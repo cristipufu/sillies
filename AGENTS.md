@@ -1,0 +1,21 @@
+# Sillies development
+
+- Keep behavior and geometry in `SilliesCore`, free of AppKit and timers.
+- Character-specific event responses belong in JSON, not conditionals in the controller.
+- Keep platform event producers, behavior selection, artwork, and clips separate.
+- Apply Clean Code principles: intention-revealing names, focused functions and types, explicit dependencies, one source of truth, and validation at boundaries. Introduce abstractions for actual variation; avoid speculative frameworks and boolean-heavy interfaces.
+- Character entry/exit/reattachment choices belong in pack transitions. Behavior clips, finite presentation transitions, and hit testing have separate owners. Character or animation additions must not require edits to window tracking.
+- Transparent panel regions and native window drag/resize borders must pass input through, including in Play mode. Stop interaction monitors when paused, excluded, or disabled.
+- Use Swift 6 concurrency checks. AX access belongs to the isolated worker; do not block the main actor on another application.
+- Do not introduce per-companion timers, screen-sized animated overlays, pixel/screenshot polling, or per-frame SwiftUI state updates. Window metadata reads must be bounded, confined to a worker, and target the known focused window during manipulation.
+- Keep drag attachment synchronous with native frame changes or display-linked pointer movement. Asynchronous metadata validates foreign-window gestures; it must not drive each drag frame. Measure live attachment error during manipulation, not only after settling.
+- A title-area mouse drag is only a candidate: require independent window movement before pointer prediction. Failed/custom-toolbar drags must never move companions or their exclusion mask. If prediction becomes incompatible, keep bounded live geometry sampling until release instead of falling back to the idle heartbeat.
+- In Play mode, opaque character artwork wins over background windows (including headers, tabs, and URL bars) while transparent panel regions pass input through via native alpha hit testing so the first character click needs no preceding hover. When picked up and dragged, companions render unclipped above the focused window.
+- Preserve distinct normalized slots when returning from an unavailable surface; do not collapse every companion to the midpoint of a degenerate path.
+- Companions belong outside the focused window. Never lower a top perch into document content to compensate for limited headroom. Use exterior sides or wait in the menu bar.
+- Attached NSPanel bounds must exclude the focused window geometrically; a layer mask alone is insufficient for input isolation. Keep rig and transition pivots at the local contact offset when cropping the canvas.
+- Every new long-lived producer must have an explicit stop path for pause, exclusions, and termination.
+- Use monotonic time for behavior, motion, and cooldowns.
+- Keep character IDs and saved preference keys stable.
+- Do not add telemetry, screen capture, keyboard-content collection, or network services without a product requirement.
+- Run `make check` for behavior/platform changes. Use `swift format` for Swift source. Update extension docs when the pack schema or renderer contract changes.

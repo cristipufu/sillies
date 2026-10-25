@@ -1,0 +1,283 @@
+{
+  "schemaVersion": 1,
+  "id": "mochi",
+  "name": "Mochi",
+  "subtitle": "Professional window warmer",
+  "bio": "A round little cat with absolutely nowhere to be. Easily startled. Easily distracted. Very good at naps.",
+  "renderer": "cat",
+  "accent": "E5A568",
+  "speed": 28,
+  "order": 1,
+  "reactions": [
+    {
+      "id": "rest",
+      "event": "ambient",
+      "animation": "idle",
+      "duration": 7,
+      "priority": 0,
+      "cooldown": 0,
+      "weight": 5,
+      "motion": "none"
+    },
+    {
+      "id": "wander",
+      "event": "ambient",
+      "animation": "walk",
+      "duration": 6,
+      "priority": 0,
+      "cooldown": 12,
+      "weight": 3,
+      "motion": "stroll"
+    },
+    {
+      "id": "catnap",
+      "event": "ambient",
+      "animation": "sleep",
+      "duration": 12,
+      "priority": 0,
+      "cooldown": 40,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "curious",
+      "event": "ambient",
+      "animation": "peek",
+      "duration": 3,
+      "priority": 0,
+      "cooldown": 14,
+      "weight": 2,
+      "motion": "none"
+    },
+    {
+      "id": "new-view",
+      "event": "appChanged",
+      "animation": "peek",
+      "duration": 0.7,
+      "priority": 5,
+      "cooldown": 0.2,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "hold-on",
+      "event": "windowMoved",
+      "animation": "scramble",
+      "duration": 1.4,
+      "priority": 5,
+      "cooldown": 0.4,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "squish",
+      "event": "windowResized",
+      "animation": "brace",
+      "duration": 1.4,
+      "priority": 5,
+      "cooldown": 0.25,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "where-did-it-go",
+      "event": "windowDisappeared",
+      "animation": "tumble",
+      "duration": 1.1,
+      "priority": 6,
+      "cooldown": 2,
+      "weight": 1,
+      "motion": "hop"
+    },
+    {
+      "id": "new-tab-maybe",
+      "event": "contextChanged",
+      "animation": "peek",
+      "duration": 2,
+      "priority": 1,
+      "cooldown": 8,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "scroll-watch",
+      "event": "scroll",
+      "animation": "peek",
+      "duration": 1.4,
+      "priority": 1,
+      "cooldown": 8,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "purr",
+      "event": "pet",
+      "animation": "happy",
+      "duration": 2,
+      "priority": 5,
+      "cooldown": 0.5,
+      "weight": 1,
+      "motion": "hop"
+    },
+    {
+      "id": "air-cat",
+      "event": "pickedUp",
+      "animation": "surprised",
+      "duration": 2,
+      "priority": 6,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "land",
+      "event": "dropped",
+      "animation": "land",
+      "duration": 0.7,
+      "priority": 6,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "gone-fishing",
+      "event": "userIdle",
+      "animation": "sleep",
+      "duration": 25,
+      "priority": 1,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "oh-youre-back",
+      "event": "userReturned",
+      "animation": "happy",
+      "duration": 2,
+      "priority": 2,
+      "cooldown": 4,
+      "weight": 1,
+      "motion": "hop"
+    },
+    {
+      "id": "hello-friend",
+      "event": "neighbor",
+      "animation": "happy",
+      "duration": 2,
+      "priority": 1,
+      "cooldown": 20,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "steady-again",
+      "event": "windowSettled",
+      "animation": "land",
+      "duration": 0.7,
+      "priority": 5,
+      "cooldown": 0.15,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "edge-business",
+      "event": "edgeReached",
+      "animation": "peek",
+      "duration": 2,
+      "priority": 1,
+      "cooldown": 8,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "wall-breather",
+      "event": "ambient.wall",
+      "animation": "hang",
+      "duration": 2.5,
+      "priority": 0,
+      "cooldown": 0,
+      "weight": 2,
+      "motion": "none"
+    },
+    {
+      "id": "wall-climb",
+      "event": "ambient.wall",
+      "animation": "climb",
+      "duration": 5,
+      "priority": 0,
+      "cooldown": 1,
+      "weight": 6,
+      "motion": "stroll"
+    },
+    {
+      "id": "snap-shutter",
+      "event": "skill.snap",
+      "animation": "snap",
+      "duration": 1.2,
+      "priority": 8,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "hop"
+    },
+    {
+      "id": "listen-notes",
+      "event": "skill.listen",
+      "animation": "listen",
+      "duration": 180,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "watch-perch",
+      "event": "skill.watch",
+      "animation": "watch",
+      "duration": 180,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "focus-buddy",
+      "event": "skill.focus",
+      "animation": "focus",
+      "duration": 180,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "job-done",
+      "event": "skill.completed",
+      "animation": "happy",
+      "duration": 2.2,
+      "priority": 8,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "hop"
+    },
+    {
+      "id": "pocket-catch",
+      "event": "stash.received",
+      "animation": "happy",
+      "duration": 1.6,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "hop"
+    }
+  ],
+  "transitions": {
+    "enter": {
+      "animation": "appear",
+      "duration": 0.3
+    },
+    "exit": {
+      "animation": "disappear",
+      "duration": 0.18
+    }
+  }
+}

@@ -1,0 +1,277 @@
+name: Release
+
+# Builds Sillies.app on a Mac, signs it with the Developer ID certificate, notarizes and staples it, and wraps it in a
+# signed, notarized disk image.
+#
+#   git tag v0.5.0 && git push origin v0.5.0
+#       Publishes a GitHub Release with Sillies.dmg, Sillies.zip, SHA256SUMS.txt, and appcast.xml.
+#       A tag with a suffix (v0.5.0-beta.1) is published as a pre-release.
+#   Actions tab -> Release -> Run workflow
+#       Builds the same files as a workflow artifact, without a release.
+#
+# Secrets (Settings -> Secrets and variables -> Actions):
+#   MACOS_CERT_P12          base64 of the "Developer ID Application" certificate and its private key, exported as .p12
+#   MACOS_CERT_PASSWORD     the .p12's password
+#   MACOS_API_KEY_P8        base64 of an App Store Connect API key (.p8), used to notarize
+#   MACOS_API_KEY_ID        that key's ID
+#   MACOS_API_ISSUER_ID     its issuer ID
+#   MACOS_TEAM_ID           the Apple Developer team ID
+#   SPARKLE_ED_PRIVATE_KEY  the EdDSA key that signs updates (Sparkle's generate_keys -x); its public half
+#                           is SUPublicEDKey in Info.plist. Without it a tag builds no appcast.xml.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      retention_days:
+        description: Days to keep the artifact
+        type: string
+        default: "3"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  HAS_APPLE_SIGNING: ${{ secrets.MACOS_CERT_P12 != '' }}
+  HAS_UPDATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY != '' }}
+  SPARKLE_VERSION: "2.10.0"
+  SPARKLE_SHA256: "c2bf58aa8387266ac179357b1415d6f2635f044da8be41042af32425dae6da0c"
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 45
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+      artifact: ${{ steps.version.outputs.artifact }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Refuse to release an unsigned build
+        if: github.ref_type == 'tag' && env.HAS_APPLE_SIGNING != 'true'
+        run: |
+          echo "::error::The signing secrets are not set (see the top of release.yml). A release has to be signed and notarized."
+          exit 1
+
+      - name: Check Swift and shell style
+        run: make lint
+
+      - name: Run all regressions before signing
+        run: make test
+
+      - name: Work out the version
+        id: version
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          if [ "$REF_TYPE" = tag ]; then
+            VERSION="${REF_NAME#v}"
+          else
+            VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Info.plist)"
+          fi
+          [[ "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,2}(-[0-9A-Za-z.]+)?$ ]] || {
+            echo "::error::'$VERSION' is not a version like 1.2.3 or 1.2.3-beta.1"; exit 1; }
+          if [[ "$VERSION" == *-* ]]; then PRERELEASE=true; else PRERELEASE=false; fi
+          if [ "$REF_TYPE" = tag ]; then ARTIFACT="Sillies-$VERSION"; else ARTIFACT="Sillies-$VERSION-build$RUN_NUMBER"; fi
+          echo "SILLIES_VERSION=${VERSION%%-*}" >> "$GITHUB_ENV"
+          echo "SILLIES_BUILD_NUMBER=$RUN_NUMBER" >> "$GITHUB_ENV"
+          echo "SILLIES_FEED_URL=https://github.com/$GITHUB_REPOSITORY/releases/latest/download/appcast.xml" >> "$GITHUB_ENV"
+          {
+            echo "version=$VERSION"
+            echo "prerelease=$PRERELEASE"
+            echo "artifact=$ARTIFACT"
+          } >> "$GITHUB_OUTPUT"
+          echo "building Sillies $VERSION (build $RUN_NUMBER)"
+
+      - name: Import the Developer ID certificate into a temporary keychain
+        if: env.HAS_APPLE_SIGNING == 'true'
+        env:
+          CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
+          CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+        run: |
+          set -euo pipefail
+          KC="$RUNNER_TEMP/signing.keychain-db"
+          KC_PASS="$(uuidgen)"
+          security create-keychain -p "$KC_PASS" "$KC"
+          security set-keychain-settings -lut 21600 "$KC"
+          security unlock-keychain -p "$KC_PASS" "$KC"
+          printf '%s' "$CERT_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KC" -P "$CERT_PASSWORD" -T /usr/bin/codesign -T /usr/bin/security
+          rm -f "$RUNNER_TEMP/cert.p12"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PASS" "$KC" >/dev/null
+          security list-keychain -d user -s "$KC" login.keychain-db
+          IDENTITY=$(security find-identity -v -p codesigning "$KC" | awk -F'"' '/Developer ID Application/{print $2; exit}')
+          [ -n "$IDENTITY" ] || { echo "::error::no Developer ID Application identity in MACOS_CERT_P12"; exit 1; }
+          echo "SIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+          echo "SIGN_KEYCHAIN=$KC" >> "$GITHUB_ENV"
+
+      - name: Build Sillies.app
+        run: |
+          set -euo pipefail
+          SILLIES_SIGNING_IDENTITY="${SIGN_IDENTITY:-}" SILLIES_KEYCHAIN="${SIGN_KEYCHAIN:-}" SILLIES_TIMESTAMP=1 \
+            bash scripts/build-app.sh release
+
+      - name: Check the app
+        run: |
+          set -euo pipefail
+          APP=build/Sillies.app
+          codesign --verify --strict --deep --verbose=2 "$APP"
+          codesign -dvv "$APP" 2>&1 | grep -E "^(Authority|TeamIdentifier|Timestamp|Runtime Version)" || true
+          echo "version $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist")" \
+               "build $(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$APP/Contents/Info.plist")"
+          "$APP/Contents/MacOS/Sillies" --validate-catalog
+
+      - name: Notarize, staple and package
+        env:
+          API_KEY_P8: ${{ secrets.MACOS_API_KEY_P8 }}
+          API_KEY_ID: ${{ secrets.MACOS_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.MACOS_API_ISSUER_ID }}
+          TEAM_ID: ${{ secrets.MACOS_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          APP=build/Sillies.app
+          mkdir -p dist
+          signed=false
+          if [ "$HAS_APPLE_SIGNING" = true ]; then signed=true; fi
+
+          if [ "$signed" = true ]; then
+            printf '%s' "$API_KEY_P8" | base64 --decode > "$RUNNER_TEMP/api.p8"
+            trap 'rm -f "$RUNNER_TEMP/api.p8"' EXIT
+            auth=(--key "$RUNNER_TEMP/api.p8" --key-id "$API_KEY_ID" --issuer "$API_ISSUER_ID" --team-id "$TEAM_ID")
+            notarize() {
+              local out id status
+              out=$(xcrun notarytool submit "$1" "${auth[@]}" --wait --timeout 30m --output-format json) || true
+              id=$(printf '%s' "$out" | plutil -extract id raw -o - - 2>/dev/null || true)
+              status=$(printf '%s' "$out" | plutil -extract status raw -o - - 2>/dev/null || true)
+              echo "notarization of $(basename "$1"): ${status:-no answer} ${id}"
+              if [ "$status" != Accepted ]; then
+                echo "$out"
+                [ -n "$id" ] && xcrun notarytool log "$id" "${auth[@]}" || true
+                echo "::error::notarization of $(basename "$1") ended as '${status:-unknown}'"
+                return 1
+              fi
+            }
+
+            ditto -c -k --keepParent "$APP" "$RUNNER_TEMP/notarize-app.zip"
+            notarize "$RUNNER_TEMP/notarize-app.zip"
+            xcrun stapler staple "$APP"
+            xcrun stapler validate "$APP"
+            spctl --assess --type execute -vv "$APP"
+          else
+            echo "::warning::Signing secrets not set: this build is ad-hoc signed and Gatekeeper will refuse it on other Macs. Don't share it."
+          fi
+
+          stage="$RUNNER_TEMP/dmg"
+          rm -rf "$stage" && mkdir -p "$stage"
+          ditto "$APP" "$stage/Sillies.app"
+          ln -s /Applications "$stage/Applications"
+          hdiutil create -volname Sillies -srcfolder "$stage" -fs HFS+ -format UDZO -ov dist/Sillies.dmg
+          if [ "$signed" = true ]; then
+            codesign --force --timestamp --keychain "$SIGN_KEYCHAIN" --sign "$SIGN_IDENTITY" dist/Sillies.dmg
+            notarize dist/Sillies.dmg
+            xcrun stapler staple dist/Sillies.dmg
+            xcrun stapler validate dist/Sillies.dmg
+            spctl --assess --type open --context context:primary-signature -vv dist/Sillies.dmg
+          fi
+
+          ditto -c -k --keepParent "$APP" dist/Sillies.zip
+          (cd dist && shasum -a 256 Sillies.dmg Sillies.zip > SHA256SUMS.txt && cat SHA256SUMS.txt)
+          ls -lh dist
+
+      - name: Sign the update and write the appcast
+        if: github.ref_type == 'tag' && env.HAS_APPLE_SIGNING == 'true'
+        env:
+          UPDATE_KEY: ${{ secrets.SPARKLE_ED_PRIVATE_KEY }}
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ github.ref_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          [ "$HAS_UPDATE_KEY" = true ] || { echo "::error::SPARKLE_ED_PRIVATE_KEY is not set: installed copies couldn't verify this update."; exit 1; }
+          tools="$RUNNER_TEMP/sparkle"
+          mkdir -p "$tools"
+          curl -fsSL -o "$tools/sparkle.tar.xz" \
+            "https://github.com/sparkle-project/Sparkle/releases/download/$SPARKLE_VERSION/Sparkle-$SPARKLE_VERSION.tar.xz"
+          echo "$SPARKLE_SHA256  $tools/sparkle.tar.xz" | shasum -a 256 -c -
+          tar -xf "$tools/sparkle.tar.xz" -C "$tools" ./bin/sign_update
+          key="$RUNNER_TEMP/update.key"
+          printf '%s' "$UPDATE_KEY" > "$key"
+          trap 'rm -f "$key"' EXIT
+          attributes=$("$tools/bin/sign_update" --ed-key-file "$key" dist/Sillies.zip)
+          [[ "$attributes" =~ ^sparkle:edSignature=\"[A-Za-z0-9+/=]+\"\ length=\"[0-9]+\"$ ]] || { echo "::error::unexpected sign_update output"; exit 1; }
+          build=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' build/Sillies.app/Contents/Info.plist)
+          minimum=$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' build/Sillies.app/Contents/Info.plist)
+          date=$(LC_ALL=C date -u '+%a, %d %b %Y %H:%M:%S +0000')
+          notes="<sparkle:releaseNotesLink>https://github.com/$REPOSITORY/releases/tag/$TAG</sparkle:releaseNotesLink>"
+          cat > dist/appcast.xml <<XML
+          <?xml version="1.0" encoding="utf-8"?>
+          <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+            <channel>
+              <title>Sillies</title>
+              <item>
+                <title>Sillies $VERSION</title>
+                <pubDate>$date</pubDate>
+                <sparkle:version>$build</sparkle:version>
+                <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
+                <sparkle:minimumSystemVersion>$minimum</sparkle:minimumSystemVersion>
+                $notes
+                <enclosure url="https://github.com/$REPOSITORY/releases/download/$TAG/Sillies.zip" $attributes type="application/octet-stream"/>
+              </item>
+            </channel>
+          </rss>
+          XML
+          "$tools/bin/sign_update" --ed-key-file "$key" --disable-signing-warning dist/appcast.xml
+          xmllint --noout dist/appcast.xml
+          cat dist/appcast.xml
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.version.outputs.artifact }}
+          path: dist/
+          retention-days: ${{ github.ref_type == 'tag' && 7 || inputs.retention_days }}
+          if-no-files-found: error
+          compression-level: 0
+
+      - name: Remove the temporary keychain
+        if: always() && env.SIGN_KEYCHAIN != ''
+        run: security delete-keychain "$SIGN_KEYCHAIN" || true
+
+  release:
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download the build
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.artifact }}
+          path: dist
+
+      - name: Publish the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ needs.build.outputs.version }}
+          PRERELEASE: ${{ needs.build.outputs.prerelease }}
+        run: |
+          set -euo pipefail
+          flags=(--generate-notes)
+          if [ "$PRERELEASE" = true ]; then flags+=(--prerelease); fi
+          assets=(dist/Sillies.dmg dist/Sillies.zip dist/SHA256SUMS.txt)
+          if [ -f dist/appcast.xml ]; then assets+=(dist/appcast.xml); fi
+          gh release create "$TAG" "${assets[@]}" --repo "$GITHUB_REPOSITORY" --title "Sillies $VERSION" --verify-tag "${flags[@]}"

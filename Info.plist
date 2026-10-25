@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key><string>app.sillies.macos</string>
+    <key>CFBundleName</key><string>Sillies</string>
+    <key>CFBundleDisplayName</key><string>Sillies</string>
+    <key>CFBundleExecutable</key><string>Sillies</string>
+    <key>CFBundlePackageType</key><string>APPL</string>
+    <key>CFBundleShortVersionString</key><string>0.4.2</string>
+    <key>CFBundleVersion</key><string>6</string>
+    <key>CFBundleIconFile</key><string>Sillies</string>
+    <key>LSMinimumSystemVersion</key><string>14.0</string>
+    <key>LSUIElement</key><true/>
+    <key>NSHighResolutionCapable</key><true/>
+    <key>NSPrincipalClass</key><string>NSApplication</string>
+    <key>NSSpeechRecognitionUsageDescription</key><string>Sillies uses on-device speech recognition when you drop a companion onto a window and choose Listen &amp; Scribe.</string>
+    <key>NSMicrophoneUsageDescription</key><string>Sillies can include microphone audio when transcribing a session you started with a companion.</string>
+    <key>NSScreenCaptureUsageDescription</key><string>Sillies captures the target window image or app audio when you drop a companion onto a window to take a snapshot or transcribe audio.</string>
+    <key>SUFeedURL</key><string>https://github.com/cristipufu/sillies/releases/latest/download/appcast.xml</string>
+    <key>SUPublicEDKey</key><string>vFHZvPv37uOxCFjKgYKFskqqJEAeKj5Gk7RiSMP5EPY=</string>
+    <key>SURequireSignedFeed</key><true/>
+    <key>SUVerifyUpdateBeforeExtraction</key><true/>
+</dict>
+</plist>

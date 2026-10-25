@@ -1,0 +1,283 @@
+{
+  "schemaVersion": 1,
+  "id": "kiko",
+  "name": "Kiko",
+  "subtitle": "Stealth mode. Mostly.",
+  "bio": "A tiny ninja with a big sense of duty. Guards your tabs, practices dramatic entrances, occasionally falls asleep on the job.",
+  "renderer": "ninja",
+  "accent": "9D9BE8",
+  "speed": 47,
+  "order": 2,
+  "reactions": [
+    {
+      "id": "stand-guard",
+      "event": "ambient",
+      "animation": "idle",
+      "duration": 5,
+      "priority": 0,
+      "cooldown": 0,
+      "weight": 3,
+      "motion": "none"
+    },
+    {
+      "id": "patrol",
+      "event": "ambient",
+      "animation": "walk",
+      "duration": 5,
+      "priority": 0,
+      "cooldown": 7,
+      "weight": 4,
+      "motion": "stroll"
+    },
+    {
+      "id": "inner-peace",
+      "event": "ambient",
+      "animation": "meditate",
+      "duration": 8,
+      "priority": 0,
+      "cooldown": 24,
+      "weight": 2,
+      "motion": "none"
+    },
+    {
+      "id": "scout",
+      "event": "ambient",
+      "animation": "peek",
+      "duration": 2.5,
+      "priority": 0,
+      "cooldown": 10,
+      "weight": 2,
+      "motion": "none"
+    },
+    {
+      "id": "reporting-for-duty",
+      "event": "appChanged",
+      "animation": "wave",
+      "duration": 0.7,
+      "priority": 5,
+      "cooldown": 0.2,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "ninja-balance",
+      "event": "windowMoved",
+      "animation": "balance",
+      "duration": 1.4,
+      "priority": 5,
+      "cooldown": 0.4,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "dodge",
+      "event": "windowResized",
+      "animation": "scramble",
+      "duration": 1.4,
+      "priority": 5,
+      "cooldown": 0.25,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "tactical-retreat",
+      "event": "windowDisappeared",
+      "animation": "tumble",
+      "duration": 1,
+      "priority": 6,
+      "cooldown": 2,
+      "weight": 1,
+      "motion": "hop"
+    },
+    {
+      "id": "inspect",
+      "event": "contextChanged",
+      "animation": "peek",
+      "duration": 1.8,
+      "priority": 1,
+      "cooldown": 6,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "scroll-scout",
+      "event": "scroll",
+      "animation": "balance",
+      "duration": 1,
+      "priority": 1,
+      "cooldown": 7,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "honor",
+      "event": "pet",
+      "animation": "wave",
+      "duration": 2,
+      "priority": 5,
+      "cooldown": 0.5,
+      "weight": 1,
+      "motion": "hop"
+    },
+    {
+      "id": "ambushed",
+      "event": "pickedUp",
+      "animation": "balance",
+      "duration": 2,
+      "priority": 6,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "ninja-landing",
+      "event": "dropped",
+      "animation": "land",
+      "duration": 0.7,
+      "priority": 6,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "off-duty",
+      "event": "userIdle",
+      "animation": "sleep",
+      "duration": 25,
+      "priority": 1,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "welcome-back",
+      "event": "userReturned",
+      "animation": "wave",
+      "duration": 1.6,
+      "priority": 2,
+      "cooldown": 4,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "salute",
+      "event": "neighbor",
+      "animation": "wave",
+      "duration": 1.8,
+      "priority": 1,
+      "cooldown": 20,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "steady-again",
+      "event": "windowSettled",
+      "animation": "land",
+      "duration": 0.7,
+      "priority": 5,
+      "cooldown": 0.15,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "edge-business",
+      "event": "edgeReached",
+      "animation": "wave",
+      "duration": 2,
+      "priority": 1,
+      "cooldown": 8,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "wall-breather",
+      "event": "ambient.wall",
+      "animation": "hang",
+      "duration": 2.5,
+      "priority": 0,
+      "cooldown": 0,
+      "weight": 2,
+      "motion": "none"
+    },
+    {
+      "id": "wall-climb",
+      "event": "ambient.wall",
+      "animation": "climb",
+      "duration": 5,
+      "priority": 0,
+      "cooldown": 1,
+      "weight": 8,
+      "motion": "stroll"
+    },
+    {
+      "id": "recon-snap",
+      "event": "skill.snap",
+      "animation": "snap",
+      "duration": 1.2,
+      "priority": 8,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "hop"
+    },
+    {
+      "id": "intercept-audio",
+      "event": "skill.listen",
+      "animation": "listen",
+      "duration": 180,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "sentinel-watch",
+      "event": "skill.watch",
+      "animation": "watch",
+      "duration": 180,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "zen-focus",
+      "event": "skill.focus",
+      "animation": "focus",
+      "duration": 180,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "mission-complete",
+      "event": "skill.completed",
+      "animation": "wave",
+      "duration": 2.2,
+      "priority": 8,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "hop"
+    },
+    {
+      "id": "secure-intel",
+      "event": "stash.received",
+      "animation": "wave",
+      "duration": 1.6,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "hop"
+    }
+  ],
+  "transitions": {
+    "enter": {
+      "animation": "fade",
+      "duration": 0.18
+    },
+    "exit": {
+      "animation": "fade",
+      "duration": 0.14
+    }
+  }
+}

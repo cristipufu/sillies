@@ -1,0 +1,22 @@
+name: macOS
+
+on:
+  push:
+    tags-ignore: ["v*"]
+  pull_request:
+
+jobs:
+  core-and-bundle:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Swift and shell style
+        run: make lint
+      - name: Test behavior and geometry
+        run: make test
+      - name: Build release application
+        run: make build
+      - name: Verify application signature and catalog
+        run: |
+          codesign --verify --strict --deep build/Sillies.app
+          build/Sillies.app/Contents/MacOS/Sillies --validate-catalog

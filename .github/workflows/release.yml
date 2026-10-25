@@ -3,9 +3,9 @@ name: Release
 # Builds Sillies.app on a Mac, signs it with the Developer ID certificate, notarizes and staples it, and wraps it in a
 # signed, notarized disk image.
 #
-#   git tag v0.5.0 && git push origin v0.5.0
+#   git tag v0.0.1 && git push origin v0.0.1
 #       Publishes a GitHub Release with Sillies.dmg, Sillies.zip, SHA256SUMS.txt, and appcast.xml.
-#       A tag with a suffix (v0.5.0-beta.1) is published as a pre-release.
+#       A tag with a suffix (v0.0.1-beta.1) is published as a pre-release.
 #   Actions tab -> Release -> Run workflow
 #       Builds the same files as a workflow artifact, without a release.
 #

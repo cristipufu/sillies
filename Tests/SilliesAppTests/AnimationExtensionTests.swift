@@ -253,3 +253,55 @@ private final class MockEventProducer: WorkspaceEventProducer {
     #expect(controller.interactiveArtworkCount(at: bodyPoint) == 1)
   }
 }
+
+@Test @MainActor func sessionVaultPreparesImagesAsynchronouslyWithoutBlockingViews() async throws {
+  let directory = FileManager.default.temporaryDirectory
+    .appendingPathComponent("sillies-vault-img-\(UUID().uuidString)", isDirectory: true)
+  defer { try? FileManager.default.removeItem(at: directory) }
+  let store = SessionVaultStore(directory: directory)
+  let context = try #require(
+    CGContext(
+      data: nil, width: 8, height: 8, bitsPerComponent: 8, bytesPerRow: 0,
+      space: CGColorSpaceCreateDeviceRGB(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+  let cgImage = try #require(context.makeImage())
+  let record = SessionRecord(
+    kind: .snap, characterID: "mochi", characterName: "Mochi", appName: "Preview",
+    summary: "Captured")
+  store.add(record, image: cgImage)
+  let stored = try #require(store.records.first)
+  // Immediately available in memory before ioQueue even finishes writing the PNG.
+  #expect(store.cachedImage(for: stored) != nil)
+  store.flush()
+
+  let reloaded = SessionVaultStore(directory: directory)
+  let reloadedRecord = try #require(reloaded.records.first)
+  #expect(reloaded.cachedImage(for: reloadedRecord) == nil)
+  reloaded.prepareImage(for: reloadedRecord)
+  let deadline = ContinuousClock.now.advanced(by: .seconds(1))
+  while reloaded.cachedImage(for: reloadedRecord) == nil, ContinuousClock.now < deadline {
+    try await Task.sleep(for: .milliseconds(2))
+  }
+  #expect(reloaded.cachedImage(for: reloadedRecord) != nil)
+}
+
+@Test @MainActor func companionHUDCachesLayoutSizeAcrossFrameAndAudioUpdates() {
+  let hud = CompanionHUDController()
+  defer { hud.close() }
+  let target = WindowTargetCandidate(
+    windowID: 12, processID: 34, appName: "Xcode",
+    frame: CGRect(x: 100, y: 100, width: 800, height: 600))
+  let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
+  for frame in 0..<120 {
+    let state = CompanionBindingState.active(
+      target: target, skill: .listen, startedAt: 10,
+      statusDetail: "00:12 · Listening to Xcode…",
+      audioLevel: Double(frame % 10) * 0.1)
+    hud.update(
+      state: state,
+      companionPoint: CGPoint(x: 300 + Double(frame), y: 700),
+      characterSize: 64,
+      visibleFrame: screen)
+  }
+  #expect(hud.layoutMeasurements == 1)
+}

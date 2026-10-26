@@ -222,10 +222,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     popover.behavior = .transient
     popover.animates = true
     popover.delegate = self
-    if let controller {
-      popover.contentViewController = controlCenterHost(
-        controller, screen: item.button?.window?.screen ?? NSScreen.main)
-    }
   }
 
   private func controlCenter(_ controller: CompanionController) -> ControlCenterView {
@@ -262,6 +258,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     if popover.isShown {
       popover.performClose(nil)
     } else {
+      if popover.contentViewController == nil, let controller {
+        popover.contentViewController = controlCenterHost(
+          controller, screen: button.window?.screen ?? NSScreen.main)
+      }
       popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
     }
   }

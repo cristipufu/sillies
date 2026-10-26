@@ -2,13 +2,20 @@ import AppKit
 import CoreGraphics
 import SilliesCore
 
-/// Single-window metadata reads. Call from a worker, never from mouse handling or view rendering.
-enum WindowTargetResolver {
+struct WindowTargetSnapshot: Sendable {
+  let frame: CGRect
+  let title: String?
+}
+
+/// Single-window metadata reads. Private to this file so callers must go through `WindowTargetMetadata`'s
+/// asynchronous worker queue and can never invoke WindowServer IPC on the main actor.
+private enum WindowTargetResolver {
   private static let minimumVisibleAlpha: Double = 0.05
 
   static func candidate(
     for windowID: CGWindowID, primaryScreenTop: Double
   ) -> WindowTargetCandidate? {
+    dispatchPrecondition(condition: .notOnQueue(.main))
     guard let entry = windowEntry(for: windowID),
       (entry[kCGWindowLayer as String] as? Int) == 0,
       (entry[kCGWindowIsOnscreen as String] as? Bool) != false,
@@ -31,7 +38,8 @@ enum WindowTargetResolver {
 
   static func currentSnapshot(
     for windowID: CGWindowID, primaryScreenTop: Double
-  ) -> (frame: CGRect, title: String?)? {
+  ) -> WindowTargetSnapshot? {
+    dispatchPrecondition(condition: .notOnQueue(.main))
     guard let entry = windowEntry(for: windowID),
       (entry[kCGWindowIsOnscreen as String] as? Bool) != false,
       (entry[kCGWindowAlpha as String] as? Double ?? 1) > minimumVisibleAlpha,
@@ -41,10 +49,11 @@ enum WindowTargetResolver {
     let frame = ScreenCoordinates.appKitRect(
       fromAccessibility: cgFrame, primaryScreenTop: primaryScreenTop)
     let title = entry[kCGWindowName as String] as? String
-    return (frame, title)
+    return WindowTargetSnapshot(frame: frame, title: title)
   }
 
   private static func windowEntry(for windowID: CGWindowID) -> [String: Any]? {
+    dispatchPrecondition(condition: .notOnQueue(.main))
     let list =
       CGWindowListCopyWindowInfo([.optionIncludingWindow], windowID) as? [[String: Any]]
     return list?.first
@@ -67,7 +76,28 @@ final class WindowTargetMetadata: Sendable {
     let read = read
     return await withCheckedContinuation { continuation in
       queue.async {
+        dispatchPrecondition(condition: .notOnQueue(.main))
         continuation.resume(returning: read(windowID, primaryScreenTop))
+      }
+    }
+  }
+
+  func snapshots(
+    for windowIDs: Set<CGWindowID>, primaryScreenTop: Double
+  ) async -> [CGWindowID: WindowTargetSnapshot] {
+    guard !Task.isCancelled, !windowIDs.isEmpty else { return [:] }
+    return await withCheckedContinuation { continuation in
+      queue.async {
+        dispatchPrecondition(condition: .notOnQueue(.main))
+        var result: [CGWindowID: WindowTargetSnapshot] = [:]
+        for windowID in windowIDs {
+          if let snapshot = WindowTargetResolver.currentSnapshot(
+            for: windowID, primaryScreenTop: primaryScreenTop)
+          {
+            result[windowID] = snapshot
+          }
+        }
+        continuation.resume(returning: result)
       }
     }
   }
@@ -76,6 +106,7 @@ final class WindowTargetMetadata: Sendable {
     guard !Task.isCancelled else { return [] }
     return await withCheckedContinuation { continuation in
       queue.async {
+        dispatchPrecondition(condition: .notOnQueue(.main))
         let entries =
           CGWindowListCopyWindowInfo(
             [.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]

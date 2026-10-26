@@ -59,6 +59,7 @@ private actor ApplicationIconLoader {
   static let shared = ApplicationIconLoader()
 
   func load(processID: Int32) -> CGImage? {
+    dispatchPrecondition(condition: .notOnQueue(.main))
     guard !Task.isCancelled else { return nil }
     return autoreleasepool {
       guard let image = NSRunningApplication(processIdentifier: processID)?.icon else { return nil }

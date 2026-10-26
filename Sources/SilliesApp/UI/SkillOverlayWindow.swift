@@ -24,6 +24,12 @@ final class SkillFloatingPanel: NSPanel {
     self.ignoresMouseEvents = ignoresMouseEvents
     collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle, .transient]
     animationBehavior = .none
+    let isUnitTest =
+      ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+      || ProcessInfo.processInfo.arguments.contains {
+        $0.contains("swift-testing") || $0.hasSuffix(".xctest")
+      }
+    if isUnitTest { alphaValue = 0 }
   }
 }
 
@@ -427,11 +433,11 @@ struct CompanionHUDView: View {
           .frame(maxWidth: 210, alignment: .leading)
       }
 
-      if skill != .snap {
+      if let stopTitle = skill.stopActionTitle {
         Button {
           model.onStopSkill?()
         } label: {
-          Text(skill == .listen ? "Finish" : "Done")
+          Text(stopTitle)
             .font(.system(size: 10, weight: .bold, design: .rounded))
             .foregroundStyle(.white)
             .padding(.horizontal, 10)
@@ -487,7 +493,7 @@ struct CompanionHUDView: View {
           .frame(maxWidth: 205, alignment: .leading)
       }
 
-      if skill == .watch {
+      if skill.offersTargetActivationOnCompletion {
         Button {
           model.onFocusWindow?(target)
         } label: {
@@ -532,14 +538,7 @@ struct CompanionHUDView: View {
   }
 
   private func completionHeadline(for skill: CompanionSkillKind, needsPermission: Bool) -> String {
-    if needsPermission { return "\(skill.title) Needs Access" }
-    switch skill {
-    case .snap: return "Snapshot & OCR Saved"
-    case .listen: return "Transcript & Notes Saved"
-    case .watch: return "Window Activity Detected"
-    case .focus: return "Focus Sprint Logged"
-    case .stash: return "Saved to Pocket Stash"
-    }
+    needsPermission ? "\(skill.title) Needs Access" : skill.completionHeadline
   }
 
   private func dismissButton(helpText: String, action: @escaping () -> Void) -> some View {
@@ -621,9 +620,33 @@ struct CompanionHUDView: View {
 final class CompanionHUDController {
   private static let fallbackSize = CGSize(width: 340, height: 64)
 
+  private enum LayoutKey: Equatable {
+    case hidden
+    case selection(appName: String)
+    case active(skill: CompanionSkillKind, appName: String, detailLength: Int)
+    case completed(skill: CompanionSkillKind, appName: String, summary: String)
+
+    init(_ state: CompanionBindingState) {
+      switch state {
+      case .followingFocusedWindow:
+        self = .hidden
+      case .awaitingSelection(let target, _):
+        self = .selection(appName: target.appName)
+      case .active(let target, let skill, _, let statusDetail, _):
+        self = .active(
+          skill: skill, appName: target.appName, detailLength: statusDetail.count)
+      case .completed(let target, let skill, let summary, _, _):
+        self = .completed(skill: skill, appName: target.appName, summary: summary)
+      }
+    }
+  }
+
   let model = CompanionHUDModel()
   private var panel: SkillFloatingPanel?
   private var hostingView: NSHostingView<CompanionHUDView>?
+  private var lastLayoutKey: LayoutKey?
+  private var cachedPanelSize: CGSize?
+  private(set) var layoutMeasurements = 0
   var windowNumber: Int? { panel?.windowNumber }
   var isVisible: Bool { panel?.isVisible == true }
 
@@ -644,12 +667,24 @@ final class CompanionHUDController {
       created.contentView = host
       hostingView = host
       panel = created
+      lastLayoutKey = nil
+      cachedPanelSize = nil
     }
-    hostingView?.layoutSubtreeIfNeeded()
-    let fitting = hostingView?.fittingSize ?? Self.fallbackSize
-    let panelSize = CGSize(
-      width: max(220, ceil(fitting.width)),
-      height: max(52, ceil(fitting.height)))
+    let key = LayoutKey(state)
+    let panelSize: CGSize
+    if key == lastLayoutKey, let cachedPanelSize {
+      panelSize = cachedPanelSize
+    } else {
+      layoutMeasurements += 1
+      hostingView?.layoutSubtreeIfNeeded()
+      let fitting = hostingView?.fittingSize ?? Self.fallbackSize
+      let measured = CGSize(
+        width: max(220, ceil(fitting.width)),
+        height: max(52, ceil(fitting.height)))
+      lastLayoutKey = key
+      cachedPanelSize = measured
+      panelSize = measured
+    }
 
     let headTopOffset = characterSize * 0.78
     let unclampedX = companionPoint.x - panelSize.width / 2
@@ -677,5 +712,7 @@ final class CompanionHUDController {
     panel?.close()
     panel = nil
     hostingView = nil
+    lastLayoutKey = nil
+    cachedPanelSize = nil
   }
 }

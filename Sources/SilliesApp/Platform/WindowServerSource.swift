@@ -60,6 +60,7 @@ final class WindowServerSource: @unchecked Sendable {
   }
 
   private func performRefresh(_ request: Request) {
+    dispatchPrecondition(condition: .notOnQueue(.main))
     let processID = request.processID
     let windowID = request.windowID
     let discover = request.discover

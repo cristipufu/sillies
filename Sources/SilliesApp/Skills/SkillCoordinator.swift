@@ -10,37 +10,18 @@ final class SkillCoordinator {
   static let selectionPromptDuration: TimeInterval = 5.5
   static let completionBannerDuration: TimeInterval = 6.5
   static let focusSprintDuration: TimeInterval = 25 * 60
-  private static let distractionThresholdSeconds: TimeInterval = 25
-
-  private struct WatchContext {
-    let initialTitle: String?
-    let initialFrame: CGRect
-    var sawChange = false
-    var changedAt: TimeInterval = 0
-    var latestTitle: String?
-  }
-
-  private struct FocusContext {
-    let target: WindowTargetCandidate
-    let startedAt: TimeInterval
-    var lastTickAt: TimeInterval
-    var focusedSeconds: Double = 0
-    var awaySince: TimeInterval?
-  }
+  fileprivate static let distractionThresholdSeconds: TimeInterval = 25
 
   let vault: SessionVaultStore
   var onBindingChanged: ((String, CompanionBindingState) -> Void)?
   var onEmitEvent: ((String, WorkspaceEvent) -> Void)?
   var onOpenVaultRecord: ((UUID) -> Void)?
 
-  private var audioServices: [String: AudioTranscriptionService] = [:]
-  private var liveTranscripts: [String: String] = [:]
-  private var watchContexts: [String: WatchContext] = [:]
-  private var focusContexts: [String: FocusContext] = [:]
+  private var sessions: [String: any ActiveSkillSession] = [:]
   private var bindings: [String: CompanionBindingState] = [:]
   private var companionNames: [String: String] = [:]
   private var tickTimer: Timer?
-  private let metadataQueue = DispatchQueue(label: "app.sillies.skill-metadata", qos: .utility)
+  private var tickTask: Task<Void, Never>?
 
   init(vault: SessionVaultStore = SessionVaultStore()) {
     self.vault = vault
@@ -70,100 +51,19 @@ final class SkillCoordinator {
     let now = ProcessInfo.processInfo.systemUptime
     onEmitEvent?(companionID, WorkspaceEvent(skill.eventKind, at: now))
 
-    switch skill {
-    case .snap:
-      setBinding(
-        .active(
-          target: target, skill: .snap, startedAt: now,
-          statusDetail: "Capturing \(target.appName)…"),
-        for: companionID)
-      Task { @MainActor [weak self] in
-        let result = await WindowSnapshotService.capture(target: target)
-        guard let self else { return }
-        if let cgImage = result.image {
-          let nsImage = NSImage(
-            cgImage: cgImage,
-            size: NSSize(width: cgImage.width, height: cgImage.height))
-          let pasteboard = NSPasteboard.general
-          pasteboard.clearContents()
-          pasteboard.writeObjects([nsImage])
-          if !result.extractedText.isEmpty {
-            pasteboard.setString(result.extractedText, forType: .string)
-          }
-        }
-        let record = SessionRecord(
-          kind: .snap,
-          characterID: companionID,
-          characterName: companionName,
-          appName: target.appName,
-          bundleIdentifier: target.bundleIdentifier,
-          windowTitle: target.windowTitle,
-          extractedText: result.extractedText,
-          summary: result.summary,
-          actionItems: result.actionItems)
-        self.vault.add(record, image: result.image)
-        let banner =
-          result.image == nil
-          ? "Permission needed · View details"
-          : (result.extractedText.isEmpty
-            ? "Snapshot copied & saved"
-            : "Captured + OCR text ready")
-        let finishTime = ProcessInfo.processInfo.systemUptime
-        self.onEmitEvent?(companionID, WorkspaceEvent(.skillCompleted, at: finishTime))
-        self.setBinding(
-          .completed(
-            target: target, skill: .snap, summary: banner, recordID: record.id,
-            expiresAt: finishTime + Self.completionBannerDuration),
-          for: companionID)
-      }
+    guard
+      let session = makeSession(
+        for: skill, companionID: companionID, companionName: companionName, target: target,
+        startedAt: now)
+    else { return }
 
-    case .listen:
-      setBinding(
-        .active(
-          target: target, skill: .listen, startedAt: now,
-          statusDetail: "Listening to \(target.appName)…"),
-        for: companionID)
-      let service = AudioTranscriptionService(target: target) { [weak self] update in
-        Task { @MainActor [weak self] in
-          guard let self else { return }
-          guard
-            case .active(let currentTarget, .listen, let startedAt, _, _) =
-              self.binding(for: companionID)
-          else { return }
-          self.liveTranscripts[companionID] = update.transcript
-          self.setBinding(
-            .active(
-              target: currentTarget, skill: .listen, startedAt: startedAt,
-              statusDetail: update.statusMessage, audioLevel: update.audioLevel),
-            for: companionID)
-        }
-      }
-      audioServices[companionID] = service
-      Task {
-        await service.start()
-      }
-
-    case .watch:
-      watchContexts[companionID] = WatchContext(
-        initialTitle: target.windowTitle, initialFrame: target.frame)
-      setBinding(
-        .active(
-          target: target, skill: .watch, startedAt: now,
-          statusDetail: "Watching \(target.appName)…"),
-        for: companionID)
-
-    case .focus:
-      focusContexts[companionID] = FocusContext(
-        target: target, startedAt: now, lastTickAt: now)
-      setBinding(
-        .active(
-          target: target, skill: .focus, startedAt: now,
-          statusDetail: "Focus · 25:00 remaining"),
-        for: companionID)
-
-    case .stash:
-      break
-    }
+    sessions[companionID] = session
+    setBinding(
+      .active(
+        target: target, skill: skill, startedAt: now,
+        statusDetail: session.initialStatusDetail),
+      for: companionID)
+    session.start()
   }
 
   func recordStash(
@@ -211,126 +111,110 @@ final class SkillCoordinator {
   }
 
   func stopAll() {
-    let ids = Array(bindings.keys)
+    let ids = Array(Set(bindings.keys).union(sessions.keys))
     for id in ids {
       cancelActiveSkill(for: id, savePartial: true)
     }
     bindings.removeAll()
+    tickTask?.cancel()
+    tickTask = nil
     tickTimer?.invalidate()
     tickTimer = nil
+  }
+
+  private func makeSession(
+    for skill: CompanionSkillKind,
+    companionID: String,
+    companionName: String,
+    target: WindowTargetCandidate,
+    startedAt: TimeInterval
+  ) -> (any ActiveSkillSession)? {
+    switch skill {
+    case .snap:
+      return SnapSkillSession(
+        companionID: companionID,
+        companionName: companionName,
+        target: target
+      ) { [weak self] outcome in
+        self?.completeSession(
+          outcome, for: companionID, skill: .snap, target: target,
+          at: ProcessInfo.processInfo.systemUptime)
+      }
+
+    case .listen:
+      return ListenSkillSession(target: target) { [weak self] statusMessage, audioLevel in
+        guard let self else { return }
+        guard
+          case .active(let currentTarget, .listen, let activeStartedAt, _, _) =
+            self.binding(for: companionID)
+        else { return }
+        self.setBinding(
+          .active(
+            target: currentTarget, skill: .listen, startedAt: activeStartedAt,
+            statusDetail: statusMessage, audioLevel: audioLevel),
+          for: companionID)
+      }
+
+    case .watch:
+      return WatchSkillSession(target: target)
+
+    case .focus:
+      return FocusSkillSession(target: target, startedAt: startedAt)
+
+    case .stash:
+      return nil
+    }
   }
 
   private func finalizeActiveSkill(for companionID: String) {
     let now = ProcessInfo.processInfo.systemUptime
     let characterName = companionNames[companionID] ?? companionID.capitalized
-    guard case .active(let target, let skill, let startedAt, _, _) = binding(for: companionID)
+    let session = sessions.removeValue(forKey: companionID)
+    guard case .active(let target, let skill, let startedAt, _, _) = binding(for: companionID),
+      let outcome = session?.finalize(
+        now: now, startedAt: startedAt, companionID: companionID,
+        companionName: characterName, target: target)
     else {
+      session?.cancel()
       setBinding(.followingFocusedWindow, for: companionID)
       return
     }
-    let duration = max(0, now - startedAt)
+    completeSession(outcome, for: companionID, skill: skill, target: target, at: now)
+  }
 
-    switch skill {
-    case .listen:
-      let service = audioServices.removeValue(forKey: companionID)
-      let stoppedText = service?.stop() ?? ""
-      let transcript =
-        stoppedText.isEmpty ? (liveTranscripts[companionID] ?? "") : stoppedText
-      liveTranscripts.removeValue(forKey: companionID)
-      let fallback =
-        transcript.isEmpty
-        ? "Audio session on \(target.displayTitle) (\(SessionRecord.formatDuration(duration)))."
-        : "Transcribed \(target.displayTitle) (\(SessionRecord.formatDuration(duration)))."
-      let (summary, actions) = SessionSummarizer.summarize(
-        text: transcript, fallbackContext: fallback)
-      let record = SessionRecord(
-        kind: .listen,
-        characterID: companionID,
-        characterName: characterName,
-        appName: target.appName,
-        bundleIdentifier: target.bundleIdentifier,
-        windowTitle: target.windowTitle,
-        durationSeconds: duration,
-        transcript: transcript,
-        summary: summary,
-        actionItems: actions)
-      vault.add(record)
-      onEmitEvent?(companionID, WorkspaceEvent(.skillCompleted, at: now))
-      setBinding(
-        .completed(
-          target: target, skill: .listen,
-          summary: transcript.isEmpty ? "Audio session saved" : "Transcript & summary saved",
-          recordID: record.id, expiresAt: now + Self.completionBannerDuration),
-        for: companionID)
-
-    case .watch:
-      let context = watchContexts.removeValue(forKey: companionID)
-      let note =
-        context?.latestTitle.map { "Window updated to “\($0)”" }
-        ?? "Watched \(target.displayTitle) for \(SessionRecord.formatDuration(duration))."
-      let record = SessionRecord(
-        kind: .watch,
-        characterID: companionID,
-        characterName: characterName,
-        appName: target.appName,
-        bundleIdentifier: target.bundleIdentifier,
-        windowTitle: context?.latestTitle ?? target.windowTitle,
-        durationSeconds: duration,
-        summary: note)
-      vault.add(record)
-      onEmitEvent?(companionID, WorkspaceEvent(.skillCompleted, at: now))
-      setBinding(
-        .completed(
-          target: target, skill: .watch, summary: "Watch complete · Focus \(target.appName)",
-          recordID: record.id, expiresAt: now + Self.completionBannerDuration),
-        for: companionID)
-
-    case .focus:
-      let context = focusContexts.removeValue(forKey: companionID)
-      let focused = context?.focusedSeconds ?? duration
-      let ratio = duration > 0 ? Int((focused / duration * 100).rounded()) : 100
-      let summary =
-        "Focused on \(target.appName) for \(SessionRecord.formatDuration(focused)) (\(ratio)% on-target)."
-      let record = SessionRecord(
-        kind: .focus,
-        characterID: companionID,
-        characterName: characterName,
-        appName: target.appName,
-        bundleIdentifier: target.bundleIdentifier,
-        windowTitle: target.windowTitle,
-        durationSeconds: duration,
-        summary: summary)
-      vault.add(record)
-      onEmitEvent?(companionID, WorkspaceEvent(.skillCompleted, at: now))
-      setBinding(
-        .completed(
-          target: target, skill: .focus,
-          summary: "Focus logged (\(SessionRecord.formatDuration(focused)))",
-          recordID: record.id, expiresAt: now + Self.completionBannerDuration),
-        for: companionID)
-
-    case .snap, .stash:
-      setBinding(.followingFocusedWindow, for: companionID)
-    }
+  private func completeSession(
+    _ outcome: SkillCompletionOutcome,
+    for companionID: String,
+    skill: CompanionSkillKind,
+    target: WindowTargetCandidate,
+    at now: TimeInterval
+  ) {
+    sessions.removeValue(forKey: companionID)
+    vault.add(outcome.record, image: outcome.image)
+    onEmitEvent?(companionID, WorkspaceEvent(.skillCompleted, at: now))
+    setBinding(
+      .completed(
+        target: target, skill: skill, summary: outcome.bannerSummary,
+        recordID: outcome.record.id, expiresAt: now + Self.completionBannerDuration),
+      for: companionID)
   }
 
   private func cancelActiveSkill(for companionID: String, savePartial: Bool) {
     if savePartial,
       case .active(_, let skill, _, _, _) = binding(for: companionID),
-      skill == .listen || skill == .focus
+      skill.savesPartialOnCancel
     {
       finalizeActiveSkill(for: companionID)
       return
     }
-    if let service = audioServices.removeValue(forKey: companionID) {
-      _ = service.stop()
+    if let session = sessions.removeValue(forKey: companionID) {
+      session.cancel()
     }
-    liveTranscripts.removeValue(forKey: companionID)
-    watchContexts.removeValue(forKey: companionID)
-    focusContexts.removeValue(forKey: companionID)
   }
 
   private func setBinding(_ state: CompanionBindingState, for companionID: String) {
+    let existing = binding(for: companionID)
+    guard existing != state else { return }
     if case .followingFocusedWindow = state {
       bindings.removeValue(forKey: companionID)
     } else {
@@ -342,6 +226,8 @@ final class SkillCoordinator {
 
   private func updateClock() {
     if bindings.isEmpty {
+      tickTask?.cancel()
+      tickTask = nil
       tickTimer?.invalidate()
       tickTimer = nil
       return
@@ -356,30 +242,25 @@ final class SkillCoordinator {
   }
 
   private func tick() {
+    guard tickTask == nil else { return }
     let windowIDs = Set(bindings.values.compactMap { $0.boundTarget?.windowID })
     guard !windowIDs.isEmpty else {
       bindings.removeAll()
       updateClock()
       return
     }
-    let primaryTop = NSScreen.screens.first?.frame.maxY ?? 0
-    metadataQueue.async { [weak self] in
-      var snapshots: [CGWindowID: (frame: CGRect, title: String?)] = [:]
-      for windowID in windowIDs {
-        if let snapshot = WindowTargetResolver.currentSnapshot(
-          for: windowID, primaryScreenTop: primaryTop)
-        {
-          snapshots[windowID] = snapshot
-        }
-      }
-      Task { @MainActor [weak self] in
-        self?.applyTickSnapshots(snapshots)
-      }
+    let primaryTop = Double(NSScreen.screens.first?.frame.maxY ?? 0)
+    tickTask = Task { @MainActor [weak self] in
+      let snapshots = await WindowTargetMetadata.shared.snapshots(
+        for: windowIDs, primaryScreenTop: primaryTop)
+      guard !Task.isCancelled, let self else { return }
+      self.tickTask = nil
+      self.applyTickSnapshots(snapshots)
     }
   }
 
   private func applyTickSnapshots(
-    _ snapshots: [CGWindowID: (frame: CGRect, title: String?)]
+    _ snapshots: [CGWindowID: WindowTargetSnapshot]
   ) {
     let now = ProcessInfo.processInfo.systemUptime
     let frontmostPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
@@ -420,88 +301,393 @@ final class SkillCoordinator {
         if let liveFrame = snapshot?.frame {
           target.frame = liveFrame
         }
-        switch skill {
-        case .listen:
-          if snapshot == nil {
-            finalizeActiveSkill(for: companionID)
-          } else {
-            let elapsed = SessionRecord.formatDuration(now - startedAt)
-            let prefix = "\(elapsed) · "
-            let cleanDetail =
-              detail.hasPrefix(prefix)
-              ? detail
-              : "\(elapsed) · \(detail.replacingOccurrences(of: #"^\d{2}:\d{2} · "#, with: "", options: .regularExpression))"
-            setBinding(
-              .active(
-                target: target, skill: .listen, startedAt: startedAt,
-                statusDetail: cleanDetail, audioLevel: audioLevel),
-              for: companionID)
-          }
-
-        case .watch:
-          guard let snapshot else {
-            finalizeActiveSkill(for: companionID)
-            continue
-          }
-          var context =
-            watchContexts[companionID]
-            ?? WatchContext(initialTitle: target.windowTitle, initialFrame: snapshot.frame)
-          if let currentTitle = snapshot.title, currentTitle != context.initialTitle {
-            context.sawChange = true
-            context.latestTitle = currentTitle
-            if context.changedAt == 0 { context.changedAt = now }
-          }
-          if abs(snapshot.frame.width - context.initialFrame.width) > 12
-            || abs(snapshot.frame.height - context.initialFrame.height) > 12
-          {
-            context.sawChange = true
-            if context.changedAt == 0 { context.changedAt = now }
-          }
-          watchContexts[companionID] = context
-          if context.sawChange && now - context.changedAt >= 1.5 {
-            finalizeActiveSkill(for: companionID)
-          } else {
-            let elapsed = SessionRecord.formatDuration(now - startedAt)
-            setBinding(
-              .active(
-                target: target, skill: .watch, startedAt: startedAt,
-                statusDetail: "Watching \(target.appName) · \(elapsed)"),
-              for: companionID)
-          }
-
-        case .focus:
-          guard var context = focusContexts[companionID] else { continue }
-          let dt = max(0, now - context.lastTickAt)
-          context.lastTickAt = now
-          let isTargetActive = frontmostPID == target.processID
-          if isTargetActive {
-            context.focusedSeconds += dt
-            context.awaySince = nil
-          } else if context.awaySince == nil {
-            context.awaySince = now
-          }
-          focusContexts[companionID] = context
-          let remaining = Self.focusSprintDuration - (now - startedAt)
-          if remaining <= 0 {
-            finalizeActiveSkill(for: companionID)
-          } else {
-            let countdown = SessionRecord.formatDuration(remaining)
-            let awayDuration = context.awaySince.map { now - $0 } ?? 0
-            let status =
-              awayDuration >= Self.distractionThresholdSeconds
-              ? "Come back to \(target.appName) 👀 · \(countdown)"
-              : "Focus · \(countdown) left"
-            setBinding(
-              .active(
-                target: target, skill: .focus, startedAt: startedAt, statusDetail: status),
-              for: companionID)
-          }
-
-        case .snap, .stash:
-          break
+        guard let session = sessions[companionID] else { continue }
+        let disposition = session.tick(
+          now: now,
+          startedAt: startedAt,
+          currentDetail: detail,
+          currentAudioLevel: audioLevel,
+          target: target,
+          snapshot: snapshot,
+          frontmostPID: frontmostPID)
+        switch disposition {
+        case .completeNow:
+          finalizeActiveSkill(for: companionID)
+        case .keepRunning(let updatedDetail, let updatedAudioLevel):
+          setBinding(
+            .active(
+              target: target, skill: skill, startedAt: startedAt,
+              statusDetail: updatedDetail, audioLevel: updatedAudioLevel),
+            for: companionID)
         }
       }
     }
     updateClock()
   }
+}
+
+private struct SkillCompletionOutcome {
+  let record: SessionRecord
+  let image: CGImage?
+  let bannerSummary: String
+}
+
+private enum SkillTickDisposition {
+  case keepRunning(statusDetail: String, audioLevel: Double = 0)
+  case completeNow
+}
+
+@MainActor
+private protocol ActiveSkillSession: AnyObject {
+  var initialStatusDetail: String { get }
+  func start()
+  func tick(
+    now: TimeInterval,
+    startedAt: TimeInterval,
+    currentDetail: String,
+    currentAudioLevel: Double,
+    target: WindowTargetCandidate,
+    snapshot: WindowTargetSnapshot?,
+    frontmostPID: pid_t?
+  ) -> SkillTickDisposition
+  func finalize(
+    now: TimeInterval,
+    startedAt: TimeInterval,
+    companionID: String,
+    companionName: String,
+    target: WindowTargetCandidate
+  ) -> SkillCompletionOutcome?
+  func cancel()
+}
+
+@MainActor
+private final class SnapSkillSession: ActiveSkillSession {
+  let companionID: String
+  let companionName: String
+  let target: WindowTargetCandidate
+  let onComplete: (SkillCompletionOutcome) -> Void
+  private var captureTask: Task<Void, Never>?
+
+  init(
+    companionID: String,
+    companionName: String,
+    target: WindowTargetCandidate,
+    onComplete: @escaping (SkillCompletionOutcome) -> Void
+  ) {
+    self.companionID = companionID
+    self.companionName = companionName
+    self.target = target
+    self.onComplete = onComplete
+  }
+
+  var initialStatusDetail: String {
+    "Capturing \(target.appName)…"
+  }
+
+  func start() {
+    let target = self.target
+    let companionID = self.companionID
+    let companionName = self.companionName
+    captureTask = Task { @MainActor [weak self] in
+      let result = await WindowSnapshotService.capture(target: target)
+      guard !Task.isCancelled, let self else { return }
+      if let cgImage = result.image {
+        let nsImage = NSImage(
+          cgImage: cgImage,
+          size: NSSize(width: cgImage.width, height: cgImage.height))
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.writeObjects([nsImage])
+        if !result.extractedText.isEmpty {
+          pasteboard.setString(result.extractedText, forType: .string)
+        }
+      }
+      let record = SessionRecord(
+        kind: .snap,
+        characterID: companionID,
+        characterName: companionName,
+        appName: target.appName,
+        bundleIdentifier: target.bundleIdentifier,
+        windowTitle: target.windowTitle,
+        extractedText: result.extractedText,
+        summary: result.summary,
+        actionItems: result.actionItems)
+      let banner =
+        result.image == nil
+        ? "Permission needed · View details"
+        : (result.extractedText.isEmpty
+          ? "Snapshot copied & saved"
+          : "Captured + OCR text ready")
+      self.onComplete(
+        SkillCompletionOutcome(record: record, image: result.image, bannerSummary: banner))
+    }
+  }
+
+  func tick(
+    now: TimeInterval,
+    startedAt: TimeInterval,
+    currentDetail: String,
+    currentAudioLevel: Double,
+    target: WindowTargetCandidate,
+    snapshot: WindowTargetSnapshot?,
+    frontmostPID: pid_t?
+  ) -> SkillTickDisposition {
+    .keepRunning(statusDetail: currentDetail, audioLevel: currentAudioLevel)
+  }
+
+  func finalize(
+    now: TimeInterval,
+    startedAt: TimeInterval,
+    companionID: String,
+    companionName: String,
+    target: WindowTargetCandidate
+  ) -> SkillCompletionOutcome? {
+    captureTask?.cancel()
+    captureTask = nil
+    return nil
+  }
+
+  func cancel() {
+    captureTask?.cancel()
+    captureTask = nil
+  }
+}
+
+@MainActor
+private final class ListenSkillSession: ActiveSkillSession {
+  let target: WindowTargetCandidate
+  let onLiveUpdate: (String, Double) -> Void
+  private var service: AudioTranscriptionService?
+  private var liveTranscript = ""
+  private var latestStatusMessage: String
+
+  init(target: WindowTargetCandidate, onLiveUpdate: @escaping (String, Double) -> Void) {
+    self.target = target
+    self.onLiveUpdate = onLiveUpdate
+    self.latestStatusMessage = "Listening to \(target.appName)…"
+  }
+
+  var initialStatusDetail: String {
+    latestStatusMessage
+  }
+
+  func start() {
+    let service = AudioTranscriptionService(target: target) { [weak self] update in
+      Task { @MainActor [weak self] in
+        guard let self else { return }
+        self.liveTranscript = update.transcript
+        self.latestStatusMessage = update.statusMessage
+        self.onLiveUpdate(update.statusMessage, update.audioLevel)
+      }
+    }
+    self.service = service
+    Task {
+      await service.start()
+    }
+  }
+
+  func tick(
+    now: TimeInterval,
+    startedAt: TimeInterval,
+    currentDetail: String,
+    currentAudioLevel: Double,
+    target: WindowTargetCandidate,
+    snapshot: WindowTargetSnapshot?,
+    frontmostPID: pid_t?
+  ) -> SkillTickDisposition {
+    guard snapshot != nil else { return .completeNow }
+    let elapsed = SessionRecord.formatDuration(now - startedAt)
+    return .keepRunning(
+      statusDetail: "\(elapsed) · \(latestStatusMessage)",
+      audioLevel: currentAudioLevel)
+  }
+
+  func finalize(
+    now: TimeInterval,
+    startedAt: TimeInterval,
+    companionID: String,
+    companionName: String,
+    target: WindowTargetCandidate
+  ) -> SkillCompletionOutcome? {
+    let duration = max(0, now - startedAt)
+    let stoppedText = service?.stop() ?? ""
+    service = nil
+    let transcript = stoppedText.isEmpty ? liveTranscript : stoppedText
+    let fallback =
+      transcript.isEmpty
+      ? "Audio session on \(target.displayTitle) (\(SessionRecord.formatDuration(duration)))."
+      : "Transcribed \(target.displayTitle) (\(SessionRecord.formatDuration(duration)))."
+    let (summary, actions) = SessionSummarizer.summarize(
+      text: transcript, fallbackContext: fallback)
+    let record = SessionRecord(
+      kind: .listen,
+      characterID: companionID,
+      characterName: companionName,
+      appName: target.appName,
+      bundleIdentifier: target.bundleIdentifier,
+      windowTitle: target.windowTitle,
+      durationSeconds: duration,
+      transcript: transcript,
+      summary: summary,
+      actionItems: actions)
+    let banner = transcript.isEmpty ? "Audio session saved" : "Transcript & summary saved"
+    return SkillCompletionOutcome(record: record, image: nil, bannerSummary: banner)
+  }
+
+  func cancel() {
+    _ = service?.stop()
+    service = nil
+  }
+}
+
+@MainActor
+private final class WatchSkillSession: ActiveSkillSession {
+  let target: WindowTargetCandidate
+  private let initialTitle: String?
+  private let initialFrame: CGRect
+  private var sawChange = false
+  private var changedAt: TimeInterval = 0
+  private var latestTitle: String?
+
+  init(target: WindowTargetCandidate) {
+    self.target = target
+    self.initialTitle = target.windowTitle
+    self.initialFrame = target.frame
+  }
+
+  var initialStatusDetail: String {
+    "Watching \(target.appName)…"
+  }
+
+  func start() {}
+
+  func tick(
+    now: TimeInterval,
+    startedAt: TimeInterval,
+    currentDetail: String,
+    currentAudioLevel: Double,
+    target: WindowTargetCandidate,
+    snapshot: WindowTargetSnapshot?,
+    frontmostPID: pid_t?
+  ) -> SkillTickDisposition {
+    guard let snapshot else { return .completeNow }
+    if let currentTitle = snapshot.title, currentTitle != initialTitle {
+      sawChange = true
+      latestTitle = currentTitle
+      if changedAt == 0 { changedAt = now }
+    }
+    if abs(snapshot.frame.width - initialFrame.width) > 12
+      || abs(snapshot.frame.height - initialFrame.height) > 12
+    {
+      sawChange = true
+      if changedAt == 0 { changedAt = now }
+    }
+    if sawChange && now - changedAt >= 1.5 {
+      return .completeNow
+    }
+    let elapsed = SessionRecord.formatDuration(now - startedAt)
+    return .keepRunning(statusDetail: "Watching \(target.appName) · \(elapsed)")
+  }
+
+  func finalize(
+    now: TimeInterval,
+    startedAt: TimeInterval,
+    companionID: String,
+    companionName: String,
+    target: WindowTargetCandidate
+  ) -> SkillCompletionOutcome? {
+    let duration = max(0, now - startedAt)
+    let note =
+      latestTitle.map { "Window updated to “\($0)”" }
+      ?? "Watched \(target.displayTitle) for \(SessionRecord.formatDuration(duration))."
+    let record = SessionRecord(
+      kind: .watch,
+      characterID: companionID,
+      characterName: companionName,
+      appName: target.appName,
+      bundleIdentifier: target.bundleIdentifier,
+      windowTitle: latestTitle ?? target.windowTitle,
+      durationSeconds: duration,
+      summary: note)
+    return SkillCompletionOutcome(
+      record: record, image: nil, bannerSummary: "Watch complete · Focus \(target.appName)")
+  }
+
+  func cancel() {}
+}
+
+@MainActor
+private final class FocusSkillSession: ActiveSkillSession {
+  let target: WindowTargetCandidate
+  private var lastTickAt: TimeInterval
+  private var focusedSeconds: Double = 0
+  private var awaySince: TimeInterval?
+
+  init(target: WindowTargetCandidate, startedAt: TimeInterval) {
+    self.target = target
+    self.lastTickAt = startedAt
+  }
+
+  var initialStatusDetail: String {
+    "Focus · 25:00 remaining"
+  }
+
+  func start() {}
+
+  func tick(
+    now: TimeInterval,
+    startedAt: TimeInterval,
+    currentDetail: String,
+    currentAudioLevel: Double,
+    target: WindowTargetCandidate,
+    snapshot: WindowTargetSnapshot?,
+    frontmostPID: pid_t?
+  ) -> SkillTickDisposition {
+    let dt = max(0, now - lastTickAt)
+    lastTickAt = now
+    if frontmostPID == target.processID {
+      focusedSeconds += dt
+      awaySince = nil
+    } else if awaySince == nil {
+      awaySince = now
+    }
+    let remaining = SkillCoordinator.focusSprintDuration - (now - startedAt)
+    if remaining <= 0 {
+      return .completeNow
+    }
+    let countdown = SessionRecord.formatDuration(remaining)
+    let awayDuration = awaySince.map { now - $0 } ?? 0
+    let status =
+      awayDuration >= SkillCoordinator.distractionThresholdSeconds
+      ? "Come back to \(target.appName) 👀 · \(countdown)"
+      : "Focus · \(countdown) left"
+    return .keepRunning(statusDetail: status)
+  }
+
+  func finalize(
+    now: TimeInterval,
+    startedAt: TimeInterval,
+    companionID: String,
+    companionName: String,
+    target: WindowTargetCandidate
+  ) -> SkillCompletionOutcome? {
+    let duration = max(0, now - startedAt)
+    let ratio = duration > 0 ? Int((focusedSeconds / duration * 100).rounded()) : 100
+    let summary =
+      "Focused on \(target.appName) for \(SessionRecord.formatDuration(focusedSeconds)) (\(ratio)% on-target)."
+    let record = SessionRecord(
+      kind: .focus,
+      characterID: companionID,
+      characterName: companionName,
+      appName: target.appName,
+      bundleIdentifier: target.bundleIdentifier,
+      windowTitle: target.windowTitle,
+      durationSeconds: duration,
+      summary: summary)
+    return SkillCompletionOutcome(
+      record: record, image: nil,
+      bannerSummary: "Focus logged (\(SessionRecord.formatDuration(focusedSeconds)))")
+  }
+
+  func cancel() {}
 }

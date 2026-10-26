@@ -25,6 +25,8 @@ final class AudioTranscriptionService: NSObject, @unchecked Sendable {
   private var latestTranscript = ""
   private var committedTranscript = ""
   private var lastLevelEmitTime: TimeInterval = 0
+  private var lastEmittedLevel: Double = -1
+  private var lastEmittedStatus = ""
   private var isStopped = false
 
   init(target: WindowTargetCandidate, onUpdate: @escaping @Sendable (Update) -> Void) {
@@ -164,14 +166,17 @@ final class AudioTranscriptionService: NSObject, @unchecked Sendable {
           self.latestTranscript = formatted
         }
         let fullText = self.combinedTranscriptLocked()
+        let snippet = Self.tailSnippet(from: fullText)
+        let message = snippet.isEmpty ? "Listening to \(self.target.appName)…" : snippet
+        self.lastEmittedStatus = message
+        self.lastEmittedLevel = 0.25
         self.lock.unlock()
 
-        let snippet = Self.tailSnippet(from: fullText)
         self.onUpdate(
           Update(
             transcript: fullText,
             audioLevel: 0.25,
-            statusMessage: snippet.isEmpty ? "Listening to \(self.target.appName)…" : snippet))
+            statusMessage: message))
       }
       if error != nil {
         self.restartSpeechTaskIfNeeded()
@@ -236,7 +241,17 @@ extension AudioTranscriptionService: SCStreamOutput {
         ? snippet
         : (rms > 0.04
           ? "Capturing audio from \(target.appName)…" : "Listening to \(target.appName)…")
-      onUpdate(Update(transcript: fullText, audioLevel: rms, statusMessage: message))
+      let shouldNotify: Bool = lock.withLock {
+        guard message != lastEmittedStatus || abs(rms - lastEmittedLevel) >= 0.025 else {
+          return false
+        }
+        lastEmittedStatus = message
+        lastEmittedLevel = rms
+        return true
+      }
+      if shouldNotify {
+        onUpdate(Update(transcript: fullText, audioLevel: rms, statusMessage: message))
+      }
     }
   }
 

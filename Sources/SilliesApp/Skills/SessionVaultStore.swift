@@ -4,14 +4,20 @@ import Observation
 import SilliesCore
 
 /// Persists captured window snapshots, transcripts, focus sprints, and stashed items locally.
+/// Views read prepared images from memory; disk reads, PNG encoding, and decoding run on `ioQueue`.
 @MainActor @Observable
 final class SessionVaultStore {
   private static let maxStoredRecords = 200
+  private static let maxCachedImages = 24
   private static let sessionsFilename = "sessions.json"
 
   private(set) var records: [SessionRecord] = []
+  private var cachedImages: [String: NSImage] = [:]
+  @ObservationIgnored private var cachedImageOrder: [String] = []
+  @ObservationIgnored private var pendingImageLoads: Set<String> = []
   let storageDirectory: URL
-  private let ioQueue = DispatchQueue(label: "app.sillies.session-vault", qos: .utility)
+  @ObservationIgnored private let ioQueue = DispatchQueue(
+    label: "app.sillies.session-vault", qos: .utility)
 
   init(directory: URL? = nil) {
     if let directory {
@@ -30,13 +36,19 @@ final class SessionVaultStore {
     if let image {
       let filename = "\(record.id.uuidString).png"
       updated.imageFilename = filename
+      let nsImage = NSImage(
+        cgImage: image, size: NSSize(width: image.width, height: image.height))
+      storeCachedImage(nsImage, for: filename)
       saveImageAsync(image, filename: filename)
     }
     records.insert(updated, at: 0)
     if records.count > Self.maxStoredRecords {
       let removed = records.suffix(from: Self.maxStoredRecords)
       for old in removed {
-        if let file = old.imageFilename { deleteImageAsync(filename: file) }
+        if let file = old.imageFilename {
+          evictCachedImage(for: file)
+          deleteImageAsync(filename: file)
+        }
       }
       records = Array(records.prefix(Self.maxStoredRecords))
     }
@@ -52,13 +64,19 @@ final class SessionVaultStore {
   func remove(id: UUID) {
     guard let index = records.firstIndex(where: { $0.id == id }) else { return }
     let removed = records.remove(at: index)
-    if let file = removed.imageFilename { deleteImageAsync(filename: file) }
+    if let file = removed.imageFilename {
+      evictCachedImage(for: file)
+      deleteImageAsync(filename: file)
+    }
     persistAsync()
   }
 
   func clearAll() {
     let files = records.compactMap(\.imageFilename)
     records.removeAll()
+    cachedImages.removeAll()
+    cachedImageOrder.removeAll()
+    pendingImageLoads.removeAll()
     for file in files { deleteImageAsync(filename: file) }
     persistAsync()
   }
@@ -72,9 +90,33 @@ final class SessionVaultStore {
     return storageDirectory.appendingPathComponent(filename)
   }
 
-  func loadImage(for record: SessionRecord) -> NSImage? {
-    guard let url = imageURL(for: record) else { return nil }
-    return NSImage(contentsOf: url)
+  /// Non-blocking cache lookup for SwiftUI view rendering.
+  func cachedImage(for record: SessionRecord) -> NSImage? {
+    guard let filename = record.imageFilename else { return nil }
+    return cachedImages[filename]
+  }
+
+  /// Decodes the snapshot PNG on `ioQueue` if not already in memory.
+  func prepareImage(for record: SessionRecord) {
+    guard let filename = record.imageFilename,
+      cachedImages[filename] == nil,
+      !pendingImageLoads.contains(filename),
+      let url = imageURL(for: record)
+    else { return }
+    pendingImageLoads.insert(filename)
+    ioQueue.async { [weak self] in
+      let decoded = Self.decodeCGImage(at: url)
+      Task { @MainActor [weak self] in
+        guard let self else { return }
+        self.pendingImageLoads.remove(filename)
+        guard let decoded,
+          self.records.contains(where: { $0.imageFilename == filename })
+        else { return }
+        let nsImage = NSImage(
+          cgImage: decoded, size: NSSize(width: decoded.width, height: decoded.height))
+        self.storeCachedImage(nsImage, for: filename)
+      }
+    }
   }
 
   func copyText(_ text: String) {
@@ -85,10 +127,51 @@ final class SessionVaultStore {
   }
 
   func copyImage(for record: SessionRecord) {
-    guard let image = loadImage(for: record) else { return }
-    let pasteboard = NSPasteboard.general
-    pasteboard.clearContents()
-    pasteboard.writeObjects([image])
+    if let cached = cachedImage(for: record) {
+      let pasteboard = NSPasteboard.general
+      pasteboard.clearContents()
+      pasteboard.writeObjects([cached])
+      return
+    }
+    guard let filename = record.imageFilename, let url = imageURL(for: record) else { return }
+    ioQueue.async { [weak self] in
+      guard let decoded = Self.decodeCGImage(at: url) else { return }
+      Task { @MainActor [weak self] in
+        let nsImage = NSImage(
+          cgImage: decoded, size: NSSize(width: decoded.width, height: decoded.height))
+        self?.storeCachedImage(nsImage, for: filename)
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.writeObjects([nsImage])
+      }
+    }
+  }
+
+  private func storeCachedImage(_ image: NSImage, for filename: String) {
+    if cachedImages[filename] == nil {
+      if cachedImageOrder.count >= Self.maxCachedImages {
+        let oldest = cachedImageOrder.removeFirst()
+        cachedImages.removeValue(forKey: oldest)
+      }
+      cachedImageOrder.append(filename)
+    }
+    cachedImages[filename] = image
+  }
+
+  private func evictCachedImage(for filename: String) {
+    cachedImages.removeValue(forKey: filename)
+    cachedImageOrder.removeAll { $0 == filename }
+    pendingImageLoads.remove(filename)
+  }
+
+  private nonisolated static func decodeCGImage(at url: URL) -> CGImage? {
+    dispatchPrecondition(condition: .notOnQueue(.main))
+    return autoreleasepool {
+      guard let data = try? Data(contentsOf: url),
+        let rep = NSBitmapImageRep(data: data)
+      else { return nil }
+      return rep.cgImage
+    }
   }
 
   private func loadSynchronously() {
@@ -106,7 +189,10 @@ final class SessionVaultStore {
     let directory = storageDirectory
     let fileURL = directory.appendingPathComponent(Self.sessionsFilename)
     ioQueue.async {
-      try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+      dispatchPrecondition(condition: .notOnQueue(.main))
+      try? FileManager.default.createDirectory(
+        at: directory, withIntermediateDirectories: true,
+        attributes: [.posixPermissions: 0o700])
       let encoder = JSONEncoder()
       encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
       encoder.dateEncodingStrategy = .iso8601
@@ -120,7 +206,10 @@ final class SessionVaultStore {
     let directory = storageDirectory
     let fileURL = directory.appendingPathComponent(filename)
     ioQueue.async {
-      try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+      dispatchPrecondition(condition: .notOnQueue(.main))
+      try? FileManager.default.createDirectory(
+        at: directory, withIntermediateDirectories: true,
+        attributes: [.posixPermissions: 0o700])
       let rep = NSBitmapImageRep(cgImage: cgImage)
       if let data = rep.representation(using: .png, properties: [:]) {
         try? data.write(to: fileURL, options: .atomic)
@@ -131,6 +220,7 @@ final class SessionVaultStore {
   private func deleteImageAsync(filename: String) {
     let fileURL = storageDirectory.appendingPathComponent(filename)
     ioQueue.async {
+      dispatchPrecondition(condition: .notOnQueue(.main))
       try? FileManager.default.removeItem(at: fileURL)
     }
   }

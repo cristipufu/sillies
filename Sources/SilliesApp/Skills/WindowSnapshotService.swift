@@ -27,28 +27,32 @@ enum WindowSnapshotService {
     }
   }
 
-  /// Clears stale ad-hoc CDHash entries from macOS TCC so a freshly built local app bundle
-  /// can be cleanly authorized in System Settings › Privacy & Security › Screen & System Audio Recording.
+  /// Clears stale ad-hoc CDHash entries from macOS TCC on a background worker so a freshly built
+  /// local app bundle can be cleanly authorized without blocking the UI thread.
   static func resetAndRequestPermission() {
-    if let bundleID = Bundle.main.bundleIdentifier {
-      let process = Process()
-      process.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
-      process.arguments = ["reset", "ScreenCapture", bundleID]
-      try? process.run()
-      process.waitUntilExit()
+    let bundleID = Bundle.main.bundleIdentifier
+    Task.detached(priority: .userInitiated) {
+      if let bundleID {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
+        process.arguments = ["reset", "ScreenCapture", bundleID]
+        try? process.run()
+        process.waitUntilExit()
+      }
+      await MainActor.run {
+        _ = CGRequestScreenCaptureAccess()
+        openSystemSettings()
+      }
     }
-    _ = CGRequestScreenCaptureAccess()
-    openSystemSettings()
   }
 
   static func capture(target: WindowTargetCandidate) async -> WindowSnapshotResult {
+    let fallback = "Captured window snapshot of \(target.displayTitle)."
     if target.processID == ProcessInfo.processInfo.processIdentifier,
       let localImage = await captureLocalApplicationWindow(windowID: target.windowID)
     {
-      let recognizedText = await recognizeText(in: localImage)
-      let fallback = "Captured window snapshot of \(target.displayTitle)."
-      let (summary, actions) = SessionSummarizer.summarize(
-        text: recognizedText, fallbackContext: fallback)
+      let (recognizedText, summary, actions) = await recognizeAndSummarize(
+        in: localImage, fallbackContext: fallback)
       return WindowSnapshotResult(
         image: localImage,
         extractedText: recognizedText,
@@ -78,10 +82,8 @@ enum WindowSnapshotService {
         actionItems: [],
         errorDescription: "Window capture unavailable")
     }
-    let recognizedText = await recognizeText(in: cgImage)
-    let fallback = "Captured window snapshot of \(target.displayTitle)."
-    let (summary, actions) = SessionSummarizer.summarize(
-      text: recognizedText, fallbackContext: fallback)
+    let (recognizedText, summary, actions) = await recognizeAndSummarize(
+      in: cgImage, fallbackContext: fallback)
     return WindowSnapshotResult(
       image: cgImage,
       extractedText: recognizedText,
@@ -128,20 +130,26 @@ enum WindowSnapshotService {
     return rep.cgImage
   }
 
-  private static func recognizeText(in image: CGImage) async -> String {
+  private static func recognizeAndSummarize(
+    in image: CGImage, fallbackContext: String
+  ) async -> (String, String, [String]) {
     await Task.detached(priority: .userInitiated) {
       let request = VNRecognizeTextRequest()
       request.recognitionLevel = .accurate
       request.usesLanguageCorrection = true
       let handler = VNImageRequestHandler(cgImage: image, options: [:])
+      let recognizedText: String
       do {
         try handler.perform([request])
         let observations = request.results ?? []
         let lines = observations.compactMap { $0.topCandidates(1).first?.string }
-        return lines.joined(separator: "\n")
+        recognizedText = lines.joined(separator: "\n")
       } catch {
-        return ""
+        recognizedText = ""
       }
+      let (summary, actions) = SessionSummarizer.summarize(
+        text: recognizedText, fallbackContext: fallbackContext)
+      return (recognizedText, summary, actions)
     }.value
   }
 }

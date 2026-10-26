@@ -62,6 +62,32 @@ public enum CompanionSkillKind: String, Codable, CaseIterable, Sendable, Identif
     case .stash: .stashReceived
     }
   }
+
+  public var completionHeadline: String {
+    switch self {
+    case .snap: "Snapshot & OCR Saved"
+    case .listen: "Transcript & Notes Saved"
+    case .watch: "Window Activity Detected"
+    case .focus: "Focus Sprint Logged"
+    case .stash: "Saved to Pocket Stash"
+    }
+  }
+
+  public var stopActionTitle: String? {
+    switch self {
+    case .listen: "Finish"
+    case .watch, .focus: "Done"
+    case .snap, .stash: nil
+    }
+  }
+
+  public var offersTargetActivationOnCompletion: Bool {
+    self == .watch
+  }
+
+  public var savesPartialOnCancel: Bool {
+    self == .listen || self == .focus
+  }
 }
 
 /// Metadata for a candidate window under a dragged companion.
@@ -271,6 +297,8 @@ public struct SessionRecord: Codable, Identifiable, Equatable, Sendable {
 public enum SessionSummarizer: Sendable {
   private static let maxSummarySentences = 3
   private static let maxActionItems = 5
+  private static let maxInputCharacters = 32_768
+  private static let maxAnalyzedSentences = 240
   private static let actionKeywords = [
     "todo", "to-do", "action item", "need to", "needs to", "we should", "let's", "must",
     "follow up", "deadline", "next step", "will send", "will fix",
@@ -283,15 +311,18 @@ public enum SessionSummarizer: Sendable {
   public static func summarize(text: String, fallbackContext: String) -> (
     summary: String, actionItems: [String]
   ) {
-    let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    let cleaned = String(
+      text.trimmingCharacters(in: .whitespacesAndNewlines).prefix(maxInputCharacters))
     guard !cleaned.isEmpty else {
       return (fallbackContext, [])
     }
-    let rawLines =
+    let rawLines = Array(
       cleaned
-      .components(separatedBy: CharacterSet.newlines.union(CharacterSet(charactersIn: ".!?")))
-      .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-      .filter { $0.count >= 12 }
+        .components(separatedBy: CharacterSet.newlines.union(CharacterSet(charactersIn: ".!?")))
+        .lazy
+        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        .filter { $0.count >= 12 }
+        .prefix(maxAnalyzedSentences))
 
     guard !rawLines.isEmpty else {
       let snippet = String(cleaned.prefix(180))

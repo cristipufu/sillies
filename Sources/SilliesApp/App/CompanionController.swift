@@ -12,11 +12,6 @@ final class CompanionController {
   private static let standardMotionFPS = 60
   private static let lowPowerMotionFPS = 30
   private static let neighborCheckCooldown: Double = 2.0
-  private static let radialDwellDelay: Double = 0.24
-  private static let radialDwellTolerance: Double = 18
-  private static let radialDismissDistance: Double = 148
-  private static let minimumDragDistanceForWheel: Double = 14
-  private static let windowDropInteriorInset: Double = 14
 
   let settings: AppSettings
   let tracker: WorkspaceTracker
@@ -28,11 +23,7 @@ final class CompanionController {
   @ObservationIgnored var onOpenVault: ((UUID?) -> Void)?
   @ObservationIgnored private let additionalEventProducers: [any WorkspaceEventProducer]
   @ObservationIgnored private let interaction = CompanionInteraction()
-  @ObservationIgnored private let radialWheel = RadialWheelController()
-  @ObservationIgnored private let windowHighlight = WindowDropHighlightController()
-  @ObservationIgnored private let dragTargets: DragWindowTargetResolver
-  @ObservationIgnored private let dragWindowSnapshot: DragWindowSnapshot
-  @ObservationIgnored private let dragMetrics: DragResponseMetrics
+  @ObservationIgnored private let dragTargeting: CompanionDragTargetingController
   private(set) var liveCount = 0
   private(set) var movingCount = 0
   private(set) var lastReaction = "Settling in"
@@ -40,14 +31,6 @@ final class CompanionController {
   @ObservationIgnored private var companions: [CompanionInstance] = []
   @ObservationIgnored private var motionTimer: Timer?
   @ObservationIgnored private var deadlineTimer: Timer?
-  @ObservationIgnored private var dragDwellTimer: Timer?
-  @ObservationIgnored private var draggedCompanionID: String?
-  @ObservationIgnored private var draggedTarget: WindowTargetCandidate?
-  @ObservationIgnored private var radialLayout: RadialSkillMenuLayout?
-  @ObservationIgnored private var hoveredSkill: CompanionSkillKind?
-  @ObservationIgnored private var dwellAnchor = CGPoint.zero
-  @ObservationIgnored private var wheelRequested = false
-  @ObservationIgnored private var dwellTargetID: UInt32?
   @ObservationIgnored private var motionFPS = 0
   @ObservationIgnored private var started = false
   @ObservationIgnored private var nextNeighborCheck: Double = 0
@@ -67,18 +50,7 @@ final class CompanionController {
       enabled:
         ProcessInfo.processInfo.arguments.contains("--trace-drag")
         || ProcessInfo.processInfo.arguments.contains("--companion-drag-test"))
-    let snapshot = DragWindowSnapshot()
-    self.dragWindowSnapshot = snapshot
-    self.dragMetrics = metrics
-    self.dragTargets = DragWindowTargetResolver(
-      hitTest: { point, below in
-        metrics.measure(.hitTest) { snapshot.hitTest(at: point, below: below) }
-      },
-      dropHitTest: { point, below in
-        metrics.measure(.releaseHitTest) {
-          NSWindow.windowNumber(at: point, belowWindowWithWindowNumber: below)
-        }
-      })
+    self.dragTargeting = CompanionDragTargetingController(metrics: metrics)
     self.settings = settings
     self.renderers = renderers
     self.animations = animations
@@ -121,14 +93,25 @@ final class CompanionController {
   func start() {
     guard !started else { return }
     started = true
-    dragTargets.onTargetChanged = { [weak self] target in self?.dragTargetChanged(target) }
-    dragWindowSnapshot.onChange = { [weak self] in self?.dragTargets.invalidateWindowStack() }
+    dragTargeting.companionLookup = { [weak self] id in
+      self?.companions.first(where: { $0.definition.id == id })
+    }
+    dragTargeting.excludedOverlayWindowNumbers = { [weak self] in
+      self?.companionAndHUDWindowNumbers() ?? []
+    }
+    dragTargeting.currentTrackerWindowFrame = { [weak self] in
+      self?.tracker.windowFrame
+    }
+    dragTargeting.currentCharacterSize = { [weak self] in
+      self?.settings.size ?? 64
+    }
+    dragTargeting.start()
     settings.onChange = { [weak self] in self?.reconcile() }
     tracker.onEvent = { [weak self] in self?.route($0) }
     tracker.onGeometryChanged = { [weak self] in self?.geometryChanged() }
     tracker.onEnvironmentChanged = { [weak self] in self?.reconcile() }
     tracker.onApplicationChanged = { [weak self] in
-      self?.dragWindowSnapshot.refresh()
+      self?.dragTargeting.windowSnapshot.refresh()
       self?.reconcile()
     }
     skills.onBindingChanged = { [weak self] companionID, state in
@@ -141,13 +124,14 @@ final class CompanionController {
       case .awaitingSelection: break
       default: pet.selectionPerchTarget = nil
       }
-      if previousWindowID != pet.attachmentTarget?.windowID
+      let targetChanged =
+        previousWindowID != pet.attachmentTarget?.windowID
         || previousFrame != pet.attachmentTarget?.frame
-      {
+      if targetChanged {
         self.updateSurfaces(animated: true)
       }
       pet.refreshHUD()
-      if self.interaction.isEnabled { self.interaction.refresh() }
+      if targetChanged, self.interaction.isEnabled { self.interaction.refresh() }
     }
     skills.onEmitEvent = { [weak self] companionID, event in
       guard let self, let pet = self.companions.first(where: { $0.definition.id == companionID })
@@ -170,9 +154,11 @@ final class CompanionController {
   }
 
   func stop() {
-    clearDragSkillTargeting(closeWheel: true)
-    dragTargets.onTargetChanged = nil
-    dragWindowSnapshot.onChange = nil
+    dragTargeting.stop()
+    dragTargeting.companionLookup = nil
+    dragTargeting.excludedOverlayWindowNumbers = nil
+    dragTargeting.currentTrackerWindowFrame = nil
+    dragTargeting.currentCharacterSize = nil
     ApplicationIconCache.shared.cancelPending()
     skills.onBindingChanged = nil
     skills.onEmitEvent = nil
@@ -223,9 +209,9 @@ final class CompanionController {
   }
 
   var dragOverlayDiagnostics: (windowID: UInt32?, highlight: Bool, wheel: Bool) {
-    (draggedTarget?.windowID, windowHighlight.isVisible, radialWheel.isVisible)
+    dragTargeting.diagnostics
   }
-  var dragTimingSummary: String { dragMetrics.summary }
+  var dragTimingSummary: String { dragTargeting.metrics.summary }
 
   func exportWindowScene(_ window: NSWindow, name: String) {
     let url = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
@@ -274,7 +260,7 @@ final class CompanionController {
   private func reconcile() {
     reconcileEnabledCharacters()
     if !shouldRun || companions.isEmpty {
-      clearDragSkillTargeting(closeWheel: false)
+      dragTargeting.clear(closeWheel: false)
       ApplicationIconCache.shared.cancelPending()
       skills.stopAll()
     }
@@ -300,8 +286,7 @@ final class CompanionController {
       producer.configure(enabled: activeProducers, tracksWindows: settings.followsWindows)
     }
     if activeProducers {
-      windowHighlight.prepare()
-      radialWheel.prepare()
+      dragTargeting.prepareOverlays()
       tracker.refreshInputBackgrounds()
     }
     interaction.configure(
@@ -343,8 +328,8 @@ final class CompanionController {
 
   private func reconcileEnabledCharacters() {
     for pet in companions where !settings.enabledCharacters.contains(pet.definition.id) {
-      if draggedCompanionID == pet.definition.id {
-        clearDragSkillTargeting(closeWheel: false)
+      if dragTargeting.draggedCompanionID == pet.definition.id {
+        dragTargeting.clear(closeWheel: false)
       }
       skills.unbind(companionID: pet.definition.id)
       pet.cancelPendingDropTarget()
@@ -406,11 +391,8 @@ final class CompanionController {
         ?? (self.settings.followsWindows ? self.currentFocusedWindowCandidate() : nil)
       pet.isPickedUp = true
       pet.dropReturn.cancel()
-      self.clearDragSkillTargeting(closeWheel: false)
-      self.draggedCompanionID = pet.definition.id
-      self.dragWindowSnapshot.start(seed: self.currentFocusedWindowCandidate())
-      self.dragTargets.start()
-      self.dwellAnchor = NSEvent.mouseLocation
+      self.dragTargeting.beginDrag(
+        for: pet, seed: self.currentFocusedWindowCandidate(), pointer: NSEvent.mouseLocation)
       pet.hud.hide()
       self.interactionCounts[.pickedUp, default: 0] += 1
       pet.tween = nil
@@ -427,9 +409,9 @@ final class CompanionController {
       guard let self, let pet else { return }
       let destination = CGPoint(
         x: pet.pickupPosition.x + delta.x, y: pet.pickupPosition.y + delta.y)
-      self.dragMetrics.measure(.movement) { pet.place(at: destination) }
-      self.dragMetrics.measure(.targeting) {
-        self.updateDragSkillTargeting(for: pet, at: NSEvent.mouseLocation)
+      self.dragTargeting.metrics.measure(.movement) { pet.place(at: destination) }
+      self.dragTargeting.metrics.measure(.targeting) {
+        self.dragTargeting.updateDrag(for: pet, at: NSEvent.mouseLocation)
       }
     }
     pet.view.onDrop = { [weak self, weak pet] dragged in
@@ -440,20 +422,14 @@ final class CompanionController {
 
   private func handleDrop(_ pet: CompanionInstance, dragged: Bool) {
     let pointer = NSEvent.mouseLocation
-    let excluded = excludedWindowNumbers()
-    let selectedSkill = hoveredSkill
-    let radialWasOpen = radialLayout != nil
-    let dropTarget =
-      dragged && !radialWasOpen
-      ? dragTargets.dropTarget(at: pointer, excluding: excluded) : nil
-    let cachedTarget =
-      dragged
-      ? ((radialWasOpen ? draggedTarget : nil)
-        ?? dropTarget?.cached) : nil
+    let evaluation = dragTargeting.evaluateDrop(dragged: dragged, at: pointer)
+    let selectedSkill = evaluation.selectedSkill
+    let radialWasOpen = evaluation.radialWasOpen
+    let dropTarget = evaluation.pendingDrop
+    let cachedTarget = evaluation.cachedTarget
     let fallbackTarget = pet.pickupWindowTarget
     let releasePosition = pet.position
     let offerSkills = radialWasOpen || releasePosition.y < pet.pickupPosition.y
-    clearDragSkillTargeting(closeWheel: false)
     pet.isPickedUp = false
     interactionCounts[dragged ? .dropped : .pet, default: 0] += 1
     guard dragged else {
@@ -480,7 +456,7 @@ final class CompanionController {
           pointer: pointer, releasePosition: releasePosition)
       } else {
         // Fast drops must not block input waiting for a WindowServer reply.
-        let resolver = self.dragTargets
+        let resolver = self.dragTargeting.targets
         pet.pendingDropTarget = Task { [weak self, weak pet] in
           let target: WindowTargetCandidate?
           if let dropTarget {
@@ -513,12 +489,18 @@ final class CompanionController {
     offerSkills: Bool, pointer: CGPoint, releasePosition: CGPoint
   ) {
     guard let target else { return }
+    let currentAttachedFrame =
+      pet.attachedWindowID == tracker.windowID ? tracker.windowFrame : nil
     if let selectedSkill {
       skills.startSkill(
         selectedSkill, for: pet.definition.id, companionName: pet.definition.name, target: target)
     } else if offerSkills
-      || shouldBindOnDrop(
-        pet: pet, target: target, pointer: pointer, companionPoint: releasePosition)
+      || DropReturnPlan.shouldBindOnDrop(
+        targetFrame: target.frame,
+        currentAttachedWindowFrame: currentAttachedFrame,
+        pointer: pointer,
+        companionPoint: releasePosition,
+        characterSize: settings.size)
     {
       pet.selectionPerchTarget = pet.pickupWindowTarget
       skills.presentSelectionPrompt(
@@ -526,14 +508,8 @@ final class CompanionController {
     }
   }
 
-  private func excludedWindowNumbers() -> Set<Int> {
+  private func companionAndHUDWindowNumbers() -> Set<Int> {
     var excluded = Set(companions.map { $0.panel.windowNumber })
-    if let wheelNumber = radialWheel.windowNumber {
-      excluded.insert(wheelNumber)
-    }
-    if let highlightNumber = windowHighlight.windowNumber {
-      excluded.insert(highlightNumber)
-    }
     for pet in companions {
       if let hudNumber = pet.hud.windowNumber {
         excluded.insert(hudNumber)
@@ -544,180 +520,13 @@ final class CompanionController {
 
   private func currentFocusedWindowCandidate() -> WindowTargetCandidate? {
     guard let windowID = tracker.windowID, let frame = tracker.windowFrame else { return nil }
-    let pid = NSWorkspace.shared.frontmostApplication?.processIdentifier ?? 0
     return WindowTargetCandidate(
-      windowID: windowID, processID: pid, appName: tracker.applicationName,
+      windowID: windowID, processID: tracker.processID, appName: tracker.applicationName,
       bundleIdentifier: tracker.bundleIdentifier, windowTitle: nil, frame: frame)
   }
 
-  private func updateDragSkillTargeting(for pet: CompanionInstance, at pointer: CGPoint) {
-    if let layout = radialLayout, let target = draggedTarget {
-      let distance = hypot(pointer.x - layout.anchor.x, pointer.y - layout.anchor.y)
-      if distance > Self.radialDismissDistance {
-        radialLayout = nil
-        hoveredSkill = nil
-        wheelRequested = false
-        radialWheel.hide()
-        dwellAnchor = pointer
-      } else {
-        let skill = layout.selectedSkill(at: pointer)
-        hoveredSkill = skill
-        dragMetrics.measure(.highlight) {
-          windowHighlight.show(target: target, hoveredSkill: skill)
-        }
-        dragMetrics.measure(.wheel) {
-          radialWheel.show(
-            companionName: pet.definition.name, target: target, layout: layout, hoveredSkill: skill)
-        }
-        return
-      }
-    }
-    let dragDistance = hypot(
-      pet.position.x - pet.pickupPosition.x, pet.position.y - pet.pickupPosition.y)
-    guard dragDistance >= Self.minimumDragDistanceForWheel else {
-      dragDwellTimer?.invalidate()
-      dragDwellTimer = nil
-      wheelRequested = false
-      windowHighlight.hide()
-      return
-    }
-    if hypot(pointer.x - dwellAnchor.x, pointer.y - dwellAnchor.y) > Self.radialDwellTolerance {
-      wheelRequested = false
-      dwellAnchor = pointer
-      dragDwellTimer?.invalidate()
-      dragDwellTimer = nil
-    }
-    dragTargets.update(at: pointer, excluding: excludedWindowNumbers())
-    dragTargetChanged(dragTargets.currentTarget)
-  }
-
-  private func dragTargetChanged(_ target: WindowTargetCandidate?) {
-    guard radialLayout == nil, let id = draggedCompanionID,
-      let pet = companions.first(where: { $0.definition.id == id }), pet.isPickedUp
-    else { return }
-    draggedTarget = target
-    let pointer = NSEvent.mouseLocation
-    let modifiers = NSEvent.modifierFlags
-    let explicitWheel = modifiers.contains(.option) || modifiers.contains(.command)
-    guard let target,
-      explicitWheel || shouldShowDragControls(pet: pet, target: target, pointer: pointer)
-    else {
-      resetDragDwell()
-      windowHighlight.hide()
-      return
-    }
-    if dwellTargetID != target.windowID {
-      resetDragDwell()
-      dwellTargetID = target.windowID
-      dwellAnchor = pointer
-    }
-    dragMetrics.measure(.highlight) { windowHighlight.show(target: target, hoveredSkill: nil) }
-    if explicitWheel { wheelRequested = true }
-    if wheelRequested {
-      openRadialWheel(for: pet, target: target, at: pointer)
-    } else if dragDwellTimer == nil {
-      scheduleDragDwell(for: id)
-    }
-  }
-
-  private func shouldShowDragControls(
-    pet: CompanionInstance, target: WindowTargetCandidate, pointer: CGPoint
-  ) -> Bool {
-    guard target.frame.contains(pointer) else { return false }
-    if target.windowID == pet.attachedWindowID { return true }
-    guard let origin = pet.pickupWindowTarget?.frame ?? tracker.windowFrame else { return true }
-    return origin.contains(pointer)
-      || !origin.insetBy(dx: -settings.size, dy: -settings.size * 1.25).contains(pet.position)
-  }
-
-  private func scheduleDragDwell(for companionID: String) {
-    let timer = Timer(timeInterval: Self.radialDwellDelay, repeats: false) { [weak self] _ in
-      MainActor.assumeIsolated { self?.handleDragDwellTimeout(for: companionID) }
-    }
-    timer.tolerance = 0.02
-    RunLoop.main.add(timer, forMode: .common)
-    dragDwellTimer = timer
-  }
-
-  private func resetDragDwell() {
-    dragDwellTimer?.invalidate()
-    dragDwellTimer = nil
-    dwellTargetID = nil
-    wheelRequested = false
-  }
-
-  private func handleDragDwellTimeout(for companionID: String) {
-    dragDwellTimer = nil
-    guard draggedCompanionID == companionID, radialLayout == nil, dwellTargetID != nil,
-      let pet = companions.first(where: { $0.definition.id == companionID }), pet.isPickedUp
-    else { return }
-    wheelRequested = true
-    dragTargets.update(at: NSEvent.mouseLocation, excluding: excludedWindowNumbers())
-    dragTargetChanged(dragTargets.currentTarget)
-  }
-
-  private func openRadialWheel(
-    for pet: CompanionInstance, target: WindowTargetCandidate, at pointer: CGPoint
-  ) {
-    dragDwellTimer?.invalidate()
-    dragDwellTimer = nil
-    let visibleFrame =
-      NSScreen.screens.first(where: { $0.frame.contains(pointer) })?.visibleFrame
-      ?? NSScreen.main?.visibleFrame
-      ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
-    let layout = RadialSkillMenuLayout(center: pointer, visibleFrame: visibleFrame)
-    radialLayout = layout
-    wheelRequested = false
-    hoveredSkill = nil
-    dragMetrics.measure(.highlight) { windowHighlight.show(target: target, hoveredSkill: nil) }
-    dragMetrics.measure(.wheel) {
-      radialWheel.show(
-        companionName: pet.definition.name, target: target, layout: layout, hoveredSkill: nil)
-    }
-  }
-
-  private func shouldBindOnDrop(
-    pet: CompanionInstance, target: WindowTargetCandidate, pointer: CGPoint,
-    companionPoint: CGPoint? = nil
-  ) -> Bool {
-    let interior = target.frame.insetBy(
-      dx: Self.windowDropInteriorInset, dy: Self.windowDropInteriorInset)
-    guard interior.contains(pointer) else { return false }
-    if let currentWindow = tracker.windowFrame, pet.attachedWindowID == tracker.windowID {
-      let currentInterior = currentWindow.insetBy(
-        dx: Self.windowDropInteriorInset, dy: Self.windowDropInteriorInset)
-      if currentInterior.contains(pointer) {
-        return true
-      }
-      let currentPerchEnvelope = currentWindow.insetBy(
-        dx: -settings.size, dy: -settings.size * 1.25)
-      if currentPerchEnvelope.contains(companionPoint ?? pet.position) {
-        return false
-      }
-    }
-    return true
-  }
-
-  private func clearDragSkillTargeting(closeWheel: Bool) {
-    resetDragDwell()
-    draggedCompanionID = nil
-    wheelRequested = false
-    dragTargets.stop()
-    dragWindowSnapshot.stop()
-    draggedTarget = nil
-    radialLayout = nil
-    hoveredSkill = nil
-    if closeWheel {
-      windowHighlight.close()
-      radialWheel.close()
-    } else {
-      windowHighlight.hide()
-      radialWheel.hide()
-    }
-  }
-
   private func geometryChanged() {
-    dragWindowSnapshot.updateKnownWindow(tracker.windowID, frame: tracker.windowFrame)
+    dragTargeting.windowSnapshot.updateKnownWindow(tracker.windowID, frame: tracker.windowFrame)
     if !shouldRun {
       reconcile()
       return

@@ -17,7 +17,8 @@ test:
 
 lint:
 	swift format lint --strict --recursive Package.swift Sources Tests scripts/make-icon.swift
-	bash -n scripts/build-app.sh scripts/test.sh scripts/toolchain.sh
+	bash -n scripts/build-app.sh scripts/test.sh scripts/toolchain.sh scripts/check-main-thread.sh
+	bash scripts/check-main-thread.sh
 
 check: lint test debug
 	build/Sillies.app/Contents/MacOS/Sillies --validate-catalog

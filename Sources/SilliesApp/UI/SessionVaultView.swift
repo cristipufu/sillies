@@ -15,9 +15,9 @@ struct SessionVaultView: View {
   }
 
   private var filteredRecords: [SessionRecord] {
-    vault.records.filter { record in
+    let query = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    return vault.records.filter { record in
       if let selectedFilter, record.kind != selectedFilter { return false }
-      let query = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
       guard !query.isEmpty else { return true }
       return record.displayTitle.lowercased().contains(query)
         || record.summary.lowercased().contains(query)
@@ -27,27 +27,29 @@ struct SessionVaultView: View {
     }
   }
 
-  private var selectedRecord: SessionRecord? {
+  private func selectedRecord(in records: [SessionRecord]) -> SessionRecord? {
     if let selectedRecordID,
-      let match = filteredRecords.first(where: { $0.id == selectedRecordID })
+      let match = records.first(where: { $0.id == selectedRecordID })
     {
       return match
     }
-    return filteredRecords.first
+    return records.first
   }
 
   var body: some View {
+    let records = filteredRecords
+    let current = selectedRecord(in: records)
     HStack(spacing: 0) {
-      sidebar
+      sidebar(records: records, selected: current)
       Divider().overlay(SilliesTheme.border)
-      detailPane
+      detailPane(for: current)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(SilliesTheme.paper)
     .foregroundStyle(SilliesTheme.ink)
   }
 
-  private var sidebar: some View {
+  private func sidebar(records: [SessionRecord], selected: SessionRecord?) -> some View {
     VStack(alignment: .leading, spacing: 14) {
       HStack(spacing: 10) {
         ZStack {
@@ -67,7 +69,7 @@ struct SessionVaultView: View {
             .foregroundStyle(SilliesTheme.secondary)
         }
         Spacer(minLength: 4)
-        Text("\(filteredRecords.count)")
+        Text("\(records.count)")
           .font(.system(size: 11, weight: .bold, design: .rounded))
           .monospacedDigit()
           .padding(.horizontal, 9)
@@ -113,13 +115,13 @@ struct SessionVaultView: View {
       .background(SilliesTheme.soft, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
       .frame(maxWidth: .infinity)
 
-      if filteredRecords.isEmpty {
+      if records.isEmpty {
         emptySidebarState
       } else {
         ScrollView {
           LazyVStack(spacing: 9) {
-            ForEach(filteredRecords) { record in
-              recordRow(record, isSelected: selectedRecord?.id == record.id)
+            ForEach(records) { record in
+              recordRow(record, isSelected: selected?.id == record.id)
             }
           }
           .padding(.vertical, 3)
@@ -282,8 +284,8 @@ struct SessionVaultView: View {
   }
 
   @ViewBuilder
-  private var detailPane: some View {
-    if let record = selectedRecord {
+  private func detailPane(for record: SessionRecord?) -> some View {
+    if let record {
       ScrollView {
         VStack(alignment: .leading, spacing: 20) {
           detailHeader(for: record)
@@ -294,7 +296,7 @@ struct SessionVaultView: View {
             permissionBanner(for: record)
           }
 
-          if let image = vault.loadImage(for: record) {
+          if let image = vault.cachedImage(for: record) {
             snapshotStage(image: image, record: record)
           }
 
@@ -384,6 +386,9 @@ struct SessionVaultView: View {
         .padding(.vertical, 24)
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .task(id: record.id) {
+        vault.prepareImage(for: record)
+      }
     } else {
       VStack(spacing: 12) {
         Image(systemName: "archivebox")
@@ -691,7 +696,7 @@ struct SessionVaultView: View {
 
   private func deleteRecord(_ record: SessionRecord) {
     let currentList = filteredRecords
-    if selectedRecord?.id == record.id {
+    if selectedRecord(in: currentList)?.id == record.id {
       if let index = currentList.firstIndex(where: { $0.id == record.id }) {
         if index + 1 < currentList.count {
           selectedRecordID = currentList[index + 1].id

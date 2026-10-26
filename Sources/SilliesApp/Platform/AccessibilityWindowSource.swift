@@ -104,6 +104,7 @@ final class AccessibilityWindowSource: @unchecked Sendable {
   }
 
   private func readWindow(reason: String) {
+    dispatchPrecondition(condition: .notOnQueue(.main))
     guard let application else { return }
     var focused: CFTypeRef?
     guard

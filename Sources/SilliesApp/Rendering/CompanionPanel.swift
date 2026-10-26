@@ -200,13 +200,18 @@ final class CompanionView: NSView {
         return true
       }
       if let stroke = shape.strokeColor, stroke.alpha > CGFloat(Self.minimumVisibleOpacity),
-        shape.lineWidth > 0,
-        path.copy(
-          strokingWithWidth: max(shape.lineWidth, Self.minimumStrokeHitWidth),
-          lineCap: .round, lineJoin: .round, miterLimit: shape.miterLimit
-        ).contains(point)
+        shape.lineWidth > 0
       {
-        return true
+        let hitWidth = max(shape.lineWidth, Self.minimumStrokeHitWidth)
+        let halfWidth = hitWidth * 0.5
+        if path.boundingBoxOfPath.insetBy(dx: -halfWidth, dy: -halfWidth).contains(point),
+          path.copy(
+            strokingWithWidth: hitWidth,
+            lineCap: .round, lineJoin: .round, miterLimit: shape.miterLimit
+          ).contains(point)
+        {
+          return true
+        }
       }
     }
     return layer.sublayers?.contains { child in

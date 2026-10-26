@@ -57,9 +57,13 @@ final class DragWindowTargetResolver {
     self.lookup = lookup
   }
 
-  func start() {
+  func start(seed: WindowTargetCandidate? = nil) {
     stop()
     cache.removeAll(keepingCapacity: true)
+    if let seed {
+      cache[Int(seed.windowID)] = Entry(
+        target: seed, capturedAt: ProcessInfo.processInfo.systemUptime)
+    }
     active = true
   }
 
@@ -108,7 +112,11 @@ final class DragWindowTargetResolver {
 
   func invalidateWindowStack() {
     nativeProbe = nil
-    cache.removeAll(keepingCapacity: true)
+    for key in cache.keys {
+      if let existing = cache[key] {
+        cache[key] = Entry(target: existing.target, capturedAt: 0)
+      }
+    }
     generation += 1
     inFlight?.cancel()
     inFlight = nil

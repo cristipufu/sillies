@@ -286,6 +286,7 @@ struct SessionVaultView: View {
   @ViewBuilder
   private func detailPane(for record: SessionRecord?) -> some View {
     if let record {
+      let previewImage = vault.cachedImage(for: record)
       ScrollView {
         VStack(alignment: .leading, spacing: 20) {
           detailHeader(for: record)
@@ -296,7 +297,7 @@ struct SessionVaultView: View {
             permissionBanner(for: record)
           }
 
-          if let image = vault.cachedImage(for: record) {
+          if let image = previewImage {
             snapshotStage(image: image, record: record)
           }
 
@@ -386,8 +387,11 @@ struct SessionVaultView: View {
         .padding(.vertical, 24)
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
-      .task(id: record.id) {
-        vault.prepareImage(for: record)
+      .task(id: "\(record.id.uuidString)-\(previewImage != nil)") {
+        vault.setPinnedRecord(record.id)
+        if previewImage == nil {
+          vault.prepareImage(for: record)
+        }
       }
     } else {
       VStack(spacing: 12) {

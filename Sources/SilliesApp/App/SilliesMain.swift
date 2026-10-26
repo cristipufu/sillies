@@ -82,6 +82,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private var externalDragCheck: ExternalDragCheck?
   private var playInteractionCheck: PlayInteractionCheck?
   private var companionDragCheck: CompanionDragResponseCheck?
+  private var isTerminating = false
+  private(set) var terminationFlushTask: Task<Void, Never>?
+  var onTerminationApproved: @MainActor (NSApplication) -> Void = { sender in
+    sender.reply(toApplicationShouldTerminate: true)
+  }
+
+  func configureForTesting(controller: CompanionController) {
+    self.controller = controller
+    self.isTerminating = false
+    self.terminationFlushTask = nil
+  }
 
   func applicationDidFinishLaunching(_ notification: Notification) {
     do {
@@ -201,13 +212,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     }
   }
 
+  func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+    guard !isTerminating else { return .terminateLater }
+    guard let controller else {
+      cleanupTemporaryPreferences()
+      return .terminateNow
+    }
+    isTerminating = true
+    controller.stop()
+    controller.skills.vault.cancelPendingSummaries()
+    cleanupTemporaryPreferences()
+    let vault = controller.skills.vault
+    let approveTermination = onTerminationApproved
+    terminationFlushTask = Task { @MainActor [weak self] in
+      await vault.flush()
+      self?.terminationFlushTask = nil
+      approveTermination(sender)
+    }
+    return .terminateLater
+  }
+
   func applicationWillTerminate(_ notification: Notification) {
     controller?.stop()
+    cleanupTemporaryPreferences()
+  }
+
+  func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+  private func cleanupTemporaryPreferences() {
     if let domain = temporaryPreferencesDomain {
       UserDefaults.standard.removePersistentDomain(forName: domain)
+      temporaryPreferencesDomain = nil
     }
   }
-  func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 
   private func installStatusItem() {
     let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)

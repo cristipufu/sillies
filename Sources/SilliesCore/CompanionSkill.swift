@@ -212,13 +212,33 @@ public struct SessionRecord: Codable, Identifiable, Equatable, Sendable {
   public var actionItems: [String]
   public var imageFilename: String?
   public var stashedItems: [String]
+  public var summaryPending: Bool
+
+  private enum CodingKeys: String, CodingKey {
+    case id
+    case kind
+    case characterID
+    case characterName
+    case appName
+    case bundleIdentifier
+    case windowTitle
+    case createdAt
+    case durationSeconds
+    case transcript
+    case extractedText
+    case summary
+    case actionItems
+    case imageFilename
+    case stashedItems
+    case summaryPending
+  }
 
   public init(
     id: UUID = UUID(), kind: CompanionSkillKind, characterID: String, characterName: String,
     appName: String, bundleIdentifier: String? = nil, windowTitle: String? = nil,
     createdAt: Date = Date(), durationSeconds: Double = 0, transcript: String = "",
     extractedText: String = "", summary: String = "", actionItems: [String] = [],
-    imageFilename: String? = nil, stashedItems: [String] = []
+    imageFilename: String? = nil, stashedItems: [String] = [], summaryPending: Bool = false
   ) {
     self.id = id
     self.kind = kind
@@ -235,6 +255,27 @@ public struct SessionRecord: Codable, Identifiable, Equatable, Sendable {
     self.actionItems = actionItems
     self.imageFilename = imageFilename
     self.stashedItems = stashedItems
+    self.summaryPending = summaryPending
+  }
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    id = try container.decode(UUID.self, forKey: .id)
+    kind = try container.decode(CompanionSkillKind.self, forKey: .kind)
+    characterID = try container.decode(String.self, forKey: .characterID)
+    characterName = try container.decode(String.self, forKey: .characterName)
+    appName = try container.decode(String.self, forKey: .appName)
+    bundleIdentifier = try container.decodeIfPresent(String.self, forKey: .bundleIdentifier)
+    windowTitle = try container.decodeIfPresent(String.self, forKey: .windowTitle)
+    createdAt = try container.decode(Date.self, forKey: .createdAt)
+    durationSeconds = try container.decode(Double.self, forKey: .durationSeconds)
+    transcript = try container.decode(String.self, forKey: .transcript)
+    extractedText = try container.decode(String.self, forKey: .extractedText)
+    summary = try container.decode(String.self, forKey: .summary)
+    actionItems = try container.decode([String].self, forKey: .actionItems)
+    imageFilename = try container.decodeIfPresent(String.self, forKey: .imageFilename)
+    stashedItems = try container.decode([String].self, forKey: .stashedItems)
+    summaryPending = try container.decodeIfPresent(Bool.self, forKey: .summaryPending) ?? false
   }
 
   public var primaryText: String {
@@ -299,10 +340,17 @@ public enum SessionSummarizer: Sendable {
   private static let maxSummarySentences = 3
   private static let maxActionItems = 5
   public static let chunkCharacterSize = 16_384
+  public static let maxChunkLookahead = 256
+  public static let maxFragmentCharacters = 240
+  public static let fragmentOverlapCharacters = 32
+  public static let maxSummaryCharacters = 600
   private static let sentenceDelimiters = CharacterSet.newlines.union(
     CharacterSet(charactersIn: ".!?"))
   private static let highSignalActionKeywords = [
     "todo", "to-do", "action item", "next step", "deadline",
+  ]
+  private static let leadActionKeywords: Set<String> = [
+    "todo", "to-do", "action item", "next step", "we should", "let's", "follow up",
   ]
   private static let actionKeywords = [
     "todo", "to-do", "action item", "need to", "needs to", "we should", "let's", "must",
@@ -315,8 +363,14 @@ public enum SessionSummarizer: Sendable {
 
   private struct ScoredEntry {
     let index: Int
+    let sourceStart: String.Index
     let score: Double
     let text: String
+  }
+
+  private struct ActionKeywordMatch {
+    let keyword: String
+    let range: Range<String.Index>
   }
 
   public static func summarize(text: String, fallbackContext: String) -> (
@@ -330,31 +384,57 @@ public enum SessionSummarizer: Sendable {
     var topSentences: [ScoredEntry] = []
     var topActions: [ScoredEntry] = []
     var sentenceIndex = 0
+    var lastActionEndIndex: String.Index?
 
     forEachChunk(in: cleaned) { chunk in
-      let parts = chunk.components(separatedBy: sentenceDelimiters)
-      for raw in parts {
-        let sentence = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard sentence.count >= 12 else { continue }
-        let currentIndex = sentenceIndex
-        sentenceIndex += 1
+      forEachSentenceSlice(in: chunk) { sentence in
+        forEachBoundedFragment(in: sentence) { fragment, detectionRange in
+          let currentIndex = sentenceIndex
+          let fragmentText = fragment.trimmingCharacters(in: .whitespacesAndNewlines)
+          if fragmentText.count >= 12 {
+            sentenceIndex += 1
+            let summaryText = String(fragmentText.prefix(maxFragmentCharacters))
+            let summaryLower = summaryText.lowercased()
+            let summaryScore = scoreSummarySentence(
+              sentence: summaryText, lower: summaryLower, index: currentIndex)
+            insertSummary(
+              ScoredEntry(
+                index: currentIndex,
+                sourceStart: fragment.startIndex,
+                score: summaryScore,
+                text: summaryText),
+              into: &topSentences)
+          }
 
-        let lower = sentence.lowercased()
-        if let actionScore = scoreActionItem(lower: lower) {
-          insertAction(
-            ScoredEntry(index: currentIndex, score: actionScore, text: sentence),
-            into: &topActions)
+          while let match = findFirstActionMatch(
+            in: cleaned, range: detectionRange, after: lastActionEndIndex)
+          {
+            let actionRange = extractActionRange(
+              in: cleaned,
+              sentence: sentence,
+              match: match,
+              minStart: detectionRange.lowerBound)
+            lastActionEndIndex = actionRange.upperBound
+            let actionText = String(
+              cleaned[actionRange]
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .prefix(maxFragmentCharacters))
+            guard actionText.count >= 12,
+              let actionScore = scoreActionItem(lower: actionText.lowercased())
+            else { continue }
+            insertAction(
+              ScoredEntry(
+                index: currentIndex,
+                sourceStart: actionRange.lowerBound,
+                score: actionScore,
+                text: actionText),
+              into: &topActions)
+          }
         }
-
-        let summaryScore = scoreSummarySentence(
-          sentence: sentence, lower: lower, index: currentIndex)
-        insertSummary(
-          ScoredEntry(index: currentIndex, score: summaryScore, text: sentence),
-          into: &topSentences)
       }
     }
 
-    guard sentenceIndex > 0 else {
+    guard sentenceIndex > 0 || !topActions.isEmpty else {
       let snippet = String(cleaned.prefix(180))
       return (snippet, [])
     }
@@ -362,16 +442,17 @@ public enum SessionSummarizer: Sendable {
     let orderedSummary =
       topSentences
       .sorted { $0.index < $1.index }
-      .map(\.text)
+      .map { String($0.text.prefix(maxFragmentCharacters)) }
     let orderedActions =
       topActions
-      .sorted { $0.index < $1.index }
-      .map(\.text)
+      .sorted { $0.sourceStart < $1.sourceStart }
+      .map { String($0.text.prefix(maxFragmentCharacters)) }
 
-    let summary =
+    let joinedSummary =
       orderedSummary.isEmpty
       ? String(cleaned.prefix(200))
       : orderedSummary.map { "• \($0)" }.joined(separator: "\n")
+    let summary = String(joinedSummary.prefix(maxSummaryCharacters))
     return (summary, orderedActions)
   }
 
@@ -392,20 +473,234 @@ public enum SessionSummarizer: Sendable {
         text.index(start, offsetBy: chunkCharacterSize, limitedBy: text.endIndex)
         ?? text.endIndex
       var end = targetEnd
+      var splitAtDelimiter = false
       if end < text.endIndex {
-        while end < text.endIndex,
-          let scalar = text[end].unicodeScalars.first,
-          !sentenceDelimiters.contains(scalar)
-        {
-          end = text.index(after: end)
+        let lookaheadLimit =
+          text.index(targetEnd, offsetBy: maxChunkLookahead, limitedBy: text.endIndex)
+          ?? text.endIndex
+        var cursor = targetEnd
+        var delimiterSplit: String.Index?
+        var whitespaceSplit: String.Index?
+        while cursor < lookaheadLimit {
+          if let scalar = text[cursor].unicodeScalars.first {
+            if sentenceDelimiters.contains(scalar) {
+              delimiterSplit = text.index(after: cursor)
+              splitAtDelimiter = true
+              break
+            }
+            if whitespaceSplit == nil && CharacterSet.whitespaces.contains(scalar) {
+              whitespaceSplit = text.index(after: cursor)
+            }
+          }
+          cursor = text.index(after: cursor)
         }
-        if end < text.endIndex {
-          end = text.index(after: end)
-        }
+        end = delimiterSplit ?? whitespaceSplit ?? targetEnd
       }
       body(text[start..<end])
-      start = end
+      if end < text.endIndex && !splitAtDelimiter {
+        let minAdvance =
+          text.index(start, offsetBy: chunkCharacterSize / 2, limitedBy: end) ?? end
+        start = overlapStartIndex(in: text[start..<end], before: end, minIndex: minAdvance)
+      } else {
+        start = end
+      }
     }
+  }
+
+  private static func forEachSentenceSlice(in chunk: Substring, body: (Substring) -> Void) {
+    var cursor = chunk.startIndex
+    var segmentStart = cursor
+    while cursor < chunk.endIndex {
+      if let scalar = chunk[cursor].unicodeScalars.first,
+        sentenceDelimiters.contains(scalar)
+      {
+        if segmentStart < cursor {
+          body(chunk[segmentStart..<cursor])
+        }
+        cursor = chunk.index(after: cursor)
+        segmentStart = cursor
+      } else {
+        cursor = chunk.index(after: cursor)
+      }
+    }
+    if segmentStart < chunk.endIndex {
+      body(chunk[segmentStart..<chunk.endIndex])
+    }
+  }
+
+  private static func forEachBoundedFragment(
+    in raw: Substring,
+    body: (_ fragment: Substring, _ detectionRange: Range<String.Index>) -> Void
+  ) {
+    var sliceStart = raw.startIndex
+    var previousSliceStart = raw.startIndex
+    var isFirstFragment = true
+    while sliceStart < raw.endIndex {
+      while sliceStart < raw.endIndex && raw[sliceStart].isWhitespace {
+        sliceStart = raw.index(after: sliceStart)
+      }
+      guard sliceStart < raw.endIndex else { break }
+
+      let detectionStart =
+        isFirstFragment
+        ? sliceStart
+        : overlapStartIndex(in: raw, before: sliceStart, minIndex: previousSliceStart)
+
+      guard
+        let windowEnd = raw.index(
+          sliceStart, offsetBy: maxFragmentCharacters, limitedBy: raw.endIndex)
+      else {
+        body(raw[sliceStart..<raw.endIndex], detectionStart..<raw.endIndex)
+        break
+      }
+
+      var splitIndex = windowEnd
+      let minBreak =
+        raw.index(sliceStart, offsetBy: maxFragmentCharacters / 2, limitedBy: windowEnd)
+        ?? sliceStart
+      var probe = windowEnd
+      while probe > minBreak {
+        let previous = raw.index(before: probe)
+        if raw[previous].isWhitespace {
+          splitIndex = previous
+          break
+        }
+        probe = previous
+      }
+      body(raw[sliceStart..<splitIndex], detectionStart..<splitIndex)
+      previousSliceStart = sliceStart
+      sliceStart = splitIndex
+      isFirstFragment = false
+    }
+  }
+
+  private static func findFirstActionMatch(
+    in text: String,
+    range: Range<String.Index>,
+    after lastActionEndIndex: String.Index?
+  ) -> ActionKeywordMatch? {
+    var best: ActionKeywordMatch?
+    for keyword in actionKeywords {
+      var searchStart = range.lowerBound
+      while searchStart < range.upperBound,
+        let found = text.range(
+          of: keyword,
+          options: [.caseInsensitive],
+          range: searchStart..<range.upperBound)
+      {
+        if let lastActionEndIndex, found.upperBound <= lastActionEndIndex {
+          searchStart = found.upperBound
+          continue
+        }
+        if let currentBest = best {
+          if found.lowerBound < currentBest.range.lowerBound
+            || (found.lowerBound == currentBest.range.lowerBound
+              && found.upperBound > currentBest.range.upperBound)
+          {
+            best = ActionKeywordMatch(keyword: keyword, range: found)
+          }
+        } else {
+          best = ActionKeywordMatch(keyword: keyword, range: found)
+        }
+        break
+      }
+    }
+    return best
+  }
+
+  private static func extractActionRange(
+    in text: String,
+    sentence: Substring,
+    match: ActionKeywordMatch,
+    minStart: String.Index
+  ) -> Range<String.Index> {
+    // Extend sentenceEnd across unpunctuated chunk splits if needed so actions near a chunk
+    // boundary are never truncated either.
+    var sentenceEnd = sentence.endIndex
+    let lookaheadLimit =
+      text.index(
+        match.range.lowerBound, offsetBy: maxFragmentCharacters + maxChunkLookahead,
+        limitedBy: text.endIndex)
+      ?? text.endIndex
+    while sentenceEnd < lookaheadLimit {
+      if let scalar = text[sentenceEnd].unicodeScalars.first,
+        sentenceDelimiters.contains(scalar)
+      {
+        break
+      }
+      sentenceEnd = text.index(after: sentenceEnd)
+    }
+
+    if text.distance(from: sentence.startIndex, to: sentenceEnd) <= maxFragmentCharacters {
+      return sentence.startIndex..<sentenceEnd
+    }
+
+    var actionStart: String.Index
+    if leadActionKeywords.contains(match.keyword) {
+      actionStart = match.range.lowerBound
+    } else {
+      let leadMin =
+        text.index(match.range.lowerBound, offsetBy: -24, limitedBy: minStart) ?? minStart
+      actionStart = overlapStartIndex(
+        in: text[sentence.startIndex..<sentenceEnd],
+        before: match.range.lowerBound,
+        minIndex: leadMin)
+    }
+
+    let rawEnd =
+      text.index(actionStart, offsetBy: maxFragmentCharacters, limitedBy: sentenceEnd)
+      ?? sentenceEnd
+    var actionEnd = rawEnd
+    if rawEnd < sentenceEnd {
+      let minBreak =
+        text.index(actionStart, offsetBy: maxFragmentCharacters / 2, limitedBy: rawEnd)
+        ?? actionStart
+      var probe = rawEnd
+      while probe > minBreak {
+        let previous = text.index(before: probe)
+        if text[previous].isWhitespace {
+          actionEnd = previous
+          break
+        }
+        probe = previous
+      }
+    }
+
+    // Ensure the extracted action has at least 12 characters when near the tail of the input.
+    if text.distance(from: actionStart, to: actionEnd) < 12 {
+      actionStart =
+        text.index(actionEnd, offsetBy: -12, limitedBy: sentence.startIndex)
+        ?? sentence.startIndex
+    }
+    return actionStart..<actionEnd
+  }
+
+  /// Carries trailing keyword context across unpunctuated fragment/chunk boundaries so multi-word
+  /// phrases like "we should" or "action item" are never lost when split across a boundary.
+  private static func overlapStartIndex(
+    in slice: Substring, before splitIndex: String.Index, minIndex: String.Index
+  ) -> String.Index {
+    let clampedMin = max(slice.startIndex, minIndex)
+    guard splitIndex > clampedMin else { return clampedMin }
+    let rawOverlapStart =
+      slice.index(splitIndex, offsetBy: -fragmentOverlapCharacters, limitedBy: clampedMin)
+      ?? clampedMin
+    let maxOverlapStart =
+      slice.index(splitIndex, offsetBy: -(fragmentOverlapCharacters / 2), limitedBy: clampedMin)
+      ?? clampedMin
+    guard rawOverlapStart < maxOverlapStart else { return rawOverlapStart }
+    var cursor = rawOverlapStart
+    while cursor < maxOverlapStart {
+      if slice[cursor].isWhitespace {
+        var wordStart = slice.index(after: cursor)
+        while wordStart < maxOverlapStart && slice[wordStart].isWhitespace {
+          wordStart = slice.index(after: wordStart)
+        }
+        return wordStart
+      }
+      cursor = slice.index(after: cursor)
+    }
+    return rawOverlapStart
   }
 
   private static func scoreActionItem(lower: String) -> Double? {
@@ -433,7 +728,11 @@ public enum SessionSummarizer: Sendable {
   }
 
   private static func insertAction(_ candidate: ScoredEntry, into actions: inout [ScoredEntry]) {
-    guard !actions.contains(where: { $0.text == candidate.text }) else { return }
+    guard
+      !actions.contains(where: {
+        $0.sourceStart == candidate.sourceStart || $0.text == candidate.text
+      })
+    else { return }
     if actions.count < maxActionItems {
       actions.append(candidate)
       return

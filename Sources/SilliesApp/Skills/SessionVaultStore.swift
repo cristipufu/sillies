@@ -4,9 +4,47 @@ import ImageIO
 import Observation
 import SilliesCore
 
-/// Persists captured window snapshots, transcripts, focus sprints, and stashed items locally.
+private final class StagedPreviewBuffer: @unchecked Sendable {
+  private let lock = NSLock()
+  private var entries: [(filename: String, image: CGImage)] = []
+
+  func append(filename: String, image: CGImage) {
+    lock.lock()
+    entries.append((filename, image))
+    lock.unlock()
+  }
+
+  func remove(filename: String) {
+    lock.lock()
+    entries.removeAll { $0.filename == filename }
+    lock.unlock()
+  }
+
+  func removeAll() {
+    lock.lock()
+    entries.removeAll()
+    lock.unlock()
+  }
+
+  func drain() -> [(filename: String, image: CGImage)] {
+    lock.lock()
+    guard !entries.isEmpty else {
+      lock.unlock()
+      return []
+    }
+    let drained = entries
+    entries.removeAll()
+    lock.unlock()
+    return drained
+  }
+}
+
+private struct WeakVaultBox {
+  weak var store: SessionVaultStore?
+}
+
 /// Views read downsampled preview images from a byte-bounded memory cache; disk reads, PNG
-/// encoding, and decoding run on `ioQueue`.
+/// encoding, preview downsampling, and decoding run on `ioQueue`.
 @MainActor @Observable
 final class SessionVaultStore {
   nonisolated static let maxStoredRecords = 200
@@ -16,16 +54,27 @@ final class SessionVaultStore {
   nonisolated private static let sessionsFilename = "sessions.json"
 
   private(set) var records: [SessionRecord] = []
+  private(set) var pinnedRecordID: UUID?
   private var cachedImages: [String: NSImage] = [:]
   @ObservationIgnored private var cachedImageBytes: [String: Int] = [:]
   @ObservationIgnored private(set) var totalCachedImageBytes = 0
   @ObservationIgnored private var cachedImageOrder: [String] = []
   @ObservationIgnored private var pendingImageLoads: Set<String> = []
+  @ObservationIgnored private var summaryTasks: [UUID: Task<Void, Never>] = [:]
+  @ObservationIgnored private let stagedPreviews = StagedPreviewBuffer()
+  @ObservationIgnored private let pasteboard: NSPasteboard
+  @ObservationIgnored private var copyRequestGeneration: UInt64 = 0
   let storageDirectory: URL
-  @ObservationIgnored private let ioQueue = DispatchQueue(
+  @ObservationIgnored nonisolated private static let ioQueue = DispatchQueue(
     label: "app.sillies.session-vault", qos: .utility)
+  @ObservationIgnored private static var activeStoresByDirectory: [URL: WeakVaultBox] = [:]
 
-  init(directory: URL? = nil) {
+  var pendingSummaryCount: Int {
+    summaryTasks.count
+  }
+
+  init(directory: URL? = nil, pasteboard: NSPasteboard = .general) {
+    self.pasteboard = pasteboard
     if let directory {
       storageDirectory = directory
     } else {
@@ -34,7 +83,15 @@ final class SessionVaultStore {
         ?? URL(fileURLWithPath: NSTemporaryDirectory())
       storageDirectory = appSupport.appendingPathComponent("Sillies/Vault", isDirectory: true)
     }
+    let directoryKey = storageDirectory.standardizedFileURL
+    if let previousStore = Self.activeStoresByDirectory[directoryKey]?.store,
+      previousStore !== self
+    {
+      previousStore.cancelPendingSummaries()
+    }
+    Self.activeStoresByDirectory[directoryKey] = WeakVaultBox(store: self)
     loadSynchronously()
+    resumePendingSummaries()
   }
 
   func add(_ record: SessionRecord, image: CGImage? = nil) {
@@ -42,9 +99,14 @@ final class SessionVaultStore {
     if let image {
       let filename = "\(record.id.uuidString).png"
       updated.imageFilename = filename
-      let preview = Self.makePreviewCGImage(from: image)
-      storeCachedImage(preview, for: filename)
-      saveImageAsync(image, filename: filename)
+      let needsDownsampling =
+        max(image.width, image.height) > Self.maxPreviewPixelDimension
+      if needsDownsampling {
+        pendingImageLoads.insert(filename)
+      } else {
+        storeCachedImage(image, for: filename)
+      }
+      saveImageAsync(image, filename: filename, preparePreview: needsDownsampling)
     }
     records.insert(updated, at: 0)
     if records.count > Self.maxStoredRecords {
@@ -58,6 +120,9 @@ final class SessionVaultStore {
       records = Array(records.prefix(Self.maxStoredRecords))
     }
     persistAsync()
+    if updated.summaryPending {
+      scheduleSummaryRefinement(for: updated)
+    }
   }
 
   func update(_ record: SessionRecord) {
@@ -66,7 +131,50 @@ final class SessionVaultStore {
     persistAsync()
   }
 
+  func completePendingSummary(id: UUID, summary: String, actionItems: [String]) {
+    summaryTasks.removeValue(forKey: id)
+    guard let index = records.firstIndex(where: { $0.id == id }) else { return }
+    var updated = records[index]
+    updated.summary = summary
+    updated.actionItems = actionItems
+    updated.summaryPending = false
+    records[index] = updated
+    persistAsync()
+  }
+
+  func resumePendingSummaries() {
+    for record in records where record.summaryPending {
+      scheduleSummaryRefinement(for: record)
+    }
+  }
+
+  func flushPendingSummaries() async {
+    resumePendingSummaries()
+    while !summaryTasks.isEmpty {
+      let current = Array(summaryTasks.values)
+      for task in current {
+        await task.value
+      }
+    }
+    await flush()
+  }
+
+  func cancelPendingSummaries() {
+    for task in summaryTasks.values { task.cancel() }
+    summaryTasks.removeAll()
+  }
+
+  func setPinnedRecord(_ id: UUID?) {
+    pinnedRecordID = id
+    if let id, let record = records.first(where: { $0.id == id }) {
+      prepareImage(for: record)
+    }
+  }
+
   func remove(id: UUID) {
+    summaryTasks[id]?.cancel()
+    summaryTasks.removeValue(forKey: id)
+    if pinnedRecordID == id { pinnedRecordID = nil }
     guard let index = records.firstIndex(where: { $0.id == id }) else { return }
     let removed = records.remove(at: index)
     if let file = removed.imageFilename {
@@ -77,6 +185,9 @@ final class SessionVaultStore {
   }
 
   func clearAll() {
+    for task in summaryTasks.values { task.cancel() }
+    summaryTasks.removeAll()
+    pinnedRecordID = nil
     let files = records.compactMap(\.imageFilename)
     records.removeAll()
     cachedImages.removeAll()
@@ -84,12 +195,19 @@ final class SessionVaultStore {
     totalCachedImageBytes = 0
     cachedImageOrder.removeAll()
     pendingImageLoads.removeAll()
+    stagedPreviews.removeAll()
     for file in files { deleteImageAsync(filename: file) }
     persistAsync()
   }
 
-  func flush() {
-    ioQueue.sync {}
+  func flush() async {
+    await withCheckedContinuation { continuation in
+      Self.ioQueue.async {
+        dispatchPrecondition(condition: .notOnQueue(.main))
+        continuation.resume()
+      }
+    }
+    drainStagedPreviews()
   }
 
   func imageURL(for record: SessionRecord) -> URL? {
@@ -99,67 +217,106 @@ final class SessionVaultStore {
 
   /// Non-blocking cache lookup for SwiftUI view rendering.
   func cachedImage(for record: SessionRecord) -> NSImage? {
+    drainStagedPreviews()
     guard let filename = record.imageFilename else { return nil }
-    return cachedImages[filename]
+    if let image = cachedImages[filename] {
+      if cachedImageOrder.last != filename {
+        cachedImageOrder.removeAll { $0 == filename }
+        cachedImageOrder.append(filename)
+      }
+      return image
+    }
+    return nil
   }
 
   /// Decodes a downsampled preview of the snapshot PNG on `ioQueue` if not already in memory.
   func prepareImage(for record: SessionRecord) {
+    drainStagedPreviews()
     guard let filename = record.imageFilename,
       cachedImages[filename] == nil,
       !pendingImageLoads.contains(filename),
       let url = imageURL(for: record)
     else { return }
     pendingImageLoads.insert(filename)
-    ioQueue.async { [weak self] in
-      let decoded = Self.decodePreviewCGImage(at: url)
+    let staged = stagedPreviews
+    Self.ioQueue.async { [weak self] in
+      if let decoded = Self.decodePreviewCGImage(at: url) {
+        staged.append(filename: filename, image: decoded)
+      }
       Task { @MainActor [weak self] in
         guard let self else { return }
         self.pendingImageLoads.remove(filename)
-        guard let decoded,
-          self.records.contains(where: { $0.imageFilename == filename })
-        else { return }
-        self.storeCachedImage(decoded, for: filename)
+        self.drainStagedPreviews()
       }
     }
   }
 
   func copyText(_ text: String) {
     guard !text.isEmpty else { return }
-    let pasteboard = NSPasteboard.general
+    copyRequestGeneration &+= 1
     pasteboard.clearContents()
     pasteboard.setString(text, forType: .string)
   }
 
   func copyImage(for record: SessionRecord) {
+    copyRequestGeneration &+= 1
+    let requestGeneration = copyRequestGeneration
+    let expectedChangeCount = pasteboard.changeCount
     guard let filename = record.imageFilename, let url = imageURL(for: record) else {
       if let cached = cachedImage(for: record) {
-        let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.writeObjects([cached])
       }
       return
     }
     let fallbackPreview = cachedImage(for: record)
-    ioQueue.async { [weak self] in
+    Self.ioQueue.async { [weak self] in
       let fullCG = Self.decodeFullCGImage(at: url)
       let previewCG = fullCG.map { Self.makePreviewCGImage(from: $0) }
       Task { @MainActor [weak self] in
-        if let previewCG {
-          self?.storeCachedImage(previewCG, for: filename)
+        guard let self else { return }
+        if let previewCG,
+          self.records.contains(where: { $0.imageFilename == filename })
+        {
+          self.storeCachedImage(previewCG, for: filename)
         }
+        guard
+          self.copyRequestGeneration == requestGeneration,
+          self.pasteboard.changeCount == expectedChangeCount
+        else { return }
         if let fullCG {
           let nsImage = NSImage(
             cgImage: fullCG, size: NSSize(width: fullCG.width, height: fullCG.height))
-          let pasteboard = NSPasteboard.general
-          pasteboard.clearContents()
-          pasteboard.writeObjects([nsImage])
+          self.pasteboard.clearContents()
+          self.pasteboard.writeObjects([nsImage])
         } else if let fallbackPreview {
-          let pasteboard = NSPasteboard.general
-          pasteboard.clearContents()
-          pasteboard.writeObjects([fallbackPreview])
+          self.pasteboard.clearContents()
+          self.pasteboard.writeObjects([fallbackPreview])
         }
       }
+    }
+  }
+
+  private func scheduleSummaryRefinement(for record: SessionRecord) {
+    guard summaryTasks[record.id] == nil else { return }
+    let recordID = record.id
+    let sourceText = record.primaryText
+    let fallbackContext = record.summary
+    summaryTasks[recordID] = Task { @MainActor [weak self] in
+      let (summary, actions) = await SessionSummarizer.summarizeOnWorker(
+        text: sourceText, fallbackContext: fallbackContext)
+      guard !Task.isCancelled, let self else { return }
+      self.completePendingSummary(id: recordID, summary: summary, actionItems: actions)
+    }
+  }
+
+  private func drainStagedPreviews() {
+    let drained = stagedPreviews.drain()
+    guard !drained.isEmpty else { return }
+    for entry in drained {
+      pendingImageLoads.remove(entry.filename)
+      guard records.contains(where: { $0.imageFilename == entry.filename }) else { continue }
+      storeCachedImage(entry.image, for: entry.filename)
     }
   }
 
@@ -169,11 +326,16 @@ final class SessionVaultStore {
       totalCachedImageBytes = max(0, totalCachedImageBytes - previousCost)
       cachedImageOrder.removeAll { $0 == filename }
     }
+    let pinnedFilename =
+      pinnedRecordID.flatMap { id in records.first(where: { $0.id == id })?.imageFilename }
     while !cachedImageOrder.isEmpty
       && (totalCachedImageBytes + byteCost > Self.maxCacheBytes
         || cachedImageOrder.count >= Self.maxCachedImages)
     {
-      let oldest = cachedImageOrder.removeFirst()
+      let evictionIndex =
+        cachedImageOrder.firstIndex(where: { $0 != pinnedFilename })
+        ?? cachedImageOrder.startIndex
+      let oldest = cachedImageOrder.remove(at: evictionIndex)
       cachedImages.removeValue(forKey: oldest)
       if let oldBytes = cachedImageBytes.removeValue(forKey: oldest) {
         totalCachedImageBytes = max(0, totalCachedImageBytes - oldBytes)
@@ -195,6 +357,7 @@ final class SessionVaultStore {
     }
     cachedImageOrder.removeAll { $0 == filename }
     pendingImageLoads.remove(filename)
+    stagedPreviews.remove(filename: filename)
   }
 
   private nonisolated static func estimatedByteSize(of cgImage: CGImage) -> Int {
@@ -202,6 +365,7 @@ final class SessionVaultStore {
   }
 
   private nonisolated static func makePreviewCGImage(from cgImage: CGImage) -> CGImage {
+    dispatchPrecondition(condition: .notOnQueue(.main))
     let maxDimension = max(cgImage.width, cgImage.height)
     guard maxDimension > maxPreviewPixelDimension, maxDimension > 0 else { return cgImage }
     let scale = Double(maxPreviewPixelDimension) / Double(maxDimension)
@@ -263,7 +427,7 @@ final class SessionVaultStore {
     let snapshot = records
     let directory = storageDirectory
     let fileURL = directory.appendingPathComponent(Self.sessionsFilename)
-    ioQueue.async {
+    Self.ioQueue.async {
       dispatchPrecondition(condition: .notOnQueue(.main))
       try? FileManager.default.createDirectory(
         at: directory, withIntermediateDirectories: true,
@@ -277,11 +441,21 @@ final class SessionVaultStore {
     }
   }
 
-  private func saveImageAsync(_ cgImage: CGImage, filename: String) {
+  private func saveImageAsync(
+    _ cgImage: CGImage, filename: String, preparePreview: Bool
+  ) {
     let directory = storageDirectory
     let fileURL = directory.appendingPathComponent(filename)
-    ioQueue.async {
+    let staged = stagedPreviews
+    Self.ioQueue.async { [weak self] in
       dispatchPrecondition(condition: .notOnQueue(.main))
+      if preparePreview {
+        let preview = Self.makePreviewCGImage(from: cgImage)
+        staged.append(filename: filename, image: preview)
+        Task { @MainActor [weak self] in
+          self?.drainStagedPreviews()
+        }
+      }
       try? FileManager.default.createDirectory(
         at: directory, withIntermediateDirectories: true,
         attributes: [.posixPermissions: 0o700])
@@ -294,7 +468,7 @@ final class SessionVaultStore {
 
   private func deleteImageAsync(filename: String) {
     let fileURL = storageDirectory.appendingPathComponent(filename)
-    ioQueue.async {
+    Self.ioQueue.async {
       dispatchPrecondition(condition: .notOnQueue(.main))
       try? FileManager.default.removeItem(at: fileURL)
     }

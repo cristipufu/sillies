@@ -61,12 +61,11 @@ final class ListenSkillSession: ActiveSkillSession {
     let stoppedText = service?.stop() ?? ""
     service = nil
     let transcript = stoppedText.isEmpty ? liveTranscript : stoppedText
+    let hasTranscript = !transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     let fallback =
-      transcript.isEmpty
-      ? "Audio session on \(target.displayTitle) (\(SessionRecord.formatDuration(duration)))."
-      : "Transcribed \(target.displayTitle) (\(SessionRecord.formatDuration(duration)))."
-    let (summary, actions) = SessionSummarizer.summarize(
-      text: transcript, fallbackContext: fallback)
+      hasTranscript
+      ? "Transcribed \(target.displayTitle) (\(SessionRecord.formatDuration(duration)))."
+      : "Audio session on \(target.displayTitle) (\(SessionRecord.formatDuration(duration)))."
     let record = SessionRecord(
       kind: .listen,
       characterID: companionID,
@@ -76,10 +75,14 @@ final class ListenSkillSession: ActiveSkillSession {
       windowTitle: target.windowTitle,
       durationSeconds: duration,
       transcript: transcript,
-      summary: summary,
-      actionItems: actions)
-    let banner = transcript.isEmpty ? "Audio session saved" : "Transcript & summary saved"
-    return SkillCompletionOutcome(record: record, image: nil, bannerSummary: banner)
+      summary: fallback,
+      actionItems: [],
+      summaryPending: hasTranscript)
+    let banner = hasTranscript ? "Transcript & summary saved" : "Audio session saved"
+    return SkillCompletionOutcome(
+      record: record,
+      image: nil,
+      bannerSummary: banner)
   }
 
   func cancel() {

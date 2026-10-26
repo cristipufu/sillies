@@ -41,6 +41,7 @@ final class SkillCoordinator {
   ) {
     self.vault = vault
     self.snapshotLoader = snapshotLoader
+    vault.resumePendingSummaries()
   }
 
   func binding(for companionID: String) -> CompanionBindingState {
@@ -96,10 +97,7 @@ final class SkillCoordinator {
     let now = ProcessInfo.processInfo.systemUptime
     let existingBinding = binding(for: companionID)
     let resolvedTarget = existingBinding.boundTarget ?? currentTarget
-    let combined = cleaned.joined(separator: "\n")
     let fallback = "Stashed \(cleaned.count) item(s) with \(companionName)."
-    let (summary, actions) = SessionSummarizer.summarize(
-      text: combined, fallbackContext: fallback)
     let record = SessionRecord(
       kind: .stash,
       characterID: companionID,
@@ -107,9 +105,10 @@ final class SkillCoordinator {
       appName: resolvedTarget?.appName ?? "Workspace",
       bundleIdentifier: resolvedTarget?.bundleIdentifier,
       windowTitle: resolvedTarget?.windowTitle,
-      summary: summary,
-      actionItems: actions,
-      stashedItems: cleaned)
+      summary: fallback,
+      actionItems: [],
+      stashedItems: cleaned,
+      summaryPending: true)
     vault.add(record)
     onEmitEvent?(companionID, WorkspaceEvent(.stashReceived, at: now))
 
@@ -160,9 +159,28 @@ final class SkillCoordinator {
     tickTimer = nil
   }
 
+  /// Stops active sessions, cancels in-flight background summary tasks so pending records remain
+  /// marked `summaryPending` for next launch, and awaits queued vault disk writes.
+  func shutdown() async {
+    stopAll()
+    vault.cancelPendingSummaries()
+    await vault.flush()
+  }
+
   /// Triggers an immediate metadata tick (used by the 1 Hz timer and unit tests).
   func pollBoundWindows() {
     tick()
+  }
+
+  /// Resumes any persisted `SessionRecord` whose summary was still pending when the previous
+  /// session exited.
+  func resumePendingSummaries() {
+    vault.resumePendingSummaries()
+  }
+
+  /// Waits for any in-flight background transcript or stash summary tasks to finish.
+  func flushPendingSummaries() async {
+    await vault.flushPendingSummaries()
   }
 
   @discardableResult

@@ -189,6 +189,12 @@ final class CompanionController {
     started = false
   }
 
+  func stopAndFlush() async {
+    stop()
+    skills.vault.cancelPendingSummaries()
+    await skills.vault.flush()
+  }
+
   func greet() { route(WorkspaceEvent(.pet, at: now)) }
   func playReaction(_ kind: EventKind) { route(WorkspaceEvent(kind, at: now)) }
 

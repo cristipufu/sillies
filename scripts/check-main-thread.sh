@@ -14,10 +14,10 @@ if matches=$(grep -rnE 'try!|as!|fatalError\(|preconditionFailure\(' Sources/ 2>
   fail "Unsafe trap or force-unwrap in Sources/"
 fi
 
-# 2. No blocking process/thread/semaphore waits in production sources (except MainActor test flush).
-if matches=$(grep -rnE 'waitUntilExit\(|Thread\.sleep|usleep\(|DispatchSemaphore' Sources/ 2>/dev/null | grep -v 'WindowSnapshotService.swift'); then
+# 2. No blocking process/thread/semaphore/condition/queue waits in production sources.
+if matches=$(grep -rnE 'waitUntilExit\(|Thread\.sleep|usleep\(|DispatchSemaphore|NSCondition|NSConditionLock|DispatchGroup|\.wait\(|\.sync[[:space:]]*\{' Sources/ 2>/dev/null | grep -v 'WindowSnapshotService.swift'); then
   printf '%s\n' "$matches" >&2
-  fail "Blocking thread/semaphore wait in Sources/"
+  fail "Blocking thread/semaphore/condition/queue wait in Sources/"
 fi
 
 # Ensure WindowSnapshotService only runs waitUntilExit inside Task.detached.
@@ -57,3 +57,9 @@ do
     fail "Missing dispatchPrecondition(condition: .notOnQueue(.main)) in $worker"
   fi
 done
+
+# 7. SessionSummarizer.summarize must not be called in SilliesApp; always use summarizeOnWorker.
+if matches=$(grep -rn 'SessionSummarizer\.summarize(' Sources/SilliesApp/ 2>/dev/null); then
+  printf '%s\n' "$matches" >&2
+  fail "Synchronous SessionSummarizer.summarize called in Sources/SilliesApp/; use summarizeOnWorker"
+fi

@@ -133,23 +133,22 @@ enum WindowSnapshotService {
   private static func recognizeAndSummarize(
     in image: CGImage, fallbackContext: String
   ) async -> (String, String, [String]) {
-    await Task.detached(priority: .userInitiated) {
+    let recognizedText = await Task.detached(priority: .userInitiated) {
       let request = VNRecognizeTextRequest()
       request.recognitionLevel = .accurate
       request.usesLanguageCorrection = true
       let handler = VNImageRequestHandler(cgImage: image, options: [:])
-      let recognizedText: String
       do {
         try handler.perform([request])
         let observations = request.results ?? []
         let lines = observations.compactMap { $0.topCandidates(1).first?.string }
-        recognizedText = lines.joined(separator: "\n")
+        return lines.joined(separator: "\n")
       } catch {
-        recognizedText = ""
+        return ""
       }
-      let (summary, actions) = SessionSummarizer.summarize(
-        text: recognizedText, fallbackContext: fallbackContext)
-      return (recognizedText, summary, actions)
     }.value
+    let (summary, actions) = await SessionSummarizer.summarizeOnWorker(
+      text: recognizedText, fallbackContext: fallbackContext)
+    return (recognizedText, summary, actions)
   }
 }

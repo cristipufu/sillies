@@ -75,16 +75,89 @@ struct CompanionSkillTests {
   }
 
   @Test("SessionSummarizer bounds work on large transcripts and preserves late action items")
-  func sessionSummarizerBoundsLargeInput() {
+  func sessionSummarizerBoundsLargeInput() async {
     let filler = String(
       repeating:
         "We discussed the architecture and window tracking latency across multiple displays.\n",
       count: 600)
     let tail = "TODO: ship the notarized build with chunked summarization before Friday."
-    let result = SessionSummarizer.summarize(
+    let result = await SessionSummarizer.summarizeOnWorker(
       text: filler + tail, fallbackContext: "Fallback")
     #expect(result.summary.contains("•"))
     #expect(result.actionItems.contains { $0.contains("ship the notarized build") })
+  }
+
+  @Test("SessionSummarizer bounds chunks and output size on 800 KB delimiter-free input")
+  func sessionSummarizerBoundsDelimiterFreeInput() async {
+    let unpunctuatedFiller = String(
+      repeating: "continuous transcript stream without any sentence punctuation ",
+      count: 14_000)
+    let unpunctuatedTail = "todo verify bounded chunking on unpunctuated streams"
+    let unpunctuatedInput = unpunctuatedFiller + unpunctuatedTail
+    #expect(unpunctuatedInput.utf8.count >= 800_000)
+
+    let unpunctuatedResult = await SessionSummarizer.summarizeOnWorker(
+      text: unpunctuatedInput, fallbackContext: "Fallback")
+    #expect(unpunctuatedResult.summary.count <= SessionSummarizer.maxSummaryCharacters)
+    #expect(
+      unpunctuatedResult.actionItems.allSatisfy {
+        $0.count <= SessionSummarizer.maxFragmentCharacters
+      })
+    #expect(
+      unpunctuatedResult.actionItems.contains {
+        $0.contains("verify bounded chunking")
+      })
+
+    let contiguousToken = String(repeating: "a", count: 820_000)
+    let contiguousResult = SessionSummarizer.summarize(
+      text: contiguousToken, fallbackContext: "Fallback")
+    #expect(contiguousResult.summary.count <= SessionSummarizer.maxSummaryCharacters)
+    #expect(
+      contiguousResult.actionItems.allSatisfy {
+        $0.count <= SessionSummarizer.maxFragmentCharacters
+      })
+  }
+
+  @Test("SessionSummarizer preserves action phrases split across the 240-character boundary")
+  func sessionSummarizerPreservesBoundaryStraddlingActions() {
+    // 1. Construct an unpunctuated string where "we" sits right before the 240-character mark
+    // and "should ship the release notes" sits immediately after it.
+    let prefixUnit = "background discussion about window geometry "
+    var prefix = ""
+    while prefix.count + prefixUnit.count < 234 {
+      prefix += prefixUnit
+    }
+    if prefix.count < 235 {
+      prefix += String(repeating: "x", count: 235 - prefix.count)
+    }
+    let straddling = prefix + " we should ship the release notes before launch"
+    let result = SessionSummarizer.summarize(
+      text: straddling, fallbackContext: "Fallback")
+    #expect(result.actionItems.count == 1)
+    #expect(
+      result.actionItems.contains {
+        $0.contains("we should ship the release notes")
+      })
+
+    // 2. Construct an unpunctuated string where a single TODO starts inside the overlap window
+    // before the 240-character mark and its clause continues across the boundary. It must produce
+    // exactly one complete checklist entry without a truncated duplicate.
+    var todoPrefix = ""
+    while todoPrefix.count + prefixUnit.count < 216 {
+      todoPrefix += prefixUnit
+    }
+    if todoPrefix.count < 218 {
+      todoPrefix += String(repeating: "x", count: 218 - todoPrefix.count)
+    }
+    let crossingTodo =
+      todoPrefix
+      + " TODO: we should verify that overlapping fragments never produce truncated duplicates"
+    let todoResult = SessionSummarizer.summarize(
+      text: crossingTodo, fallbackContext: "Fallback")
+    #expect(todoResult.actionItems.count == 1)
+    #expect(
+      todoResult.actionItems.first
+        == "TODO: we should verify that overlapping fragments never produce truncated duplicates")
   }
 
   @Test("DropReturnPlan geometry distinguishes perch adjustments from window drops")

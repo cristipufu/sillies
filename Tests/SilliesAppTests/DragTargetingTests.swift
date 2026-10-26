@@ -255,3 +255,64 @@ func dropTargetingValidatesLiveWindowOrderWhenOverlappingWindowsReorderDuringDra
   let resolved = await controller.targets.resolveDrop(pendingDrop)
   #expect(resolved?.windowID == 2)
 }
+
+@Test @MainActor
+func radialSelectionCancelsWhenUnderlyingTargetChangesBeforeDrop() async throws {
+  let liveWindows = WindowHitTestProbe()
+  liveWindows.frontmost = 1
+  let snapshot = DragWindowSnapshot(load: { _ in
+    [
+      DragWindowRegion(windowID: 1, frame: CGRect(x: 0, y: 0, width: 900, height: 700)),
+      DragWindowRegion(windowID: 2, frame: CGRect(x: 0, y: 0, width: 900, height: 700)),
+    ]
+  })
+  let controller = CompanionDragTargetingController(
+    metrics: DragResponseMetrics(enabled: false),
+    snapshot: snapshot,
+    dropHitTest: { point, below in liveWindows.hit(point, below: below) },
+    lookup: { id, _ in dragTestTarget(id) },
+    radialDwellDelay: 0.02)
+  let pet = CompanionInstance(
+    definition: try CharacterCatalog().characters[0],
+    rig: CatRig(),
+    size: 64,
+    seed: 1,
+    transitions: TransitionLibrary())
+  defer {
+    controller.stop()
+    pet.hud.close()
+    pet.presentation.close()
+  }
+  controller.companionLookup = { [weak pet] id in
+    pet?.definition.id == id ? pet : nil
+  }
+  controller.start()
+
+  let anchor = CGPoint(x: 400, y: 400)
+  pet.pickupPosition = CGPoint(x: 100, y: 100)
+  pet.place(at: anchor)
+  pet.isPickedUp = true
+
+  controller.beginDrag(for: pet, seed: dragTestTarget(1), pointer: anchor)
+  controller.updateDrag(for: pet, at: anchor)
+  // Wait for dwell task to open the radial wheel for window 1.
+  try await eventually {
+    controller.diagnostics.wheel && controller.diagnostics.windowID == 1
+  }
+
+  let screen =
+    NSScreen.screens.first(where: { $0.frame.contains(anchor) })?.visibleFrame
+    ?? NSScreen.main?.visibleFrame
+    ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
+  let layout = RadialSkillMenuLayout(center: anchor, visibleFrame: screen)
+  let snapBubble = try #require(layout.items.first { $0.skill == .snap }?.center)
+  controller.updateDrag(for: pet, at: snapBubble)
+  #expect(controller.hoveredSkill == .snap)
+
+  // Window 2 moves underneath the radial wheel before mouse release.
+  liveWindows.frontmost = 2
+  let evaluation = controller.evaluateDrop(dragged: true, at: snapBubble)
+  #expect(evaluation.selectedSkill == nil)
+  #expect(evaluation.cachedTarget?.windowID != 1)
+  #expect(evaluation.pendingDrop?.windowID == 2)
+}

@@ -1,3 +1,4 @@
+import AppKit
 import QuartzCore
 import SilliesCore
 import Testing
@@ -154,7 +155,7 @@ private final class MockEventProducer: WorkspaceEventProducer {
   pet.presentation.close()
 }
 
-@Test @MainActor func sessionVaultPersistsAndReloadsRecords() throws {
+@Test @MainActor func sessionVaultPersistsAndReloadsRecords() async throws {
   let directory = FileManager.default.temporaryDirectory
     .appendingPathComponent("sillies-vault-test-\(UUID().uuidString)", isDirectory: true)
   defer { try? FileManager.default.removeItem(at: directory) }
@@ -168,14 +169,14 @@ private final class MockEventProducer: WorkspaceEventProducer {
     extractedText: "final class CompanionController",
     summary: "• Captured CompanionController.swift")
   store.add(record)
-  store.flush()
+  await store.flush()
   #expect(store.records.count == 1)
 
   let reloaded = SessionVaultStore(directory: directory)
   #expect(reloaded.records.count == 1)
   #expect(reloaded.records.first?.extractedText == "final class CompanionController")
   reloaded.remove(id: record.id)
-  reloaded.flush()
+  await reloaded.flush()
   #expect(reloaded.records.isEmpty)
 }
 
@@ -272,7 +273,7 @@ private final class MockEventProducer: WorkspaceEventProducer {
   let stored = try #require(store.records.first)
   // Immediately available in memory before ioQueue even finishes writing the PNG.
   #expect(store.cachedImage(for: stored) != nil)
-  store.flush()
+  await store.flush()
 
   let reloaded = SessionVaultStore(directory: directory)
   let reloadedRecord = try #require(reloaded.records.first)
@@ -416,7 +417,7 @@ private actor DelayedSnapshotProbe {
   }
 }
 
-@Test @MainActor func sessionVaultDownsamplesPreviewsAndEnforcesByteBudget() throws {
+@Test @MainActor func sessionVaultDownsamplesPreviewsAndEnforcesByteBudget() async throws {
   let directory = FileManager.default.temporaryDirectory
     .appendingPathComponent("sillies-vault-budget-\(UUID().uuidString)", isDirectory: true)
   defer { try? FileManager.default.removeItem(at: directory) }
@@ -428,14 +429,27 @@ private actor DelayedSnapshotProbe {
       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
   let largeImage = try #require(context.makeImage())
 
+  let pinnedRecord = SessionRecord(
+    kind: .snap, characterID: "mochi", characterName: "Mochi",
+    appName: "Pinned Display", summary: "Pinned Snapshot")
+  store.add(pinnedRecord, image: largeImage)
+  store.setPinnedRecord(pinnedRecord.id)
+
   for index in 0..<24 {
     let record = SessionRecord(
       kind: .snap, characterID: "mochi", characterName: "Mochi",
       appName: "Display \(index)", summary: "Snapshot \(index)")
     store.add(record, image: largeImage)
   }
+  await store.flush()
 
   #expect(store.totalCachedImageBytes <= SessionVaultStore.maxCacheBytes)
+  // Both the pinned record and the latest snapshot must remain available in cache.
+  if let storedPinned = store.records.first(where: { $0.id == pinnedRecord.id }) {
+    #expect(store.cachedImage(for: storedPinned) != nil)
+  } else {
+    Issue.record("Expected pinned record to remain in vault")
+  }
   if let latest = store.records.first, let preview = store.cachedImage(for: latest) {
     #expect(
       max(preview.size.width, preview.size.height)
@@ -443,4 +457,158 @@ private actor DelayedSnapshotProbe {
   } else {
     Issue.record("Expected latest snapshot preview to be cached")
   }
+}
+
+@Test @MainActor func listenAndStashSummarizeOnBackgroundWorkerAndResumeAcrossRelaunch()
+  async throws
+{
+  let directory = FileManager.default.temporaryDirectory
+    .appendingPathComponent("sillies-async-summary-\(UUID().uuidString)", isDirectory: true)
+  defer { try? FileManager.default.removeItem(at: directory) }
+  let suiteName = "app.sillies.quit-test.\(UUID().uuidString)"
+  let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+  defer { UserDefaults.standard.removePersistentDomain(forName: suiteName) }
+  let settings = AppSettings(defaults: defaults)
+  settings.followsWindows = false
+  settings.reduceMotion = true
+
+  let vault = SessionVaultStore(directory: directory)
+  let coordinator = SkillCoordinator(vault: vault)
+  let controller = try CompanionController(
+    settings: settings, useAccessibility: false, skills: coordinator)
+  let delegate = AppDelegate()
+  var terminationApproved = false
+  delegate.configureForTesting(controller: controller)
+  delegate.onTerminationApproved = { _ in terminationApproved = true }
+
+  let target = WindowTargetCandidate(
+    windowID: 88, processID: 102, appName: "Notes",
+    frame: CGRect(x: 100, y: 100, width: 700, height: 500))
+
+  // 1. Save a baseline record so sessions.json already exists on disk.
+  vault.add(
+    SessionRecord(
+      kind: .focus, characterID: "mochi", characterName: "Mochi",
+      appName: "Notes", summary: "Baseline focus session"))
+  await vault.flush()
+
+  // 2. Queue a large snapshot image I/O job and a large stash simultaneously.
+  let imageContext = try #require(
+    CGContext(
+      data: nil, width: 1600, height: 1000, bitsPerComponent: 8, bytesPerRow: 0,
+      space: CGColorSpaceCreateDeviceRGB(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+  let snapshotImage = try #require(imageContext.makeImage())
+  let snapRecord = SessionRecord(
+    kind: .snap, characterID: "mochi", characterName: "Mochi",
+    appName: "Notes", summary: "Queued snapshot")
+  vault.add(snapRecord, image: snapshotImage)
+
+  let largeTranscriptFiller = String(
+    repeating: "We discussed non-blocking pause and app exclusion transitions across displays.\n",
+    count: 8_200)
+  coordinator.recordStash(
+    items: [
+      largeTranscriptFiller,
+      "TODO: verify stash action items populate asynchronously without blocking stopAll.",
+    ],
+    for: "mochi",
+    companionName: "Mochi",
+    currentTarget: target)
+  #expect(vault.pendingSummaryCount <= 1)
+
+  // 3. stopAll() (used on pause and app exclusion) must return immediately without blocking
+  // the main thread on background summarization or image encoding.
+  let stopStart = ContinuousClock.now
+  coordinator.stopAll()
+  let stopElapsed = ContinuousClock.now - stopStart
+  #expect(stopElapsed < .milliseconds(50))
+
+  // 4. Quitting via applicationShouldTerminate defers exit (.terminateLater), stops sessions,
+  // and asynchronously awaits vault.flush() so all 3 records and the PNG reach disk.
+  let reply = delegate.applicationShouldTerminate(NSApplication.shared)
+  #expect(reply == .terminateLater)
+  await delegate.terminationFlushTask?.value
+  #expect(terminationApproved)
+
+  let reloadedVault = SessionVaultStore(directory: directory)
+  #expect(reloadedVault.records.count == 3)
+  let reloadedCoordinator = SkillCoordinator(vault: reloadedVault)
+  await reloadedCoordinator.flushPendingSummaries()
+
+  let stashRecord = try #require(reloadedVault.records.first { $0.kind == .stash })
+  #expect(!stashRecord.summaryPending)
+  #expect(stashRecord.summary.contains("•"))
+  #expect(
+    stashRecord.actionItems.contains {
+      $0.contains("verify stash action items")
+    })
+  let persistedSnap = try #require(reloadedVault.records.first { $0.kind == .snap })
+  let snapURL = try #require(reloadedVault.imageURL(for: persistedSnap))
+  #expect(FileManager.default.fileExists(atPath: snapURL.path))
+
+  // Also verify crash-recovery relaunch when a record on disk still has summaryPending == true.
+  let pendingDirectory = FileManager.default.temporaryDirectory
+    .appendingPathComponent("sillies-crash-recovery-\(UUID().uuidString)", isDirectory: true)
+  defer { try? FileManager.default.removeItem(at: pendingDirectory) }
+  try FileManager.default.createDirectory(at: pendingDirectory, withIntermediateDirectories: true)
+  let unrefinedRecord = SessionRecord(
+    kind: .listen,
+    characterID: "mochi",
+    characterName: "Mochi",
+    appName: "Zoom",
+    transcript:
+      "We decided to persist pending summaries across app restarts.\nTODO: resume unrefined records on launch.",
+    summary: "Fallback summary before refinement.",
+    actionItems: [],
+    summaryPending: true)
+  let encoder = JSONEncoder()
+  encoder.dateEncodingStrategy = .iso8601
+  let data = try encoder.encode([unrefinedRecord])
+  try data.write(to: pendingDirectory.appendingPathComponent("sessions.json"), options: .atomic)
+
+  let recoveredVault = SessionVaultStore(directory: pendingDirectory)
+  let recoveredCoordinator = SkillCoordinator(vault: recoveredVault)
+  #expect(recoveredVault.pendingSummaryCount <= 1)
+  await recoveredCoordinator.flushPendingSummaries()
+
+  let recovered = try #require(recoveredVault.records.first)
+  #expect(!recovered.summaryPending)
+  #expect(recovered.summary.contains("•"))
+  #expect(
+    recovered.actionItems.contains {
+      $0.contains("resume unrefined records on launch")
+    })
+}
+
+@Test @MainActor func asyncCopyImageDoesNotOverwriteNewerPasteboardContents() async throws {
+  let directory = FileManager.default.temporaryDirectory
+    .appendingPathComponent("sillies-copy-race-\(UUID().uuidString)", isDirectory: true)
+  defer { try? FileManager.default.removeItem(at: directory) }
+  let pasteboard = NSPasteboard.withUniqueName()
+  defer { pasteboard.releaseGlobally() }
+  let store = SessionVaultStore(directory: directory, pasteboard: pasteboard)
+
+  let context = try #require(
+    CGContext(
+      data: nil, width: 64, height: 64, bitsPerComponent: 8, bytesPerRow: 0,
+      space: CGColorSpaceCreateDeviceRGB(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+  let cgImage = try #require(context.makeImage())
+  let record = SessionRecord(
+    kind: .snap, characterID: "mochi", characterName: "Mochi",
+    appName: "Preview", summary: "Snapshot")
+  store.add(record, image: cgImage)
+  await store.flush()
+  let savedRecord = try #require(store.records.first)
+
+  // Start an asynchronous image copy from disk, then immediately copy newer text before
+  // the background image decode finishes.
+  store.copyImage(for: savedRecord)
+  store.copyText("Newer clipboard text that must not be overwritten")
+  await store.flush()
+  try await Task.sleep(for: .milliseconds(25))
+
+  #expect(
+    pasteboard.string(forType: .string) == "Newer clipboard text that must not be overwritten")
 }

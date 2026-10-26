@@ -283,6 +283,7 @@ final class CompanionController {
       if !shouldRun {
         pet.cancelPendingDropTarget()
         pet.isPickedUp = false
+        pet.isWaitingForSpace = false
         pet.dropReturn.cancel()
         pet.bindingState = .followingFocusedWindow
         pet.hud.hide()
@@ -593,6 +594,7 @@ final class CompanionController {
       for pet in companions {
         pet.presentation.hide(immediately: reducedMotion || tracker.isLowPower)
         pet.hud.hide()
+        pet.isWaitingForSpace = false
         pet.tween = nil
         pet.isStrolling = false
         pet.strollReachesEdge = false
@@ -631,6 +633,7 @@ final class CompanionController {
         }
         pet.presentation.hide(immediately: reducedMotion || tracker.isLowPower)
         pet.hud.hide()
+        pet.isWaitingForSpace = false
         pet.tween = nil
         pet.isStrolling = false
         pet.strollReachesEdge = false
@@ -672,6 +675,7 @@ final class CompanionController {
         pet.dropReturn.cancel()
         pet.presentation.hide(immediately: true)
         pet.hud.hide()
+        pet.isWaitingForSpace = false
         pet.tween = nil
         pet.isStrolling = false
         pet.strollReachesEdge = false
@@ -767,7 +771,11 @@ final class CompanionController {
   }
 
   private func apply(_ state: BehaviorState, to pet: CompanionInstance) {
-    guard !settings.followsWindows || pet.surface?.isAvailable == true else {
+    let hasActiveSurface =
+      !settings.followsWindows
+      || (pet.bindingState.isBound && pet.surface?.isAvailable == true)
+      || (tracker.windowFrame != nil && tracker.windowID != nil && pet.surface?.isAvailable == true)
+    guard hasActiveSurface else {
       pet.view.rig.resetPose()
       return
     }

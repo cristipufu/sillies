@@ -15,6 +15,9 @@ import Testing
     #expect(abs(layout.frame.minX + layout.contactOffset.x - contact.x) < 0.0001)
     #expect(abs(layout.frame.minY + layout.contactOffset.y - contact.y) < 0.0001)
     #expect(layout.frame.width * layout.frame.height < pow(256 * 0.64, 2) * 0.6)
+    if edge == .top {
+      #expect(abs(layout.frame.width - AttachmentPose.designCanvasSize * 0.64) < 0.0001)
+    }
   }
 }
 

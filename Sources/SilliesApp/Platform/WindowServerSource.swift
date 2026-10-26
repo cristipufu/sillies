@@ -81,26 +81,51 @@ final class WindowServerSource: @unchecked Sendable {
     let hasFloatingCandidate = eligible.contains { $0.layer != normalWindowLayer }
     // When all eligible windows are standard normal-layer windows, WindowServer's front-to-back
     // ordering is already the exact focus order.
-    guard hasFloatingCandidate else { return eligible.first }
+    guard hasFloatingCandidate else {
+      return canonicalCandidate(
+        eligible.first, roleSnapshot: roleSnapshot, isManipulatingWindow: isManipulatingWindow)
+    }
 
     if let point = preferredPoint,
       let clicked = candidateContainingClickPoint(
         point, in: eligible, currentWindowID: currentWindowID)
     {
-      return clicked
+      return canonicalCandidate(
+        clicked, roleSnapshot: roleSnapshot, isManipulatingWindow: isManipulatingWindow)
     }
 
     if let preferred = preferredFrame,
       let matched = eligible.first(where: { framesMatch($0.frame, preferred) })
     {
-      return matched
+      return canonicalCandidate(
+        matched, roleSnapshot: roleSnapshot, isManipulatingWindow: isManipulatingWindow)
     }
     if let currentWindowID,
       let existing = eligible.first(where: { $0.id == currentWindowID })
     {
-      return existing
+      return canonicalCandidate(
+        existing, roleSnapshot: roleSnapshot, isManipulatingWindow: isManipulatingWindow)
     }
-    return eligible.first
+    return canonicalCandidate(
+      eligible.first, roleSnapshot: roleSnapshot, isManipulatingWindow: isManipulatingWindow)
+  }
+
+  private static func canonicalCandidate(
+    _ candidate: Candidate?,
+    roleSnapshot: AccessibilityWindowRoleSnapshot?,
+    isManipulatingWindow: Bool
+  ) -> Candidate? {
+    guard let candidate else { return nil }
+    guard !isManipulatingWindow,
+      let roleSnapshot,
+      roleSnapshot.hasExactStandardWindowFrames,
+      let standardFrame = roleSnapshot.standardWindowFrames.first(where: {
+        framesMatch(candidate.frame, $0)
+      })
+    else {
+      return candidate
+    }
+    return Candidate(id: candidate.id, layer: candidate.layer, frame: standardFrame)
   }
 
   static func isEligibleCandidate(
@@ -114,7 +139,8 @@ final class WindowServerSource: @unchecked Sendable {
     guard isLockedCurrentWindow || isTrackableWindowSize(candidate.frame.size) else { return false }
     if let roleSnapshot,
       !isLockedCurrentWindow,
-      matchesAnyFrame(candidate.frame, in: roleSnapshot.nonStandardWindowFrames)
+      matchesAnyFrame(candidate.frame, in: roleSnapshot.nonStandardWindowFrames),
+      !matchesAnyFrame(candidate.frame, in: roleSnapshot.standardWindowFrames)
     {
       return false
     }
@@ -137,12 +163,20 @@ final class WindowServerSource: @unchecked Sendable {
     requiresVerifiedFloatingRole: Bool,
     isManipulatingWindow: Bool = false
   ) -> [Candidate] {
-    let filtered = candidates.filter {
+    let preliminaries = candidates.filter {
       isEligibleCandidate(
         $0,
         roleSnapshot: roleSnapshot,
         currentWindowID: currentWindowID,
         requiresVerifiedFloatingRole: requiresVerifiedFloatingRole,
+        isManipulatingWindow: isManipulatingWindow)
+    }
+    let filtered = preliminaries.filter {
+      !isInteriorOverlayCandidate(
+        $0,
+        in: preliminaries,
+        roleSnapshot: roleSnapshot,
+        currentWindowID: currentWindowID,
         isManipulatingWindow: isManipulatingWindow)
     }
     guard let roleSnapshot else {
@@ -163,7 +197,44 @@ final class WindowServerSource: @unchecked Sendable {
         currentWindowID: currentWindowID,
         isManipulatingWindow: isManipulatingWindow)
     }
-    return verified.isEmpty ? filtered : verified
+    if !verified.isEmpty {
+      return verified
+    }
+    return roleSnapshot.hasVerifiedWindowList || !roleSnapshot.nonStandardWindowFrames.isEmpty
+      ? [] : filtered
+  }
+
+  private static func isInteriorOverlayCandidate(
+    _ candidate: Candidate,
+    in candidates: [Candidate],
+    roleSnapshot: AccessibilityWindowRoleSnapshot?,
+    currentWindowID: CGWindowID?,
+    isManipulatingWindow: Bool
+  ) -> Bool {
+    guard !(isManipulatingWindow && candidate.id == currentWindowID),
+      candidate.layer == normalWindowLayer
+    else {
+      return false
+    }
+    if let roleSnapshot,
+      matchesAnyFrame(candidate.frame, in: roleSnapshot.standardWindowFrames)
+    {
+      return false
+    }
+    let candidateArea = candidate.frame.width * candidate.frame.height
+    return candidates.contains { enclosing in
+      guard enclosing.id != candidate.id,
+        enclosing.layer == normalWindowLayer
+      else {
+        return false
+      }
+      let enclosingArea = enclosing.frame.width * enclosing.frame.height
+      guard candidateArea < enclosingArea * 0.65 else { return false }
+      return enclosing.frame.insetBy(
+        dx: -preferredFrameTolerance,
+        dy: -preferredFrameTolerance
+      ).contains(candidate.frame)
+    }
   }
 
   private static func isVerifiedStandardCandidate(
@@ -179,7 +250,10 @@ final class WindowServerSource: @unchecked Sendable {
     if matchesAnyFrame(candidate.frame, in: roleSnapshot.standardWindowFrames) {
       return true
     }
-    guard candidate.layer == normalWindowLayer, !unmatchedStandardFrames.isEmpty else {
+    guard isManipulatingWindow || !roleSnapshot.hasExactStandardWindowFrames,
+      candidate.layer == normalWindowLayer,
+      !unmatchedStandardFrames.isEmpty
+    else {
       return false
     }
     return matchesStandardWindowSize(candidate.frame.size, in: unmatchedStandardFrames)
@@ -311,14 +385,14 @@ final class WindowServerSource: @unchecked Sendable {
     let processID = request.processID
     let windowID = request.windowID
     let discover = request.discover
+    let singleWindowRead = !discover && windowID != nil && request.isManipulatingWindow
     let options: CGWindowListOption =
-      discover || windowID == nil
-      ? [.optionOnScreenOnly] : [.optionIncludingWindow]
-    let reference = discover ? kCGNullWindowID : (windowID ?? kCGNullWindowID)
+      singleWindowRead ? [.optionIncludingWindow] : [.optionOnScreenOnly]
+    let reference = singleWindowRead ? (windowID ?? kCGNullWindowID) : kCGNullWindowID
     let capturedAt = ProcessInfo.processInfo.systemUptime
     let entries = CGWindowListCopyWindowInfo(options, reference) as? [[String: Any]] ?? []
     let backgroundIDs: Set<Int>? =
-      discover || windowID == nil
+      !singleWindowRead
       ? Set(
         entries.compactMap { row in
           guard
@@ -328,7 +402,7 @@ final class WindowServerSource: @unchecked Sendable {
           return row[kCGWindowNumber as String] as? Int
         }) : nil
     let inputFrames: [Int: CGRect]? =
-      discover || windowID == nil
+      !singleWindowRead
       ? Dictionary(
         uniqueKeysWithValues: entries.compactMap { row in
           guard

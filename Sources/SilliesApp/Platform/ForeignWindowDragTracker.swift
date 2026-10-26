@@ -106,8 +106,13 @@ final class ForeignWindowDragTracker: NSObject {
     frame: CGRect?, hasWindow: Bool, at time: Double, isLowPower: Bool
   ) -> Bool {
     attachCandidateIfNeeded(frame: frame, hasWindow: hasWindow, isLowPower: isLowPower)
-    guard session != nil else { return false }
+    guard let active = session else { return false }
     if !isDragging {
+      let point = NSEvent.mouseLocation
+      let initial = active.gesture.initialPointer
+      guard hypot(point.x - initial.x, point.y - initial.y) > Self.pointerDragStartThreshold else {
+        return false
+      }
       isDragging = true
       onDragStarted?()
     }

@@ -150,7 +150,7 @@ final class CompanionView: NSView {
     isAttachedToSurface = attached
     let edge: PerchSurface.Edge =
       switch attachmentPose {
-      case .standing: clippingWindow == nil ? .desktop : .top
+      case .standing: (attached && clippingWindow == nil) ? .desktop : .top
       case .hangingLeft: .left
       case .hangingRight: .right
       }
@@ -239,7 +239,9 @@ final class CompanionView: NSView {
   }
 
   private func containsFilledShape(_ layer: CALayer, at point: CGPoint) -> Bool {
-    guard !layer.isHidden, layer.opacity > Self.minimumVisibleOpacity else { return false }
+    guard layer !== rig.delight, !layer.isHidden, layer.opacity > Self.minimumVisibleOpacity else {
+      return false
+    }
     if let shape = layer as? CAShapeLayer, let path = shape.path {
       if let fill = shape.fillColor, fill.alpha > CGFloat(Self.minimumVisibleOpacity),
         path.contains(point)

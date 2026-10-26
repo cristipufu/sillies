@@ -74,7 +74,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
   private static let pollingTimerTolerance: Double = 0.03
   private static let housekeepingTimerTolerance: Double = 1.0
   private static let discoveryTickMultiple = 2
-  private static let followUpDiscoveryDelays: [Double] = [0.035, 0.11]
+  private static let followUpDiscoveryDelays: [Double] = [0.035, 0.11, 0.2, 0.35, 0.55]
   private static let housekeepingInterval: Double = 5.0
   private static let userIdleThresholdSeconds: Double = 90
   private static let settleDelaySeconds: Double = 0.22
@@ -154,10 +154,11 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
     windowID != nil && (dragTracker.isDragging || currentManipulation != nil)
   }
 
-  private var isManipulatingTrackedWindow: Bool {
+  private var isActivelyManipulatingTrackedWindow: Bool {
     guard windowID != nil else { return false }
-    return dragTracker.isDragging || dragTracker.isResizeCandidate || currentManipulation != nil
-      || (isLeftMouseButtonPressed && currentManipulation != nil)
+    return dragTracker.isDragging
+      || (isLeftMouseButtonPressed
+        && (dragTracker.isResizeCandidate || currentManipulation != nil))
   }
 
   init(useAccessibility: Bool = true) {
@@ -409,8 +410,11 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
     roleSnapshot = nil
     isAwaitingApplicationWindow = isEnabled && tracksWindows && hadTrackedWindow
     if isEnabled && tracksWindows {
-      if hasAccessibility { accessibilitySource?.observe(processID: processID) }
-      refreshGeometry(discover: true)
+      if hasAccessibility {
+        accessibilitySource?.observe(processID: processID)
+      } else {
+        refreshGeometry(discover: true)
+      }
       scheduleFollowUpDiscovery()
     }
     onApplicationChanged?()
@@ -424,12 +428,17 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
   private func scheduleFollowUpDiscovery() {
     cancelFollowUpDiscovery()
     guard started, isEnabled, tracksWindows, !isSuspended else { return }
-    for delay in Self.followUpDiscoveryDelays {
+    for (index, delay) in Self.followUpDiscoveryDelays.enumerated() {
       let task = DispatchWorkItem { [weak self] in
         MainActor.assumeIsolated {
-          guard let self, !self.isManipulatingTrackedWindow else { return }
+          guard let self, !self.isActivelyManipulatingTrackedWindow else { return }
           self.followFrontmostApplication()
-          self.refreshGeometry(discover: true)
+          if self.hasAccessibility && index >= 2 {
+            self.accessibilitySource?.refresh()
+          }
+          if !self.hasAccessibility || self.roleSnapshot != nil || index > 0 {
+            self.refreshGeometry(discover: true)
+          }
         }
       }
       discoveryTasks.append(task)
@@ -440,11 +449,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
   private func refreshGeometry(discover: Bool = false) {
     guard started, isEnabled, tracksWindows, !isSuspended, processID != 0 else { return }
     let now = ProcessInfo.processInfo.systemUptime
-    let lockedToCurrentWindow =
-      windowID != nil
-      && (dragTracker.isDragging
-        || dragTracker.isResizeCandidate
-        || currentManipulation != nil)
+    let lockedToCurrentWindow = isActivelyManipulatingTrackedWindow
     let effectiveDiscover = lockedToCurrentWindow ? false : discover
     let activeClickPoint: CGPoint? =
       if !lockedToCurrentWindow,
@@ -464,7 +469,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
       preferredPoint: activeClickPoint,
       roleSnapshot: roleSnapshot,
       requiresVerifiedFloatingRole: hasAccessibility,
-      isManipulatingWindow: isManipulatingTrackedWindow)
+      isManipulatingWindow: isActivelyManipulatingTrackedWindow)
   }
 
   private func accept(_ observation: WindowServerObservation) {
@@ -492,18 +497,22 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
     var next = observation.frame.map {
       ScreenCoordinates.appKitRect(fromAccessibility: $0, primaryScreenTop: top)
     }
-    if let id = observation.windowID, let next { inputWindowFrames[Int(id)] = next }
+    var resolvedWindowID = observation.windowID
+    if let id = resolvedWindowID, let next { inputWindowFrames[Int(id)] = next }
     // Native windows already provide synchronous bounds. Never overwrite them with stale IPC readback.
-    if processID == ProcessInfo.processInfo.processIdentifier, let id = observation.windowID,
-      let native = NSApp.window(withWindowNumber: Int(id)), native.isVisible
+    if processID == ProcessInfo.processInfo.processIdentifier,
+      let id = resolvedWindowID ?? windowID,
+      let native = NSApp.window(withWindowNumber: Int(id)),
+      native.isVisible, !native.isMiniaturized
     {
+      resolvedWindowID = id
       next = native.frame
     }
     let wasReconcilingRelease = dragTracker.hasActiveSession && !dragTracker.isDragging
     if dragTracker.hasActiveSession {
       let decision = dragTracker.validate(
         observationFrame: next,
-        matchesTrackedWindow: observation.windowID == windowID,
+        matchesTrackedWindow: resolvedWindowID == windowID,
         currentFrame: windowFrame,
         capturedAt: observation.capturedAt,
         now: ProcessInfo.processInfo.systemUptime)
@@ -515,10 +524,13 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
     let previousID = windowID
     publishGeometry(
       next,
-      windowID: observation.windowID,
+      windowID: resolvedWindowID,
       windowLayer: observation.windowLayer,
       suppressManipulationEvent: wasReconcilingRelease)
-    if wasAwaitingApplicationWindow && observation.windowID == nil && previousFrame == nil
+    if wasReconcilingRelease && !dragTracker.hasActiveSession {
+      settle()
+    }
+    if wasAwaitingApplicationWindow && resolvedWindowID == nil && previousFrame == nil
       && previousID == nil
     {
       onGeometryChanged?()
@@ -567,7 +579,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
         settleTimer = timer
         RunLoop.main.add(timer, forMode: .common)
       }
-    } else if currentManipulation != nil {
+    } else if !suppressManipulationEvent, currentManipulation != nil {
       settleTimer?.invalidate()
       settleTimer = nil
       currentManipulation = nil
@@ -610,15 +622,16 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
     let now = ProcessInfo.processInfo.systemUptime
     let hasActiveClickSelection =
       pendingClickPoint != nil && now - pendingClickTime < Self.clickSelectionExpirationSeconds
-    if !isManipulatingTrackedWindow,
+    if !isActivelyManipulatingTrackedWindow,
       let focusedFrame = observation.focusedFrame,
       !hasActiveClickSelection
     {
       preferredAccessibilityFrame = focusedFrame
     }
     let discover =
-      !isManipulatingTrackedWindow
+      !isActivelyManipulatingTrackedWindow
       && (observation.reason == AccessibilityWindowSource.activationReason
+        || observation.reason == AccessibilityWindowSource.sampleReason
         || isFocusChangedNotification
         || isWindowLifecycleNotification)
     let isGeometryNotification =
@@ -626,7 +639,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
       || observation.reason == kAXResizedNotification
     if !(isGeometryNotification && dragTracker.isPointerConfirmed) {
       refreshGeometry(discover: discover)
-      if isWindowLifecycleNotification && !isManipulatingTrackedWindow {
+      if isWindowLifecycleNotification && !isActivelyManipulatingTrackedWindow {
         scheduleFollowUpDiscovery()
       }
     }
@@ -694,7 +707,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
         refreshGeometry(discover: windowID == nil || pendingClickPoint != nil)
       }
     case .leftMouseUp:
-      let wasDragging = dragTracker.isDragging
+      let wasDragging = dragTracker.isDragging && dragTracker.isPointerConfirmed
       isLeftMouseDown = false
       pendingClickPoint = nil
       endDrag()
@@ -704,6 +717,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
           refreshGeometry(discover: true)
           scheduleFollowUpDiscovery()
         } else {
+          accessibilitySource?.refresh(reason: AccessibilityWindowSource.sampleReason)
           refreshGeometry(discover: windowID == nil)
         }
       }
@@ -791,12 +805,20 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
     if notification.name == NSWindow.willCloseNotification
       || notification.name == NSWindow.didMiniaturizeNotification
     {
+      if UInt32(window.windowNumber) == windowID {
+        publishGeometry(nil, windowID: nil)
+      }
       refreshGeometry(discover: true)
       scheduleFollowUpDiscovery()
       return
     }
     guard window.isMainWindow || window.isKeyWindow || UInt32(window.windowNumber) == windowID
     else { return }
+    if notification.name == NSWindow.didMoveNotification
+      || notification.name == NSWindow.didResizeNotification
+    {
+      roleSnapshot?.hasExactStandardWindowFrames = false
+    }
     publishGeometry(window.frame, windowID: UInt32(window.windowNumber))
   }
   @objc private func spaceChanged() {

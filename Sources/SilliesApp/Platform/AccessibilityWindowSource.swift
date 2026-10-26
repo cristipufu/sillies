@@ -6,6 +6,19 @@ struct AccessibilityWindowRoleSnapshot: Sendable, Equatable {
   var standardWindowFrames: [CGRect] = []
   var nonStandardWindowFrames: [CGRect] = []
   var hasVerifiedWindowList = false
+  var hasExactStandardWindowFrames = false
+
+  init(
+    standardWindowFrames: [CGRect] = [],
+    nonStandardWindowFrames: [CGRect] = [],
+    hasVerifiedWindowList: Bool = false,
+    hasExactStandardWindowFrames: Bool? = nil
+  ) {
+    self.standardWindowFrames = standardWindowFrames
+    self.nonStandardWindowFrames = nonStandardWindowFrames
+    self.hasVerifiedWindowList = hasVerifiedWindowList
+    self.hasExactStandardWindowFrames = hasExactStandardWindowFrames ?? hasVerifiedWindowList
+  }
 }
 
 struct WindowObservation: Sendable {
@@ -191,6 +204,9 @@ final class AccessibilityWindowSource: @unchecked Sendable {
     dispatchPrecondition(condition: .notOnQueue(.main))
     guard let application, isCurrentRequestedProcess(processID) else { return }
     if Self.isNonStructuralWindowNotification(reason), window != nil {
+      if reason == kAXMovedNotification || reason == kAXResizedNotification {
+        cachedRoleSnapshot?.hasExactStandardWindowFrames = false
+      }
       publish(reason: reason, roleSnapshot: cachedRoleSnapshot)
       return
     }
@@ -203,6 +219,15 @@ final class AccessibilityWindowSource: @unchecked Sendable {
       fallbackWindow: window,
       timeout: Self.messagingTimeoutSeconds)
     guard isCurrentRequestedProcess(processID) else { return }
+    let isTransientUnverifiedRead =
+      !evaluation.roleSnapshot.hasVerifiedWindowList
+      && evaluation.targetWindow == nil
+      && evaluation.roleSnapshot.standardWindowFrames.isEmpty
+      && evaluation.roleSnapshot.nonStandardWindowFrames.isEmpty
+    if isTransientUnverifiedRead, let cachedRoleSnapshot {
+      publish(reason: reason, roleSnapshot: cachedRoleSnapshot)
+      return
+    }
     cachedRoleSnapshot = evaluation.roleSnapshot
 
     guard let target = evaluation.targetWindow else {
@@ -226,18 +251,9 @@ final class AccessibilityWindowSource: @unchecked Sendable {
         }
       }
     }
-    let shouldPublishFocusedFrame =
-      isNewWindow
-      || reason == Self.activationReason
-      || reason == kAXFocusedWindowChangedNotification
-      || reason == kAXMainWindowChangedNotification
-      || reason == kAXWindowCreatedNotification
-      || reason == kAXUIElementDestroyedNotification
-      || reason == kAXWindowMiniaturizedNotification
-      || reason == kAXWindowDeminiaturizedNotification
     publish(
       reason: reason,
-      focusedFrame: shouldPublishFocusedFrame ? target.frame : nil,
+      focusedFrame: target.frame,
       roleSnapshot: evaluation.roleSnapshot)
   }
 
@@ -315,11 +331,9 @@ final class AccessibilityWindowSource: @unchecked Sendable {
       orderedElements.insert(focusedWindow, at: 0)
     }
 
-    var allInspectedSucceeded = windowList.succeeded
     var inspectedWindows: [InspectedWindow] = []
     for element in orderedElements.prefix(maxInspectedWindowCount) {
       guard let inspected = inspectWindow(element, timeout: timeout) else {
-        allInspectedSucceeded = false
         continue
       }
       inspectedWindows.append(inspected)
@@ -329,7 +343,9 @@ final class AccessibilityWindowSource: @unchecked Sendable {
         snapshot.nonStandardWindowFrames.append(inspected.frame)
       }
     }
-    snapshot.hasVerifiedWindowList = allInspectedSucceeded
+    snapshot.hasVerifiedWindowList =
+      windowList.succeeded && (orderedElements.isEmpty || !inspectedWindows.isEmpty)
+    snapshot.hasExactStandardWindowFrames = snapshot.hasVerifiedWindowList
 
     var fallbackInspected: InspectedWindow?
     if let fallbackWindow,

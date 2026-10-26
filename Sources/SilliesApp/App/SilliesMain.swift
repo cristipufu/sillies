@@ -82,6 +82,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private var externalDragCheck: ExternalDragCheck?
   private var playInteractionCheck: PlayInteractionCheck?
   private var companionDragCheck: CompanionDragResponseCheck?
+  private var automatedRunWatchdog: DispatchSourceTimer?
   private var isTerminating = false
   private(set) var terminationFlushTask: Task<Void, Never>?
   var onTerminationApproved: @MainActor (NSApplication) -> Void = { sender in
@@ -97,6 +98,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   func applicationDidFinishLaunching(_ notification: Notification) {
     do {
       let launch = LaunchConfiguration()
+      if launch.isAutomatedRun || launch.validatesCatalogOnly {
+        armAutomatedRunWatchdog(
+          timeoutSeconds: launch.arguments.contains("--performance-check") ? 45 : 25)
+      }
       if launch.runsInputFixture {
         inputFixture = InputWindowFixture()
         inputFixture?.start()
@@ -213,7 +218,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   }
 
   func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-    guard !isTerminating else { return .terminateLater }
+    guard !isTerminating else { return .terminateNow }
     guard let controller else {
       cleanupTemporaryPreferences()
       return .terminateNow
@@ -224,10 +229,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     cleanupTemporaryPreferences()
     let vault = controller.skills.vault
     let approveTermination = onTerminationApproved
-    terminationFlushTask = Task { @MainActor [weak self] in
-      await vault.flush()
-      self?.terminationFlushTask = nil
-      approveTermination(sender)
+    let (stream, continuation) = AsyncStream<Void>.makeStream()
+    terminationFlushTask = Task {
+      for await _ in stream { break }
+    }
+    vault.flushOnIOQueue { [weak self] in
+      MainActor.assumeIsolated {
+        vault.drainStagedPreviewsForTermination()
+        self?.terminationFlushTask = nil
+        approveTermination(sender)
+        continuation.finish()
+      }
     }
     return .terminateLater
   }
@@ -244,6 +256,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       UserDefaults.standard.removePersistentDomain(forName: domain)
       temporaryPreferencesDomain = nil
     }
+  }
+
+  private func armAutomatedRunWatchdog(timeoutSeconds: Double) {
+    let timer = DispatchSource.makeTimerSource(
+      queue: DispatchQueue(label: "app.sillies.watchdog", qos: .userInteractive))
+    timer.schedule(deadline: .now() + timeoutSeconds)
+    timer.setEventHandler {
+      FileHandle.standardError.write(
+        Data("AUTOMATED CHECK WATCHDOG TIMEOUT after \(timeoutSeconds)s\n".utf8))
+      _exit(1)
+    }
+    timer.resume()
+    automatedRunWatchdog = timer
   }
 
   private func installStatusItem() {

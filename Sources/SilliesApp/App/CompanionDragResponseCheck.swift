@@ -80,8 +80,9 @@ final class CompanionDragResponseCheck: NSObject {
       let pet = controller.attachmentDiagnostics[index]
       let vertical = pet.edge == .left || pet.edge == .right
       let scale =
-        (vertical ? pet.frame.height : pet.frame.width)
-        / CompanionWindowLayout.runtimeCanvasDimension
+        vertical
+        ? pet.frame.height / CompanionWindowLayout.runtimeCanvasDimension
+        : pet.frame.width / AttachmentPose.designCanvasSize
       switch pet.edge {
       case .left: body = CGPoint(x: pet.point.x - 48 * scale, y: pet.point.y - 41 * scale)
       case .right: body = CGPoint(x: pet.point.x + 48 * scale, y: pet.point.y - 41 * scale)

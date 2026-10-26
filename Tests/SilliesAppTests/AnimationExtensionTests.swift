@@ -459,6 +459,14 @@ private actor DelayedSnapshotProbe {
   }
 }
 
+@MainActor
+private func spinModalPanelRunLoopUntil(_ condition: () -> Bool) {
+  let deadline = Date(timeIntervalSinceNow: 2.0)
+  while !condition(), Date() < deadline {
+    _ = RunLoop.current.run(mode: .modalPanel, before: Date(timeIntervalSinceNow: 0.005))
+  }
+}
+
 @Test @MainActor func listenAndStashSummarizeOnBackgroundWorkerAndResumeAcrossRelaunch()
   async throws
 {
@@ -525,9 +533,11 @@ private actor DelayedSnapshotProbe {
   #expect(stopElapsed < .milliseconds(50))
 
   // 4. Quitting via applicationShouldTerminate defers exit (.terminateLater), stops sessions,
-  // and asynchronously awaits vault.flush() so all 3 records and the PNG reach disk.
+  // and asynchronously flushes the vault in a modal-runloop-safe manner so all 3 records and the
+  // PNG reach disk without deadlocking AppKit's NSModalPanelRunLoopMode termination wait loop.
   let reply = delegate.applicationShouldTerminate(NSApplication.shared)
   #expect(reply == .terminateLater)
+  spinModalPanelRunLoopUntil { terminationApproved }
   await delegate.terminationFlushTask?.value
   #expect(terminationApproved)
 

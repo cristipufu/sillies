@@ -203,11 +203,31 @@ final class SessionVaultStore {
 
   func flush() async {
     await withCheckedContinuation { continuation in
-      Self.ioQueue.async {
-        dispatchPrecondition(condition: .notOnQueue(.main))
+      flushOnIOQueue {
         continuation.resume()
       }
     }
+    drainStagedPreviews()
+  }
+
+  func flushOnIOQueue(completion: @escaping @Sendable () -> Void) {
+    Self.ioQueue.async {
+      dispatchPrecondition(condition: .notOnQueue(.main))
+      let modes: [CFString] = [
+        CFRunLoopMode.commonModes.rawValue,
+        CFRunLoopMode.defaultMode.rawValue,
+        RunLoop.Mode.modalPanel.rawValue as CFString,
+        RunLoop.Mode.eventTracking.rawValue as CFString,
+      ]
+      let mainLoop = CFRunLoopGetMain()
+      CFRunLoopPerformBlock(mainLoop, modes as CFArray) {
+        completion()
+      }
+      CFRunLoopWakeUp(mainLoop)
+    }
+  }
+
+  func drainStagedPreviewsForTermination() {
     drainStagedPreviews()
   }
 

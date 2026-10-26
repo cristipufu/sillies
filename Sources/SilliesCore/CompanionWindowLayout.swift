@@ -12,6 +12,7 @@ public struct CompanionWindowLayout: Sendable {
 
   public init(contact: CGPoint, size: Double, window: CGRect?, edge: PerchSurface.Edge) {
     let half = Self.halfRuntimeCanvas * size / Self.percentScale
+    let halfDesignWidth = AttachmentPose.designCanvasSize * 0.5 * size / Self.percentScale
     let canvas = CGRect(x: contact.x - half, y: contact.y - half, width: half * 2, height: half * 2)
     var native = canvas
     if let window {
@@ -19,7 +20,7 @@ public struct CompanionWindowLayout: Sendable {
       case .top:
         let bottom = max(canvas.minY, window.maxY)
         native = CGRect(
-          x: canvas.minX, y: bottom, width: canvas.width,
+          x: contact.x - halfDesignWidth, y: bottom, width: halfDesignWidth * 2,
           height: max(Self.minimumCroppedDimension, canvas.maxY - bottom))
       case .left:
         let right = min(canvas.maxX, window.minX)
@@ -33,6 +34,10 @@ public struct CompanionWindowLayout: Sendable {
           width: max(Self.minimumCroppedDimension, canvas.maxX - left), height: canvas.height)
       default: break
       }
+    } else if edge == .desktop {
+      native = CGRect(
+        x: contact.x - halfDesignWidth, y: canvas.minY, width: halfDesignWidth * 2,
+        height: canvas.height)
     }
     frame = native
     contactOffset = CGPoint(x: contact.x - native.minX, y: contact.y - native.minY)

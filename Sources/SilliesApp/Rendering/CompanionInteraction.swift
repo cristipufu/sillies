@@ -14,6 +14,7 @@ final class CompanionInteraction {
   private var targets: [Target] = []
   private var globalMonitor: Any?
   private var localMonitor: Any?
+  private var lastPointerLocation = NSEvent.mouseLocation
   private(set) var isEnabled = false
   private(set) var monitorInstallations = 0
 
@@ -28,17 +29,17 @@ final class CompanionInteraction {
       monitorInstallations += 1
       globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .leftMouseUp]) {
         [weak self] _ in
-        MainActor.assumeIsolated { self?.refresh() }
+        MainActor.assumeIsolated { self?.refresh(at: NSEvent.mouseLocation) }
       }
     }
     if localMonitor == nil {
       localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseUp]) {
         [weak self] event in
-        self?.refresh()
+        self?.refresh(at: NSEvent.mouseLocation)
         return event
       }
     }
-    refresh()
+    refresh(at: NSEvent.mouseLocation)
   }
 
   func stop() {
@@ -51,14 +52,19 @@ final class CompanionInteraction {
     targets.removeAll()
   }
 
-  func refresh(at point: CGPoint = NSEvent.mouseLocation) {
+  func refresh() {
+    refresh(at: lastPointerLocation)
+  }
+
+  func refresh(at point: CGPoint) {
+    lastPointerLocation = point
     for target in targets {
       let eligible =
         isEnabled && target.panel.isVisible && !target.isReturning()
         && (target.isDragging()
           || !target.panel.frame.contains(point)
-          || !target.view.isProtectedInputPoint(point))
-      // WindowServer handles alpha hit testing. Keep panels ready before the pointer arrives.
+          || target.view.containsInteractiveArtwork(at: point))
+      // Keep panels ready before the pointer arrives; inside the panel, only opaque artwork intercepts clicks.
       if target.panel.ignoresMouseEvents == eligible {
         target.panel.ignoresMouseEvents = !eligible
       }

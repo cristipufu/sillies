@@ -77,6 +77,10 @@ enum RuntimeChecks {
       require(
         !view.containsInteractiveArtwork(at: transparentPoint),
         "Transparent panel regions are not interactive artwork")
+      interaction.refresh(at: transparentPoint)
+      require(
+        panel.ignoresMouseEvents,
+        "Transparent panel regions pass clicks through to background windows")
       view.configureSurface(pose: .standing, window: underlay.frame, display: nil)
       interaction.refresh(at: point)
       require(
@@ -131,7 +135,9 @@ enum RuntimeChecks {
           "Play mode detects visible character artwork")
         require(
           controller.blockingCompanionCount(
-            at: CGPoint(x: attachment.point.x + 70, y: attachment.point.y)) == 0,
+            at: CGPoint(x: attachment.point.x + 28, y: attachment.point.y + 20)) == 0
+            && controller.blockingCompanionCount(
+              at: CGPoint(x: attachment.point.x + 70, y: attachment.point.y)) == 0,
           "Transparent panel canvas always passes input through")
       }
       controller.settings.enabledCharacters.remove("mochi")

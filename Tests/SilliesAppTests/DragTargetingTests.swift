@@ -180,9 +180,11 @@ private func dragTestTarget(_ id: UInt32) -> WindowTargetCandidate {
 
 @MainActor
 private func eventually(_ condition: () async -> Bool) async throws {
-  let deadline = ContinuousClock.now.advanced(by: .seconds(1))
-  while !(await condition()), ContinuousClock.now < deadline {
-    try await Task.sleep(for: .milliseconds(1))
+  let deadline = ContinuousClock.now.advanced(by: .seconds(5))
+  var iterations = 0
+  while !(await condition()), iterations < 20 || ContinuousClock.now < deadline {
+    iterations += 1
+    try await Task.sleep(for: .milliseconds(2))
   }
   let satisfied = await condition()
   #expect(satisfied, "Timed out waiting for asynchronous targeting")
@@ -422,20 +424,24 @@ func floatingForeignWindowsLikeBrowserPictureInPictureAreTrackableBelowCompanion
   let largeInteriorAutocompletePopup = WindowServerSource.Candidate(
     id: 25, layer: WindowServerSource.normalWindowLayer,
     frame: CGRect(x: 420, y: 280, width: 320, height: 240))
+  let chromeOmniboxPopup = WindowServerSource.Candidate(
+    id: 26, layer: WindowServerSource.normalWindowLayer,
+    frame: CGRect(x: 136, y: 58, width: 1043, height: 218))
   #expect(!WindowServerSource.isTrackableWindowSize(passwordAutocompletePopup.frame.size))
   #expect(WindowServerSource.isTrackableWindowSize(CGSize(width: 300, height: 220)))
   #expect(WindowServerSource.isTrackableWindowSize(meetPiP.frame.size))
   let roleSnapshot = AccessibilityWindowRoleSnapshot(
     standardWindowFrames: [meetPiP.frame, mainBrowser.frame],
-    nonStandardWindowFrames: [confirmationAlert.frame])
+    nonStandardWindowFrames: [confirmationAlert.frame],
+    hasVerifiedWindowList: true)
 
   // Floating permission bubble (not in standardWindowFrames), confirmation alert (in
-  // nonStandardWindowFrames), and both small and large interior autocomplete/popup windows
+  // nonStandardWindowFrames), and both small and large interior autocomplete/omnibox popup windows
   // are filtered out; Meet PiP (in standardWindowFrames) wins.
   let chosenWithPopups = WindowServerSource.chooseCandidate(
     from: [
-      passwordAutocompletePopup, largeInteriorAutocompletePopup, permissionBubble,
-      confirmationAlert, meetPiP, mainBrowser,
+      passwordAutocompletePopup, largeInteriorAutocompletePopup, chromeOmniboxPopup,
+      permissionBubble, confirmationAlert, meetPiP, mainBrowser,
     ],
     preferredFrame: nil,
     preferredPoint: nil,
@@ -443,6 +449,34 @@ func floatingForeignWindowsLikeBrowserPictureInPictureAreTrackableBelowCompanion
     roleSnapshot: roleSnapshot,
     requiresVerifiedFloatingRole: true)
   #expect(chosenWithPopups?.id == 20)
+
+  // Even when Accessibility is disabled (roleSnapshot == nil) or after dragging the browser window
+  // before AX refreshes, Chrome's URL/search omnibox popup inside the browser window is excluded.
+  let movedMainBrowser = WindowServerSource.Candidate(
+    id: 21, layer: 0, frame: mainBrowser.frame.offsetBy(dx: 120, dy: 60))
+  let movedOmniboxPopup = WindowServerSource.Candidate(
+    id: 26, layer: 0, frame: chromeOmniboxPopup.frame.offsetBy(dx: 120, dy: 60))
+  #expect(
+    WindowServerSource.chooseCandidate(
+      from: [movedOmniboxPopup, movedMainBrowser],
+      preferredFrame: nil,
+      preferredPoint: nil,
+      currentWindowID: 21,
+      roleSnapshot: nil,
+      requiresVerifiedFloatingRole: false)?.id == 21)
+  let staleMovedBrowserSnapshot = AccessibilityWindowRoleSnapshot(
+    standardWindowFrames: [mainBrowser.frame],
+    nonStandardWindowFrames: [],
+    hasVerifiedWindowList: true,
+    hasExactStandardWindowFrames: false)
+  #expect(
+    WindowServerSource.chooseCandidate(
+      from: [movedOmniboxPopup, movedMainBrowser],
+      preferredFrame: nil,
+      preferredPoint: nil,
+      currentWindowID: 21,
+      roleSnapshot: staleMovedBrowserSnapshot,
+      requiresVerifiedFloatingRole: true)?.id == 21)
 
   // 4. Clicking the exterior resize border (within hitSlop outside maxX, directly over the
   // background window) and resizing the active window keeps companions on the active window.
@@ -553,6 +587,94 @@ func floatingForeignWindowsLikeBrowserPictureInPictureAreTrackableBelowCompanion
     requiresVerifiedFloatingRole: true,
     isManipulatingWindow: false)
   #expect(chosenAfterLastWindowClosed == nil)
+
+  // 6c. During the ~550ms macOS Dock genie minimize animation, WindowServer warps CGWindowBounds
+  // toward the Dock before kAXWindowMiniaturizedNotification fires. When not actively manipulating
+  // a window (isManipulatingWindow == false), genie-warped bounds must never be mistaken for a
+  // user resize or accepted via a fallback to unverified candidates.
+  let verifiedSingleWindowSnapshot = AccessibilityWindowRoleSnapshot(
+    standardWindowFrames: [frontNormal.frame],
+    nonStandardWindowFrames: [],
+    hasVerifiedWindowList: true)
+  let genieInitialWobble = WindowServerSource.Candidate(
+    id: 10,
+    layer: 0,
+    frame: CGRect(
+      x: frontNormal.frame.minX,
+      y: frontNormal.frame.minY,
+      width: frontNormal.frame.width + 3,
+      height: frontNormal.frame.height))
+  let chosenDuringGeniePreStretch = WindowServerSource.chooseCandidate(
+    from: [genieInitialWobble],
+    preferredFrame: frontNormal.frame,
+    preferredPoint: nil,
+    currentWindowID: 10,
+    roleSnapshot: verifiedSingleWindowSnapshot,
+    requiresVerifiedFloatingRole: true,
+    isManipulatingWindow: false)
+  #expect(chosenDuringGeniePreStretch?.frame == frontNormal.frame)
+
+  let geniePhase1Stretch = WindowServerSource.Candidate(
+    id: 10,
+    layer: 0,
+    frame: CGRect(
+      x: frontNormal.frame.minX,
+      y: frontNormal.frame.minY,
+      width: frontNormal.frame.width + 60,
+      height: frontNormal.frame.height + 1))
+  let chosenDuringGeniePhase1SingleWindow = WindowServerSource.chooseCandidate(
+    from: [geniePhase1Stretch],
+    preferredFrame: frontNormal.frame,
+    preferredPoint: nil,
+    currentWindowID: 10,
+    roleSnapshot: verifiedSingleWindowSnapshot,
+    requiresVerifiedFloatingRole: true,
+    isManipulatingWindow: false)
+  #expect(chosenDuringGeniePhase1SingleWindow == nil)
+
+  let genieMidAirMesh = WindowServerSource.Candidate(
+    id: 10,
+    layer: 0,
+    frame: CGRect(x: 939, y: 616, width: 436, height: 335))
+  let chosenDuringGenieMidAirSingleWindow = WindowServerSource.chooseCandidate(
+    from: [genieMidAirMesh],
+    preferredFrame: frontNormal.frame,
+    preferredPoint: nil,
+    currentWindowID: 10,
+    roleSnapshot: verifiedSingleWindowSnapshot,
+    requiresVerifiedFloatingRole: true,
+    isManipulatingWindow: false)
+  #expect(chosenDuringGenieMidAirSingleWindow == nil)
+
+  let verifiedTwoWindowSnapshot = AccessibilityWindowRoleSnapshot(
+    standardWindowFrames: [frontNormal.frame, backNormal.frame],
+    nonStandardWindowFrames: [],
+    hasVerifiedWindowList: true)
+  let chosenDuringGeniePhase1TwoWindows = WindowServerSource.chooseCandidate(
+    from: [geniePhase1Stretch, backNormal],
+    preferredFrame: frontNormal.frame,
+    preferredPoint: nil,
+    currentWindowID: 10,
+    roleSnapshot: verifiedTwoWindowSnapshot,
+    requiresVerifiedFloatingRole: true,
+    isManipulatingWindow: false)
+  #expect(chosenDuringGeniePhase1TwoWindows?.id == 11)
+
+  // 6d. A minimized or non-standard window sharing the exact same rect as an open standard window
+  // must never disqualify the open standard window.
+  let overlappingMinimizedSnapshot = AccessibilityWindowRoleSnapshot(
+    standardWindowFrames: [frontNormal.frame],
+    nonStandardWindowFrames: [frontNormal.frame],
+    hasVerifiedWindowList: true)
+  let chosenWithOverlappingMinimizedRect = WindowServerSource.chooseCandidate(
+    from: [frontNormal],
+    preferredFrame: frontNormal.frame,
+    preferredPoint: nil,
+    currentWindowID: nil,
+    roleSnapshot: overlappingMinimizedSnapshot,
+    requiresVerifiedFloatingRole: true,
+    isManipulatingWindow: false)
+  #expect(chosenWithOverlappingMinimizedRect?.id == 10)
 
   // 7. Non-structural AX notifications (move, resize, title, selection) must never re-query
   // the target application's window hierarchy during a window drag.

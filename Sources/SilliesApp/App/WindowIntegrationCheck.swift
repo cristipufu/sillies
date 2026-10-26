@@ -68,8 +68,9 @@ final class WindowIntegrationCheck {
       guard let frame = controller.tracker.windowFrame else { fail("Missing window") }
       let attachments = controller.attachmentDiagnostics
       require(
-        attachments.count == 2 && attachments.allSatisfy(\.visible),
-        "Both characters visible at \(stage)")
+        attachments.count == controller.settings.enabledCharacters.count
+          && attachments.allSatisfy(\.visible),
+        "All characters visible at \(stage)")
       require(
         attachments.allSatisfy { !frame.contains($0.point) },
         "Characters remain outside the window at \(stage)")

@@ -2,57 +2,31 @@ import AppKit
 import CoreGraphics
 import SilliesCore
 
-/// Resolves the application window underneath a dragged companion and queries single-window bounds
-/// for bound companions without full window-list polling.
+/// Single-window metadata reads. Call from a worker, never from mouse handling or view rendering.
 enum WindowTargetResolver {
   private static let minimumVisibleAlpha: Double = 0.05
-  private static let maxStackSearchDepth = 16
 
-  @MainActor
-  static func resolveTarget(
-    at screenPoint: CGPoint, excludingWindowNumbers: Set<Int>
+  static func candidate(
+    for windowID: CGWindowID, primaryScreenTop: Double
   ) -> WindowTargetCandidate? {
-    var below = 0
-    var candidateNumber = NSWindow.windowNumber(at: screenPoint, belowWindowWithWindowNumber: below)
-    var steps = 0
-    let primaryTop = NSScreen.screens.first?.frame.maxY ?? 0
-    let minimumSize = PointerWindowGesture.defaultMinimumWindowSize
-
-    while candidateNumber > 0 && steps < maxStackSearchDepth {
-      steps += 1
-      if !excludingWindowNumbers.contains(candidateNumber) {
-        let windowID = CGWindowID(candidateNumber)
-        if let entry = windowEntry(for: windowID),
-          (entry[kCGWindowLayer as String] as? Int) == 0,
-          (entry[kCGWindowIsOnscreen as String] as? Bool) != false,
-          (entry[kCGWindowAlpha as String] as? Double ?? 1) > minimumVisibleAlpha,
-          let pid = entry[kCGWindowOwnerPID as String] as? Int32,
-          let boundsDict = entry[kCGWindowBounds as String] as? [String: Any],
-          let cgFrame = CGRect(dictionaryRepresentation: boundsDict as CFDictionary)
-        {
-          let frame = ScreenCoordinates.appKitRect(
-            fromAccessibility: cgFrame, primaryScreenTop: primaryTop)
-          if frame.width >= minimumSize.width && frame.height >= minimumSize.height {
-            let runningApp = NSRunningApplication(processIdentifier: pid)
-            let ownerName =
-              runningApp?.localizedName
-              ?? (entry[kCGWindowOwnerName as String] as? String)
-              ?? "App"
-            let title = entry[kCGWindowName as String] as? String
-            return WindowTargetCandidate(
-              windowID: windowID,
-              processID: pid,
-              appName: ownerName,
-              bundleIdentifier: runningApp?.bundleIdentifier,
-              windowTitle: title,
-              frame: frame)
-          }
-        }
-      }
-      below = candidateNumber
-      candidateNumber = NSWindow.windowNumber(at: screenPoint, belowWindowWithWindowNumber: below)
-    }
-    return nil
+    guard let entry = windowEntry(for: windowID),
+      (entry[kCGWindowLayer as String] as? Int) == 0,
+      (entry[kCGWindowIsOnscreen as String] as? Bool) != false,
+      (entry[kCGWindowAlpha as String] as? Double ?? 1) > minimumVisibleAlpha,
+      let pid = entry[kCGWindowOwnerPID as String] as? Int32,
+      let bounds = entry[kCGWindowBounds as String] as? [String: Any],
+      let cgFrame = CGRect(dictionaryRepresentation: bounds as CFDictionary)
+    else { return nil }
+    let minimum = PointerWindowGesture.defaultMinimumWindowSize
+    guard cgFrame.width >= minimum.width, cgFrame.height >= minimum.height else { return nil }
+    let app = NSRunningApplication(processIdentifier: pid)
+    return WindowTargetCandidate(
+      windowID: windowID, processID: pid,
+      appName: app?.localizedName ?? (entry[kCGWindowOwnerName as String] as? String) ?? "App",
+      bundleIdentifier: app?.bundleIdentifier,
+      windowTitle: entry[kCGWindowName as String] as? String,
+      frame: ScreenCoordinates.appKitRect(
+        fromAccessibility: cgFrame, primaryScreenTop: primaryScreenTop))
   }
 
   static func currentSnapshot(
@@ -74,5 +48,54 @@ enum WindowTargetResolver {
     let list =
       CGWindowListCopyWindowInfo([.optionIncludingWindow], windowID) as? [[String: Any]]
     return list?.first
+  }
+}
+
+final class WindowTargetMetadata: Sendable {
+  typealias Read = @Sendable (CGWindowID, Double) -> WindowTargetCandidate?
+  static let shared = WindowTargetMetadata()
+  private let queue = DispatchQueue(label: "app.sillies.drag-target-metadata", qos: .userInitiated)
+  private let read: Read
+
+  init(read: @escaping Read = { WindowTargetResolver.candidate(for: $0, primaryScreenTop: $1) }) {
+    self.read = read
+  }
+
+  func candidate(for windowID: CGWindowID, primaryScreenTop: Double) async -> WindowTargetCandidate?
+  {
+    guard !Task.isCancelled else { return nil }
+    let read = read
+    return await withCheckedContinuation { continuation in
+      queue.async {
+        continuation.resume(returning: read(windowID, primaryScreenTop))
+      }
+    }
+  }
+
+  func regions(primaryScreenTop: Double) async -> [DragWindowRegion] {
+    guard !Task.isCancelled else { return [] }
+    return await withCheckedContinuation { continuation in
+      queue.async {
+        let entries =
+          CGWindowListCopyWindowInfo(
+            [.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]
+          ?? []
+        let minimum = PointerWindowGesture.defaultMinimumWindowSize
+        let regions = entries.prefix(256).compactMap { entry -> DragWindowRegion? in
+          guard (entry[kCGWindowLayer as String] as? Int) == 0,
+            (entry[kCGWindowAlpha as String] as? Double ?? 1) > 0.05,
+            let id = entry[kCGWindowNumber as String] as? UInt32,
+            let bounds = entry[kCGWindowBounds as String] as? [String: Any],
+            let frame = CGRect(dictionaryRepresentation: bounds as CFDictionary),
+            frame.width >= minimum.width, frame.height >= minimum.height
+          else { return nil }
+          return DragWindowRegion(
+            windowID: id,
+            frame: ScreenCoordinates.appKitRect(
+              fromAccessibility: frame, primaryScreenTop: primaryScreenTop))
+        }
+        continuation.resume(returning: regions)
+      }
+    }
   }
 }

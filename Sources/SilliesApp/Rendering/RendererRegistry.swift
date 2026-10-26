@@ -8,6 +8,8 @@ final class RendererRegistry {
   init() {
     register("cat", factory: CatRig.init)
     register("ninja", factory: NinjaRig.init)
+    register("frog", factory: FrogRig.init)
+    register("robot", factory: RobotRig.init)
   }
 
   func register(_ id: String, factory: @escaping Factory) { factories[id] = factory }

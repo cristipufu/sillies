@@ -10,6 +10,7 @@ final class CompanionInstance {
   let panel: CompanionPanel
   let presentation: CompanionPresentation
   let hud = CompanionHUDController()
+  let dropReturn = CompanionDropReturn()
   var behavior: BehaviorEngine
   var random: SeededRandom
   var position = CGPoint.zero
@@ -18,10 +19,20 @@ final class CompanionInstance {
   var isStrolling = false
   var strollReachesEdge = false
   var isPickedUp = false
-  var isReturningFromDrop = false
+  var isWaitingForSpace = false
+  var isReturningFromDrop: Bool { dropReturn.isActive }
   var pickupPosition = CGPoint.zero
+  var pickupFraction = 0.5
+  var pickupWindowTarget: WindowTargetCandidate?
+  var selectionPerchTarget: WindowTargetCandidate?
+  var pendingDropTarget: Task<Void, Never>?
   var attachedWindowID: CGWindowID?
   var bindingState: CompanionBindingState = .followingFocusedWindow
+
+  var attachmentTarget: WindowTargetCandidate? {
+    if case .awaitingSelection = bindingState { return selectionPerchTarget }
+    return bindingState.boundTarget
+  }
 
   init(
     definition: CharacterDefinition, rig: CharacterRig, size: Double, seed: UInt64,
@@ -55,8 +66,13 @@ final class CompanionInstance {
     refreshHUD()
   }
 
+  func cancelPendingDropTarget() {
+    pendingDropTarget?.cancel()
+    pendingDropTarget = nil
+  }
+
   func refreshHUD() {
-    guard panel.isVisible, !isPickedUp else {
+    guard panel.isVisible, !isPickedUp, !isReturningFromDrop, !isWaitingForSpace else {
       hud.hide()
       return
     }

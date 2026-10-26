@@ -12,7 +12,11 @@ final class AnimationLibrary {
   private var characterReducedMotionClips: [String: [AnimationID: Clip]] = [:]
   private var poseVariants: [AttachmentPose: [AnimationID: AnimationID]] = [:]
 
-  init() { BuiltinAnimations.register(in: self) }
+  init() {
+    BuiltinAnimations.register(in: self)
+    FrogAnimations.register(in: self)
+    RobotAnimations.register(in: self)
+  }
 
   func register(_ id: AnimationID, characterID: String? = nil, clip: @escaping Clip) {
     if let characterID {

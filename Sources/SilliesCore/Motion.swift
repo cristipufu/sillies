@@ -133,19 +133,22 @@ public struct StrollPlan: Equatable, Sendable {
 
   public init?(
     from position: CGPoint, on surface: PerchSurface, speed: Double, activity: Double,
-    maxDuration: Double, random: inout SeededRandom
+    maxDuration: Double, occupied: [PerchReservation] = [], random: inout SeededRandom
   ) {
     let direction = random.unit() < 0.5 ? -1.0 : 1.0
     let offset = direction * (Self.minimumOffset + random.unit() * Self.offsetSpan)
     let length = hypot(surface.end.x - surface.start.x, surface.end.y - surface.start.y)
     let currentFraction = surface.fraction(for: position)
     let rawFraction = currentFraction + offset / max(length, 1)
-    let targetPoint = surface.point(at: rawFraction)
+    guard
+      let targetPoint = PerchSpacing.nearestAvailablePoint(
+        to: surface.point(at: rawFraction), on: surface, occupied: occupied)
+    else { return nil }
     let distance = hypot(targetPoint.x - position.x, targetPoint.y - position.y)
     guard distance > Self.minimumTravelDistance else { return nil }
     target = targetPoint
     facingRight = surface.fraction(for: targetPoint) > currentFraction
-    reachesEdge = rawFraction <= 0 || rawFraction >= 1
+    reachesEdge = surface.isAtBoundary(targetPoint)
     duration = min(maxDuration, distance / max(speed * activity, 1))
   }
 }
@@ -198,6 +201,10 @@ public enum NeighborProximity {
   }
 }
 
+public enum MotionCurve: Sendable {
+  case smooth, linear, accelerating
+}
+
 public struct MotionTween: Sendable {
   private static let minimumDuration: Double = 0.001
 
@@ -206,12 +213,12 @@ public struct MotionTween: Sendable {
   public let startedAt: TimeInterval
   public let duration: Double
   public let arcHeight: Double
-  public let linear: Bool
+  public let curve: MotionCurve
   public let arcDirection: CGPoint
 
   public init(
     from start: CGPoint, to end: CGPoint, at time: TimeInterval,
-    duration: Double, arcHeight: Double = 0, linear: Bool = false,
+    duration: Double, arcHeight: Double = 0, curve: MotionCurve = .smooth,
     arcDirection: CGPoint = CGPoint(x: 0, y: 1)
   ) {
     self.start = start
@@ -219,13 +226,18 @@ public struct MotionTween: Sendable {
     startedAt = time
     self.duration = max(duration, Self.minimumDuration)
     self.arcHeight = arcHeight
-    self.linear = linear
+    self.curve = curve
     self.arcDirection = arcDirection
   }
 
   public func position(at time: TimeInterval) -> CGPoint {
     let t = min(max((time - startedAt) / duration, 0), 1)
-    let eased = linear ? t : t * t * (3 - 2 * t)
+    let eased: Double
+    switch curve {
+    case .smooth: eased = t * t * (3 - 2 * t)
+    case .linear: eased = t
+    case .accelerating: eased = t * t
+    }
     let lift = 4 * arcHeight * t * (1 - t)
     return CGPoint(
       x: start.x + (end.x - start.x) * eased + arcDirection.x * lift,

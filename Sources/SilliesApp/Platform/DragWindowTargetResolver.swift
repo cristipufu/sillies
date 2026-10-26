@@ -1,0 +1,196 @@
+import AppKit
+import SilliesCore
+
+/// Native hit testing stays immediate. Metadata is cached, coalesced, and read by a serial worker.
+@MainActor
+final class DragWindowTargetResolver {
+  typealias HitTest = @MainActor (CGPoint, Int) -> Int
+  typealias Lookup = @Sendable (UInt32, Double) async -> WindowTargetCandidate?
+
+  struct DropTarget: Sendable {
+    let windowID: UInt32
+    let primaryTop: Double
+    let cached: WindowTargetCandidate?
+  }
+
+  private struct Entry {
+    let target: WindowTargetCandidate?
+    let capturedAt: TimeInterval
+  }
+  private struct Request {
+    let point: CGPoint
+    let excluded: Set<Int>
+    let primaryTop: Double
+  }
+  private struct NativeProbe {
+    let point: CGPoint
+    let excluded: Set<Int>
+    let number: Int?
+    let capturedAt: TimeInterval
+  }
+  private static let nativeProbeInterval: TimeInterval = 1.0 / 60
+  private static let nativeProbeTravel: Double = 12
+  private static let refreshInterval: TimeInterval = 0.12
+  private static let maxCacheEntries = 32
+  private static let maxStackDepth = 16
+  private let hitTest: HitTest
+  private let dropHitTest: HitTest
+  private let lookup: Lookup
+  private var cache: [Int: Entry] = [:]
+  private var latest: Request?
+  private var nativeProbe: NativeProbe?
+  private var inFlight: Task<Void, Never>?
+  private var generation = 0
+  private var active = false
+  private(set) var currentTarget: WindowTargetCandidate?
+  var onTargetChanged: ((WindowTargetCandidate?) -> Void)?
+
+  init(
+    hitTest: @escaping HitTest = { NSWindow.windowNumber(at: $0, belowWindowWithWindowNumber: $1) },
+    dropHitTest: HitTest? = nil,
+    lookup: @escaping Lookup = { id, top in
+      await WindowTargetMetadata.shared.candidate(for: id, primaryScreenTop: top)
+    }
+  ) {
+    self.hitTest = hitTest
+    self.dropHitTest = dropHitTest ?? hitTest
+    self.lookup = lookup
+  }
+
+  func start() {
+    stop()
+    cache.removeAll(keepingCapacity: true)
+    active = true
+  }
+
+  func stop() {
+    generation += 1
+    active = false
+    latest = nil
+    nativeProbe = nil
+    inFlight?.cancel()
+    inFlight = nil
+    publish(nil)
+  }
+
+  func update(at point: CGPoint, excluding excluded: Set<Int>) {
+    guard active else { return }
+    let request = Request(
+      point: point, excluded: excluded, primaryTop: Double(NSScreen.screens.first?.frame.maxY ?? 0))
+    latest = request
+    guard let id = candidateNumber(for: request) else {
+      publish(nil)
+      return
+    }
+    let entry = cache[id]
+    if let target = entry?.target, target.frame.contains(point) {
+      publish(target)
+    } else {
+      publish(nil)
+    }
+    if let entry, ProcessInfo.processInfo.systemUptime - entry.capturedAt < Self.refreshInterval {
+      return
+    }
+    guard inFlight == nil else { return }
+    let token = generation
+    let load = lookup
+    inFlight = Task { [weak self] in
+      let result = await load(UInt32(id), request.primaryTop)
+      guard !Task.isCancelled, let self, self.generation == token, self.active else { return }
+      self.inFlight = nil
+      if self.cache.count >= Self.maxCacheEntries { self.cache.removeAll(keepingCapacity: true) }
+      self.cache[id] = Entry(target: result, capturedAt: ProcessInfo.processInfo.systemUptime)
+      // Worker replies and mouse-up always get a fresh native hit test.
+      self.nativeProbe = nil
+      if let latest = self.latest { self.update(at: latest.point, excluding: latest.excluded) }
+    }
+  }
+
+  func invalidateWindowStack() {
+    nativeProbe = nil
+    cache.removeAll(keepingCapacity: true)
+    generation += 1
+    inFlight?.cancel()
+    inFlight = nil
+    if let latest { update(at: latest.point, excluding: latest.excluded) }
+  }
+
+  func cachedTarget(at point: CGPoint, excluding excluded: Set<Int>) -> WindowTargetCandidate? {
+    dropTarget(at: point, excluding: excluded)?.cached
+  }
+
+  func dropTarget(at point: CGPoint, excluding excluded: Set<Int>) -> DropTarget? {
+    nativeProbe = nil
+    let request = Request(
+      point: point, excluded: excluded, primaryTop: Double(NSScreen.screens.first?.frame.maxY ?? 0))
+    var below = 0
+    var found: Int?
+    for _ in 0..<Self.maxStackDepth {
+      let id = dropHitTest(point, below)
+      guard id > 0, id != below else { break }
+      let rejected =
+        cache[id].map {
+          $0.target == nil
+            && ProcessInfo.processInfo.systemUptime - $0.capturedAt < Self.refreshInterval
+        } ?? false
+      if !excluded.contains(id), !rejected {
+        found = id
+        break
+      }
+      below = id
+    }
+    guard let id = found else { return nil }
+    let cached = cache[id]?.target.flatMap { $0.frame.contains(point) ? $0 : nil }
+    return DropTarget(windowID: UInt32(id), primaryTop: request.primaryTop, cached: cached)
+  }
+
+  /// A quick drop can precede the hover lookup. Finish that lookup asynchronously after landing.
+  func resolveDrop(_ request: DropTarget) async -> WindowTargetCandidate? {
+    guard !Task.isCancelled else { return nil }
+    if let cached = request.cached { return cached }
+    // Capture the ID at mouse-up; a later hit test could otherwise select a different app.
+    let result = await lookup(request.windowID, request.primaryTop)
+    guard !Task.isCancelled, result?.windowID == request.windowID else { return nil }
+    return result
+  }
+
+  private func candidateNumber(for request: Request) -> Int? {
+    let time = ProcessInfo.processInfo.systemUptime
+    if let probe = nativeProbe,
+      time - probe.capturedAt < Self.nativeProbeInterval,
+      probe.excluded == request.excluded,
+      hypot(probe.point.x - request.point.x, probe.point.y - request.point.y)
+        < Self.nativeProbeTravel
+    {
+      let leftKnownFrame =
+        probe.number.flatMap { cache[$0]?.target }.map {
+          !$0.frame.contains(request.point)
+        } ?? false
+      if !leftKnownFrame { return probe.number }
+    }
+    var below = 0
+    var result: Int?
+    for _ in 0..<Self.maxStackDepth {
+      let id = hitTest(request.point, below)
+      guard id > 0, id != below else { break }
+      let knownInvalid =
+        cache[id].map {
+          $0.target == nil && time - $0.capturedAt < Self.refreshInterval
+        } ?? false
+      if !request.excluded.contains(id), !knownInvalid {
+        result = id
+        break
+      }
+      below = id
+    }
+    nativeProbe = NativeProbe(
+      point: request.point, excluded: request.excluded, number: result, capturedAt: time)
+    return result
+  }
+
+  private func publish(_ target: WindowTargetCandidate?) {
+    guard currentTarget != target else { return }
+    currentTarget = target
+    onTargetChanged?(target)
+  }
+}

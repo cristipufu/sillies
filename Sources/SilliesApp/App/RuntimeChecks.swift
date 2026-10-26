@@ -98,8 +98,9 @@ enum RuntimeChecks {
   }
 
   static func smokeTest(_ controller: CompanionController) {
-    require(controller.diagnostics.companionCount == 2, "Both companions load")
-    require(controller.diagnostics.visibleCount == 2, "Companion panels are visible")
+    let crew = Set(controller.catalog.characters.map(\.id))
+    require(controller.diagnostics.companionCount == crew.count, "All companions load")
+    require(controller.diagnostics.visibleCount == crew.count, "Companion panels are visible")
     require(controller.diagnostics.nonactivating, "Panels cannot steal keyboard focus")
     controller.greet()
     if !controller.reducedMotion {
@@ -119,7 +120,7 @@ enum RuntimeChecks {
     }
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
       controller.settings.paused = false
-      require(controller.diagnostics.visibleCount == 2, "Resume restores panels")
+      require(controller.diagnostics.visibleCount == crew.count, "Resume restores panels")
       controller.settings.reduceMotion = true
       controller.greet()
       require(!controller.diagnostics.movementClockRunning, "Reduce Motion prevents movement")
@@ -135,13 +136,15 @@ enum RuntimeChecks {
       }
       controller.settings.enabledCharacters.remove("mochi")
       require(
-        controller.diagnostics.companionCount == 1, "Disabling a character releases its panel")
+        controller.diagnostics.companionCount == crew.count - 1,
+        "Disabling a character releases its panel")
       controller.settings.enabledCharacters.insert("mochi")
       require(
-        controller.diagnostics.companionCount == 2, "Re-enabling a character restores its panel")
+        controller.diagnostics.companionCount == crew.count,
+        "Re-enabling a character restores its panel")
       controller.settings.enabledCharacters.removeAll()
       require(!controller.diagnostics.decisionClockRunning, "An empty crew has no decision timer")
-      controller.settings.enabledCharacters = ["mochi", "kiko"]
+      controller.settings.enabledCharacters = crew
     }
     DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
       print(
@@ -156,7 +159,7 @@ enum RuntimeChecks {
     DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
       let start = sample()
       DispatchQueue.main.asyncAfter(deadline: .now() + 15) {
-        report("two-companion-window-following-calm", since: start)
+        report("\(controller.liveCount)-companion-window-following-calm", since: start)
         controller.settings.paused = true
         let paused = sample()
         DispatchQueue.main.asyncAfter(deadline: .now() + 10) {

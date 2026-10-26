@@ -12,6 +12,7 @@ final class CompanionPresentation {
   private let library: TransitionLibrary
   private var phase = Phase.hidden
   private var generation = 0
+  private var relocationCompletion: (() -> Void)?
 
   init(
     panel: CompanionPanel, view: CompanionView,
@@ -24,6 +25,7 @@ final class CompanionPresentation {
   }
 
   func show(reattached: Bool = false, reducedMotion: Bool) {
+    relocationCompletion = nil
     let wasHidden = phase == .hidden
     guard wasHidden || phase == .exiting || reattached else { return }
     let kind: TransitionKind = wasHidden || phase == .exiting ? .enter : .reattach
@@ -32,6 +34,7 @@ final class CompanionPresentation {
   }
 
   func hide(immediately: Bool = false) {
+    relocationCompletion = nil
     guard phase != .hidden else { return }
     panel.ignoresMouseEvents = true
     if immediately {
@@ -43,18 +46,30 @@ final class CompanionPresentation {
     }
   }
 
+  func hideForRelocation(completion: @escaping () -> Void) {
+    relocationCompletion = nil
+    panel.ignoresMouseEvents = true
+    guard phase != .hidden else {
+      completion()
+      return
+    }
+    relocationCompletion = completion
+    play(.exit, reducedMotion: false, durationLimit: 0.12)
+  }
+
   func close() {
     hide(immediately: true)
     panel.close()
   }
 
   private func play(
-    _ kind: TransitionKind, reducedMotion: Bool, startsHidden: Bool = false
+    _ kind: TransitionKind, reducedMotion: Bool, startsHidden: Bool = false,
+    durationLimit: Double = .infinity
   ) {
     let layer = view.presentationLayer
     let presented = layer.presentation() ?? layer
     let context = TransitionContext(
-      kind: kind, duration: profile.definition(for: kind).duration,
+      kind: kind, duration: min(profile.definition(for: kind).duration, durationLimit),
       fromOpacity: startsHidden ? 0 : Double(presented.opacity),
       fromScale: startsHidden ? 0.84 : Double(presented.transform.m11))
     generation += 1
@@ -79,7 +94,14 @@ final class CompanionPresentation {
 
   private func complete(_ kind: TransitionKind, token: Int) {
     guard generation == token else { return }
-    if kind == .exit { finishHiding() } else { phase = .visible }
+    if kind == .exit {
+      let relocation = relocationCompletion
+      relocationCompletion = nil
+      finishHiding()
+      relocation?()
+    } else {
+      phase = .visible
+    }
   }
 
   private func finishHiding() {

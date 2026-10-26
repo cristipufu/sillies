@@ -1,0 +1,287 @@
+{
+  "schemaVersion": 1,
+  "id": "bolt",
+  "name": "Bolt",
+  "subtitle": "Doing my very best. Beep.",
+  "bio": "An earnest little robot determined to be helpful. Measures twice, shuffles once, and occasionally needs a moment to process your excellent decisions.",
+  "renderer": "robot",
+  "accent": "83B7CD",
+  "speed": 32,
+  "order": 4,
+  "reactions": [
+    {
+      "id": "standby",
+      "event": "ambient",
+      "animation": "idle",
+      "duration": 6,
+      "priority": 0,
+      "cooldown": 0,
+      "weight": 4,
+      "motion": "none"
+    },
+    {
+      "id": "routine-patrol",
+      "event": "ambient",
+      "animation": "walk",
+      "duration": 5,
+      "priority": 0,
+      "cooldown": 9,
+      "weight": 4,
+      "motion": "stroll"
+    },
+    {
+      "id": "processing",
+      "event": "ambient",
+      "animation": "peek",
+      "duration": 2.5,
+      "priority": 0,
+      "cooldown": 12,
+      "weight": 2,
+      "motion": "none"
+    },
+    {
+      "id": "low-power-mode",
+      "event": "ambient",
+      "animation": "meditate",
+      "duration": 8,
+      "priority": 0,
+      "cooldown": 40,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "new-assignment",
+      "event": "appChanged",
+      "animation": "peek",
+      "duration": 0.9,
+      "priority": 5,
+      "cooldown": 0.2,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "stabilizers-online",
+      "event": "windowMoved",
+      "animation": "balance",
+      "duration": 1.4,
+      "priority": 5,
+      "cooldown": 0.3,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "recalibrating",
+      "event": "windowResized",
+      "animation": "brace",
+      "duration": 1.4,
+      "priority": 5,
+      "cooldown": 0.25,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "target-lost",
+      "event": "windowDisappeared",
+      "animation": "surprised",
+      "duration": 1,
+      "priority": 6,
+      "cooldown": 2,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "recalculate",
+      "event": "contextChanged",
+      "animation": "peek",
+      "duration": 1.8,
+      "priority": 1,
+      "cooldown": 6,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "data-stream",
+      "event": "scroll",
+      "animation": "peek",
+      "duration": 1.2,
+      "priority": 1,
+      "cooldown": 8,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "greeting-protocol",
+      "event": "pet",
+      "animation": "wave",
+      "duration": 1.8,
+      "priority": 5,
+      "cooldown": 0.5,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "unscheduled-maintenance",
+      "event": "pickedUp",
+      "animation": "surprised",
+      "duration": 2,
+      "priority": 6,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "boots-on-the-ground",
+      "event": "dropped",
+      "animation": "land",
+      "duration": 0.7,
+      "priority": 6,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "charging",
+      "event": "userIdle",
+      "animation": "sleep",
+      "duration": 25,
+      "priority": 1,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "welcome-back-human",
+      "event": "userReturned",
+      "animation": "wave",
+      "duration": 1.6,
+      "priority": 2,
+      "cooldown": 4,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "friend-detected",
+      "event": "neighbor",
+      "animation": "wave",
+      "duration": 1.8,
+      "priority": 1,
+      "cooldown": 20,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "calibration-complete",
+      "event": "windowSettled",
+      "animation": "land",
+      "duration": 0.7,
+      "priority": 5,
+      "cooldown": 0.15,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "end-of-track",
+      "event": "edgeReached",
+      "animation": "peek",
+      "duration": 2,
+      "priority": 1,
+      "cooldown": 8,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "magnets-engaged",
+      "event": "ambient.wall",
+      "animation": "hang",
+      "duration": 3,
+      "priority": 0,
+      "cooldown": 0,
+      "weight": 3,
+      "motion": "none"
+    },
+    {
+      "id": "mechanical-pulls",
+      "event": "ambient.wall",
+      "animation": "climb",
+      "duration": 3.5,
+      "priority": 0,
+      "cooldown": 2,
+      "weight": 6,
+      "motion": "stroll"
+    },
+    {
+      "id": "viewfinder",
+      "event": "skill.snap",
+      "animation": "bolt.scan",
+      "duration": 1.2,
+      "priority": 8,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "antenna-tuned",
+      "event": "skill.listen",
+      "animation": "listen",
+      "duration": 180,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "monitoring",
+      "event": "skill.watch",
+      "animation": "watch",
+      "duration": 180,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "work-cycle",
+      "event": "skill.focus",
+      "animation": "focus",
+      "duration": 180,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "task-successful",
+      "event": "skill.completed",
+      "animation": "happy",
+      "duration": 2,
+      "priority": 8,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "safely-filed",
+      "event": "stash.received",
+      "animation": "happy",
+      "duration": 1.6,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    }
+  ],
+  "transitions": {
+    "enter": {
+      "animation": "fade",
+      "duration": 0.24
+    },
+    "exit": {
+      "animation": "fade",
+      "duration": 0.18
+    },
+    "reattach": {
+      "animation": "fade",
+      "duration": 0.16
+    }
+  }
+}

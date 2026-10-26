@@ -2,8 +2,8 @@
 
 ## Implemented constraints
 
-- Native AppKit, SwiftUI, and Core Animation; no web runtime, game engine, network service, or third-party package.
-- Two small transparent panels, with foot- or hand-anchored vector rigs and a mask that excludes the focused document. Side poses hang upright; no screen-sized animation surface exists.
+- Native AppKit, SwiftUI, and Core Animation for companions; no web runtime or game engine.
+- A small transparent panel per enabled companion, with a foot- or hand-anchored vector rig and a mask that excludes the focused document. Side poses hang upright; no screen-sized animation surface exists.
 - Attached native panel rectangles are cropped to the exterior edge too. A mask is not the input boundary: the focused title bar is physically outside each attached panel. Rig and transition pivots use the cropped contact offset.
 - One shared motion clock, 60 Hz normally and 30 Hz in Low Power Mode. Elapsed-time evaluation keeps motion frame independent. The clock stops when no character is moving.
 - One shared next-decision deadline. Static and sleeping poses have no application frame loop.
@@ -18,7 +18,7 @@
 
 ## Validation
 
-`make check` runs Swift and shell lint, core and rendering-extension tests, pack validation, lifecycle checks, a presentation interruption check, a real native-window integration check, and a live move/resize attachment regression with Accessibility notifications disabled.
+`make check` runs Swift and shell lint, core and app tests, a debug build, and pack validation. `make gui-check` adds lifecycle, presentation, real-window tracking, and live move/resize attachment checks.
 
 The window check waits for actual WindowServer geometry to match the native target and stabilize. It verifies the focused window ID, top-edge feet, outside-document placement, resize/movement events, distinct brace/scramble clips, landing, upright hand-held side attachment, and close detection. It exports native Sillies-owned view composites without capturing other apps. The separate drag regression samples contact error during every native frame update; a settled-position check alone cannot reveal dragging lag.
 
@@ -36,7 +36,31 @@ make build
 build/Sillies.app/Contents/MacOS/Sillies --performance-check --without-accessibility
 ```
 
-The performance check uses temporary preferences, a real native playground, two companions in Calm mode, a warmup, a 15-second passive window-following sample, and a 10-second paused sample. It prints average process CPU and peak resident memory, then exits. It does not measure compositor/GPU cost, battery life, or sustained dragging.
+The performance check uses temporary preferences, a real native playground, the bundled crew in Calm mode, a warmup, a 15-second passive window-following sample, and a 10-second paused sample. It prints average process CPU and peak resident memory, then exits. It does not measure compositor/GPU cost, battery life, or sustained dragging.
+
+## Companion drag response
+
+`DragWindowSnapshot` discovers a bounded front-to-back window stack on a worker at pickup and on focus/stack changes. Pointer movement uses cached rectangles, with known geometry updates merged in immediately; it performs no WindowServer IPC. `DragWindowTargetResolver` coalesces asynchronous single-window metadata reads and rejects stale session/position replies. Mouse-up performs native validation and captures that ID before any return animation, so delayed metadata cannot select a different app. Pause, exclusions, disabling the crew, and termination cancel pending work.
+
+The two shared highlight/wheel panels prepare their hidden views before interaction is enabled. The highlight uses a native Core Animation outline and a small, fixed-size app badge, with no window-sized SwiftUI tint. App icons are decoded by a worker into small cached bitmaps; SwiftUI bodies only read the cache. Unchanged models/frames and already-hidden HUD ordering are skipped. Automatic system popup animations are disabled. The wheel's dwell starts only after a valid target is entered, without a dead zone at the focused window's border. These services introduce no periodic poller.
+
+```sh
+build/Sillies.app/Contents/MacOS/Sillies --drop-return-test --without-accessibility --assert-drag-budget
+```
+
+This opt-in real-input test covers first window entry, highlight display, a dwell to open the skill wheel, selection, and release. It reports p95 and maximum display-link callback gaps during active dragging; the optional assertion rejects a gap above two 60 Hz frames (33 ms), intended for a display running at 60 Hz or higher. It uses owned windows, temporary settings, and existing event-posting access; it restores pointer/focus. It does not measure compositor presentation latency.
+
+On the local M4 Pro/macOS 26.7.1 setup, comparable debug runs measured a maximum active-drag gap of 36.96 ms before this change and 12.84 ms afterward; p95 stayed near 8.4 ms. These are fixture measurements, not a guarantee for every app/display configuration.
+
+For repeated slow entry over a real, already-running application:
+
+```sh
+build/Sillies.app/Contents/MacOS/Sillies --companion-drag-test --target-bundle com.mitchellh.ghostty --without-accessibility
+```
+
+This opt-in check drags a mascot slowly over the existing window border, stops two points inside, waits for the highlight/wheel, and repeats five times. It does not send keys, choose a skill, move the target window, or change its tabs. It verifies mascot input ownership before posting the gesture, stops if the target loses focus, and restores pointer/focus. Output distinguishes overall drag gaps from border/wheel gaps and, only with this diagnostic mode, times movement, cached hit testing, highlight, wheel, and release validation. No terminal contents are captured.
+
+The final optimized build was also exercised over the existing Ghostty window with five slow crossings and a pause two points inside the border. Across 1,595 active drag frames, p95 callback spacing was 8.38 ms and the maximum was 20.81 ms. Cached pointer hit testing rounded to 0.00 ms at two-decimal precision; the maximum measured movement handler was 4.18 ms, highlight update 2.72 ms, and wheel update 0.50 ms. All five entries showed both the correct highlight and wheel. These app-level timings include scheduling noise and do not measure compositor latency.
 
 ## Interactive matrix
 

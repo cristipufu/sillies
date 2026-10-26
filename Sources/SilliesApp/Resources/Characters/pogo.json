@@ -1,0 +1,297 @@
+{
+  "schemaVersion": 1,
+  "id": "pogo",
+  "name": "Pogo",
+  "subtitle": "Sticky fingers. Big plans.",
+  "bio": "A curious little frog with more confidence than coordination. Collects tiny treasures, tests every ledge, and insists that slip was intentional.",
+  "renderer": "frog",
+  "accent": "91B96E",
+  "speed": 34,
+  "order": 3,
+  "reactions": [
+    {
+      "id": "pond-thoughts",
+      "event": "ambient",
+      "animation": "idle",
+      "duration": 6,
+      "priority": 0,
+      "cooldown": 0,
+      "weight": 5,
+      "motion": "none"
+    },
+    {
+      "id": "little-waddle",
+      "event": "ambient",
+      "animation": "walk",
+      "duration": 4,
+      "priority": 0,
+      "cooldown": 8,
+      "weight": 3,
+      "motion": "stroll"
+    },
+    {
+      "id": "excellent-idea",
+      "event": "ambient",
+      "animation": "pogo.hop",
+      "duration": 1.1,
+      "priority": 0,
+      "cooldown": 18,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "whats-that",
+      "event": "ambient",
+      "animation": "peek",
+      "duration": 2.4,
+      "priority": 0,
+      "cooldown": 12,
+      "weight": 2,
+      "motion": "none"
+    },
+    {
+      "id": "pond-nap",
+      "event": "ambient",
+      "animation": "sleep",
+      "duration": 10,
+      "priority": 0,
+      "cooldown": 50,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "new-pond",
+      "event": "appChanged",
+      "animation": "peek",
+      "duration": 0.9,
+      "priority": 5,
+      "cooldown": 0.2,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "totally-under-control",
+      "event": "windowMoved",
+      "animation": "balance",
+      "duration": 1.6,
+      "priority": 5,
+      "cooldown": 0.3,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "frog-squish",
+      "event": "windowResized",
+      "animation": "brace",
+      "duration": 1.4,
+      "priority": 5,
+      "cooldown": 0.25,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "missing-lily-pad",
+      "event": "windowDisappeared",
+      "animation": "tumble",
+      "duration": 1.1,
+      "priority": 6,
+      "cooldown": 2,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "tab-inspector",
+      "event": "contextChanged",
+      "animation": "peek",
+      "duration": 1.8,
+      "priority": 1,
+      "cooldown": 7,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "scroll-fascination",
+      "event": "scroll",
+      "animation": "peek",
+      "duration": 1.4,
+      "priority": 1,
+      "cooldown": 8,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "happy-frog",
+      "event": "pet",
+      "animation": "pogo.hop",
+      "duration": 1.2,
+      "priority": 5,
+      "cooldown": 0.5,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "unexpected-flight",
+      "event": "pickedUp",
+      "animation": "surprised",
+      "duration": 2,
+      "priority": 6,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "lily-pad-landing",
+      "event": "dropped",
+      "animation": "land",
+      "duration": 0.8,
+      "priority": 6,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "quiet-pond",
+      "event": "userIdle",
+      "animation": "sleep",
+      "duration": 25,
+      "priority": 1,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "there-you-are",
+      "event": "userReturned",
+      "animation": "pogo.hop",
+      "duration": 1.2,
+      "priority": 2,
+      "cooldown": 4,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "new-best-friend",
+      "event": "neighbor",
+      "animation": "wave",
+      "duration": 1.8,
+      "priority": 1,
+      "cooldown": 20,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "meant-to-do-that",
+      "event": "windowSettled",
+      "animation": "land",
+      "duration": 0.9,
+      "priority": 5,
+      "cooldown": 0.15,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "is-it-deep",
+      "event": "edgeReached",
+      "animation": "peek",
+      "duration": 2,
+      "priority": 1,
+      "cooldown": 8,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "sticky-fingers",
+      "event": "ambient.wall",
+      "animation": "hang",
+      "duration": 2.8,
+      "priority": 0,
+      "cooldown": 0,
+      "weight": 3,
+      "motion": "none"
+    },
+    {
+      "id": "little-pulls",
+      "event": "ambient.wall",
+      "animation": "climb",
+      "duration": 2.4,
+      "priority": 0,
+      "cooldown": 3,
+      "weight": 5,
+      "motion": "stroll"
+    },
+    {
+      "id": "picture-perfect",
+      "event": "skill.snap",
+      "animation": "snap",
+      "duration": 1.2,
+      "priority": 8,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "all-ears-somehow",
+      "event": "skill.listen",
+      "animation": "listen",
+      "duration": 180,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "pond-watch",
+      "event": "skill.watch",
+      "animation": "watch",
+      "duration": 180,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "very-serious-frog",
+      "event": "skill.focus",
+      "animation": "focus",
+      "duration": 180,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "nailed-it",
+      "event": "skill.completed",
+      "animation": "pogo.hop",
+      "duration": 1.2,
+      "priority": 8,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "snack-for-later",
+      "event": "stash.received",
+      "animation": "pogo.pocket",
+      "duration": 1.6,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    }
+  ],
+  "transitions": {
+    "enter": {
+      "animation": "appear",
+      "duration": 0.35
+    },
+    "exit": {
+      "animation": "disappear",
+      "duration": 0.18
+    },
+    "reattach": {
+      "animation": "fade",
+      "duration": 0.16
+    }
+  }
+}

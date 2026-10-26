@@ -2,7 +2,7 @@
 
 Little companions. Big personalities.
 
-A native macOS menu-bar app. **Mochi**, a sleepy ginger cat, and **Kiko**, an earnest little ninja, roam your window edges and react to your workspace. Swift 6, AppKit, SwiftUI, Core Animation. No third-party dependencies or network services.
+A native macOS menu-bar app. **Mochi** the sleepy ginger cat, **Kiko** the dramatic ninja, **Pogo** the curious frog, and **Bolt** the earnest robot roam your window edges and react to your workspace. Swift 6, AppKit, SwiftUI, Core Animation.
 
 ## Run
 
@@ -12,9 +12,12 @@ Requires macOS 14+, Swift 6+, and Xcode for the test suite. Build scripts use an
 make run
 ```
 
-The app is built at `build/Sillies.app`. Its paw icon appears in the menu bar. Both companions start enabled, in Playful mode, following window edges. The app does not appear in the Dock.
+The app is built at `build/Sillies.app`. Its paw icon appears in the menu bar. Mochi and Kiko start enabled, in Playful mode, following window edges. Choose any combination of the four characters in the crew picker; saved selections are preserved across updates. The popover stays compact (at most 640 points tall) and scrolls to the remaining controls. The app does not appear in the Dock.
+
+Pogo waddles, hops, grips sides with sticky fingertips, and slips beneath fixed hands before pulling back up. Bolt takes measured steps, adjusts telescoping legs during resizing, climbs with magnetic mittens, and turns its face into a viewfinder for Snap. Each character has its own reaction pack and animation overrides, including reduced-motion expressions.
 
 - **Window edges, by default:** companions walk above the focused window, ride its movement, brace/scramble during resizing, and squash/settle when it stops. Independent window movement confirms a drag before display-linked pointer attachment begins. Basic tracking works without Accessibility or Screen Recording permission.
+- **Room for everyone:** companions can pass each other while walking, but reserve separate stopping spots. They still wave when they meet; a crowded edge lets excess companions wait for room.
 - **Tall windows:** companions hang from exterior sides by their hands, with upright bodies, dangling feet, and occasional climbs up and down. Fully screen-filling windows have no exterior seat, so the crew waits.
 - **Desktop:** an explicit placement option in the menu-bar popover; it is never a silent permission fallback.
 - **Optional Accessibility:** adds faster focus/context notifications for applications that expose them.
@@ -30,7 +33,8 @@ Open **Give them a window to play on** from the menu-bar popover for a real nati
 make debug       # Debug .app bundle
 make preview     # Open the control center in a regular preview window
 make test        # Pure behavior, geometry, and pack validation tests
-make check       # Tests, bundle, lifecycle, real window tracking and live drag regression
+make check       # Formatting, tests, debug bundle, catalog validation
+make gui-check   # Also checks lifecycle, window tracking, and live drag attachment
 make build       # Optimized local build
 ```
 
@@ -40,7 +44,7 @@ Open `Package.swift` in Xcode to browse and debug. Use the bundled app for permi
 build/Sillies.app/Contents/MacOS/Sillies --snapshot-dir build/previews
 ```
 
-Exports the control center and both character portraits as PNGs, then exits. This renders Sillies' own views; it does not capture other apps.
+Exports the control center and all four character portraits as PNGs, then exits. This renders Sillies' own views; it does not capture other apps.
 
 ## Structure
 
@@ -60,7 +64,7 @@ Sources/
     Platform/                  Workspace notifications and isolated AX observation
     Rendering/                 Small panels, vector rigs, registered animation clips
     UI/                        Menu-bar control center and settings
-    Resources/Characters/      Mochi and Kiko's behavior definitions
+    Resources/Characters/      Mochi, Kiko, Pogo, and Bolt's behavior definitions
 Tests/                         Deterministic logic and animation extension tests
 ```
 

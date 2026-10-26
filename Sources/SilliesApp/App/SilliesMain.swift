@@ -34,6 +34,8 @@ private struct LaunchConfiguration {
       || arguments.contains("--drag-latency-test")
       || arguments.contains("--presentation-test")
       || arguments.contains("--interaction-test")
+      || arguments.contains("--drop-return-test")
+      || arguments.contains("--companion-drag-test")
   }
 
   func optionValue(after flag: String) -> String? {
@@ -58,6 +60,11 @@ private struct LaunchConfiguration {
       settings.followsWindows = true
       settings.activity = .calm
     }
+    if arguments.contains("--drop-return-test") || arguments.contains("--companion-drag-test") {
+      settings.followsWindows = true
+      settings.reduceMotion = false
+      settings.activity = .calm
+    }
   }
 }
 
@@ -74,6 +81,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private var inputFixture: InputWindowFixture?
   private var externalDragCheck: ExternalDragCheck?
   private var playInteractionCheck: PlayInteractionCheck?
+  private var companionDragCheck: CompanionDragResponseCheck?
 
   func applicationDidFinishLaunching(_ notification: Notification) {
     do {
@@ -105,6 +113,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         )
         NSApp.terminate(nil)
         return
+      }
+      if launch.isAutomatedRun {
+        settings.enabledCharacters = Set(controller.catalog.characters.map(\.id))
       }
       controller.start()
       if !launch.isAutomatedRun {
@@ -148,14 +159,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       RuntimeChecks.smokeTest(controller)
     } else if args.contains("--presentation-test") {
       RuntimeChecks.presentationTest()
-    } else if args.contains("--interaction-test") {
+    } else if args.contains("--interaction-test") || args.contains("--drop-return-test") {
       let previous = NSWorkspace.shared.frontmostApplication
       showPlayground()
       if let playground {
         playInteractionCheck = PlayInteractionCheck(
-          controller: controller, playground: playground, previousApplication: previous)
+          controller: controller, playground: playground, previousApplication: previous,
+          mode: args.contains("--drop-return-test") ? .dropReturn : .interaction)
         playInteractionCheck?.start()
       }
+    } else if args.contains("--companion-drag-test") {
+      guard let target = launch.optionValue(after: "--target-bundle") else {
+        fputs("--companion-drag-test requires --target-bundle\n", stderr)
+        NSApp.terminate(nil)
+        return
+      }
+      companionDragCheck = CompanionDragResponseCheck(controller: controller, targetBundle: target)
+      companionDragCheck?.start()
     } else if args.contains("--performance-check") {
       showPlayground()
       RuntimeChecks.performanceCheck(controller)
@@ -203,7 +223,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     popover.animates = true
     popover.delegate = self
     if let controller {
-      popover.contentViewController = NSHostingController(rootView: controlCenter(controller))
+      popover.contentViewController = controlCenterHost(
+        controller, screen: item.button?.window?.screen ?? NSScreen.main)
     }
   }
 
@@ -213,6 +234,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       openPlayground: { [weak self] in self?.showPlayground() },
       openVault: { [weak self] in self?.showVault() },
       quit: { NSApp.terminate(nil) })
+  }
+
+  private func controlCenterHost(
+    _ controller: CompanionController, screen: NSScreen?
+  ) -> NSViewController {
+    let content = controlCenter(controller)
+    let idealHeight = NSHostingView(rootView: content).fittingSize.height
+    let compactHeight: CGFloat = 640
+    let availableHeight = min(
+      compactHeight, max(240, (screen?.visibleFrame.height ?? idealHeight) - 24))
+    return NSHostingController(
+      rootView: ScrollView(.vertical) {
+        content
+      }
+      .scrollBounceBehavior(.basedOnSize)
+      .frame(width: 388, height: min(idealHeight, availableHeight))
+      .background(SilliesTheme.paper))
   }
 
   @objc private func togglePopover() {
@@ -319,7 +357,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
   private func showPreview() {
     guard let controller else { return }
-    let host = NSHostingController(rootView: controlCenter(controller))
+    let host = controlCenterHost(controller, screen: NSScreen.main)
     let size = host.view.fittingSize
     let window = NSWindow(
       contentRect: CGRect(origin: .zero, size: size), styleMask: [.titled, .closable],

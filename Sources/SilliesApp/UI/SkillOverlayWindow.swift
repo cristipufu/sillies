@@ -1,4 +1,5 @@
 import AppKit
+import QuartzCore
 import SilliesCore
 import SwiftUI
 
@@ -16,12 +17,28 @@ final class SkillFloatingPanel: NSPanel {
     backgroundColor = .clear
     isOpaque = false
     hasShadow = false
+    animationBehavior = .none
     self.level = level
     hidesOnDeactivate = false
     isReleasedWhenClosed = false
     self.ignoresMouseEvents = ignoresMouseEvents
     collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle, .transient]
     animationBehavior = .none
+  }
+}
+
+/// Build and render the two shared overlays once, before drag interaction is enabled.
+@MainActor
+private enum SkillOverlayPreparation {
+  static let target = WindowTargetCandidate(
+    windowID: 0, processID: 0, appName: "Window",
+    frame: CGRect(x: 0, y: 0, width: 480, height: 320))
+
+  static func render(_ view: NSView) {
+    view.layoutSubtreeIfNeeded()
+    if let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds) {
+      view.cacheDisplay(in: view.bounds, to: bitmap)
+    }
   }
 }
 
@@ -35,59 +52,81 @@ struct WindowDropHighlightView: View {
   let model: WindowDropHighlightModel
 
   var body: some View {
-    ZStack(alignment: .top) {
-      RoundedRectangle(cornerRadius: 12, style: .continuous)
-        .fill(SilliesTheme.accent.opacity(model.hoveredSkill != nil ? 0.08 : 0.04))
-        .overlay(
-          RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .strokeBorder(
-              SilliesTheme.accent.opacity(model.hoveredSkill != nil ? 0.95 : 0.72),
-              lineWidth: model.hoveredSkill != nil ? 3.0 : 2.2)
-        )
-
+    HStack(spacing: 6) {
       if let target = model.target {
-        HStack(spacing: 6) {
-          if let skill = model.hoveredSkill {
-            Image(systemName: skill.symbolName)
-              .font(.system(size: 11, weight: .bold))
-              .foregroundStyle(.white)
-            Text("\(skill.title) · \(target.appName)")
-              .font(.system(size: 11, weight: .bold, design: .rounded))
-              .foregroundStyle(.white)
-              .lineLimit(1)
+        if let skill = model.hoveredSkill {
+          Image(systemName: skill.symbolName).font(.system(size: 11, weight: .bold))
+          Text("\(skill.title) · \(target.appName)")
+            .font(.system(size: 11, weight: .bold, design: .rounded)).lineLimit(1)
+        } else {
+          if let icon = ApplicationIconCache.shared.image(for: target) {
+            Image(nsImage: icon).resizable().frame(width: 15, height: 15)
           } else {
-            if let icon = NSRunningApplication(processIdentifier: target.processID)?.icon {
-              Image(nsImage: icon)
-                .resizable()
-                .frame(width: 15, height: 15)
-            } else {
-              Image(systemName: "macwindow")
-                .font(.system(size: 10.5, weight: .semibold))
-                .foregroundStyle(SilliesTheme.accent)
-            }
-            Text(target.displayTitle)
-              .font(.system(size: 11, weight: .bold, design: .rounded))
-              .foregroundStyle(SilliesTheme.ink)
-              .lineLimit(1)
+            Image(systemName: "macwindow").font(.system(size: 10.5, weight: .semibold))
           }
+          Text(target.appName)
+            .font(.system(size: 11, weight: .bold, design: .rounded)).lineLimit(1)
         }
-        .padding(.horizontal, 11)
-        .padding(.vertical, 5)
-        .background(
-          Capsule().fill(
-            model.hoveredSkill != nil ? SilliesTheme.accent : SilliesTheme.card.opacity(0.97))
-        )
-        .overlay(
-          Capsule().strokeBorder(
-            model.hoveredSkill != nil ? Color.white.opacity(0.4) : SilliesTheme.border,
-            lineWidth: 0.8)
-        )
-        .shadow(color: .black.opacity(0.16), radius: 6, y: 2)
-        .padding(.top, 10)
-        .animation(.spring(response: 0.2, dampingFraction: 0.78), value: model.hoveredSkill)
       }
     }
-    .padding(2)
+    .foregroundStyle(model.hoveredSkill != nil ? Color.white : SilliesTheme.ink)
+    .padding(.horizontal, 11).padding(.vertical, 5)
+    .background(
+      Capsule().fill(
+        model.hoveredSkill != nil ? SilliesTheme.accent : SilliesTheme.card.opacity(0.97))
+    )
+    .overlay(
+      Capsule().strokeBorder(
+        model.hoveredSkill != nil ? Color.white.opacity(0.4) : SilliesTheme.border, lineWidth: 0.8)
+    )
+    .shadow(color: .black.opacity(0.16), radius: 6, y: 2)
+    .padding(12)
+  }
+}
+
+/// Only the outline uses window-sized geometry; SwiftUI lays out a small, fixed-size badge.
+@MainActor
+private final class WindowDropOutlineView: NSView {
+  private let outline = CAShapeLayer()
+  private let badge: NSHostingView<WindowDropHighlightView>
+
+  init(model: WindowDropHighlightModel) {
+    badge = NSHostingView(rootView: WindowDropHighlightView(model: model))
+    super.init(frame: SkillOverlayPreparation.target.frame)
+    wantsLayer = true
+    layer?.addSublayer(outline)
+    addSubview(badge)
+    outline.fillColor = nil
+    outline.lineJoin = .round
+    updateSelection(false)
+  }
+
+  required init?(coder: NSCoder) { nil }
+
+  override func layout() {
+    super.layout()
+    CATransaction.begin()
+    CATransaction.setDisableActions(true)
+    outline.contentsScale = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
+    outline.frame = bounds
+    outline.path = CGPath(
+      roundedRect: bounds.insetBy(dx: 3, dy: 3), cornerWidth: 12, cornerHeight: 12,
+      transform: nil)
+    CATransaction.commit()
+    let width = min(400, bounds.width)
+    badge.frame = CGRect(
+      x: (bounds.width - width) / 2, y: bounds.height - 66, width: width, height: 56)
+  }
+
+  func updateSelection(_ selected: Bool) {
+    CATransaction.begin()
+    CATransaction.setDisableActions(true)
+    outline.strokeColor =
+      NSColor(
+        srgbRed: 0.52, green: 0.47, blue: 0.77, alpha: selected ? 0.95 : 0.72
+      ).cgColor
+    outline.lineWidth = selected ? 3 : 2.2
+    CATransaction.commit()
   }
 }
 
@@ -96,34 +135,48 @@ struct WindowDropHighlightView: View {
 final class WindowDropHighlightController {
   private let model = WindowDropHighlightModel()
   private var panel: SkillFloatingPanel?
+  private var outlineView: WindowDropOutlineView?
   var windowNumber: Int? { panel?.windowNumber }
+  var isVisible: Bool { panel?.isVisible == true }
+
+  func prepare() {
+    guard panel == nil else { return }
+    model.target = SkillOverlayPreparation.target
+    let created = SkillFloatingPanel(
+      contentRect: SkillOverlayPreparation.target.frame, ignoresMouseEvents: true, level: .floating)
+    let view = WindowDropOutlineView(model: model)
+    created.contentView = view
+    panel = created
+    outlineView = view
+    SkillOverlayPreparation.render(view)
+  }
 
   func show(target: WindowTargetCandidate, hoveredSkill: CompanionSkillKind?) {
-    if panel == nil {
-      let created = SkillFloatingPanel(
-        contentRect: target.frame, ignoresMouseEvents: true, level: .floating)
-      created.contentView = NSHostingView(rootView: WindowDropHighlightView(model: model))
-      panel = created
+    prepare()
+    ApplicationIconCache.shared.prepare(for: target)
+    if model.target?.processID != target.processID || model.target?.appName != target.appName {
+      model.target = target
     }
-    model.target = target
-    model.hoveredSkill = hoveredSkill
+    if model.hoveredSkill != hoveredSkill {
+      model.hoveredSkill = hoveredSkill
+      outlineView?.updateSelection(hoveredSkill != nil)
+    }
     let highlightFrame = target.frame.insetBy(dx: -2, dy: -2)
     if panel?.frame != highlightFrame {
-      panel?.setFrame(highlightFrame, display: true)
+      panel?.setFrame(highlightFrame, display: false)
     }
-    if panel?.isVisible != true {
-      panel?.orderFrontRegardless()
-    }
+    if panel?.isVisible != true { panel?.orderFrontRegardless() }
   }
 
   func hide() {
-    panel?.orderOut(nil)
+    if panel?.isVisible == true { panel?.orderOut(nil) }
   }
 
   func close() {
     panel?.orderOut(nil)
     panel?.close()
     panel = nil
+    outlineView = nil
   }
 }
 
@@ -228,33 +281,37 @@ final class RadialWheelController {
   private let model = RadialWheelModel()
   private var panel: SkillFloatingPanel?
   var windowNumber: Int? { panel?.windowNumber }
+  var isVisible: Bool { panel?.isVisible == true }
+
+  func prepare() {
+    guard panel == nil else { return }
+    let created = SkillFloatingPanel(
+      contentRect: CGRect(origin: .zero, size: Self.canvasSize), ignoresMouseEvents: true)
+    let view = NSHostingView(rootView: RadialWheelView(model: model))
+    created.contentView = view
+    panel = created
+    SkillOverlayPreparation.render(view)
+  }
 
   func show(
     companionName: String, target: WindowTargetCandidate, layout: RadialSkillMenuLayout,
     hoveredSkill: CompanionSkillKind?
   ) {
-    if panel == nil {
-      let created = SkillFloatingPanel(
-        contentRect: CGRect(origin: .zero, size: Self.canvasSize), ignoresMouseEvents: true)
-      created.contentView = NSHostingView(rootView: RadialWheelView(model: model))
-      panel = created
-    }
+    prepare()
     let origin = CGPoint(
       x: layout.anchor.x - Self.canvasSize.width / 2,
       y: layout.anchor.y - Self.canvasSize.height / 2)
-    model.companionName = companionName
-    model.target = target
-    model.layout = layout
-    model.hoveredSkill = hoveredSkill
-    model.panelOrigin = origin
-    panel?.setFrameOrigin(origin)
-    if panel?.isVisible != true {
-      panel?.orderFrontRegardless()
-    }
+    if model.companionName != companionName { model.companionName = companionName }
+    if model.target != target { model.target = target }
+    if model.layout != layout { model.layout = layout }
+    if model.hoveredSkill != hoveredSkill { model.hoveredSkill = hoveredSkill }
+    if model.panelOrigin != origin { model.panelOrigin = origin }
+    if panel?.frame.origin != origin { panel?.setFrameOrigin(origin) }
+    if panel?.isVisible != true { panel?.orderFrontRegardless() }
   }
 
   func hide() {
-    panel?.orderOut(nil)
+    if panel?.isVisible == true { panel?.orderOut(nil) }
   }
 
   func close() {
@@ -502,7 +559,7 @@ struct CompanionHUDView: View {
 
   @ViewBuilder
   private func appIcon(for target: WindowTargetCandidate, fallbackSymbol: String) -> some View {
-    if let icon = NSRunningApplication(processIdentifier: target.processID)?.icon {
+    if let icon = ApplicationIconCache.shared.image(for: target) {
       Image(nsImage: icon)
         .resizable()
         .frame(width: 18, height: 18)
@@ -568,12 +625,14 @@ final class CompanionHUDController {
   private var panel: SkillFloatingPanel?
   private var hostingView: NSHostingView<CompanionHUDView>?
   var windowNumber: Int? { panel?.windowNumber }
+  var isVisible: Bool { panel?.isVisible == true }
 
   func update(
     state: CompanionBindingState, companionPoint: CGPoint, characterSize: Double,
     visibleFrame: CGRect
   ) {
-    model.state = state
+    if model.state != state { model.state = state }
+    if let target = state.boundTarget { ApplicationIconCache.shared.prepare(for: target) }
     guard state.isBound else {
       hide()
       return
@@ -602,15 +661,15 @@ final class CompanionHUDController {
       max(preferredY, visibleFrame.minY + 6),
       visibleFrame.maxY - panelSize.height - 2)
 
-    panel?.setFrame(
-      CGRect(origin: CGPoint(x: clampedX, y: clampedY), size: panelSize), display: true)
+    let frame = CGRect(origin: CGPoint(x: clampedX, y: clampedY), size: panelSize)
+    if panel?.frame != frame { panel?.setFrame(frame, display: false) }
     if panel?.isVisible != true {
       panel?.orderFrontRegardless()
     }
   }
 
   func hide() {
-    panel?.orderOut(nil)
+    if panel?.isVisible == true { panel?.orderOut(nil) }
   }
 
   func close() {

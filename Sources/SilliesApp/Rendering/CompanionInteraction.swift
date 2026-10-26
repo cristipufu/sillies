@@ -15,20 +15,28 @@ final class CompanionInteraction {
   private var globalMonitor: Any?
   private var localMonitor: Any?
   private(set) var isEnabled = false
+  private(set) var monitorInstallations = 0
 
   func configure(enabled: Bool, targets: [Target]) {
-    stop()
-    self.targets = targets
-    isEnabled = enabled
-    guard enabled else { return }
-    globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .leftMouseUp]) {
-      [weak self] _ in
-      MainActor.assumeIsolated { self?.refresh() }
+    guard enabled else {
+      stop()
+      return
     }
-    localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseUp]) {
-      [weak self] event in
-      self?.refresh()
-      return event
+    self.targets = targets
+    isEnabled = true
+    if globalMonitor == nil {
+      monitorInstallations += 1
+      globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .leftMouseUp]) {
+        [weak self] _ in
+        MainActor.assumeIsolated { self?.refresh() }
+      }
+    }
+    if localMonitor == nil {
+      localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseUp]) {
+        [weak self] event in
+        self?.refresh()
+        return event
+      }
     }
     refresh()
   }

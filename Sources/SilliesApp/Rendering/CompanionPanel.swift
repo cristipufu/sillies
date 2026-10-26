@@ -4,6 +4,29 @@ import SilliesCore
 
 @MainActor
 final class CompanionPanel: NSPanel {
+  private static let windowLevelOffsetAboveTarget = 1
+  private static let hudLevelOffsetAboveCompanion = 1
+  static let normalOverlayLevel = NSWindow.Level(
+    rawValue: NSWindow.Level.normal.rawValue + windowLevelOffsetAboveTarget)
+  static let floatingOverlayLevel = NSWindow.Level(
+    rawValue: NSWindow.Level.floating.rawValue + windowLevelOffsetAboveTarget)
+  static let overlayLevel = floatingOverlayLevel
+
+  static func overlayLevel(
+    forWindowLayer windowLayer: Int,
+    isPickedUp: Bool = false
+  ) -> NSWindow.Level {
+    if isPickedUp || windowLayer >= NSWindow.Level.floating.rawValue {
+      return floatingOverlayLevel
+    }
+    return normalOverlayLevel
+  }
+
+  static func hudLevel(forWindowLayer windowLayer: Int) -> NSWindow.Level {
+    let companionLevel = overlayLevel(forWindowLayer: windowLayer, isPickedUp: false)
+    return NSWindow.Level(rawValue: companionLevel.rawValue + hudLevelOffsetAboveCompanion)
+  }
+
   override var canBecomeKey: Bool { false }
   override var canBecomeMain: Bool { false }
 
@@ -21,7 +44,7 @@ final class CompanionPanel: NSPanel {
     isOpaque = false
     hasShadow = false
     minSize = .zero
-    level = .floating
+    level = Self.normalOverlayLevel
     hidesOnDeactivate = false
     isReleasedWhenClosed = false
     ignoresMouseEvents = true
@@ -34,6 +57,13 @@ final class CompanionPanel: NSPanel {
         $0.contains("swift-testing") || $0.hasSuffix(".xctest")
       }
     if isUnitTest { alphaValue = 0 }
+  }
+
+  func updateOverlayLevel(forWindowLayer windowLayer: Int, isPickedUp: Bool) {
+    let targetLevel = Self.overlayLevel(forWindowLayer: windowLayer, isPickedUp: isPickedUp)
+    if level != targetLevel {
+      level = targetLevel
+    }
   }
 }
 
@@ -62,6 +92,7 @@ final class CompanionView: NSView {
   private static let pickupDragThreshold: Double = 3
   private static let minimumVisibleOpacity: Float = 0.1
   private static let minimumStrokeHitWidth: CGFloat = 6
+  private static let maskSubpixelTolerance: CGFloat = 1.5
 
   init(rig: CharacterRig, size: Double, portrait: Bool = false) {
     self.rig = rig
@@ -143,14 +174,30 @@ final class CompanionView: NSView {
   func updateWorldMask() {
     guard !portrait, let panel = window else { return }
     let origin = panel.frame.origin
-    let visible =
-      clippingDisplay.map { $0.offsetBy(dx: -origin.x, dy: -origin.y).intersection(bounds) }
-      ?? bounds
-    let excluded =
+    let visible: CGRect
+    if isAttachedToSurface {
+      let rawVisible =
+        clippingDisplay.map { $0.offsetBy(dx: -origin.x, dy: -origin.y).intersection(bounds) }
+        ?? bounds
+      visible =
+        abs(rawVisible.minX - bounds.minX) < Self.maskSubpixelTolerance
+          && abs(rawVisible.minY - bounds.minY) < Self.maskSubpixelTolerance
+          && abs(rawVisible.width - bounds.width) < Self.maskSubpixelTolerance
+          && abs(rawVisible.height - bounds.height) < Self.maskSubpixelTolerance
+        ? bounds : rawVisible
+    } else {
+      visible = bounds
+    }
+    let rawExcluded =
       isAttachedToSurface
       ? (clippingWindow.map { $0.offsetBy(dx: -origin.x, dy: -origin.y).intersection(visible) }
         ?? .null)
       : .null
+    let excluded =
+      rawExcluded.isNull
+        || rawExcluded.width < Self.maskSubpixelTolerance
+        || rawExcluded.height < Self.maskSubpixelTolerance
+      ? .null : rawExcluded
     let regions = [visible, excluded]
     guard regions != lastMask else { return }
     lastMask = regions
@@ -269,7 +316,8 @@ final class CompanionView: NSView {
 
   override func draggingEntered(_ sender: any NSDraggingInfo) -> NSDragOperation {
     guard !portrait else { return [] }
-    return extractDraggedStrings(from: sender.draggingPasteboard).isEmpty ? [] : .copy
+    return sender.draggingPasteboard.canReadObject(
+      forClasses: [NSURL.self, NSString.self], options: nil) ? .copy : []
   }
 
   override func performDragOperation(_ sender: any NSDraggingInfo) -> Bool {

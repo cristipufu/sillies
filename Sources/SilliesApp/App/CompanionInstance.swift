@@ -27,7 +27,10 @@ final class CompanionInstance {
   var selectionPerchTarget: WindowTargetCandidate?
   var pendingDropTarget: Task<Void, Never>?
   var attachedWindowID: CGWindowID?
+  var attachedWindowLayer: Int = WindowServerSource.normalWindowLayer
   var bindingState: CompanionBindingState = .followingFocusedWindow
+  private var appliedLayoutSize: CGSize = .zero
+  private(set) var placementCount = 0
 
   var attachmentTarget: WindowTargetCandidate? {
     if case .awaitingSelection = bindingState { return selectionPerchTarget }
@@ -48,16 +51,23 @@ final class CompanionInstance {
       panel: panel, view: view, profile: definition.presentationTransitions, library: transitions)
   }
 
+  func updateOverlayLevel() {
+    panel.updateOverlayLevel(forWindowLayer: attachedWindowLayer, isPickedUp: isPickedUp)
+  }
+
   func place(at point: CGPoint) {
+    placementCount += 1
     position = point
+    updateOverlayLevel()
     let layout = view.panelLayout(at: point, attached: !isPickedUp && !isReturningFromDrop)
-    let tolerance = 0.5 / panel.backingScaleFactor
-    if abs(panel.frame.width - layout.frame.width) > tolerance
-      || abs(panel.frame.height - layout.frame.height) > tolerance
-    {
-      panel.setFrame(layout.frame, display: true)
-    } else if abs(panel.frame.minX - layout.frame.minX) > tolerance
-      || abs(panel.frame.minY - layout.frame.minY) > tolerance
+    let sizeChanged =
+      abs(appliedLayoutSize.width - layout.frame.width) > 0.001
+      || abs(appliedLayoutSize.height - layout.frame.height) > 0.001
+    if sizeChanged {
+      appliedLayoutSize = layout.frame.size
+      panel.setFrame(layout.frame, display: false)
+    } else if abs(panel.frame.minX - layout.frame.minX) > 0.001
+      || abs(panel.frame.minY - layout.frame.minY) > 0.001
     {
       panel.setFrameOrigin(layout.frame.origin)
     }
@@ -72,7 +82,9 @@ final class CompanionInstance {
   }
 
   func refreshHUD() {
-    guard panel.isVisible, !isPickedUp, !isReturningFromDrop, !isWaitingForSpace else {
+    guard bindingState.isBound, panel.isVisible, !isPickedUp, !isReturningFromDrop,
+      !isWaitingForSpace
+    else {
       hud.hide()
       return
     }

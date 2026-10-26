@@ -12,6 +12,15 @@ public struct PerchSurface: Equatable, Sendable {
   private static let sideBottomClearanceFactor: Double = 0.9
   private static let sideTopClearanceFactor: Double = 0.35
   private static let windowBorderGap: Double = 1
+  private static let floatingPointRoundingSlop: Double = 1e-6
+
+  private static func compactedPresentationSize(
+    availableRoom: Double, characterSize: Double
+  ) -> Double {
+    let rawSize = availableRoom / compactHeadroomRatio
+    guard rawSize < characterSize else { return characterSize }
+    return (rawSize + floatingPointRoundingSlop).rounded(.down)
+  }
 
   public enum Edge: String, Sendable { case top, left, right, desktop, unavailable }
   public let minX: Double
@@ -23,6 +32,7 @@ public struct PerchSurface: Equatable, Sendable {
   public let end: CGPoint
 
   public var isAvailable: Bool { edge != .unavailable }
+  public var spanLength: Double { hypot(end.x - start.x, end.y - start.y) }
   public var angle: Double {
     switch edge {
     case .left: .pi / 2
@@ -54,7 +64,8 @@ public struct PerchSurface: Equatable, Sendable {
     }
     let safe = window.intersection(visibleFrame)
     let headroom = visibleFrame.maxY - window.maxY - Self.topHeadroomMargin
-    let topSize = min(characterSize, headroom / Self.compactHeadroomRatio)
+    let topSize = Self.compactedPresentationSize(
+      availableRoom: headroom, characterSize: characterSize)
     let leftRoom = window.minX - visibleFrame.minX - Self.sideScreenMargin
     let rightRoom = visibleFrame.maxX - window.maxX - Self.sideScreenMargin
     let minReadableSize = min(Self.minimumCompactSize, characterSize)
@@ -72,8 +83,8 @@ public struct PerchSurface: Equatable, Sendable {
       let minimum = minReadableSize * Self.compactHeadroomRatio
       let right = preferRight ? rightRoom >= minimum : leftRoom < minimum
       edge = right ? .right : .left
-      presentationSize = min(
-        characterSize, (right ? rightRoom : leftRoom) / Self.compactHeadroomRatio)
+      presentationSize = Self.compactedPresentationSize(
+        availableRoom: right ? rightRoom : leftRoom, characterSize: characterSize)
       let low = safe.minY + presentationSize * Self.sideBottomClearanceFactor
       let high = max(low, safe.maxY - presentationSize * Self.sideTopClearanceFactor)
       minX = right ? window.maxX + Self.windowBorderGap : window.minX - Self.windowBorderGap

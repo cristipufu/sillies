@@ -30,13 +30,14 @@ final class DragWindowTargetResolver {
   }
   private static let nativeProbeInterval: TimeInterval = 1.0 / 60
   private static let nativeProbeTravel: Double = 12
-  private static let refreshInterval: TimeInterval = 0.12
+  private static let refreshInterval: TimeInterval = 1.0
   private static let maxCacheEntries = 32
   private static let maxStackDepth = 16
   private let hitTest: HitTest
   private let dropHitTest: HitTest
   private let lookup: Lookup
   private var cache: [Int: Entry] = [:]
+  private var seededWindowID: Int?
   private var latest: Request?
   private var nativeProbe: NativeProbe?
   private var inFlight: Task<Void, Never>?
@@ -61,8 +62,12 @@ final class DragWindowTargetResolver {
     stop()
     cache.removeAll(keepingCapacity: true)
     if let seed {
-      cache[Int(seed.windowID)] = Entry(
+      let id = Int(seed.windowID)
+      seededWindowID = id
+      cache[id] = Entry(
         target: seed, capturedAt: ProcessInfo.processInfo.systemUptime)
+    } else {
+      seededWindowID = nil
     }
     active = true
   }
@@ -70,6 +75,7 @@ final class DragWindowTargetResolver {
   func stop() {
     generation += 1
     active = false
+    seededWindowID = nil
     latest = nil
     nativeProbe = nil
     inFlight?.cancel()
@@ -112,9 +118,16 @@ final class DragWindowTargetResolver {
 
   func invalidateWindowStack() {
     nativeProbe = nil
+    let now = ProcessInfo.processInfo.systemUptime
     for key in cache.keys {
       if let existing = cache[key] {
-        cache[key] = Entry(target: existing.target, capturedAt: 0)
+        let keepSeedFresh =
+          key == seededWindowID
+          && existing.target != nil
+          && now - existing.capturedAt < Self.refreshInterval
+        cache[key] = Entry(
+          target: existing.target,
+          capturedAt: keepSeedFresh ? existing.capturedAt : 0)
       }
     }
     generation += 1

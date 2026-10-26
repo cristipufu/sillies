@@ -94,7 +94,7 @@ final class SessionVaultStore {
     resumePendingSummaries()
   }
 
-  func add(_ record: SessionRecord, image: CGImage? = nil) {
+  func add(_ record: SessionRecord, image: CGImage? = nil, pngData: Data? = nil) {
     var updated = record
     if let image {
       let filename = "\(record.id.uuidString).png"
@@ -106,7 +106,8 @@ final class SessionVaultStore {
       } else {
         storeCachedImage(image, for: filename)
       }
-      saveImageAsync(image, filename: filename, preparePreview: needsDownsampling)
+      saveImageAsync(
+        image, preencodedPNGData: pngData, filename: filename, preparePreview: needsDownsampling)
     }
     records.insert(updated, at: 0)
     if records.count > Self.maxStoredRecords {
@@ -262,17 +263,28 @@ final class SessionVaultStore {
     copyRequestGeneration &+= 1
     let requestGeneration = copyRequestGeneration
     let expectedChangeCount = pasteboard.changeCount
+    let fallbackCG = cachedImage(for: record)?.cgImage(
+      forProposedRect: nil, context: nil, hints: nil)
     guard let filename = record.imageFilename, let url = imageURL(for: record) else {
-      if let cached = cachedImage(for: record) {
-        pasteboard.clearContents()
-        pasteboard.writeObjects([cached])
+      guard let fallbackCG else { return }
+      Self.ioQueue.async { [weak self] in
+        guard let pngData = Self.encodePNGData(from: fallbackCG) else { return }
+        Task { @MainActor [weak self] in
+          guard let self,
+            self.copyRequestGeneration == requestGeneration,
+            self.pasteboard.changeCount == expectedChangeCount
+          else { return }
+          self.pasteboard.clearContents()
+          self.pasteboard.setData(pngData, forType: .png)
+        }
       }
       return
     }
-    let fallbackPreview = cachedImage(for: record)
+    let needsPreviewCache = cachedImage(for: record) == nil
     Self.ioQueue.async { [weak self] in
-      let fullCG = Self.decodeFullCGImage(at: url)
-      let previewCG = fullCG.map { Self.makePreviewCGImage(from: $0) }
+      let diskPNGData = try? Data(contentsOf: url)
+      let resolvedPNGData = diskPNGData ?? fallbackCG.flatMap { Self.encodePNGData(from: $0) }
+      let previewCG = needsPreviewCache ? Self.decodePreviewCGImage(at: url) : nil
       Task { @MainActor [weak self] in
         guard let self else { return }
         if let previewCG,
@@ -282,17 +294,11 @@ final class SessionVaultStore {
         }
         guard
           self.copyRequestGeneration == requestGeneration,
-          self.pasteboard.changeCount == expectedChangeCount
+          self.pasteboard.changeCount == expectedChangeCount,
+          let resolvedPNGData
         else { return }
-        if let fullCG {
-          let nsImage = NSImage(
-            cgImage: fullCG, size: NSSize(width: fullCG.width, height: fullCG.height))
-          self.pasteboard.clearContents()
-          self.pasteboard.writeObjects([nsImage])
-        } else if let fallbackPreview {
-          self.pasteboard.clearContents()
-          self.pasteboard.writeObjects([fallbackPreview])
-        }
+        self.pasteboard.clearContents()
+        self.pasteboard.setData(resolvedPNGData, forType: .png)
       }
     }
   }
@@ -403,13 +409,11 @@ final class SessionVaultStore {
     }
   }
 
-  private nonisolated static func decodeFullCGImage(at url: URL) -> CGImage? {
+  nonisolated static func encodePNGData(from cgImage: CGImage) -> Data? {
     dispatchPrecondition(condition: .notOnQueue(.main))
     return autoreleasepool {
-      guard let data = try? Data(contentsOf: url),
-        let rep = NSBitmapImageRep(data: data)
-      else { return nil }
-      return rep.cgImage
+      let rep = NSBitmapImageRep(cgImage: cgImage)
+      return rep.representation(using: .png, properties: [:])
     }
   }
 
@@ -442,7 +446,7 @@ final class SessionVaultStore {
   }
 
   private func saveImageAsync(
-    _ cgImage: CGImage, filename: String, preparePreview: Bool
+    _ cgImage: CGImage, preencodedPNGData: Data?, filename: String, preparePreview: Bool
   ) {
     let directory = storageDirectory
     let fileURL = directory.appendingPathComponent(filename)
@@ -459,8 +463,7 @@ final class SessionVaultStore {
       try? FileManager.default.createDirectory(
         at: directory, withIntermediateDirectories: true,
         attributes: [.posixPermissions: 0o700])
-      let rep = NSBitmapImageRep(cgImage: cgImage)
-      if let data = rep.representation(using: .png, properties: [:]) {
+      if let data = preencodedPNGData ?? Self.encodePNGData(from: cgImage) {
         try? data.write(to: fileURL, options: .atomic)
       }
     }

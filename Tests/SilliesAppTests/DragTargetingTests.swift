@@ -316,3 +316,285 @@ func radialSelectionCancelsWhenUnderlyingTargetChangesBeforeDrop() async throws 
   #expect(evaluation.cachedTarget?.windowID != 1)
   #expect(evaluation.pendingDrop?.windowID == 2)
 }
+
+@Test @MainActor
+func floatingForeignWindowsLikeBrowserPictureInPictureAreTrackableBelowCompanionOverlays() throws {
+  let floatingLayer = Int(CGWindowLevelForKey(.floatingWindow))
+  let ownPID = ProcessInfo.processInfo.processIdentifier
+  let foreignPID = ownPID + 100
+
+  #expect(WindowServerSource.isTrackableWindowLayer(0, ownerPID: ownPID))
+  #expect(WindowServerSource.isTrackableWindowLayer(0, ownerPID: foreignPID))
+  #expect(WindowServerSource.isTrackableWindowLayer(floatingLayer, ownerPID: foreignPID))
+  #expect(!WindowServerSource.isTrackableWindowLayer(floatingLayer, ownerPID: ownPID))
+  #expect(CompanionPanel.overlayLevel.rawValue > floatingLayer)
+  // Companions on normal windows sit above normal windows (0) and below floating windows (3),
+  // while companions on floating windows (or picked up) sit above floating windows (3).
+  let normalCompanionLevel = CompanionPanel.overlayLevel(forWindowLayer: 0).rawValue
+  let normalHUDLevel = CompanionPanel.hudLevel(forWindowLayer: 0).rawValue
+  let floatingCompanionLevel = CompanionPanel.overlayLevel(forWindowLayer: floatingLayer).rawValue
+  let pickedUpCompanionLevel = CompanionPanel.overlayLevel(forWindowLayer: 0, isPickedUp: true)
+    .rawValue
+  #expect(normalCompanionLevel > WindowServerSource.normalWindowLayer)
+  #expect(normalCompanionLevel < floatingLayer)
+  #expect(normalHUDLevel > normalCompanionLevel)
+  #expect(normalHUDLevel < floatingLayer)
+  #expect(floatingCompanionLevel > floatingLayer)
+  #expect(pickedUpCompanionLevel > floatingLayer)
+
+  // 1. Standard layer-0 apps (e.g. Ghostty) always trust WindowServer front-to-back order
+  // even if Accessibility reports a stale/background window frame.
+  let frontNormal = WindowServerSource.Candidate(
+    id: 10, layer: 0, frame: CGRect(x: 500, y: 200, width: 900, height: 600))
+  let backNormal = WindowServerSource.Candidate(
+    id: 11, layer: 0, frame: CGRect(x: 60, y: 150, width: 1100, height: 700))
+  let chosenNormal = WindowServerSource.chooseCandidate(
+    from: [frontNormal, backNormal],
+    preferredFrame: backNormal.frame,
+    preferredPoint: nil,
+    currentWindowID: 11)
+  #expect(chosenNormal?.id == 10)
+
+  // 2. When an app has both a floating PiP window (layer 3) and a main browser window (layer 0),
+  // click point and AX focus disambiguate them, and currentWindowID is retained across drags.
+  let meetPiP = WindowServerSource.Candidate(
+    id: 20, layer: floatingLayer, frame: CGRect(x: 900, y: 250, width: 500, height: 600))
+  let mainBrowser = WindowServerSource.Candidate(
+    id: 21, layer: 0, frame: CGRect(x: 0, y: 33, width: 1512, height: 867))
+  let chromeCandidates = [meetPiP, mainBrowser]
+
+  // Clicking inside the Meet PiP window selects Meet.
+  #expect(
+    WindowServerSource.chooseCandidate(
+      from: chromeCandidates,
+      preferredFrame: nil,
+      preferredPoint: CGPoint(x: 1100, y: 400),
+      currentWindowID: 21)?.id == 20)
+
+  // Clicking on the main browser window outside Meet selects the main browser window.
+  #expect(
+    WindowServerSource.chooseCandidate(
+      from: chromeCandidates,
+      preferredFrame: nil,
+      preferredPoint: CGPoint(x: 200, y: 400),
+      currentWindowID: 20)?.id == 21)
+
+  // Once the main browser window is active, subsequent discovery ticks keep it active
+  // even though Meet remains at layer 3 in front.
+  #expect(
+    WindowServerSource.chooseCandidate(
+      from: chromeCandidates,
+      preferredFrame: nil,
+      preferredPoint: nil,
+      currentWindowID: 21)?.id == 21)
+
+  // 3. System / OS popups and confirmation dialogs are excluded, while verified standard
+  // floating windows (like Google Meet) remain eligible.
+  #expect(
+    TrackableApplicationPolicy.isTrackable(
+      activationPolicy: .regular,
+      bundleIdentifier: "com.google.Chrome",
+      bundlePath: "/Applications/Google Chrome.app"))
+  #expect(
+    TrackableApplicationPolicy.isTrackable(
+      activationPolicy: .regular,
+      bundleIdentifier: "com.apple.finder",
+      bundlePath: "/System/Library/CoreServices/Finder.app"))
+  #expect(
+    !TrackableApplicationPolicy.isTrackable(
+      activationPolicy: .accessory,
+      bundleIdentifier: "com.apple.UserNotificationCenter",
+      bundlePath: "/System/Library/CoreServices/UserNotificationCenter.app"))
+  #expect(
+    !TrackableApplicationPolicy.isTrackable(
+      activationPolicy: .regular,
+      bundleIdentifier: "com.apple.coreservices.uiagent",
+      bundlePath: "/System/Library/CoreServices/CoreServicesUIAgent.app"))
+
+  let permissionBubble = WindowServerSource.Candidate(
+    id: 22, layer: floatingLayer, frame: CGRect(x: 920, y: 280, width: 380, height: 280))
+  let confirmationAlert = WindowServerSource.Candidate(
+    id: 23, layer: WindowServerSource.normalWindowLayer,
+    frame: CGRect(x: 520, y: 300, width: 420, height: 280))
+  let passwordAutocompletePopup = WindowServerSource.Candidate(
+    id: 24, layer: WindowServerSource.normalWindowLayer,
+    frame: CGRect(x: 600, y: 360, width: 240, height: 160))
+  let largeInteriorAutocompletePopup = WindowServerSource.Candidate(
+    id: 25, layer: WindowServerSource.normalWindowLayer,
+    frame: CGRect(x: 420, y: 280, width: 320, height: 240))
+  #expect(!WindowServerSource.isTrackableWindowSize(passwordAutocompletePopup.frame.size))
+  #expect(WindowServerSource.isTrackableWindowSize(CGSize(width: 300, height: 220)))
+  #expect(WindowServerSource.isTrackableWindowSize(meetPiP.frame.size))
+  let roleSnapshot = AccessibilityWindowRoleSnapshot(
+    standardWindowFrames: [meetPiP.frame, mainBrowser.frame],
+    nonStandardWindowFrames: [confirmationAlert.frame])
+
+  // Floating permission bubble (not in standardWindowFrames), confirmation alert (in
+  // nonStandardWindowFrames), and both small and large interior autocomplete/popup windows
+  // are filtered out; Meet PiP (in standardWindowFrames) wins.
+  let chosenWithPopups = WindowServerSource.chooseCandidate(
+    from: [
+      passwordAutocompletePopup, largeInteriorAutocompletePopup, permissionBubble,
+      confirmationAlert, meetPiP, mainBrowser,
+    ],
+    preferredFrame: nil,
+    preferredPoint: nil,
+    currentWindowID: nil,
+    roleSnapshot: roleSnapshot,
+    requiresVerifiedFloatingRole: true)
+  #expect(chosenWithPopups?.id == 20)
+
+  // 4. Clicking the exterior resize border (within hitSlop outside maxX, directly over the
+  // background window) and resizing the active window keeps companions on the active window.
+  let resizeBorderClick = CGPoint(
+    x: meetPiP.frame.maxX + 6,
+    y: meetPiP.frame.midY)
+  #expect(mainBrowser.frame.contains(resizeBorderClick))
+  #expect(!meetPiP.frame.contains(resizeBorderClick))
+  let chosenOnResizeBorder = WindowServerSource.chooseCandidate(
+    from: chromeCandidates,
+    preferredFrame: nil,
+    preferredPoint: resizeBorderClick,
+    currentWindowID: 20,
+    roleSnapshot: roleSnapshot,
+    requiresVerifiedFloatingRole: true)
+  #expect(chosenOnResizeBorder?.id == 20)
+
+  // During active resize, even if the active window shrinks below minimumTrackableWindowSize
+  // before AX roleSnapshot updates, currentWindowID remains locked to the window being resized.
+  let shrunkenMeet = WindowServerSource.Candidate(
+    id: 20, layer: floatingLayer, frame: CGRect(x: 900, y: 250, width: 220, height: 160))
+  let chosenDuringResize = WindowServerSource.chooseCandidate(
+    from: [shrunkenMeet, mainBrowser],
+    preferredFrame: mainBrowser.frame,
+    preferredPoint: nil,
+    currentWindowID: 20,
+    roleSnapshot: roleSnapshot,
+    requiresVerifiedFloatingRole: true,
+    isManipulatingWindow: true)
+  #expect(chosenDuringResize?.id == 20)
+
+  // 5. Resizing a standard normal-layer window inward when a background window of the same
+  // app is behind the initial click point and roleSnapshot still holds the pre-resize frame
+  // must keep the active front window instead of switching to the background window.
+  let shrunkenFrontNormal = WindowServerSource.Candidate(
+    id: 10, layer: 0, frame: CGRect(x: 580, y: 200, width: 820, height: 600))
+  let preResizeClickAtOldLeftEdge = CGPoint(
+    x: frontNormal.frame.minX + 2, y: frontNormal.frame.midY)
+  #expect(!shrunkenFrontNormal.frame.contains(preResizeClickAtOldLeftEdge))
+  #expect(backNormal.frame.contains(preResizeClickAtOldLeftEdge))
+  let normalRoleSnapshot = AccessibilityWindowRoleSnapshot(
+    standardWindowFrames: [frontNormal.frame, backNormal.frame],
+    nonStandardWindowFrames: [])
+  let chosenNormalDuringInwardResize = WindowServerSource.chooseCandidate(
+    from: [shrunkenFrontNormal, backNormal],
+    preferredFrame: backNormal.frame,
+    preferredPoint: preResizeClickAtOldLeftEdge,
+    currentWindowID: nil,
+    roleSnapshot: normalRoleSnapshot,
+    requiresVerifiedFloatingRole: true)
+  #expect(chosenNormalDuringInwardResize?.id == 10)
+
+  // 6. Moving (dragging) a standard normal-layer window when a second standard window is
+  // stationary in the background and roleSnapshot still holds the pre-drag origin must keep
+  // the moved front window instead of rejecting it or switching to the background window.
+  let movedFrontNormal = WindowServerSource.Candidate(
+    id: 10, layer: 0, frame: frontNormal.frame.offsetBy(dx: 140, dy: -85))
+  let chosenNormalDuringMove = WindowServerSource.chooseCandidate(
+    from: [movedFrontNormal, backNormal],
+    preferredFrame: backNormal.frame,
+    preferredPoint: nil,
+    currentWindowID: nil,
+    roleSnapshot: normalRoleSnapshot,
+    requiresVerifiedFloatingRole: true)
+  #expect(chosenNormalDuringMove?.id == 10)
+
+  // 6b. Minimizing or closing the currently tracked front window while its surface is still
+  // animating out in WindowServer must immediately switch to the remaining standard window (or nil
+  // when the last window closes) without waiting for the Dock genie / close fade animation.
+  let minimizedFrontSnapshot = AccessibilityWindowRoleSnapshot(
+    standardWindowFrames: [backNormal.frame],
+    nonStandardWindowFrames: [frontNormal.frame],
+    hasVerifiedWindowList: true)
+  let chosenAfterFrontMinimized = WindowServerSource.chooseCandidate(
+    from: [frontNormal, backNormal],
+    preferredFrame: backNormal.frame,
+    preferredPoint: nil,
+    currentWindowID: 10,
+    roleSnapshot: minimizedFrontSnapshot,
+    requiresVerifiedFloatingRole: true,
+    isManipulatingWindow: false)
+  #expect(chosenAfterFrontMinimized?.id == 11)
+
+  let closedFrontSnapshot = AccessibilityWindowRoleSnapshot(
+    standardWindowFrames: [backNormal.frame],
+    nonStandardWindowFrames: [],
+    hasVerifiedWindowList: true)
+  let chosenAfterFrontClosed = WindowServerSource.chooseCandidate(
+    from: [frontNormal, backNormal],
+    preferredFrame: backNormal.frame,
+    preferredPoint: nil,
+    currentWindowID: 10,
+    roleSnapshot: closedFrontSnapshot,
+    requiresVerifiedFloatingRole: true,
+    isManipulatingWindow: false)
+  #expect(chosenAfterFrontClosed?.id == 11)
+
+  let closedLastWindowSnapshot = AccessibilityWindowRoleSnapshot(
+    standardWindowFrames: [],
+    nonStandardWindowFrames: [],
+    hasVerifiedWindowList: true)
+  let chosenAfterLastWindowClosed = WindowServerSource.chooseCandidate(
+    from: [frontNormal],
+    preferredFrame: nil,
+    preferredPoint: nil,
+    currentWindowID: 10,
+    roleSnapshot: closedLastWindowSnapshot,
+    requiresVerifiedFloatingRole: true,
+    isManipulatingWindow: false)
+  #expect(chosenAfterLastWindowClosed == nil)
+
+  // 7. Non-structural AX notifications (move, resize, title, selection) must never re-query
+  // the target application's window hierarchy during a window drag.
+  #expect(AccessibilityWindowSource.isNonStructuralWindowNotification(kAXMovedNotification))
+  #expect(AccessibilityWindowSource.isNonStructuralWindowNotification(kAXResizedNotification))
+  #expect(AccessibilityWindowSource.isNonStructuralWindowNotification(kAXTitleChangedNotification))
+  #expect(
+    AccessibilityWindowSource.isNonStructuralWindowNotification(
+      kAXSelectedChildrenChangedNotification))
+  #expect(
+    !AccessibilityWindowSource.isNonStructuralWindowNotification(
+      AccessibilityWindowSource.activationReason))
+  #expect(
+    !AccessibilityWindowSource.isNonStructuralWindowNotification(
+      AccessibilityWindowSource.sampleReason))
+  #expect(
+    !AccessibilityWindowSource.isNonStructuralWindowNotification(
+      kAXFocusedWindowChangedNotification))
+
+  // 8. Pure fractional window translation must not rebuild the companion's worldMask path.
+  let rig = CatRig()
+  let view = CompanionView(rig: rig, size: 64)
+  let panel = CompanionPanel(view: view)
+  defer { panel.close() }
+  let display = CGRect(x: 0, y: 0, width: 1512, height: 945)
+  let initialAttachedWindow = CGRect(x: 200.0, y: 200.0, width: 800.0, height: 500.0)
+  view.configureSurface(pose: .standing, window: initialAttachedWindow, display: display)
+  let initialLayout = view.panelLayout(
+    at: CGPoint(x: 500.0, y: initialAttachedWindow.maxY + 1), attached: true)
+  panel.setFrame(initialLayout.frame, display: false)
+  view.applyPanelLayout(initialLayout)
+  view.updateWorldMask()
+  let maskLayer = try #require(view.layer?.mask as? CAShapeLayer)
+  let initialPath = try #require(maskLayer.path)
+
+  let translatedWindow = initialAttachedWindow.offsetBy(dx: 17.3333333333, dy: -9.6666666667)
+  view.configureSurface(pose: .standing, window: translatedWindow, display: display)
+  let translatedLayout = view.panelLayout(
+    at: CGPoint(x: 517.3333333333, y: translatedWindow.maxY + 1), attached: true)
+  panel.setFrame(translatedLayout.frame, display: false)
+  view.applyPanelLayout(translatedLayout)
+  view.updateWorldMask()
+  let translatedPath = try #require(maskLayer.path)
+  #expect(initialPath === translatedPath)
+}

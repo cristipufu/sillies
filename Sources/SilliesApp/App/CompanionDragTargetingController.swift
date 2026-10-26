@@ -75,6 +75,10 @@ final class CompanionDragTargetingController {
     (draggedTarget?.windowID, windowHighlight.isVisible, radialWheel.isVisible)
   }
 
+  var usesHardwareBorderOutline: Bool {
+    windowHighlight.usesHardwareBorderOutline
+  }
+
   func start() {
     targets.onTargetChanged = { [weak self] target in self?.dragTargetChanged(target) }
     windowSnapshot.onChange = { [weak self] in self?.targets.invalidateWindowStack() }
@@ -107,6 +111,7 @@ final class CompanionDragTargetingController {
   ) {
     clear(closeWheel: false)
     draggedCompanionID = pet.definition.id
+    windowHighlight.prestage(target: seed)
     windowSnapshot.start(seed: seed)
     targets.start(seed: seed)
     dwellAnchor = pointer

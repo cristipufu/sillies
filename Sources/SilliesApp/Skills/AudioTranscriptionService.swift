@@ -3,13 +3,13 @@ import CoreMedia
 import Foundation
 import ScreenCaptureKit
 import SilliesCore
-import Speech
+@preconcurrency import Speech
 
 /// Captures isolated application/window audio via ScreenCaptureKit and performs live on-device
 /// Speech-to-Text transcription using the Speech framework.
 final class AudioTranscriptionService: NSObject, @unchecked Sendable {
   struct Update: Sendable {
-    let transcript: String
+    let transcript: String?
     let audioLevel: Double
     let statusMessage: String
   }
@@ -17,6 +17,13 @@ final class AudioTranscriptionService: NSObject, @unchecked Sendable {
   private let target: WindowTargetCandidate
   private let onUpdate: @Sendable (Update) -> Void
   private let audioQueue = DispatchQueue(label: "app.sillies.audio-capture", qos: .userInitiated)
+  private let speechQueue: OperationQueue = {
+    let queue = OperationQueue()
+    queue.name = "app.sillies.speech-recognition"
+    queue.maxConcurrentOperationCount = 1
+    queue.qualityOfService = .userInitiated
+    return queue
+  }()
   private let lock = NSLock()
   private var stream: SCStream?
   private var recognizer: SFSpeechRecognizer?
@@ -32,6 +39,7 @@ final class AudioTranscriptionService: NSObject, @unchecked Sendable {
   init(target: WindowTargetCandidate, onUpdate: @escaping @Sendable (Update) -> Void) {
     self.target = target
     self.onUpdate = onUpdate
+    speechQueue.underlyingQueue = audioQueue
     super.init()
   }
 
@@ -44,13 +52,13 @@ final class AudioTranscriptionService: NSObject, @unchecked Sendable {
       let content = try await SCShareableContent.excludingDesktopWindows(
         false, onScreenWindowsOnly: false)
       let filter: SCContentFilter
-      if let scWindow = content.windows.first(where: { $0.windowID == target.windowID }) {
-        filter = SCContentFilter(desktopIndependentWindow: scWindow)
-      } else if let display = content.displays.first,
+      if let display = content.displays.first,
         let app = content.applications.first(where: { $0.processID == target.processID })
       {
         filter = SCContentFilter(
           display: display, including: [app], exceptingWindows: [])
+      } else if let scWindow = content.windows.first(where: { $0.windowID == target.windowID }) {
+        filter = SCContentFilter(desktopIndependentWindow: scWindow)
       } else {
         onUpdate(
           Update(
@@ -115,8 +123,12 @@ final class AudioTranscriptionService: NSObject, @unchecked Sendable {
     let finalTranscript = combinedTranscriptLocked()
     lock.unlock()
 
-    request?.endAudio()
-    task?.cancel()
+    if request != nil || task != nil {
+      audioQueue.async {
+        request?.endAudio()
+        task?.cancel()
+      }
+    }
     if let activeStream {
       Task {
         try? await activeStream.stopCapture()
@@ -140,6 +152,7 @@ final class AudioTranscriptionService: NSObject, @unchecked Sendable {
     guard let speechRecognizer = SFSpeechRecognizer(locale: .current) ?? SFSpeechRecognizer(),
       speechRecognizer.isAvailable
     else { return }
+    speechRecognizer.queue = speechQueue
 
     let request = SFSpeechAudioBufferRecognitionRequest()
     request.shouldReportPartialResults = true
@@ -166,7 +179,7 @@ final class AudioTranscriptionService: NSObject, @unchecked Sendable {
           self.latestTranscript = formatted
         }
         let fullText = self.combinedTranscriptLocked()
-        let snippet = Self.tailSnippet(from: fullText)
+        let snippet = self.latestTailSnippetLocked()
         let message = snippet.isEmpty ? "Listening to \(self.target.appName)…" : snippet
         self.lastEmittedStatus = message
         self.lastEmittedLevel = 0.25
@@ -207,6 +220,11 @@ final class AudioTranscriptionService: NSObject, @unchecked Sendable {
     return "\(committedTranscript) \(latestTranscript)"
   }
 
+  private func latestTailSnippetLocked() -> String {
+    let source = !latestTranscript.isEmpty ? latestTranscript : committedTranscript
+    return Self.tailSnippet(from: String(source.suffix(120)))
+  }
+
   private static func tailSnippet(from text: String) -> String {
     let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else { return "" }
@@ -228,14 +246,13 @@ extension AudioTranscriptionService: SCStreamOutput {
     let now = ProcessInfo.processInfo.systemUptime
     let shouldEmitLevel = now - lastLevelEmitTime >= 0.08
     if shouldEmitLevel { lastLevelEmitTime = now }
-    let fullText = combinedTranscriptLocked()
+    let snippet = shouldEmitLevel ? latestTailSnippetLocked() : ""
     lock.unlock()
 
     activeRequest?.append(pcmBuffer)
 
     if shouldEmitLevel {
       let rms = Self.computeRMSLevel(from: pcmBuffer)
-      let snippet = Self.tailSnippet(from: fullText)
       let message =
         !snippet.isEmpty
         ? snippet
@@ -250,7 +267,7 @@ extension AudioTranscriptionService: SCStreamOutput {
         return true
       }
       if shouldNotify {
-        onUpdate(Update(transcript: fullText, audioLevel: rms, statusMessage: message))
+        onUpdate(Update(transcript: nil, audioLevel: rms, statusMessage: message))
       }
     }
   }

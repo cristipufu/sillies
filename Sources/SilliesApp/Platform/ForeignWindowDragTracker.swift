@@ -20,9 +20,11 @@ final class ForeignWindowDragTracker: NSObject {
   private var session: WindowDragSession?
   private var displayLink: CADisplayLink?
   private var pointerDown: CGPoint?
+  private var pointerDownFrame: CGRect?
   private var pointerDownTime: Double = 0
   private var pointerDownCentered = false
   private var pointerDownProportional = false
+  private var releaseStartedAt: Double = 0
   private var releaseDeadline: Double = 0
   private var releaseTask: DispatchWorkItem?
   private var lastValidationRead: Double = 0
@@ -35,6 +37,11 @@ final class ForeignWindowDragTracker: NSObject {
 
   var hasActiveSession: Bool { session != nil }
   var isPointerConfirmed: Bool { session?.mode == .pointer }
+  var isResizeCandidate: Bool {
+    guard let kind = session?.gesture.kind else { return false }
+    if case .resize = kind { return true }
+    return false
+  }
 
   func beginCandidate(
     frame: CGRect?, hasWindow: Bool, pointer: CGPoint, at time: Double,
@@ -43,6 +50,7 @@ final class ForeignWindowDragTracker: NSObject {
     cancel()
     self.isLowPower = isLowPower
     pointerDown = pointer
+    pointerDownFrame = frame
     pointerDownTime = time
     pointerDownCentered = centered
     pointerDownProportional = proportional
@@ -54,13 +62,44 @@ final class ForeignWindowDragTracker: NSObject {
     guard session == nil, let frame, let pointerDown, hasWindow else { return }
     guard CGEventSource.buttonState(.combinedSessionState, button: .left) else {
       self.pointerDown = nil
+      self.pointerDownFrame = nil
       return
     }
-    session = PointerWindowGesture(
-      frame: frame, pointer: pointerDown, at: pointerDownTime,
-      centered: pointerDownCentered, proportional: pointerDownProportional
-    ).map(WindowDragSession.init)
+    if pointerDownFrame == nil { pointerDownFrame = frame }
+    let currentPointer = NSEvent.mouseLocation
+    let now = ProcessInfo.processInfo.systemUptime
+    let gesture =
+      PointerWindowGesture(
+        frame: frame, pointer: pointerDown, at: pointerDownTime,
+        centered: pointerDownCentered, proportional: pointerDownProportional)
+      ?? PointerWindowGesture(
+        frame: frame, pointer: currentPointer, at: now,
+        centered: pointerDownCentered, proportional: pointerDownProportional)
+      ?? verifiedWindowMoveGesture(frame: frame, currentPointer: currentPointer, now: now)
+    session = gesture.map(WindowDragSession.init)
+    if currentPointer != pointerDown {
+      session?.record(pointer: currentPointer, at: now)
+    }
     if session != nil { startDisplayLink() }
+  }
+
+  private func verifiedWindowMoveGesture(
+    frame: CGRect, currentPointer: CGPoint, now: Double
+  ) -> PointerWindowGesture? {
+    guard let initialFrame = pointerDownFrame,
+      let initialPointer = pointerDown,
+      initialFrame.insetBy(dx: -PointerWindowGesture.hitSlop, dy: -PointerWindowGesture.hitSlop)
+        .contains(initialPointer),
+      abs(frame.width - initialFrame.width) < 0.5,
+      abs(frame.height - initialFrame.height) < 0.5
+    else { return nil }
+    let moved = abs(frame.minX - initialFrame.minX) + abs(frame.minY - initialFrame.minY)
+    guard moved > 1.0,
+      hypot(currentPointer.x - initialPointer.x, currentPointer.y - initialPointer.y)
+        > Self.pointerDragStartThreshold
+    else { return nil }
+    return PointerWindowGesture(
+      kind: .move, frame: frame, pointer: currentPointer, at: now)
   }
 
   func updateDrag(
@@ -82,12 +121,15 @@ final class ForeignWindowDragTracker: NSObject {
     observationFrame: CGRect?, matchesTrackedWindow: Bool, currentFrame: CGRect?,
     capturedAt: Double, now: Double
   ) -> WindowDragSession.Decision? {
-    guard let startedAt = session?.startedAt, matchesTrackedWindow, let next = observationFrame
-    else {
-      if session != nil { invalidateSession() }
+    guard let startedAt = session?.startedAt else { return nil }
+    guard capturedAt >= startedAt else { return .ignore }
+    guard matchesTrackedWindow, let next = observationFrame else {
+      if isDragging && (isPointerConfirmed || observationFrame == nil) {
+        return .ignore
+      }
+      invalidateSession()
       return nil
     }
-    guard capturedAt >= startedAt else { return .ignore }
     if isDragging {
       session?.record(pointer: NSEvent.mouseLocation, at: now)
       let previousMode = session?.mode
@@ -106,7 +148,10 @@ final class ForeignWindowDragTracker: NSObject {
       let current = currentFrame ?? next
       let originError = abs(current.minX - next.minX) + abs(current.minY - next.minY)
       let sizeError = abs(current.width - next.width) + abs(current.height - next.height)
-      if originError + sizeError > Self.releaseErrorTolerance && now < releaseDeadline {
+      if capturedAt < releaseStartedAt
+        && originError + sizeError > Self.releaseErrorTolerance
+        && now < releaseDeadline
+      {
         return .ignore
       }
       cancel()
@@ -121,7 +166,9 @@ final class ForeignWindowDragTracker: NSObject {
     displayLink?.invalidate()
     displayLink = nil
     if wasDragging && session?.mode == .pointer && canReconcile {
-      releaseDeadline = ProcessInfo.processInfo.systemUptime + Self.releaseHoldDuration
+      let now = ProcessInfo.processInfo.systemUptime
+      releaseStartedAt = now
+      releaseDeadline = now + Self.releaseHoldDuration
       reconcileRelease()
     } else {
       cancel()
@@ -137,9 +184,11 @@ final class ForeignWindowDragTracker: NSObject {
     releaseTask = nil
     isDragging = false
     session = nil
+    releaseStartedAt = 0
     releaseDeadline = 0
     if !CGEventSource.buttonState(.combinedSessionState, button: .left) {
       pointerDown = nil
+      pointerDownFrame = nil
       pointerDownTime = 0
       pointerDownCentered = false
       pointerDownProportional = false
@@ -149,6 +198,7 @@ final class ForeignWindowDragTracker: NSObject {
   func cancel() {
     invalidateSession()
     pointerDown = nil
+    pointerDownFrame = nil
     pointerDownTime = 0
     pointerDownCentered = false
     pointerDownProportional = false

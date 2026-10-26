@@ -16,7 +16,9 @@ extension NSColor {
 @MainActor
 class CharacterRig {
   private static let floorShadowOpacity: Float = 0.12
-  private static let feedbackChangeEpsilon: Double = 0.003
+  private static let feedbackChangeEpsilon: Double = 0.015
+  private static let feedbackAnimationInterval: Double = 1.0 / 30.0
+  private static let feedbackTimingFunction = CAMediaTimingFunction(name: .easeOut)
 
   let root = CALayer()
   let facing = CALayer()
@@ -44,8 +46,11 @@ class CharacterRig {
   private var standingFacingRight = true
   private var floorShadow: CAShapeLayer?
   private(set) var facingRight = true
+  private(set) var feedbackAnimationCount = 0
   private var lastLean: Double = 0
   private var lastStretch: Double = 0
+  private var lastFeedbackTransform = CATransform3DIdentity
+  private var lastFeedbackAnimationTime: Double = -.infinity
 
   private var animatableLayers: [CALayer] {
     [
@@ -180,6 +185,8 @@ class CharacterRig {
     attachmentPose = pose
     lastLean = 0
     lastStretch = 0
+    lastFeedbackTransform = CATransform3DIdentity
+    lastFeedbackAnimationTime = -.infinity
     CATransaction.begin()
     CATransaction.setDisableActions(true)
     facingRight = pose.isHanging ? pose == .hangingLeft : standingFacingRight
@@ -199,6 +206,8 @@ class CharacterRig {
     resetBehaviorPose()
     lastLean = 0
     lastStretch = 0
+    lastFeedbackTransform = CATransform3DIdentity
+    lastFeedbackAnimationTime = -.infinity
     CATransaction.begin()
     CATransaction.setDisableActions(true)
     workspaceMotion.removeAllAnimations()
@@ -232,12 +241,18 @@ class CharacterRig {
     {
       return
     }
+    let now = ProcessInfo.processInfo.systemUptime
+    if !settling, now - lastFeedbackAnimationTime < Self.feedbackAnimationInterval {
+      return
+    }
     lastLean = lean
     lastStretch = stretch
-    let old = workspaceMotion.presentation()?.transform ?? workspaceMotion.transform
+    lastFeedbackAnimationTime = settling ? -.infinity : now
+    let old = lastFeedbackTransform
     let transform = CATransform3DScale(
       CATransform3DMakeRotation(facingRight ? lean : -lean, 0, 0, 1), 1 + stretch,
       1 - stretch * 0.6, 1)
+    lastFeedbackTransform = transform
     CATransaction.begin()
     CATransaction.setDisableActions(true)
     workspaceMotion.transform = transform
@@ -253,10 +268,11 @@ class CharacterRig {
     } else {
       animation = CABasicAnimation(keyPath: "transform")
       animation.duration = 0.09
-      animation.timingFunction = CAMediaTimingFunction(name: .easeOut)
+      animation.timingFunction = Self.feedbackTimingFunction
     }
     animation.fromValue = NSValue(caTransform3D: old)
     animation.toValue = NSValue(caTransform3D: transform)
+    feedbackAnimationCount += 1
     workspaceMotion.add(animation, forKey: "workspaceFeedback")
   }
 

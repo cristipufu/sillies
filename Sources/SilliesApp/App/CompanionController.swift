@@ -23,12 +23,14 @@ final class CompanionController {
   @ObservationIgnored var onOpenVault: ((UUID?) -> Void)?
   @ObservationIgnored private let additionalEventProducers: [any WorkspaceEventProducer]
   @ObservationIgnored private let interaction = CompanionInteraction()
-  @ObservationIgnored private let dragTargeting: CompanionDragTargetingController
+  @ObservationIgnored let dragTargeting: CompanionDragTargetingController
+  @ObservationIgnored let smoothnessMetrics: InteractionSmoothnessMetrics
   private(set) var liveCount = 0
   private(set) var movingCount = 0
   private(set) var lastReaction = "Settling in"
   private(set) var perchLocation = PerchSurface.Edge.unavailable
   @ObservationIgnored private var companions: [CompanionInstance] = []
+  @ObservationIgnored private var pendingPlacements: [ObjectIdentifier: Bool] = [:]
   @ObservationIgnored private var motionTimer: Timer?
   @ObservationIgnored private var deadlineTimer: Timer?
   @ObservationIgnored private var motionFPS = 0
@@ -46,10 +48,11 @@ final class CompanionController {
     skills: SkillCoordinator = SkillCoordinator(),
     eventProducers: [any WorkspaceEventProducer] = []
   ) throws {
-    let metrics = DragResponseMetrics(
-      enabled:
-        ProcessInfo.processInfo.arguments.contains("--trace-drag")
-        || ProcessInfo.processInfo.arguments.contains("--companion-drag-test"))
+    let traceEnabled =
+      ProcessInfo.processInfo.arguments.contains("--trace-drag")
+      || ProcessInfo.processInfo.arguments.contains("--companion-drag-test")
+    let metrics = DragResponseMetrics(enabled: traceEnabled)
+    self.smoothnessMetrics = InteractionSmoothnessMetrics(enabled: traceEnabled)
     self.dragTargeting = CompanionDragTargetingController(metrics: metrics)
     self.settings = settings
     self.renderers = renderers
@@ -218,6 +221,12 @@ final class CompanionController {
     dragTargeting.diagnostics
   }
   var dragTimingSummary: String { dragTargeting.metrics.summary }
+  var totalPlacementCount: Int { companions.reduce(0) { $0 + $1.placementCount } }
+  var rigFeedbackAnimationCount: Int {
+    companions.reduce(0) { $0 + $1.view.rig.feedbackAnimationCount }
+  }
+  var interactionMonitorInstallations: Int { interaction.monitorInstallations }
+  var primaryCompanionView: CompanionView? { companions.first?.view }
 
   func exportWindowScene(_ window: NSWindow, name: String) {
     let url = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
@@ -396,6 +405,7 @@ final class CompanionController {
         pet.attachmentTarget
         ?? (self.settings.followsWindows ? self.currentFocusedWindowCandidate() : nil)
       pet.isPickedUp = true
+      pet.updateOverlayLevel()
       pet.dropReturn.cancel()
       self.dragTargeting.beginDrag(
         for: pet, seed: self.currentFocusedWindowCandidate(), pointer: NSEvent.mouseLocation)
@@ -413,11 +423,13 @@ final class CompanionController {
     }
     pet.view.onDrag = { [weak self, weak pet] delta in
       guard let self, let pet else { return }
-      let destination = CGPoint(
-        x: pet.pickupPosition.x + delta.x, y: pet.pickupPosition.y + delta.y)
-      self.dragTargeting.metrics.measure(.movement) { pet.place(at: destination) }
-      self.dragTargeting.metrics.measure(.targeting) {
-        self.dragTargeting.updateDrag(for: pet, at: NSEvent.mouseLocation)
+      self.smoothnessMetrics.measure(.companionDrag) {
+        let destination = CGPoint(
+          x: pet.pickupPosition.x + delta.x, y: pet.pickupPosition.y + delta.y)
+        self.dragTargeting.metrics.measure(.movement) { pet.place(at: destination) }
+        self.dragTargeting.metrics.measure(.targeting) {
+          self.dragTargeting.updateDrag(for: pet, at: NSEvent.mouseLocation)
+        }
       }
     }
     pet.view.onDrop = { [weak self, weak pet] dragged in
@@ -437,6 +449,7 @@ final class CompanionController {
     let releasePosition = pet.position
     let offerSkills = radialWasOpen || releasePosition.y < pet.pickupPosition.y
     pet.isPickedUp = false
+    pet.updateOverlayLevel()
     interactionCounts[dragged ? .dropped : .pet, default: 0] += 1
     guard dragged else {
       react(pet, to: WorkspaceEvent(.pet, at: now))
@@ -528,28 +541,55 @@ final class CompanionController {
     guard let windowID = tracker.windowID, let frame = tracker.windowFrame else { return nil }
     return WindowTargetCandidate(
       windowID: windowID, processID: tracker.processID, appName: tracker.applicationName,
-      bundleIdentifier: tracker.bundleIdentifier, windowTitle: nil, frame: frame)
+      bundleIdentifier: tracker.bundleIdentifier, windowTitle: nil, frame: frame,
+      windowLayer: tracker.windowLayer)
+  }
+
+  private static func preferredScreen(for frame: CGRect?) -> NSScreen? {
+    frame.flatMap { rect in
+      NSScreen.screens.max { lhs, rhs in
+        let a = lhs.frame.intersection(rect)
+        let b = rhs.frame.intersection(rect)
+        return (a.isNull ? 0 : a.width * a.height) < (b.isNull ? 0 : b.width * b.height)
+      }
+    } ?? NSScreen.main ?? NSScreen.screens.first
   }
 
   private func geometryChanged() {
-    dragTargeting.windowSnapshot.updateKnownWindow(tracker.windowID, frame: tracker.windowFrame)
-    if !shouldRun {
-      reconcile()
-      return
+    let path: InteractionSmoothnessMetrics.Path =
+      if let latest = tracker.latestGeometry {
+        latest.resized ? .windowResize : .windowMove
+      } else {
+        .windowSwitch
+      }
+    smoothnessMetrics.measure(path) {
+      dragTargeting.windowSnapshot.updateKnownWindow(tracker.windowID, frame: tracker.windowFrame)
+      if tracker.latestGeometry == nil {
+        skills.refreshBoundWindows()
+      }
+      if !shouldRun {
+        reconcile()
+        return
+      }
+      updateSurfaces(animated: true)
+      if deadlineTimer == nil && !tracker.isManipulatingWindow { advanceBehaviors() }
+      updateMotionClock()
     }
-    updateSurfaces(animated: true)
-    if interaction.isEnabled { interaction.refresh() }
-    if deadlineTimer == nil { advanceBehaviors() }
-    updateMotionClock()
   }
 
   private func updateSurfaces(animated: Bool) {
     let defaultWindow = settings.followsWindows ? tracker.windowFrame : nil
     let defaultWindowID = settings.followsWindows ? tracker.windowID : nil
+    let defaultWindowLayer =
+      settings.followsWindows ? tracker.windowLayer : WindowServerSource.normalWindowLayer
     let hasBoundCompanion = companions.contains { $0.bindingState.isBound }
     if settings.followsWindows && (defaultWindow == nil || defaultWindowID == nil)
       && !hasBoundCompanion
     {
+      if tracker.isAwaitingApplicationWindow {
+        return
+      }
+      pendingPlacements.removeAll(keepingCapacity: true)
       for pet in companions {
         pet.presentation.hide(immediately: reducedMotion || tracker.isLowPower)
         pet.hud.hide()
@@ -559,25 +599,36 @@ final class CompanionController {
         pet.dropReturn.cancel()
         pet.surface = nil
         pet.attachedWindowID = nil
+        pet.attachedWindowLayer = WindowServerSource.normalWindowLayer
       }
       deadlineTimer?.invalidate()
       deadlineTimer = nil
       return
     }
+    pendingPlacements.removeAll(keepingCapacity: true)
+    let defaultScreen = Self.preferredScreen(for: defaultWindow)
+    var needsSurfaceArrangement = !animated
     for (index, pet) in companions.enumerated() {
       let boundTarget = pet.attachmentTarget
       let petWindow: CGRect?
       let petWindowID: CGWindowID?
+      let petWindowLayer: Int
       if let boundTarget {
         petWindow =
           boundTarget.windowID == defaultWindowID
           ? (defaultWindow ?? boundTarget.frame) : boundTarget.frame
         petWindowID = boundTarget.windowID
+        petWindowLayer =
+          boundTarget.windowID == defaultWindowID ? defaultWindowLayer : boundTarget.windowLayer
       } else {
         petWindow = defaultWindow
         petWindowID = defaultWindowID
+        petWindowLayer = defaultWindowLayer
       }
       if settings.followsWindows && (petWindow == nil || petWindowID == nil) {
+        if boundTarget == nil && tracker.isAwaitingApplicationWindow {
+          continue
+        }
         pet.presentation.hide(immediately: reducedMotion || tracker.isLowPower)
         pet.hud.hide()
         pet.tween = nil
@@ -586,30 +637,34 @@ final class CompanionController {
         pet.dropReturn.cancel()
         pet.surface = nil
         pet.attachedWindowID = nil
+        pet.attachedWindowLayer = WindowServerSource.normalWindowLayer
         continue
       }
       let screen =
-        petWindow.flatMap { frame in
-          NSScreen.screens.max { lhs, rhs in
-            let a = lhs.frame.intersection(frame)
-            let b = rhs.frame.intersection(frame)
-            return (a.isNull ? 0 : a.width * a.height) < (b.isNull ? 0 : b.width * b.height)
-          }
-        } ?? NSScreen.main ?? NSScreen.screens.first
+        petWindow == defaultWindow ? defaultScreen : Self.preferredScreen(for: petWindow)
       guard let screen else { continue }
       let surface = PerchSurface(
         window: petWindow, visibleFrame: screen.visibleFrame, characterSize: settings.size,
         preferRight: index % 2 == 1)
+      let previousSurface = pet.surface
       let fallback = Double(index + 1) / Double(companions.count + 1)
       let fraction =
         pet.isPickedUp || pet.isReturningFromDrop
         ? pet.pickupFraction
-        : (pet.surface?.fraction(for: pet.position, fallback: fallback) ?? fallback)
+        : (previousSurface?.fraction(for: pet.position, fallback: fallback) ?? fallback)
       let target = surface.point(at: fraction)
-      let changed = pet.surface != surface
-      let reattached = pet.attachedWindowID != petWindowID || pet.surface?.edge != surface.edge
+      let changed = previousSurface != surface
+      let reattached = pet.attachedWindowID != petWindowID || previousSurface?.edge != surface.edge
+      let surfaceLengthChanged =
+        abs((previousSurface?.spanLength ?? 0) - surface.spanLength) > 0.5
+        || abs((previousSurface?.presentationSize ?? 0) - surface.presentationSize) > 0.5
+      if reattached || surfaceLengthChanged || pet.tween != nil || pet.isWaitingForSpace {
+        needsSurfaceArrangement = true
+      }
       pet.surface = surface
       pet.attachedWindowID = petWindowID
+      pet.attachedWindowLayer = petWindowLayer
+      pet.updateOverlayLevel()
       pet.view.resize(to: surface.presentationSize)
       pet.view.configureSurface(
         pose: surface.attachmentPose, window: petWindow, display: screen.visibleFrame)
@@ -629,15 +684,16 @@ final class CompanionController {
         }
         if changed || reattached {
           pet.dropReturn.cancel()
-          pet.place(at: target)
+          pet.position = target
+          pendingPlacements[ObjectIdentifier(pet)] = reattached
         } else {
           pet.view.updateWorldMask()
+          pet.refreshHUD()
+          if !pet.isWaitingForSpace {
+            pet.presentation.show(
+              reattached: false, reducedMotion: reducedMotion || tracker.isLowPower)
+          }
         }
-        if !pet.isWaitingForSpace {
-          pet.presentation.show(
-            reattached: reattached, reducedMotion: reducedMotion || tracker.isLowPower)
-        }
-        pet.refreshHUD()
       } else if pet.isPickedUp {
         pet.view.updateWorldMask()
       }
@@ -655,13 +711,27 @@ final class CompanionController {
         pet.view.rig.workspaceFeedback(lean: feedback.lean, stretch: feedback.stretch)
       }
     }
-    var arrangedSurfaces: [PerchSurface] = []
-    for pet in companions where pet.tween == nil {
-      guard let surface = pet.surface, !arrangedSurfaces.contains(surface) else { continue }
-      if settleRestingGroup(on: surface, animated: false) {
-        arrangedSurfaces.append(surface)
-      } else {
-        settleAtFreePerch(pet, animated: false)
+    if needsSurfaceArrangement {
+      var arrangedSurfaces: [PerchSurface] = []
+      for pet in companions where pet.tween == nil {
+        guard let surface = pet.surface, !arrangedSurfaces.contains(surface) else { continue }
+        if settleRestingGroup(on: surface, animated: false) {
+          arrangedSurfaces.append(surface)
+        } else {
+          settleAtFreePerch(pet, animated: false)
+        }
+      }
+    }
+    if !pendingPlacements.isEmpty {
+      for pet in companions {
+        guard let reattached = pendingPlacements.removeValue(forKey: ObjectIdentifier(pet)) else {
+          continue
+        }
+        pet.place(at: pet.position)
+        if !pet.isWaitingForSpace {
+          pet.presentation.show(
+            reattached: reattached, reducedMotion: reducedMotion || tracker.isLowPower)
+        }
       }
     }
     let location =
@@ -680,8 +750,12 @@ final class CompanionController {
     for pet in companions where !pet.isPickedUp && !pet.isReturningFromDrop {
       react(pet, to: event)
     }
-    scheduleDeadline()
-    updateMotionClock()
+    if event.kind == .windowSettled {
+      advanceBehaviors()
+    } else {
+      scheduleDeadline()
+      updateMotionClock()
+    }
   }
 
   private func react(_ pet: CompanionInstance, to event: WorkspaceEvent) {
@@ -710,7 +784,8 @@ final class CompanionController {
       pet.isStrolling = false
       pet.strollReachesEdge = false
     }
-    guard !reducedMotion, !pet.isPickedUp, !pet.isReturningFromDrop, let surface = pet.surface,
+    guard !reducedMotion, !tracker.isManipulatingWindow, !pet.isPickedUp,
+      !pet.isReturningFromDrop, let surface = pet.surface,
       surface.isAvailable
     else {
       return
@@ -798,6 +873,7 @@ final class CompanionController {
   }
 
   private func waitForPerchSpace(_ pet: CompanionInstance) {
+    pendingPlacements.removeValue(forKey: ObjectIdentifier(pet))
     pet.isWaitingForSpace = true
     pet.tween = nil
     pet.isStrolling = false
@@ -809,17 +885,26 @@ final class CompanionController {
   private func placeAtRestingTarget(
     _ pet: CompanionInstance, target: CGPoint, animated: Bool
   ) {
+    let pendingReattach = pendingPlacements.removeValue(forKey: ObjectIdentifier(pet))
     if pet.isWaitingForSpace {
       pet.isWaitingForSpace = false
       pet.place(at: target)
-      pet.presentation.show(reducedMotion: reducedMotion || tracker.isLowPower)
+      pet.presentation.show(
+        reattached: pendingReattach ?? false,
+        reducedMotion: reducedMotion || tracker.isLowPower)
       pet.refreshHUD()
-    } else if hypot(target.x - pet.position.x, target.y - pet.position.y) > 0.5 {
-      if animated, !reducedMotion, !tracker.isLowPower {
+    } else if pendingReattach != nil
+      || hypot(target.x - pet.position.x, target.y - pet.position.y) > 0.5
+    {
+      if animated, pendingReattach == nil, !reducedMotion, !tracker.isLowPower {
         let distance = hypot(target.x - pet.position.x, target.y - pet.position.y)
         move(pet, to: target, duration: min(0.24, max(0.12, distance / 360)), arc: 0)
       } else {
         pet.place(at: target)
+      }
+      if let reattached = pendingReattach, !pet.isWaitingForSpace {
+        pet.presentation.show(
+          reattached: reattached, reducedMotion: reducedMotion || tracker.isLowPower)
       }
     }
   }
@@ -835,7 +920,7 @@ final class CompanionController {
   }
 
   private func advanceBehaviors() {
-    guard shouldRun else { return }
+    guard shouldRun, !tracker.isManipulatingWindow else { return }
     let time = now
     for pet in companions
     where !pet.isPickedUp && !pet.isReturningFromDrop

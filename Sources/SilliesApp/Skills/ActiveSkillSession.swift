@@ -5,6 +5,7 @@ import SilliesCore
 struct SkillCompletionOutcome {
   let record: SessionRecord
   let image: CGImage?
+  var pngData: Data? = nil
   let bannerSummary: String
 }
 

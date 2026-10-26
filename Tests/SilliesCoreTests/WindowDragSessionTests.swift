@@ -87,4 +87,59 @@ private let titlePointer = CGPoint(x: 350, y: 680)
     session.observe(firstMovedFrame.offsetBy(dx: 15, dy: 0), capturedAt: 0.024, now: 0.024)
       == .usePointer)
   #expect(session.mode == .pointer)
+
+  // Simulate dense 120Hz pointer samples during a 14pt drag threshold followed by dispatch delay:
+  // the first 2pt window movement at t=8/120 must compare against samples near capturedAt (not
+  // ancient pre-threshold samples) and reanchor cleanly before entering pointer mode.
+  var denseSession = WindowDragSession(gesture: gesture)
+  for step in 1...8 {
+    let time = Double(step) / 120
+    denseSession.record(
+      pointer: CGPoint(x: deepHeaderPointer.x + Double(step * 2), y: deepHeaderPointer.y),
+      at: time)
+  }
+  let earlyConfirmTime = 8.0 / 120
+  #expect(
+    denseSession.observe(
+      initialWindow.offsetBy(dx: 2, dy: 0), capturedAt: earlyConfirmTime, now: earlyConfirmTime)
+      == .useMetadata)
+  let laterCaptureTime = 0.40
+  let laterPointer = CGPoint(x: deepHeaderPointer.x + 114, y: deepHeaderPointer.y)
+  denseSession.record(pointer: laterPointer, at: laterCaptureTime)
+  denseSession.record(
+    pointer: CGPoint(x: laterPointer.x + 18, y: laterPointer.y), at: laterCaptureTime + 0.008)
+  #expect(
+    denseSession.observe(
+      initialWindow.offsetBy(dx: 100, dy: 0),
+      capturedAt: laterCaptureTime,
+      now: laterCaptureTime + 0.008) == .usePointer)
+  #expect(denseSession.mode == .pointer)
+  #expect(
+    denseSession.predictedFrame(at: CGPoint(x: laterPointer.x + 30, y: laterPointer.y))
+      == initialWindow.offsetBy(dx: 130, dy: 0))
+}
+
+@Test func highVelocityWindowDragInterpolatesSubframeSamplesAndResumesFromConstraint() throws {
+  let gesture = try #require(
+    PointerWindowGesture(frame: initialWindow, pointer: titlePointer, at: 0))
+  var session = WindowDragSession(gesture: gesture)
+  // Fast 40pt jump in a single 8ms frame; intermediate 18pt window snapshot must still match.
+  let fastPointer = CGPoint(x: titlePointer.x + 40, y: titlePointer.y - 20)
+  session.record(pointer: fastPointer, at: 0.008)
+  #expect(
+    session.observe(initialWindow.offsetBy(dx: 20, dy: -10), capturedAt: 0.004, now: 0.008)
+      == .usePointer)
+  #expect(session.mode == .pointer)
+
+  // If a constrained window temporarily falls back to metadata, moving freely again resumes pointer mode.
+  let constrained = CGRect(x: 120, y: 800, width: 700, height: 500)
+  _ = session.observe(constrained, capturedAt: 0.30, now: 0.30)
+  #expect(session.observe(constrained, capturedAt: 0.50, now: 0.50) == .useMetadata)
+  #expect(session.mode == .metadata)
+
+  let resumePointer = CGPoint(x: fastPointer.x + 30, y: fastPointer.y - 30)
+  session.record(pointer: resumePointer, at: 0.508)
+  let resumedFrame = constrained.offsetBy(dx: 30, dy: -30)
+  #expect(session.observe(resumedFrame, capturedAt: 0.508, now: 0.508) == .usePointer)
+  #expect(session.mode == .pointer)
 }

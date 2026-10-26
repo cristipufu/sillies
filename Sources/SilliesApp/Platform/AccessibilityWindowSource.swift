@@ -2,68 +2,147 @@ import ApplicationServices
 import CoreGraphics
 import Foundation
 
+struct AccessibilityWindowRoleSnapshot: Sendable, Equatable {
+  var standardWindowFrames: [CGRect] = []
+  var nonStandardWindowFrames: [CGRect] = []
+  var hasVerifiedWindowList = false
+}
+
 struct WindowObservation: Sendable {
   let processID: pid_t
   let identity: UInt64
   let reason: String
+  var focusedFrame: CGRect?
+  var roleSnapshot: AccessibilityWindowRoleSnapshot?
 }
 
 /// All AX objects live on `queue`. Only the refresh gate crosses threads, under its lock.
 /// A stalled application can block this worker briefly, never the UI or animation clock.
 final class AccessibilityWindowSource: @unchecked Sendable {
+  static let activationReason = "activation"
+  static let sampleReason = "sample"
+  static let unavailableReason = "unavailable"
   private static let messagingTimeoutSeconds: Float = 0.10
+  private static let lookupMessagingTimeoutSeconds: Float = 0.05
+  private static let maxInspectedWindowCount = 12
+  private static let inspectedWindowAttributes: [String] = [
+    kAXRoleAttribute,
+    kAXSubroleAttribute,
+    kAXModalAttribute,
+    kAXMinimizedAttribute,
+    kAXCloseButtonAttribute,
+    kAXMinimizeButtonAttribute,
+    kAXZoomButtonAttribute,
+    kAXFullScreenButtonAttribute,
+    kAXPositionAttribute,
+    kAXSizeAttribute,
+  ]
+
+  private struct InspectedWindow {
+    let element: AXUIElement
+    let frame: CGRect
+    let isStandardWindow: Bool
+  }
 
   private let queue = DispatchQueue(label: "app.sillies.accessibility", qos: .userInitiated)
   private let gate = NSLock()
   private var refreshPending = false
   private var pendingReason: String?
+  private var requestedProcessID: pid_t = 0
+  private var observePending = false
   private var application: AXUIElement?
   private var window: AXUIElement?
   private var observer: AXObserver?
   private var processID: pid_t = 0
   private var identity: UInt64 = 0
+  private var cachedRoleSnapshot: AccessibilityWindowRoleSnapshot?
   private let deliver: @Sendable (WindowObservation) -> Void
 
   init(deliver: @escaping @Sendable (WindowObservation) -> Void) { self.deliver = deliver }
 
   func observe(processID: pid_t) {
-    queue.async { [self] in
-      removeObserver()
-      self.processID = processID
-      guard AXIsProcessTrusted() else {
-        publish(reason: "unavailable")
-        return
-      }
-      let app = AXUIElementCreateApplication(processID)
-      AXUIElementSetMessagingTimeout(app, Self.messagingTimeoutSeconds)
-      application = app
-      var created: AXObserver?
-      let result = AXObserverCreate(
-        processID,
-        { _, _, notification, context in
-          guard let context else { return }
-          let source = Unmanaged<AccessibilityWindowSource>.fromOpaque(context)
-            .takeUnretainedValue()
-          source.refresh(reason: notification as String)
-        }, &created)
-      if result == .success, let created {
-        observer = created
-        let context = Unmanaged.passUnretained(self).toOpaque()
-        for name in [
-          kAXFocusedWindowChangedNotification, kAXMainWindowChangedNotification,
-          kAXWindowCreatedNotification,
-        ] {
-          AXObserverAddNotification(created, app, name as CFString, context)
-        }
-        CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(created), .commonModes)
-      }
-      readWindow(reason: "activation")
+    gate.lock()
+    requestedProcessID = processID
+    pendingReason = nil
+    guard !observePending else {
+      gate.unlock()
+      return
     }
+    observePending = true
+    gate.unlock()
+    queue.async { [self] in drainObserve() }
   }
 
-  func refresh(reason: String = "sample") {
+  private func drainObserve() {
     gate.lock()
-    if pendingReason == nil || reason != "sample" { pendingReason = reason }
+    let targetPID = requestedProcessID
+    gate.unlock()
+    removeObserver()
+    processID = targetPID
+    guard targetPID != 0 else {
+      finishObserveDrain()
+      return
+    }
+    guard AXIsProcessTrusted() else {
+      publish(reason: Self.unavailableReason)
+      finishObserveDrain()
+      return
+    }
+    let app = AXUIElementCreateApplication(targetPID)
+    AXUIElementSetMessagingTimeout(app, Self.messagingTimeoutSeconds)
+    application = app
+    var created: AXObserver?
+    let result = AXObserverCreate(
+      targetPID,
+      { _, _, notification, context in
+        guard let context else { return }
+        let source = Unmanaged<AccessibilityWindowSource>.fromOpaque(context)
+          .takeUnretainedValue()
+        source.refresh(reason: notification as String)
+      }, &created)
+    if result == .success, let created, isCurrentRequestedProcess(targetPID) {
+      observer = created
+      let context = Unmanaged.passUnretained(self).toOpaque()
+      for name in applicationNotifications {
+        guard isCurrentRequestedProcess(targetPID) else { break }
+        AXObserverAddNotification(created, app, name as CFString, context)
+      }
+      if isCurrentRequestedProcess(targetPID) {
+        CFRunLoopAddSource(CFRunLoopGetMain(), AXObserverGetRunLoopSource(created), .commonModes)
+      }
+    }
+    if isCurrentRequestedProcess(targetPID) {
+      readWindow(reason: Self.activationReason)
+    }
+    finishObserveDrain()
+  }
+
+  private func finishObserveDrain() {
+    gate.lock()
+    let needsAnotherObserve = requestedProcessID != processID
+    if !needsAnotherObserve { observePending = false }
+    gate.unlock()
+    if needsAnotherObserve { queue.async { [self] in drainObserve() } }
+  }
+
+  private func isCurrentRequestedProcess(_ pid: pid_t) -> Bool {
+    gate.lock()
+    let matches = requestedProcessID == pid
+    gate.unlock()
+    return matches
+  }
+
+  func refresh(reason: String = AccessibilityWindowSource.sampleReason) {
+    gate.lock()
+    if let existing = pendingReason {
+      if !Self.isNonStructuralWindowNotification(reason)
+        || Self.isNonStructuralWindowNotification(existing)
+      {
+        pendingReason = reason
+      }
+    } else {
+      pendingReason = reason
+    }
     guard !refreshPending else {
       gate.unlock()
       return
@@ -75,7 +154,7 @@ final class AccessibilityWindowSource: @unchecked Sendable {
 
   private func drainRefresh() {
     gate.lock()
-    let reason = pendingReason ?? "sample"
+    let reason = pendingReason ?? Self.sampleReason
     pendingReason = nil
     gate.unlock()
     readWindow(reason: reason)
@@ -88,6 +167,10 @@ final class AccessibilityWindowSource: @unchecked Sendable {
   }
 
   func stop() {
+    gate.lock()
+    requestedProcessID = 0
+    pendingReason = nil
+    gate.unlock()
     queue.async { [self] in
       removeObserver()
       application = nil
@@ -101,38 +184,76 @@ final class AccessibilityWindowSource: @unchecked Sendable {
     observer = nil
     window = nil
     application = nil
+    cachedRoleSnapshot = nil
   }
 
   private func readWindow(reason: String) {
     dispatchPrecondition(condition: .notOnQueue(.main))
-    guard let application else { return }
-    var focused: CFTypeRef?
-    guard
-      AXUIElementCopyAttributeValue(application, kAXFocusedWindowAttribute as CFString, &focused)
-        == .success,
-      let focused, CFGetTypeID(focused) == AXUIElementGetTypeID()
-    else {
+    guard let application, isCurrentRequestedProcess(processID) else { return }
+    if Self.isNonStructuralWindowNotification(reason), window != nil {
+      publish(reason: reason, roleSnapshot: cachedRoleSnapshot)
+      return
+    }
+    let focusedElement = Self.copyWindowAttribute(
+      kAXFocusedWindowAttribute, from: application, timeout: Self.messagingTimeoutSeconds)
+    guard isCurrentRequestedProcess(processID) else { return }
+    let evaluation = Self.evaluateApplicationWindows(
+      in: application,
+      focusedWindow: focusedElement,
+      fallbackWindow: window,
+      timeout: Self.messagingTimeoutSeconds)
+    guard isCurrentRequestedProcess(processID) else { return }
+    cachedRoleSnapshot = evaluation.roleSnapshot
+
+    guard let target = evaluation.targetWindow else {
       if window != nil {
         identity &+= 1
         clearTrackedWindow()
       }
-      publish(reason: reason)
+      publish(reason: reason, roleSnapshot: evaluation.roleSnapshot)
       return
     }
-    let target = unsafeDowncast(focused as AnyObject, to: AXUIElement.self)
-    AXUIElementSetMessagingTimeout(target, Self.messagingTimeoutSeconds)
-    if window == nil || !CFEqual(window, target) {
+
+    let isNewWindow = window == nil || !CFEqual(window, target.element)
+    if isNewWindow {
       clearTrackedWindow()
-      window = target
+      window = target.element
       identity &+= 1
       if let observer {
         for name in windowNotifications {
           AXObserverAddNotification(
-            observer, target, name as CFString, Unmanaged.passUnretained(self).toOpaque())
+            observer, target.element, name as CFString, Unmanaged.passUnretained(self).toOpaque())
         }
       }
     }
-    publish(reason: reason)
+    let shouldPublishFocusedFrame =
+      isNewWindow
+      || reason == Self.activationReason
+      || reason == kAXFocusedWindowChangedNotification
+      || reason == kAXMainWindowChangedNotification
+      || reason == kAXWindowCreatedNotification
+      || reason == kAXUIElementDestroyedNotification
+      || reason == kAXWindowMiniaturizedNotification
+      || reason == kAXWindowDeminiaturizedNotification
+    publish(
+      reason: reason,
+      focusedFrame: shouldPublishFocusedFrame ? target.frame : nil,
+      roleSnapshot: evaluation.roleSnapshot)
+  }
+
+  static func isNonStructuralWindowNotification(_ reason: String) -> Bool {
+    reason == kAXMovedNotification
+      || reason == kAXResizedNotification
+      || reason == kAXTitleChangedNotification
+      || reason == kAXSelectedChildrenChangedNotification
+  }
+
+  private var applicationNotifications: [String] {
+    [
+      kAXFocusedWindowChangedNotification, kAXMainWindowChangedNotification,
+      kAXWindowCreatedNotification, kAXUIElementDestroyedNotification,
+      kAXWindowMiniaturizedNotification, kAXWindowDeminiaturizedNotification,
+    ]
   }
 
   private var windowNotifications: [String] {
@@ -152,7 +273,190 @@ final class AccessibilityWindowSource: @unchecked Sendable {
     window = nil
   }
 
-  private func publish(reason: String) {
-    deliver(WindowObservation(processID: processID, identity: identity, reason: reason))
+  private func publish(
+    reason: String,
+    focusedFrame: CGRect? = nil,
+    roleSnapshot: AccessibilityWindowRoleSnapshot? = nil
+  ) {
+    deliver(
+      WindowObservation(
+        processID: processID,
+        identity: identity,
+        reason: reason,
+        focusedFrame: focusedFrame,
+        roleSnapshot: roleSnapshot))
+  }
+
+  static func roleSnapshot(for processID: pid_t) -> AccessibilityWindowRoleSnapshot? {
+    dispatchPrecondition(condition: .notOnQueue(.main))
+    guard AXIsProcessTrusted(), processID > 0 else { return nil }
+    let app = AXUIElementCreateApplication(processID)
+    AXUIElementSetMessagingTimeout(app, lookupMessagingTimeoutSeconds)
+    let focused = copyWindowAttribute(
+      kAXFocusedWindowAttribute, from: app, timeout: lookupMessagingTimeoutSeconds)
+    return evaluateApplicationWindows(
+      in: app,
+      focusedWindow: focused,
+      fallbackWindow: nil,
+      timeout: lookupMessagingTimeoutSeconds
+    ).roleSnapshot
+  }
+
+  private static func evaluateApplicationWindows(
+    in application: AXUIElement,
+    focusedWindow: AXUIElement?,
+    fallbackWindow: AXUIElement?,
+    timeout: Float
+  ) -> (targetWindow: InspectedWindow?, roleSnapshot: AccessibilityWindowRoleSnapshot) {
+    var snapshot = AccessibilityWindowRoleSnapshot()
+    let windowList = copyWindows(from: application)
+    var orderedElements = windowList.elements
+    if let focusedWindow, !orderedElements.contains(where: { CFEqual($0, focusedWindow) }) {
+      orderedElements.insert(focusedWindow, at: 0)
+    }
+
+    var allInspectedSucceeded = windowList.succeeded
+    var inspectedWindows: [InspectedWindow] = []
+    for element in orderedElements.prefix(maxInspectedWindowCount) {
+      guard let inspected = inspectWindow(element, timeout: timeout) else {
+        allInspectedSucceeded = false
+        continue
+      }
+      inspectedWindows.append(inspected)
+      if inspected.isStandardWindow {
+        snapshot.standardWindowFrames.append(inspected.frame)
+      } else {
+        snapshot.nonStandardWindowFrames.append(inspected.frame)
+      }
+    }
+    snapshot.hasVerifiedWindowList = allInspectedSucceeded
+
+    var fallbackInspected: InspectedWindow?
+    if let fallbackWindow,
+      !inspectedWindows.contains(where: { CFEqual($0.element, fallbackWindow) }),
+      let inspected = inspectWindow(fallbackWindow, timeout: timeout)
+    {
+      fallbackInspected = inspected
+      if !inspected.isStandardWindow {
+        snapshot.nonStandardWindowFrames.append(inspected.frame)
+      }
+    }
+
+    let targetWindow = resolveStandardTargetWindow(
+      focusedWindow: focusedWindow,
+      fallbackWindow: fallbackWindow,
+      fallbackInspected: fallbackInspected,
+      inspectedWindows: inspectedWindows)
+    return (targetWindow, snapshot)
+  }
+
+  private static func resolveStandardTargetWindow(
+    focusedWindow: AXUIElement?,
+    fallbackWindow: AXUIElement?,
+    fallbackInspected: InspectedWindow?,
+    inspectedWindows: [InspectedWindow]
+  ) -> InspectedWindow? {
+    if let focusedWindow,
+      let matchedFocused = inspectedWindows.first(where: { CFEqual($0.element, focusedWindow) }),
+      matchedFocused.isStandardWindow
+    {
+      return matchedFocused
+    }
+    if let fallbackWindow {
+      if let matchedFallback = inspectedWindows.first(where: { CFEqual($0.element, fallbackWindow) }
+      ) {
+        if matchedFallback.isStandardWindow {
+          return matchedFallback
+        }
+      } else if let fallbackInspected, fallbackInspected.isStandardWindow {
+        return fallbackInspected
+      }
+    }
+    return inspectedWindows.first(where: \.isStandardWindow)
+  }
+
+  private static func inspectWindow(
+    _ window: AXUIElement,
+    timeout: Float
+  ) -> InspectedWindow? {
+    AXUIElementSetMessagingTimeout(window, timeout)
+    var rawValues: CFArray?
+    guard
+      AXUIElementCopyMultipleAttributeValues(
+        window,
+        inspectedWindowAttributes as CFArray,
+        [],
+        &rawValues) == .success,
+      let values = rawValues as? [AnyObject],
+      values.count == inspectedWindowAttributes.count,
+      let frame = extractFrame(positionRef: values[8], sizeRef: values[9])
+    else { return nil }
+
+    let role = values[0] as? String
+    let subrole = values[1] as? String
+    let isModal = (values[2] as? Bool) == true
+    let isMinimized = (values[3] as? Bool) == true
+    let hasCloseButton = isUIElementAttributeValue(values[4])
+    let hasWindowControl =
+      isUIElementAttributeValue(values[5])
+      || isUIElementAttributeValue(values[6])
+      || isUIElementAttributeValue(values[7])
+    let isStandardWindow =
+      role == kAXWindowRole
+      && subrole == kAXStandardWindowSubrole
+      && !isModal
+      && !isMinimized
+      && hasCloseButton
+      && hasWindowControl
+    return InspectedWindow(
+      element: window,
+      frame: frame,
+      isStandardWindow: isStandardWindow)
+  }
+
+  private static func isUIElementAttributeValue(_ value: AnyObject) -> Bool {
+    CFGetTypeID(value) == AXUIElementGetTypeID()
+  }
+
+  private static func copyWindowAttribute(
+    _ attribute: String,
+    from element: AXUIElement,
+    timeout: Float
+  ) -> AXUIElement? {
+    var value: CFTypeRef?
+    guard
+      AXUIElementCopyAttributeValue(element, attribute as CFString, &value) == .success,
+      let value, CFGetTypeID(value) == AXUIElementGetTypeID()
+    else { return nil }
+    let window = unsafeDowncast(value as AnyObject, to: AXUIElement.self)
+    AXUIElementSetMessagingTimeout(window, timeout)
+    return window
+  }
+
+  private static func copyWindows(
+    from application: AXUIElement
+  ) -> (elements: [AXUIElement], succeeded: Bool) {
+    var value: CFTypeRef?
+    guard
+      AXUIElementCopyAttributeValue(application, kAXWindowsAttribute as CFString, &value)
+        == .success,
+      let elements = value as? [AXUIElement]
+    else { return ([], false) }
+    return (elements, true)
+  }
+
+  private static func extractFrame(positionRef: AnyObject, sizeRef: AnyObject) -> CGRect? {
+    guard CFGetTypeID(positionRef) == AXValueGetTypeID(),
+      CFGetTypeID(sizeRef) == AXValueGetTypeID()
+    else { return nil }
+    var origin = CGPoint.zero
+    var size = CGSize.zero
+    let posValue = unsafeDowncast(positionRef, to: AXValue.self)
+    let sizeValue = unsafeDowncast(sizeRef, to: AXValue.self)
+    guard AXValueGetValue(posValue, .cgPoint, &origin),
+      AXValueGetValue(sizeValue, .cgSize, &size),
+      size.width > 0, size.height > 0
+    else { return nil }
+    return CGRect(origin: origin, size: size)
   }
 }

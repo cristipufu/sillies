@@ -98,10 +98,12 @@ public struct WindowTargetCandidate: Equatable, Sendable {
   public let bundleIdentifier: String?
   public let windowTitle: String?
   public var frame: CGRect
+  public let windowLayer: Int
 
   public init(
     windowID: UInt32, processID: Int32, appName: String,
-    bundleIdentifier: String? = nil, windowTitle: String? = nil, frame: CGRect
+    bundleIdentifier: String? = nil, windowTitle: String? = nil, frame: CGRect,
+    windowLayer: Int = 0
   ) {
     self.windowID = windowID
     self.processID = processID
@@ -109,6 +111,7 @@ public struct WindowTargetCandidate: Equatable, Sendable {
     self.bundleIdentifier = bundleIdentifier
     self.windowTitle = windowTitle
     self.frame = frame
+    self.windowLayer = windowLayer
   }
 
   public var displayTitle: String {

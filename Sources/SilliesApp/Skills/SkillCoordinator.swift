@@ -262,7 +262,7 @@ final class SkillCoordinator {
   ) {
     sessions.removeValue(forKey: companionID)
     advanceBindingToken(for: companionID)
-    vault.add(outcome.record, image: outcome.image)
+    vault.add(outcome.record, image: outcome.image, pngData: outcome.pngData)
     onEmitEvent?(companionID, WorkspaceEvent(.skillCompleted, at: now))
     setBinding(
       .completed(
@@ -316,6 +316,11 @@ final class SkillCoordinator {
     timer.tolerance = 0.15
     RunLoop.main.add(timer, forMode: .common)
     tickTimer = timer
+  }
+
+  func refreshBoundWindows() {
+    guard !bindings.isEmpty else { return }
+    tick()
   }
 
   private func tick() {
@@ -382,15 +387,18 @@ final class SkillCoordinator {
         if now >= expiresAt {
           advanceBindingToken(for: companionID)
           setBinding(.followingFocusedWindow, for: companionID)
-        } else if let snapshot = snapshots[target.windowID],
-          snapshot.frame != target.frame
-        {
-          target.frame = snapshot.frame
-          setBinding(
-            .completed(
-              target: target, skill: skill, summary: summary, recordID: recordID,
-              expiresAt: expiresAt),
-            for: companionID)
+        } else if let snapshot = snapshots[target.windowID] {
+          if snapshot.frame != target.frame {
+            target.frame = snapshot.frame
+            setBinding(
+              .completed(
+                target: target, skill: skill, summary: summary, recordID: recordID,
+                expiresAt: expiresAt),
+              for: companionID)
+          }
+        } else {
+          advanceBindingToken(for: companionID)
+          setBinding(.followingFocusedWindow, for: companionID)
         }
 
       case .active(var target, let skill, let startedAt, let detail, let audioLevel):

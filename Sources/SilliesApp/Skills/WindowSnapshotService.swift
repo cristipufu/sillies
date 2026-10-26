@@ -6,6 +6,7 @@ import Vision
 
 struct WindowSnapshotResult: Sendable {
   let image: CGImage?
+  let pngData: Data?
   let extractedText: String
   let summary: String
   let actionItems: [String]
@@ -39,8 +40,8 @@ enum WindowSnapshotService {
         try? process.run()
         process.waitUntilExit()
       }
+      _ = CGRequestScreenCaptureAccess()
       await MainActor.run {
-        _ = CGRequestScreenCaptureAccess()
         openSystemSettings()
       }
     }
@@ -51,20 +52,28 @@ enum WindowSnapshotService {
     if target.processID == ProcessInfo.processInfo.processIdentifier,
       let localImage = await captureLocalApplicationWindow(windowID: target.windowID)
     {
-      let (recognizedText, summary, actions) = await recognizeAndSummarize(
+      let (recognizedText, summary, actions, pngData) = await recognizeAndSummarize(
         in: localImage, fallbackContext: fallback)
       return WindowSnapshotResult(
         image: localImage,
+        pngData: pngData,
         extractedText: recognizedText,
         summary: summary,
         actionItems: actions,
         errorDescription: nil)
     }
 
-    guard CGPreflightScreenCaptureAccess() else {
+    let hasAccess = await Task.detached(priority: .userInitiated) {
+      if CGPreflightScreenCaptureAccess() {
+        return true
+      }
       _ = CGRequestScreenCaptureAccess()
+      return false
+    }.value
+    guard hasAccess else {
       return WindowSnapshotResult(
         image: nil,
+        pngData: nil,
         extractedText: "",
         summary:
           "Screen Recording permission is required to capture \(target.appName). If Sillies is already enabled in System Settings › Privacy & Security › Screen & System Audio Recording, a local rebuild updated the app binary—click “Refresh Permission” below, toggle Sillies back on, and relaunch.",
@@ -76,16 +85,18 @@ enum WindowSnapshotService {
     guard let cgImage else {
       return WindowSnapshotResult(
         image: nil,
+        pngData: nil,
         extractedText: "",
         summary:
           "Could not capture \(target.displayTitle). Make sure the window is visible on screen and not minimized.",
         actionItems: [],
         errorDescription: "Window capture unavailable")
     }
-    let (recognizedText, summary, actions) = await recognizeAndSummarize(
+    let (recognizedText, summary, actions, pngData) = await recognizeAndSummarize(
       in: cgImage, fallbackContext: fallback)
     return WindowSnapshotResult(
       image: cgImage,
+      pngData: pngData,
       extractedText: recognizedText,
       summary: summary,
       actionItems: actions,
@@ -132,8 +143,9 @@ enum WindowSnapshotService {
 
   private static func recognizeAndSummarize(
     in image: CGImage, fallbackContext: String
-  ) async -> (String, String, [String]) {
-    let recognizedText = await Task.detached(priority: .userInitiated) {
+  ) async -> (String, String, [String], Data?) {
+    let (recognizedText, pngData) = await Task.detached(priority: .userInitiated) {
+      let encodedPNG = SessionVaultStore.encodePNGData(from: image)
       let request = VNRecognizeTextRequest()
       request.recognitionLevel = .accurate
       request.usesLanguageCorrection = true
@@ -142,13 +154,13 @@ enum WindowSnapshotService {
         try handler.perform([request])
         let observations = request.results ?? []
         let lines = observations.compactMap { $0.topCandidates(1).first?.string }
-        return lines.joined(separator: "\n")
+        return (lines.joined(separator: "\n"), encodedPNG)
       } catch {
-        return ""
+        return ("", encodedPNG)
       }
     }.value
     let (summary, actions) = await SessionSummarizer.summarizeOnWorker(
       text: recognizedText, fallbackContext: fallbackContext)
-    return (recognizedText, summary, actions)
+    return (recognizedText, summary, actions, pngData)
   }
 }

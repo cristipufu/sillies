@@ -6,7 +6,7 @@ public struct PointerWindowGesture: Sendable {
   public static let hitSlop: Double = 12
   public static let resizeEdgeTolerance: Double = 9
   public static let topResizeEdgeTolerance: Double = 7
-  public static let draggableHeaderDepth: Double = 64
+  public static let draggableHeaderDepth: Double = 84
   public static let defaultMinimumWindowSize = CGSize(width: 120, height: 70)
   public static let defaultMatchTolerance: Double = 12
 

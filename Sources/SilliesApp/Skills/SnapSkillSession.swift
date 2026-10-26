@@ -33,13 +33,10 @@ final class SnapSkillSession: ActiveSkillSession {
     captureTask = Task { @MainActor [weak self] in
       let result = await WindowSnapshotService.capture(target: target)
       guard !Task.isCancelled, let self else { return }
-      if let cgImage = result.image {
-        let nsImage = NSImage(
-          cgImage: cgImage,
-          size: NSSize(width: cgImage.width, height: cgImage.height))
+      if let pngData = result.pngData {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        pasteboard.writeObjects([nsImage])
+        pasteboard.setData(pngData, forType: .png)
         if !result.extractedText.isEmpty {
           pasteboard.setString(result.extractedText, forType: .string)
         }
@@ -61,7 +58,8 @@ final class SnapSkillSession: ActiveSkillSession {
           ? "Snapshot copied & saved"
           : "Captured + OCR text ready")
       self.onComplete(
-        SkillCompletionOutcome(record: record, image: result.image, bannerSummary: banner))
+        SkillCompletionOutcome(
+          record: record, image: result.image, pngData: result.pngData, bannerSummary: banner))
     }
   }
 

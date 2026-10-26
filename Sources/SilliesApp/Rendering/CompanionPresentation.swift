@@ -67,11 +67,11 @@ final class CompanionPresentation {
     durationLimit: Double = .infinity
   ) {
     let layer = view.presentationLayer
-    let presented = layer.presentation() ?? layer
+    let presented = startsHidden ? nil : layer.presentation()
     let context = TransitionContext(
       kind: kind, duration: min(profile.definition(for: kind).duration, durationLimit),
-      fromOpacity: startsHidden ? 0 : Double(presented.opacity),
-      fromScale: startsHidden ? 0.84 : Double(presented.transform.m11))
+      fromOpacity: startsHidden ? 0 : Double((presented ?? layer).opacity),
+      fromScale: startsHidden ? 0.84 : Double((presented ?? layer).transform.m11))
     generation += 1
     let token = generation
     phase = kind == .exit ? .exiting : .entering

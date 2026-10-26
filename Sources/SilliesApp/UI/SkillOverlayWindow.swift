@@ -42,9 +42,6 @@ private enum SkillOverlayPreparation {
 
   static func render(_ view: NSView) {
     view.layoutSubtreeIfNeeded()
-    if let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds) {
-      view.cacheDisplay(in: view.bounds, to: bitmap)
-    }
   }
 }
 
@@ -91,19 +88,39 @@ struct WindowDropHighlightView: View {
 }
 
 /// Only the outline uses window-sized geometry; SwiftUI lays out a small, fixed-size badge.
+/// Uses a hardware-composited `CALayer` border so WindowServer renders the outline
+/// directly without allocating or CPU-rasterizing a window-sized backing bitmap.
 @MainActor
 private final class WindowDropOutlineView: NSView {
-  private let outline = CAShapeLayer()
-  private let badge: NSHostingView<WindowDropHighlightView>
+  private static let cornerRadius: CGFloat = 12
+  private static let outlineInset: CGFloat = 3
+  private static let badgeWidth: CGFloat = 400
+  private static let badgeHeight: CGFloat = 56
+  private static let selectedBorderWidth: CGFloat = 3
+  private static let unselectedBorderWidth: CGFloat = 2.2
+  private static let selectedBorderColor = NSColor(
+    srgbRed: 0.52, green: 0.47, blue: 0.77, alpha: 0.95
+  ).cgColor
+  private static let unselectedBorderColor = NSColor(
+    srgbRed: 0.52, green: 0.47, blue: 0.77, alpha: 0.72
+  ).cgColor
+
+  private let outline = CALayer()
+  let badge: NSHostingView<WindowDropHighlightView>
+  var hasHardwareBorderOutline: Bool {
+    outline.borderWidth > 0 && outline.cornerRadius == Self.cornerRadius && outline.contents == nil
+  }
 
   init(model: WindowDropHighlightModel) {
     badge = NSHostingView(rootView: WindowDropHighlightView(model: model))
+    badge.frame = CGRect(x: 0, y: 0, width: Self.badgeWidth, height: Self.badgeHeight)
     super.init(frame: SkillOverlayPreparation.target.frame)
     wantsLayer = true
     layer?.addSublayer(outline)
     addSubview(badge)
-    outline.fillColor = nil
-    outline.lineJoin = .round
+    outline.backgroundColor = nil
+    outline.cornerRadius = Self.cornerRadius
+    outline.cornerCurve = .continuous
     updateSelection(false)
   }
 
@@ -113,25 +130,22 @@ private final class WindowDropOutlineView: NSView {
     super.layout()
     CATransaction.begin()
     CATransaction.setDisableActions(true)
-    outline.contentsScale = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
-    outline.frame = bounds
-    outline.path = CGPath(
-      roundedRect: bounds.insetBy(dx: 3, dy: 3), cornerWidth: 12, cornerHeight: 12,
-      transform: nil)
+    outline.frame = bounds.insetBy(dx: Self.outlineInset, dy: Self.outlineInset)
     CATransaction.commit()
-    let width = min(400, bounds.width)
-    badge.frame = CGRect(
-      x: (bounds.width - width) / 2, y: bounds.height - 66, width: width, height: 56)
+    let width = min(Self.badgeWidth, bounds.width)
+    let origin = CGPoint(x: (bounds.width - width) / 2, y: bounds.height - 66)
+    if badge.frame.size.width != width || badge.frame.size.height != Self.badgeHeight {
+      badge.frame = CGRect(origin: origin, size: CGSize(width: width, height: Self.badgeHeight))
+    } else if badge.frame.origin != origin {
+      badge.setFrameOrigin(origin)
+    }
   }
 
   func updateSelection(_ selected: Bool) {
     CATransaction.begin()
     CATransaction.setDisableActions(true)
-    outline.strokeColor =
-      NSColor(
-        srgbRed: 0.52, green: 0.47, blue: 0.77, alpha: selected ? 0.95 : 0.72
-      ).cgColor
-    outline.lineWidth = selected ? 3 : 2.2
+    outline.borderColor = selected ? Self.selectedBorderColor : Self.unselectedBorderColor
+    outline.borderWidth = selected ? Self.selectedBorderWidth : Self.unselectedBorderWidth
     CATransaction.commit()
   }
 }
@@ -144,17 +158,42 @@ final class WindowDropHighlightController {
   private var outlineView: WindowDropOutlineView?
   var windowNumber: Int? { panel?.windowNumber }
   var isVisible: Bool { panel?.isVisible == true }
+  var usesHardwareBorderOutline: Bool {
+    outlineView?.hasHardwareBorderOutline == true
+  }
 
   func prepare() {
     guard panel == nil else { return }
     model.target = SkillOverlayPreparation.target
     let created = SkillFloatingPanel(
-      contentRect: SkillOverlayPreparation.target.frame, ignoresMouseEvents: true, level: .floating)
+      contentRect: SkillOverlayPreparation.target.frame, ignoresMouseEvents: true,
+      level: CompanionPanel.overlayLevel)
     let view = WindowDropOutlineView(model: model)
     created.contentView = view
     panel = created
     outlineView = view
-    SkillOverlayPreparation.render(view)
+    view.layoutSubtreeIfNeeded()
+    SkillOverlayPreparation.render(view.badge)
+  }
+
+  func prestage(target: WindowTargetCandidate?) {
+    guard let target else { return }
+    prepare()
+    ApplicationIconCache.shared.prepare(for: target)
+    let targetChanged =
+      model.target?.processID != target.processID || model.target?.appName != target.appName
+    if targetChanged {
+      model.target = target
+    }
+    if model.hoveredSkill != nil {
+      model.hoveredSkill = nil
+      outlineView?.updateSelection(false)
+    }
+    let highlightFrame = target.frame.insetBy(dx: -2, dy: -2)
+    if panel?.frame != highlightFrame {
+      panel?.setFrame(highlightFrame, display: false)
+    }
+    outlineView?.layoutSubtreeIfNeeded()
   }
 
   func show(target: WindowTargetCandidate, hoveredSkill: CompanionSkillKind?) {
@@ -188,25 +227,26 @@ final class WindowDropHighlightController {
 
 @MainActor @Observable
 final class RadialWheelModel {
-  var companionName = ""
-  var target: WindowTargetCandidate?
-  var layout = RadialSkillMenuLayout(
-    center: .zero, visibleFrame: CGRect(x: 0, y: 0, width: 1440, height: 900))
+  var flippedDownward = false
   var hoveredSkill: CompanionSkillKind?
-  var panelOrigin = CGPoint.zero
 }
 
 struct RadialWheelView: View {
+  private static let canvasCenter = CGPoint(
+    x: RadialWheelController.canvasSize.width / 2,
+    y: RadialWheelController.canvasSize.height / 2)
+  private static let upwardLayout = RadialSkillMenuLayout(
+    center: canvasCenter,
+    visibleFrame: CGRect(x: 0, y: 0, width: 360, height: 480))
+  private static let downwardLayout = RadialSkillMenuLayout(
+    center: canvasCenter,
+    visibleFrame: CGRect(x: 0, y: 0, width: 360, height: 220))
+
   let model: RadialWheelModel
 
-  private var centerInCanvas: CGPoint {
-    CGPoint(
-      x: model.layout.anchor.x - model.panelOrigin.x,
-      y: RadialWheelController.canvasSize.height - (model.layout.anchor.y - model.panelOrigin.y))
-  }
-
   var body: some View {
-    let anchor = centerInCanvas
+    let anchor = Self.canvasCenter
+    let layout = model.flippedDownward ? Self.downwardLayout : Self.upwardLayout
     let orbitDiameter = RadialSkillMenuLayout.orbitRadius * 2
 
     ZStack {
@@ -229,10 +269,10 @@ struct RadialWheelView: View {
         .position(anchor)
 
       // Radial skill bubbles (no bottom text banner)
-      ForEach(model.layout.items) { item in
+      ForEach(layout.items) { item in
         let isSelected = model.hoveredSkill == item.skill
-        let localX = item.center.x - model.panelOrigin.x
-        let localY = RadialWheelController.canvasSize.height - (item.center.y - model.panelOrigin.y)
+        let localX = item.center.x
+        let localY = RadialWheelController.canvasSize.height - item.center.y
 
         VStack(spacing: 5) {
           ZStack {
@@ -303,15 +343,15 @@ final class RadialWheelController {
     companionName: String, target: WindowTargetCandidate, layout: RadialSkillMenuLayout,
     hoveredSkill: CompanionSkillKind?
   ) {
+    _ = companionName
+    _ = target
     prepare()
     let origin = CGPoint(
       x: layout.anchor.x - Self.canvasSize.width / 2,
       y: layout.anchor.y - Self.canvasSize.height / 2)
-    if model.companionName != companionName { model.companionName = companionName }
-    if model.target != target { model.target = target }
-    if model.layout != layout { model.layout = layout }
+    let flippedDownward = (layout.items.first?.center.y ?? layout.anchor.y) < layout.anchor.y
+    if model.flippedDownward != flippedDownward { model.flippedDownward = flippedDownward }
     if model.hoveredSkill != hoveredSkill { model.hoveredSkill = hoveredSkill }
-    if model.panelOrigin != origin { model.panelOrigin = origin }
     if panel?.frame.origin != origin { panel?.setFrameOrigin(origin) }
     if panel?.isVisible != true { panel?.orderFrontRegardless() }
   }
@@ -680,12 +720,19 @@ final class CompanionHUDController {
     if panel == nil {
       let host = NSHostingView(rootView: CompanionHUDView(model: model))
       let created = SkillFloatingPanel(
-        contentRect: CGRect(origin: .zero, size: Self.fallbackSize), ignoresMouseEvents: false)
+        contentRect: CGRect(origin: .zero, size: Self.fallbackSize),
+        ignoresMouseEvents: false,
+        level: CompanionPanel.hudLevel(forWindowLayer: state.boundTarget?.windowLayer ?? 0))
       created.contentView = host
       hostingView = host
       panel = created
       lastLayoutKey = nil
       cachedPanelSize = nil
+    }
+    let targetHUDLevel = CompanionPanel.hudLevel(
+      forWindowLayer: state.boundTarget?.windowLayer ?? 0)
+    if panel?.level != targetHUDLevel {
+      panel?.level = targetHUDLevel
     }
     let key = LayoutKey(state)
     let panelSize: CGSize

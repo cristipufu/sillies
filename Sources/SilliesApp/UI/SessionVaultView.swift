@@ -3,6 +3,10 @@ import SilliesCore
 import SwiftUI
 
 struct SessionVaultView: View {
+  private static let maxSidebarPreviewCharacters = 240
+  private static let maxDetailDisplayCharacters = 8_192
+  private static let maxSearchScanCharacters = 65_536
+
   let vault: SessionVaultStore
   @State private var selectedFilter: CompanionSkillKind?
   @State private var searchQuery = ""
@@ -15,16 +19,28 @@ struct SessionVaultView: View {
   }
 
   private var filteredRecords: [SessionRecord] {
-    let query = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    let query = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
     return vault.records.filter { record in
       if let selectedFilter, record.kind != selectedFilter { return false }
       guard !query.isEmpty else { return true }
-      return record.displayTitle.lowercased().contains(query)
-        || record.summary.lowercased().contains(query)
-        || record.transcript.lowercased().contains(query)
-        || record.extractedText.lowercased().contains(query)
-        || record.stashedItems.joined(separator: " ").lowercased().contains(query)
+      return Self.matchesSearch(record.displayTitle, query: query)
+        || Self.matchesSearch(record.summary, query: query)
+        || Self.matchesSearch(record.transcript, query: query)
+        || Self.matchesSearch(record.extractedText, query: query)
+        || record.stashedItems.contains { Self.matchesSearch($0, query: query) }
     }
+  }
+
+  private static func matchesSearch(_ text: String, query: String) -> Bool {
+    guard !text.isEmpty else { return false }
+    return text.prefix(maxSearchScanCharacters).range(
+      of: query, options: [.caseInsensitive, .diacriticInsensitive]) != nil
+  }
+
+  private static func boundedDisplayText(_ text: String) -> String {
+    guard text.count > maxDetailDisplayCharacters else { return text }
+    return
+      "\(text.prefix(maxDetailDisplayCharacters))\n\n… [Showing first \(maxDetailDisplayCharacters) of \(text.count) characters — use Copy to copy full text]"
   }
 
   private func selectedRecord(in records: [SessionRecord]) -> SessionRecord? {
@@ -270,17 +286,22 @@ struct SessionVaultView: View {
 
   private func cleanPreviewText(for record: SessionRecord) -> String {
     if record.kind == .stash, let first = record.stashedItems.first {
-      return first
+      return String(first.prefix(Self.maxSidebarPreviewCharacters))
+        .replacingOccurrences(of: "\n", with: " ")
+        .trimmingCharacters(in: .whitespacesAndNewlines)
     }
     if !record.extractedText.isEmpty {
-      return record.extractedText
+      return String(record.extractedText.prefix(Self.maxSidebarPreviewCharacters))
         .replacingOccurrences(of: "\n", with: " ")
         .trimmingCharacters(in: .whitespacesAndNewlines)
     }
     if !record.transcript.isEmpty {
-      return record.transcript
+      return String(record.transcript.prefix(Self.maxSidebarPreviewCharacters))
+        .replacingOccurrences(of: "\n", with: " ")
+        .trimmingCharacters(in: .whitespacesAndNewlines)
     }
-    return record.summary.replacingOccurrences(of: "• ", with: "")
+    return String(record.summary.prefix(Self.maxSidebarPreviewCharacters))
+      .replacingOccurrences(of: "• ", with: "")
   }
 
   @ViewBuilder
@@ -354,7 +375,7 @@ struct SessionVaultView: View {
                 flashCopied("Transcript copied")
               }
             ) {
-              Text(record.transcript)
+              Text(Self.boundedDisplayText(record.transcript))
                 .font(.system(size: 12.5))
                 .lineSpacing(4)
                 .textSelection(.enabled)
@@ -371,7 +392,7 @@ struct SessionVaultView: View {
                 flashCopied("OCR text copied")
               }
             ) {
-              Text(record.extractedText)
+              Text(Self.boundedDisplayText(record.extractedText))
                 .font(.system(size: 12, design: .monospaced))
                 .lineSpacing(3)
                 .textSelection(.enabled)
@@ -549,7 +570,7 @@ struct SessionVaultView: View {
                 .foregroundStyle(SilliesTheme.accent)
             }
 
-            Text(item)
+            Text(Self.boundedDisplayText(item))
               .font(
                 .system(
                   size: 12.5, weight: .medium,

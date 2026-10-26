@@ -39,10 +39,15 @@ if matches=$(grep -rn 'CGWindowListCopyWindowInfo' Sources/ 2>/dev/null | grep -
   fail "CGWindowListCopyWindowInfo called outside isolated platform workers"
 fi
 
-# 5. AXUIElementCopyAttributeValue is confined strictly to AccessibilityWindowSource.
-if matches=$(grep -rn 'AXUIElementCopyAttributeValue' Sources/ 2>/dev/null | grep -v 'Sources/SilliesApp/Platform/AccessibilityWindowSource.swift:'); then
+# 5. AXUIElementCopyAttributeValue / AXUIElementCopyMultipleAttributeValues are confined strictly to AccessibilityWindowSource.
+if matches=$(grep -rnE 'AXUIElementCopy(Multiple)?AttributeValue' Sources/ 2>/dev/null | grep -v 'Sources/SilliesApp/Platform/AccessibilityWindowSource.swift:'); then
   printf '%s\n' "$matches" >&2
   fail "AXUIElementCopyAttributeValue called outside AccessibilityWindowSource"
+fi
+
+# 9. AccessibilityWindowSource must treat move/resize notifications as non-structural (no AX hierarchy IPC during window drags).
+if ! grep -q 'isNonStructuralWindowNotification' Sources/SilliesApp/Platform/AccessibilityWindowSource.swift; then
+  fail "AccessibilityWindowSource must skip AX hierarchy inspection on non-structural move/resize notifications"
 fi
 
 # 6. Every isolated worker must assert off-main-queue execution at runtime.
@@ -63,3 +68,45 @@ if matches=$(grep -rn 'SessionSummarizer\.summarize(' Sources/SilliesApp/ 2>/dev
   printf '%s\n' "$matches" >&2
   fail "Synchronous SessionSummarizer.summarize called in Sources/SilliesApp/; use summarizeOnWorker"
 fi
+
+# 8. Never pass NSImage to pasteboard.writeObjects on the main thread (encodes TIFF synchronously).
+if matches=$(grep -rn 'writeObjects(' Sources/ 2>/dev/null); then
+  printf '%s\n' "$matches" >&2
+  fail "pasteboard.writeObjects called in Sources/; write pre-encoded PNG data off the main thread"
+fi
+
+# 10. Companion and skill overlay panels must never call setFrame(..., display: true).
+if matches=$(grep -rn 'setFrame(.*display:[[:space:]]*true' Sources/SilliesApp/App/CompanionInstance.swift Sources/SilliesApp/Rendering/ Sources/SilliesApp/UI/SkillOverlayWindow.swift 2>/dev/null); then
+  printf '%s\n' "$matches" >&2
+  fail "Overlay panel called setFrame(..., display: true); use display: false to coalesce with CoreAnimation"
+fi
+
+# 11. CharacterRig must not read workspaceMotion.presentation() during live manipulation.
+if matches=$(grep -rn 'workspaceMotion\.presentation()' Sources/SilliesApp/Rendering/ 2>/dev/null); then
+  printf '%s\n' "$matches" >&2
+  fail "workspaceMotion.presentation() called in Rendering/; track transform state directly to avoid render-tree readback stalls"
+fi
+
+# 12. SkillOverlayWindow must never use CAShapeLayer for window-sized drop outlines.
+if matches=$(grep -rn 'CAShapeLayer' Sources/SilliesApp/UI/SkillOverlayWindow.swift 2>/dev/null); then
+  printf '%s\n' "$matches" >&2
+  fail "CAShapeLayer used in SkillOverlayWindow.swift; use hardware-composited CALayer borderWidth/cornerRadius to avoid full-window bitmap rasterization"
+fi
+
+# 13. SmoothnessBudgetTests must enforce frame budgets for all 4 interactive paths.
+for path in '.windowMove' '.windowResize' '.windowSwitch' '.companionDrag'; do
+  if ! grep -q "isWithinBudget(for: $path)" Tests/SilliesAppTests/SmoothnessBudgetTests.swift; then
+    fail "SmoothnessBudgetTests.swift is missing budget assertion for $path"
+  fi
+done
+
+# 14. AccessibilityWindowSource must inspect kAXMinimizedAttribute so minimized windows are excluded immediately.
+if ! grep -q 'kAXMinimizedAttribute' Sources/SilliesApp/Platform/AccessibilityWindowSource.swift; then
+  fail "AccessibilityWindowSource must inspect kAXMinimizedAttribute to exclude minimizing windows immediately"
+fi
+
+# 15. WindowTracking must treat miniaturize/deminiaturize as lifecycle discovery events.
+if ! grep -q 'kAXWindowMiniaturizedNotification' Sources/SilliesApp/Platform/WindowTracking.swift; then
+  fail "WindowTracking must handle kAXWindowMiniaturizedNotification for immediate minimize discovery"
+fi
+

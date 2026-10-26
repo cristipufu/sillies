@@ -23,7 +23,9 @@ final class ListenSkillSession: ActiveSkillSession {
     let service = AudioTranscriptionService(target: target) { [weak self] update in
       Task { @MainActor [weak self] in
         guard let self else { return }
-        self.liveTranscript = update.transcript
+        if let transcript = update.transcript, !transcript.isEmpty {
+          self.liveTranscript = transcript
+        }
         self.latestStatusMessage = update.statusMessage
         self.onLiveUpdate(update.statusMessage, update.audioLevel)
       }

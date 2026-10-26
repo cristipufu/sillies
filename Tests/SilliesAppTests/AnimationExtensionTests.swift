@@ -285,7 +285,7 @@ private final class MockEventProducer: WorkspaceEventProducer {
   #expect(reloaded.cachedImage(for: reloadedRecord) != nil)
 }
 
-@Test @MainActor func companionHUDCachesLayoutSizeAcrossFrameAndAudioUpdates() {
+@Test @MainActor func companionHUDCachesLayoutSizeAcrossFrameAndAudioUpdates() throws {
   let hud = CompanionHUDController()
   defer { hud.close() }
   let target = WindowTargetCandidate(
@@ -295,7 +295,7 @@ private final class MockEventProducer: WorkspaceEventProducer {
   for frame in 0..<120 {
     let state = CompanionBindingState.active(
       target: target, skill: .listen, startedAt: 10,
-      statusDetail: "00:12 · Listening to Xcode…",
+      statusDetail: "00:\(String(format: "%02d", frame % 60)) · Listening to Xcode…",
       audioLevel: Double(frame % 10) * 0.1)
     hud.update(
       state: state,
@@ -304,4 +304,143 @@ private final class MockEventProducer: WorkspaceEventProducer {
       visibleFrame: screen)
   }
   #expect(hud.layoutMeasurements == 1)
+
+  // Equal-length strings with wider proportional glyphs must invalidate the layout cache
+  // and re-measure so the HUD panel never clips wider text.
+  let narrow = "00:12 · iiiiiiiiiiiiiiiiiii"
+  let wide = "00:12 · WWWWWWWWWWWWWWWWWWW"
+  #expect(narrow.count == wide.count)
+  hud.update(
+    state: .active(
+      target: target, skill: .listen, startedAt: 10, statusDetail: narrow, audioLevel: 0),
+    companionPoint: CGPoint(x: 300, y: 700),
+    characterSize: 64,
+    visibleFrame: screen)
+  let measurementsAfterNarrow = hud.layoutMeasurements
+  let narrowWidth = try #require(hud.currentPanelSize?.width)
+  hud.update(
+    state: .active(
+      target: target, skill: .listen, startedAt: 10, statusDetail: wide, audioLevel: 0),
+    companionPoint: CGPoint(x: 300, y: 700),
+    characterSize: 64,
+    visibleFrame: screen)
+  let wideWidth = try #require(hud.currentPanelSize?.width)
+  #expect(hud.layoutMeasurements == measurementsAfterNarrow + 1)
+  #expect(wideWidth > narrowWidth)
+}
+
+@Test @MainActor func stashingDuringActiveSkillPreservesActiveSessionAndSavesBoth() throws {
+  let directory = FileManager.default.temporaryDirectory
+    .appendingPathComponent("sillies-stash-active-\(UUID().uuidString)", isDirectory: true)
+  defer { try? FileManager.default.removeItem(at: directory) }
+  let vault = SessionVaultStore(directory: directory)
+  let coordinator = SkillCoordinator(vault: vault)
+  let target = WindowTargetCandidate(
+    windowID: 55, processID: 101, appName: "Xcode",
+    frame: CGRect(x: 100, y: 100, width: 800, height: 600))
+
+  coordinator.startSkill(.focus, for: "mochi", companionName: "Mochi", target: target)
+  coordinator.recordStash(
+    items: ["https://github.com/cristipufu/sillies"],
+    for: "mochi", companionName: "Mochi", currentTarget: target)
+
+  // Active Focus session must remain active after stashing.
+  if case .active(let activeTarget, let skill, _, let detail, _) = coordinator.binding(for: "mochi")
+  {
+    #expect(activeTarget.windowID == 55)
+    #expect(skill == .focus)
+    #expect(detail.contains("Stashed"))
+  } else {
+    Issue.record("Expected Focus session to remain active after stashing")
+  }
+
+  // Stopping the Focus session must still persist the Focus record alongside the Stash record.
+  coordinator.stopSkill(for: "mochi")
+  #expect(vault.records.count == 2)
+  #expect(vault.records.contains { $0.kind == .stash })
+  #expect(vault.records.contains { $0.kind == .focus })
+}
+
+private actor DelayedSnapshotProbe {
+  private var continuation: CheckedContinuation<[CGWindowID: WindowTargetSnapshot], Never>?
+  private(set) var requestedIDs: Set<CGWindowID> = []
+
+  func load(_ ids: Set<CGWindowID>) async -> [CGWindowID: WindowTargetSnapshot] {
+    requestedIDs = ids
+    return await withCheckedContinuation { continuation = $0 }
+  }
+
+  func finish(_ snapshots: [CGWindowID: WindowTargetSnapshot]) {
+    continuation?.resume(returning: snapshots)
+    continuation = nil
+  }
+}
+
+@Test @MainActor func staleMetadataReplyDoesNotDismissNewSelectionPrompt() async throws {
+  let directory = FileManager.default.temporaryDirectory
+    .appendingPathComponent("sillies-stale-tick-\(UUID().uuidString)", isDirectory: true)
+  defer { try? FileManager.default.removeItem(at: directory) }
+  let probe = DelayedSnapshotProbe()
+  let vault = SessionVaultStore(directory: directory)
+  let coordinator = SkillCoordinator(
+    vault: vault,
+    snapshotLoader: { ids, _ in await probe.load(ids) })
+  defer { coordinator.stopAll() }
+
+  let firstTarget = WindowTargetCandidate(
+    windowID: 10, processID: 1, appName: "Safari",
+    frame: CGRect(x: 0, y: 0, width: 600, height: 400))
+  let secondTarget = WindowTargetCandidate(
+    windowID: 20, processID: 2, appName: "Terminal",
+    frame: CGRect(x: 200, y: 200, width: 600, height: 400))
+
+  coordinator.presentSelectionPrompt(for: "mochi", companionName: "Mochi", target: firstTarget)
+  coordinator.pollBoundWindows()
+  let deadline = ContinuousClock.now.advanced(by: .seconds(1))
+  while await probe.requestedIDs.isEmpty, ContinuousClock.now < deadline {
+    try await Task.sleep(for: .milliseconds(1))
+  }
+  #expect(await probe.requestedIDs == [10])
+
+  // Switch Mochi to a new target window while the old metadata request for window 10 is in flight.
+  coordinator.presentSelectionPrompt(for: "mochi", companionName: "Mochi", target: secondTarget)
+  await probe.finish([
+    10: WindowTargetSnapshot(frame: firstTarget.frame, title: "Safari")
+  ])
+  try await Task.sleep(for: .milliseconds(10))
+
+  if case .awaitingSelection(let boundTarget, _) = coordinator.binding(for: "mochi") {
+    #expect(boundTarget.windowID == 20)
+  } else {
+    Issue.record("Stale tick reply dismissed the new selection prompt")
+  }
+}
+
+@Test @MainActor func sessionVaultDownsamplesPreviewsAndEnforcesByteBudget() throws {
+  let directory = FileManager.default.temporaryDirectory
+    .appendingPathComponent("sillies-vault-budget-\(UUID().uuidString)", isDirectory: true)
+  defer { try? FileManager.default.removeItem(at: directory) }
+  let store = SessionVaultStore(directory: directory)
+  let context = try #require(
+    CGContext(
+      data: nil, width: 2560, height: 1440, bitsPerComponent: 8, bytesPerRow: 0,
+      space: CGColorSpaceCreateDeviceRGB(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+  let largeImage = try #require(context.makeImage())
+
+  for index in 0..<24 {
+    let record = SessionRecord(
+      kind: .snap, characterID: "mochi", characterName: "Mochi",
+      appName: "Display \(index)", summary: "Snapshot \(index)")
+    store.add(record, image: largeImage)
+  }
+
+  #expect(store.totalCachedImageBytes <= SessionVaultStore.maxCacheBytes)
+  if let latest = store.records.first, let preview = store.cachedImage(for: latest) {
+    #expect(
+      max(preview.size.width, preview.size.height)
+        <= CGFloat(SessionVaultStore.maxPreviewPixelDimension))
+  } else {
+    Issue.record("Expected latest snapshot preview to be cached")
+  }
 }

@@ -140,7 +140,15 @@ final class DragWindowTargetResolver {
       below = id
     }
     guard let id = found else { return nil }
-    let cached = cache[id]?.target.flatMap { $0.frame.contains(point) ? $0 : nil }
+    let now = ProcessInfo.processInfo.systemUptime
+    let cached = cache[id].flatMap { entry -> WindowTargetCandidate? in
+      guard now - entry.capturedAt < Self.refreshInterval,
+        let target = entry.target,
+        target.frame.contains(point),
+        currentTarget == nil || currentTarget?.windowID == target.windowID
+      else { return nil }
+      return target
+    }
     return DropTarget(windowID: UInt32(id), primaryTop: request.primaryTop, cached: cached)
   }
 

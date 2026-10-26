@@ -214,3 +214,44 @@ private func eventually(_ condition: () async -> Bool) async throws {
   #expect(windows.hits < 10)
   resolver.stop()
 }
+
+@Test @MainActor
+func dropTargetingValidatesLiveWindowOrderWhenOverlappingWindowsReorderDuringDrag() async throws {
+  let snapshot = DragWindowSnapshot(load: { _ in
+    [
+      DragWindowRegion(windowID: 1, frame: CGRect(x: 0, y: 0, width: 800, height: 600)),
+      DragWindowRegion(windowID: 2, frame: CGRect(x: 0, y: 0, width: 800, height: 600)),
+    ]
+  })
+  // Live window stack reordered so window 2 is now above window 1 at release time.
+  let controller = CompanionDragTargetingController(
+    metrics: DragResponseMetrics(enabled: false),
+    snapshot: snapshot,
+    dropHitTest: { _, below in below == 0 ? 2 : 0 },
+    lookup: { id, _ in dragTestTarget(id) })
+  controller.start()
+  defer { controller.stop() }
+
+  let pet = CompanionInstance(
+    definition: try CharacterCatalog().characters[0],
+    rig: CatRig(),
+    size: 64,
+    seed: 1,
+    transitions: TransitionLibrary())
+  defer {
+    pet.hud.close()
+    pet.presentation.close()
+  }
+  pet.isPickedUp = true
+  controller.beginDrag(
+    for: pet, seed: dragTestTarget(1), pointer: CGPoint(x: 200, y: 200))
+  try await eventually {
+    snapshot.hitTest(at: CGPoint(x: 200, y: 200), below: 0) == 1
+  }
+
+  let evaluation = controller.evaluateDrop(dragged: true, at: CGPoint(x: 200, y: 200))
+  let pendingDrop = try #require(evaluation.pendingDrop)
+  #expect(pendingDrop.windowID == 2)
+  let resolved = await controller.targets.resolveDrop(pendingDrop)
+  #expect(resolved?.windowID == 2)
+}

@@ -37,21 +37,34 @@ final class CompanionDragTargetingController {
   var currentTrackerWindowFrame: (() -> CGRect?)?
   var currentCharacterSize: (() -> Double)?
 
-  init(metrics: DragResponseMetrics) {
-    let snapshot = DragWindowSnapshot()
+  init(
+    metrics: DragResponseMetrics,
+    snapshot: DragWindowSnapshot = DragWindowSnapshot(),
+    dropHitTest: DragWindowTargetResolver.HitTest? = nil,
+    lookup: DragWindowTargetResolver.Lookup? = nil
+  ) {
     self.windowSnapshot = snapshot
     self.metrics = metrics
-    self.targets = DragWindowTargetResolver(
-      hitTest: { point, below in
-        metrics.measure(.hitTest) { snapshot.hitTest(at: point, below: below) }
-      },
-      dropHitTest: { point, below in
+    let liveDropHitTest: DragWindowTargetResolver.HitTest =
+      dropHitTest ?? { point, below in
         metrics.measure(.releaseHitTest) {
-          let cached = snapshot.hitTest(at: point, below: below)
-          if cached > 0 { return cached }
-          return NSWindow.windowNumber(at: point, belowWindowWithWindowNumber: below)
+          NSWindow.windowNumber(at: point, belowWindowWithWindowNumber: below)
         }
-      })
+      }
+    if let lookup {
+      self.targets = DragWindowTargetResolver(
+        hitTest: { point, below in
+          metrics.measure(.hitTest) { snapshot.hitTest(at: point, below: below) }
+        },
+        dropHitTest: liveDropHitTest,
+        lookup: lookup)
+    } else {
+      self.targets = DragWindowTargetResolver(
+        hitTest: { point, below in
+          metrics.measure(.hitTest) { snapshot.hitTest(at: point, below: below) }
+        },
+        dropHitTest: liveDropHitTest)
+    }
   }
 
   var diagnostics: (windowID: UInt32?, highlight: Bool, wheel: Bool) {
@@ -141,12 +154,22 @@ final class CompanionDragTargetingController {
     let excluded = excludedWindowNumbers(including: excludedOverlayWindowNumbers?() ?? [])
     let selectedSkill = hoveredSkill
     let radialWasOpen = radialLayout != nil
+    let dropPoint = radialLayout?.anchor ?? pointer
     let pendingDrop =
-      dragged && !radialWasOpen
-      ? targets.dropTarget(at: pointer, excluding: excluded) : nil
-    let cachedTarget =
       dragged
-      ? ((radialWasOpen ? draggedTarget : nil) ?? pendingDrop?.cached) : nil
+      ? targets.dropTarget(at: dropPoint, excluding: excluded) : nil
+    let cachedTarget: WindowTargetCandidate?
+    if dragged {
+      if radialWasOpen, let draggedTarget,
+        pendingDrop == nil || pendingDrop?.windowID == draggedTarget.windowID
+      {
+        cachedTarget = draggedTarget
+      } else {
+        cachedTarget = pendingDrop?.cached
+      }
+    } else {
+      cachedTarget = nil
+    }
     clear(closeWheel: false)
     return DropEvaluation(
       selectedSkill: selectedSkill,

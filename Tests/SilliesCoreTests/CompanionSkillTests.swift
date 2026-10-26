@@ -74,15 +74,17 @@ struct CompanionSkillTests {
     #expect(markdown.contains("## Transcript\nHello team."))
   }
 
-  @Test("SessionSummarizer bounds work on large transcripts")
+  @Test("SessionSummarizer bounds work on large transcripts and preserves late action items")
   func sessionSummarizerBoundsLargeInput() {
-    let repeated = String(
+    let filler = String(
       repeating:
-        "We decided on the release plan for Sillies. TODO: verify notarization and Sparkle feed.\n",
-      count: 2_000)
-    let result = SessionSummarizer.summarize(text: repeated, fallbackContext: "Fallback")
+        "We discussed the architecture and window tracking latency across multiple displays.\n",
+      count: 600)
+    let tail = "TODO: ship the notarized build with chunked summarization before Friday."
+    let result = SessionSummarizer.summarize(
+      text: filler + tail, fallbackContext: "Fallback")
     #expect(result.summary.contains("•"))
-    #expect(!result.actionItems.isEmpty)
+    #expect(result.actionItems.contains { $0.contains("ship the notarized build") })
   }
 
   @Test("DropReturnPlan geometry distinguishes perch adjustments from window drops")

@@ -294,11 +294,16 @@ public struct SessionRecord: Codable, Identifiable, Equatable, Sendable {
 }
 
 /// Deterministic on-device summarizer and action-item extractor for transcripts and OCR captures.
+/// Processes arbitrarily long transcripts in bounded chunks so late action items are never dropped.
 public enum SessionSummarizer: Sendable {
   private static let maxSummarySentences = 3
   private static let maxActionItems = 5
-  private static let maxInputCharacters = 32_768
-  private static let maxAnalyzedSentences = 240
+  public static let chunkCharacterSize = 16_384
+  private static let sentenceDelimiters = CharacterSet.newlines.union(
+    CharacterSet(charactersIn: ".!?"))
+  private static let highSignalActionKeywords = [
+    "todo", "to-do", "action item", "next step", "deadline",
+  ]
   private static let actionKeywords = [
     "todo", "to-do", "action item", "need to", "needs to", "we should", "let's", "must",
     "follow up", "deadline", "next step", "will send", "will fix",
@@ -308,62 +313,162 @@ public enum SessionSummarizer: Sendable {
     "launch", "goal", "plan", "result", "error", "update", "question",
   ]
 
+  private struct ScoredEntry {
+    let index: Int
+    let score: Double
+    let text: String
+  }
+
   public static func summarize(text: String, fallbackContext: String) -> (
     summary: String, actionItems: [String]
   ) {
-    let cleaned = String(
-      text.trimmingCharacters(in: .whitespacesAndNewlines).prefix(maxInputCharacters))
+    let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !cleaned.isEmpty else {
       return (fallbackContext, [])
     }
-    let rawLines = Array(
-      cleaned
-        .components(separatedBy: CharacterSet.newlines.union(CharacterSet(charactersIn: ".!?")))
-        .lazy
-        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-        .filter { $0.count >= 12 }
-        .prefix(maxAnalyzedSentences))
 
-    guard !rawLines.isEmpty else {
+    var topSentences: [ScoredEntry] = []
+    var topActions: [ScoredEntry] = []
+    var sentenceIndex = 0
+
+    forEachChunk(in: cleaned) { chunk in
+      let parts = chunk.components(separatedBy: sentenceDelimiters)
+      for raw in parts {
+        let sentence = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard sentence.count >= 12 else { continue }
+        let currentIndex = sentenceIndex
+        sentenceIndex += 1
+
+        let lower = sentence.lowercased()
+        if let actionScore = scoreActionItem(lower: lower) {
+          insertAction(
+            ScoredEntry(index: currentIndex, score: actionScore, text: sentence),
+            into: &topActions)
+        }
+
+        let summaryScore = scoreSummarySentence(
+          sentence: sentence, lower: lower, index: currentIndex)
+        insertSummary(
+          ScoredEntry(index: currentIndex, score: summaryScore, text: sentence),
+          into: &topSentences)
+      }
+    }
+
+    guard sentenceIndex > 0 else {
       let snippet = String(cleaned.prefix(180))
       return (snippet, [])
     }
 
-    var actions: [String] = []
-    for line in rawLines {
-      let lower = line.lowercased()
-      if actionKeywords.contains(where: { lower.contains($0) }) {
-        if !actions.contains(line) && actions.count < maxActionItems {
-          actions.append(line)
-        }
-      }
-    }
-
-    let scored = rawLines.enumerated().map { index, sentence -> (Int, Double, String) in
-      let lower = sentence.lowercased()
-      let wordCount = sentence.split(separator: " ").count
-      var score = Double(min(wordCount, 24)) * 0.4
-      if index == 0 { score += 3.0 }
-      for keyword in priorityKeywords where lower.contains(keyword) {
-        score += 2.5
-      }
-      for keyword in actionKeywords where lower.contains(keyword) {
-        score += 1.5
-      }
-      return (index, score, sentence)
-    }
-
-    let topSentences =
-      scored
-      .sorted { $0.1 > $1.1 }
-      .prefix(maxSummarySentences)
-      .sorted { $0.0 < $1.0 }
-      .map(\.2)
+    let orderedSummary =
+      topSentences
+      .sorted { $0.index < $1.index }
+      .map(\.text)
+    let orderedActions =
+      topActions
+      .sorted { $0.index < $1.index }
+      .map(\.text)
 
     let summary =
-      topSentences.isEmpty
+      orderedSummary.isEmpty
       ? String(cleaned.prefix(200))
-      : topSentences.map { "• \($0)" }.joined(separator: "\n")
-    return (summary, actions)
+      : orderedSummary.map { "• \($0)" }.joined(separator: "\n")
+    return (summary, orderedActions)
+  }
+
+  /// Processes arbitrarily long transcripts in chunks on a background worker.
+  public static func summarizeOnWorker(
+    text: String, fallbackContext: String
+  ) async -> (summary: String, actionItems: [String]) {
+    await Task.detached(priority: .userInitiated) {
+      dispatchPrecondition(condition: .notOnQueue(.main))
+      return summarize(text: text, fallbackContext: fallbackContext)
+    }.value
+  }
+
+  private static func forEachChunk(in text: String, body: (Substring) -> Void) {
+    var start = text.startIndex
+    while start < text.endIndex {
+      let targetEnd =
+        text.index(start, offsetBy: chunkCharacterSize, limitedBy: text.endIndex)
+        ?? text.endIndex
+      var end = targetEnd
+      if end < text.endIndex {
+        while end < text.endIndex,
+          let scalar = text[end].unicodeScalars.first,
+          !sentenceDelimiters.contains(scalar)
+        {
+          end = text.index(after: end)
+        }
+        if end < text.endIndex {
+          end = text.index(after: end)
+        }
+      }
+      body(text[start..<end])
+      start = end
+    }
+  }
+
+  private static func scoreActionItem(lower: String) -> Double? {
+    guard actionKeywords.contains(where: { lower.contains($0) }) else { return nil }
+    var score = 1.0
+    for keyword in highSignalActionKeywords where lower.contains(keyword) {
+      score += 2.0
+    }
+    return score
+  }
+
+  private static func scoreSummarySentence(
+    sentence: String, lower: String, index: Int
+  ) -> Double {
+    let wordCount = sentence.split(separator: " ").count
+    var score = Double(min(wordCount, 24)) * 0.4
+    if index == 0 { score += 3.0 }
+    for keyword in priorityKeywords where lower.contains(keyword) {
+      score += 2.5
+    }
+    for keyword in actionKeywords where lower.contains(keyword) {
+      score += 1.5
+    }
+    return score
+  }
+
+  private static func insertAction(_ candidate: ScoredEntry, into actions: inout [ScoredEntry]) {
+    guard !actions.contains(where: { $0.text == candidate.text }) else { return }
+    if actions.count < maxActionItems {
+      actions.append(candidate)
+      return
+    }
+    // Prefer higher-signal or more recent action items when the cap is reached so late TODOs
+    // at the end of a long transcript are never dropped.
+    if let weakestIndex = actions.indices.min(by: { lhs, rhs in
+      if actions[lhs].score != actions[rhs].score {
+        return actions[lhs].score < actions[rhs].score
+      }
+      return actions[lhs].index < actions[rhs].index
+    }),
+      candidate.score >= actions[weakestIndex].score
+    {
+      actions[weakestIndex] = candidate
+    }
+  }
+
+  private static func insertSummary(
+    _ candidate: ScoredEntry, into sentences: inout [ScoredEntry]
+  ) {
+    guard !sentences.contains(where: { $0.text == candidate.text }) else { return }
+    if sentences.count < maxSummarySentences {
+      sentences.append(candidate)
+      return
+    }
+    if let weakestIndex = sentences.indices.min(by: { lhs, rhs in
+      if sentences[lhs].score != sentences[rhs].score {
+        return sentences[lhs].score < sentences[rhs].score
+      }
+      return sentences[lhs].index > sentences[rhs].index
+    }),
+      candidate.score > sentences[weakestIndex].score
+    {
+      sentences[weakestIndex] = candidate
+    }
   }
 }

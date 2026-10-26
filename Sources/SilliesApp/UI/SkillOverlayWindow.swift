@@ -622,8 +622,8 @@ final class CompanionHUDController {
 
   private enum LayoutKey: Equatable {
     case hidden
-    case selection(appName: String)
-    case active(skill: CompanionSkillKind, appName: String, detailLength: Int)
+    case selection(appName: String, displayTitle: String)
+    case active(skill: CompanionSkillKind, appName: String, normalizedDetail: String)
     case completed(skill: CompanionSkillKind, appName: String, summary: String)
 
     init(_ state: CompanionBindingState) {
@@ -631,13 +631,29 @@ final class CompanionHUDController {
       case .followingFocusedWindow:
         self = .hidden
       case .awaitingSelection(let target, _):
-        self = .selection(appName: target.appName)
+        self = .selection(appName: target.appName, displayTitle: target.displayTitle)
       case .active(let target, let skill, _, let statusDetail, _):
         self = .active(
-          skill: skill, appName: target.appName, detailLength: statusDetail.count)
+          skill: skill, appName: target.appName,
+          normalizedDetail: Self.normalizeMonospacedDigits(statusDetail))
       case .completed(let target, let skill, let summary, _, _):
         self = .completed(skill: skill, appName: target.appName, summary: summary)
       }
+    }
+
+    /// Status labels use `.monospacedDigit()`, so digit-only timer changes (`00:12` -> `00:13`)
+    /// preserve exact glyph width while any text or character change invalidates cached sizing.
+    private static func normalizeMonospacedDigits(_ text: String) -> String {
+      var scalars = String.UnicodeScalarView()
+      scalars.reserveCapacity(text.unicodeScalars.count)
+      for scalar in text.unicodeScalars {
+        if scalar.value >= 0x30 && scalar.value <= 0x39 {
+          scalars.append("0")
+        } else {
+          scalars.append(scalar)
+        }
+      }
+      return String(scalars)
     }
   }
 
@@ -649,6 +665,7 @@ final class CompanionHUDController {
   private(set) var layoutMeasurements = 0
   var windowNumber: Int? { panel?.windowNumber }
   var isVisible: Bool { panel?.isVisible == true }
+  var currentPanelSize: CGSize? { panel?.frame.size }
 
   func update(
     state: CompanionBindingState, companionPoint: CGPoint, characterSize: Double,
@@ -676,6 +693,8 @@ final class CompanionHUDController {
       panelSize = cachedPanelSize
     } else {
       layoutMeasurements += 1
+      hostingView?.rootView = CompanionHUDView(model: model)
+      hostingView?.invalidateIntrinsicContentSize()
       hostingView?.layoutSubtreeIfNeeded()
       let fitting = hostingView?.fittingSize ?? Self.fallbackSize
       let measured = CGSize(

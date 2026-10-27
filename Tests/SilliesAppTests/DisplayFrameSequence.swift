@@ -8,6 +8,7 @@ import Testing
 @MainActor
 final class DisplayFrameSequence: NSObject {
   private static let timeoutSeconds: Double = 20
+  private static let initialPresentationFrames = 8
   private let count: Int
   private let operation: (Int) -> Void
   private var index = 0
@@ -17,6 +18,12 @@ final class DisplayFrameSequence: NSObject {
   private init(count: Int, operation: @escaping (Int) -> Void) {
     self.count = count
     self.operation = operation
+  }
+
+  /// Let newly created native panels finish their initial WindowServer presentation before
+  /// measuring manipulation. Otherwise their first CA fence is charged to the third resize.
+  static func presentCreatedWindows() throws {
+    try run(count: initialPresentationFrames) { _ in }
   }
 
   static func run(count: Int, operation: @escaping (Int) -> Void) throws {

@@ -32,7 +32,7 @@ The controller reuses its shared movement clock for brief spacing adjustments. I
 ## Add a character
 
 1. Add a version-1 JSON file with a unique character ID.
-2. Reuse `cat`, `ninja`, `frog`, or `robot` to prototype a personality with existing artwork.
+2. Reuse a registered renderer to prototype a personality with existing artwork. The twelve bundled renderers are `cat`, `ninja`, `frog`, `robot`, `ghost`, `octopus`, `mushroom`, `axolotl`, `penguin`, `dragon`, `hedgehog`, and `bunny`.
 3. For new artwork, subclass `CharacterRig` and register its factory in `RendererRegistry`.
 4. Use the rig's named head, arms, feet, eyes, and accessory layers so shared clips work automatically.
 5. Run `make check` and inspect `--snapshot-dir` exports.
@@ -66,6 +66,10 @@ Open identifiers accept custom strings, so character packs are not constrained b
 `FrogRig` and `FrogAnimations` implement Pogo; `RobotRig` and `RobotAnimations` implement Bolt. Register each character's clips in `AnimationLibrary.init()` after shared clips. `RigAnimation` supplies reusable layer keyframes and oscillations; clips reuse existing layers and introduce no timers. Reaction choices remain in `pogo.json` and `bolt.json`.
 
 Pogo overrides shared walk/climb/catch clips and uses namespaced `pogo.hop` and `pogo.pocket` clips. Bolt overrides walk/resize/climb clips and uses `bolt.scan` for its viewfinder in standing and hanging poses. Custom IDs need pose variants when their standing animation would be inappropriate on a side (see Pogo's hop registration).
+
+The expanded crew pairs `GhostRig`, `OctopusRig`, `MushroomRig`, `AxolotlRig`, `PenguinRig`, `DragonRig`, `HedgehogRig`, and `BunnyRig` with separate animation files and JSON packs. `CreatureArtwork` supplies small drawing primitives; `CreatureMotion` shares limb mechanics. Palette/layout values and motion profiles stay with the character that owns them. `RigAnimation.Oscillation` and `Sequence` group cohesive timing/keyframe parameters; `oscillate`, `play`, and `loop` make playback intent explicit.
+
+Register local moving details with `CharacterRig.addDetail(_:to:frame:restingOpacity:)` at construction time. The rig then restores their transforms, opacity, and animations on every behavior interruption, hide, and reduced-motion change. Clip bodies must reuse these layers. `AnimationLibrary.registerSignature` provides a static reduced-motion expression and resolves a standing-only signature action to the character’s fixed-grip `hangCatch` clip on either side. Never animate the primary grip to perform a signature. Decorative effects such as Taro’s spark use the decoration marker and do not become pickup targets.
 
 For extra animated layers, keep reset responsibility in the rig: `RobotRig.resetBehaviorPose()` calls `super`, removes antenna/viewfinder animations, and restores the face. Override that method instead of adding character checks to the base rig or controller. Supply static reduced-motion expressions for custom IDs. Existing saved crew selections stay unchanged when new packs are installed; the picker discovers every pack, and automated GUI runs explicitly exercise the entire catalog.
 

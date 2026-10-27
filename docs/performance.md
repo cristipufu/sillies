@@ -21,7 +21,28 @@
 
 `make check` runs Swift and shell lint, core and app tests, a debug build, and pack validation. `make gui-check` adds lifecycle, presentation, real-window tracking, and live move/resize attachment checks.
 
-The structural budgets exercise all four bundled companions, including individual pickup paths. They require actual samples and reject a single handler over one 120 Hz frame (8.33 ms), as well as enforcing p50/p90/p95 limits. Diagnostic samples use bounded storage and retain the worst stall even after old percentile samples roll out. AppKit tests run serially because they share application/window state. `DisplayFrameSequence` drives the structural checks through the native application event loop at display cadence, with workspace producers stopped so injected geometry is not overwritten by unrelated focus changes. Sending hundreds of panel updates in a single run-loop turn instead measured artificial transaction backpressure (sampled inside AppKit’s screen/layout queries). These checks measure synchronous handler work; live display-link gap measurements also include deferred layout and run-loop scheduling.
+The structural budgets exercise all twelve bundled companions, including individual pickup paths. The full-crew move/resize/switch fixtures use wider windows to give every character a valid perch; timing limits stay unchanged. They require actual samples and reject a single handler over one 120 Hz frame (8.33 ms), as well as enforcing p50/p90/p95 limits. Diagnostic samples use bounded storage and retain the worst stall even after old percentile samples roll out. AppKit tests run serially because they share application/window state. `DisplayFrameSequence` drives the structural checks through the native application event loop at display cadence, with workspace producers stopped so injected geometry is not overwritten by unrelated focus changes. Sending hundreds of panel updates in a single run-loop turn instead measured artificial transaction backpressure (sampled inside AppKit’s screen/layout queries). The full-crew fixtures let eight display frames present the newly constructed panels before collecting manipulation samples: profiling traced a repeatable initial 16–22 ms resize sample to AppKit waiting for its first CA fence, rather than ongoing resize work. The measured interaction budgets are unchanged. These checks measure synchronous handler work; live display-link gap measurements also include deferred layout and run-loop scheduling.
+
+### Twelve-character crew
+
+The eight additional rigs reuse Core Animation layers and the existing shared clocks. Catalog validation covers all twelve renderers; reaction checks cover standing, both hanging poses, interruption cleanup, and Reduce Motion. All twelve characters passed real click/pickup/release and animated drop/return checks, including quiet unselected returns and explicit Focus activation. Lifecycle, independent presentation, native minimize/restore, external move/resize, and stationary-header checks also passed.
+
+Local optimized build, all twelve enabled, 120 Hz display:
+
+| Check | Result |
+| --- | --- |
+| Native move/resize attachment error | 0.00 pt across 3,540 live samples |
+| Native move/resize synchronous handler maxima | 0.30 / 0.35 ms |
+| Native callback spacing, p95 / maximum | 8.46 / 20.96 ms |
+| Real click/pickup/release callback spacing, p95 / maximum | 8.36 / 10.26 ms |
+| Animated pickup/drop/return callback spacing, p95 / maximum | 8.38 / 19.97 ms across 1,216 frames |
+| External move / corner resize / top resize error, p95 | 1.30 / 4.42 / 0.49 pt |
+| External move / corner resize / top resize error, maximum | 1.76 / 9.50 / 7.00 pt |
+| Stationary custom header | 0.00 pt motion across 3,984 samples |
+
+Native and external drag fixtures carry independently calculated `PerchSpacing` slots through resizing: a crowded crew can legitimately redistribute as the available span changes. Subsequent expectations never use measured attachment positions. The lifecycle fixture checks available perch capacity on narrow windows and starts its continuous minimize assertion at the native `willMiniaturize` notification; AppKit may return from the request before that notification. Long input runs refresh a resting reaction between companions so a scripted click does not chase an ambient stroll; pickup interrupts that reaction normally and runs the character's animated clip.
+
+Two complete debug `make check` runs passed 74 core and 65 app tests during development. Subsequent runs exceeded strict timing thresholds under the current desktop workload, including p50/p90 budgets; those failures remain a limitation of the local validation, and no thresholds were relaxed. A full optimized test run passed all 74 core tests and 64 of 65 app tests: the rapid window-switch fixture measured p50 0.99 ms and p90 1.64 ms against 0.75/1.50 ms limits, with a 1.74 ms maximum. Move, resize, and every individual pickup timing test passed in that run. The optimized GUI results above are separate measurements, not a claim of universal frame-perfect presentation.
 
 ### October 27, 2026 smoothness audit
 

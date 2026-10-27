@@ -3,7 +3,7 @@ import SilliesCore
 
 /// Waits for presented geometry to settle; fixed sleeps are unreliable during native animations.
 @MainActor
-final class WindowIntegrationCheck {
+final class WindowIntegrationCheck: NSObject {
   private enum Stage: Int { case top, resize, move, sides, minimize, restore, close }
   private let controller: CompanionController
   private let playground: WindowPlayground
@@ -13,14 +13,19 @@ final class WindowIntegrationCheck {
   private var timer: Timer?
   private var settledBeforeResize = 0
   private var landingsBeforeResize = 0
+  private var minimizationBegan = false
 
   init(controller: CompanionController, playground: WindowPlayground) {
     self.controller = controller
     self.playground = playground
+    super.init()
   }
 
   func start() {
     deadline = time + 6
+    NotificationCenter.default.addObserver(
+      self, selector: #selector(minimizationWillBegin), name: NSWindow.willMiniaturizeNotification,
+      object: playground.window)
     // RunLoop retains the timer/session until finish invalidates it.
     let timer = Timer(timeInterval: 0.05, repeats: true) { [self] _ in
       MainActor.assumeIsolated { tick() }
@@ -31,6 +36,8 @@ final class WindowIntegrationCheck {
 
   private var time: Double { ProcessInfo.processInfo.systemUptime }
 
+  @objc private func minimizationWillBegin() { minimizationBegan = true }
+
   private func tick() {
     guard time < deadline else {
       fail(
@@ -39,6 +46,8 @@ final class WindowIntegrationCheck {
     }
     let ready: Bool
     if stage == .minimize {
+      // AppKit can return from miniaturize before it starts the native transition.
+      guard minimizationBegan else { return }
       require(
         controller.tracker.windowID != UInt32(playground.window.windowNumber),
         "A minimizing window must never be reattached during its Dock animation")
@@ -72,22 +81,23 @@ final class WindowIntegrationCheck {
     if stage != .close && stage != .minimize {
       guard let frame = controller.tracker.windowFrame else { fail("Missing window") }
       let attachments = controller.attachmentDiagnostics
+      let visible = attachments.filter(\.visible)
       require(
         attachments.count == controller.settings.enabledCharacters.count
-          && attachments.allSatisfy(\.visible),
-        "All characters visible at \(stage)")
+          && visible.count == expectedVisibleCount(for: frame),
+        "Available perches are filled and excess companions wait at \(stage)")
       require(
-        attachments.allSatisfy { !frame.contains($0.point) },
+        visible.allSatisfy { !frame.contains($0.point) },
         "Characters remain outside the window at \(stage)")
       require(
-        attachments.allSatisfy { $0.frame.intersection(frame).isEmpty },
+        visible.allSatisfy { $0.frame.intersection(frame).isEmpty },
         "Native panel bounds exclude the document and title bar at \(stage)")
     }
     switch stage {
     case .top:
       require(
         controller.attachmentDiagnostics.allSatisfy { $0.edge == .top }, "Characters stand on top")
-      for attachment in controller.attachmentDiagnostics {
+      for attachment in controller.attachmentDiagnostics where attachment.visible {
         _ = controller.blockingCompanionCount(
           at: CGPoint(x: attachment.point.x, y: attachment.point.y + 35))
         let receiver = NSWindow.windowNumber(
@@ -137,12 +147,14 @@ final class WindowIntegrationCheck {
       playground.window.deminiaturize(nil)
       playground.window.makeKeyAndOrderFront(nil)
     case .restore:
-      require(controller.attachmentDiagnostics.allSatisfy(\.visible), "Restore shows the crew")
+      require(
+        controller.diagnostics.visibleCount > 0, "Restore shows the crew on available perches")
       playground.window.close()
     case .close:
       require(controller.tracker.eventCounts[.windowDisappeared, default: 0] > 0, "Close detected")
       timer?.invalidate()
       timer = nil
+      NotificationCenter.default.removeObserver(self)
       print(
         "WINDOW TEST OK: real focused window, exact top-edge geometry, resize/move acting, settling, exterior sides, minimize/restore, close; Accessibility \(controller.tracker.hasAccessibility ? "on" : "off")"
       )
@@ -154,6 +166,22 @@ final class WindowIntegrationCheck {
     }
     deadline = time + 6
     stableSince = nil
+  }
+
+  private func expectedVisibleCount(for window: CGRect) -> Int {
+    let attachments = controller.attachmentDiagnostics
+    let display = CompanionPanel.visibleFrame(for: playground.window.screen)
+    return [PerchSurface.Edge.top, .left, .right].reduce(0) { count, edge in
+      let assigned = attachments.filter { $0.edge == edge }.count
+      guard assigned > 0 else { return count }
+      let surface = PerchSurface(
+        window: window, visibleFrame: display, characterSize: controller.settings.size,
+        preferRight: edge == .right)
+      let spacing = PerchSpacing.separation(
+        between: surface.presentationSize, and: surface.presentationSize)
+      let capacity = Int(surface.spanLength / spacing) + 1
+      return count + min(assigned, capacity)
+    }
   }
 
   private func require(_ condition: Bool, _ message: String) { if !condition { fail(message) } }

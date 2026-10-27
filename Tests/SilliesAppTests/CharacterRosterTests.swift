@@ -4,10 +4,14 @@ import Testing
 
 @testable import SilliesApp
 
-@Test @MainActor func bundledCrewHasFourDistinctValidatedCharacters() throws {
+@Test @MainActor func bundledCrewHasTwelveDistinctValidatedCharacters() throws {
   let catalog = try CharacterCatalog()
-  #expect(catalog.characters.map(\.id) == ["mochi", "kiko", "pogo", "bolt"])
-  #expect(Set(catalog.characters.map(\.renderer)).count == 4)
+  #expect(
+    catalog.characters.map(\.id) == [
+      "mochi", "kiko", "pogo", "bolt", "boo", "bloop", "sprout", "pip", "pebble", "taro", "nib",
+      "mallow",
+    ])
+  #expect(Set(catalog.characters.map(\.renderer)).count == 12)
   try catalog.validateAssets(
     renderers: RendererRegistry(), animations: AnimationLibrary(), transitions: TransitionLibrary())
 }
@@ -20,6 +24,7 @@ import Testing
     let layerCount = layers(in: rig.root).count
     for pose in [AttachmentPose.standing, .hangingLeft, .hangingRight] {
       rig.setAttachmentPose(pose)
+      let restingOpacities = layers(in: rig.root).map(\.opacity)
       for reaction in character.reactions {
         let state = BehaviorState(animation: reaction.animation)
         library.apply(state, to: rig, characterID: character.id, reducedMotion: false)
@@ -31,9 +36,20 @@ import Testing
         #expect(layers(in: rig.root).allSatisfy { $0.animationKeys() == nil })
         rig.resetPose()
         #expect(layers(in: rig.root).allSatisfy { $0.animationKeys() == nil })
+        #expect(layers(in: rig.root).map(\.opacity) == restingOpacities)
       }
     }
   }
+}
+
+@Test @MainActor func signatureDecorationsDoNotBecomePickupTargets() {
+  let dragon = DragonRig()
+  let hitTester = ArtworkHitTester()
+  dragon.spark.opacity = 1
+  #expect(!hitTester.containsArtwork(in: dragon.root, at: CGPoint(x: 118, y: 78)))
+  #expect(hitTester.containsArtwork(in: dragon.root, at: CGPoint(x: 64, y: 74)))
+  dragon.resetPose()
+  #expect(dragon.spark.opacity == 0)
 }
 
 @Test @MainActor func boltDisplayAndAntennaResetWhenInterruptedOrStopped() {
@@ -74,7 +90,7 @@ import Testing
   }
 }
 
-@Test @MainActor func fourCharacterCrewHasDistinctInteractivePerches() throws {
+@Test @MainActor func wholeCrewHasDistinctInteractivePerches() throws {
   let suiteName = "app.sillies.test.\(UUID().uuidString)"
   let defaults = try #require(UserDefaults(suiteName: suiteName))
   defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -87,7 +103,7 @@ import Testing
   controller.start()
   defer { controller.stop() }
   let attachments = controller.attachmentDiagnostics
-  #expect(attachments.count == 4 && attachments.allSatisfy(\.visible))
+  #expect(attachments.count == 12 && attachments.allSatisfy(\.visible))
   for attachment in attachments {
     #expect(
       controller.interactiveArtworkCount(
@@ -106,7 +122,7 @@ import Testing
   defaults.set(["kiko"], forKey: "characters")
   let settings = AppSettings(defaults: defaults)
   #expect(settings.enabledCharacters == ["kiko"])
-  #expect(try CharacterCatalog().characters.count == 4)
+  #expect(try CharacterCatalog().characters.count == 12)
 }
 
 @MainActor

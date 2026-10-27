@@ -16,6 +16,27 @@ final class AnimationLibrary {
     BuiltinAnimations.register(in: self)
     FrogAnimations.register(in: self)
     RobotAnimations.register(in: self)
+    GhostAnimations.register(in: self)
+    OctopusAnimations.register(in: self)
+    MushroomAnimations.register(in: self)
+    AxolotlAnimations.register(in: self)
+    PenguinAnimations.register(in: self)
+    DragonAnimations.register(in: self)
+    HedgehogAnimations.register(in: self)
+    BunnyAnimations.register(in: self)
+  }
+
+  /// Signature actions have a static expression and a safe fixed-grip side variant.
+  func registerSignature(_ id: AnimationID, characterID: String, clip: @escaping Clip) {
+    register(id, characterID: characterID, clip: clip)
+    registerReducedMotion(id, characterID: characterID) { rig in
+      rig.eyes.opacity = 0
+      rig.closedEyes.opacity = 1
+      rig.delight.opacity = 1
+    }
+    for pose in [AttachmentPose.hangingLeft, .hangingRight] {
+      registerVariant(id, pose: pose, clip: .hangCatch)
+    }
   }
 
   func register(_ id: AnimationID, characterID: String? = nil, clip: @escaping Clip) {

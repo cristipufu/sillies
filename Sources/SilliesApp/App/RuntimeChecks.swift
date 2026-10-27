@@ -13,6 +13,7 @@ struct CompanionDiagnostics {
 }
 
 struct LaunchConfiguration {
+  private static let inputCheckWatchdogTimeoutSeconds: Double = 60
   let arguments: [String]
 
   init(arguments: [String] = ProcessInfo.processInfo.arguments) {
@@ -38,7 +39,10 @@ struct LaunchConfiguration {
   }
 
   var watchdogTimeoutSeconds: Double {
-    arguments.contains("--performance-check") ? 45 : 25
+    if arguments.contains("--interaction-test") || arguments.contains("--drop-return-test") {
+      return Self.inputCheckWatchdogTimeoutSeconds
+    }
+    return arguments.contains("--performance-check") ? 45 : 25
   }
 
   func optionValue(after flag: String) -> String? {

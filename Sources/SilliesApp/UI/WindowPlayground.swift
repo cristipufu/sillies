@@ -1,10 +1,13 @@
 import AppKit
 import QuartzCore
+import SilliesCore
 import SwiftUI
 
 /// A real native window: the ordinary tracking pipeline follows it, including in runtime checks.
 @MainActor
 final class WindowPlayground: NSObject {
+  private static let defaultWidth: Double = 860
+  private static let crewEndSlots: Double = 2
   let window: NSWindow
   private let controller: CompanionController
   private var squeezed = false
@@ -53,7 +56,11 @@ final class WindowPlayground: NSObject {
 
   func reset(animated: Bool = true) {
     let visible = (NSScreen.main ?? NSScreen.screens.first)?.visibleFrame ?? fallbackVisibleFrame
-    let size = CGSize(width: min(860, visible.width - 260), height: min(470, visible.height - 250))
+    let spacing = PerchSpacing.separation(
+      between: controller.settings.size, and: controller.settings.size)
+    let crewWidth = spacing * (Double(controller.liveCount) + Self.crewEndSlots)
+    let width = min(max(Self.defaultWidth, crewWidth), visible.width - 260)
+    let size = CGSize(width: width, height: min(470, visible.height - 250))
     let frame = CGRect(
       x: visible.midX - size.width / 2, y: visible.midY - size.height / 2 - 35, width: size.width,
       height: size.height)

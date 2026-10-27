@@ -72,10 +72,15 @@ final class DragLatencyCheck: NSObject {
       ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
     let surface = PerchSurface(
       window: actual, visibleFrame: visible, characterSize: controller.settings.size)
+    let expectedPositions = PerchSpacing.restingPoints(
+      near: fractions.map { surface.point(at: $0) }, on: surface)
     for (index, attachment) in controller.attachmentDiagnostics.enumerated() {
-      guard fractions.indices.contains(index) else { continue }
-      let expected = surface.point(at: fractions[index])
+      guard expectedPositions.indices.contains(index), let expected = expectedPositions[index]
+      else { continue }
       let error = hypot(expected.x - attachment.point.x, expected.y - attachment.point.y)
+      // Resize may legitimately redistribute a crowded crew. Carry the independently
+      // calculated slots forward; never derive the next expectation from measured positions.
+      fractions[index] = surface.fraction(for: expected)
       if elapsed < Self.phaseDuration {
         moveErrors.append(error)
       } else {

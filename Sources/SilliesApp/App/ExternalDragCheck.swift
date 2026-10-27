@@ -25,7 +25,7 @@ final class InputWindowFixture: NSObject, NSWindowDelegate {
     // The fixture represents a document app; accessory agents are intentionally not trackable.
     NSApp.setActivationPolicy(.regular)
     let window = NSWindow(
-      contentRect: CGRect(x: 350, y: 250, width: 760, height: 440),
+      contentRect: CGRect(x: 180, y: 250, width: 1120, height: 440),
       styleMask: [.titled, .closable, .resizable, .fullSizeContentView], backing: .buffered,
       defer: false)
     window.title = "Sillies · External drag check"
@@ -196,9 +196,13 @@ final class ExternalDragCheck: NSObject {
     let surface = PerchSurface(
       window: message.frame, visibleFrame: visible,
       characterSize: controller.settings.size)
+    let expectedPositions = PerchSpacing.restingPoints(
+      near: fractions.map { surface.point(at: $0) }, on: surface)
     for (index, attachment) in controller.attachmentDiagnostics.enumerated()
     where fractions.indices.contains(index) {
-      let expected = surface.point(at: fractions[index])
+      guard let expected = expectedPositions[index] else { continue }
+      // Carry independently calculated slots through crowding, as the native drag fixture does.
+      fractions[index] = surface.fraction(for: expected)
       let error = hypot(expected.x - attachment.point.x, expected.y - attachment.point.y)
       if error > 15, outliers.count < 4 {
         outliers.append(

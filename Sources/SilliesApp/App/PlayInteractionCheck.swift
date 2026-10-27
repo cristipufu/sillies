@@ -32,7 +32,17 @@ final class PlayInteractionCheck: NSObject {
       ? CGPoint(x: 62, y: 28)
       : CGPoint(x: 80, y: companionIndex.isMultiple(of: 2) ? 90 : -140)
   }
-  private var selectsSkill: Bool { mode == .dropReturn && companionIndex == 3 }
+  private static let startupAllowance: Double = 5
+  private static let interactionAllowancePerCompanion: Double = 2
+  private static let returnAllowancePerCompanion: Double = 3
+  private var selectsSkill: Bool {
+    mode == .dropReturn && companionIndex == controller.liveCount - 1
+  }
+  private var timeout: Double {
+    Self.startupAllowance + Double(controller.liveCount)
+      * (mode == .interaction
+        ? Self.interactionAllowancePerCompanion : Self.returnAllowancePerCompanion)
+  }
 
   init(
     controller: CompanionController, playground: WindowPlayground,
@@ -86,7 +96,7 @@ final class PlayInteractionCheck: NSObject {
       dragFrameGaps.append(current - previousTick)
     }
     previousTick = current
-    guard now - started < (mode == .interaction ? 8 : 15) else {
+    guard now - started < timeout else {
       fail(
         "Timed out at \(phase); tracked=\(String(describing: controller.tracker.windowID)), target=\(playground.window.windowNumber), attachments=\(controller.attachmentDiagnostics), backgroundKnown=\(background.map { controller.tracker.inputWindowFrames[$0.windowNumber] != nil } ?? false)"
       )
@@ -97,6 +107,7 @@ final class PlayInteractionCheck: NSObject {
       guard elapsed > 0.25 else { return }
       require(controller.interactionCounts.isEmpty, "Paused state passes real clicks through")
       controller.settings.paused = false
+      controller.playReaction(.userIdle)
       focusPlayground()
       advance(to: .disabledClick)
     case .disabledClick:
@@ -144,7 +155,7 @@ final class PlayInteractionCheck: NSObject {
       guard elapsed > (waitsForWheel ? 0.4 : 0.1) else { return }
       require(
         controller.interactionCounts[.pickedUp, default: 0] == companionIndex + 1,
-        "Real drag picks up the companion"
+        "Real drag picks up companion \(companionIndex); events=\(controller.interactionCounts), body=\(body), pointer=\(NSEvent.mouseLocation), attachments=\(controller.attachmentDiagnostics)"
       )
       let points = controller.attachmentDiagnostics
       guard points.indices.contains(companionIndex) else { fail("Companion vanished") }
@@ -216,6 +227,9 @@ final class PlayInteractionCheck: NSObject {
   private func finishCompanion() {
     if companionIndex + 1 < controller.liveCount {
       companionIndex += 1
+      // A long full-crew run must not chase a later companion's ambient stroll between input events.
+      // Pickup interrupts this resting reaction and still exercises that character's animated clips.
+      controller.playReaction(.userIdle)
       post(.mouseMoved, at: previousPointer)
       advance(to: .ready)
       return

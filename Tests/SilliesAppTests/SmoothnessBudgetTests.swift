@@ -14,16 +14,17 @@ func windowDragSmoothnessBudgetAndSinglePassPlacement() throws {
   let settings = AppSettings(defaults: defaults)
   settings.followsWindows = true
   settings.reduceMotion = false
-  settings.enabledCharacters = ["mochi", "kiko", "pogo", "bolt"]
+  settings.enabledCharacters = Set(try CharacterCatalog().characters.map(\.id))
 
   let controller = try CompanionController(settings: settings, useAccessibility: false)
   controller.smoothnessMetrics.isEnabled = true
   controller.start()
   defer { controller.stop() }
 
-  let initialWindow = CGRect(x: 180, y: 180, width: 760, height: 520)
+  let initialWindow = CGRect(x: 180, y: 180, width: 1120, height: 520)
   controller.tracker.simulateTrackedWindow(initialWindow, windowID: 101)
   controller.tracker.stop()
+  try DisplayFrameSequence.presentCreatedWindows()
   controller.smoothnessMetrics.reset()
 
   let primaryView = try #require(controller.primaryCompanionView)
@@ -54,7 +55,12 @@ func windowDragSmoothnessBudgetAndSinglePassPlacement() throws {
 
   #expect(placementsDuringDrag == frameCount * settings.enabledCharacters.count)
   #expect(initialMaskPath === finalMaskPath)
-  #expect(feedbackAnimationsDuringDrag < frameCount)
+  // Feedback is capped at 30 Hz on this 120 Hz fixture, per companion.
+  let maximumFeedbackFraction = 0.25
+  let maximumFeedbackUpdates =
+    Double(frameCount * settings.enabledCharacters.count)
+    * maximumFeedbackFraction
+  #expect(Double(feedbackAnimationsDuringDrag) < maximumFeedbackUpdates)
   #expect(controller.smoothnessMetrics.sampleCount(for: .windowMove) == frameCount)
   #expect(controller.smoothnessMetrics.isWithinBudget(for: .windowMove))
 }
@@ -68,16 +74,17 @@ func windowResizeSmoothnessBudgetAndCompactionQuantization() throws {
   let settings = AppSettings(defaults: defaults)
   settings.followsWindows = true
   settings.reduceMotion = false
-  settings.enabledCharacters = ["mochi", "kiko", "pogo", "bolt"]
+  settings.enabledCharacters = Set(try CharacterCatalog().characters.map(\.id))
 
   let controller = try CompanionController(settings: settings, useAccessibility: false)
   controller.smoothnessMetrics.isEnabled = true
   controller.start()
   defer { controller.stop() }
 
-  let initialWindow = CGRect(x: 160, y: 160, width: 720, height: 500)
+  let initialWindow = CGRect(x: 160, y: 160, width: 1160, height: 500)
   controller.tracker.simulateTrackedWindow(initialWindow, windowID: 202)
   controller.tracker.stop()
+  try DisplayFrameSequence.presentCreatedWindows()
   controller.smoothnessMetrics.reset()
 
   let initialPlacements = controller.totalPlacementCount
@@ -121,14 +128,14 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
   let settings = AppSettings(defaults: defaults)
   settings.followsWindows = true
   settings.reduceMotion = false
-  settings.enabledCharacters = ["mochi", "kiko", "pogo", "bolt"]
+  settings.enabledCharacters = Set(try CharacterCatalog().characters.map(\.id))
 
   let controller = try CompanionController(settings: settings, useAccessibility: false)
   controller.smoothnessMetrics.isEnabled = true
   controller.start()
   defer { controller.stop() }
 
-  let firstWindow = CGRect(x: 120, y: 150, width: 780, height: 520)
+  let firstWindow = CGRect(x: 120, y: 150, width: 1120, height: 520)
   controller.tracker.simulateTrackedWindow(firstWindow, windowID: 301)
   #expect(controller.attachmentDiagnostics.allSatisfy { $0.visible })
   let initialInstallations = controller.interactionMonitorInstallations
@@ -144,6 +151,7 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
   #expect(controller.interactionMonitorInstallations == initialInstallations)
 
   controller.tracker.stop()
+  try DisplayFrameSequence.presentCreatedWindows()
   controller.smoothnessMetrics.reset()
   let initialPlacements = controller.totalPlacementCount
   let switchCount = 40
@@ -152,7 +160,7 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
     let nextWindow = CGRect(
       x: 100 + Double((switchIndex % 5) * 70),
       y: 120 + Double((switchIndex % 3) * 50),
-      width: 760 + Double((switchIndex % 4) * 30),
+      width: 1120 + Double((switchIndex % 4) * 30),
       height: 500)
     controller.tracker.simulateTrackedWindow(
       nextWindow,
@@ -167,13 +175,14 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
   // Minimizing or closing the last window and restoring a window must also stay within the
   // windowSwitch frame budget.
   controller.tracker.stop()
+  try DisplayFrameSequence.presentCreatedWindows()
   controller.smoothnessMetrics.reset()
   try DisplayFrameSequence.run(count: 20) { cycle in
     controller.tracker.simulateTrackedWindow(nil, windowID: nil)
     let restoredWindow = CGRect(
       x: 160 + Double((cycle % 4) * 50),
       y: 140 + Double((cycle % 3) * 40),
-      width: 820,
+      width: 1120,
       height: 520)
     controller.tracker.simulateTrackedWindow(restoredWindow, windowID: CGWindowID(500 + cycle))
   }
@@ -181,7 +190,10 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
   #expect(controller.smoothnessMetrics.isWithinBudget(for: .windowSwitch))
 }
 
-@Test(arguments: ["mochi", "kiko", "pogo", "bolt"]) @MainActor
+@Test(arguments: [
+  "mochi", "kiko", "pogo", "bolt", "boo", "bloop", "sprout", "pip", "pebble", "taro", "nib",
+  "mallow",
+]) @MainActor
 func companionDragSmoothnessBudgetAndUnclippedMaskStability(characterID: String) throws {
   let suiteName = "app.sillies.test.smoothness.companion.\(UUID().uuidString)"
   let defaults = try #require(UserDefaults(suiteName: suiteName))
@@ -206,6 +218,7 @@ func companionDragSmoothnessBudgetAndUnclippedMaskStability(characterID: String)
   let pickupMaskPath = try #require(maskLayer.path)
 
   controller.tracker.stop()
+  try DisplayFrameSequence.presentCreatedWindows()
   controller.smoothnessMetrics.reset()
   let frameCount = 120
 

@@ -58,6 +58,21 @@ class CharacterRig {
   private var lastStretch: Double = 0
   private var feedbackAnimation: WindowFeedbackAnimation?
   private var lastFeedbackAnimationTime: Double = -.infinity
+  private struct DetailPose {
+    let layer: CALayer
+    let opacity: Float
+  }
+  private var details: [DetailPose] = []
+
+  /// Artwork registers local moving details once; interruption and Reduce Motion reset them.
+  func addDetail(
+    _ layer: CALayer, to parent: CALayer, frame: CGRect, restingOpacity: Float = 1
+  ) {
+    layer.frame = frame
+    layer.opacity = restingOpacity
+    parent.addSublayer(layer)
+    details.append(DetailPose(layer: layer, opacity: restingOpacity))
+  }
 
   private var animatableLayers: [CALayer] {
     [
@@ -231,6 +246,11 @@ class CharacterRig {
     CATransaction.begin()
     CATransaction.setDisableActions(true)
     for layer in animatableLayers { layer.removeAllAnimations() }
+    for detail in details {
+      detail.layer.removeAllAnimations()
+      detail.layer.transform = CATransform3DIdentity
+      detail.layer.opacity = detail.opacity
+    }
     for layer in [stage, torso, head, leftArm, rightArm, leftFoot, rightFoot, accessory] {
       layer.transform = CATransform3DIdentity
     }

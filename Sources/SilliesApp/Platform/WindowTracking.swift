@@ -523,6 +523,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
     guard let app = NSWorkspace.shared.frontmostApplication else { return }
     if !force && processID == app.processIdentifier { return }
     if app.processIdentifier == ProcessInfo.processInfo.processIdentifier {
+      if NSApp.keyWindow is CompanionUtilityWindow { return }
       guard
         NSApp.windows.contains(where: {
           $0.isVisible && !$0.isMiniaturized && $0.canBecomeMain && $0.styleMask.contains(.titled)
@@ -613,6 +614,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
 
   private func accept(_ observation: WindowServerObservation) {
     guard started, observation.processID == processID, isEnabled, !isSuspended else { return }
+    if let id = observation.windowID, WindowTrackingExclusions.shared.contains(id) { return }
     let primaryScreenTop = NSScreen.screens.first?.frame.maxY ?? 0
     let priorInputFrames = inputWindowFrames
     updateBackgroundAndInputFrames(from: observation, primaryScreenTop: primaryScreenTop)

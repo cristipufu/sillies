@@ -5,6 +5,8 @@ import SilliesCore
 /// Owns visibility and transition cancellation; geometry and behavior never wait for a clip.
 @MainActor
 final class CompanionPresentation {
+  enum Availability { case available, unavailable }
+  private var availability = Availability.available
   private enum Phase { case hidden, entering, visible, exiting }
   private let panel: CompanionPanel
   private let view: CompanionView
@@ -25,12 +27,19 @@ final class CompanionPresentation {
   }
 
   func show(reattached: Bool = false, reducedMotion: Bool) {
+    guard availability == .available else { return }
     relocationCompletion = nil
     let wasHidden = phase == .hidden
     guard wasHidden || phase == .exiting || reattached else { return }
     let kind: TransitionKind = wasHidden || phase == .exiting ? .enter : .reattach
-    if !panel.isVisible { panel.orderFrontRegardless() }
+    if !panel.isVisible { panel.presentAtAttachment() }
     play(kind, reducedMotion: reducedMotion, startsHidden: wasHidden || reattached)
+  }
+
+  func updateAvailability(_ availability: Availability) {
+    guard self.availability != availability else { return }
+    self.availability = availability
+    if availability == .unavailable { hide(immediately: true) }
   }
 
   func hide(immediately: Bool = false) {

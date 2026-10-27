@@ -27,6 +27,7 @@ public struct BehaviorEngine: Sendable {
 
   public let character: CharacterDefinition
   public private(set) var state = BehaviorState()
+  private var sustainedState: BehaviorState?
   private var cooldowns: [String: TimeInterval] = [:]
   private var random: SeededRandom
 
@@ -61,6 +62,30 @@ public struct BehaviorEngine: Sendable {
     return state
   }
 
+  /// Keeps the pack-selected activity clip alive, while higher-priority interaction clips can interrupt it.
+  @discardableResult
+  public mutating func beginSustainedReaction(_ event: WorkspaceEvent) -> BehaviorState? {
+    let previous = state
+    state = BehaviorState()
+    guard let selected = receive(event) else {
+      state = previous
+      return nil
+    }
+    let sustained = BehaviorState(
+      animation: selected.animation, motion: .none,
+      priority: selected.priority, expiresAt: .infinity, reactionID: selected.reactionID)
+    sustainedState = sustained
+    state =
+      previous.priority > sustained.priority && previous.expiresAt > event.timestamp
+      ? previous : sustained
+    return state
+  }
+
+  public mutating func endSustainedReaction() {
+    if state == sustainedState { state = BehaviorState() }
+    sustainedState = nil
+  }
+
   @discardableResult
   public mutating func advance(
     at time: TimeInterval, activity: Double = 1, isIdle: Bool = false,
@@ -69,6 +94,10 @@ public struct BehaviorEngine: Sendable {
     -> BehaviorState?
   {
     guard time >= state.expiresAt else { return nil }
+    if let sustainedState {
+      state = sustainedState
+      return state
+    }
     if isIdle {
       if let next = receive(WorkspaceEvent(.userIdle, at: time), activity: activity) { return next }
       state = BehaviorState(
@@ -88,6 +117,7 @@ public struct BehaviorEngine: Sendable {
   }
 
   public mutating func reset() {
+    sustainedState = nil
     state = BehaviorState()
     cooldowns.removeAll(keepingCapacity: true)
   }

@@ -97,7 +97,7 @@ import Testing
     Issue.record("An unselected drop cancelled the existing skill")
     return
   }
-  #expect(retained.windowID == target.windowID)
+  #expect(retained?.windowID == target.windowID)
   #expect(controller.diagnostics.visibleHUDCount == 1)
 }
 

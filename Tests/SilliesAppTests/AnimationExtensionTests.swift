@@ -181,7 +181,7 @@ private final class MockEventProducer: WorkspaceEventProducer {
   #expect(reloaded.records.isEmpty)
 }
 
-@Test @MainActor func skillCoordinatorManagesLifecycleAndPocketStash() throws {
+@Test @MainActor func skillCoordinatorManagesLifecycleAndPocketStash() async throws {
   let directory = FileManager.default.temporaryDirectory
     .appendingPathComponent("sillies-skills-test-\(UUID().uuidString)", isDirectory: true)
   defer { try? FileManager.default.removeItem(at: directory) }
@@ -200,13 +200,14 @@ private final class MockEventProducer: WorkspaceEventProducer {
   coordinator.startSkill(.focus, for: "mochi", companionName: "Mochi", target: target)
   #expect(emittedEvents.contains(.skillFocus))
   if case .active(let activeTarget, let skill, _, _, _) = coordinator.binding(for: "mochi") {
-    #expect(activeTarget.windowID == 42)
+    #expect(activeTarget?.windowID == 42)
     #expect(skill == .focus)
   } else {
     Issue.record("Expected active focus binding")
   }
 
   coordinator.stopSkill(for: "mochi")
+  await vault.flush()
   #expect(emittedEvents.contains(.skillCompleted))
   #expect(vault.records.count == 1)
   #expect(vault.records.first?.kind == .focus)
@@ -307,8 +308,7 @@ private final class MockEventProducer: WorkspaceEventProducer {
   }
   #expect(hud.layoutMeasurements == 1)
 
-  // Equal-length strings with wider proportional glyphs must invalidate the layout cache
-  // and re-measure so the HUD panel never clips wider text.
+  // Audio status has a fixed text column: proportional text changes must not resize the HUD.
   let narrow = "00:12 · iiiiiiiiiiiiiiiiiii"
   let wide = "00:12 · WWWWWWWWWWWWWWWWWWW"
   #expect(narrow.count == wide.count)
@@ -327,8 +327,8 @@ private final class MockEventProducer: WorkspaceEventProducer {
     characterSize: 64,
     visibleFrame: screen)
   let wideWidth = try #require(hud.currentPanelSize?.width)
-  #expect(hud.layoutMeasurements == measurementsAfterNarrow + 1)
-  #expect(wideWidth > narrowWidth)
+  #expect(hud.layoutMeasurements == measurementsAfterNarrow)
+  #expect(wideWidth == narrowWidth)
 }
 
 @Test @MainActor func stashingDuringActiveSkillPreservesActiveSessionAndSavesBoth() throws {
@@ -349,9 +349,9 @@ private final class MockEventProducer: WorkspaceEventProducer {
   // Active Focus session must remain active after stashing.
   if case .active(let activeTarget, let skill, _, let detail, _) = coordinator.binding(for: "mochi")
   {
-    #expect(activeTarget.windowID == 55)
+    #expect(activeTarget?.windowID == 55)
     #expect(skill == .focus)
-    #expect(detail.contains("Stashed"))
+    #expect(detail.contains("Focus"))
   } else {
     Issue.record("Expected Focus session to remain active after stashing")
   }
@@ -412,7 +412,7 @@ private actor DelayedSnapshotProbe {
   try await Task.sleep(for: .milliseconds(10))
 
   if case .active(let boundTarget, .focus, _, _, _) = coordinator.binding(for: "mochi") {
-    #expect(boundTarget.windowID == 20)
+    #expect(boundTarget?.windowID == 20)
   } else {
     Issue.record("Stale tick reply dismissed the newly selected skill")
   }
@@ -579,7 +579,13 @@ private func spinModalPanelRunLoopUntil(_ condition: () -> Bool) {
   let data = try encoder.encode([unrefinedRecord])
   try data.write(to: pendingDirectory.appendingPathComponent("sessions.json"), options: .atomic)
 
-  let recoveredVault = SessionVaultStore(directory: pendingDirectory)
+  let recoveredVault = SessionVaultStore(
+    directory: pendingDirectory,
+    notesGenerator: { record in
+      let (summary, actions) = await SessionSummarizer.summarizeOnWorker(
+        text: record.primaryText, fallbackContext: record.summary)
+      return LocalNotes(summary: summary, actions: actions)
+    })
   let recoveredCoordinator = SkillCoordinator(vault: recoveredVault)
   #expect(recoveredVault.pendingSummaryCount <= 1)
   await recoveredCoordinator.flushPendingSummaries()

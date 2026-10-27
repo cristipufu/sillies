@@ -2,7 +2,6 @@ import AppKit
 import CoreGraphics
 import ScreenCaptureKit
 import SilliesCore
-import Vision
 
 struct WindowSnapshotResult: Sendable {
   let image: CGImage?
@@ -61,15 +60,7 @@ enum WindowSnapshotService {
     if target.processID == ProcessInfo.processInfo.processIdentifier,
       let localImage = await captureLocalApplicationWindow(windowID: target.windowID)
     {
-      let (recognizedText, summary, actions, pngData) = await recognizeAndSummarize(
-        in: localImage, fallbackContext: fallback)
-      return WindowSnapshotResult(
-        image: localImage,
-        pngData: pngData,
-        extractedText: recognizedText,
-        summary: summary,
-        actionItems: actions,
-        errorDescription: nil)
+      return await imageResult(localImage, summary: fallback)
     }
 
     let hasAccess = await Task.detached(priority: .userInitiated) {
@@ -101,31 +92,26 @@ enum WindowSnapshotService {
         actionItems: [],
         errorDescription: "Window capture unavailable")
     }
-    let (recognizedText, summary, actions, pngData) = await recognizeAndSummarize(
-      in: cgImage, fallbackContext: fallback)
+    return await imageResult(cgImage, summary: fallback)
+  }
+
+  private static func imageResult(_ image: CGImage, summary: String) async -> WindowSnapshotResult {
+    let pngData = await Task.detached(priority: .utility) {
+      SessionVaultStore.encodePNGData(from: image)
+    }.value
     return WindowSnapshotResult(
-      image: cgImage,
-      pngData: pngData,
-      extractedText: recognizedText,
-      summary: summary,
-      actionItems: actions,
-      errorDescription: nil)
+      image: image, pngData: pngData, extractedText: "",
+      summary: summary, actionItems: [],
+      errorDescription: pngData == nil ? "Could not encode the snapshot image." : nil)
   }
 
   private static func captureWindowImage(target: WindowTargetCandidate) async -> CGImage? {
     do {
       let content = try await SCShareableContent.excludingDesktopWindows(
         false, onScreenWindowsOnly: false)
-      let matchedWindow =
-        content.windows.first { $0.windowID == target.windowID }
-        ?? content.windows.first {
-          $0.owningApplication?.processID == target.processID && $0.frame.width >= 120
-            && $0.isOnScreen
-        }
-        ?? content.windows.first {
-          $0.owningApplication?.processID == target.processID && $0.frame.width >= 120
-        }
-      guard let scWindow = matchedWindow else { return nil }
+      guard let scWindow = content.windows.first(where: { $0.windowID == target.windowID }) else {
+        return nil
+      }
       let filter = SCContentFilter(desktopIndependentWindow: scWindow)
       let config = SCStreamConfiguration()
       let scale = max(Int(filter.pointPixelScale.rounded()), 2)
@@ -136,6 +122,7 @@ enum WindowSnapshotService {
       return try await SCScreenshotManager.captureImage(
         contentFilter: filter, configuration: config)
     } catch {
+      fputs("Window capture failed: \(error.localizedDescription)\n", stderr)
       return nil
     }
   }
@@ -150,26 +137,4 @@ enum WindowSnapshotService {
     return rep.cgImage
   }
 
-  private static func recognizeAndSummarize(
-    in image: CGImage, fallbackContext: String
-  ) async -> (String, String, [String], Data?) {
-    let (recognizedText, pngData) = await Task.detached(priority: .userInitiated) {
-      let encodedPNG = SessionVaultStore.encodePNGData(from: image)
-      let request = VNRecognizeTextRequest()
-      request.recognitionLevel = .accurate
-      request.usesLanguageCorrection = true
-      let handler = VNImageRequestHandler(cgImage: image, options: [:])
-      do {
-        try handler.perform([request])
-        let observations = request.results ?? []
-        let lines = observations.compactMap { $0.topCandidates(1).first?.string }
-        return (lines.joined(separator: "\n"), encodedPNG)
-      } catch {
-        return ("", encodedPNG)
-      }
-    }.value
-    let (summary, actions) = await SessionSummarizer.summarizeOnWorker(
-      text: recognizedText, fallbackContext: fallbackContext)
-    return (recognizedText, summary, actions, pngData)
-  }
 }

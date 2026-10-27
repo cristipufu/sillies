@@ -12,6 +12,8 @@ struct SessionVaultView: View {
   @State private var selectedFilter: CompanionSkillKind?
   @State private var searchQuery = ""
   @State private var selectedRecordID: UUID?
+  @State private var showsStashComposer = false
+  @State private var lastStashID: UUID?
   @State private var copiedFeedback: String?
 
   init(vault: SessionVaultStore, initialRecordID: UUID? = nil) {
@@ -64,6 +66,9 @@ struct SessionVaultView: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(SilliesTheme.paper)
     .foregroundStyle(SilliesTheme.ink)
+    .sheet(isPresented: $showsStashComposer) {
+      StashComposerView { saveStash([$0]) }
+    }
   }
 
   private func sidebar(records: [SessionRecord], selected: SessionRecord?) -> some View {
@@ -121,16 +126,36 @@ struct SessionVaultView: View {
         RoundedRectangle(cornerRadius: 10, style: .continuous)
           .strokeBorder(SilliesTheme.border, lineWidth: 0.8))
 
-      // Unified segmented filter bar
-      HStack(spacing: 3) {
-        filterChip(title: "All", kind: nil)
-        ForEach(CompanionSkillKind.allCases) { kind in
-          filterChip(title: kind.shortTitle, kind: kind)
+      HStack {
+        Button("Add text / link", systemImage: "plus") { showsStashComposer = true }
+        Spacer()
+        Button("Save Clipboard", systemImage: "clipboard") {
+          saveStash(StashPasteboard.items(from: .general))
         }
+      }.font(.system(size: 11, weight: .medium))
+
+      HStack {
+        Picker("Show", selection: $selectedFilter) {
+          Text("Everything").tag(Optional<CompanionSkillKind>.none)
+          ForEach(
+            CompanionSkillKind.allCases.filter { kind in
+              CompanionSkillKind.radialSkills.contains(kind) || kind == .stash
+                || vault.records.contains { $0.kind == kind }
+            }
+          ) { kind in Text(kind.title).tag(Optional(kind)) }
+        }
+        if let id = lastStashID {
+          Button("Undo save") {
+            vault.remove(id: id)
+            lastStashID = nil
+          }
+        }
+      }.font(.caption)
+
+      if let error = vault.persistenceError {
+        Text(error).font(.caption).foregroundStyle(.orange)
+        Button("Retry saving") { vault.retrySaving() }
       }
-      .padding(3)
-      .background(SilliesTheme.soft, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-      .frame(maxWidth: .infinity)
 
       if records.isEmpty {
         emptySidebarState
@@ -151,6 +176,27 @@ struct SessionVaultView: View {
     .frame(width: 332)
   }
 
+  private func saveStash(_ items: [String]) {
+    let cleaned = items.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter {
+      !$0.isEmpty
+    }
+    guard !cleaned.isEmpty else {
+      flashCopied("Copy text or a link first")
+      return
+    }
+    let record = SessionRecord(
+      kind: .stash, characterID: "workspace", characterName: "Sillies",
+      appName: "Pocket Stash", summary: "Saved \(cleaned.count) item(s).", stashedItems: cleaned)
+    vault.add(record)
+    selectedFilter = .stash
+    selectedRecordID = record.id
+    lastStashID = record.id
+    flashCopied("Saving…")
+    vault.whenPersisted { error in
+      flashCopied(error == nil ? "Saved to Pocket Stash" : "Could not save — see details")
+    }
+  }
+
   private var emptySidebarState: some View {
     VStack(spacing: 12) {
       Spacer()
@@ -168,7 +214,7 @@ struct SessionVaultView: View {
       )
       .font(.system(size: 14, weight: .bold, design: .rounded))
       Text(
-        "Drag a companion onto any window to Snap & OCR, Listen & Scribe, Watch, or Focus—or drop text and links onto a companion to Stash."
+        "Drag a companion onto a window to choose a skill. Record from the menu bar, or add text and links here to Pocket Stash."
       )
       .font(.system(size: 11.5))
       .foregroundStyle(SilliesTheme.secondary)
@@ -323,8 +369,42 @@ struct SessionVaultView: View {
             snapshotStage(image: image, record: record)
           }
 
+          if let audioURL = vault.audioURL(for: record) {
+            RecordingPlaybackView(url: audioURL).id(record.id)
+          }
+          if record.summaryPending {
+            HStack {
+              ProgressView().controlSize(.small)
+              Text("Preparing local notes…").font(.callout)
+            }
+          }
+          if let failure = record.failureMessage {
+            Label(failure, systemImage: "exclamationmark.triangle.fill")
+              .font(.callout).foregroundStyle(.orange).textSelection(.enabled)
+          }
+          if !record.processingNote.isEmpty {
+            Text(record.processingNote).font(.callout).foregroundStyle(SilliesTheme.secondary)
+              .textSelection(.enabled)
+          }
+          if !record.explanation.isEmpty {
+            sectionCard(title: "EXPLANATION", symbol: "text.bubble") {
+              Text(Self.boundedDisplayText(record.explanation)).lineSpacing(4).textSelection(
+                .enabled)
+            }
+          }
+          if !record.suggestions.isEmpty {
+            sectionCard(title: "MEETING SUGGESTIONS", symbol: "pawprint.fill") {
+              VStack(spacing: 10) {
+                ForEach(record.suggestions) { MeetingSuggestionView(suggestion: $0) }
+              }
+            }
+          }
           if !record.stashedItems.isEmpty {
             stashedItemsCard(for: record)
+            Text(
+              "File entries are references to the original files. Pocket Stash keeps saved items until you delete them."
+            )
+            .font(.caption).foregroundStyle(SilliesTheme.secondary)
           }
 
           let shouldShowSummary =

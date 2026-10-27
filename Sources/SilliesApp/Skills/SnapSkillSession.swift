@@ -2,77 +2,76 @@ import AppKit
 import Foundation
 import SilliesCore
 
-@MainActor
-final class SnapSkillSession: ActiveSkillSession {
+struct SnapshotSkillRequest {
+  let kind: CompanionSkillKind
   let companionID: String
   let companionName: String
   let target: WindowTargetCandidate
-  let onComplete: (SkillCompletionOutcome) -> Void
+}
+
+@MainActor
+final class SnapSkillSession: ActiveSkillSession {
+  private let request: SnapshotSkillRequest
+  private let onComplete: (SkillCompletionOutcome) -> Void
   private var captureTask: Task<Void, Never>?
 
-  init(
-    companionID: String,
-    companionName: String,
-    target: WindowTargetCandidate,
-    onComplete: @escaping (SkillCompletionOutcome) -> Void
-  ) {
-    self.companionID = companionID
-    self.companionName = companionName
-    self.target = target
+  init(request: SnapshotSkillRequest, onComplete: @escaping (SkillCompletionOutcome) -> Void) {
+    self.request = request
     self.onComplete = onComplete
   }
 
-  var initialStatusDetail: String {
-    "Capturing \(target.appName)…"
-  }
+  var initialStatusDetail: String { "Capturing \(request.target.appName)…" }
 
   func start() {
-    let target = self.target
-    let companionID = self.companionID
-    let companionName = self.companionName
-    captureTask = Task { @MainActor [weak self] in
-      let result = await WindowSnapshotService.capture(target: target)
+    let request = request
+    captureTask = Task { [weak self] in
+      let result = await WindowSnapshotService.capture(target: request.target)
       guard !Task.isCancelled, let self else { return }
-      if let pngData = result.pngData {
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-        pasteboard.setData(pngData, forType: .png)
-        if !result.extractedText.isEmpty {
-          pasteboard.setString(result.extractedText, forType: .string)
+      if request.kind == .snap, let png = result.pngData {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setData(png, forType: .png)
+      }
+      var text = ""
+      var notice = result.errorDescription ?? ""
+      if request.kind == .explain, let image = result.image {
+        do { text = try await WindowTextRecognition.recognize(image) } catch {
+          notice = "Text recognition failed: \(error.localizedDescription)"
+          fputs("\(notice)\n", stderr)
+        }
+        if text.isEmpty, notice.isEmpty {
+          notice =
+            "No readable text was found. Explain works from visible text; it cannot infer hidden content or interpret images alone."
         }
       }
+      guard !Task.isCancelled else { return }
+      let pending = request.kind == .explain && !text.isEmpty
       let record = SessionRecord(
-        kind: .snap,
-        characterID: companionID,
-        characterName: companionName,
-        appName: target.appName,
-        bundleIdentifier: target.bundleIdentifier,
-        windowTitle: target.windowTitle,
-        extractedText: result.extractedText,
-        summary: result.summary,
-        actionItems: result.actionItems)
+        kind: request.kind, characterID: request.companionID,
+        characterName: request.companionName, appName: request.target.appName,
+        bundleIdentifier: request.target.bundleIdentifier, windowTitle: request.target.windowTitle,
+        extractedText: text, summary: pending ? "Preparing a local explanation…" : result.summary,
+        summaryPending: pending, failureMessage: result.errorDescription, processingNote: notice)
       let banner =
-        result.image == nil
-        ? "Permission needed · View details"
-        : (result.extractedText.isEmpty
-          ? "Snapshot copied & saved"
-          : "Captured + OCR text ready")
+        result.pngData == nil
+        ? "Capture unavailable · View details"
+        : (request.kind == .snap ? "Snapshot copied to clipboard" : "Text ready · Open explanation")
       self.onComplete(
         SkillCompletionOutcome(
-          record: record, image: result.image, pngData: result.pngData, bannerSummary: banner))
+          record: record, image: result.image,
+          pngData: result.pngData, bannerSummary: banner))
     }
   }
 
   func tick(_ context: SkillTickContext) -> SkillTickDisposition {
-    .keepRunning(statusDetail: context.currentDetail, audioLevel: context.currentAudioLevel)
+    .keepRunning(statusDetail: context.currentDetail)
   }
 
-  func finalize(_ context: SkillFinalizeContext) -> SkillCompletionOutcome? {
-    captureTask?.cancel()
-    captureTask = nil
-    return nil
+  func finish(
+    _: SkillFinalizeContext, completion: @escaping @MainActor (SkillCompletionOutcome?) -> Void
+  ) {
+    cancel()
+    completion(nil)
   }
-
   func cancel() {
     captureTask?.cancel()
     captureTask = nil

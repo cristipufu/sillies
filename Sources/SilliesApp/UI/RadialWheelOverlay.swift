@@ -12,12 +12,10 @@ struct RadialWheelView: View {
   private static let canvasCenter = CGPoint(
     x: RadialWheelController.canvasSize.width / 2,
     y: RadialWheelController.canvasSize.height / 2)
-  private static let upwardLayout = RadialSkillMenuLayout(
-    center: canvasCenter,
-    visibleFrame: CGRect(x: 0, y: 0, width: 360, height: 480))
-  private static let downwardLayout = RadialSkillMenuLayout(
-    center: canvasCenter,
-    visibleFrame: CGRect(x: 0, y: 0, width: 360, height: 220))
+  private static let upwardItems = RadialSkillMenuLayout.items(
+    around: canvasCenter, direction: .upward)
+  private static let downwardItems = RadialSkillMenuLayout.items(
+    around: canvasCenter, direction: .downward)
   private static let selectedBubbleScale: CGFloat = 1.12
   private static let unselectedBubbleScale: CGFloat = 1.0
 
@@ -25,11 +23,11 @@ struct RadialWheelView: View {
 
   var body: some View {
     let anchor = Self.canvasCenter
-    let layout = model.flippedDownward ? Self.downwardLayout : Self.upwardLayout
+    let items = model.flippedDownward ? Self.downwardItems : Self.upwardItems
     let orbitDiameter = RadialSkillMenuLayout.orbitRadius * 2
 
     ZStack {
-      // Subtle orbital guide ring connecting the 4 skill bubbles
+      // Subtle orbital guide ring connecting the skill bubbles
       Circle()
         .strokeBorder(
           SilliesTheme.accent.opacity(0.28),
@@ -48,7 +46,7 @@ struct RadialWheelView: View {
         .position(anchor)
 
       // Radial skill bubbles (no bottom text banner)
-      ForEach(layout.items) { item in
+      ForEach(items) { item in
         let isSelected = model.hoveredSkill == item.skill
         let localX = item.center.x
         let localY = RadialWheelController.canvasSize.height - item.center.y
@@ -100,7 +98,7 @@ struct RadialWheelView: View {
 
 @MainActor
 final class RadialWheelController {
-  static let canvasSize = CGSize(width: 360, height: 320)
+  static let canvasSize = CGSize(width: 440, height: 400)
 
   private let model = RadialWheelModel()
   private var panel: SkillFloatingPanel?

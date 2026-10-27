@@ -7,6 +7,7 @@ import SwiftUI
 /// WindowServer shadow is disabled so SwiftUI renders crisp, unclipped shadows without rectangular backing halos.
 @MainActor
 final class SkillFloatingPanel: NSPanel {
+  private var occlusionExclusion: WindowTrackingExclusions.Registration?
   override var canBecomeKey: Bool { false }
   override var canBecomeMain: Bool { false }
 
@@ -23,6 +24,7 @@ final class SkillFloatingPanel: NSPanel {
     isReleasedWhenClosed = false
     self.ignoresMouseEvents = ignoresMouseEvents
     collectionBehavior = CompanionPanel.overlayCollectionBehavior
+    occlusionExclusion = WindowTrackingExclusions.transparentOverlays.register(UInt32(windowNumber))
     if CompanionPanel.isRunningUnderUnitTests { alphaValue = 0 }
   }
 }

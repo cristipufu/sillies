@@ -27,6 +27,7 @@ final class WindowServerSource: @unchecked Sendable {
     let layer: Int
     let isOnScreen: Bool
     let isVisible: Bool
+    let opacity: Double
     let frame: CGRect
     let ownerName: String?
     let windowTitle: String?
@@ -45,6 +46,7 @@ final class WindowServerSource: @unchecked Sendable {
       self.layer = layer
       self.isOnScreen = isOnScreen
       self.isVisible = isOnScreen && alpha > minimumVisibleAlpha
+      self.opacity = alpha
       self.frame = frame
       self.ownerName = dictionary[kCGWindowOwnerName as String] as? String
       self.windowTitle = dictionary[kCGWindowName as String] as? String
@@ -76,7 +78,6 @@ final class WindowServerSource: @unchecked Sendable {
   private static let minimumTrackableWindowHeight: Double = 180
   static let minimumTrackableWindowSize = CGSize(
     width: minimumTrackableWindowWidth, height: minimumTrackableWindowHeight)
-  private static let unassignedLayer = -1
   private static let defaultWindowAlpha: Double = 1.0
   private static let minimumVisibleAlpha: Double = 0.05
   private static let preferredFrameTolerance: Double = 6.0
@@ -474,25 +475,22 @@ final class WindowServerSource: @unchecked Sendable {
   private static func extractBackgroundWindowIDs(from entries: [[String: Any]]) -> Set<Int> {
     Set(
       entries.compactMap { row in
-        guard (row[kCGWindowLayer as String] as? Int ?? normalWindowLayer) < normalWindowLayer
+        guard let entry = ParsedWindowEntry(dictionary: row), entry.layer < normalWindowLayer
         else { return nil }
-        return row[kCGWindowNumber as String] as? Int
+        return Int(entry.id)
       })
   }
 
-  private static func extractInputWindowFrames(from entries: [[String: Any]]) -> [Int: CGRect] {
+  static func extractInputWindowFrames(from entries: [[String: Any]]) -> [Int: CGRect] {
     Dictionary(
       uniqueKeysWithValues: entries.compactMap { row in
-        guard (row[kCGWindowLayer as String] as? Int ?? unassignedLayer) >= normalWindowLayer,
-          let id = row[kCGWindowNumber as String] as? Int,
-          let bounds = row[kCGWindowBounds as String] as? [String: Any],
-          let frame = CGRect(dictionaryRepresentation: bounds as CFDictionary)
+        guard let entry = ParsedWindowEntry(dictionary: row), entry.layer >= normalWindowLayer
         else { return nil }
-        return (id, frame)
+        return (Int(entry.id), entry.frame)
       })
   }
 
-  private static func extractCandidates(
+  static func extractCandidates(
     from entries: [[String: Any]],
     for processID: pid_t,
     currentWindowID: CGWindowID?
@@ -500,6 +498,7 @@ final class WindowServerSource: @unchecked Sendable {
     entries.compactMap { raw in
       guard let parsed = ParsedWindowEntry(dictionary: raw),
         parsed.ownerPID == processID,
+        !WindowTrackingExclusions.shared.contains(parsed.id),
         parsed.isTrackableLayer,
         parsed.isVisible,
         parsed.id == currentWindowID || parsed.isTrackableSize

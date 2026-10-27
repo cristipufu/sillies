@@ -42,6 +42,23 @@ struct ControlCenterView: View {
       }
 
       HStack {
+        if let session = controller.skills.activeAudioSession {
+          Button("Open \(session.kind.title)", systemImage: "waveform") {
+            controller.skills.onOpenAudioSession?(session)
+          }
+          Spacer()
+          Button("Finish", action: { session.onFinish?() })
+        } else {
+          Button("Record microphone", systemImage: "mic.fill") {
+            controller.startMicrophoneRecording()
+          }
+          .disabled(!controller.shouldRun || controller.liveCount == 0)
+          Spacer()
+          Button("Pocket Stash", systemImage: "tray") { openVault() }
+        }
+      }.font(.system(size: 12, weight: .medium))
+
+      HStack {
         Text("THE LITTLE CREW").font(.system(size: 9, weight: .bold)).tracking(1.5)
         Spacer()
         Text("\(controller.liveCount) of \(controller.catalog.characters.count) out & about")

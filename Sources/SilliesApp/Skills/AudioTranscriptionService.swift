@@ -1,355 +1,306 @@
 import AVFoundation
 import CoreMedia
 import Foundation
-import ScreenCaptureKit
 import SilliesCore
-@preconcurrency import Speech
 
-/// Captures isolated application/window audio via ScreenCaptureKit and performs live on-device
-/// Speech-to-Text transcription using the Speech framework.
-final class AudioTranscriptionService: NSObject, @unchecked Sendable {
-  struct Update: Sendable {
-    let transcript: String?
-    let audioLevel: Double
-    let statusMessage: String
-  }
+enum SessionAudioSource: String, CaseIterable, Sendable {
+  case application = "Meeting"
+  case microphone = "Microphone"
+}
 
-  private static let captureSampleRate = 48_000
-  private static let captureChannelCount = 1
-  private static let minimalVideoCaptureDimension = 2
-  private static let speechActivityAudioLevel: Double = 0.25
-  private static let levelEmitInterval: TimeInterval = 0.08
-  private static let capturingAudioRMSThreshold: Double = 0.04
-  private static let levelChangeEmitThreshold: Double = 0.025
-  private static let rmsNormalizationGain: Double = 6.0
-  private static let rmsSampleBudget = 128
-  private static let maxSnippetSourceCharacters = 120
-  private static let maxFormattedSnippetCharacters = 56
-  private static let truncatedSnippetCharacters = 54
-
-  private let target: WindowTargetCandidate
-  private let onUpdate: @Sendable (Update) -> Void
-  private let audioQueue = DispatchQueue(label: "app.sillies.audio-capture", qos: .userInitiated)
-  private let speechQueue: OperationQueue = {
-    let queue = OperationQueue()
-    queue.name = "app.sillies.speech-recognition"
-    queue.maxConcurrentOperationCount = 1
-    queue.qualityOfService = .userInitiated
-    return queue
-  }()
-  private let lock = NSLock()
-  private var stream: SCStream?
-  private var recognizer: SFSpeechRecognizer?
-  private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
-  private var recognitionTask: SFSpeechRecognitionTask?
-  private var latestTranscript = ""
-  private var committedTranscript = ""
-  private var lastLevelEmitTime: TimeInterval = 0
-  private var lastEmittedLevel: Double = -1
-  private var lastEmittedStatus = ""
-  private var isStopped = false
-
-  init(target: WindowTargetCandidate, onUpdate: @escaping @Sendable (Update) -> Void) {
-    self.target = target
-    self.onUpdate = onUpdate
-    speechQueue.underlyingQueue = audioQueue
-    super.init()
-  }
-
-  func start() async {
-    let speechAuthorized = await requestSpeechAuthorization()
-    guard !Task.isCancelled, !lock.withLock({ isStopped }) else { return }
-    if speechAuthorized {
-      await withCheckedContinuation { continuation in
-        audioQueue.async { [self] in
-          configureSpeechRecognition()
-          continuation.resume()
-        }
-      }
+struct AudioCaptureConfiguration: Sendable {
+  let kind: CompanionSkillKind
+  let target: WindowTargetCandidate?
+  let recordingURL: URL?
+  var language: SpeechLanguage?
+  var sources: [SessionAudioSource] {
+    switch kind {
+    case .participate: [.application, .microphone]
+    case .record: [.microphone]
+    default: [.application]
     }
-    guard !Task.isCancelled, !lock.withLock({ isStopped }) else { return }
-    do {
-      let content = try await SCShareableContent.excludingDesktopWindows(
-        false, onScreenWindowsOnly: false)
-      guard !Task.isCancelled, !lock.withLock({ isStopped }) else { return }
-      let filter: SCContentFilter
-      if let display = content.displays.first,
-        let app = content.applications.first(where: { $0.processID == target.processID })
-      {
-        filter = SCContentFilter(
-          display: display, including: [app], exceptingWindows: [])
-      } else if let scWindow = content.windows.first(where: { $0.windowID == target.windowID }) {
-        filter = SCContentFilter(desktopIndependentWindow: scWindow)
-      } else {
-        onUpdate(
-          Update(
-            transcript: "", audioLevel: 0,
-            statusMessage: "Target window unavailable for audio capture"))
-        return
-      }
-
-      let config = SCStreamConfiguration()
-      config.capturesAudio = true
-      config.excludesCurrentProcessAudio = true
-      config.sampleRate = Self.captureSampleRate
-      config.channelCount = Self.captureChannelCount
-      config.width = Self.minimalVideoCaptureDimension
-      config.height = Self.minimalVideoCaptureDimension
-      config.minimumFrameInterval = CMTime(value: 1, timescale: 1)
-
-      let scStream = SCStream(filter: filter, configuration: config, delegate: nil)
-      try scStream.addStreamOutput(self, type: .audio, sampleHandlerQueue: audioQueue)
-      try await scStream.startCapture()
-
-      let wasStopped: Bool = lock.withLock {
-        if isStopped { return true }
-        stream = scStream
-        return false
-      }
-      if wasStopped {
-        await Self.stopCapture(scStream)
-        return
-      }
-
-      let initialStatus =
-        speechAuthorized
-        ? "Listening to \(target.appName)…"
-        : "Monitoring \(target.appName) audio (enable Speech Recognition for live text)"
-      onUpdate(Update(transcript: "", audioLevel: 0, statusMessage: initialStatus))
-    } catch {
-      onUpdate(
-        Update(
-          transcript: "",
-          audioLevel: 0,
-          statusMessage:
-            "Grant Screen & System Audio Recording in System Settings to transcribe \(target.appName)."
-        ))
-    }
-  }
-
-  func stop() -> String {
-    lock.lock()
-    guard !isStopped else {
-      let existing = combinedTranscriptLocked()
-      lock.unlock()
-      return existing
-    }
-    isStopped = true
-    let activeStream = stream
-    stream = nil
-    let request = recognitionRequest
-    recognitionRequest = nil
-    let task = recognitionTask
-    recognitionTask = nil
-    let finalTranscript = combinedTranscriptLocked()
-    lock.unlock()
-
-    if request != nil || task != nil {
-      audioQueue.async {
-        request?.endAudio()
-        task?.cancel()
-      }
-    }
-    if let activeStream {
-      Task {
-        await Self.stopCapture(activeStream)
-      }
-    }
-    return finalTranscript
-  }
-
-  private static func stopCapture(_ stream: SCStream) async {
-    do {
-      try await stream.stopCapture()
-    } catch {
-      fputs("Audio capture stop failed: \(error.localizedDescription)\n", stderr)
-    }
-  }
-
-  private func requestSpeechAuthorization() async -> Bool {
-    let current = SFSpeechRecognizer.authorizationStatus()
-    if current == .authorized { return true }
-    if current == .denied || current == .restricted { return false }
-    return await withCheckedContinuation { continuation in
-      SFSpeechRecognizer.requestAuthorization { status in
-        continuation.resume(returning: status == .authorized)
-      }
-    }
-  }
-
-  private func configureSpeechRecognition() {
-    dispatchPrecondition(condition: .notOnQueue(.main))
-    guard !lock.withLock({ isStopped }) else { return }
-    guard let speechRecognizer = SFSpeechRecognizer(locale: .current) ?? SFSpeechRecognizer(),
-      speechRecognizer.isAvailable
-    else { return }
-    speechRecognizer.queue = speechQueue
-
-    let request = SFSpeechAudioBufferRecognitionRequest()
-    request.shouldReportPartialResults = true
-    if speechRecognizer.supportsOnDeviceRecognition {
-      request.requiresOnDeviceRecognition = true
-    }
-
-    // Speech may synchronously contact its service. Never hold the lock that stop() needs on UI.
-    let task = speechRecognizer.recognitionTask(with: request) { [weak self] result, error in
-      guard let self else { return }
-      if let result {
-        let formatted = result.bestTranscription.formattedString
-        self.lock.lock()
-        guard !self.isStopped else {
-          self.lock.unlock()
-          return
-        }
-        if result.isFinal {
-          if !formatted.isEmpty {
-            self.committedTranscript =
-              self.committedTranscript.isEmpty
-              ? formatted : "\(self.committedTranscript)\n\(formatted)"
-            self.latestTranscript = ""
-          }
-        } else {
-          self.latestTranscript = formatted
-        }
-        let fullText = self.combinedTranscriptLocked()
-        let snippet = self.latestTailSnippetLocked()
-        let message = snippet.isEmpty ? "Listening to \(self.target.appName)…" : snippet
-        self.lastEmittedStatus = message
-        self.lastEmittedLevel = Self.speechActivityAudioLevel
-        self.lock.unlock()
-
-        self.onUpdate(
-          Update(
-            transcript: fullText,
-            audioLevel: Self.speechActivityAudioLevel,
-            statusMessage: message))
-      }
-      if error != nil {
-        self.restartSpeechTaskIfNeeded()
-      }
-    }
-    let stopped = lock.withLock {
-      guard !isStopped else { return true }
-      recognizer = speechRecognizer
-      recognitionRequest = request
-      recognitionTask = task
-      return false
-    }
-    if stopped {
-      request.endAudio()
-      task.cancel()
-    }
-  }
-
-  private func restartSpeechTaskIfNeeded() {
-    let speechRecognizer = lock.withLock { isStopped ? nil : recognizer }
-    guard let speechRecognizer, speechRecognizer.isAvailable else { return }
-    lock.lock()
-    guard !isStopped else {
-      lock.unlock()
-      return
-    }
-    if !latestTranscript.isEmpty {
-      committedTranscript =
-        committedTranscript.isEmpty
-        ? latestTranscript : "\(committedTranscript)\n\(latestTranscript)"
-      latestTranscript = ""
-    }
-    lock.unlock()
-    configureSpeechRecognition()
-  }
-
-  private func combinedTranscriptLocked() -> String {
-    if committedTranscript.isEmpty { return latestTranscript }
-    if latestTranscript.isEmpty { return committedTranscript }
-    return "\(committedTranscript) \(latestTranscript)"
-  }
-
-  private func latestTailSnippetLocked() -> String {
-    let source = !latestTranscript.isEmpty ? latestTranscript : committedTranscript
-    return Self.tailSnippet(from: String(source.suffix(Self.maxSnippetSourceCharacters)))
-  }
-
-  private static func tailSnippet(from text: String) -> String {
-    let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !trimmed.isEmpty else { return "" }
-    if trimmed.count <= maxFormattedSnippetCharacters { return "“\(trimmed)”" }
-    return "“…\(trimmed.suffix(truncatedSnippetCharacters))”"
   }
 }
 
-extension AudioTranscriptionService: SCStreamOutput {
-  func stream(
-    _ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer,
-    of outputType: SCStreamOutputType
-  ) {
-    guard outputType == .audio, sampleBuffer.isValid else { return }
-    guard let pcmBuffer = Self.makePCMBuffer(from: sampleBuffer) else { return }
+struct AudioCaptureResult: Sendable {
+  let transcript: String
+  let recordingURL: URL?
+  let duration: TimeInterval
+  let error: String?
+}
 
-    lock.lock()
-    let activeRequest = recognitionRequest
-    let now = ProcessInfo.processInfo.systemUptime
-    let shouldEmitLevel = now - lastLevelEmitTime >= Self.levelEmitInterval
-    if shouldEmitLevel { lastLevelEmitTime = now }
-    let snippet = shouldEmitLevel ? latestTailSnippetLocked() : ""
-    lock.unlock()
+/// Owns one session, with bounded input and UI publication. All DSP, speech, and file work is off-main.
+final class AudioTranscriptionService: SessionAudioCapture, @unchecked Sendable {
+  enum Update: Sendable {
+    case preparing(String)
+    case capturing(String)
+    case changingLanguage(SpeechLanguage)
+    case languageChanged(SpeechLanguage)
+    case transcript(String, level: Double, elapsed: TimeInterval)
+    case failed(String)
+  }
+  private static let publicationInterval: TimeInterval = 0.5
+  private static let finishTimeout: TimeInterval = 8
+  private let configuration: AudioCaptureConfiguration
+  private let onUpdate: @Sendable (Update) -> Void
+  private let queue: DispatchQueue
+  private let inputQueue: AudioCaptureInputQueue
+  private let lock = NSLock()
+  private var stopped = false
+  private var startup: Task<Void, Never>?
+  // The following state is confined to queue.
+  private var speech: SessionSpeechPipeline?
+  private var microphone: MicrophoneAudioSource?
+  private var application: ApplicationAudioSource?
+  private var writer: AudioRecordingWriter?
+  private var paused = false
+  private var capturing = false
+  private var startedAt: TimeInterval = 0
+  private var pausedAt: TimeInterval?
+  private var pausedDuration: TimeInterval = 0
+  private var lastPublishedAt: TimeInterval = 0
+  private var failure: String?
+  private var finishDelivered = false
+  private var pendingStops = 0
 
-    activeRequest?.append(pcmBuffer)
+  init(configuration: AudioCaptureConfiguration, onUpdate: @escaping @Sendable (Update) -> Void) {
+    let queue = DispatchQueue(label: "app.sillies.audio-session", qos: .utility)
+    self.queue = queue
+    inputQueue = AudioCaptureInputQueue(queue: queue)
+    self.configuration = configuration
+    self.onUpdate = onUpdate
+  }
 
-    if shouldEmitLevel {
-      let rms = Self.computeRMSLevel(from: pcmBuffer)
-      let message =
-        !snippet.isEmpty
-        ? snippet
-        : (rms > Self.capturingAudioRMSThreshold
-          ? "Capturing audio from \(target.appName)…" : "Listening to \(target.appName)…")
-      let shouldNotify: Bool = lock.withLock {
-        guard
-          message != lastEmittedStatus
-            || abs(rms - lastEmittedLevel) >= Self.levelChangeEmitThreshold
-        else {
-          return false
+  func start() {
+    let task = Task.detached(priority: .utility) { [self] in
+      do {
+        onUpdate(.preparing("Preparing on-device speech…"))
+        try Task.checkCancellation()
+        try await beginCapture()
+      } catch is CancellationError {
+        // Finishing during permission/model preparation is a normal cancellation.
+      } catch { reportFailure(error.localizedDescription) }
+    }
+    lock.withLock {
+      startup = task
+      if stopped { task.cancel() }
+    }
+  }
+
+  private func beginCapture() async throws {
+    let sources = try await prepareSources()
+    try await prepareSpeech()
+    if let application = sources.application { try await application.start() }
+    try Task.checkCancellation()
+    var microphoneName: String?
+    if let microphone = sources.microphone { microphoneName = try await microphone.start() }
+    try Task.checkCancellation()
+    let label = [configuration.target?.appName, microphoneName].compactMap { $0 }.joined(
+      separator: " + ")
+    queue.async { [self] in
+      guard !lock.withLock({ stopped }), failure == nil else { return }
+      startedAt = ProcessInfo.processInfo.systemUptime
+      capturing = true
+      onUpdate(.capturing(label))
+    }
+  }
+
+  private func prepareSpeech() async throws {
+    guard let language = configuration.language else {
+      throw AudioCaptureFailure.unavailable("Choose a transcription language before starting.")
+    }
+    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+      queue.async { [self] in
+        guard !lock.withLock({ stopped }) else {
+          continuation.resume(throwing: CancellationError())
+          return
         }
-        lastEmittedStatus = message
-        lastEmittedLevel = rms
-        return true
-      }
-      if shouldNotify {
-        onUpdate(Update(transcript: nil, audioLevel: rms, statusMessage: message))
+        let pipeline = SessionSpeechPipeline(
+          configuration: .init(sources: configuration.sources, queue: queue)
+        ) { [weak self] event in
+          self?.speechChanged(event)
+        }
+        speech = pipeline
+        pipeline.start(language: language) { continuation.resume(with: $0) }
       }
     }
   }
 
-  private static func makePCMBuffer(from sampleBuffer: CMSampleBuffer) -> AVAudioPCMBuffer? {
-    guard let formatDescription = sampleBuffer.formatDescription else { return nil }
-    let audioFormat = AVAudioFormat(cmAudioFormatDescription: formatDescription)
-    let frameCount = AVAudioFrameCount(sampleBuffer.numSamples)
-    guard frameCount > 0,
-      let pcmBuffer = AVAudioPCMBuffer(pcmFormat: audioFormat, frameCapacity: frameCount)
-    else { return nil }
-    pcmBuffer.frameLength = frameCount
-    let status = CMSampleBufferCopyPCMDataIntoAudioBufferList(
-      sampleBuffer, at: 0, frameCount: Int32(frameCount), into: pcmBuffer.mutableAudioBufferList)
-    return status == noErr ? pcmBuffer : nil
+  private func speechChanged(_ event: SessionSpeechPipeline.Event) {
+    switch event {
+    case .textChanged: if !finishDelivered { publish(level: 0) }
+    case .changingLanguage(let language): onUpdate(.changingLanguage(language))
+    case .languageChanged(let language): onUpdate(.languageChanged(language))
+    case .failed(let message): fail(message)
+    }
   }
 
-  private static func computeRMSLevel(from buffer: AVAudioPCMBuffer) -> Double {
-    guard let channelData = buffer.floatChannelData else { return 0 }
-    let count = Int(buffer.frameLength)
-    guard count > 0 else { return 0 }
-    let samples = channelData[0]
-    var sumSquares: Float = 0
-    let strideStep = max(1, count / rmsSampleBudget)
-    var sampled = 0
-    var index = 0
-    while index < count {
-      let sample = samples[index]
-      sumSquares += sample * sample
-      sampled += 1
-      index += strideStep
+  func changeLanguage(_ language: SpeechLanguage) {
+    queue.async { [self] in
+      guard capturing, !lock.withLock({ stopped }) else { return }
+      speech?.changeLanguage(language, elapsed: elapsed)
     }
-    guard sampled > 0 else { return 0 }
-    let rms = sqrt(sumSquares / Float(sampled))
-    return min(max(Double(rms) * rmsNormalizationGain, 0), 1)
+  }
+
+  private struct CaptureSources: Sendable {
+    let application: ApplicationAudioSource?
+    let microphone: MicrophoneAudioSource?
+  }
+
+  private func prepareSources() async throws -> CaptureSources {
+    try await withCheckedThrowingContinuation { continuation in
+      queue.async { [self] in
+        do {
+          guard !lock.withLock({ stopped }) else { throw CancellationError() }
+          if let url = configuration.recordingURL {
+            writer = try AudioRecordingWriter(destination: url)
+          }
+          if configuration.sources.contains(.microphone) {
+            microphone = MicrophoneAudioSource(
+              receive: { [weak self] in self?.enqueue($0, from: .microphone) },
+              failure: { [weak self] in self?.reportFailure($0) })
+          }
+          if configuration.sources.contains(.application) {
+            guard let target = configuration.target else {
+              throw AudioCaptureFailure.unavailable("Choose a meeting window first.")
+            }
+            application = ApplicationAudioSource(
+              target: target,
+              receive: { [weak self] in self?.enqueue($0, from: .application) },
+              failure: { [weak self] in self?.reportFailure($0) })
+          }
+          continuation.resume(
+            returning: CaptureSources(application: application, microphone: microphone))
+        } catch { continuation.resume(throwing: error) }
+      }
+    }
+  }
+
+  func pause() {
+    queue.async { [self] in
+      guard capturing, !paused else { return }
+      paused = true
+      pausedAt = ProcessInfo.processInfo.systemUptime
+    }
+  }
+
+  func resume() {
+    queue.async { [self] in
+      guard capturing, paused else { return }
+      if let pausedAt { pausedDuration += ProcessInfo.processInfo.systemUptime - pausedAt }
+      pausedAt = nil
+      paused = false
+    }
+  }
+
+  func refreshProgress() {
+    queue.async { [self] in
+      guard capturing, !lock.withLock({ stopped }) else { return }
+      publish(level: 0)
+    }
+  }
+
+  private func enqueue(_ sample: CMSampleBuffer, from source: SessionAudioSource) {
+    guard let packet = AudioCaptureInputQueue.Packet(sample: sample, source: source) else { return }
+    inputQueue.enqueue(
+      packet, receive: { [weak self] in self?.process($0) },
+      overflow: { [weak self] in
+        self?.fail(
+          "Audio capture fell behind. Finish to save the available transcript and recording.")
+      })
+  }
+
+  private func process(_ packet: AudioCaptureInputQueue.Packet) {
+    dispatchPrecondition(condition: .notOnQueue(.main))
+    guard capturing, !paused, failure == nil,
+      let buffer = AudioPCMTools.buffer(from: packet.sample)
+    else { return }
+    do {
+      if packet.source == .microphone { try writer?.append(buffer) }
+      speech?.append(
+        buffer, source: packet.source,
+        elapsed: max(0, packet.capturedAt - startedAt - pausedDuration))
+      publish(level: AudioPCMTools.level(buffer))
+    } catch { fail(error.localizedDescription) }
+  }
+
+  private var elapsed: TimeInterval {
+    guard startedAt > 0 else { return 0 }
+    return max(0, (pausedAt ?? ProcessInfo.processInfo.systemUptime) - startedAt - pausedDuration)
+  }
+
+  private var transcript: String {
+    speech?.text ?? ""
+  }
+
+  private func publish(level: Double) {
+    let now = ProcessInfo.processInfo.systemUptime
+    guard now - lastPublishedAt >= Self.publicationInterval else { return }
+    lastPublishedAt = now
+    onUpdate(
+      .transcript(
+        SpeechTranscript.preview(of: transcript), level: level, elapsed: elapsed))
+  }
+
+  private func reportFailure(_ message: String) { queue.async { [self] in fail(message) } }
+
+  private func fail(_ message: String) {
+    guard failure == nil, !lock.withLock({ stopped }) else { return }
+    failure = message
+    inputQueue.stop()
+    capturing = false
+    if startedAt > 0 { pausedAt = ProcessInfo.processInfo.systemUptime }
+    microphone?.stop()
+    application?.stop()
+    speech?.cancel()
+    onUpdate(.failed(message))
+    fputs("Audio session failed: \(message)\n", stderr)
+  }
+
+  func finish(completion: @escaping @Sendable (AudioCaptureResult) -> Void) {
+    inputQueue.stop()
+    lock.withLock {
+      stopped = true
+      startup?.cancel()
+    }
+    queue.async { [self] in
+      capturing = false
+      if pausedAt == nil { pausedAt = ProcessInfo.processInfo.systemUptime }
+      pendingStops =
+        (speech == nil ? 0 : 1) + (microphone == nil ? 0 : 1) + (application == nil ? 0 : 1)
+      let stopped: @Sendable () -> Void = { [self] in
+        queue.async { [self] in
+          pendingStops -= 1
+          if pendingStops == 0 { deliverFinish(completion) }
+        }
+      }
+      if pendingStops == 0 { deliverFinish(completion) }
+      microphone?.stop(completion: stopped)
+      application?.stop(completion: stopped)
+      speech?.finish { [self] notice in
+        failure = failure ?? notice
+        stopped()
+      }
+      queue.asyncAfter(deadline: .now() + Self.finishTimeout) { [self] in
+        guard !finishDelivered else { return }
+        speech?.cancel()
+        failure = failure ?? "Saved the available transcript; speech finalization timed out."
+        deliverFinish(completion)
+      }
+    }
+  }
+
+  private func deliverFinish(_ completion: @Sendable (AudioCaptureResult) -> Void) {
+    guard !finishDelivered else { return }
+    finishDelivered = true
+    var audioURL: URL?
+    do { audioURL = try writer?.finish() } catch {
+      failure = "Audio could not be saved: \(error.localizedDescription)"
+      fputs("Audio file finalization failed: \(error.localizedDescription)\n", stderr)
+    }
+    writer = nil
+    completion(
+      AudioCaptureResult(
+        transcript: transcript, recordingURL: audioURL, duration: elapsed, error: failure))
   }
 }

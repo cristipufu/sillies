@@ -93,7 +93,7 @@ final class AutomatedLaunchRunner {
     let timer = DispatchSource.makeTimerSource(
       queue: DispatchQueue(label: "app.sillies.watchdog", qos: .userInteractive))
     timer.schedule(deadline: .now() + timeoutSeconds)
-    timer.setEventHandler {
+    timer.setEventHandler { @Sendable in
       FileHandle.standardError.write(
         Data("AUTOMATED CHECK WATCHDOG TIMEOUT after \(timeoutSeconds)s\n".utf8))
       _exit(1)

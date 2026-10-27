@@ -25,7 +25,7 @@ final class FocusSkillSession: ActiveSkillSession {
   func tick(_ context: SkillTickContext) -> SkillTickDisposition {
     let dt = max(0, context.now - lastTickAt)
     lastTickAt = context.now
-    if context.frontmostPID == context.target.processID {
+    if context.frontmostPID == target.processID {
       focusedSeconds += dt
       awaySince = nil
     } else if awaySince == nil {
@@ -39,23 +39,30 @@ final class FocusSkillSession: ActiveSkillSession {
     let awayDuration = awaySince.map { context.now - $0 } ?? 0
     let status =
       awayDuration >= Self.distractionThresholdSeconds
-      ? "Come back to \(context.target.appName) 👀 · \(countdown)"
+      ? "Come back to \(target.appName) 👀 · \(countdown)"
       : "Focus · \(countdown) left"
     return .keepRunning(statusDetail: status)
   }
 
-  func finalize(_ context: SkillFinalizeContext) -> SkillCompletionOutcome? {
+  func finish(
+    _ context: SkillFinalizeContext,
+    completion: @escaping @MainActor (SkillCompletionOutcome?) -> Void
+  ) {
+    completion(makeOutcome(context))
+  }
+
+  private func makeOutcome(_ context: SkillFinalizeContext) -> SkillCompletionOutcome {
     let duration = max(0, context.now - context.startedAt)
     let ratio = duration > 0 ? Int((focusedSeconds / duration * 100).rounded()) : 100
     let summary =
-      "Focused on \(context.target.appName) for \(SessionRecord.formatDuration(focusedSeconds)) (\(ratio)% on-target)."
+      "Focused on \(target.appName) for \(SessionRecord.formatDuration(focusedSeconds)) (\(ratio)% on-target)."
     let record = SessionRecord(
       kind: .focus,
       characterID: context.companionID,
       characterName: context.companionName,
-      appName: context.target.appName,
-      bundleIdentifier: context.target.bundleIdentifier,
-      windowTitle: context.target.windowTitle,
+      appName: target.appName,
+      bundleIdentifier: target.bundleIdentifier,
+      windowTitle: target.windowTitle,
       durationSeconds: duration,
       summary: summary)
     return SkillCompletionOutcome(

@@ -5,12 +5,12 @@ import Testing
 
 @Suite("CompanionSkill")
 struct CompanionSkillTests {
-  @Test("Radial skill menu places four skills and hit-tests bubbles")
+  @Test("Radial skill menu places five skills and hit-tests bubbles")
   func radialMenuHitTesting() {
     let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
     let layout = RadialSkillMenuLayout(
       center: CGPoint(x: 500, y: 400), visibleFrame: screen)
-    #expect(layout.items.count == 4)
+    #expect(layout.items.count == 5)
     #expect(layout.selectedSkill(at: layout.anchor) == nil)
     for item in layout.items {
       #expect(layout.selectedSkill(at: item.center) == item.skill)

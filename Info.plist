@@ -10,12 +10,11 @@
     <key>CFBundleShortVersionString</key><string>0.0.1</string>
     <key>CFBundleVersion</key><string>1</string>
     <key>CFBundleIconFile</key><string>Sillies</string>
-    <key>LSMinimumSystemVersion</key><string>14.0</string>
+    <key>LSMinimumSystemVersion</key><string>26.0</string>
     <key>LSUIElement</key><true/>
     <key>NSHighResolutionCapable</key><true/>
     <key>NSPrincipalClass</key><string>NSApplication</string>
-    <key>NSSpeechRecognitionUsageDescription</key><string>Sillies uses on-device speech recognition when you drop a companion onto a window and choose Listen &amp; Scribe.</string>
-    <key>NSMicrophoneUsageDescription</key><string>Sillies can include microphone audio when transcribing a session you started with a companion.</string>
+    <key>NSMicrophoneUsageDescription</key><string>Participate includes your microphone in meeting notes. Record saves playable microphone audio and a transcript. Capture starts only when you choose a skill.</string>
     <key>NSScreenCaptureUsageDescription</key><string>Sillies captures the target window image or app audio when you drop a companion onto a window to take a snapshot or transcribe audio.</string>
     <key>SUFeedURL</key><string>https://github.com/cristipufu/sillies/releases/latest/download/appcast.xml</string>
     <key>SUPublicEDKey</key><string>vFHZvPv37uOxCFjKgYKFskqqJEAeKj5Gk7RiSMP5EPY=</string>

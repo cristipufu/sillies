@@ -70,7 +70,7 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 4) {
               Text("Window skills & Session Vault").fontWeight(.medium)
               Text(
-                "Pause while dragging a companion over any window to open the Radial Skill Wheel (Snap & OCR, Listen & Scribe, Watch Window, Focus Sprint), drop inside a window to pin, or drag text/files onto a companion to stash."
+                "Pause while dragging a companion over a window to choose Listen, Participate, Snap, Explain, or Record. Right-click a companion for the same skills and Save Clipboard. Add text and links directly in Pocket Stash."
               )
               .font(.system(size: 11)).foregroundStyle(SilliesTheme.secondary)
             }

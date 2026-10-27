@@ -6,7 +6,7 @@ A native macOS menu-bar app. **Mochi** the sleepy ginger cat, **Kiko** the drama
 
 ## Run
 
-Requires macOS 14+, Swift 6+, and Xcode for the test suite. Build scripts use an installed `/Applications/Xcode.app` when Command Line Tools are selected; they do not change your global developer settings.
+Requires macOS 26+, Swift 6+, and Xcode 26 or later for the test suite. Build scripts use an installed `/Applications/Xcode.app` when Command Line Tools are selected; they do not change your global developer settings.
 
 ```sh
 make run
@@ -16,7 +16,10 @@ The app is built at `build/Sillies.app`. Its paw icon appears in the menu bar. M
 
 Pogo waddles, hops, grips sides with sticky fingertips, and slips beneath fixed hands before pulling back up. Bolt takes measured steps, adjusts telescoping legs during resizing, climbs with magnetic mittens, and turns its face into a viewfinder for Snap. Each character has its own reaction pack and animation overrides, including reduced-motion expressions.
 
-The crew also includes **Boo** the bashful ghost, **Bloop** the affectionate octopus, **Sprout** the mushroom gardener, **Pip** the delighted axolotl, **Pebble** the dignified penguin, **Taro** the baby dragon, **Nib** the cautious hedgehog, and **Mallow** the floppy-eared bunny. Each has distinct vector artwork, signature actions, side-hanging clips, and all four radial skills. Your existing crew selection stays saved; new companions are available in the scrolling picker.
+The crew also includes **Boo** the bashful ghost, **Bloop** the affectionate octopus, **Sprout** the mushroom gardener, **Pip** the delighted axolotl, **Pebble** the dignified penguin, **Taro** the baby dragon, **Nib** the cautious hedgehog, and **Mallow** the floppy-eared bunny. Each has distinct vector artwork, signature actions, side-hanging clips, and all five radial skills. Your existing crew selection stays saved; new companions are available in the scrolling picker.
+
+Choose **Listen** for app audio notes, **Participate** for app audio plus your microphone and quiet meeting suggestions, **Snap** for a screenshot copied to the clipboard, **Explain** for OCR with a local explanation, or **Record** for playable microphone audio with a transcript and notes. Right-click a companion for the same actions and **Save Clipboard**. The Vault also has **Add text / link** and audio playback. [Skill behavior and local processing requirements](docs/skills.md).
+
 
 - **Window edges, by default:** companions walk above the focused window, ride its movement, brace/scramble during resizing, and squash/settle when it stops. Independent window movement confirms a drag before display-linked pointer attachment begins. Basic tracking works without Accessibility or Screen Recording permission.
 - **Room for everyone:** companions can pass each other while walking, but reserve separate stopping spots. They still wave when they meet; a crowded edge lets excess companions wait for room.

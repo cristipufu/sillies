@@ -28,6 +28,9 @@ final class WatchSkillSession: ActiveSkillSession {
 
   func tick(_ context: SkillTickContext) -> SkillTickDisposition {
     guard let snapshot = context.snapshot else { return .completeNow }
+    guard snapshot.visibility != .unavailable else {
+      return .keepRunning(statusDetail: context.currentDetail)
+    }
     if let currentTitle = snapshot.title, currentTitle != initialTitle {
       sawChange = true
       latestTitle = currentTitle
@@ -43,25 +46,32 @@ final class WatchSkillSession: ActiveSkillSession {
       return .completeNow
     }
     let elapsed = SessionRecord.formatDuration(context.now - context.startedAt)
-    return .keepRunning(statusDetail: "Watching \(context.target.appName) · \(elapsed)")
+    return .keepRunning(statusDetail: "Watching \(target.appName) · \(elapsed)")
   }
 
-  func finalize(_ context: SkillFinalizeContext) -> SkillCompletionOutcome? {
+  func finish(
+    _ context: SkillFinalizeContext,
+    completion: @escaping @MainActor (SkillCompletionOutcome?) -> Void
+  ) {
+    completion(makeOutcome(context))
+  }
+
+  private func makeOutcome(_ context: SkillFinalizeContext) -> SkillCompletionOutcome {
     let duration = max(0, context.now - context.startedAt)
     let note =
       latestTitle.map { "Window updated to “\($0)”" }
-      ?? "Watched \(context.target.displayTitle) for \(SessionRecord.formatDuration(duration))."
+      ?? "Watched \(target.displayTitle) for \(SessionRecord.formatDuration(duration))."
     let record = SessionRecord(
       kind: .watch,
       characterID: context.companionID,
       characterName: context.companionName,
-      appName: context.target.appName,
-      bundleIdentifier: context.target.bundleIdentifier,
-      windowTitle: latestTitle ?? context.target.windowTitle,
+      appName: target.appName,
+      bundleIdentifier: target.bundleIdentifier,
+      windowTitle: latestTitle ?? target.windowTitle,
       durationSeconds: duration,
       summary: note)
     return SkillCompletionOutcome(
-      record: record, image: nil, bannerSummary: "Watch complete · Focus \(context.target.appName)")
+      record: record, image: nil, bannerSummary: "Watch complete · Focus \(target.appName)")
   }
 
   func cancel() {}

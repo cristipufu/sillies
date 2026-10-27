@@ -3,8 +3,21 @@ import CoreGraphics
 import SilliesCore
 
 struct WindowTargetSnapshot: Sendable {
+  enum Visibility: Sendable { case visible, hidden, unavailable }
   let frame: CGRect
   let title: String?
+  var visibility: Visibility = .visible
+  var windowLayer: Int = 0
+
+  func updating(_ target: WindowTargetCandidate) -> WindowTargetCandidate {
+    guard visibility != .unavailable else { return target }
+    var updated = target
+    updated.isVisible = visibility == .visible
+    guard updated.isVisible else { return updated }
+    updated.frame = frame
+    updated.windowLayer = windowLayer
+    return updated
+  }
 }
 
 /// Single-window metadata reads. Private to this file so callers must go through `WindowTargetMetadata`'s
@@ -126,6 +139,7 @@ private enum WindowTargetResolver {
     for windowID: CGWindowID, primaryScreenTop: Double
   ) -> WindowTargetCandidate? {
     dispatchPrecondition(condition: .notOnQueue(.main))
+    guard !WindowTrackingExclusions.shared.contains(windowID) else { return nil }
     let now = ProcessInfo.processInfo.systemUptime
     let cached = lookupCachedCandidate(for: windowID, at: now)
     if cached.hit {
@@ -180,18 +194,6 @@ private enum WindowTargetResolver {
     return resolved
   }
 
-  static func currentSnapshot(
-    for windowID: CGWindowID, primaryScreenTop: Double
-  ) -> WindowTargetSnapshot? {
-    dispatchPrecondition(condition: .notOnQueue(.main))
-    guard let parsed = parsedWindowEntry(for: windowID),
-      parsed.isVisible
-    else { return nil }
-    let frame = ScreenCoordinates.appKitRect(
-      fromAccessibility: parsed.frame, primaryScreenTop: primaryScreenTop)
-    return WindowTargetSnapshot(frame: frame, title: parsed.windowTitle)
-  }
-
   private static func parsedWindowEntry(
     for windowID: CGWindowID
   ) -> WindowServerSource.ParsedWindowEntry? {
@@ -240,15 +242,9 @@ final class WindowTargetMetadata: Sendable {
     return await withCheckedContinuation { continuation in
       queue.async {
         dispatchPrecondition(condition: .notOnQueue(.main))
-        var result: [CGWindowID: WindowTargetSnapshot] = [:]
-        for windowID in windowIDs {
-          if let snapshot = WindowTargetResolver.currentSnapshot(
-            for: windowID, primaryScreenTop: primaryScreenTop)
-          {
-            result[windowID] = snapshot
-          }
-        }
-        continuation.resume(returning: result)
+        continuation.resume(
+          returning: BoundWindowSnapshots.read(
+            windowIDs: windowIDs, primaryScreenTop: primaryScreenTop))
       }
     }
   }
@@ -306,6 +302,13 @@ final class WindowTargetMetadata: Sendable {
         }
 
         let regions = preliminaryEntries.compactMap { parsed -> DragWindowRegion? in
+          if WindowTrackingExclusions.shared.contains(parsed.id) {
+            WindowTargetResolver.cacheCandidate(nil, for: parsed.id, at: now)
+            return DragWindowRegion(
+              windowID: parsed.id,
+              frame: ScreenCoordinates.appKitRect(
+                fromAccessibility: parsed.frame, primaryScreenTop: primaryScreenTop))
+          }
           let pid = parsed.ownerPID
           let snapshot =
             pid == currentPID ? nil : WindowTargetResolver.nonBlockingRoleSnapshot(for: pid)

@@ -165,3 +165,21 @@ private func character(_ reactions: [ReactionDefinition]) -> CharacterDefinition
   ])
   #expect(throws: CharacterDefinition.ValidationError.self) { try duplicate.validate() }
 }
+
+@Test func sustainedSkillUsesPackClipAndReturnsAfterPickup() {
+  var engine = BehaviorEngine(
+    character: character([
+      ReactionDefinition(
+        id: "listen", event: .skillListen, animation: .listen, duration: 180, priority: 7),
+      ReactionDefinition(
+        id: "pickup", event: .pickedUp, animation: .surprised, duration: 2, priority: 9),
+    ]), seed: 1)
+  engine.beginSustainedReaction(WorkspaceEvent(.skillListen, at: 10))
+  #expect(engine.state.animation == .listen)
+  #expect(engine.advance(at: 1_000) == nil)
+  engine.receive(WorkspaceEvent(.pickedUp, at: 1_001))
+  #expect(engine.state.animation == .surprised)
+  #expect(engine.advance(at: 1_004)?.animation == .listen)
+  engine.endSustainedReaction()
+  #expect(engine.advance(at: 1_005)?.animation == .idle)
+}

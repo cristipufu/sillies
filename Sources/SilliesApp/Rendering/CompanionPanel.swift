@@ -4,6 +4,13 @@ import SilliesCore
 
 @MainActor
 final class CompanionPanel: NSPanel {
+  enum Stacking: Equatable {
+    case following(windowLayer: Int)
+    case bound(windowID: UInt32, windowLayer: Int)
+    case pickedUp
+  }
+  private var stacking: Stacking = .following(windowLayer: 0)
+  private var occlusionExclusion: WindowTrackingExclusions.Registration?
   private static let windowLevelOffsetAboveTarget = 1
   private static let hudLevelOffsetAboveCompanion = 1
   private static let defaultScreenVisibleFrame = CGRect(x: 0, y: 0, width: 1440, height: 900)
@@ -12,6 +19,8 @@ final class CompanionPanel: NSPanel {
   static let floatingOverlayLevel = NSWindow.Level(
     rawValue: NSWindow.Level.floating.rawValue + windowLevelOffsetAboveTarget)
   static let overlayLevel = floatingOverlayLevel
+  static let transcriptionLevel = NSWindow.Level(
+    rawValue: floatingOverlayLevel.rawValue + hudLevelOffsetAboveCompanion + 1)
   static let overlayCollectionBehavior: NSWindow.CollectionBehavior = [
     .canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle, .transient,
   ]
@@ -71,13 +80,35 @@ final class CompanionPanel: NSPanel {
     acceptsMouseMovedEvents = true
     collectionBehavior = Self.overlayCollectionBehavior
     animationBehavior = .none
+    occlusionExclusion = WindowTrackingExclusions.transparentOverlays.register(UInt32(windowNumber))
     if Self.isRunningUnderUnitTests { alphaValue = 0 }
   }
 
-  func updateOverlayLevel(forWindowLayer windowLayer: Int, isPickedUp: Bool) {
-    let targetLevel = Self.overlayLevel(forWindowLayer: windowLayer, isPickedUp: isPickedUp)
+  func updateStacking(_ stacking: Stacking) {
+    guard self.stacking != stacking else { return }
+    self.stacking = stacking
+    let targetLevel: NSWindow.Level
+    switch stacking {
+    case .following(let layer): targetLevel = Self.overlayLevel(forWindowLayer: layer)
+    case .bound(_, let layer): targetLevel = NSWindow.Level(rawValue: layer)
+    case .pickedUp: targetLevel = Self.floatingOverlayLevel
+    }
     if level != targetLevel {
       level = targetLevel
     }
+    restoreAttachmentOrder()
+  }
+
+  func presentAtAttachment() {
+    if case .bound(let id, _) = stacking {
+      order(.above, relativeTo: Int(id))
+    } else {
+      orderFrontRegardless()
+    }
+  }
+
+  func restoreAttachmentOrder() {
+    guard isVisible, case .bound(let id, _) = stacking else { return }
+    order(.above, relativeTo: Int(id))
   }
 }

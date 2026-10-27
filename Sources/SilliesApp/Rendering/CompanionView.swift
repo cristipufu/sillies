@@ -14,6 +14,8 @@ final class CompanionView: NSView {
   var onPickup: (() -> Void)?
   var onDrag: ((CGPoint) -> Void)?
   var onDrop: ((Bool) -> Void)?
+  var onContextMenu: (() -> NSMenu)?
+  var onStashTargetChanged: ((Bool) -> Void)?
   var onStashDropped: (([String]) -> Void)?
   private var mouseStart = CGPoint.zero
   private var lastDragPoint: CGPoint?
@@ -240,33 +242,36 @@ final class CompanionView: NSView {
     lastDragPoint = nil
   }
 
-  override func draggingEntered(_ sender: any NSDraggingInfo) -> NSDragOperation {
-    guard !isPortraitMode else { return [] }
-    return sender.draggingPasteboard.canReadObject(
-      forClasses: [NSURL.self, NSString.self], options: nil) ? .copy : []
+  override func menu(for event: NSEvent) -> NSMenu? {
+    guard !isPortraitMode else { return nil }
+    return onContextMenu?()
   }
 
+  override func draggingEntered(_ sender: any NSDraggingInfo) -> NSDragOperation {
+    draggingUpdated(sender)
+  }
+
+  override func draggingUpdated(_ sender: any NSDraggingInfo) -> NSDragOperation {
+    guard !isPortraitMode,
+      sender.draggingPasteboard.canReadObject(
+        forClasses: [NSURL.self, NSString.self], options: nil)
+    else { return [] }
+    let point = window?.convertPoint(toScreen: sender.draggingLocation) ?? NSEvent.mouseLocation
+    let accepted = containsInteractiveArtwork(at: point)
+    onStashTargetChanged?(accepted)
+    return accepted ? .copy : []
+  }
+
+  override func draggingExited(_ sender: (any NSDraggingInfo)?) { onStashTargetChanged?(false) }
+  override func draggingEnded(_ sender: any NSDraggingInfo) { onStashTargetChanged?(false) }
+
   override func performDragOperation(_ sender: any NSDraggingInfo) -> Bool {
-    let items = extractDraggedStrings(from: sender.draggingPasteboard)
+    let point = window?.convertPoint(toScreen: sender.draggingLocation) ?? NSEvent.mouseLocation
+    guard containsInteractiveArtwork(at: point) else { return false }
+    let items = StashPasteboard.items(from: sender.draggingPasteboard)
+    onStashTargetChanged?(false)
     guard !items.isEmpty else { return false }
     onStashDropped?(items)
     return true
-  }
-
-  private func extractDraggedStrings(from pasteboard: NSPasteboard) -> [String] {
-    var collected: [String] = []
-    if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL] {
-      for url in urls {
-        collected.append(url.isFileURL ? url.path : url.absoluteString)
-      }
-    }
-    if let text = pasteboard.string(forType: .string)?.trimmingCharacters(
-      in: .whitespacesAndNewlines),
-      !text.isEmpty,
-      !collected.contains(text)
-    {
-      collected.append(text)
-    }
-    return collected
   }
 }

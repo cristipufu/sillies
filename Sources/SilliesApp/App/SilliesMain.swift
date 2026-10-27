@@ -29,6 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private var statusItem: NSStatusItem?
   private let popover = NSPopover()
   private var settingsWindow: NSWindow?
+  private let audioSessionWindow = AudioSessionWindowController()
   private var vaultWindow: NSWindow?
   private var previewWindow: NSWindow?
   private var temporaryPreferencesDomain: String?
@@ -62,6 +63,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       controller.onOpenVault = { [weak self] recordID in
         self?.showVault(recordID: recordID)
       }
+      skills.onOpenAudioSession = { [weak self] in self?.audioSessionWindow.show($0) }
       self.controller = controller
       if launch.validatesCatalogOnly {
         print(

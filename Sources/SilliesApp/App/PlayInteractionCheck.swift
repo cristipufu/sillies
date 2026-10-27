@@ -143,7 +143,8 @@ final class PlayInteractionCheck: NSObject {
       guard elapsed > 0.15 else { return }
       require(
         controller.interactionCounts[.pet, default: 0] == companionIndex + 1,
-        "Real click greets the companion")
+        "Real click greets companion \(companionIndex); events=\(controller.interactionCounts), body=\(body), pointer=\(NSEvent.mouseLocation), tracked=\(String(describing: controller.tracker.windowID)), frontmost=\(NSWorkspace.shared.frontmostApplication?.processIdentifier ?? -1), ownPID=\(ProcessInfo.processInfo.processIdentifier), attachments=\(controller.attachmentDiagnostics)"
+      )
       post(.leftMouseDown, at: body)
       advance(to: .pressed)
     case .pressed:
@@ -170,10 +171,10 @@ final class PlayInteractionCheck: NSObject {
           ?? CGRect(
             x: 0, y: 0, width: 1440, height: 900)
         let layout = RadialSkillMenuLayout(center: destination, visibleFrame: visible)
-        guard let focus = layout.items.first(where: { $0.skill == .focus }) else {
-          fail("Missing Focus skill")
+        guard let snap = layout.items.first(where: { $0.skill == .snap }) else {
+          fail("Missing Snap skill")
         }
-        releasePointer = focus.center
+        releasePointer = snap.center
         post(.leftMouseDragged, at: releasePointer)
         advance(to: .skillHovered)
         return
@@ -211,10 +212,14 @@ final class PlayInteractionCheck: NSObject {
       let id = controller.catalog.characters[companionIndex].id
       let binding = controller.skills.binding(for: id)
       if selectsSkill {
-        guard case .active(let target, .focus, _, _, _) = binding else {
-          fail("Selected Focus skill did not activate")
+        let target: WindowTargetCandidate?
+        switch binding {
+        case .active(let candidate, .snap, _, _, _): target = candidate
+        case .completed(let candidate, .snap, _, _, _): target = candidate
+        default: fail("Selected Snap skill did not activate")
         }
-        require(target.windowID == UInt32(playground.window.windowNumber), "Skill binds its target")
+        require(
+          target?.windowID == UInt32(playground.window.windowNumber), "Skill binds its target")
       } else {
         require(!binding.isBound, "An unselected drop keeps following the focused window")
         require(
@@ -249,7 +254,7 @@ final class PlayInteractionCheck: NSObject {
     }
     if mode == .dropReturn {
       print(
-        "DROP RETURN OK: quick falls, below-perch relocation, quiet returns without a skill bar, selected Focus binding"
+        "DROP RETURN OK: quick falls, below-perch relocation, quiet returns without a skill bar, selected Snap binding"
       )
     } else {
       print(

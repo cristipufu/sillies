@@ -33,14 +33,14 @@ struct CompanionHUDView: View {
   }
 
   private func activeCard(
-    target: WindowTargetCandidate, skill: CompanionSkillKind, statusDetail: String,
+    target: WindowTargetCandidate?, skill: CompanionSkillKind, statusDetail: String,
     audioLevel: Double
   ) -> some View {
     HStack(spacing: 9) {
       statusIndicator(for: skill, audioLevel: audioLevel)
 
       VStack(alignment: .leading, spacing: 1.5) {
-        Text("\(skill.title) · \(target.appName)")
+        Text("\(skill.title) · \((target?.appName ?? "Microphone"))")
           .font(.system(size: 11, weight: .bold, design: .rounded))
           .foregroundStyle(SilliesTheme.ink)
           .lineLimit(1)
@@ -49,7 +49,11 @@ struct CompanionHUDView: View {
           .monospacedDigit()
           .foregroundStyle(SilliesTheme.secondary)
           .lineLimit(1)
-          .frame(maxWidth: 210, alignment: .leading)
+          .frame(width: 210, alignment: .leading)
+      }
+
+      if let session = model.audioSession, skill.isAudioSession {
+        AudioHUDControls(session: session, open: { model.onOpenSession?() })
       }
 
       if let stopTitle = skill.stopActionTitle {
@@ -80,9 +84,11 @@ struct CompanionHUDView: View {
   }
 
   private func completedCard(
-    target: WindowTargetCandidate, skill: CompanionSkillKind, summary: String, recordID: UUID
+    target: WindowTargetCandidate?, skill: CompanionSkillKind, summary: String, recordID: UUID
   ) -> some View {
-    let needsPermission = SessionRecord.indicatesPermissionNeeded(summary)
+    let needsPermission =
+      model.persistenceError != nil || model.completedRecord?.failureMessage != nil
+      || model.completedRecord?.requiresPermissionAccess == true
     return HStack(spacing: 9) {
       ZStack {
         Circle()
@@ -105,7 +111,7 @@ struct CompanionHUDView: View {
           .font(.system(size: 11, weight: .bold, design: .rounded))
           .foregroundStyle(SilliesTheme.ink)
           .lineLimit(1)
-        Text("\(target.appName) · \(summary)")
+        Text("\((target?.appName ?? "Microphone")) · \(summary)")
           .font(.system(size: 10, weight: .medium))
           .foregroundStyle(SilliesTheme.secondary)
           .lineLimit(1)
@@ -114,7 +120,7 @@ struct CompanionHUDView: View {
 
       if skill.offersTargetActivationOnCompletion {
         Button {
-          model.onFocusWindow?(target)
+          if let target { model.onFocusWindow?(target) }
         } label: {
           Text("Focus App")
             .font(.system(size: 10, weight: .bold, design: .rounded))
@@ -147,6 +153,10 @@ struct CompanionHUDView: View {
       .onHover { hoveredPrimaryAction = $0 }
       .help("Open in Session Vault")
 
+      if skill == .stash {
+        Button("Undo") { model.onUndoStash?(recordID) }.buttonStyle(.plain).font(.caption)
+      }
+
       dismissButton(helpText: "Dismiss") {
         model.onUnbind?()
       }
@@ -157,7 +167,7 @@ struct CompanionHUDView: View {
   }
 
   private func completionHeadline(for skill: CompanionSkillKind, needsPermission: Bool) -> String {
-    needsPermission ? "\(skill.title) Needs Access" : skill.completionHeadline
+    needsPermission ? "\(skill.title) Needs Attention" : skill.completionHeadline
   }
 
   private func dismissButton(helpText: String, action: @escaping () -> Void) -> some View {
@@ -189,10 +199,11 @@ struct CompanionHUDView: View {
 
   @ViewBuilder
   private func statusIndicator(for skill: CompanionSkillKind, audioLevel: Double) -> some View {
-    if skill == .listen {
+    if skill.isAudioSession {
+      let color: Color = model.audioSession?.phase == .capturing ? .red : .secondary
       ZStack {
         Circle()
-          .fill(Color.red.opacity(0.14))
+          .fill(color.opacity(0.14))
           .frame(width: 28, height: 28)
         HStack(spacing: 2) {
           ForEach(0..<3, id: \.self) { index in
@@ -203,7 +214,7 @@ struct CompanionHUDView: View {
                 Self.maxAudioBarHeight,
                 Self.minAudioBarHeight + CGFloat(audioLevel * Self.audioBarGain * factor)))
             RoundedRectangle(cornerRadius: 1.5)
-              .fill(Color.red.opacity(0.88))
+              .fill(color.opacity(0.88))
               .frame(width: 2.5, height: barHeight)
           }
         }

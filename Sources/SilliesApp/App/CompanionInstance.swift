@@ -21,6 +21,7 @@ final class CompanionInstance {
   var tween: MotionTween?
   var isStrolling = false
   var strollReachesEdge = false
+  private(set) var isStashTargeted = false
   var isPickedUp = false
   var isWaitingForSpace = false
   var isReturningFromDrop: Bool { dropReturn.isActive }
@@ -37,6 +38,7 @@ final class CompanionInstance {
   var attachmentTarget: WindowTargetCandidate? {
     return bindingState.boundTarget
   }
+  var isAttachmentVisible: Bool { attachmentTarget?.isVisible ?? true }
 
   init(
     definition: CharacterDefinition, rig: CharacterRig, size: Double, seed: UInt64,
@@ -53,8 +55,29 @@ final class CompanionInstance {
       panel: panel, view: view, profile: definition.presentationTransitions, library: transitions)
   }
 
+  func updateBinding(_ state: CompanionBindingState) {
+    bindingState = state
+    updateOverlayLevel()
+    panel.restoreAttachmentOrder()
+    if !isAttachmentVisible, !isPickedUp { hideForUnavailableSurface() }
+    if case .active(_, let skill, _, _, _) = state, skill.isAudioSession { return }
+    behavior.endSustainedReaction()
+  }
+
   func updateOverlayLevel() {
-    panel.updateOverlayLevel(forWindowLayer: attachedWindowLayer, isPickedUp: isPickedUp)
+    presentation.updateAvailability(isPickedUp || isAttachmentVisible ? .available : .unavailable)
+    if isPickedUp {
+      panel.updateStacking(.pickedUp)
+    } else if let target = attachmentTarget {
+      panel.updateStacking(.bound(windowID: target.windowID, windowLayer: target.windowLayer))
+    } else {
+      panel.updateStacking(.following(windowLayer: attachedWindowLayer))
+    }
+  }
+
+  func setStashTargeted(_ targeted: Bool) {
+    isStashTargeted = targeted
+    if targeted { clearMotion() }
   }
 
   func clearMotion() {
@@ -122,6 +145,7 @@ final class CompanionInstance {
 
   func resetForInactiveSession() {
     view.cancelInteraction()
+    isStashTargeted = false
     isPickedUp = false
     isWaitingForSpace = false
     dropReturn.cancel()
@@ -162,13 +186,16 @@ final class CompanionInstance {
   }
 
   func refreshHUD() {
-    guard bindingState.isBound, panel.isVisible, !isPickedUp, !isReturningFromDrop,
+    guard bindingState.hasPresentation, isAttachmentVisible, panel.isVisible, !isPickedUp,
+      !isReturningFromDrop,
       !isWaitingForSpace
     else {
       hud.hide()
       return
     }
     let visibleFrame = CompanionPanel.visibleFrame(for: panel.screen)
+    hud.attachedWindowLayer = attachedWindowLayer
+    hud.companionWindowNumber = panel.windowNumber
     hud.update(
       state: bindingState, companionPoint: position, characterSize: view.characterSize,
       visibleFrame: visibleFrame)

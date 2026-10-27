@@ -54,7 +54,7 @@ final class DisplayFrameSequence: NSObject {
   private func makeWatchdog() -> DispatchSourceTimer {
     let timer = DispatchSource.makeTimerSource(queue: .global(qos: .userInitiated))
     timer.schedule(deadline: .now() + Self.timeoutSeconds)
-    timer.setEventHandler { [weak self] in
+    timer.setEventHandler { @Sendable [weak self] in
       MainRunLoopDelivery.perform { [weak self] in
         self?.timedOut = true
         self?.stop()

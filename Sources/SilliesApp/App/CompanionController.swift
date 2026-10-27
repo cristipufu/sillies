@@ -53,6 +53,7 @@ final class CompanionController {
   let skills: SkillCoordinator
   @ObservationIgnored var onOpenVault: ((UUID?) -> Void)?
   @ObservationIgnored private let additionalEventProducers: [any WorkspaceEventProducer]
+  @ObservationIgnored private let stashFeedback = StashFeedbackController()
   @ObservationIgnored private let interaction = CompanionInteraction()
   @ObservationIgnored let dragTargeting: CompanionDragTargetingController
   @ObservationIgnored let smoothnessMetrics: InteractionSmoothnessMetrics
@@ -109,7 +110,7 @@ final class CompanionController {
     if liveCount == 0 { return "Choose a little companion" }
     for pet in companions {
       if case .active(let target, let skill, _, _, _) = pet.bindingState {
-        return "\(pet.definition.name) · \(skill.activeVerb) \(target.appName)"
+        return "\(pet.definition.name) · \(skill.activeVerb) \(target?.appName ?? "Microphone")"
       }
     }
     if !settings.followsWindows {
@@ -146,19 +147,32 @@ final class CompanionController {
     tracker.onEnvironmentChanged = { [weak self] in self?.reconcile() }
     tracker.onApplicationChanged = { [weak self] in
       self?.dragTargeting.windowSnapshot.refresh()
+      self?.skills.refreshBoundWindows()
       self?.reconcile()
     }
     skills.onBindingChanged = { [weak self] companionID, state in
       guard let self, let pet = self.companions.first(where: { $0.definition.id == companionID })
       else { return }
-      let previousWindowID = pet.attachmentTarget?.windowID
-      let previousFrame = pet.attachmentTarget?.frame
-      pet.bindingState = state
-      let targetChanged =
-        previousWindowID != pet.attachmentTarget?.windowID
-        || previousFrame != pet.attachmentTarget?.frame
+      let previousTarget = pet.attachmentTarget
+      let wasVisible = pet.isAttachmentVisible
+      pet.updateBinding(state)
+      pet.hud.model.persistenceError = self.skills.vault.persistenceError
+      if case .completed(_, _, _, let recordID, _) = state {
+        pet.hud.model.completedRecord = self.skills.vault.records.first { $0.id == recordID }
+      } else {
+        pet.hud.model.completedRecord = nil
+      }
+      pet.hud.model.audioSession = self.skills.audioPresentation(for: companionID)
+      let targetChanged = previousTarget != pet.attachmentTarget
       if targetChanged {
         self.updateSurfaces(animated: true)
+        if !wasVisible, pet.isAttachmentVisible {
+          pet.displayBehavior(
+            pet.behavior.state, using: self.animations,
+            reducedMotion: self.reducedMotion || self.tracker.isLowPower)
+        }
+        self.scheduleDeadline()
+        self.updateMotionClock()
       }
       pet.refreshHUD()
       if targetChanged, self.interaction.isEnabled { self.interaction.refresh() }
@@ -166,7 +180,13 @@ final class CompanionController {
     skills.onEmitEvent = { [weak self] companionID, event in
       guard let self, let pet = self.companions.first(where: { $0.definition.id == companionID })
       else { return }
-      self.react(pet, to: event)
+      if case .active(_, let skill, _, _, _) = pet.bindingState, skill.isAudioSession,
+        event.kind == skill.eventKind, let state = pet.behavior.beginSustainedReaction(event)
+      {
+        self.apply(state, to: pet)
+      } else {
+        self.react(pet, to: event)
+      }
       self.scheduleDeadline()
       self.updateMotionClock()
     }
@@ -193,6 +213,7 @@ final class CompanionController {
     skills.onBindingChanged = nil
     skills.onEmitEvent = nil
     skills.onOpenVaultRecord = nil
+    stashFeedback.close()
     skills.stopAll()
     interaction.stop()
     settings.onChange = nil
@@ -311,6 +332,7 @@ final class CompanionController {
     if !shouldRun || companions.isEmpty {
       dragTargeting.resetAndHideOverlays()
       ApplicationIconCache.shared.cancelPending()
+      stashFeedback.close()
       skills.stopAll()
     }
     if !shouldRun {
@@ -388,6 +410,21 @@ final class CompanionController {
   }
 
   private func configureCompanionInput(_ pet: CompanionInstance) {
+    configureSkillControls(pet)
+    configureStashControls(pet)
+    configureDragControls(pet)
+  }
+
+  private func configureSkillControls(_ pet: CompanionInstance) {
+    pet.hud.model.onOpenSession = { [weak self, weak pet] in
+      guard let self, let pet, let session = self.skills.audioPresentation(for: pet.definition.id)
+      else { return }
+      self.skills.onOpenAudioSession?(session)
+    }
+    pet.hud.model.onUndoStash = { [weak self, weak pet] id in
+      self?.skills.vault.remove(id: id)
+      if let pet { self?.skills.unbind(companionID: pet.definition.id) }
+    }
     pet.hud.model.onStopSkill = { [weak self, weak pet] in
       guard let self, let pet else { return }
       self.skills.stopSkill(for: pet.definition.id)
@@ -402,13 +439,38 @@ final class CompanionController {
     pet.hud.model.onFocusWindow = { target in
       NSRunningApplication(processIdentifier: target.processID)?.activate()
     }
+  }
+
+  private func configureStashControls(_ pet: CompanionInstance) {
+    pet.view.onContextMenu = { [weak self, weak pet] in
+      guard let self, let pet else { return NSMenu() }
+      let target = pet.attachmentTarget ?? self.currentFocusedWindowCandidate()
+      return CompanionActionMenu.make(
+        windowName: target?.appName,
+        hasAudioSession: self.skills.activeAudioSession != nil
+      ) { [weak self, weak pet] action in
+        guard let self, let pet else { return }
+        self.performMenuAction(action, for: pet, target: target)
+      }
+    }
+    pet.view.onStashTargetChanged = { [weak self, weak pet] targeted in
+      guard let self, let pet, pet.isStashTargeted != targeted else { return }
+      pet.setStashTargeted(targeted)
+      if targeted {
+        self.stashFeedback.showDropTarget(at: pet.position)
+      } else {
+        self.stashFeedback.hideDropTarget()
+      }
+      self.updateMotionClock()
+    }
     pet.view.onStashDropped = { [weak self, weak pet] items in
       guard let self, let pet else { return }
       let target = pet.bindingState.boundTarget ?? self.currentFocusedWindowCandidate()
-      self.skills.recordStash(
-        items: items, for: pet.definition.id, companionName: pet.definition.name,
-        currentTarget: target)
+      self.stash(items, with: pet, target: target)
     }
+  }
+
+  private func configureDragControls(_ pet: CompanionInstance) {
     pet.view.onPickup = { [weak self, weak pet] in
       guard let self, let pet else { return }
       let fallbackTarget = self.settings.followsWindows ? self.currentFocusedWindowCandidate() : nil
@@ -434,6 +496,50 @@ final class CompanionController {
     pet.view.onDrop = { [weak self, weak pet] dragged in
       guard let self, let pet else { return }
       self.handleDrop(pet, dragged: dragged)
+    }
+  }
+
+  func startMicrophoneRecording() {
+    guard shouldRun, let pet = companions.first else { return }
+    skills.startSkill(.record, for: pet.definition.id, companionName: pet.definition.name)
+  }
+
+  private func performMenuAction(
+    _ action: CompanionMenuAction, for pet: CompanionInstance, target: WindowTargetCandidate?
+  ) {
+    guard shouldRun else { return }
+    switch action {
+    case .skill(let skill):
+      skills.startSkill(
+        skill, for: pet.definition.id, companionName: pet.definition.name, target: target)
+    case .saveClipboard: stash(StashPasteboard.items(from: .general), with: pet, target: target)
+    case .openStash: onOpenVault?(nil)
+    case .openSession:
+      if let session = skills.activeAudioSession { skills.onOpenAudioSession?(session) }
+    }
+  }
+
+  private func stash(_ items: [String], with pet: CompanionInstance, target: WindowTargetCandidate?)
+  {
+    guard
+      let id = skills.recordStash(
+        items: items, for: pet.definition.id,
+        companionName: pet.definition.name, currentTarget: target)
+    else {
+      stashFeedback.showMessage("Copy text or a link first", at: pet.position)
+      return
+    }
+    stashFeedback.showMessage("Saving…", at: pet.position)
+    skills.vault.whenPersisted { [weak self, weak pet] error in
+      guard let self, let pet, self.shouldRun else { return }
+      if let error {
+        self.stashFeedback.showMessage(error, at: pet.position)
+        return
+      }
+      self.stashFeedback.showSaved(
+        id, at: pet.position,
+        open: { [weak self] in self?.onOpenVault?($0) },
+        undo: { [weak self] in self?.skills.vault.remove(id: $0) })
     }
   }
 
@@ -591,6 +697,10 @@ final class CompanionController {
     at index: Int,
     context: inout SurfaceUpdateContext
   ) -> Bool {
+    guard pet.isAttachmentVisible || pet.isPickedUp else {
+      pet.hideForUnavailableSurface()
+      return false
+    }
     let targetWindow = resolveTargetWindow(
       for: pet,
       defaultWindow: context.window,
@@ -692,7 +802,7 @@ final class CompanionController {
 
   private func arrangeRestingCompanionsOnSurfaces() {
     var arrangedSurfaces: [PerchSurface] = []
-    for pet in companions where pet.tween == nil {
+    for pet in companions where pet.tween == nil && pet.isAttachmentVisible {
       guard let surface = pet.surface, !arrangedSurfaces.contains(surface) else { continue }
       if settleRestingGroup(on: surface, animated: false) {
         arrangedSurfaces.append(surface)
@@ -743,6 +853,7 @@ final class CompanionController {
   }
 
   private func apply(_ state: BehaviorState, to pet: CompanionInstance) {
+    guard pet.isAttachmentVisible || pet.isPickedUp else { return }
     let hasActiveSurface =
       !settings.followsWindows
       || (pet.bindingState.isBound && pet.surface?.isAvailable == true)
@@ -762,7 +873,7 @@ final class CompanionController {
     if pet.isStrolling {
       pet.clearMotion()
     }
-    guard !reducedMotion, !tracker.isManipulatingWindow, !pet.isPickedUp,
+    guard !reducedMotion, !tracker.isManipulatingWindow, !pet.isPickedUp, !pet.isStashTargeted,
       !pet.isReturningFromDrop, let surface = pet.surface,
       surface.isAvailable
     else {
@@ -803,7 +914,7 @@ final class CompanionController {
 
   private func perchReservations(excluding pet: CompanionInstance) -> [PerchReservation] {
     companions.compactMap { other in
-      guard other !== pet, !other.isWaitingForSpace,
+      guard other !== pet, other.isAttachmentVisible, !other.isWaitingForSpace,
         let surface = other.surface, surface.isAvailable
       else { return nil }
       let point =
@@ -815,7 +926,8 @@ final class CompanionController {
   }
 
   private func settleAtFreePerch(_ pet: CompanionInstance, animated: Bool) {
-    guard shouldRun, !pet.isPickedUp, !pet.isReturningFromDrop,
+    guard shouldRun, pet.isAttachmentVisible, !pet.isPickedUp, !pet.isReturningFromDrop,
+      !pet.isStashTargeted,
       let surface = pet.surface, surface.isAvailable
     else { return }
     guard
@@ -831,7 +943,7 @@ final class CompanionController {
 
   private func settleRestingGroup(on surface: PerchSurface, animated: Bool) -> Bool {
     guard shouldRun, surface.isAvailable else { return false }
-    let group = companions.filter { $0.surface == surface }
+    let group = companions.filter { $0.surface == surface && $0.isAttachmentVisible }
     guard group.count > 1,
       group.allSatisfy({ !$0.isPickedUp && !$0.isReturningFromDrop && $0.tween == nil })
     else { return false }
@@ -895,7 +1007,7 @@ final class CompanionController {
     guard shouldRun, !tracker.isManipulatingWindow else { return }
     let time = now
     for pet in companions
-    where !pet.isPickedUp && !pet.isReturningFromDrop
+    where !pet.isPickedUp && !pet.isReturningFromDrop && pet.isAttachmentVisible
       && (!settings.followsWindows || pet.surface?.isAvailable == true)
     {
       if let state = pet.behavior.advance(
@@ -914,9 +1026,9 @@ final class CompanionController {
     deadlineTimer = nil
     guard shouldRun,
       let deadline = companions.filter({
-        !$0.isPickedUp && !$0.isReturningFromDrop
+        !$0.isPickedUp && !$0.isReturningFromDrop && $0.isAttachmentVisible
           && (!settings.followsWindows || $0.surface?.isAvailable == true)
-      }).map(\.behavior.state.expiresAt).min()
+      }).map(\.behavior.state.expiresAt).filter(\.isFinite).min()
     else { return }
     let interval = max(Self.minimumDeadlineInterval, deadline - now)
     let timer = Timer(timeInterval: interval, repeats: false) { [weak self] _ in

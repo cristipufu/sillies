@@ -61,7 +61,11 @@ if [[ -z "$identity" ]]; then
 fi
 sign=(--force --options runtime --sign "${identity:--}")
 if [[ -n "${SILLIES_KEYCHAIN:-}" ]]; then sign+=(--keychain "$SILLIES_KEYCHAIN"); fi
-if [[ "${SILLIES_TIMESTAMP:-}" == 1 && -n "$identity" ]]; then sign+=(--timestamp); fi
+if [[ "${SILLIES_TIMESTAMP:-}" == 1 && -n "$identity" ]]; then
+  sign+=(--timestamp)
+else
+  sign+=(--timestamp=none)
+fi
 
 framework="$app/Contents/Frameworks/Sparkle.framework"
 if [[ -d "$framework" ]]; then
@@ -70,7 +74,7 @@ if [[ -d "$framework" ]]; then
   codesign "${sign[@]}" "$framework" >/dev/null
 fi
 codesign "${sign[@]}" --identifier app.sillies.window-metadata "$app/Contents/Helpers/SilliesWindowMetadata" >/dev/null
-codesign "${sign[@]}" --identifier app.sillies.macos "$app" >/dev/null
+codesign "${sign[@]}" --entitlements Sillies.entitlements --identifier app.sillies.macos "$app" >/dev/null
 
 if [[ -n "$identity" ]]; then signer="Developer ID"; else signer="ad-hoc"; fi
 printf 'Built %s (%s, signed %s)\n' "$app" "$configuration" "$signer"

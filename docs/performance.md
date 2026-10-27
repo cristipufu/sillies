@@ -101,7 +101,7 @@ The two shared highlight/wheel panels prepare their hidden views before interact
 build/Sillies.app/Contents/MacOS/Sillies --drop-return-test --without-accessibility --assert-drag-budget
 ```
 
-This opt-in real-input test covers first window entry, highlight display, a dwell to open the skill wheel, selection, and release. It checks quiet returns above and below the perch, including dismissal of an open wheel without a choice, and verifies that only an explicit Focus selection creates a binding and status card. It reports p95 and maximum display-link callback gaps through pickup, overlays, drop, and return; the optional assertion rejects a gap above two 60 Hz frames (33 ms), intended for a display running at 60 Hz or higher. It uses owned windows, temporary settings, and existing event-posting access; it restores pointer/focus. It does not measure compositor presentation latency.
+This opt-in real-input test covers first window entry, highlight display, a dwell to open the skill wheel, selection, and release. It checks quiet returns above and below the perch, including dismissal of an open wheel without a choice, and verifies that only an explicit Snap selection creates a binding and status card. It reports p95 and maximum display-link callback gaps through pickup, overlays, drop, and return; the optional assertion rejects a gap above two 60 Hz frames (33 ms), intended for a display running at 60 Hz or higher. It uses owned windows, temporary settings, and existing event-posting access; it restores pointer/focus. It does not measure compositor presentation latency.
 
 On the local M4 Pro/macOS 26.7.1 setup, comparable debug runs measured a maximum active-drag gap of 36.96 ms before this change and 12.84 ms afterward; p95 stayed near 8.4 ms. These are fixture measurements, not a guarantee for every app/display configuration.
 
@@ -114,6 +114,35 @@ build/Sillies.app/Contents/MacOS/Sillies --companion-drag-test --target-bundle c
 This opt-in check drags a mascot slowly over the existing window border, stops two points inside, waits for the highlight/wheel, and repeats five times. It does not send keys, choose a skill, move the target window, or change its tabs. It verifies mascot input ownership before posting the gesture, stops if the target loses focus, and restores pointer/focus. Output distinguishes overall drag gaps from border/wheel gaps and, only with this diagnostic mode, times movement, cached hit testing, highlight, wheel, and release validation. No terminal contents are captured.
 
 An earlier optimized build was also exercised over the existing Ghostty window with five slow crossings and a pause two points inside the border. Across 1,595 active drag frames, p95 callback spacing was 8.38 ms and the maximum was 20.81 ms. Cached pointer hit testing rounded to 0.00 ms at two-decimal precision; the maximum measured movement handler was 4.18 ms, highlight update 2.72 ms, and wheel update 0.50 ms. All five entries showed both the correct highlight and wheel. These app-level timings include scheduling noise and do not measure compositor latency.
+
+## Skills integration validation
+
+October 27, 2026, local M4 Pro/macOS 26.7.1, twelve-character crew:
+
+| Check | Result |
+| --- | --- |
+| Native window lifecycle | Focus, exterior geometry, move, resize, minimize, restore and close passed |
+| Native live attachment | Maximum move and resize contact error 0.00 pt across 3,600 samples |
+| Move handler | p50 0.26 ms, p95 0.37 ms, maximum 0.80 ms |
+| Resize handler | p50 0.31 ms, p95 0.39 ms, maximum 0.44 ms |
+| Move/resize display-link gaps | p95 8.47 ms, maximum 15.51 ms across 300 frames |
+| Wheel, Snap selection and quiet drop returns | p95 8.35 ms, maximum 22.13 ms across 1,214 frames |
+| Final release-build clicks, pickups, drags and releases, all twelve characters | p95 8.36 ms, maximum 9.45 ms across 467 frames |
+
+The checks used owned native windows with AX disabled. An earlier debug input check failed its click assertion; a release run passed. A later release repeat failed with the cursor away from the commanded drag position; the final repeat passed all twelve characters. Failure diagnostics include pointer, target and event counts. Passing retries do not establish the causes of the earlier failures.
+
+Later debug-suite runs, while an older Sillies instance was also running, exceeded interaction timing budgets. Temporary stage measurements localized the extra window-switch time to the first native panel move, and a process sample found AppKit waiting for a Core Animation fence in `NSWindow._setFrameCommon` → `NSWMWindowCoordinator.clearDisplayAffinityForWindow`. A longer 800-switch diagnostic also reached a 29.50 ms maximum. After gracefully stopping the older app, the final full `make check` passed: 78 Core tests, 73 app tests, formatting, signed build and all twelve packs. The opt-in model test runs separately as described below. This does not prove that concurrent instances alone caused the earlier delays. The production metrics and standard 40-switch test retain their original thresholds; temporary instrumentation and the longer diagnostic fixture were removed.
+
+The opt-in local AI check feeds generated speech into two real on-device speech channels, encodes AAC, and generates Foundation Models notes while running the unchanged budgets for window move, resize, switch and companion drag. It passed in 7.94 seconds and transcribed the fixture through both channels. Notes retained both explicit commitments in the source. This check uses synthetic audio; it does not record a microphone or meeting application. See [skill validation](skills.md#validation) for the command and remaining live-call acceptance check.
+
+The language-selector and buffering regression passes the full `make check`: 79 Core tests and 83 app tests, including all four interaction budgets, formatting, the signed build and twelve packs. Speech now normalizes variable callbacks into 100 ms chunks with a bounded 12-second input stream; the earlier callback-count limit could fill with only about a second of frequent microphone input. The updated real-model check repeats generated speech three times on two channels using approximately 10 ms input buffers, with AAC encoding and notes generation, and passes the unchanged interaction budgets in 24.82 seconds. A separate French-output check verifies translated summaries and both commitments with their owner and deadlines intact. Switching tests preserve both source drafts, buffer new speech, reject old recognizer callbacks and finish safely during a switch. Utility-window regressions cover attachment/drop exclusion, native lifecycle notifications, stale metadata after close and reopening.
+
+The macOS 26-only visibility and transcript follow-up passes `make check` with 86 Core and 88 app tests, the signed build, and twelve packs. Bound-window tests cover rectangular occlusion, hiding/restoring mascot and HUD, preserving capture during invisibility, native window levels, and utility-window priority. Capture input now budgets queued duration per source instead of 128 callbacks; a regression drains 2,000 one-millisecond PCM buffers without losing samples and separately verifies bounded overload. Timeline tests cover late finals, disjoint partials, two-source chronology, and adjacent-range floating-point rounding. The real local-model workload passes all four unchanged interaction budgets in 24.80 seconds while retaining all nine sentences in each of two speech streams; French summaries and actions also pass. These tests do not provide acoustic echo cancellation or certify live Meet/Zoom capture through laptop speakers.
+
+A locked-display run initially exposed an actor-isolation error in the off-main test watchdog. Its handler is now explicitly Sendable, as is the automated app-check watchdog. Display-driven checks were rerun after unlocking; no performance thresholds were changed. These checks still do not certify live meeting capture on every app/device combination.
+
+
+All timings are local app-level measurements. Display-link gaps include scheduling delays and do not measure compositor presentation latency or establish universal smoothness guarantees.
 
 ## Interactive matrix
 

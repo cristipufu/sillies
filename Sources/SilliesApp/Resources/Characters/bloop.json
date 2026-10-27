@@ -230,6 +230,36 @@
       "motion": "none"
     },
     {
+      "id": "participate-companion",
+      "event": "skill.participate",
+      "animation": "listen",
+      "duration": 180,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "record-companion",
+      "event": "skill.record",
+      "animation": "listen",
+      "duration": 180,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "explain-companion",
+      "event": "skill.explain",
+      "animation": "snap",
+      "duration": 1.2,
+      "priority": 8,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
       "id": "keeping-an-eye-out",
       "event": "skill.watch",
       "animation": "watch",

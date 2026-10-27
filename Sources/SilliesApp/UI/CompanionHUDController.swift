@@ -27,10 +27,12 @@ final class CompanionHUDController {
         self = .hidden
       case .active(let target, let skill, _, let statusDetail, _):
         self = .active(
-          skill: skill, appName: target.appName,
-          normalizedDetail: Self.normalizeMonospacedDigits(statusDetail))
+          skill: skill, appName: (target?.appName ?? "Microphone"),
+          normalizedDetail: skill.isAudioSession
+            ? "audio" : Self.normalizeMonospacedDigits(statusDetail))
       case .completed(let target, let skill, let summary, _, _):
-        self = .completed(skill: skill, appName: target.appName, summary: summary)
+        self = .completed(
+          skill: skill, appName: (target?.appName ?? "Microphone"), summary: summary)
       }
     }
 
@@ -52,6 +54,8 @@ final class CompanionHUDController {
     }
   }
 
+  var attachedWindowLayer = 0
+  var companionWindowNumber: Int?
   let model = CompanionHUDModel()
   private var panel: SkillFloatingPanel?
   private var hostingController: NSHostingController<CompanionHUDView>?
@@ -67,7 +71,7 @@ final class CompanionHUDController {
     visibleFrame: CGRect
   ) {
     updateModel(state)
-    guard state.isBound else {
+    guard state.hasPresentation else {
       hide()
       return
     }
@@ -78,7 +82,9 @@ final class CompanionHUDController {
       for: panelSize, companionPoint: companionPoint, characterSize: characterSize,
       visibleFrame: visibleFrame)
     if panel?.frame != frame { panel?.setFrame(frame, display: false) }
-    if panel?.isVisible != true {
+    if state.isBound, let companionWindowNumber {
+      panel?.order(.above, relativeTo: companionWindowNumber)
+    } else if panel?.isVisible != true {
       panel?.orderFrontRegardless()
     }
   }
@@ -110,15 +116,17 @@ final class CompanionHUDController {
     let created = SkillFloatingPanel(
       contentRect: CGRect(origin: .zero, size: Self.fallbackSize),
       ignoresMouseEvents: false,
-      level: CompanionPanel.hudLevel(forWindowLayer: state.boundTarget?.windowLayer ?? 0))
+      level: CompanionPanel.hudLevel(
+        forWindowLayer: state.boundTarget?.windowLayer ?? attachedWindowLayer))
     created.contentViewController = host
     hostingController = host
     panel = created
   }
 
   private func updatePanelLevel(for state: CompanionBindingState) {
-    let targetHUDLevel = CompanionPanel.hudLevel(
-      forWindowLayer: state.boundTarget?.windowLayer ?? 0)
+    let targetHUDLevel =
+      state.boundTarget.map { NSWindow.Level(rawValue: $0.windowLayer) }
+      ?? CompanionPanel.hudLevel(forWindowLayer: attachedWindowLayer)
     if panel?.level != targetHUDLevel {
       panel?.level = targetHUDLevel
     }

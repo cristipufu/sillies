@@ -55,12 +55,15 @@ final class SessionVaultStore {
   nonisolated private static let vaultDirectoryPermissions = 0o700
 
   private(set) var records: [SessionRecord] = []
+  private(set) var persistenceError: String?
   private(set) var pinnedRecordID: UUID?
   private var cachedImages: [String: NSImage] = [:]
   @ObservationIgnored private var cachedImageBytes: [String: Int] = [:]
   @ObservationIgnored private(set) var totalCachedImageBytes = 0
   @ObservationIgnored private var cachedImageOrder: [String] = []
   @ObservationIgnored private var pendingImageLoads: Set<String> = []
+  typealias NotesGenerator = @Sendable (SessionRecord) async -> LocalNotes
+  @ObservationIgnored private let notesGenerator: NotesGenerator
   @ObservationIgnored private var summaryTasks: [UUID: Task<Void, Never>] = [:]
   @ObservationIgnored private var isLoading = true
   @ObservationIgnored private var loadCompletions: [() -> Void] = []
@@ -80,7 +83,20 @@ final class SessionVaultStore {
     summaryTasks.count
   }
 
-  init(directory: URL? = nil, pasteboard: NSPasteboard = .general) {
+  init(
+    directory: URL? = nil, pasteboard: NSPasteboard = .general,
+    notesGenerator: @escaping NotesGenerator = { record in
+      if record.kind == .stash {
+        let (summary, actions) = await SessionSummarizer.summarizeOnWorker(
+          text: record.primaryText, fallbackContext: record.summary)
+        return LocalNotes(summary: summary, actions: actions)
+      }
+      return await LocalReasoningService.shared.notes(
+        for: record.primaryText, kind: record.kind, fallback: record.summary,
+        localeIdentifier: record.languageIdentifier)
+    }
+  ) {
+    self.notesGenerator = notesGenerator
     self.pasteboard = pasteboard
     if let directory {
       storageDirectory = directory
@@ -116,18 +132,9 @@ final class SessionVaultStore {
         image, preencodedPNGData: pngData, filename: filename, preparePreview: needsDownsampling)
     }
     records.insert(updated, at: 0)
-    if records.count > Self.maxStoredRecords {
-      let removed = records.suffix(from: Self.maxStoredRecords)
-      for old in removed {
-        if let file = old.imageFilename {
-          evictCachedImage(for: file)
-          deleteImageAsync(filename: file)
-        }
-      }
-      records = Array(records.prefix(Self.maxStoredRecords))
-    }
+    trimHistory()
     persistAsync()
-    if updated.summaryPending {
+    if updated.summaryPending && summariesEnabled {
       scheduleSummaryRefinement(for: updated)
     }
   }
@@ -195,6 +202,7 @@ final class SessionVaultStore {
       evictCachedImage(for: file)
       deleteImageAsync(filename: file)
     }
+    if let file = removed.audioFilename { deleteImageAsync(filename: file) }
     persistAsync()
   }
 
@@ -203,7 +211,7 @@ final class SessionVaultStore {
     for task in summaryTasks.values { task.cancel() }
     summaryTasks.removeAll()
     pinnedRecordID = nil
-    let files = records.compactMap(\.imageFilename)
+    let files = records.flatMap { [$0.imageFilename, $0.audioFilename].compactMap { $0 } }
     records.removeAll()
     cachedImages.removeAll()
     cachedImageBytes.removeAll()
@@ -232,6 +240,13 @@ final class SessionVaultStore {
     Self.ioQueue.async {
       dispatchPrecondition(condition: .notOnQueue(.main))
       MainRunLoopDelivery.perform { completion() }
+    }
+  }
+
+  /// Acknowledges image and JSON writes, including a load still in flight at Save.
+  func whenPersisted(_ completion: @escaping @MainActor (String?) -> Void) {
+    flushOnIOQueue { [weak self] in
+      MainActor.assumeIsolated { completion(self?.persistenceError) }
     }
   }
 
@@ -342,16 +357,53 @@ final class SessionVaultStore {
   }
 
   private func scheduleSummaryRefinement(for record: SessionRecord) {
-    guard summaryTasks[record.id] == nil else { return }
-    let recordID = record.id
-    let sourceText = record.primaryText
-    let fallbackContext = record.summary
-    summaryTasks[recordID] = Task { @MainActor [weak self] in
-      let (summary, actions) = await SessionSummarizer.summarizeOnWorker(
-        text: sourceText, fallbackContext: fallbackContext)
-      guard !Task.isCancelled, let self else { return }
-      self.completePendingSummary(id: recordID, summary: summary, actionItems: actions)
+    guard summariesEnabled, summaryTasks[record.id] == nil else { return }
+    let generate = notesGenerator
+    summaryTasks[record.id] = Task { [weak self] in
+      let notes = await generate(record)
+      guard !Task.isCancelled, let self,
+        let index = self.records.firstIndex(where: { $0.id == record.id })
+      else { return }
+      var updated = self.records[index]
+      updated.summary = notes.summary
+      updated.actionItems = notes.actions
+      updated.explanation = notes.explanation
+      updated.processingNote = [updated.processingNote, notes.notice].filter { !$0.isEmpty }.joined(
+        separator: "\n")
+      updated.summaryPending = false
+      self.summaryTasks.removeValue(forKey: record.id)
+      self.update(updated)
     }
+  }
+
+  func audioURL(for record: SessionRecord) -> URL? {
+    record.audioFilename.map {
+      storageDirectory.appendingPathComponent(URL(fileURLWithPath: $0).lastPathComponent)
+    }
+  }
+
+  private func trimHistory() {
+    var historyCount = 0
+    let expired = records.filter { record in
+      guard record.kind != .stash else { return false }
+      historyCount += 1
+      return historyCount > Self.maxStoredRecords
+    }
+    for record in expired {
+      summaryTasks.removeValue(forKey: record.id)?.cancel()
+      if let filename = record.imageFilename {
+        evictCachedImage(for: filename)
+        deleteImageAsync(filename: filename)
+      }
+      if let filename = record.audioFilename { deleteImageAsync(filename: filename) }
+    }
+    let expiredIDs = Set(expired.map(\.id))
+    records.removeAll { expiredIDs.contains($0.id) }
+  }
+
+  func retrySaving() {
+    persistenceError = nil
+    persistAsync()
   }
 
   private func drainStagedPreviews() {
@@ -492,12 +544,14 @@ final class SessionVaultStore {
       guard !currentIDs.contains(record.id) else { continue }
       if discardLoadedRecords || removedWhileLoading.contains(record.id) {
         if let filename = record.imageFilename { deleteImageAsync(filename: filename) }
-      } else if merged.count < Self.maxStoredRecords {
+        if let filename = record.audioFilename { deleteImageAsync(filename: filename) }
+      } else {
         merged.append(record)
         currentIDs.insert(record.id)
       }
     }
     records = merged
+    trimHistory()
     isLoading = false
     removedWhileLoading.removeAll()
     if persistencePending {
@@ -518,18 +572,23 @@ final class SessionVaultStore {
     let snapshot = records
     let directory = storageDirectory
     let fileURL = directory.appendingPathComponent(Self.sessionsFilename)
-    Self.ioQueue.async {
+    Self.ioQueue.async { [weak self] in
       dispatchPrecondition(condition: .notOnQueue(.main))
       let encoder = JSONEncoder()
       encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
       encoder.dateEncodingStrategy = .iso8601
       do {
         let data = try encoder.encode(snapshot)
-        Self.writeAtomically(data, to: fileURL, in: directory)
+        let error = Self.writeAtomically(data, to: fileURL, in: directory)
+        if let error {
+          MainRunLoopDelivery.perform { [weak self] in self?.persistenceError = error }
+        }
       } catch {
         fputs(
           "SessionVaultStore failed to encode session records: \(error.localizedDescription)\n",
           stderr)
+        let message = "Could not save session notes: \(error.localizedDescription)"
+        MainRunLoopDelivery.perform { [weak self] in self?.persistenceError = message }
       }
     }
   }
@@ -549,8 +608,14 @@ final class SessionVaultStore {
           self?.drainStagedPreviews()
         }
       }
-      if let data = preencodedPNGData ?? Self.encodePNGData(from: cgImage) {
-        Self.writeAtomically(data, to: fileURL, in: directory)
+      guard let data = preencodedPNGData ?? Self.encodePNGData(from: cgImage) else {
+        let message = "Could not encode the snapshot image."
+        fputs("\(message)\n", stderr)
+        MainRunLoopDelivery.perform { [weak self] in self?.persistenceError = message }
+        return
+      }
+      if let error = Self.writeAtomically(data, to: fileURL, in: directory) {
+        MainRunLoopDelivery.perform { [weak self] in self?.persistenceError = error }
       }
     }
   }
@@ -559,17 +624,19 @@ final class SessionVaultStore {
     _ data: Data,
     to fileURL: URL,
     in directory: URL
-  ) {
+  ) -> String? {
     do {
       try FileManager.default.createDirectory(
         at: directory,
         withIntermediateDirectories: true,
         attributes: [.posixPermissions: vaultDirectoryPermissions])
       try data.write(to: fileURL, options: .atomic)
+      return nil
     } catch {
       fputs(
         "SessionVaultStore failed to write \(fileURL.lastPathComponent): \(error.localizedDescription)\n",
         stderr)
+      return "Could not save \(fileURL.lastPathComponent): \(error.localizedDescription)"
     }
   }
 

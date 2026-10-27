@@ -8,7 +8,7 @@ import Testing
 func vaultLoadingMergesEarlyChangesWithoutOverwritingSavedSessions() async throws {
   let directory = FileManager.default.temporaryDirectory
     .appendingPathComponent("sillies-load-\(UUID().uuidString)")
-  defer { try? FileManager.default.removeItem(at: directory) }
+  defer { removeTestFile(at: directory) }
   let original = SessionVaultStore(directory: directory)
   let retained = makeLoadTestRecord("Retained")
   let removed = makeLoadTestRecord("Removed during load")
@@ -42,7 +42,7 @@ func vaultLoadingMergesEarlyChangesWithoutOverwritingSavedSessions() async throw
 func quittingBeforeVaultLoadFinishesFlushesInTheModalRunLoop() throws {
   let directory = FileManager.default.temporaryDirectory
     .appendingPathComponent("sillies-load-quit-\(UUID().uuidString)")
-  defer { try? FileManager.default.removeItem(at: directory) }
+  defer { removeTestFile(at: directory) }
   let vault = SessionVaultStore(directory: directory)
   let record = makeLoadTestRecord("Saved while loading")
   vault.add(record)
@@ -64,4 +64,40 @@ func quittingBeforeVaultLoadFinishesFlushesInTheModalRunLoop() throws {
 private func makeLoadTestRecord(_ summary: String) -> SessionRecord {
   SessionRecord(
     kind: .focus, characterID: "mochi", characterName: "Mochi", appName: "Test", summary: summary)
+}
+
+@Test @MainActor func deliberateStashesSurviveHistoryLimitAndRelaunch() async throws {
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { removeTestFile(at: directory) }
+  let vault = SessionVaultStore(directory: directory)
+  let stash = SessionRecord(
+    kind: .stash, characterID: "mochi", characterName: "Mochi", appName: "Pocket Stash",
+    stashedItems: ["Keep until I delete it"])
+  vault.add(stash)
+  for index in 0..<(SessionVaultStore.maxStoredRecords + 2) {
+    vault.add(
+      SessionRecord(
+        kind: .snap, characterID: "mochi", characterName: "Mochi", appName: "Capture \(index)"))
+  }
+  await vault.flush()
+  #expect(vault.records.count == SessionVaultStore.maxStoredRecords + 1)
+  let loaded = SessionVaultStore(directory: directory)
+  await loaded.waitUntilLoaded()
+  #expect(loaded.records.contains { $0.id == stash.id })
+  loaded.remove(id: stash.id)
+  await loaded.flush()
+  #expect(!loaded.records.contains { $0.id == stash.id })
+}
+
+@Test @MainActor func vaultReportsUnwritableStorageInsteadOfAcknowledgingASave() async throws {
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  try Data("occupied".utf8).write(to: directory)
+  defer { removeTestFile(at: directory) }
+  let vault = SessionVaultStore(directory: directory)
+  vault.add(makeLoadTestRecord("Cannot persist here"))
+  let error: String? = await withCheckedContinuation { continuation in
+    vault.whenPersisted { continuation.resume(returning: $0) }
+  }
+  #expect(error != nil)
+  #expect(vault.persistenceError != nil)
 }

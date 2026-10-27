@@ -15,7 +15,7 @@ struct AudioCaptureConfiguration: Sendable {
   var language: SpeechLanguage?
   var sources: [SessionAudioSource] {
     switch kind {
-    case .participate: [.application, .microphone]
+    case .listen, .participate: [.application, .microphone]
     case .record: [.microphone]
     default: [.application]
     }
@@ -53,6 +53,7 @@ final class AudioTranscriptionService: SessionAudioCapture, @unchecked Sendable 
   private var microphone: MicrophoneAudioSource?
   private var application: ApplicationAudioSource?
   private var writer: AudioRecordingWriter?
+  private var meetingAudio: MeetingAudioProcessor?
   private var paused = false
   private var capturing = false
   private var startedAt: TimeInterval = 0
@@ -99,7 +100,7 @@ final class AudioTranscriptionService: SessionAudioCapture, @unchecked Sendable 
       separator: " + ")
     queue.async { [self] in
       guard !lock.withLock({ stopped }), failure == nil else { return }
-      startedAt = ProcessInfo.processInfo.systemUptime
+      startedAt = AudioCaptureClock.now
       capturing = true
       onUpdate(.capturing(label))
     }
@@ -155,9 +156,12 @@ final class AudioTranscriptionService: SessionAudioCapture, @unchecked Sendable 
           if let url = configuration.recordingURL {
             writer = try AudioRecordingWriter(destination: url)
           }
+          if configuration.kind.isMeetingSession {
+            meetingAudio = try MeetingAudioProcessor()
+          }
           if configuration.sources.contains(.microphone) {
             microphone = MicrophoneAudioSource(
-              receive: { [weak self] in self?.enqueue($0, from: .microphone) },
+              receive: { [weak self] in self?.enqueue($0) },
               failure: { [weak self] in self?.reportFailure($0) })
           }
           if configuration.sources.contains(.application) {
@@ -166,7 +170,7 @@ final class AudioTranscriptionService: SessionAudioCapture, @unchecked Sendable 
             }
             application = ApplicationAudioSource(
               target: target,
-              receive: { [weak self] in self?.enqueue($0, from: .application) },
+              receive: { [weak self] in self?.enqueue($0) },
               failure: { [weak self] in self?.reportFailure($0) })
           }
           continuation.resume(
@@ -179,15 +183,22 @@ final class AudioTranscriptionService: SessionAudioCapture, @unchecked Sendable 
   func pause() {
     queue.async { [self] in
       guard capturing, !paused else { return }
+      do {
+        try flushMeetingAudio()
+        try meetingAudio?.reset()
+      } catch {
+        fail(error.localizedDescription)
+        return
+      }
       paused = true
-      pausedAt = ProcessInfo.processInfo.systemUptime
+      pausedAt = AudioCaptureClock.now
     }
   }
 
   func resume() {
     queue.async { [self] in
       guard capturing, paused else { return }
-      if let pausedAt { pausedDuration += ProcessInfo.processInfo.systemUptime - pausedAt }
+      if let pausedAt { pausedDuration += AudioCaptureClock.now - pausedAt }
       pausedAt = nil
       paused = false
     }
@@ -200,8 +211,7 @@ final class AudioTranscriptionService: SessionAudioCapture, @unchecked Sendable 
     }
   }
 
-  private func enqueue(_ sample: CMSampleBuffer, from source: SessionAudioSource) {
-    guard let packet = AudioCaptureInputQueue.Packet(sample: sample, source: source) else { return }
+  private func enqueue(_ packet: AudioCaptureInputQueue.Packet) {
     inputQueue.enqueue(
       packet, receive: { [weak self] in self?.process($0) },
       overflow: { [weak self] in
@@ -216,17 +226,33 @@ final class AudioTranscriptionService: SessionAudioCapture, @unchecked Sendable 
       let buffer = AudioPCMTools.buffer(from: packet.sample)
     else { return }
     do {
-      if packet.source == .microphone { try writer?.append(buffer) }
-      speech?.append(
-        buffer, source: packet.source,
-        elapsed: max(0, packet.capturedAt - startedAt - pausedDuration))
+      if let meetingAudio {
+        try meetingAudio.append(buffer, source: packet.source, at: packet.sampleStartTime)
+        while let output = try meetingAudio.nextReadyOutput() { try consume(output) }
+      } else {
+        try writer?.append(buffer)
+        speech?.append(
+          buffer, source: packet.source,
+          elapsed: max(0, packet.capturedAt - startedAt - pausedDuration))
+      }
       publish(level: AudioPCMTools.level(buffer))
     } catch { fail(error.localizedDescription) }
   }
 
+  private func consume(_ output: MeetingAudioProcessor.Output) throws {
+    let elapsed = max(0, output.endTime - startedAt - pausedDuration)
+    try writer?.append(output.recording)
+    speech?.append(output.meeting, source: .application, elapsed: elapsed)
+    speech?.append(output.microphone, source: .microphone, elapsed: elapsed)
+  }
+
+  private func flushMeetingAudio() throws {
+    while let output = try meetingAudio?.nextFinalOutput() { try consume(output) }
+  }
+
   private var elapsed: TimeInterval {
     guard startedAt > 0 else { return 0 }
-    return max(0, (pausedAt ?? ProcessInfo.processInfo.systemUptime) - startedAt - pausedDuration)
+    return max(0, (pausedAt ?? AudioCaptureClock.now) - startedAt - pausedDuration)
   }
 
   private var transcript: String {
@@ -234,7 +260,7 @@ final class AudioTranscriptionService: SessionAudioCapture, @unchecked Sendable 
   }
 
   private func publish(level: Double) {
-    let now = ProcessInfo.processInfo.systemUptime
+    let now = AudioCaptureClock.now
     guard now - lastPublishedAt >= Self.publicationInterval else { return }
     lastPublishedAt = now
     onUpdate(
@@ -249,10 +275,11 @@ final class AudioTranscriptionService: SessionAudioCapture, @unchecked Sendable 
     failure = message
     inputQueue.stop()
     capturing = false
-    if startedAt > 0 { pausedAt = ProcessInfo.processInfo.systemUptime }
+    if startedAt > 0 { pausedAt = AudioCaptureClock.now }
     microphone?.stop()
     application?.stop()
     speech?.cancel()
+    meetingAudio = nil
     onUpdate(.failed(message))
     fputs("Audio session failed: \(message)\n", stderr)
   }
@@ -264,8 +291,13 @@ final class AudioTranscriptionService: SessionAudioCapture, @unchecked Sendable 
       startup?.cancel()
     }
     queue.async { [self] in
+      do { try flushMeetingAudio() } catch {
+        failure = failure ?? error.localizedDescription
+        fputs("Meeting audio finalization failed: \(error.localizedDescription)\n", stderr)
+      }
+      meetingAudio = nil
       capturing = false
-      if pausedAt == nil { pausedAt = ProcessInfo.processInfo.systemUptime }
+      if pausedAt == nil { pausedAt = AudioCaptureClock.now }
       pendingStops =
         (speech == nil ? 0 : 1) + (microphone == nil ? 0 : 1) + (application == nil ? 0 : 1)
       let stopped: @Sendable () -> Void = { [self] in

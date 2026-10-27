@@ -18,6 +18,7 @@ public struct MeetingSuggestion: Codable, Equatable, Identifiable, Sendable {
 public struct MeetingSuggestionGate: Sendable {
   public static let minimumInterval: TimeInterval = 45
   public static let maximumSuggestions = 12
+  public static let maximumQuestionCharacters = 180
   private static let minimumEvidenceCharacters = 12
   public private(set) var suggestions: [MeetingSuggestion] = []
 
@@ -26,15 +27,16 @@ public struct MeetingSuggestionGate: Sendable {
   public mutating func accept(_ suggestion: MeetingSuggestion, source: String) -> Bool {
     let question = suggestion.question.trimmingCharacters(in: .whitespacesAndNewlines)
     let evidence = suggestion.evidence.trimmingCharacters(in: .whitespacesAndNewlines)
-    guard !question.isEmpty, evidence.count >= Self.minimumEvidenceCharacters,
+    guard !question.isEmpty, question.count <= Self.maximumQuestionCharacters,
+      evidence.count >= Self.minimumEvidenceCharacters,
       source.localizedCaseInsensitiveContains(evidence),
-      suggestions.count < Self.maximumSuggestions,
       !suggestions.contains(where: {
         $0.question.lowercased() == question.lowercased()
           || $0.evidence.lowercased() == evidence.lowercased()
       }),
       suggestions.last.map({ suggestion.elapsed - $0.elapsed >= Self.minimumInterval }) ?? true
     else { return false }
+    if suggestions.count == Self.maximumSuggestions { suggestions.removeFirst() }
     suggestions.append(suggestion)
     return true
   }

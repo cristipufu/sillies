@@ -58,6 +58,7 @@ final class CompanionHUDController {
   var companionWindowNumber: Int?
   let model = CompanionHUDModel()
   private var panel: SkillFloatingPanel?
+  let speechBubble = MeetingSpeechBubbleController()
   private var hostingController: NSHostingController<CompanionHUDView>?
   private var lastLayoutKey: LayoutKey?
   private var cachedPanelSize: CGSize?
@@ -87,6 +88,23 @@ final class CompanionHUDController {
     } else if panel?.isVisible != true {
       panel?.orderFrontRegardless()
     }
+    updateSpeechBubble(
+      companionPoint: companionPoint, characterSize: characterSize, visibleFrame: visibleFrame)
+  }
+
+  private func updateSpeechBubble(
+    companionPoint: CGPoint, characterSize: Double, visibleFrame: CGRect
+  ) {
+    guard let companionWindowNumber, let panel else {
+      speechBubble.hide()
+      return
+    }
+    speechBubble.update(
+      suggestion: model.audioSession?.currentBubbleSuggestion,
+      placement: .init(
+        layout: SuggestionBubbleLayout(
+          companionPoint: companionPoint, characterSize: characterSize, visibleFrame: visibleFrame),
+        level: panel.level, companionWindowNumber: companionWindowNumber))
   }
 
   private func updateModel(_ state: CompanionBindingState) {
@@ -96,10 +114,12 @@ final class CompanionHUDController {
   }
 
   func hide() {
+    speechBubble.hide()
     if panel?.isVisible == true { panel?.orderOut(nil) }
   }
 
   func close() {
+    speechBubble.close()
     panel?.orderOut(nil)
     panel?.close()
     panel = nil

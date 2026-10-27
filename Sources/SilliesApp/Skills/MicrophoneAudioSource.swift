@@ -7,7 +7,7 @@ import CoreMedia
 final class MicrophoneAudioSource: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate,
   @unchecked Sendable
 {
-  typealias Receiver = @Sendable (CMSampleBuffer) -> Void
+  typealias Receiver = AudioCaptureInputQueue.Receiver
   private let queue = DispatchQueue(label: "app.sillies.microphone", qos: .userInitiated)
   private let outputQueue = DispatchQueue(
     label: "app.sillies.microphone.samples", qos: .userInitiated)
@@ -96,6 +96,10 @@ final class MicrophoneAudioSource: NSObject, AVCaptureAudioDataOutputSampleBuffe
     _ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer,
     from connection: AVCaptureConnection
   ) {
-    receive(sampleBuffer)
+    guard
+      let packet = AudioCaptureInputQueue.Packet(
+        sample: sampleBuffer, source: .microphone, sourceClock: session.synchronizationClock)
+    else { return }
+    receive(packet)
   }
 }

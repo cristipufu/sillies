@@ -10,7 +10,7 @@ final class ApplicationAudioSource: NSObject, SCStreamOutput, SCStreamDelegate, 
   private static let channelCount = 1
   private static let unusedVideoDimension = 2
   private let target: WindowTargetCandidate
-  private let receive: @Sendable (CMSampleBuffer) -> Void
+  private let receive: AudioCaptureInputQueue.Receiver
   private let failure: @Sendable (String) -> Void
   private let queue = DispatchQueue(label: "app.sillies.application-audio", qos: .userInitiated)
   private let lock = NSLock()
@@ -18,7 +18,7 @@ final class ApplicationAudioSource: NSObject, SCStreamOutput, SCStreamDelegate, 
   private var stopped = false
 
   init(
-    target: WindowTargetCandidate, receive: @escaping @Sendable (CMSampleBuffer) -> Void,
+    target: WindowTargetCandidate, receive: @escaping AudioCaptureInputQueue.Receiver,
     failure: @escaping @Sendable (String) -> Void
   ) {
     self.target = target
@@ -81,7 +81,11 @@ final class ApplicationAudioSource: NSObject, SCStreamOutput, SCStreamDelegate, 
     _ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer,
     of outputType: SCStreamOutputType
   ) {
-    if outputType == .audio, sampleBuffer.isValid { receive(sampleBuffer) }
+    if outputType == .audio, sampleBuffer.isValid,
+      let packet = AudioCaptureInputQueue.Packet(sample: sampleBuffer, source: .application)
+    {
+      receive(packet)
+    }
   }
 
   func stream(_ stream: SCStream, didStopWithError error: Error) {

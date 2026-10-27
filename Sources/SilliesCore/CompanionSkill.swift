@@ -14,6 +14,7 @@ public enum CompanionSkillKind: String, Codable, CaseIterable, Sendable, Identif
   case stash
 
   public var isAudioSession: Bool { self == .listen || self == .participate || self == .record }
+  public var isMeetingSession: Bool { self == .listen || self == .participate }
   public var requiresWindow: Bool { self != .record && self != .stash }
 
   public var id: Self { self }

@@ -89,9 +89,9 @@ struct AudioSessionHeader: View {
         model.kind == .record
           ? "Records your laptop microphone when available and saves a playable audio file."
           : "Captures audio from the selected app, including other tabs in the same browser.")
-      if model.kind == .participate {
+      if model.kind.isMeetingSession {
         Text(
-          "Your microphone is included and labeled separately. Muting Meet or Zoom does not mute Sillies. Use headphones to prevent speaker audio from entering both streams; use Listen for meeting audio alone."
+          "Includes your microphone and saves both sides of the conversation. Speaker echo is reduced locally. Muting Meet or Zoom does not mute Sillies."
         )
       }
       Text("Sillies does not change your meeting’s microphone, mute, volume, or audio routing.")

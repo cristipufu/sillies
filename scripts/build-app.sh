@@ -52,6 +52,14 @@ if [[ -n "${SILLIES_FEED_URL:-}" ]]; then
 fi
 
 rsync -a --delete Sources/SilliesApp/Resources/Characters/ "$app/Contents/Resources/Characters/"
+mkdir -p "$app/Contents/Resources/ThirdPartyNotices"
+cp Vendor/AudioProcessing/WEBRTC-LICENSE Vendor/AudioProcessing/WEBRTC-PATENTS Vendor/AudioProcessing/ABSEIL-LICENSE "$app/Contents/Resources/ThirdPartyNotices/"
+cp Vendor/AudioProcessing/webrtc/LICENSE "$app/Contents/Resources/ThirdPartyNotices/WEBRTC-AUTHORS-LICENSE"
+cp Vendor/AudioProcessing/webrtc/third_party/pffft/LICENSE "$app/Contents/Resources/ThirdPartyNotices/PFFFT-LICENSE"
+cp Vendor/AudioProcessing/webrtc/third_party/rnnoise/COPYING "$app/Contents/Resources/ThirdPartyNotices/RNNOISE-LICENSE"
+cp Vendor/AudioProcessing/webrtc/common_audio/third_party/ooura/LICENSE "$app/Contents/Resources/ThirdPartyNotices/OOURA-LICENSE"
+cp Vendor/AudioProcessing/webrtc/common_audio/third_party/spl_sqrt_floor/LICENSE "$app/Contents/Resources/ThirdPartyNotices/SPL-SQRT-LICENSE"
+cp Vendor/AudioProcessing/webrtc/modules/third_party/fft/LICENSE "$app/Contents/Resources/ThirdPartyNotices/FFT-LICENSE"
 swift scripts/make-icon.swift "$PWD/build"
 cp build/Sillies.icns "$app/Contents/Resources/Sillies.icns"
 

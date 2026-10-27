@@ -4,20 +4,31 @@ import SilliesCore
 
 /// Retains capture buffers only until the serial processing queue consumes them.
 final class AudioCaptureInputQueue: @unchecked Sendable {
+  typealias Receiver = @Sendable (Packet) -> Void
+
   struct Packet: @unchecked Sendable {
     let sample: CMSampleBuffer
     let source: SessionAudioSource
     let duration: TimeInterval
     let capturedAt: TimeInterval
+    let sampleStartTime: TimeInterval
 
-    init?(sample: CMSampleBuffer, source: SessionAudioSource) {
+    init?(sample: CMSampleBuffer, source: SessionAudioSource, sourceClock: CMClock? = nil) {
       guard let description = sample.formatDescription,
         let format = CMAudioFormatDescriptionGetStreamBasicDescription(description)
       else { return nil }
       self.sample = sample
       self.source = source
       duration = Double(sample.numSamples) / format.pointee.mSampleRate
-      capturedAt = ProcessInfo.processInfo.systemUptime
+      capturedAt = AudioCaptureClock.now
+      let presentationTime =
+        sourceClock.map {
+          CMSyncConvertTime(sample.presentationTimeStamp, from: $0, to: CMClockGetHostTimeClock())
+            .seconds
+        } ?? sample.presentationTimeStamp.seconds
+      sampleStartTime =
+        presentationTime.isFinite && presentationTime > 0
+        ? presentationTime : capturedAt - duration
     }
   }
   private let queue: DispatchQueue

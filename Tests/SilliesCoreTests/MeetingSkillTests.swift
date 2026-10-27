@@ -69,3 +69,21 @@ import Testing
   let decoded = try JSONDecoder().decode(SessionRecord.self, from: JSONEncoder().encode(record))
   #expect(decoded.languageIdentifier == "fr-FR")
 }
+
+@Test func meetingSuggestionsContinueAfterHistoryFillsAndFitTheSpeechBubble() {
+  var gate = MeetingSuggestionGate()
+  for index in 0..<20 {
+    let evidence = "Unresolved topic number \(index) needs an owner."
+    let suggestion = MeetingSuggestion(
+      question: "Who owns topic \(index)?", evidence: evidence, elapsed: Double(index) * 60)
+    let accepted = gate.accept(suggestion, source: evidence)
+    #expect(accepted)
+  }
+  #expect(gate.suggestions.count == MeetingSuggestionGate.maximumSuggestions)
+  #expect(gate.suggestions.last?.question == "Who owns topic 19?")
+  let oversized = MeetingSuggestion(
+    question: String(repeating: "a", count: MeetingSuggestionGate.maximumQuestionCharacters + 1),
+    evidence: "An unresolved concern remains.", elapsed: 2000)
+  let accepted = gate.accept(oversized, source: oversized.evidence)
+  #expect(!accepted)
+}

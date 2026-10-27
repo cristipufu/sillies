@@ -39,6 +39,8 @@ final class SpeechBufferConverter {
 
   init(format: AVAudioFormat) { self.format = format }
 
+  func reset() { converter?.reset() }
+
   func convert(_ input: AVAudioPCMBuffer) throws -> AVAudioPCMBuffer {
     if input.format == format { return input }
     if converter?.inputFormat != input.format {

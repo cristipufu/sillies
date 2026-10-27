@@ -34,7 +34,7 @@ private final class FixtureAudioCapture: SessionAudioCapture, @unchecked Sendabl
   let listen = AudioCaptureConfiguration(kind: .listen, target: nil, recordingURL: nil)
   let participate = AudioCaptureConfiguration(kind: .participate, target: nil, recordingURL: nil)
   let record = AudioCaptureConfiguration(kind: .record, target: nil, recordingURL: nil)
-  #expect(listen.sources == [.application])
+  #expect(listen.sources == [.application, .microphone])
   #expect(participate.sources == [.application, .microphone])
   #expect(record.sources == [.microphone])
 }

@@ -38,7 +38,7 @@ final class AudioSkillSession: ActiveSkillSession {
     let source =
       request.kind == .record
       ? "Microphone"
-      : "\(request.target?.appName ?? "Application") audio\(request.kind == .participate ? " + microphone" : "")"
+      : "\(request.target?.appName ?? "Application") + microphone"
     presentation = AudioSessionPresentation(kind: request.kind, sourceLabel: source)
     presentation.onPause = { [weak self] in self?.pause() }
     presentation.onResume = { [weak self] in self?.resume() }
@@ -70,9 +70,7 @@ final class AudioSkillSession: ActiveSkillSession {
   private func beginCapture(language: SpeechLanguage) {
     presentation.selectedLanguageID = language.id
     presentation.status = "Preparing \(language.name)…"
-    let url =
-      request.kind == .record
-      ? request.recordingDirectory.appendingPathComponent("\(recordID.uuidString).m4a") : nil
+    let url = request.recordingDirectory.appendingPathComponent("\(recordID.uuidString).m4a")
     let configuration = AudioCaptureConfiguration(
       kind: request.kind, target: request.target, recordingURL: url, language: language)
     let service = captureFactory(configuration) { [weak self] update in

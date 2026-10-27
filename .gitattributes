@@ -1,0 +1,5 @@
+# Preserve upstream formatting and collapse the pinned DSP dependency in code reviews.
+Vendor/AudioProcessing/webrtc/** linguist-vendored -whitespace
+Vendor/AudioProcessing/abseil/** linguist-vendored -whitespace
+Vendor/AudioProcessing/*LICENSE linguist-vendored -whitespace
+Vendor/AudioProcessing/WEBRTC-PATENTS linguist-vendored -whitespace

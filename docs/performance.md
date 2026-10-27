@@ -217,3 +217,10 @@ October 25, 2026: Apple M4 Pro, 48 GiB RAM, macOS 26.7.1, optimized arm64 v0.2 b
 The paused interval includes the pause UI transition; the visible native playground remains open. These are short process-only measurements, not battery or GPU results. WindowServer/compositor cost and long-session behavior need separate profiling.
 
 Profiling removed companion-window notifications from the local window monitor, repeated ordering of already-visible panels, and replacement of mask layers during geometry updates. Raw window coordinates are excluded from SwiftUI observation; the UI observes only coarse attachment changes.
+
+
+## Speaker echo and live suggestion bubbles
+
+October 27, 2026: the shared Listen/Participate path adds local WebRTC AEC3 on the existing serial audio worker. Deterministic delayed-echo/double-talk testing measured 20.83 dB echo reduction and 0.828 near-speaker waveform correlation. The 24-second real Apple speech regression preserved the separate local speaker’s sentence and produced no remote “report” or “Alex” text in the microphone transcript, while encoding the mixed AAC recording and passing all four unchanged interaction budgets (27.87 seconds total). These are synthetic audio measurements, not a live Meet/Zoom or room-acoustics guarantee.
+
+`make check` passes 91 Core and 93 app tests. Bubble regressions verify one native panel is reused for replacement suggestions, no focus/input interception, utility tracking exclusion, native z-level, hide/restore and pause behavior, and only one SwiftUI content update across 120 anchor moves. Light and dark previews were rendered and visually checked. The small bubble background updates its Core Animation path directly; window movement never measures or regenerates its SwiftUI text.

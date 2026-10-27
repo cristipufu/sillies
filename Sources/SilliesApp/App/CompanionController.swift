@@ -589,6 +589,7 @@ final class CompanionController {
       if let hudNumber = pet.hud.windowNumber {
         excluded.insert(hudNumber)
       }
+      if let bubbleNumber = pet.hud.speechBubble.windowNumber { excluded.insert(bubbleNumber) }
     }
     return excluded
   }

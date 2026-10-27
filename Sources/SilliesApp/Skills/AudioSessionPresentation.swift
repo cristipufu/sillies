@@ -19,6 +19,10 @@ final class AudioSessionPresentation {
   var suggestionsEnabled: Bool
   var suggestions: [MeetingSuggestion] = []
   var hasUnreadSuggestion = false
+  var currentBubbleSuggestion: MeetingSuggestion? {
+    guard kind == .participate, phase == .capturing, suggestionsEnabled else { return nil }
+    return suggestions.last
+  }
   var reasoningNotice: String?
   var savedRecordID: UUID?
   var languages: [SpeechLanguage] = []

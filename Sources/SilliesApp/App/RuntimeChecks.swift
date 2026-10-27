@@ -5,6 +5,7 @@ import SilliesCore
 struct CompanionDiagnostics {
   let companionCount: Int
   let visibleCount: Int
+  let visibleHUDCount: Int
   let movementClockRunning: Bool
   let decisionClockRunning: Bool
   let clickThrough: Bool
@@ -51,8 +52,8 @@ struct LaunchConfiguration {
   func apply(to settings: AppSettings) {
     if isAutomatedRun { settings.followsWindows = false }
     if arguments.contains("--window-test") { settings.followsWindows = true }
-    if arguments.contains("--drag-latency-test")
-      || arguments.contains("--external-drag-test")
+    if arguments.contains("--drag-latency-test") { settings.followsWindows = true }
+    if arguments.contains("--external-drag-test")
       || arguments.contains("--interaction-test")
     {
       settings.followsWindows = true
@@ -81,7 +82,9 @@ final class AutomatedLaunchRunner {
   private var watchdogTimer: DispatchSourceTimer?
 
   func armWatchdogIfNeeded(for launch: LaunchConfiguration) {
-    guard launch.isAutomatedRun || launch.validatesCatalogOnly else { return }
+    guard launch.isAutomatedRun || launch.validatesCatalogOnly || launch.runsInputFixture else {
+      return
+    }
     let timeoutSeconds = launch.watchdogTimeoutSeconds
     let timer = DispatchSource.makeTimerSource(
       queue: DispatchQueue(label: "app.sillies.watchdog", qos: .userInteractive))

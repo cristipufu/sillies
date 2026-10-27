@@ -22,6 +22,8 @@ private final class FixtureTitleRegion: NSView {
 final class InputWindowFixture: NSObject, NSWindowDelegate {
   private var window: NSWindow?
   func start() {
+    // The fixture represents a document app; accessory agents are intentionally not trackable.
+    NSApp.setActivationPolicy(.regular)
     let window = NSWindow(
       contentRect: CGRect(x: 350, y: 250, width: 760, height: 440),
       styleMask: [.titled, .closable, .resizable, .fullSizeContentView], backing: .buffered,
@@ -216,7 +218,11 @@ final class ExternalDragCheck: NSObject {
     targetProbe?.refresh(
       processID: targetProcessID, windowID: latest.map { UInt32($0.windowID) },
       discover: latest == nil)
-    guard now - started < 16 else { fail("Fixture/input timed out") }
+    guard now - started < 16 else {
+      fail(
+        "Fixture/input timed out at \(phase); tracked=\(String(describing: controller.tracker.windowID)), expected=\(String(describing: latest?.windowID)), frontmostPID=\(NSWorkspace.shared.frontmostApplication?.processIdentifier ?? 0), fixturePID=\(targetProcessID)"
+      )
+    }
     if phase != .waiting,
       NSWorkspace.shared.frontmostApplication?.processIdentifier != targetProcessID
     {
@@ -271,7 +277,9 @@ final class ExternalDragCheck: NSObject {
       ?? controller.attachmentDiagnostics.first?.point.x ?? frame.midX
     switch phase {
     case .moving:
-      pointerOrigin = CGPoint(x: companionX, y: frame.maxY - (targetBundle == nil ? 44 : 18))
+      // The fixture's draggable header begins 200 pt from the left; a four-pet first slot is outside it.
+      let headerX = targetBundle == nil ? frame.midX : companionX
+      pointerOrigin = CGPoint(x: headerX, y: frame.maxY - (targetBundle == nil ? 44 : 18))
     case .topResizing: pointerOrigin = CGPoint(x: companionX, y: frame.maxY - 2)
     default: pointerOrigin = CGPoint(x: frame.maxX - 2, y: frame.minY + 2)
     }

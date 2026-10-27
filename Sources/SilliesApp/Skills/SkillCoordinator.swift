@@ -10,7 +10,6 @@ final class SkillCoordinator {
   typealias SnapshotLoader =
     @Sendable (Set<CGWindowID>, Double) async -> [CGWindowID: WindowTargetSnapshot]
 
-  static let selectionPromptDuration: TimeInterval = 5.5
   static let completionBannerDuration: TimeInterval = 6.5
   static let focusSprintDuration: TimeInterval = FocusSkillSession.sprintDuration
   private static let tickInterval: TimeInterval = 1.0
@@ -49,18 +48,6 @@ final class SkillCoordinator {
 
   func binding(for companionID: String) -> CompanionBindingState {
     bindings[companionID] ?? .followingFocusedWindow
-  }
-
-  func presentSelectionPrompt(
-    for companionID: String, companionName: String, target: WindowTargetCandidate
-  ) {
-    cancelActiveSkill(for: companionID, savePartial: true)
-    companionNames[companionID] = companionName
-    advanceBindingToken(for: companionID)
-    let now = ProcessInfo.processInfo.systemUptime
-    let state = CompanionBindingState.awaitingSelection(
-      target: target, expiresAt: now + Self.selectionPromptDuration)
-    setBinding(state, for: companionID)
   }
 
   func startSkill(
@@ -384,17 +371,6 @@ final class SkillCoordinator {
       switch state {
       case .followingFocusedWindow:
         bindings.removeValue(forKey: companionID)
-
-      case .awaitingSelection(let target, let expiresAt):
-        updateExpiringBinding(
-          for: companionID,
-          target: target,
-          expiresAt: expiresAt,
-          now: now,
-          snapshots: snapshots
-        ) { updatedTarget in
-          .awaitingSelection(target: updatedTarget, expiresAt: expiresAt)
-        }
 
       case .completed(let target, let skill, let summary, let recordID, let expiresAt):
         updateExpiringBinding(

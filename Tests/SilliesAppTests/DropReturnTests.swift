@@ -1,3 +1,4 @@
+import AppKit
 import QuartzCore
 import SilliesCore
 import Testing
@@ -13,7 +14,7 @@ import Testing
   pet.isPickedUp = false
   var landed = false
   let plan = DropReturnPlan(
-    releasedAt: pet.position, pickedUpAt: origin, destination: origin, selectedSkill: false)
+    releasedAt: pet.position, pickedUpAt: origin, destination: origin, intent: .returnToPerch)
   pet.dropReturn.begin(for: pet, plan: plan, reducedMotion: false) { landed = true }
   #expect(!landed && pet.isReturningFromDrop)
   #expect(pet.tween?.end == origin && pet.tween?.curve == .accelerating)
@@ -23,7 +24,7 @@ import Testing
   #expect(pet.panel.frame.intersection(dropTestWindow).isEmpty)
 }
 
-@Test @MainActor func reducedMotionReturnsImmediatelyBeforeShowingTheSkillBar() throws {
+@Test @MainActor func reducedMotionReturnsImmediatelyAndCompletesArrivalOnce() throws {
   let pet = try dropTestCompanion()
   defer { pet.presentation.close() }
   let origin = pet.position
@@ -31,7 +32,7 @@ import Testing
   pet.place(at: CGPoint(x: origin.x + 90, y: origin.y - 100))
   pet.isPickedUp = false
   let plan = DropReturnPlan(
-    releasedAt: pet.position, pickedUpAt: origin, destination: origin, selectedSkill: false)
+    releasedAt: pet.position, pickedUpAt: origin, destination: origin, intent: .returnToPerch)
   var arrivals = 0
   pet.dropReturn.begin(for: pet, plan: plan, reducedMotion: true) {
     arrivals += 1
@@ -52,7 +53,7 @@ import Testing
   pet.dropReturn.begin(
     for: pet,
     plan: DropReturnPlan(
-      releasedAt: pet.position, pickedUpAt: origin, destination: origin, selectedSkill: false),
+      releasedAt: pet.position, pickedUpAt: origin, destination: origin, intent: .returnToPerch),
     reducedMotion: false
   ) { activated = true }
   pet.dropReturn.cancel()
@@ -61,19 +62,43 @@ import Testing
   #expect(!activated && !pet.isReturningFromDrop)
 }
 
-@Test @MainActor func pendingSkillChoicesKeepTheOriginPerchUntilASkillIsSelected() throws {
-  let pet = try dropTestCompanion()
-  let origin = WindowTargetCandidate(
-    windowID: 1, processID: 10, appName: "Origin", frame: dropTestWindow)
-  let candidate = WindowTargetCandidate(
-    windowID: 2, processID: 20, appName: "Candidate",
-    frame: dropTestWindow.offsetBy(dx: 200, dy: 100))
-  pet.selectionPerchTarget = origin
-  pet.bindingState = .awaitingSelection(target: candidate, expiresAt: 100)
-  #expect(pet.attachmentTarget?.windowID == origin.windowID)
-  #expect(pet.bindingState.boundTarget?.windowID == candidate.windowID)
-  pet.bindingState = .active(target: candidate, skill: .focus, startedAt: 10)
-  #expect(pet.attachmentTarget?.windowID == candidate.windowID)
+@Test @MainActor func unselectedDropsReturnWithoutBindingOrCreatingASkillBar() throws {
+  let domain = "app.sillies.test.quiet-drop.\(UUID().uuidString)"
+  let defaults = try #require(UserDefaults(suiteName: domain))
+  defer { defaults.removePersistentDomain(forName: domain) }
+  let settings = AppSettings(defaults: defaults)
+  settings.followsWindows = true
+  settings.reduceMotion = true
+  settings.enabledCharacters = ["mochi"]
+  let controller = try CompanionController(settings: settings, useAccessibility: false)
+  controller.start()
+  defer { controller.stop() }
+  controller.tracker.simulateTrackedWindow(dropTestWindow, windowID: 401)
+  let view = try #require(controller.primaryCompanionView)
+  let origin = try #require(controller.attachmentDiagnostics.first?.point)
+
+  for delta in [CGPoint(x: 80, y: -100), CGPoint(x: 80, y: 100)] {
+    view.onPickup?()
+    view.onDrag?(delta)
+    view.onDrop?(true)
+    #expect(controller.attachmentDiagnostics.first?.point == origin)
+    #expect(controller.skills.binding(for: "mochi") == .followingFocusedWindow)
+    #expect(controller.diagnostics.visibleHUDCount == 0)
+  }
+
+  // Returning without a new choice must preserve a skill the user already started.
+  let target = WindowTargetCandidate(
+    windowID: 401, processID: 100, appName: "Test", frame: dropTestWindow)
+  controller.skills.startSkill(.focus, for: "mochi", companionName: "Mochi", target: target)
+  view.onPickup?()
+  view.onDrag?(CGPoint(x: 80, y: -100))
+  view.onDrop?(true)
+  guard case .active(let retained, .focus, _, _, _) = controller.skills.binding(for: "mochi") else {
+    Issue.record("An unselected drop cancelled the existing skill")
+    return
+  }
+  #expect(retained.windowID == target.windowID)
+  #expect(controller.diagnostics.visibleHUDCount == 1)
 }
 
 private let dropTestWindow = CGRect(x: 200, y: 150, width: 700, height: 400)

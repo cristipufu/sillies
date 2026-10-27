@@ -173,6 +173,7 @@ private final class MockEventProducer: WorkspaceEventProducer {
   #expect(store.records.count == 1)
 
   let reloaded = SessionVaultStore(directory: directory)
+  await reloaded.waitUntilLoaded()
   #expect(reloaded.records.count == 1)
   #expect(reloaded.records.first?.extractedText == "final class CompanionController")
   reloaded.remove(id: record.id)
@@ -194,8 +195,7 @@ private final class MockEventProducer: WorkspaceEventProducer {
     bundleIdentifier: "com.apple.Terminal", windowTitle: "make check",
     frame: CGRect(x: 100, y: 100, width: 700, height: 500))
 
-  coordinator.presentSelectionPrompt(for: "mochi", companionName: "Mochi", target: target)
-  #expect(coordinator.binding(for: "mochi").isBound)
+  #expect(!coordinator.binding(for: "mochi").isBound)
 
   coordinator.startSkill(.focus, for: "mochi", companionName: "Mochi", target: target)
   #expect(emittedEvents.contains(.skillFocus))
@@ -276,6 +276,7 @@ private final class MockEventProducer: WorkspaceEventProducer {
   await store.flush()
 
   let reloaded = SessionVaultStore(directory: directory)
+  await reloaded.waitUntilLoaded()
   let reloadedRecord = try #require(reloaded.records.first)
   #expect(reloaded.cachedImage(for: reloadedRecord) == nil)
   reloaded.prepareImage(for: reloadedRecord)
@@ -377,7 +378,7 @@ private actor DelayedSnapshotProbe {
   }
 }
 
-@Test @MainActor func staleMetadataReplyDoesNotDismissNewSelectionPrompt() async throws {
+@Test @MainActor func staleMetadataReplyDoesNotDismissANewlySelectedSkill() async throws {
   let directory = FileManager.default.temporaryDirectory
     .appendingPathComponent("sillies-stale-tick-\(UUID().uuidString)", isDirectory: true)
   defer { try? FileManager.default.removeItem(at: directory) }
@@ -395,7 +396,7 @@ private actor DelayedSnapshotProbe {
     windowID: 20, processID: 2, appName: "Terminal",
     frame: CGRect(x: 200, y: 200, width: 600, height: 400))
 
-  coordinator.presentSelectionPrompt(for: "mochi", companionName: "Mochi", target: firstTarget)
+  coordinator.startSkill(.focus, for: "mochi", companionName: "Mochi", target: firstTarget)
   coordinator.pollBoundWindows()
   let deadline = ContinuousClock.now.advanced(by: .seconds(1))
   while await probe.requestedIDs.isEmpty, ContinuousClock.now < deadline {
@@ -404,16 +405,16 @@ private actor DelayedSnapshotProbe {
   #expect(await probe.requestedIDs == [10])
 
   // Switch Mochi to a new target window while the old metadata request for window 10 is in flight.
-  coordinator.presentSelectionPrompt(for: "mochi", companionName: "Mochi", target: secondTarget)
+  coordinator.startSkill(.focus, for: "mochi", companionName: "Mochi", target: secondTarget)
   await probe.finish([
     10: WindowTargetSnapshot(frame: firstTarget.frame, title: "Safari")
   ])
   try await Task.sleep(for: .milliseconds(10))
 
-  if case .awaitingSelection(let boundTarget, _) = coordinator.binding(for: "mochi") {
+  if case .active(let boundTarget, .focus, _, _, _) = coordinator.binding(for: "mochi") {
     #expect(boundTarget.windowID == 20)
   } else {
-    Issue.record("Stale tick reply dismissed the new selection prompt")
+    Issue.record("Stale tick reply dismissed the newly selected skill")
   }
 }
 
@@ -542,6 +543,7 @@ private func spinModalPanelRunLoopUntil(_ condition: () -> Bool) {
   #expect(terminationApproved)
 
   let reloadedVault = SessionVaultStore(directory: directory)
+  await reloadedVault.waitUntilLoaded()
   #expect(reloadedVault.records.count == 3)
   let reloadedCoordinator = SkillCoordinator(vault: reloadedVault)
   await reloadedCoordinator.flushPendingSummaries()

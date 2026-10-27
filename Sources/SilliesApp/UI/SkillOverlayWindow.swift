@@ -22,7 +22,7 @@ final class SkillFloatingPanel: NSPanel {
     hidesOnDeactivate = false
     isReleasedWhenClosed = false
     self.ignoresMouseEvents = ignoresMouseEvents
-    collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle, .transient]
+    collectionBehavior = CompanionPanel.overlayCollectionBehavior
     if CompanionPanel.isRunningUnderUnitTests { alphaValue = 0 }
   }
 }
@@ -124,6 +124,10 @@ private final class WindowDropOutlineView: NSView {
 
   override func layout() {
     super.layout()
+    updateGeometry()
+  }
+
+  func updateGeometry() {
     CATransaction.begin()
     CATransaction.setDisableActions(true)
     outline.frame = bounds.insetBy(dx: Self.outlineInset, dy: Self.outlineInset)
@@ -186,9 +190,6 @@ final class WindowDropHighlightController {
   func prestage(target: WindowTargetCandidate?) {
     guard let target else { return }
     applyTarget(target, hoveredSkill: nil)
-    if let badge = outlineView?.badge {
-      SkillOverlayPreparation.render(badge)
-    }
   }
 
   func show(target: WindowTargetCandidate, hoveredSkill: CompanionSkillKind?) {
@@ -234,7 +235,7 @@ final class WindowDropHighlightController {
     CATransaction.setDisableActions(true)
     if sizeChanged {
       panel?.setFrame(highlightFrame, display: false)
-      outlineView?.layoutSubtreeIfNeeded()
+      outlineView?.updateGeometry()
     } else {
       panel?.setFrameOrigin(highlightFrame.origin)
     }

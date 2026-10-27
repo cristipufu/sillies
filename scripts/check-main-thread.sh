@@ -33,10 +33,11 @@ if matches=$(grep -rnE 'NSImage\(contentsOf:|Data\(contentsOf:|String\(contentsO
   fail "Synchronous disk read in UI or Rendering layer"
 fi
 
-# 4. CGWindowListCopyWindowInfo is confined strictly to the isolated WindowServer workers.
-if matches=$(grep -rn 'CGWindowListCopyWindowInfo' Sources/ 2>/dev/null | grep -vE 'Sources/SilliesApp/Platform/(WindowServerSource|WindowTargetResolver)\.swift:'); then
+# 4. Window-list APIs must remain in the separate helper process. A worker thread alone
+# still shares AppKit's CG connection lock and can deadlock its animation commit for 500 ms.
+if matches=$(rg -n 'CGWindowList(CopyWindowInfo|Create|CreateDescriptionFromArray)[[:space:]]*\(' Sources/ | grep -v 'Sources/SilliesWindowMetadata/WindowMetadataService.swift:'); then
   printf '%s\n' "$matches" >&2
-  fail "CGWindowListCopyWindowInfo called outside isolated platform workers"
+  fail "Window-list API called outside the metadata helper process"
 fi
 
 # 5. AXUIElementCopyAttributeValue / AXUIElementCopyMultipleAttributeValues are confined strictly to AccessibilityWindowSource.
@@ -56,6 +57,9 @@ for worker in \
   Sources/SilliesApp/Platform/WindowTargetResolver.swift \
   Sources/SilliesApp/Platform/AccessibilityWindowSource.swift \
   Sources/SilliesApp/Platform/ApplicationIconCache.swift \
+  Sources/SilliesApp/Platform/WindowMetadataReader.swift \
+  Sources/SilliesApp/Platform/WindowMetadataClient.swift \
+  Sources/SilliesApp/Platform/WindowMetadataConnection.swift \
   Sources/SilliesApp/Skills/SessionVaultStore.swift
 do
   if ! grep -q 'dispatchPrecondition(condition: \.notOnQueue(\.main))' "$worker"; then

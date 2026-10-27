@@ -13,6 +13,7 @@ final class CompanionInstance {
   let presentation: CompanionPresentation
   let hud = CompanionHUDController()
   let dropReturn = CompanionDropReturn()
+  private let playback: BehaviorPlayback
   var behavior: BehaviorEngine
   var random: SeededRandom
   var position = CGPoint.zero
@@ -27,8 +28,6 @@ final class CompanionInstance {
   var pickupPosition = CGPoint.zero
   var pickupFraction = CompanionInstance.defaultPickupFraction
   var pickupWindowTarget: WindowTargetCandidate?
-  var selectionPerchTarget: WindowTargetCandidate?
-  var pendingDropTarget: Task<Void, Never>?
   var attachedWindowID: CGWindowID?
   var attachedWindowLayer: Int = WindowServerSource.normalWindowLayer
   var bindingState: CompanionBindingState = .followingFocusedWindow
@@ -36,7 +35,6 @@ final class CompanionInstance {
   private(set) var placementCount = 0
 
   var attachmentTarget: WindowTargetCandidate? {
-    if case .awaitingSelection = bindingState { return selectionPerchTarget }
     return bindingState.boundTarget
   }
 
@@ -45,6 +43,7 @@ final class CompanionInstance {
     transitions: TransitionLibrary
   ) {
     self.definition = definition
+    playback = BehaviorPlayback(rig: rig, characterID: definition.id)
     behavior = BehaviorEngine(character: definition, seed: seed)
     random = SeededRandom(seed: seed &+ Self.motionSeedOffset)
     view = CompanionView(rig: rig, size: size)
@@ -64,6 +63,13 @@ final class CompanionInstance {
     strollReachesEdge = false
   }
 
+  func displayBehavior(
+    _ state: BehaviorState, using library: AnimationLibrary, reducedMotion: Bool
+  ) {
+    playback.apply(
+      state, library: library, reducedMotion: reducedMotion)
+  }
+
   func beginStroll(_ plan: StrollPlan, at time: Double) {
     view.rig.setFacing(right: plan.facingRight)
     tween = MotionTween(
@@ -73,7 +79,6 @@ final class CompanionInstance {
   }
 
   func beginPickup(fallbackTarget: WindowTargetCandidate?) {
-    cancelPendingDropTarget()
     pickupPosition = position
     pickupFraction = surface?.fraction(for: position) ?? Self.defaultPickupFraction
     pickupWindowTarget = attachmentTarget ?? fallbackTarget
@@ -116,7 +121,7 @@ final class CompanionInstance {
   }
 
   func resetForInactiveSession() {
-    cancelPendingDropTarget()
+    view.cancelInteraction()
     isPickedUp = false
     isWaitingForSpace = false
     dropReturn.cancel()
@@ -129,7 +134,7 @@ final class CompanionInstance {
   }
 
   func closeAllPanels() {
-    cancelPendingDropTarget()
+    view.cancelInteraction()
     dropReturn.cancel()
     hud.close()
     presentation.close()
@@ -154,11 +159,6 @@ final class CompanionInstance {
     view.applyPanelLayout(layout)
     view.updateWorldMask()
     refreshHUD()
-  }
-
-  func cancelPendingDropTarget() {
-    pendingDropTarget?.cancel()
-    pendingDropTarget = nil
   }
 
   func refreshHUD() {

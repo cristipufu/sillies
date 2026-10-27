@@ -62,6 +62,12 @@ final class SessionVaultStore {
   @ObservationIgnored private var cachedImageOrder: [String] = []
   @ObservationIgnored private var pendingImageLoads: Set<String> = []
   @ObservationIgnored private var summaryTasks: [UUID: Task<Void, Never>] = [:]
+  @ObservationIgnored private var isLoading = true
+  @ObservationIgnored private var loadCompletions: [() -> Void] = []
+  @ObservationIgnored private var persistencePending = false
+  @ObservationIgnored private var removedWhileLoading: Set<UUID> = []
+  @ObservationIgnored private var discardLoadedRecords = false
+  @ObservationIgnored private var summariesEnabled = true
   @ObservationIgnored private let stagedPreviews = StagedPreviewBuffer()
   @ObservationIgnored private let pasteboard: NSPasteboard
   @ObservationIgnored private var copyRequestGeneration: UInt64 = 0
@@ -91,8 +97,7 @@ final class SessionVaultStore {
       previousStore.cancelPendingSummaries()
     }
     Self.activeStoresByDirectory[directoryKey] = WeakVaultBox(store: self)
-    loadSynchronously()
-    resumePendingSummaries()
+    loadAsync()
   }
 
   func add(_ record: SessionRecord, image: CGImage? = nil, pngData: Data? = nil) {
@@ -145,12 +150,14 @@ final class SessionVaultStore {
   }
 
   func resumePendingSummaries() {
+    summariesEnabled = true
     for record in records where record.summaryPending {
       scheduleSummaryRefinement(for: record)
     }
   }
 
   func flushPendingSummaries() async {
+    await waitUntilLoaded()
     resumePendingSummaries()
     while !summaryTasks.isEmpty {
       let current = Array(summaryTasks.values)
@@ -162,6 +169,7 @@ final class SessionVaultStore {
   }
 
   func cancelPendingSummaries() {
+    summariesEnabled = false
     for task in summaryTasks.values { task.cancel() }
     summaryTasks.removeAll()
   }
@@ -174,6 +182,10 @@ final class SessionVaultStore {
   }
 
   func remove(id: UUID) {
+    if isLoading {
+      removedWhileLoading.insert(id)
+      persistencePending = true
+    }
     summaryTasks[id]?.cancel()
     summaryTasks.removeValue(forKey: id)
     if pinnedRecordID == id { pinnedRecordID = nil }
@@ -187,6 +199,7 @@ final class SessionVaultStore {
   }
 
   func clearAll() {
+    if isLoading { discardLoadedRecords = true }
     for task in summaryTasks.values { task.cancel() }
     summaryTasks.removeAll()
     pinnedRecordID = nil
@@ -212,19 +225,13 @@ final class SessionVaultStore {
   }
 
   func flushOnIOQueue(completion: @escaping @Sendable () -> Void) {
+    guard !isLoading else {
+      loadCompletions.append { self.flushOnIOQueue(completion: completion) }
+      return
+    }
     Self.ioQueue.async {
       dispatchPrecondition(condition: .notOnQueue(.main))
-      let modes: [CFString] = [
-        CFRunLoopMode.commonModes.rawValue,
-        CFRunLoopMode.defaultMode.rawValue,
-        RunLoop.Mode.modalPanel.rawValue as CFString,
-        RunLoop.Mode.eventTracking.rawValue as CFString,
-      ]
-      let mainLoop = CFRunLoopGetMain()
-      CFRunLoopPerformBlock(mainLoop, modes as CFArray) {
-        completion()
-      }
-      CFRunLoopWakeUp(mainLoop)
+      MainRunLoopDelivery.perform { completion() }
     }
   }
 
@@ -303,7 +310,7 @@ final class SessionVaultStore {
     }
     let needsPreviewCache = cachedImage(for: record) == nil
     Self.ioQueue.async { [weak self] in
-      let diskPNGData = try? Data(contentsOf: url)
+      let diskPNGData = Self.readImageData(at: url)
       let resolvedPNGData = diskPNGData ?? fallbackCG.flatMap { Self.encodePNGData(from: $0) }
       let previewCG = needsPreviewCache ? Self.decodePreviewCGImage(at: url) : nil
       Task { @MainActor [weak self] in
@@ -321,6 +328,16 @@ final class SessionVaultStore {
         self.pasteboard.clearContents()
         self.pasteboard.setData(resolvedPNGData, forType: .png)
       }
+    }
+  }
+
+  nonisolated private static func readImageData(at url: URL) -> Data? {
+    dispatchPrecondition(condition: .notOnQueue(.main))
+    do {
+      return try Data(contentsOf: url)
+    } catch {
+      fputs("Vault image read failed: \(error.localizedDescription)\n", stderr)
+      return nil
     }
   }
 
@@ -438,17 +455,66 @@ final class SessionVaultStore {
     }
   }
 
-  private func loadSynchronously() {
-    let fileURL = storageDirectory.appendingPathComponent(Self.sessionsFilename)
-    guard let data = try? Data(contentsOf: fileURL) else { return }
-    let decoder = JSONDecoder()
-    decoder.dateDecodingStrategy = .iso8601
-    if let decoded = try? decoder.decode([SessionRecord].self, from: data) {
-      records = decoded
+  func waitUntilLoaded() async {
+    guard isLoading else { return }
+    await withCheckedContinuation { continuation in
+      loadCompletions.append { continuation.resume() }
     }
   }
 
+  private func loadAsync() {
+    let fileURL = storageDirectory.appendingPathComponent(Self.sessionsFilename)
+    Self.ioQueue.async { [weak self] in
+      let loaded = Self.readRecords(at: fileURL)
+      MainRunLoopDelivery.perform { [weak self] in self?.finishLoading(loaded) }
+    }
+  }
+
+  private nonisolated static func readRecords(at url: URL) -> [SessionRecord] {
+    dispatchPrecondition(condition: .notOnQueue(.main))
+    do {
+      let data = try Data(contentsOf: url)
+      let decoder = JSONDecoder()
+      decoder.dateDecodingStrategy = .iso8601
+      return try decoder.decode([SessionRecord].self, from: data)
+    } catch CocoaError.fileReadNoSuchFile {
+      return []
+    } catch {
+      fputs("SessionVaultStore failed to load records: \(error.localizedDescription)\n", stderr)
+      return []
+    }
+  }
+
+  private func finishLoading(_ loaded: [SessionRecord]) {
+    var currentIDs = Set(records.map(\.id))
+    var merged = records
+    for record in loaded {
+      guard !currentIDs.contains(record.id) else { continue }
+      if discardLoadedRecords || removedWhileLoading.contains(record.id) {
+        if let filename = record.imageFilename { deleteImageAsync(filename: filename) }
+      } else if merged.count < Self.maxStoredRecords {
+        merged.append(record)
+        currentIDs.insert(record.id)
+      }
+    }
+    records = merged
+    isLoading = false
+    removedWhileLoading.removeAll()
+    if persistencePending {
+      persistencePending = false
+      persistAsync()
+    }
+    if summariesEnabled { resumePendingSummaries() }
+    let completions = loadCompletions
+    loadCompletions.removeAll()
+    for completion in completions { completion() }
+  }
+
   private func persistAsync() {
+    guard !isLoading else {
+      persistencePending = true
+      return
+    }
     let snapshot = records
     let directory = storageDirectory
     let fileURL = directory.appendingPathComponent(Self.sessionsFilename)
@@ -511,7 +577,13 @@ final class SessionVaultStore {
     let fileURL = storageDirectory.appendingPathComponent(filename)
     Self.ioQueue.async {
       dispatchPrecondition(condition: .notOnQueue(.main))
-      try? FileManager.default.removeItem(at: fileURL)
+      do {
+        try FileManager.default.removeItem(at: fileURL)
+      } catch CocoaError.fileNoSuchFile {
+        return
+      } catch {
+        fputs("SessionVaultStore failed to remove image: \(error.localizedDescription)\n", stderr)
+      }
     }
   }
 }

@@ -165,7 +165,7 @@ struct CompanionSkillTests {
     let originWindow = CGRect(x: 100, y: 100, width: 600, height: 400)
     let backgroundWindow = CGRect(x: 80, y: 80, width: 800, height: 600)
     // A small drag near the origin perch over an overlapping background window should not
-    // trigger background window controls or accidental rebinding.
+    // trigger background window controls.
     #expect(
       !DropReturnPlan.shouldShowDragControls(
         targetFrame: backgroundWindow,
@@ -174,19 +174,12 @@ struct CompanionSkillTests {
         pointer: CGPoint(x: 90, y: 510),
         companionPoint: CGPoint(x: 120, y: 505),
         characterSize: 64))
+    // Moving well inside another window still offers the radial controls while held.
     #expect(
-      !DropReturnPlan.shouldBindOnDrop(
+      DropReturnPlan.shouldShowDragControls(
         targetFrame: backgroundWindow,
-        currentAttachedWindowFrame: originWindow,
-        pointer: CGPoint(x: 96, y: 510),
-        companionPoint: CGPoint(x: 120, y: 505),
-        characterSize: 64))
-
-    // Dropping well inside a target window's interior binds to that target.
-    #expect(
-      DropReturnPlan.shouldBindOnDrop(
-        targetFrame: backgroundWindow,
-        currentAttachedWindowFrame: originWindow,
+        isSameTargetAsAttached: false,
+        originWindowFrame: originWindow,
         pointer: CGPoint(x: 780, y: 300),
         companionPoint: CGPoint(x: 780, y: 300),
         characterSize: 64))

@@ -1,23 +1,30 @@
 import AppKit
+import QuartzCore
 import SilliesCore
 
 /// Samples attachment error during every update, rather than waiting for the window to settle.
 @MainActor
-final class DragLatencyCheck {
+final class DragLatencyCheck: NSObject {
+  private static let phaseDuration: Double = 1.25
+  private static let millisecondsPerSecond: Double = 1000
+  private static let maximumFrameGap: Double = 2.0 / 60
   private let controller: CompanionController
   private let playground: WindowPlayground
   private let allowLag: Bool
-  private var timer: Timer?
+  private var link: CADisplayLink?
   private var base = CGRect.zero
   private var fractions: [Double] = []
   private var started: Double = 0
   private var moveErrors: [Double] = []
   private var resizeErrors: [Double] = []
+  private var previousTick: Double?
+  private var frameGaps: [Double] = []
 
   init(controller: CompanionController, playground: WindowPlayground, allowLag: Bool) {
     self.controller = controller
     self.playground = playground
     self.allowLag = allowLag
+    super.init()
   }
 
   func start() {
@@ -30,27 +37,33 @@ final class DragLatencyCheck {
         window: base, visibleFrame: visible, characterSize: controller.settings.size)
       fractions = controller.attachmentDiagnostics.map { surface.fraction(for: $0.point) }
       started = ProcessInfo.processInfo.systemUptime
-      let timer = Timer(timeInterval: 1 / 120, repeats: true) { [self] _ in
-        MainActor.assumeIsolated { tick() }
-      }
-      self.timer = timer
-      RunLoop.main.add(timer, forMode: .common)
+      controller.smoothnessMetrics.isEnabled = true
+      controller.smoothnessMetrics.reset()
+      let link = playground.window.displayLink(target: self, selector: #selector(tick(_:)))
+      let maximum = Float(playground.window.screen?.maximumFramesPerSecond ?? 60)
+      link.preferredFrameRateRange = CAFrameRateRange(
+        minimum: maximum, maximum: maximum, preferred: maximum)
+      self.link = link
+      link.add(to: .main, forMode: .common)
     }
   }
 
-  private func tick() {
-    let elapsed = ProcessInfo.processInfo.systemUptime - started
-    guard elapsed < 2.5 else {
+  @objc private func tick(_ link: CADisplayLink) {
+    let time = ProcessInfo.processInfo.systemUptime
+    if let previousTick { frameGaps.append(time - previousTick) }
+    previousTick = time
+    let elapsed = time - started
+    guard elapsed < Self.phaseDuration * 2 else {
       finish()
       return
     }
     var frame = base
-    if elapsed < 1.25 {
+    if elapsed < Self.phaseDuration {
       frame.origin.x += sin(elapsed * 5) * 110
       frame.origin.y += sin(elapsed * 6) * 30
     } else {
-      frame.size.width += sin((elapsed - 1.25) * 5) * 100
-      frame.size.height += sin((elapsed - 1.25) * 6) * 35
+      frame.size.width += sin((elapsed - Self.phaseDuration) * 5) * 100
+      frame.size.height += sin((elapsed - Self.phaseDuration) * 6) * 35
     }
     playground.window.setFrame(frame, display: true)
     let actual = playground.window.frame
@@ -63,25 +76,56 @@ final class DragLatencyCheck {
       guard fractions.indices.contains(index) else { continue }
       let expected = surface.point(at: fractions[index])
       let error = hypot(expected.x - attachment.point.x, expected.y - attachment.point.y)
-      if elapsed < 1.25 { moveErrors.append(error) } else { resizeErrors.append(error) }
+      if elapsed < Self.phaseDuration {
+        moveErrors.append(error)
+      } else {
+        resizeErrors.append(error)
+      }
     }
   }
 
   private func finish() {
-    timer?.invalidate()
-    timer = nil
+    link?.invalidate()
+    link = nil
     let move = moveErrors.max() ?? .infinity
     let resize = resizeErrors.max() ?? .infinity
     print(
       String(
         format:
-          "DRAG LATENCY: move max %.2f pt, resize max %.2f pt; %d live attachment samples at requested 120 Hz",
+          "DRAG LATENCY: move max %.2f pt, resize max %.2f pt; %d display-linked live attachment samples",
         move, resize, moveErrors.count + resizeErrors.count))
+    print("INTERACTION HANDLERS: \(controller.smoothnessMetrics.summary)")
+    let gaps = frameGaps.sorted()
+    let maximumGap = gaps.last ?? .infinity
+    let p95 = gaps.isEmpty ? .infinity : gaps[min(gaps.count - 1, Int(Double(gaps.count) * 0.95))]
+    print(
+      String(
+        format: "LIVE FRAME GAPS: p95 %.2f ms, max %.2f ms (%d frames)",
+        p95 * Self.millisecondsPerSecond, maximumGap * Self.millisecondsPerSecond, gaps.count))
     if !allowLag && (move > 2 || resize > 2) {
       FileHandle.standardError.write(
         Data("DRAG LATENCY FAILED: live attachment exceeds 2 points\n".utf8))
       exit(1)
     }
+    if ProcessInfo.processInfo.arguments.contains("--assert-drag-budget"),
+      maximumGap > Self.maximumFrameGap
+    {
+      FileHandle.standardError.write(
+        Data("LIVE FRAME BUDGET FAILED: callback gap exceeds 33 ms\n".utf8))
+      exit(1)
+    }
+    if ProcessInfo.processInfo.arguments.contains("--assert-drag-budget") {
+      assertHandlerBudgets()
+    }
     NSApp.terminate(nil)
+  }
+
+  private func assertHandlerBudgets() {
+    for path: InteractionSmoothnessMetrics.Path in [.windowMove, .windowResize] {
+      guard controller.smoothnessMetrics.isWithinBudget(for: path) else {
+        fputs("INTERACTION HANDLER BUDGET FAILED: \(path.rawValue)\n", stderr)
+        exit(1)
+      }
+    }
   }
 }

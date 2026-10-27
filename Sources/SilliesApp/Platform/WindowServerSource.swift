@@ -427,8 +427,9 @@ final class WindowServerSource: @unchecked Sendable {
     let options: CGWindowListOption =
       singleWindowRead ? [.optionIncludingWindow] : [.optionOnScreenOnly]
     let reference = singleWindowRead ? (windowID ?? kCGNullWindowID) : kCGNullWindowID
-    let capturedAt = ProcessInfo.processInfo.systemUptime
-    let entries = CGWindowListCopyWindowInfo(options, reference) as? [[String: Any]] ?? []
+    guard let snapshot = WindowMetadataReader.snapshot(options, reference) else { return }
+    let capturedAt = snapshot.capturedAt
+    let entries = snapshot.entries
     let backgroundIDs = singleWindowRead ? nil : Self.extractBackgroundWindowIDs(from: entries)
     let inputFrames = singleWindowRead ? nil : Self.extractInputWindowFrames(from: entries)
     let candidates = Self.extractCandidates(

@@ -247,6 +247,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
   @ObservationIgnored private var roleSnapshot: AccessibilityWindowRoleSnapshot?
   @ObservationIgnored private var clickSelection = ClickSelectionState()
   @ObservationIgnored private var transitionGate = AutonomousTransitionGate()
+  @ObservationIgnored private var minimizingNativeWindowIDs: Set<Int> = []
   @ObservationIgnored private var isLeftMouseDown = false
   @ObservationIgnored private var housekeepingInFlight = false
   @ObservationIgnored private(set) var isAwaitingApplicationWindow = false
@@ -305,11 +306,12 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
   func start() {
     guard !started else { return }
     started = true
+    updateMetadataWorkerActivity()
     geometrySource = WindowServerSource { [weak self] value in
-      DispatchQueue.main.async { [weak self] in self?.accept(value) }
+      MainRunLoopDelivery.perform { [weak self] in self?.accept(value) }
     }
     accessibilitySource = AccessibilityWindowSource { [weak self] value in
-      DispatchQueue.main.async { [weak self] in self?.acceptAccessibility(value) }
+      MainRunLoopDelivery.perform { [weak self] in self?.acceptAccessibility(value) }
     }
     let center = NSWorkspace.shared.notificationCenter
     center.addObserver(
@@ -362,6 +364,8 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
 
   func stop() {
     started = false
+    WindowMetadataReader.stop(owner: ObjectIdentifier(self))
+    minimizingNativeWindowIDs.removeAll()
     accessibilitySource?.stop()
     accessibilitySource = nil
     geometrySource = nil
@@ -444,7 +448,16 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
     }
   }
 
+  private func updateMetadataWorkerActivity() {
+    if started, isEnabled, !isSuspended {
+      WindowMetadataReader.start(owner: ObjectIdentifier(self))
+    } else {
+      WindowMetadataReader.stop(owner: ObjectIdentifier(self))
+    }
+  }
+
   private func configureTimers() {
+    updateMetadataWorkerActivity()
     heartbeat?.invalidate()
     heartbeat = nil
     idleTimer?.invalidate()
@@ -599,7 +612,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
   }
 
   private func accept(_ observation: WindowServerObservation) {
-    guard observation.processID == processID, isEnabled, !isSuspended else { return }
+    guard started, observation.processID == processID, isEnabled, !isSuspended else { return }
     let primaryScreenTop = NSScreen.screens.first?.frame.maxY ?? 0
     let priorInputFrames = inputWindowFrames
     updateBackgroundAndInputFrames(from: observation, primaryScreenTop: primaryScreenTop)
@@ -902,9 +915,11 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
     // Native windows already provide synchronous bounds. Never overwrite them with stale IPC readback.
     if processID == ProcessInfo.processInfo.processIdentifier,
       let id = resolvedWindowID ?? windowID,
-      let native = NSApp.window(withWindowNumber: Int(id)),
-      native.isVisible, !native.isMiniaturized
+      let native = NSApp.window(withWindowNumber: Int(id))
     {
+      guard native.isVisible, !native.isMiniaturized,
+        !minimizingNativeWindowIDs.contains(native.windowNumber)
+      else { return (nil, nil) }
       resolvedWindowID = id
       next = native.frame
     }
@@ -966,7 +981,9 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
   }
 
   private func acceptAccessibility(_ observation: WindowObservation) {
-    guard observation.processID == processID, isEnabled, tracksWindows else { return }
+    guard started, observation.processID == processID, isEnabled, tracksWindows, !isSuspended else {
+      return
+    }
     if let snapshot = observation.roleSnapshot {
       roleSnapshot = snapshot
       WindowTargetMetadata.shared.seedRoleSnapshot(snapshot, for: processID)
@@ -1195,9 +1212,19 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
     scheduleFollowUpDiscovery()
   }
   @objc private func localWindowChanged(_ notification: Notification) {
-    guard processID == ProcessInfo.processInfo.processIdentifier,
-      let window = notification.object as? NSWindow, window.canBecomeMain,
+    guard let window = notification.object as? NSWindow, window.canBecomeMain,
       window.styleMask.contains(.titled), window.windowNumber > 0
+    else { return }
+    if notification.name == NSWindow.willMiniaturizeNotification {
+      minimizingNativeWindowIDs.insert(window.windowNumber)
+    } else if notification.name == NSWindow.didMiniaturizeNotification
+      || notification.name == NSWindow.didDeminiaturizeNotification
+      || notification.name == NSWindow.willCloseNotification
+    {
+      minimizingNativeWindowIDs.remove(window.windowNumber)
+    }
+    guard started, isEnabled, tracksWindows, !isSuspended,
+      processID == ProcessInfo.processInfo.processIdentifier
     else { return }
     if notification.name == NSWindow.willCloseNotification
       || notification.name == NSWindow.willMiniaturizeNotification
@@ -1210,6 +1237,9 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
       scheduleFollowUpDiscovery()
       return
     }
+    guard window.isVisible, !window.isMiniaturized,
+      !minimizingNativeWindowIDs.contains(window.windowNumber)
+    else { return }
     guard window.isMainWindow || window.isKeyWindow || UInt32(window.windowNumber) == windowID
     else { return }
     if notification.name == NSWindow.didMoveNotification

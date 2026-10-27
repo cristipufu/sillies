@@ -12,11 +12,9 @@ final class CompanionDragTargetingController {
   private static let minimumDragDistanceForWheel: Double = 14
   private static let minimumDwellSleepInterval: Double = 0.002
 
-  struct DropEvaluation {
-    let selectedSkill: CompanionSkillKind?
-    let radialWasOpen: Bool
-    let cachedTarget: WindowTargetCandidate?
-    let pendingDrop: DragWindowTargetResolver.DropTarget?
+  struct SkillSelection {
+    let skill: CompanionSkillKind
+    let target: WindowTargetCandidate
   }
 
   let targets: DragWindowTargetResolver
@@ -187,37 +185,18 @@ final class CompanionDragTargetingController {
     dragTargetChanged(targets.currentTarget)
   }
 
-  func evaluateDrop(dragged: Bool, at pointer: CGPoint) -> DropEvaluation {
+  func finishDrag() -> SkillSelection? {
+    defer { resetAndHideOverlays() }
+    guard let layout = radialLayout, let skill = hoveredSkill, let target = draggedTarget else {
+      return nil
+    }
     let excluded =
       cachedExcludedWindowNumbers.isEmpty
       ? excludedWindowNumbers(including: excludedOverlayWindowNumbers?() ?? [])
       : cachedExcludedWindowNumbers
-    let radialWasOpen = radialLayout != nil
-    let dropPoint = radialLayout?.anchor ?? pointer
-    let pendingDrop =
-      dragged
-      ? targets.dropTarget(at: dropPoint, excluding: excluded) : nil
-    let radialTargetMatches =
-      radialWasOpen
-      && draggedTarget != nil
-      && pendingDrop?.windowID == draggedTarget?.windowID
-    let selectedSkill = (dragged && radialTargetMatches) ? hoveredSkill : nil
-    let cachedTarget: WindowTargetCandidate?
-    if dragged {
-      if radialTargetMatches {
-        cachedTarget = draggedTarget
-      } else {
-        cachedTarget = pendingDrop?.cached
-      }
-    } else {
-      cachedTarget = nil
-    }
-    resetAndHideOverlays()
-    return DropEvaluation(
-      selectedSkill: selectedSkill,
-      radialWasOpen: radialWasOpen,
-      cachedTarget: cachedTarget,
-      pendingDrop: pendingDrop)
+    guard targets.windowIDAtRelease(at: layout.anchor, excluding: excluded) == target.windowID
+    else { return nil }
+    return SkillSelection(skill: skill, target: target)
   }
 
   func resetAndHideOverlays() {

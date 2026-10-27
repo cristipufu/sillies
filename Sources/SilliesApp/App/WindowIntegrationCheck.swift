@@ -4,7 +4,7 @@ import SilliesCore
 /// Waits for presented geometry to settle; fixed sleeps are unreliable during native animations.
 @MainActor
 final class WindowIntegrationCheck {
-  private enum Stage: Int { case top, resize, move, sides, close }
+  private enum Stage: Int { case top, resize, move, sides, minimize, restore, close }
   private let controller: CompanionController
   private let playground: WindowPlayground
   private var stage = Stage.top
@@ -38,7 +38,12 @@ final class WindowIntegrationCheck {
       )
     }
     let ready: Bool
-    if stage == .close {
+    if stage == .minimize {
+      require(
+        controller.tracker.windowID != UInt32(playground.window.windowNumber),
+        "A minimizing window must never be reattached during its Dock animation")
+    }
+    if stage == .close || stage == .minimize {
       ready = controller.tracker.windowFrame == nil
     } else if let frame = controller.tracker.windowFrame {
       let target = playground.targetFrame
@@ -64,7 +69,7 @@ final class WindowIntegrationCheck {
   }
 
   private func verifyAndAdvance() {
-    if stage != .close {
+    if stage != .close && stage != .minimize {
       guard let frame = controller.tracker.windowFrame else { fail("Missing window") }
       let attachments = controller.attachmentDiagnostics
       require(
@@ -124,13 +129,22 @@ final class WindowIntegrationCheck {
         controller.attachmentDiagnostics.allSatisfy { $0.edge == .left || $0.edge == .right },
         "Tall window uses outside edges")
       controller.exportWindowScene(playground.window, name: "window-sides")
+      playground.window.miniaturize(nil)
+    case .minimize:
+      require(
+        controller.attachmentDiagnostics.allSatisfy { !$0.visible },
+        "Minimized windows finish their exit and remain hidden")
+      playground.window.deminiaturize(nil)
+      playground.window.makeKeyAndOrderFront(nil)
+    case .restore:
+      require(controller.attachmentDiagnostics.allSatisfy(\.visible), "Restore shows the crew")
       playground.window.close()
     case .close:
       require(controller.tracker.eventCounts[.windowDisappeared, default: 0] > 0, "Close detected")
       timer?.invalidate()
       timer = nil
       print(
-        "WINDOW TEST OK: real focused window, exact top-edge geometry, resize/move acting, settling, exterior sides, close; Accessibility \(controller.tracker.hasAccessibility ? "on" : "off")"
+        "WINDOW TEST OK: real focused window, exact top-edge geometry, resize/move acting, settling, exterior sides, minimize/restore, close; Accessibility \(controller.tracker.hasAccessibility ? "on" : "off")"
       )
       NSApp.terminate(nil)
       return

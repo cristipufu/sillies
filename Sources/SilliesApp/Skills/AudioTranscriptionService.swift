@@ -58,12 +58,20 @@ final class AudioTranscriptionService: NSObject, @unchecked Sendable {
 
   func start() async {
     let speechAuthorized = await requestSpeechAuthorization()
+    guard !Task.isCancelled, !lock.withLock({ isStopped }) else { return }
     if speechAuthorized {
-      configureSpeechRecognition()
+      await withCheckedContinuation { continuation in
+        audioQueue.async { [self] in
+          configureSpeechRecognition()
+          continuation.resume()
+        }
+      }
     }
+    guard !Task.isCancelled, !lock.withLock({ isStopped }) else { return }
     do {
       let content = try await SCShareableContent.excludingDesktopWindows(
         false, onScreenWindowsOnly: false)
+      guard !Task.isCancelled, !lock.withLock({ isStopped }) else { return }
       let filter: SCContentFilter
       if let display = content.displays.first,
         let app = content.applications.first(where: { $0.processID == target.processID })
@@ -99,7 +107,7 @@ final class AudioTranscriptionService: NSObject, @unchecked Sendable {
         return false
       }
       if wasStopped {
-        try? await scStream.stopCapture()
+        await Self.stopCapture(scStream)
         return
       }
 
@@ -144,10 +152,18 @@ final class AudioTranscriptionService: NSObject, @unchecked Sendable {
     }
     if let activeStream {
       Task {
-        try? await activeStream.stopCapture()
+        await Self.stopCapture(activeStream)
       }
     }
     return finalTranscript
+  }
+
+  private static func stopCapture(_ stream: SCStream) async {
+    do {
+      try await stream.stopCapture()
+    } catch {
+      fputs("Audio capture stop failed: \(error.localizedDescription)\n", stderr)
+    }
   }
 
   private func requestSpeechAuthorization() async -> Bool {
@@ -162,6 +178,8 @@ final class AudioTranscriptionService: NSObject, @unchecked Sendable {
   }
 
   private func configureSpeechRecognition() {
+    dispatchPrecondition(condition: .notOnQueue(.main))
+    guard !lock.withLock({ isStopped }) else { return }
     guard let speechRecognizer = SFSpeechRecognizer(locale: .current) ?? SFSpeechRecognizer(),
       speechRecognizer.isAvailable
     else { return }
@@ -173,14 +191,16 @@ final class AudioTranscriptionService: NSObject, @unchecked Sendable {
       request.requiresOnDeviceRecognition = true
     }
 
-    lock.lock()
-    recognizer = speechRecognizer
-    recognitionRequest = request
-    recognitionTask = speechRecognizer.recognitionTask(with: request) { [weak self] result, error in
+    // Speech may synchronously contact its service. Never hold the lock that stop() needs on UI.
+    let task = speechRecognizer.recognitionTask(with: request) { [weak self] result, error in
       guard let self else { return }
       if let result {
         let formatted = result.bestTranscription.formattedString
         self.lock.lock()
+        guard !self.isStopped else {
+          self.lock.unlock()
+          return
+        }
         if result.isFinal {
           if !formatted.isEmpty {
             self.committedTranscript =
@@ -208,12 +228,24 @@ final class AudioTranscriptionService: NSObject, @unchecked Sendable {
         self.restartSpeechTaskIfNeeded()
       }
     }
-    lock.unlock()
+    let stopped = lock.withLock {
+      guard !isStopped else { return true }
+      recognizer = speechRecognizer
+      recognitionRequest = request
+      recognitionTask = task
+      return false
+    }
+    if stopped {
+      request.endAudio()
+      task.cancel()
+    }
   }
 
   private func restartSpeechTaskIfNeeded() {
+    let speechRecognizer = lock.withLock { isStopped ? nil : recognizer }
+    guard let speechRecognizer, speechRecognizer.isAvailable else { return }
     lock.lock()
-    guard !isStopped, let speechRecognizer = recognizer, speechRecognizer.isAvailable else {
+    guard !isStopped else {
       lock.unlock()
       return
     }

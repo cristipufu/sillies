@@ -104,19 +104,18 @@ private final class WindowHitTestProbe {
   try await eventually { await probe.calls == [99, 7] }
   await probe.finish(7, target: dragTestTarget(7))
   try await eventually { resolver.currentTarget?.windowID == 7 }
-  #expect(resolver.cachedTarget(at: point, excluding: [8])?.windowID == 7)
+  #expect(resolver.windowIDAtRelease(at: point, excluding: [8]) == 7)
 }
 
-@Test @MainActor func quickDropsResolveWithoutAnActiveHoverSession() async throws {
+@Test @MainActor func releaseValidationDoesNotStartAnUnrequestedMetadataLookup() async throws {
   let probe = TargetLookupProbe()
   let resolver = DragWindowTargetResolver(
     hitTest: { _, below in below == 0 ? 9 : 0 },
     lookup: { id, _ in await probe.read(id) })
-  let request = try #require(resolver.dropTarget(at: CGPoint(x: 100, y: 100), excluding: []))
-  let task = Task { await resolver.resolveDrop(request) }
-  try await eventually { await probe.calls == [9] }
-  await probe.finish(9, target: dragTestTarget(9))
-  #expect(await task.value?.windowID == 9)
+  let captured = try #require(
+    resolver.windowIDAtRelease(at: CGPoint(x: 100, y: 100), excluding: []))
+  #expect(captured == 9)
+  #expect(await probe.calls.isEmpty)
 }
 
 @Test @MainActor func actualMetadataWorkerNeverBlocksTheMainThread() async throws {
@@ -190,19 +189,15 @@ private func eventually(_ condition: () async -> Bool) async throws {
   #expect(satisfied, "Timed out waiting for asynchronous targeting")
 }
 
-@Test @MainActor func quickDropKeepsTheWindowFromMouseUpEvenIfAnotherWindowMovesUnderIt()
-  async throws
-{
-  let probe = TargetLookupProbe()
+@Test @MainActor func releaseValidationCapturesTheWindowBeforeTheStackChanges() throws {
   let windows = WindowHitTestProbe()
   let resolver = DragWindowTargetResolver(
-    hitTest: { windows.hit($0, below: $1) }, lookup: { id, _ in await probe.read(id) })
-  let request = try #require(resolver.dropTarget(at: CGPoint(x: 100, y: 100), excluding: []))
+    hitTest: { windows.hit($0, below: $1) }, lookup: { _, _ in nil })
+  let point = CGPoint(x: 100, y: 100)
+  let captured = try #require(resolver.windowIDAtRelease(at: point, excluding: []))
   windows.frontmost = 2
-  let task = Task { await resolver.resolveDrop(request) }
-  try await eventually { await probe.calls == [1] }
-  await probe.finish(1, target: dragTestTarget(1))
-  #expect(await task.value?.windowID == 1)
+  #expect(captured == 1)
+  #expect(resolver.windowIDAtRelease(at: point, excluding: []) == 2)
 }
 
 @Test @MainActor func tinyPointerUpdatesDoNotFloodWindowServerWithHitTests() {
@@ -218,18 +213,22 @@ private func eventually(_ condition: () async -> Bool) async throws {
 }
 
 @Test @MainActor
-func dropTargetingValidatesLiveWindowOrderWhenOverlappingWindowsReorderDuringDrag() async throws {
+func unselectedDropSkipsReleaseQueriesAndClearsOverlays() async throws {
   let snapshot = DragWindowSnapshot(load: { _ in
     [
       DragWindowRegion(windowID: 1, frame: CGRect(x: 0, y: 0, width: 800, height: 600)),
       DragWindowRegion(windowID: 2, frame: CGRect(x: 0, y: 0, width: 800, height: 600)),
     ]
   })
-  // Live window stack reordered so window 2 is now above window 1 at release time.
+  var releaseQueries = 0
+  // A plain release needs no window validation, even if the stack changed.
   let controller = CompanionDragTargetingController(
     metrics: DragResponseMetrics(enabled: false),
     snapshot: snapshot,
-    dropHitTest: { _, below in below == 0 ? 2 : 0 },
+    dropHitTest: { _, below in
+      releaseQueries += 1
+      return below == 0 ? 2 : 0
+    },
     lookup: { id, _ in dragTestTarget(id) })
   controller.start()
   defer { controller.stop() }
@@ -251,15 +250,13 @@ func dropTargetingValidatesLiveWindowOrderWhenOverlappingWindowsReorderDuringDra
     snapshot.hitTest(at: CGPoint(x: 200, y: 200), below: 0) == 1
   }
 
-  let evaluation = controller.evaluateDrop(dragged: true, at: CGPoint(x: 200, y: 200))
-  let pendingDrop = try #require(evaluation.pendingDrop)
-  #expect(pendingDrop.windowID == 2)
-  let resolved = await controller.targets.resolveDrop(pendingDrop)
-  #expect(resolved?.windowID == 2)
+  #expect(controller.finishDrag() == nil)
+  #expect(releaseQueries == 0)
+  #expect(!controller.diagnostics.highlight && !controller.diagnostics.wheel)
 }
 
-@Test @MainActor
-func radialSelectionCancelsWhenUnderlyingTargetChangesBeforeDrop() async throws {
+@Test(arguments: [false, true]) @MainActor
+func radialSelectionRequiresTheSameLiveWindowAtRelease(windowChanges: Bool) async throws {
   let liveWindows = WindowHitTestProbe()
   liveWindows.frontmost = 1
   let snapshot = DragWindowSnapshot(load: { _ in
@@ -312,11 +309,15 @@ func radialSelectionCancelsWhenUnderlyingTargetChangesBeforeDrop() async throws 
   #expect(controller.hoveredSkill == .snap)
 
   // Window 2 moves underneath the radial wheel before mouse release.
-  liveWindows.frontmost = 2
-  let evaluation = controller.evaluateDrop(dragged: true, at: snapBubble)
-  #expect(evaluation.selectedSkill == nil)
-  #expect(evaluation.cachedTarget?.windowID != 1)
-  #expect(evaluation.pendingDrop?.windowID == 2)
+  if windowChanges { liveWindows.frontmost = 2 }
+  let selection = controller.finishDrag()
+  if windowChanges {
+    #expect(selection == nil)
+  } else {
+    #expect(selection?.skill == .snap)
+    #expect(selection?.target.windowID == 1)
+  }
+  #expect(!controller.diagnostics.wheel)
 }
 
 @Test @MainActor

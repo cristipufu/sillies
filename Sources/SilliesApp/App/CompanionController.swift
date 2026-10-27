@@ -9,9 +9,6 @@ final class CompanionController {
   private static let maxHopDuration: Double = 0.55
   private static let hopArcHeightRatio: Double = 0.22
   private static let minimumDeadlineInterval: Double = 0.08
-  private static let standardMotionFPS = 60
-  private static let lowPowerMotionFPS = 30
-  private static let motionClockTolerance: Double = 0.002
   private static let neighborCheckCooldown: Double = 2.0
   private static let minSettleDuration: Double = 0.12
   private static let maxSettleDuration: Double = 0.24
@@ -19,12 +16,32 @@ final class CompanionController {
   private static let positionChangeEpsilon: Double = 0.5
   private static let surfaceSpanChangeEpsilon: Double = 0.5
 
-  private struct DropBindingContext {
-    let target: WindowTargetCandidate?
-    let selectedSkill: CompanionSkillKind?
-    let offerSkills: Bool
-    let pointer: CGPoint
-    let releasePosition: CGPoint
+  @MainActor
+  private struct SurfaceUpdateContext {
+    let window: CGRect?
+    let windowID: CGWindowID?
+    let windowLayer: Int
+    let screen: NSScreen?
+    let animated: Bool
+    private var visibleFrames: [ObjectIdentifier: CGRect] = [:]
+
+    init(window: CGRect?, windowID: CGWindowID?, windowLayer: Int, animated: Bool) {
+      self.window = window
+      self.windowID = windowID
+      self.windowLayer = windowLayer
+      screen = CompanionController.preferredScreen(for: window)
+      self.animated = animated
+    }
+
+    // NSScreen.visibleFrame can wait on WindowServer. Share one read per screen per pass,
+    // but do not cache across passes: Dock/menu-bar changes alter the usable area.
+    mutating func visibleFrame(for screen: NSScreen) -> CGRect {
+      let key = ObjectIdentifier(screen)
+      if let frame = visibleFrames[key] { return frame }
+      let frame = CompanionPanel.visibleFrame(for: screen)
+      visibleFrames[key] = frame
+      return frame
+    }
   }
 
   let settings: AppSettings
@@ -45,9 +62,8 @@ final class CompanionController {
   private(set) var perchLocation = PerchSurface.Edge.unavailable
   @ObservationIgnored private var companions: [CompanionInstance] = []
   @ObservationIgnored private var pendingPlacements: [ObjectIdentifier: Bool] = [:]
-  @ObservationIgnored private var motionTimer: Timer?
+  @ObservationIgnored private let motionClock = CompanionMotionClock()
   @ObservationIgnored private var deadlineTimer: Timer?
-  @ObservationIgnored private var motionFPS = 0
   @ObservationIgnored private var started = false
   @ObservationIgnored private var nextNeighborCheck: Double = 0
   @ObservationIgnored private(set) var playedAnimations: [AnimationID: Int] = [:]
@@ -110,6 +126,7 @@ final class CompanionController {
   func start() {
     guard !started else { return }
     started = true
+    motionClock.onFrame = { [weak self] time in self?.tick(at: time) }
     dragTargeting.companionLookup = { [weak self] id in
       self?.companions.first(where: { $0.definition.id == id })
     }
@@ -137,10 +154,6 @@ final class CompanionController {
       let previousWindowID = pet.attachmentTarget?.windowID
       let previousFrame = pet.attachmentTarget?.frame
       pet.bindingState = state
-      switch state {
-      case .awaitingSelection: break
-      default: pet.selectionPerchTarget = nil
-      }
       let targetChanged =
         previousWindowID != pet.attachmentTarget?.windowID
         || previousFrame != pet.attachmentTarget?.frame
@@ -192,8 +205,8 @@ final class CompanionController {
       producer.onEvent = nil
       producer.stop()
     }
-    motionTimer?.invalidate()
-    motionTimer = nil
+    motionClock.stop()
+    motionClock.onFrame = nil
     deadlineTimer?.invalidate()
     deadlineTimer = nil
     for pet in companions {
@@ -263,7 +276,8 @@ final class CompanionController {
     CompanionDiagnostics(
       companionCount: companions.count,
       visibleCount: companions.filter { $0.panel.isVisible }.count,
-      movementClockRunning: motionTimer != nil,
+      visibleHUDCount: companions.filter { $0.hud.isVisible }.count,
+      movementClockRunning: motionClock.isRunning,
       decisionClockRunning: deadlineTimer != nil,
       clickThrough: companions.allSatisfy { $0.panel.ignoresMouseEvents },
       nonactivating: companions.allSatisfy { !$0.panel.canBecomeKey && !$0.panel.canBecomeMain }
@@ -340,8 +354,8 @@ final class CompanionController {
         if let target = pet.tween?.end { pet.place(at: target) }
         pet.clearMotion()
       }
-      animations.apply(
-        pet.behavior.state, to: pet.view.rig, characterID: pet.definition.id,
+      pet.displayBehavior(
+        pet.behavior.state, using: animations,
         reducedMotion: reducedMotion || tracker.isLowPower)
     }
     advanceBehaviors()
@@ -374,18 +388,12 @@ final class CompanionController {
   }
 
   private func configureCompanionInput(_ pet: CompanionInstance) {
-    pet.hud.model.onSelectSkill = { [weak self, weak pet] skill in
-      guard let self, let pet, let target = pet.bindingState.boundTarget else { return }
-      self.skills.startSkill(
-        skill, for: pet.definition.id, companionName: pet.definition.name, target: target)
-    }
     pet.hud.model.onStopSkill = { [weak self, weak pet] in
       guard let self, let pet else { return }
       self.skills.stopSkill(for: pet.definition.id)
     }
     pet.hud.model.onUnbind = { [weak self, weak pet] in
       guard let self, let pet else { return }
-      pet.cancelPendingDropTarget()
       self.skills.unbind(companionID: pet.definition.id)
     }
     pet.hud.model.onOpenVault = { [weak self] recordID in
@@ -430,15 +438,8 @@ final class CompanionController {
   }
 
   private func handleDrop(_ pet: CompanionInstance, dragged: Bool) {
-    let pointer = NSEvent.mouseLocation
-    let evaluation = dragTargeting.evaluateDrop(dragged: dragged, at: pointer)
-    let selectedSkill = evaluation.selectedSkill
-    let radialWasOpen = evaluation.radialWasOpen
-    let dropTarget = evaluation.pendingDrop
-    let cachedTarget = evaluation.cachedTarget
-    let fallbackTarget = pet.pickupWindowTarget
+    let selection = dragTargeting.finishDrag()
     let releasePosition = pet.position
-    let offerSkills = radialWasOpen || releasePosition.y < pet.pickupPosition.y
     pet.isPickedUp = false
     pet.updateOverlayLevel()
     interactionCounts[dragged ? .dropped : .pet, default: 0] += 1
@@ -451,49 +452,21 @@ final class CompanionController {
     guard shouldRun, let surface = pet.surface, surface.isAvailable else {
       pet.dropReturn.cancel()
       updateSurfaces(animated: false)
+      updateMotionClock()
       return
     }
     let plan = DropReturnPlan(
       releasedAt: releasePosition, pickedUpAt: pet.pickupPosition,
-      destination: surface.point(at: pet.pickupFraction), selectedSkill: selectedSkill != nil)
+      destination: surface.point(at: pet.pickupFraction),
+      intent: selection == nil ? .returnToPerch : .activateSkill)
     pet.dropReturn.begin(for: pet, plan: plan, reducedMotion: reducedMotion) {
       [weak self, weak pet] in
       guard let self, let pet, self.shouldRun else { return }
       self.react(pet, to: WorkspaceEvent(.dropped, at: self.now))
-      if let cachedTarget {
-        self.applyDropBinding(
-          pet,
-          context: DropBindingContext(
-            target: cachedTarget,
-            selectedSkill: selectedSkill,
-            offerSkills: offerSkills,
-            pointer: pointer,
-            releasePosition: releasePosition))
-      } else {
-        // Fast drops must not block input waiting for a WindowServer reply.
-        let resolver = self.dragTargeting.targets
-        pet.pendingDropTarget = Task { [weak self, weak pet] in
-          let target: WindowTargetCandidate?
-          if let dropTarget {
-            target = await resolver.resolveDrop(dropTarget) ?? fallbackTarget
-          } else {
-            target = fallbackTarget
-          }
-          guard !Task.isCancelled, let self, let pet, self.shouldRun, !pet.isPickedUp else {
-            return
-          }
-          pet.pendingDropTarget = nil
-          self.applyDropBinding(
-            pet,
-            context: DropBindingContext(
-              target: target,
-              selectedSkill: selectedSkill,
-              offerSkills: offerSkills,
-              pointer: pointer,
-              releasePosition: releasePosition))
-          self.scheduleDeadline()
-          self.updateMotionClock()
-        }
+      if let selection {
+        self.skills.startSkill(
+          selection.skill, for: pet.definition.id, companionName: pet.definition.name,
+          target: selection.target)
       }
       self.scheduleDeadline()
       self.updateMotionClock()
@@ -502,27 +475,6 @@ final class CompanionController {
     scheduleDeadline()
     updateMotionClock()
     if interaction.isEnabled { interaction.refresh() }
-  }
-
-  private func applyDropBinding(_ pet: CompanionInstance, context: DropBindingContext) {
-    guard let target = context.target else { return }
-    let currentAttachedFrame =
-      pet.attachedWindowID == tracker.windowID ? tracker.windowFrame : nil
-    if let selectedSkill = context.selectedSkill {
-      skills.startSkill(
-        selectedSkill, for: pet.definition.id, companionName: pet.definition.name, target: target)
-    } else if context.offerSkills
-      || DropReturnPlan.shouldBindOnDrop(
-        targetFrame: target.frame,
-        currentAttachedWindowFrame: currentAttachedFrame,
-        pointer: context.pointer,
-        companionPoint: context.releasePosition,
-        characterSize: settings.size)
-    {
-      pet.selectionPerchTarget = pet.pickupWindowTarget
-      skills.presentSelectionPrompt(
-        for: pet.definition.id, companionName: pet.definition.name, target: target)
-    }
   }
 
   private func companionAndHUDWindowNumbers() -> Set<Int> {
@@ -590,18 +542,12 @@ final class CompanionController {
       return
     }
     pendingPlacements.removeAll(keepingCapacity: true)
-    let defaultScreen = Self.preferredScreen(for: defaultWindow)
+    var context = SurfaceUpdateContext(
+      window: defaultWindow, windowID: defaultWindowID, windowLayer: defaultWindowLayer,
+      animated: animated)
     var needsSurfaceArrangement = !animated
     for (index, pet) in companions.enumerated() {
-      if updateCompanionSurface(
-        pet,
-        at: index,
-        defaultWindow: defaultWindow,
-        defaultWindowID: defaultWindowID,
-        defaultLayer: defaultWindowLayer,
-        defaultScreen: defaultScreen,
-        animated: animated)
-      {
+      if updateCompanionSurface(pet, at: index, context: &context) {
         needsSurfaceArrangement = true
       }
     }
@@ -643,17 +589,13 @@ final class CompanionController {
   private func updateCompanionSurface(
     _ pet: CompanionInstance,
     at index: Int,
-    defaultWindow: CGRect?,
-    defaultWindowID: CGWindowID?,
-    defaultLayer: Int,
-    defaultScreen: NSScreen?,
-    animated: Bool
+    context: inout SurfaceUpdateContext
   ) -> Bool {
     let targetWindow = resolveTargetWindow(
       for: pet,
-      defaultWindow: defaultWindow,
-      defaultWindowID: defaultWindowID,
-      defaultLayer: defaultLayer)
+      defaultWindow: context.window,
+      defaultWindowID: context.windowID,
+      defaultLayer: context.windowLayer)
     if settings.followsWindows && (targetWindow.frame == nil || targetWindow.windowID == nil) {
       if pet.attachmentTarget == nil && tracker.isAwaitingApplicationWindow {
         return false
@@ -662,11 +604,12 @@ final class CompanionController {
       return false
     }
     let screen =
-      targetWindow.frame == defaultWindow
-      ? defaultScreen : Self.preferredScreen(for: targetWindow.frame)
+      targetWindow.frame == context.window
+      ? context.screen : Self.preferredScreen(for: targetWindow.frame)
     guard let screen else { return false }
+    let visibleFrame = context.visibleFrame(for: screen)
     let surface = PerchSurface(
-      window: targetWindow.frame, visibleFrame: screen.visibleFrame, characterSize: settings.size,
+      window: targetWindow.frame, visibleFrame: visibleFrame, characterSize: settings.size,
       preferRight: index % 2 == 1)
     let previousSurface = pet.surface
     let fallback = Double(index + 1) / Double(companions.count + 1)
@@ -690,8 +633,9 @@ final class CompanionController {
     pet.attachedWindowLayer = targetWindow.layer
     pet.updateOverlayLevel()
     pet.view.resize(to: surface.presentationSize)
+    let previousPose = pet.view.rig.attachmentPose
     pet.view.configureSurface(
-      pose: surface.attachmentPose, window: targetWindow.frame, display: screen.visibleFrame)
+      pose: surface.attachmentPose, window: targetWindow.frame, display: visibleFrame)
     guard surface.isAvailable || pet.isPickedUp else {
       pet.hideForUnavailableSurface()
       return requiresArrangement
@@ -718,7 +662,12 @@ final class CompanionController {
     }
     if !pet.isPickedUp && (changed || reattached) {
       applySurfaceMotionFeedback(
-        to: pet, surface: surface, reattached: reattached, animated: animated)
+        to: pet, surface: surface, reattached: reattached, animated: context.animated)
+    }
+    if shouldRun, previousPose != surface.attachmentPose, !pet.isPickedUp {
+      pet.displayBehavior(
+        pet.behavior.state, using: animations,
+        reducedMotion: reducedMotion || tracker.isLowPower)
     }
     return requiresArrangement
   }
@@ -807,8 +756,8 @@ final class CompanionController {
       guard !pet.isWaitingForSpace else { return }
     }
     playedAnimations[state.animation, default: 0] += 1
-    animations.apply(
-      state, to: pet.view.rig, characterID: pet.definition.id,
+    pet.displayBehavior(
+      state, using: animations,
       reducedMotion: reducedMotion || tracker.isLowPower)
     if pet.isStrolling {
       pet.clearMotion()
@@ -843,8 +792,8 @@ final class CompanionController {
           random: &pet.random)
       else {
         settleAtFreePerch(pet, animated: true)
-        animations.apply(
-          BehaviorState(), to: pet.view.rig, characterID: pet.definition.id,
+        pet.displayBehavior(
+          BehaviorState(), using: animations,
           reducedMotion: reducedMotion || tracker.isLowPower)
         return
       }
@@ -981,26 +930,22 @@ final class CompanionController {
   private func updateMotionClock() {
     let count = shouldRun ? companions.filter { $0.tween != nil && !$0.isPickedUp }.count : 0
     if count != movingCount { movingCount = count }
-    guard movingCount > 0 else {
-      motionTimer?.invalidate()
-      motionTimer = nil
-      motionFPS = 0
+    let pickedUp = companions.first(where: \.isPickedUp)
+    guard shouldRun, let active = pickedUp ?? companions.first(where: { $0.tween != nil }) else {
+      motionClock.stop()
       return
     }
-    let fps = tracker.isLowPower ? Self.lowPowerMotionFPS : Self.standardMotionFPS
-    guard motionTimer == nil || motionFPS != fps else { return }
-    motionTimer?.invalidate()
-    motionFPS = fps
-    let timer = Timer(timeInterval: 1 / Double(fps), repeats: true) { [weak self] _ in
-      MainActor.assumeIsolated { self?.tick() }
-    }
-    timer.tolerance = Self.motionClockTolerance
-    RunLoop.main.add(timer, forMode: .common)
-    motionTimer = timer
+    let cadence: CompanionMotionClock.Cadence =
+      tracker.isLowPower
+      ? (pickedUp == nil ? .lowPowerMotion : .lowPowerInteraction) : .display
+    motionClock.configure(
+      screen: active.panel.screen ?? NSScreen.main ?? NSScreen.screens.first, cadence: cadence)
   }
 
-  private func tick() {
-    let time = now
+  private func tick(at time: Double) {
+    for pet in companions where pet.isPickedUp {
+      pet.view.continueDrag(at: NSEvent.mouseLocation)
+    }
     var deadlineNeedsUpdate = false
     for pet in companions where !pet.isPickedUp {
       guard let tween = pet.tween else { continue }
@@ -1024,8 +969,8 @@ final class CompanionController {
             lastReaction = "\(pet.definition.name) · \(state.animation.rawValue)"
             deadlineNeedsUpdate = true
           } else {
-            animations.apply(
-              BehaviorState(), to: pet.view.rig, characterID: pet.definition.id,
+            pet.displayBehavior(
+              BehaviorState(), using: animations,
               reducedMotion: reducedMotion || tracker.isLowPower)
           }
         }

@@ -69,6 +69,10 @@ Pogo overrides shared walk/climb/catch clips and uses namespaced `pogo.hop` and 
 
 For extra animated layers, keep reset responsibility in the rig: `RobotRig.resetBehaviorPose()` calls `super`, removes antenna/viewfinder animations, and restores the face. Override that method instead of adding character checks to the base rig or controller. Supply static reduced-motion expressions for custom IDs. Existing saved crew selections stay unchanged when new packs are installed; the picker discovers every pack, and automated GUI runs explicitly exercise the entire catalog.
 
+Always call `super.resetBehaviorPose()` in overrides. It advances the reset generation used by `BehaviorPlayback` to reinstall a clip after hiding. Unchanged states otherwise keep playing through settings/application reconciliation; a new reaction, attachment pose, or reduced-motion policy replaces the clip. Window inertia uses the pure `WindowFeedbackAnimation` model to sample interrupted motion, with matching renderer timing and spring constants. Keep those definitions in sync rather than reading `workspaceMotion.presentation()`.
+
+Keep the base rig's layer names on `stage`, `hangingArms`, and `delight`. `ArtworkHitTester` uses those markers to identify interactive artwork and exclude decorations inside a single presentation snapshot. Stroked hit paths are cached by geometry and stroke width; new artwork still belongs under the existing interactive roots.
+
 ## Change entry, exit, or reattachment
 
 Add an optional `transitions` object to a version-1 character JSON:
@@ -109,7 +113,7 @@ For semantic events like successful terminal commands, prefer an explicit local 
 
 `DropReturnPlan` chooses a short accelerating fall for an unassigned release at or above the pickup height. A release below the pickup height, or any explicit radial skill selection, uses an exit/entry pair instead. Returns use the saved normalized pickup slot, never the release point's projected slot. `CompanionDropReturn` owns cancellable arrival work, uses the shared movement clock for falls, and delegates disappearance to `CompanionPresentation`. Landing reactions and skill activation happen on arrival. Pause, removal, or loss of a safe perch cancel pending arrival work; Reduce Motion returns immediately.
 
-An unselected skill bar stays beside the original perch, even when its candidate task targets another window. Only a selected skill changes that attachment. Run `--drop-return-test --without-accessibility` to exercise real above/below drops, a radial menu dismissed without a choice, and an explicitly selected Focus skill against Sillies-owned windows. Like `--interaction-test`, it requires existing event-posting access and never prompts for it.
+A release without a radial skill selection returns quietly to the original perch: it creates no skill bar, window binding, or deferred target lookup. Only an explicit radial selection starts a skill and shows its status card. Dragging without a new selection preserves any skill already running. Run `--drop-return-test --without-accessibility` to exercise real above/below drops, a radial menu dismissed without a choice, and an explicitly selected Focus skill against Sillies-owned windows. Like `--interaction-test`, it requires existing event-posting access and never prompts for it.
 
 Companions support spatial window-binding skills coordinated by `SkillCoordinator` and persisted locally by `SessionVaultStore`:
 

@@ -37,8 +37,17 @@ enum WindowSnapshotService {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
         process.arguments = ["reset", "ScreenCapture", bundleID]
-        try? process.run()
-        process.waitUntilExit()
+        do {
+          try process.run()
+          process.waitUntilExit()
+          if process.terminationStatus != 0 {
+            fputs(
+              "Screen capture permission reset exited with status \(process.terminationStatus)\n",
+              stderr)
+          }
+        } catch {
+          fputs("Screen capture permission reset failed: \(error.localizedDescription)\n", stderr)
+        }
       }
       _ = CGRequestScreenCaptureAccess()
       await MainActor.run {

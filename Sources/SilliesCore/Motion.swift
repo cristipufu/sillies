@@ -173,6 +173,11 @@ public struct WindowMotionFeedback: Equatable, Sendable {
   public let lean: Double
   public let stretch: Double
 
+  public init(lean: Double, stretch: Double) {
+    self.lean = lean
+    self.stretch = stretch
+  }
+
   public init(
     edge: PerchSurface.Edge, horizontalSpeed: Double, verticalSpeed: Double,
     widthSpeed: Double, resized: Bool

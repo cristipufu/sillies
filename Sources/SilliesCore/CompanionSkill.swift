@@ -179,7 +179,6 @@ public struct RadialSkillMenuLayout: Equatable, Sendable {
 /// Lifecycle state of a companion's attachment to a specific window task.
 public enum CompanionBindingState: Equatable, Sendable {
   case followingFocusedWindow
-  case awaitingSelection(target: WindowTargetCandidate, expiresAt: TimeInterval)
   case active(
     target: WindowTargetCandidate, skill: CompanionSkillKind, startedAt: TimeInterval,
     statusDetail: String = "", audioLevel: Double = 0)
@@ -190,8 +189,7 @@ public enum CompanionBindingState: Equatable, Sendable {
   public var boundTarget: WindowTargetCandidate? {
     switch self {
     case .followingFocusedWindow: nil
-    case .awaitingSelection(let target, _),
-      .active(let target, _, _, _, _),
+    case .active(let target, _, _, _, _),
       .completed(let target, _, _, _, _):
       target
     }

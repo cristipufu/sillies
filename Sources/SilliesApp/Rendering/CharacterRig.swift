@@ -18,7 +18,8 @@ class CharacterRig {
   private static let floorShadowOpacity: Float = 0.12
   private static let feedbackChangeEpsilon: Double = 0.015
   private static let feedbackAnimationInterval: Double = 1.0 / 30.0
-  private static let feedbackTimingFunction = CAMediaTimingFunction(name: .easeOut)
+  private static let feedbackTimingFunction = CAMediaTimingFunction(name: .linear)
+  private static let feedbackVerticalStretchRatio: Double = 0.6
   private static let uprightTransformTolerance: CGFloat = 0.0001
 
   let root = CALayer()
@@ -52,9 +53,10 @@ class CharacterRig {
   private var floorShadow: CAShapeLayer?
   private(set) var facingRight = true
   private(set) var feedbackAnimationCount = 0
+  private(set) var behaviorResetGeneration = 0
   private var lastLean: Double = 0
   private var lastStretch: Double = 0
-  private var lastFeedbackTransform = CATransform3DIdentity
+  private var feedbackAnimation: WindowFeedbackAnimation?
   private var lastFeedbackAnimationTime: Double = -.infinity
 
   private var animatableLayers: [CALayer] {
@@ -70,6 +72,9 @@ class CharacterRig {
     self.gripFill = gripFill
     self.sleeveFill = sleeveFill
     self.gripOutline = gripOutline
+    stage.name = ArtworkHitTester.interactiveRootName
+    hangingArms.name = ArtworkHitTester.interactiveRootName
+    delight.name = ArtworkHitTester.decorationName
     let canvasSize = AttachmentPose.designCanvasSize
     root.frame = CGRect(x: 0, y: 0, width: canvasSize, height: canvasSize)
     facing.frame = root.bounds
@@ -188,10 +193,7 @@ class CharacterRig {
   func setAttachmentPose(_ pose: AttachmentPose) {
     guard attachmentPose != pose else { return }
     attachmentPose = pose
-    lastLean = 0
-    lastStretch = 0
-    lastFeedbackTransform = CATransform3DIdentity
-    lastFeedbackAnimationTime = -.infinity
+    resetWorkspaceFeedback()
     CATransaction.begin()
     CATransaction.setDisableActions(true)
     facingRight = pose.isHanging ? pose == .hangingLeft : standingFacingRight
@@ -209,9 +211,13 @@ class CharacterRig {
 
   func resetPose() {
     resetBehaviorPose()
+    resetWorkspaceFeedback()
+  }
+
+  private func resetWorkspaceFeedback() {
     lastLean = 0
     lastStretch = 0
-    lastFeedbackTransform = CATransform3DIdentity
+    feedbackAnimation = nil
     lastFeedbackAnimationTime = -.infinity
     CATransaction.begin()
     CATransaction.setDisableActions(true)
@@ -221,6 +227,7 @@ class CharacterRig {
   }
 
   func resetBehaviorPose() {
+    behaviorResetGeneration += 1
     CATransaction.begin()
     CATransaction.setDisableActions(true)
     for layer in animatableLayers { layer.removeAllAnimations() }
@@ -253,11 +260,12 @@ class CharacterRig {
     lastLean = lean
     lastStretch = stretch
     lastFeedbackAnimationTime = settling ? -.infinity : now
-    let old = lastFeedbackTransform
-    let transform = CATransform3DScale(
-      CATransform3DMakeRotation(facingRight ? lean : -lean, 0, 0, 1), 1 + stretch,
-      1 - stretch * 0.6, 1)
-    lastFeedbackTransform = transform
+    let old = feedbackAnimation?.value(at: now) ?? WindowMotionFeedback(lean: 0, stretch: 0)
+    let next = WindowMotionFeedback(lean: lean, stretch: stretch)
+    let motion = WindowFeedbackAnimation(
+      from: old, to: next, at: now, style: settling ? .settling : .following)
+    feedbackAnimation = motion
+    let transform = feedbackTransform(next)
     CATransaction.begin()
     CATransaction.setDisableActions(true)
     workspaceMotion.transform = transform
@@ -265,20 +273,26 @@ class CharacterRig {
     let animation: CABasicAnimation
     if settling {
       let spring = CASpringAnimation(keyPath: "transform")
-      spring.mass = 0.7
-      spring.stiffness = 200
-      spring.damping = 12
-      spring.duration = 0.55
+      spring.mass = WindowFeedbackAnimation.springMass
+      spring.stiffness = WindowFeedbackAnimation.springStiffness
+      spring.damping = WindowFeedbackAnimation.springDamping
       animation = spring
     } else {
       animation = CABasicAnimation(keyPath: "transform")
-      animation.duration = 0.09
       animation.timingFunction = Self.feedbackTimingFunction
     }
-    animation.fromValue = NSValue(caTransform3D: old)
+    animation.duration = motion.duration
+    animation.beginTime = workspaceMotion.convertTime(CACurrentMediaTime(), from: nil)
+    animation.fromValue = NSValue(caTransform3D: feedbackTransform(old))
     animation.toValue = NSValue(caTransform3D: transform)
     feedbackAnimationCount += 1
     workspaceMotion.add(animation, forKey: "workspaceFeedback")
+  }
+
+  private func feedbackTransform(_ feedback: WindowMotionFeedback) -> CATransform3D {
+    CATransform3DScale(
+      CATransform3DMakeRotation(facingRight ? feedback.lean : -feedback.lean, 0, 0, 1),
+      1 + feedback.stretch, 1 - feedback.stretch * Self.feedbackVerticalStretchRatio, 1)
   }
 
   @discardableResult

@@ -197,8 +197,8 @@ private enum WindowTargetResolver {
   ) -> WindowServerSource.ParsedWindowEntry? {
     dispatchPrecondition(condition: .notOnQueue(.main))
     let list =
-      CGWindowListCopyWindowInfo([.optionIncludingWindow], windowID) as? [[String: Any]]
-    guard let raw = list?.first else { return nil }
+      WindowMetadataReader.copyInfo([.optionIncludingWindow], windowID)
+    guard let raw = list.first else { return nil }
     return WindowServerSource.ParsedWindowEntry(dictionary: raw)
   }
 }
@@ -259,9 +259,8 @@ final class WindowTargetMetadata: Sendable {
       queue.async {
         dispatchPrecondition(condition: .notOnQueue(.main))
         let entries =
-          CGWindowListCopyWindowInfo(
-            [.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]
-          ?? []
+          WindowMetadataReader.copyInfo(
+            [.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID)
         let currentPID = ProcessInfo.processInfo.processIdentifier
         let now = ProcessInfo.processInfo.systemUptime
         var processInfoByPID:

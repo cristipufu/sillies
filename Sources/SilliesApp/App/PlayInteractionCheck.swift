@@ -82,11 +82,15 @@ final class PlayInteractionCheck: NSObject {
 
   @objc private func tick(_ link: CADisplayLink) {
     let current = now
-    if previousTick > 0, [.pressed, .dragged, .skillHovered].contains(phase) {
+    if previousTick > 0, [.pressed, .dragged, .skillHovered, .dropped, .returned].contains(phase) {
       dragFrameGaps.append(current - previousTick)
     }
     previousTick = current
-    guard now - started < (mode == .interaction ? 8 : 15) else { fail("Timed out at \(phase)") }
+    guard now - started < (mode == .interaction ? 8 : 15) else {
+      fail(
+        "Timed out at \(phase); tracked=\(String(describing: controller.tracker.windowID)), target=\(playground.window.windowNumber), attachments=\(controller.attachmentDiagnostics), backgroundKnown=\(background.map { controller.tracker.inputWindowFrames[$0.windowNumber] != nil } ?? false)"
+      )
+    }
     let elapsed = now - phaseStarted
     switch phase {
     case .waiting:
@@ -174,7 +178,8 @@ final class PlayInteractionCheck: NSObject {
       guard elapsed > (mode == .interaction ? 0.15 : 0.04) else { return }
       require(
         controller.interactionCounts[.dropped, default: 0] == companionIndex + 1,
-        "Release drops the companion")
+        "Release drops companion \(companionIndex); events=\(controller.interactionCounts), pointer=\(NSEvent.mouseLocation), attachments=\(controller.attachmentDiagnostics)"
+      )
       if mode == .dropReturn {
         let point = controller.attachmentDiagnostics[companionIndex].point
         require(
@@ -199,8 +204,10 @@ final class PlayInteractionCheck: NSObject {
           fail("Selected Focus skill did not activate")
         }
         require(target.windowID == UInt32(playground.window.windowNumber), "Skill binds its target")
-      } else if companionIndex > 0 {
-        guard case .awaitingSelection = binding else { fail("Expected the returned skill bar") }
+      } else {
+        require(!binding.isBound, "An unselected drop keeps following the focused window")
+        require(
+          controller.diagnostics.visibleHUDCount == 0, "An unselected drop shows no skill bar")
       }
       finishCompanion()
     }
@@ -214,20 +221,21 @@ final class PlayInteractionCheck: NSObject {
       return
     }
     cleanup()
+    print("DRAG HANDLERS: \(controller.smoothnessMetrics.summary)")
     let sortedGaps = dragFrameGaps.sorted()
     if let maximum = sortedGaps.last, !sortedGaps.isEmpty {
       let p95 = sortedGaps[min(sortedGaps.count - 1, Int(Double(sortedGaps.count) * 0.95))]
       print(
         String(
-          format: "DRAG RESPONSE: p95 %.2f ms, max %.2f ms across %d active-drag frames",
+          format: "DRAG RESPONSE: p95 %.2f ms, max %.2f ms across %d pickup/drop/return frames",
           p95 * 1000, maximum * 1000, sortedGaps.count))
       if ProcessInfo.processInfo.arguments.contains("--assert-drag-budget") {
-        require(maximum < 2.0 / 60, "Dragging or first overlay presentation stalled over 33 ms")
+        require(maximum < 2.0 / 60, "Pickup, overlays, or drop return stalled over 33 ms")
       }
     }
     if mode == .dropReturn {
       print(
-        "DROP RETURN OK: quick falls, below-perch relocation, skill bar at original perch, selected Focus binding"
+        "DROP RETURN OK: quick falls, below-perch relocation, quiet returns without a skill bar, selected Focus binding"
       )
     } else {
       print(

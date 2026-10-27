@@ -84,7 +84,7 @@ final class CompanionPresentation {
       reducedMotion ? nil : library.make(profile.definition(for: kind).animation, context: context)
     if let animation {
       CATransaction.setCompletionBlock { [weak self] in
-        Task { @MainActor [weak self] in self?.complete(kind, token: token) }
+        MainRunLoopDelivery.perform { [weak self] in self?.complete(kind, token: token) }
       }
       layer.add(animation, forKey: "presentation")
     }

@@ -14,7 +14,7 @@ func windowDragSmoothnessBudgetAndSinglePassPlacement() throws {
   let settings = AppSettings(defaults: defaults)
   settings.followsWindows = true
   settings.reduceMotion = false
-  settings.enabledCharacters = ["mochi", "kiko"]
+  settings.enabledCharacters = ["mochi", "kiko", "pogo", "bolt"]
 
   let controller = try CompanionController(settings: settings, useAccessibility: false)
   controller.smoothnessMetrics.isEnabled = true
@@ -23,6 +23,7 @@ func windowDragSmoothnessBudgetAndSinglePassPlacement() throws {
 
   let initialWindow = CGRect(x: 180, y: 180, width: 760, height: 520)
   controller.tracker.simulateTrackedWindow(initialWindow, windowID: 101)
+  controller.tracker.stop()
   controller.smoothnessMetrics.reset()
 
   let primaryView = try #require(controller.primaryCompanionView)
@@ -33,7 +34,7 @@ func windowDragSmoothnessBudgetAndSinglePassPlacement() throws {
   let initialFeedbackAnimations = controller.rigFeedbackAnimationCount
   let frameCount = 240
 
-  for frameIndex in 1...frameCount {
+  try DisplayFrameSequence.run(count: frameCount) { frameIndex in
     let progress = Double(frameIndex) / Double(frameCount)
     let movedWindow = initialWindow.offsetBy(
       dx: sin(progress * .pi * 4) * 140 + 0.33,
@@ -51,7 +52,7 @@ func windowDragSmoothnessBudgetAndSinglePassPlacement() throws {
     controller.rigFeedbackAnimationCount - initialFeedbackAnimations
   let finalMaskPath = try #require(maskLayer.path)
 
-  #expect(placementsDuringDrag == frameCount * 2)
+  #expect(placementsDuringDrag == frameCount * settings.enabledCharacters.count)
   #expect(initialMaskPath === finalMaskPath)
   #expect(feedbackAnimationsDuringDrag < frameCount)
   #expect(controller.smoothnessMetrics.sampleCount(for: .windowMove) == frameCount)
@@ -67,7 +68,7 @@ func windowResizeSmoothnessBudgetAndCompactionQuantization() throws {
   let settings = AppSettings(defaults: defaults)
   settings.followsWindows = true
   settings.reduceMotion = false
-  settings.enabledCharacters = ["mochi", "kiko"]
+  settings.enabledCharacters = ["mochi", "kiko", "pogo", "bolt"]
 
   let controller = try CompanionController(settings: settings, useAccessibility: false)
   controller.smoothnessMetrics.isEnabled = true
@@ -76,12 +77,13 @@ func windowResizeSmoothnessBudgetAndCompactionQuantization() throws {
 
   let initialWindow = CGRect(x: 160, y: 160, width: 720, height: 500)
   controller.tracker.simulateTrackedWindow(initialWindow, windowID: 202)
+  controller.tracker.stop()
   controller.smoothnessMetrics.reset()
 
   let initialPlacements = controller.totalPlacementCount
   let frameCount = 120
 
-  for frameIndex in 1...frameCount {
+  try DisplayFrameSequence.run(count: frameCount) { frameIndex in
     let deltaWidth = sin(Double(frameIndex) * 0.1) * 120
     let deltaHeight = cos(Double(frameIndex) * 0.1) * 40
     let resizedWindow = CGRect(
@@ -93,7 +95,7 @@ func windowResizeSmoothnessBudgetAndCompactionQuantization() throws {
   }
 
   let placementsDuringResize = controller.totalPlacementCount - initialPlacements
-  #expect(placementsDuringResize == frameCount * 2)
+  #expect(placementsDuringResize == frameCount * settings.enabledCharacters.count)
   #expect(controller.smoothnessMetrics.sampleCount(for: .windowResize) == frameCount)
   #expect(controller.smoothnessMetrics.isWithinBudget(for: .windowResize))
 
@@ -119,7 +121,7 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
   let settings = AppSettings(defaults: defaults)
   settings.followsWindows = true
   settings.reduceMotion = false
-  settings.enabledCharacters = ["mochi", "kiko"]
+  settings.enabledCharacters = ["mochi", "kiko", "pogo", "bolt"]
 
   let controller = try CompanionController(settings: settings, useAccessibility: false)
   controller.smoothnessMetrics.isEnabled = true
@@ -141,11 +143,12 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
   #expect(controller.attachmentDiagnostics.allSatisfy { $0.visible })
   #expect(controller.interactionMonitorInstallations == initialInstallations)
 
+  controller.tracker.stop()
   controller.smoothnessMetrics.reset()
   let initialPlacements = controller.totalPlacementCount
   let switchCount = 40
 
-  for switchIndex in 1...switchCount {
+  try DisplayFrameSequence.run(count: switchCount) { switchIndex in
     let nextWindow = CGRect(
       x: 100 + Double((switchIndex % 5) * 70),
       y: 120 + Double((switchIndex % 3) * 50),
@@ -157,14 +160,15 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
   }
 
   let placementsDuringSwitches = controller.totalPlacementCount - initialPlacements
-  #expect(placementsDuringSwitches == switchCount * 2)
+  #expect(placementsDuringSwitches == switchCount * settings.enabledCharacters.count)
   #expect(controller.smoothnessMetrics.sampleCount(for: .windowSwitch) == switchCount)
   #expect(controller.smoothnessMetrics.isWithinBudget(for: .windowSwitch))
 
   // Minimizing or closing the last window and restoring a window must also stay within the
   // windowSwitch frame budget.
+  controller.tracker.stop()
   controller.smoothnessMetrics.reset()
-  for cycle in 1...20 {
+  try DisplayFrameSequence.run(count: 20) { cycle in
     controller.tracker.simulateTrackedWindow(nil, windowID: nil)
     let restoredWindow = CGRect(
       x: 160 + Double((cycle % 4) * 50),
@@ -177,8 +181,8 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
   #expect(controller.smoothnessMetrics.isWithinBudget(for: .windowSwitch))
 }
 
-@Test @MainActor
-func companionDragSmoothnessBudgetAndUnclippedMaskStability() throws {
+@Test(arguments: ["mochi", "kiko", "pogo", "bolt"]) @MainActor
+func companionDragSmoothnessBudgetAndUnclippedMaskStability(characterID: String) throws {
   let suiteName = "app.sillies.test.smoothness.companion.\(UUID().uuidString)"
   let defaults = try #require(UserDefaults(suiteName: suiteName))
   defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -186,7 +190,7 @@ func companionDragSmoothnessBudgetAndUnclippedMaskStability() throws {
   let settings = AppSettings(defaults: defaults)
   settings.followsWindows = true
   settings.reduceMotion = false
-  settings.enabledCharacters = ["kiko"]
+  settings.enabledCharacters = [characterID]
 
   let controller = try CompanionController(settings: settings, useAccessibility: false)
   controller.smoothnessMetrics.isEnabled = true
@@ -201,10 +205,11 @@ func companionDragSmoothnessBudgetAndUnclippedMaskStability() throws {
   let maskLayer = try #require(primaryView.layer?.mask as? CAShapeLayer)
   let pickupMaskPath = try #require(maskLayer.path)
 
+  controller.tracker.stop()
   controller.smoothnessMetrics.reset()
   let frameCount = 120
 
-  for frameIndex in 1...frameCount {
+  try DisplayFrameSequence.run(count: frameCount) { frameIndex in
     let delta = CGPoint(
       x: Double(frameIndex) * 1.5,
       y: -Double(frameIndex) * 2.5)

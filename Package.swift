@@ -13,16 +13,22 @@ let package = Package(
   ],
   targets: [
     .target(name: "SilliesCore"),
+    .target(name: "WindowMetadataProtocol"),
+    .executableTarget(
+      name: "SilliesWindowMetadata", dependencies: ["WindowMetadataProtocol"]),
     .executableTarget(
       name: "SilliesApp",
       dependencies: [
         .product(name: "Sparkle", package: "Sparkle"),
         "SilliesCore",
+        "WindowMetadataProtocol",
       ],
       resources: [.copy("Resources/Characters")]
     ),
     .testTarget(name: "SilliesCoreTests", dependencies: ["SilliesCore"]),
-    .testTarget(name: "SilliesAppTests", dependencies: ["SilliesApp", "SilliesCore"]),
+    .testTarget(
+      name: "SilliesAppTests",
+      dependencies: ["SilliesApp", "SilliesCore", "WindowMetadataProtocol"]),
   ],
   swiftLanguageModes: [.v6]
 )

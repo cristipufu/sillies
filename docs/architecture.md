@@ -6,6 +6,8 @@
 flowchart LR
     OS[Workspace / mouse / Accessibility] --> Tracker[WorkspaceTracker]
     AX[AX worker queue] --> Tracker
+    Metadata[Bundled metadata helper] --> Worker[Serialized geometry worker]
+    Worker --> Tracker
     Tracker --> Events[WorkspaceEvent]
     Events --> Controller[CompanionController]
     Packs[Character JSON] --> Brain[BehaviorEngine per companion]
@@ -28,7 +30,11 @@ flowchart LR
 
 `CompanionController` owns the session. It reconciles enabled characters, routes events, places feet or hands on safe surfaces, and owns two shared scheduling mechanisms: a single next-decision deadline and a single movement clock. Each companion owns its own small window and rig; it does not own a timer. When a state expires on a side, the engine selects from the pack's `ambient.wall` reactions, falling back to ordinary `ambient` for packs without wall overrides.
 
+`CompanionMotionClock` synchronizes travel with the active display and samples tweens at the next presentation deadline. It also samples deliberate pickup gestures between mouse events; duplicate pointer positions do no work. A screen display link lets offscreen returns continue. Pause, exclusions, an empty crew, and termination invalidate the link. No clock runs for static poses or finite Core Animation clips alone.
+
 `WorkspaceTracker` (`WindowTracking.swift`) converts macOS signals into bounded event rates. `WindowServerSource` reads public window geometry on a worker queue; it does not capture pixels or request Screen Recording. Normal window following works without Accessibility. A shared heartbeat samples the known focused window at 4 Hz when AX is unavailable (1 Hz with AX); full discovery is limited to focus changes and periodic reconciliation. It observes the active application, never an inventory of every UI tree. A context event means a supported selection/title notification arrived; it is not a guarantee that a browser tab changed. Window titles and document contents are not read.
+
+Window metadata reads run in the bundled `SilliesWindowMetadata` helper process. Background threads in the UI process still share a WindowServer connection lock with Core Animation; a window-list read can otherwise stall an animation commit for about 500 ms. Existing worker queues use bounded pipe requests, while `WorkspaceTracker` owns the helper lifetime through pause, exclusions, sleep, and termination. Replies carry the helper's monotonic capture timestamp. Errors preserve the last verified geometry; the next request can restart a failed helper. No AppKit or Core Animation is initialized in that process. `WindowMetadataClient` owns leases and reconnection, `WindowMetadataConnection` owns pipe I/O, and `WindowMetadataWire` owns the shared response format. A valid empty snapshot is distinct from a failed read.
 
 Native Sillies windows publish their actual frame synchronously from AppKit move/resize notifications. For another app, `PointerWindowGesture` anchors a move or edge/corner resize to the original mouse-down location and window bounds, coordinated by `ForeignWindowDragTracker`. `WindowDragSession` starts pending: a header may contain controls, text, or a non-draggable custom element. Targeted metadata at up to 60 Hz must first prove actual window movement consistent with the pointer. An attempted drag that leaves the window stationary never moves companions or their document mask.
 
@@ -38,15 +44,21 @@ The shared settle deadline uses a timer in common run-loop modes so native track
 
 `AccessibilityWindowSource` confines AX objects to a serial worker queue. The observer's main-run-loop callback only queues work. AX messaging has a short timeout. A lock-protected gate bounds pending geometry reads to one; slow apps cannot accumulate an unbounded backlog. Published observations are immutable, and the main actor rejects observations from a no-longer-active process.
 
-`DragWindowSnapshot` reads a bounded, front-to-back window stack on a serial worker at pickup and on focus/stack invalidation. Drag hit testing uses cached rectangles instead of synchronous WindowServer calls. Known frame updates are merged into in-flight snapshots. `DragWindowTargetResolver` coalesces single-window metadata queries, caches results briefly, and rejects stale session/point replies. Mouse-up alone validates the native target and captures its window ID; fast-drop metadata resolves asynchronously after landing. Pending drop tasks cancel on a new pickup, unbind, pause, removal, and termination.
+`DragWindowSnapshot` reads a bounded, front-to-back window stack on a serial worker at pickup and on focus/stack invalidation. Drag hit testing uses cached rectangles instead of synchronous WindowServer calls. Known frame updates are merged into in-flight snapshots. `DragWindowTargetResolver` coalesces single-window metadata queries, caches results briefly, and rejects stale session/point replies. Mouse-up validates the native window only for an explicit radial skill selection. A release without a choice simply clears the overlays and returns to the original perch, without creating a skill bar or scheduling another target lookup. The cancellable arrival callback starts the selected skill after the return transition.
 
 `ApplicationIconCache` loads and rasterizes icons off the main actor, keeping bounded 64×64 bitmaps for views to read. The shared highlight and radial wheel prepare hidden views before input is enabled and reuse their panels. The highlight is a native outline plus a small SwiftUI badge, without a window-sized tint or changing terminal-title layout. Unchanged frame/model values and redundant hidden-window ordering are skipped. Dwell begins at valid target entry, and system popup animations are disabled. None of these services adds a polling timer or drives mascot movement.
+
+`CompanionHUDController` owns panel placement and cached card sizing. Its SwiftUI view receives a binding-state value alongside action callbacks, so explicit sizing sees the latest text immediately. `NSHostingController.sizeThatFits(in:)` measures only when the layout key changes; automatic hosting constraints and forced subtree rendering are unnecessary. The model, view, and controller live in separate files.
 
 `RendererRegistry` maps character-pack renderer identifiers to rig factories. `AnimationLibrary` resolves shared clips, registered pose variants, and character-specific overrides. `BuiltinAnimations` defines the shared clips separately from that resolution policy. Character drawing knows nothing about events; behavior selection knows nothing about CALayer. The initial rigs share named head/limb/face anchors, so common clips work on either body.
 
 `CompanionPresentation` owns entry, exit, reattachment, and their cancellation. `TransitionLibrary` supplies finite clips selected by the pack's optional `transitions` profile. These animate an outer presentation layer; behavior resets affect only the inner rig. Geometry updates never wait for a transition. Generation tokens reject stale completion callbacks when an exit is interrupted by a new attachment. Losing an attachment plays an exit; pause, exclusions, disabling a character, unsafe placement, and termination hide immediately. Reduced motion skips transition animation. Completion callbacks replace additional application timers.
 
 Behavior preparation preserves continuous window inertia; a full stop resets both. This keeps the landing spring alive when a settling reaction starts, while hidden characters stop all rig animations.
+
+`BehaviorPlayback` owns continuity across reconciliation: the same behavior, pose, and motion policy keep their current clip. `CharacterRig.behaviorResetGeneration` invalidates that cached state after hiding or custom rig resets. `WindowFeedbackAnimation` evaluates interrupted lean/stretch motion and settling analytically in `SilliesCore`, so retargeting never needs synchronous presentation-tree readback.
+
+`MainRunLoopDelivery` delivers metadata and finite completions across common, tracking, and modal run-loop modes. `SessionVaultStore` reads and decodes saved sessions on its I/O worker, then merges early additions/deletions before persisting. Initial-load completion participates in the same modal-safe termination flush; views never wait synchronously for vault I/O.
 
 The controller accepts a catalog, renderer registry, behavior animation library, and transition library at construction. The bundled defaults keep normal startup simple; extensions and tests can supply their own registrations. Catalog validation checks data, duplicate identities, renderers, behavior clips, and transition references before panels appear.
 
@@ -69,6 +81,8 @@ Unavailable surfaces have no meaningful normalized position. On return to a usab
 `AttachmentPose` selects the contact point: feet at `(64, 20)` for standing, upper hand at `(112, 101)` or `(16, 101)` for hanging. Side bodies stay upright. A shared hanging rig supplies raised arms and grips; normal standing arms and the floor shadow disappear. Climbing combines vertical travel with secondary-hand movement and alternating foot kicks. The upper grip stays fixed while body inertia and dangling animate separately. Moving/resizing updates the contact point directly. Hops use the surface outward normal. A reused per-panel mask subtracts the actual focused-window rectangle and clips to the display work area.
 
 `CompanionWindowLayout` also crops the native panel itself to the exterior of the attached top/left/right edge. The transparent native window therefore cannot cover the focused title bar, even during decorative effects. The rig and outer transition layer pivot at the layout's local contact offset, which need not be the canvas center. Deliberate pickup temporarily restores the full animation canvas; release restores exterior native bounds immediately. The layer mask remains responsible for visual document/display clipping during pickup.
+
+Surface updates share a per-pass display visible-frame snapshot across companions; no long-lived screen-frame cache can hide Dock or menu-bar changes.
 
 Switching to another window changes the attachment with a short appearance clip. Characters do not travel through the document to get there.
 

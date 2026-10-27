@@ -7,12 +7,6 @@ final class DragWindowTargetResolver {
   typealias HitTest = @MainActor (CGPoint, Int) -> Int
   typealias Lookup = @Sendable (UInt32, Double) async -> WindowTargetCandidate?
 
-  struct DropTarget: Sendable {
-    let windowID: UInt32
-    let primaryTop: Double
-    let cached: WindowTargetCandidate?
-  }
-
   private struct Entry {
     let target: WindowTargetCandidate?
     let capturedAt: TimeInterval
@@ -132,38 +126,12 @@ final class DragWindowTargetResolver {
     }
   }
 
-  func cachedTarget(at point: CGPoint, excluding excluded: Set<Int>) -> WindowTargetCandidate? {
-    dropTarget(at: point, excluding: excluded)?.cached
-  }
-
-  func dropTarget(at point: CGPoint, excluding excluded: Set<Int>) -> DropTarget? {
+  func windowIDAtRelease(at point: CGPoint, excluding excluded: Set<Int>) -> UInt32? {
     nativeProbe = nil
-    let request = Request(
-      point: point, excluded: excluded, primaryTop: Double(NSScreen.screens.first?.frame.maxY ?? 0))
-    let now = ProcessInfo.processInfo.systemUptime
-    guard
-      let id = firstEligibleWindowNumber(
-        at: point, excluding: excluded, using: dropHitTest, now: now)
-    else { return nil }
-    let cached = cache[id].flatMap { entry -> WindowTargetCandidate? in
-      guard now - entry.capturedAt < Self.refreshInterval,
-        let target = entry.target,
-        target.frame.contains(point),
-        currentTarget == nil || currentTarget?.windowID == target.windowID
-      else { return nil }
-      return target
-    }
-    return DropTarget(windowID: UInt32(id), primaryTop: request.primaryTop, cached: cached)
-  }
-
-  /// A quick drop can precede the hover lookup. Finish that lookup asynchronously after landing.
-  func resolveDrop(_ request: DropTarget) async -> WindowTargetCandidate? {
-    guard !Task.isCancelled else { return nil }
-    if let cached = request.cached { return cached }
-    // Capture the ID at mouse-up; a later hit test could otherwise select a different app.
-    let result = await lookup(request.windowID, request.primaryTop)
-    guard !Task.isCancelled, result?.windowID == request.windowID else { return nil }
-    return result
+    let number = firstEligibleWindowNumber(
+      at: point, excluding: excluded, using: dropHitTest,
+      now: ProcessInfo.processInfo.systemUptime)
+    return number.map(UInt32.init)
   }
 
   private func candidateNumber(for request: Request) -> Int? {

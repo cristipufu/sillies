@@ -29,6 +29,8 @@ app="$PWD/build/Sillies.app"
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 install -m 755 "$binary_dir/Sillies" "$app/Contents/MacOS/Sillies"
+mkdir -p "$app/Contents/Helpers"
+install -m 755 "$binary_dir/SilliesWindowMetadata" "$app/Contents/Helpers/SilliesWindowMetadata"
 
 sparkle=$(find .build/artifacts -path "*Sparkle.xcframework/macos-*/Sparkle.framework" -maxdepth 6 -type d 2>/dev/null | head -1)
 if [[ -n "$sparkle" ]]; then
@@ -67,6 +69,7 @@ if [[ -d "$framework" ]]; then
   codesign "${sign[@]}" "$framework/Versions/B/Updater.app" >/dev/null
   codesign "${sign[@]}" "$framework" >/dev/null
 fi
+codesign "${sign[@]}" --identifier app.sillies.window-metadata "$app/Contents/Helpers/SilliesWindowMetadata" >/dev/null
 codesign "${sign[@]}" --identifier app.sillies.macos "$app" >/dev/null
 
 if [[ -n "$identity" ]]; then signer="Developer ID"; else signer="ad-hoc"; fi

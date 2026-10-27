@@ -63,25 +63,11 @@ final class SnapSkillSession: ActiveSkillSession {
     }
   }
 
-  func tick(
-    now: TimeInterval,
-    startedAt: TimeInterval,
-    currentDetail: String,
-    currentAudioLevel: Double,
-    target: WindowTargetCandidate,
-    snapshot: WindowTargetSnapshot?,
-    frontmostPID: pid_t?
-  ) -> SkillTickDisposition {
-    .keepRunning(statusDetail: currentDetail, audioLevel: currentAudioLevel)
+  func tick(_ context: SkillTickContext) -> SkillTickDisposition {
+    .keepRunning(statusDetail: context.currentDetail, audioLevel: context.currentAudioLevel)
   }
 
-  func finalize(
-    now: TimeInterval,
-    startedAt: TimeInterval,
-    companionID: String,
-    companionName: String,
-    target: WindowTargetCandidate
-  ) -> SkillCompletionOutcome? {
+  func finalize(_ context: SkillFinalizeContext) -> SkillCompletionOutcome? {
     captureTask?.cancel()
     captureTask = nil
     return nil

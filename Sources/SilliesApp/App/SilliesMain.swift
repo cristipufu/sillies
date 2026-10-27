@@ -13,63 +13,18 @@ struct SilliesMain {
   }
 }
 
-private struct LaunchConfiguration {
-  let arguments: [String]
-
-  init(arguments: [String] = ProcessInfo.processInfo.arguments) {
-    self.arguments = arguments
-  }
-
-  var runsInputFixture: Bool { arguments.contains("--input-fixture") }
-  var usesDarkAppearance: Bool { arguments.contains("--dark") }
-  var usesAccessibility: Bool { !arguments.contains("--without-accessibility") }
-  var validatesCatalogOnly: Bool { arguments.contains("--validate-catalog") }
-  var showsPreview: Bool {
-    arguments.contains("--preview") || arguments.contains("--snapshot-dir")
-  }
-  var isAutomatedRun: Bool {
-    arguments.contains("--smoke-test") || arguments.contains("--snapshot-dir")
-      || arguments.contains("--performance-check") || arguments.contains("--window-test")
-      || arguments.contains("--external-drag-test")
-      || arguments.contains("--drag-latency-test")
-      || arguments.contains("--presentation-test")
-      || arguments.contains("--interaction-test")
-      || arguments.contains("--drop-return-test")
-      || arguments.contains("--companion-drag-test")
-  }
-
-  func optionValue(after flag: String) -> String? {
-    guard let index = arguments.firstIndex(of: flag), arguments.indices.contains(index + 1) else {
-      return nil
-    }
-    return arguments[index + 1]
-  }
-
-  @MainActor
-  func apply(to settings: AppSettings) {
-    if isAutomatedRun { settings.followsWindows = false }
-    if arguments.contains("--window-test") { settings.followsWindows = true }
-    if arguments.contains("--drag-latency-test")
-      || arguments.contains("--external-drag-test")
-      || arguments.contains("--interaction-test")
-    {
-      settings.followsWindows = true
-      settings.reduceMotion = true
-    }
-    if arguments.contains("--performance-check") {
-      settings.followsWindows = true
-      settings.activity = .calm
-    }
-    if arguments.contains("--drop-return-test") || arguments.contains("--companion-drag-test") {
-      settings.followsWindows = true
-      settings.reduceMotion = false
-      settings.activity = .calm
-    }
-  }
-}
-
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
+  private static let controlCenterWidth: CGFloat = 388
+  private static let maxCompactControlCenterHeight: CGFloat = 640
+  private static let minControlCenterHeight: CGFloat = 240
+  private static let controlCenterScreenMargin: CGFloat = 24
+  private static let initialVaultWindowSize = NSSize(width: 980, height: 660)
+  private static let minVaultWindowSize = NSSize(width: 880, height: 560)
+  private static let settingsWindowSize = NSSize(width: 560, height: 690)
+  private static let exportedCharacterPreviewPixels = 512
+  private static let exportedCharacterPreviewScale: CGFloat = 4
+
   private var controller: CompanionController?
   private var statusItem: NSStatusItem?
   private let popover = NSPopover()
@@ -78,11 +33,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private var previewWindow: NSWindow?
   private var temporaryPreferencesDomain: String?
   private var playground: WindowPlayground?
-  private var inputFixture: InputWindowFixture?
-  private var externalDragCheck: ExternalDragCheck?
-  private var playInteractionCheck: PlayInteractionCheck?
-  private var companionDragCheck: CompanionDragResponseCheck?
-  private var automatedRunWatchdog: DispatchSourceTimer?
+  private let automatedRunner = AutomatedLaunchRunner()
   private var isTerminating = false
   private(set) var terminationFlushTask: Task<Void, Never>?
   var onTerminationApproved: @MainActor (NSApplication) -> Void = { sender in
@@ -98,25 +49,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   func applicationDidFinishLaunching(_ notification: Notification) {
     do {
       let launch = LaunchConfiguration()
-      if launch.isAutomatedRun || launch.validatesCatalogOnly {
-        armAutomatedRunWatchdog(
-          timeoutSeconds: launch.arguments.contains("--performance-check") ? 45 : 25)
-      }
+      automatedRunner.armWatchdogIfNeeded(for: launch)
       if launch.runsInputFixture {
-        inputFixture = InputWindowFixture()
-        inputFixture?.start()
+        automatedRunner.startInputFixture()
         return
       }
       if launch.usesDarkAppearance { NSApp.appearance = NSAppearance(named: .darkAqua) }
       let settings = makeSettings(for: launch)
-      let skills: SkillCoordinator
-      if launch.isAutomatedRun {
-        let tempVault = FileManager.default.temporaryDirectory
-          .appendingPathComponent("sillies-vault-\(UUID().uuidString)", isDirectory: true)
-        skills = SkillCoordinator(vault: SessionVaultStore(directory: tempVault))
-      } else {
-        skills = SkillCoordinator()
-      }
+      let skills = makeSkillCoordinator(for: launch)
       let controller = try CompanionController(
         settings: settings, useAccessibility: launch.usesAccessibility, skills: skills)
       controller.onOpenVault = { [weak self] recordID in
@@ -139,7 +79,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         installStatusItem()
       }
       if launch.showsPreview { showPreview() }
-      runLaunchAction(launch, controller: controller)
+      automatedRunner.run(
+        launch,
+        controller: controller,
+        openPlayground: { [unowned self] in self.openOrCreatePlayground(for: controller) },
+        exportPreviews: { [weak self] directory in self?.exportPreviews(to: directory) })
     } catch {
       let alert = NSAlert()
       alert.messageText = "Sillies couldn’t get settled."
@@ -163,58 +107,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     return settings
   }
 
-  private func runLaunchAction(_ launch: LaunchConfiguration, controller: CompanionController) {
-    let args = launch.arguments
-    if let snapshotPath = launch.optionValue(after: "--snapshot-dir") {
-      let directory = URL(fileURLWithPath: snapshotPath, isDirectory: true)
-      DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
-        self?.exportPreviews(to: directory)
-        NSApp.terminate(nil)
-      }
-    } else if args.contains("--smoke-test") {
-      RuntimeChecks.smokeTest(controller)
-    } else if args.contains("--presentation-test") {
-      RuntimeChecks.presentationTest()
-    } else if args.contains("--interaction-test") || args.contains("--drop-return-test") {
-      let previous = NSWorkspace.shared.frontmostApplication
-      showPlayground()
-      if let playground {
-        playInteractionCheck = PlayInteractionCheck(
-          controller: controller, playground: playground, previousApplication: previous,
-          mode: args.contains("--drop-return-test") ? .dropReturn : .interaction)
-        playInteractionCheck?.start()
-      }
-    } else if args.contains("--companion-drag-test") {
-      guard let target = launch.optionValue(after: "--target-bundle") else {
-        fputs("--companion-drag-test requires --target-bundle\n", stderr)
-        NSApp.terminate(nil)
-        return
-      }
-      companionDragCheck = CompanionDragResponseCheck(controller: controller, targetBundle: target)
-      companionDragCheck?.start()
-    } else if args.contains("--performance-check") {
-      showPlayground()
-      RuntimeChecks.performanceCheck(controller)
-    } else if args.contains("--window-test") {
-      showPlayground()
-      if let playground { RuntimeChecks.windowTest(controller, playground: playground) }
-    } else if args.contains("--drag-latency-test") {
-      showPlayground()
-      if let playground {
-        DragLatencyCheck(
-          controller: controller, playground: playground, allowLag: args.contains("--allow-lag")
-        ).start()
-      }
-    } else if args.contains("--external-drag-test") {
-      let targetBundle = launch.optionValue(after: "--target-bundle")
-      let fraction = launch.optionValue(after: "--target-header-fraction").flatMap(Double.init)
-      externalDragCheck = ExternalDragCheck(
-        controller: controller, targetBundle: targetBundle, targetHeaderFraction: fraction,
-        expectsStationary: args.contains("--expect-stationary"))
-      externalDragCheck?.start()
-    } else if args.contains("--playground") {
-      showPlayground()
-    }
+  private func makeSkillCoordinator(for launch: LaunchConfiguration) -> SkillCoordinator {
+    guard launch.isAutomatedRun else { return SkillCoordinator() }
+    let tempVault = FileManager.default.temporaryDirectory
+      .appendingPathComponent("sillies-vault-\(UUID().uuidString)", isDirectory: true)
+    return SkillCoordinator(vault: SessionVaultStore(directory: tempVault))
   }
 
   func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
@@ -224,18 +121,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       return .terminateNow
     }
     isTerminating = true
-    controller.stop()
-    controller.skills.vault.cancelPendingSummaries()
     cleanupTemporaryPreferences()
-    let vault = controller.skills.vault
     let approveTermination = onTerminationApproved
     let (stream, continuation) = AsyncStream<Void>.makeStream()
     terminationFlushTask = Task {
       for await _ in stream { break }
     }
-    vault.flushOnIOQueue { [weak self] in
+    controller.flushForTermination { [weak self, weak controller] in
       MainActor.assumeIsolated {
-        vault.drainStagedPreviewsForTermination()
+        controller?.drainPreviewsForTermination()
         self?.terminationFlushTask = nil
         approveTermination(sender)
         continuation.finish()
@@ -256,19 +150,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       UserDefaults.standard.removePersistentDomain(forName: domain)
       temporaryPreferencesDomain = nil
     }
-  }
-
-  private func armAutomatedRunWatchdog(timeoutSeconds: Double) {
-    let timer = DispatchSource.makeTimerSource(
-      queue: DispatchQueue(label: "app.sillies.watchdog", qos: .userInteractive))
-    timer.schedule(deadline: .now() + timeoutSeconds)
-    timer.setEventHandler {
-      FileHandle.standardError.write(
-        Data("AUTOMATED CHECK WATCHDOG TIMEOUT after \(timeoutSeconds)s\n".utf8))
-      _exit(1)
-    }
-    timer.resume()
-    automatedRunWatchdog = timer
   }
 
   private func installStatusItem() {
@@ -299,15 +180,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   ) -> NSViewController {
     let content = controlCenter(controller)
     let idealHeight = NSHostingView(rootView: content).fittingSize.height
-    let compactHeight: CGFloat = 640
     let availableHeight = min(
-      compactHeight, max(240, (screen?.visibleFrame.height ?? idealHeight) - 24))
+      Self.maxCompactControlCenterHeight,
+      max(
+        Self.minControlCenterHeight,
+        (screen?.visibleFrame.height ?? idealHeight) - Self.controlCenterScreenMargin))
     return NSHostingController(
       rootView: ScrollView(.vertical) {
         content
       }
       .scrollBounceBehavior(.basedOnSize)
-      .frame(width: 388, height: min(idealHeight, availableHeight))
+      .frame(width: Self.controlCenterWidth, height: min(idealHeight, availableHeight))
       .background(SilliesTheme.paper))
   }
 
@@ -361,10 +244,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   @objc private func quit() { NSApp.terminate(nil) }
 
   private func showPlayground() {
-    popover.performClose(nil)
     guard let controller else { return }
-    if playground == nil { playground = WindowPlayground(controller: controller) }
-    playground?.show()
+    _ = openOrCreatePlayground(for: controller)
+  }
+
+  private func openOrCreatePlayground(for controller: CompanionController) -> WindowPlayground {
+    popover.performClose(nil)
+    let existing = playground ?? WindowPlayground(controller: controller)
+    playground = existing
+    existing.show()
+    return existing
   }
 
   @objc private func openVaultFromMenu() { showVault() }
@@ -381,17 +270,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       vaultWindow.contentViewController = host
       vaultWindow.setFrame(currentFrame, display: true)
     } else {
-      let initialSize = NSSize(width: 980, height: 660)
       let window = NSWindow(
-        contentRect: CGRect(origin: .zero, size: initialSize),
+        contentRect: CGRect(origin: .zero, size: Self.initialVaultWindowSize),
         styleMask: [.titled, .closable, .miniaturizable, .resizable],
         backing: .buffered, defer: false)
       window.title = "Sillies · Session Vault"
       window.titlebarAppearsTransparent = true
       window.isReleasedWhenClosed = false
-      window.minSize = NSSize(width: 880, height: 560)
+      window.minSize = Self.minVaultWindowSize
       window.contentViewController = host
-      window.setContentSize(initialSize)
+      window.setContentSize(Self.initialVaultWindowSize)
       window.center()
       vaultWindow = window
     }
@@ -403,7 +291,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     popover.performClose(nil)
     if settingsWindow == nil, let controller {
       let window = NSWindow(
-        contentRect: CGRect(x: 0, y: 0, width: 560, height: 690),
+        contentRect: CGRect(origin: .zero, size: Self.settingsWindowSize),
         styleMask: [.titled, .closable, .miniaturizable], backing: .buffered, defer: false)
       window.title = "Sillies Settings"
       window.titlebarAppearsTransparent = true
@@ -448,13 +336,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       for character in controller.catalog.characters {
         guard let rig = controller.renderers.make(character.renderer),
           let bitmap = NSBitmapImageRep(
-            bitmapDataPlanes: nil, pixelsWide: 512, pixelsHigh: 512, bitsPerSample: 8,
+            bitmapDataPlanes: nil,
+            pixelsWide: Self.exportedCharacterPreviewPixels,
+            pixelsHigh: Self.exportedCharacterPreviewPixels,
+            bitsPerSample: 8,
             samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
             bytesPerRow: 0, bitsPerPixel: 0),
           let context = NSGraphicsContext(bitmapImageRep: bitmap)
         else { continue }
         let cg = context.cgContext
-        cg.scaleBy(x: 4, y: 4)
+        cg.scaleBy(
+          x: Self.exportedCharacterPreviewScale, y: Self.exportedCharacterPreviewScale)
         rig.root.render(in: cg)
         if let data = bitmap.representation(using: .png, properties: [:]) {
           try data.write(to: directory.appendingPathComponent("\(character.id).png"))

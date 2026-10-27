@@ -14,6 +14,19 @@ final class AudioTranscriptionService: NSObject, @unchecked Sendable {
     let statusMessage: String
   }
 
+  private static let captureSampleRate = 48_000
+  private static let captureChannelCount = 1
+  private static let minimalVideoCaptureDimension = 2
+  private static let speechActivityAudioLevel: Double = 0.25
+  private static let levelEmitInterval: TimeInterval = 0.08
+  private static let capturingAudioRMSThreshold: Double = 0.04
+  private static let levelChangeEmitThreshold: Double = 0.025
+  private static let rmsNormalizationGain: Double = 6.0
+  private static let rmsSampleBudget = 128
+  private static let maxSnippetSourceCharacters = 120
+  private static let maxFormattedSnippetCharacters = 56
+  private static let truncatedSnippetCharacters = 54
+
   private let target: WindowTargetCandidate
   private let onUpdate: @Sendable (Update) -> Void
   private let audioQueue = DispatchQueue(label: "app.sillies.audio-capture", qos: .userInitiated)
@@ -70,10 +83,10 @@ final class AudioTranscriptionService: NSObject, @unchecked Sendable {
       let config = SCStreamConfiguration()
       config.capturesAudio = true
       config.excludesCurrentProcessAudio = true
-      config.sampleRate = 48_000
-      config.channelCount = 1
-      config.width = 2
-      config.height = 2
+      config.sampleRate = Self.captureSampleRate
+      config.channelCount = Self.captureChannelCount
+      config.width = Self.minimalVideoCaptureDimension
+      config.height = Self.minimalVideoCaptureDimension
       config.minimumFrameInterval = CMTime(value: 1, timescale: 1)
 
       let scStream = SCStream(filter: filter, configuration: config, delegate: nil)
@@ -182,13 +195,13 @@ final class AudioTranscriptionService: NSObject, @unchecked Sendable {
         let snippet = self.latestTailSnippetLocked()
         let message = snippet.isEmpty ? "Listening to \(self.target.appName)…" : snippet
         self.lastEmittedStatus = message
-        self.lastEmittedLevel = 0.25
+        self.lastEmittedLevel = Self.speechActivityAudioLevel
         self.lock.unlock()
 
         self.onUpdate(
           Update(
             transcript: fullText,
-            audioLevel: 0.25,
+            audioLevel: Self.speechActivityAudioLevel,
             statusMessage: message))
       }
       if error != nil {
@@ -222,14 +235,14 @@ final class AudioTranscriptionService: NSObject, @unchecked Sendable {
 
   private func latestTailSnippetLocked() -> String {
     let source = !latestTranscript.isEmpty ? latestTranscript : committedTranscript
-    return Self.tailSnippet(from: String(source.suffix(120)))
+    return Self.tailSnippet(from: String(source.suffix(Self.maxSnippetSourceCharacters)))
   }
 
   private static func tailSnippet(from text: String) -> String {
     let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else { return "" }
-    if trimmed.count <= 56 { return "“\(trimmed)”" }
-    return "“…\(trimmed.suffix(54))”"
+    if trimmed.count <= maxFormattedSnippetCharacters { return "“\(trimmed)”" }
+    return "“…\(trimmed.suffix(truncatedSnippetCharacters))”"
   }
 }
 
@@ -244,7 +257,7 @@ extension AudioTranscriptionService: SCStreamOutput {
     lock.lock()
     let activeRequest = recognitionRequest
     let now = ProcessInfo.processInfo.systemUptime
-    let shouldEmitLevel = now - lastLevelEmitTime >= 0.08
+    let shouldEmitLevel = now - lastLevelEmitTime >= Self.levelEmitInterval
     if shouldEmitLevel { lastLevelEmitTime = now }
     let snippet = shouldEmitLevel ? latestTailSnippetLocked() : ""
     lock.unlock()
@@ -256,10 +269,13 @@ extension AudioTranscriptionService: SCStreamOutput {
       let message =
         !snippet.isEmpty
         ? snippet
-        : (rms > 0.04
+        : (rms > Self.capturingAudioRMSThreshold
           ? "Capturing audio from \(target.appName)…" : "Listening to \(target.appName)…")
       let shouldNotify: Bool = lock.withLock {
-        guard message != lastEmittedStatus || abs(rms - lastEmittedLevel) >= 0.025 else {
+        guard
+          message != lastEmittedStatus
+            || abs(rms - lastEmittedLevel) >= Self.levelChangeEmitThreshold
+        else {
           return false
         }
         lastEmittedStatus = message
@@ -291,7 +307,7 @@ extension AudioTranscriptionService: SCStreamOutput {
     guard count > 0 else { return 0 }
     let samples = channelData[0]
     var sumSquares: Float = 0
-    let strideStep = max(1, count / 128)
+    let strideStep = max(1, count / rmsSampleBudget)
     var sampled = 0
     var index = 0
     while index < count {
@@ -302,6 +318,6 @@ extension AudioTranscriptionService: SCStreamOutput {
     }
     guard sampled > 0 else { return 0 }
     let rms = sqrt(sumSquares / Float(sampled))
-    return min(max(Double(rms) * 6.0, 0), 1)
+    return min(max(Double(rms) * rmsNormalizationGain, 0), 1)
   }
 }

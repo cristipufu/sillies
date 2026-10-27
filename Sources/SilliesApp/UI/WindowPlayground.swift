@@ -48,8 +48,7 @@ final class WindowPlayground: NSObject {
   }
 
   private var fallbackVisibleFrame: CGRect {
-    (window.screen ?? NSScreen.main ?? NSScreen.screens.first)?.visibleFrame
-      ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
+    CompanionPanel.visibleFrame(for: window.screen)
   }
 
   func reset(animated: Bool = true) {

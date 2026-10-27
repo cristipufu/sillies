@@ -118,9 +118,9 @@ struct ControlCenterView: View {
           VStack(alignment: .leading, spacing: 3) {
             Text("Session Vault & Drop Skills").font(.system(size: 11, weight: .semibold))
             Text(
-              controller.skills.vault.records.isEmpty
+              controller.savedRecordCount == 0
                 ? "Drop a sillie on any window to snap, transcribe, or focus."
-                : "\(controller.skills.vault.records.count) saved capture\(controller.skills.vault.records.count == 1 ? "" : "s"), transcripts & stashes"
+                : "\(controller.savedRecordCount) saved capture\(controller.savedRecordCount == 1 ? "" : "s"), transcripts & stashes"
             )
             .font(.system(size: 10))
             .foregroundStyle(SilliesTheme.secondary)

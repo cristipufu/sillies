@@ -21,15 +21,53 @@ final class WindowServerSource: @unchecked Sendable {
     let frame: CGRect
   }
 
-  private struct Request {
+  struct ParsedWindowEntry {
+    let id: UInt32
+    let ownerPID: pid_t
+    let layer: Int
+    let isOnScreen: Bool
+    let isVisible: Bool
+    let frame: CGRect
+    let ownerName: String?
+    let windowTitle: String?
+
+    init?(dictionary: [String: Any]) {
+      guard let id = dictionary[kCGWindowNumber as String] as? UInt32,
+        let ownerPID = dictionary[kCGWindowOwnerPID as String] as? Int32,
+        let layer = dictionary[kCGWindowLayer as String] as? Int,
+        let bounds = dictionary[kCGWindowBounds as String] as? [String: Any],
+        let frame = CGRect(dictionaryRepresentation: bounds as CFDictionary)
+      else { return nil }
+      let isOnScreen = (dictionary[kCGWindowIsOnscreen as String] as? Bool) != false
+      let alpha = dictionary[kCGWindowAlpha as String] as? Double ?? defaultWindowAlpha
+      self.id = id
+      self.ownerPID = ownerPID
+      self.layer = layer
+      self.isOnScreen = isOnScreen
+      self.isVisible = isOnScreen && alpha > minimumVisibleAlpha
+      self.frame = frame
+      self.ownerName = dictionary[kCGWindowOwnerName as String] as? String
+      self.windowTitle = dictionary[kCGWindowName as String] as? String
+    }
+
+    var isTrackableLayer: Bool {
+      WindowServerSource.isTrackableWindowLayer(layer, ownerPID: ownerPID)
+    }
+
+    var isTrackableSize: Bool {
+      WindowServerSource.isTrackableWindowSize(frame.size)
+    }
+  }
+
+  struct Request {
     let processID: pid_t
     let windowID: CGWindowID?
     let discover: Bool
-    let preferredFrame: CGRect?
-    let preferredPoint: CGPoint?
-    let roleSnapshot: AccessibilityWindowRoleSnapshot?
-    let requiresVerifiedFloatingRole: Bool
-    let isManipulatingWindow: Bool
+    var preferredFrame: CGRect? = nil
+    var preferredPoint: CGPoint? = nil
+    var roleSnapshot: AccessibilityWindowRoleSnapshot? = nil
+    var requiresVerifiedFloatingRole: Bool = false
+    var isManipulatingWindow: Bool = false
   }
 
   static let normalWindowLayer = Int(CGWindowLevelForKey(.normalWindow))
@@ -43,6 +81,8 @@ final class WindowServerSource: @unchecked Sendable {
   private static let minimumVisibleAlpha: Double = 0.05
   private static let preferredFrameTolerance: Double = 6.0
   private static let interactiveBorderTolerance: Double = PointerWindowGesture.hitSlop
+  private static let maxInteriorOverlayAreaRatio: Double = 0.65
+  private static let maxUnverifiedOverlayMinorDimension: Double = 320.0
 
   static func isTrackableWindowLayer(_ layer: Int, ownerPID: pid_t) -> Bool {
     if layer == normalWindowLayer { return true }
@@ -204,20 +244,29 @@ final class WindowServerSource: @unchecked Sendable {
       ? [] : filtered
   }
 
-  private static func isInteriorOverlayCandidate(
+  static func isInteriorOverlayCandidate(
     _ candidate: Candidate,
     in candidates: [Candidate],
     roleSnapshot: AccessibilityWindowRoleSnapshot?,
     currentWindowID: CGWindowID?,
-    isManipulatingWindow: Bool
+    isManipulatingWindow: Bool = false
   ) -> Bool {
     guard !(isManipulatingWindow && candidate.id == currentWindowID),
       candidate.layer == normalWindowLayer
     else {
       return false
     }
-    if let roleSnapshot,
-      matchesAnyFrame(candidate.frame, in: roleSnapshot.standardWindowFrames)
+    if let roleSnapshot {
+      if matchesAnyFrame(candidate.frame, in: roleSnapshot.standardWindowFrames) {
+        return false
+      }
+      if !roleSnapshot.hasExactStandardWindowFrames,
+        matchesStandardWindowSize(candidate.frame.size, in: roleSnapshot.standardWindowFrames)
+      {
+        return false
+      }
+    } else if min(candidate.frame.width, candidate.frame.height)
+      >= maxUnverifiedOverlayMinorDimension
     {
       return false
     }
@@ -229,7 +278,7 @@ final class WindowServerSource: @unchecked Sendable {
         return false
       }
       let enclosingArea = enclosing.frame.width * enclosing.frame.height
-      guard candidateArea < enclosingArea * 0.65 else { return false }
+      guard candidateArea < enclosingArea * maxInteriorOverlayAreaRatio else { return false }
       return enclosing.frame.insetBy(
         dx: -preferredFrameTolerance,
         dy: -preferredFrameTolerance
@@ -256,8 +305,10 @@ final class WindowServerSource: @unchecked Sendable {
     else {
       return false
     }
-    return matchesStandardWindowSize(candidate.frame.size, in: unmatchedStandardFrames)
-      || matchesResizeAnchor(candidate.frame, in: unmatchedStandardFrames)
+    if matchesStandardWindowSize(candidate.frame.size, in: unmatchedStandardFrames) {
+      return true
+    }
+    return matchesResizeAnchor(candidate.frame, in: unmatchedStandardFrames)
   }
 
   private static func matchesStandardWindowSize(
@@ -319,50 +370,37 @@ final class WindowServerSource: @unchecked Sendable {
 
   init(deliver: @escaping @Sendable (WindowServerObservation) -> Void) { self.deliver = deliver }
 
-  func refresh(
-    processID: pid_t,
-    windowID: CGWindowID?,
-    discover: Bool,
-    preferredFrame: CGRect? = nil,
-    preferredPoint: CGPoint? = nil,
-    roleSnapshot: AccessibilityWindowRoleSnapshot? = nil,
-    requiresVerifiedFloatingRole: Bool = false,
-    isManipulatingWindow: Bool = false
-  ) {
+  func refresh(processID: pid_t, windowID: CGWindowID?, discover: Bool) {
+    refresh(Request(processID: processID, windowID: windowID, discover: discover))
+  }
+
+  func refresh(_ request: Request) {
     lock.lock()
     if pending {
-      let sameProcess = queued?.processID == processID
-      let mergedDiscover =
-        isManipulatingWindow
-        ? discover
-        : ((sameProcess ? (queued?.discover ?? false) : false) || discover)
-      let mergedFrame = preferredFrame ?? (sameProcess ? queued?.preferredFrame : nil)
-      let mergedPoint = preferredPoint ?? (sameProcess ? queued?.preferredPoint : nil)
-      let mergedSnapshot = roleSnapshot ?? (sameProcess ? queued?.roleSnapshot : nil)
-      queued = Request(
-        processID: processID,
-        windowID: windowID,
-        discover: mergedDiscover,
-        preferredFrame: mergedFrame,
-        preferredPoint: mergedPoint,
-        roleSnapshot: mergedSnapshot,
-        requiresVerifiedFloatingRole: requiresVerifiedFloatingRole,
-        isManipulatingWindow: isManipulatingWindow)
+      queued = mergedRequest(from: request, existing: queued)
       lock.unlock()
       return
     }
     pending = true
     lock.unlock()
-    enqueue(
-      Request(
-        processID: processID,
-        windowID: windowID,
-        discover: discover,
-        preferredFrame: preferredFrame,
-        preferredPoint: preferredPoint,
-        roleSnapshot: roleSnapshot,
-        requiresVerifiedFloatingRole: requiresVerifiedFloatingRole,
-        isManipulatingWindow: isManipulatingWindow))
+    enqueue(request)
+  }
+
+  private func mergedRequest(from incoming: Request, existing: Request?) -> Request {
+    let sameProcess = existing?.processID == incoming.processID
+    let mergedDiscover =
+      incoming.isManipulatingWindow
+      ? incoming.discover
+      : ((sameProcess ? (existing?.discover ?? false) : false) || incoming.discover)
+    return Request(
+      processID: incoming.processID,
+      windowID: incoming.windowID,
+      discover: mergedDiscover,
+      preferredFrame: incoming.preferredFrame ?? (sameProcess ? existing?.preferredFrame : nil),
+      preferredPoint: incoming.preferredPoint ?? (sameProcess ? existing?.preferredPoint : nil),
+      roleSnapshot: incoming.roleSnapshot ?? (sameProcess ? existing?.roleSnapshot : nil),
+      requiresVerifiedFloatingRole: incoming.requiresVerifiedFloatingRole,
+      isManipulatingWindow: incoming.isManipulatingWindow)
   }
 
   private func enqueue(_ request: Request) {
@@ -391,45 +429,10 @@ final class WindowServerSource: @unchecked Sendable {
     let reference = singleWindowRead ? (windowID ?? kCGNullWindowID) : kCGNullWindowID
     let capturedAt = ProcessInfo.processInfo.systemUptime
     let entries = CGWindowListCopyWindowInfo(options, reference) as? [[String: Any]] ?? []
-    let backgroundIDs: Set<Int>? =
-      !singleWindowRead
-      ? Set(
-        entries.compactMap { row in
-          guard
-            (row[kCGWindowLayer as String] as? Int ?? Self.normalWindowLayer)
-              < Self.normalWindowLayer
-          else { return nil }
-          return row[kCGWindowNumber as String] as? Int
-        }) : nil
-    let inputFrames: [Int: CGRect]? =
-      !singleWindowRead
-      ? Dictionary(
-        uniqueKeysWithValues: entries.compactMap { row in
-          guard
-            (row[kCGWindowLayer as String] as? Int ?? Self.unassignedLayer)
-              >= Self.normalWindowLayer,
-            let id = row[kCGWindowNumber as String] as? Int,
-            let bounds = row[kCGWindowBounds as String] as? [String: Any],
-            let frame = CGRect(dictionaryRepresentation: bounds as CFDictionary)
-          else { return nil }
-          return (id, frame)
-        }) : nil
-    var candidates: [Candidate] = []
-    for entry in entries {
-      guard let ownerPID = entry[kCGWindowOwnerPID as String] as? Int32,
-        ownerPID == processID,
-        let layer = entry[kCGWindowLayer as String] as? Int,
-        Self.isTrackableWindowLayer(layer, ownerPID: ownerPID),
-        (entry[kCGWindowIsOnscreen as String] as? Bool) != false,
-        (entry[kCGWindowAlpha as String] as? Double ?? Self.defaultWindowAlpha)
-          > Self.minimumVisibleAlpha,
-        let id = entry[kCGWindowNumber as String] as? UInt32,
-        let bounds = entry[kCGWindowBounds as String] as? [String: Any],
-        let frame = CGRect(dictionaryRepresentation: bounds as CFDictionary),
-        id == windowID || Self.isTrackableWindowSize(frame.size)
-      else { continue }
-      candidates.append(Candidate(id: id, layer: layer, frame: frame))
-    }
+    let backgroundIDs = singleWindowRead ? nil : Self.extractBackgroundWindowIDs(from: entries)
+    let inputFrames = singleWindowRead ? nil : Self.extractInputWindowFrames(from: entries)
+    let candidates = Self.extractCandidates(
+      from: entries, for: processID, currentWindowID: windowID)
 
     let chosen = Self.chooseCandidate(
       from: candidates,
@@ -465,6 +468,43 @@ final class WindowServerSource: @unchecked Sendable {
       WindowServerObservation(
         processID: processID, windowID: nil, frame: nil, capturedAt: capturedAt,
         backgroundWindowIDs: backgroundIDs, inputWindowFrames: inputFrames))
+  }
+
+  private static func extractBackgroundWindowIDs(from entries: [[String: Any]]) -> Set<Int> {
+    Set(
+      entries.compactMap { row in
+        guard (row[kCGWindowLayer as String] as? Int ?? normalWindowLayer) < normalWindowLayer
+        else { return nil }
+        return row[kCGWindowNumber as String] as? Int
+      })
+  }
+
+  private static func extractInputWindowFrames(from entries: [[String: Any]]) -> [Int: CGRect] {
+    Dictionary(
+      uniqueKeysWithValues: entries.compactMap { row in
+        guard (row[kCGWindowLayer as String] as? Int ?? unassignedLayer) >= normalWindowLayer,
+          let id = row[kCGWindowNumber as String] as? Int,
+          let bounds = row[kCGWindowBounds as String] as? [String: Any],
+          let frame = CGRect(dictionaryRepresentation: bounds as CFDictionary)
+        else { return nil }
+        return (id, frame)
+      })
+  }
+
+  private static func extractCandidates(
+    from entries: [[String: Any]],
+    for processID: pid_t,
+    currentWindowID: CGWindowID?
+  ) -> [Candidate] {
+    entries.compactMap { raw in
+      guard let parsed = ParsedWindowEntry(dictionary: raw),
+        parsed.ownerPID == processID,
+        parsed.isTrackableLayer,
+        parsed.isVisible,
+        parsed.id == currentWindowID || parsed.isTrackableSize
+      else { return nil }
+      return Candidate(id: parsed.id, layer: parsed.layer, frame: parsed.frame)
+    }
   }
 
   static func framesMatch(_ lhs: CGRect, _ rhs: CGRect) -> Bool {

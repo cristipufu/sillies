@@ -4,6 +4,8 @@ import SilliesCore
 @MainActor
 final class CompanionInstance {
   private static let motionSeedOffset: UInt64 = 41
+  private static let layoutPlacementTolerance: CGFloat = 0.001
+  private static let defaultPickupFraction = 0.5
 
   let definition: CharacterDefinition
   let view: CompanionView
@@ -21,8 +23,9 @@ final class CompanionInstance {
   var isPickedUp = false
   var isWaitingForSpace = false
   var isReturningFromDrop: Bool { dropReturn.isActive }
+  var isUpright: Bool { view.rig.isUpright }
   var pickupPosition = CGPoint.zero
-  var pickupFraction = 0.5
+  var pickupFraction = CompanionInstance.defaultPickupFraction
   var pickupWindowTarget: WindowTargetCandidate?
   var selectionPerchTarget: WindowTargetCandidate?
   var pendingDropTarget: Task<Void, Never>?
@@ -55,19 +58,96 @@ final class CompanionInstance {
     panel.updateOverlayLevel(forWindowLayer: attachedWindowLayer, isPickedUp: isPickedUp)
   }
 
+  func clearMotion() {
+    tween = nil
+    isStrolling = false
+    strollReachesEdge = false
+  }
+
+  func beginStroll(_ plan: StrollPlan, at time: Double) {
+    view.rig.setFacing(right: plan.facingRight)
+    tween = MotionTween(
+      from: position, to: plan.target, at: time, duration: plan.duration, curve: .linear)
+    isStrolling = true
+    strollReachesEdge = plan.reachesEdge
+  }
+
+  func beginPickup(fallbackTarget: WindowTargetCandidate?) {
+    cancelPendingDropTarget()
+    pickupPosition = position
+    pickupFraction = surface?.fraction(for: position) ?? Self.defaultPickupFraction
+    pickupWindowTarget = attachmentTarget ?? fallbackTarget
+    isPickedUp = true
+    updateOverlayLevel()
+    dropReturn.cancel()
+    hud.hide()
+    clearMotion()
+    if !panel.isVisible {
+      panel.orderFrontRegardless()
+    }
+    presentation.show(reducedMotion: true)
+    place(at: position)
+  }
+
+  func detachFromWindow(immediately: Bool) {
+    presentation.hide(immediately: immediately)
+    hud.hide()
+    isWaitingForSpace = false
+    clearMotion()
+    dropReturn.cancel()
+    surface = nil
+    attachedWindowID = nil
+    attachedWindowLayer = WindowServerSource.normalWindowLayer
+  }
+
+  func hideForUnavailableSurface() {
+    dropReturn.cancel()
+    presentation.hide(immediately: true)
+    hud.hide()
+    isWaitingForSpace = false
+    clearMotion()
+  }
+
+  func waitForPerchSpace() {
+    isWaitingForSpace = true
+    clearMotion()
+    hud.hide()
+    presentation.hide(immediately: true)
+  }
+
+  func resetForInactiveSession() {
+    cancelPendingDropTarget()
+    isPickedUp = false
+    isWaitingForSpace = false
+    dropReturn.cancel()
+    bindingState = .followingFocusedWindow
+    hud.hide()
+    presentation.hide(immediately: true)
+    clearMotion()
+    view.rig.resetPose()
+    behavior.reset()
+  }
+
+  func closeAllPanels() {
+    cancelPendingDropTarget()
+    dropReturn.cancel()
+    hud.close()
+    presentation.close()
+  }
+
   func place(at point: CGPoint) {
     placementCount += 1
     position = point
     updateOverlayLevel()
     let layout = view.panelLayout(at: point, attached: !isPickedUp && !isReturningFromDrop)
     let sizeChanged =
-      abs(appliedLayoutSize.width - layout.frame.width) > 0.001
-      || abs(appliedLayoutSize.height - layout.frame.height) > 0.001
+      abs(appliedLayoutSize.width - layout.frame.width) > Self.layoutPlacementTolerance
+      || abs(appliedLayoutSize.height - layout.frame.height) > Self.layoutPlacementTolerance
     if sizeChanged {
       appliedLayoutSize = layout.frame.size
       panel.setFrame(layout.frame, display: false)
-    } else if abs(panel.frame.minX - layout.frame.minX) > 0.001
-      || abs(panel.frame.minY - layout.frame.minY) > 0.001
+    } else if abs(panel.frame.minX - layout.frame.minX) > Self.layoutPlacementTolerance
+      || abs(panel.frame.minY - layout.frame.minY) > Self.layoutPlacementTolerance
     {
       panel.setFrameOrigin(layout.frame.origin)
     }
@@ -88,9 +168,7 @@ final class CompanionInstance {
       hud.hide()
       return
     }
-    let visibleFrame =
-      (panel.screen ?? NSScreen.main ?? NSScreen.screens.first)?.visibleFrame
-      ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
+    let visibleFrame = CompanionPanel.visibleFrame(for: panel.screen)
     hud.update(
       state: bindingState, companionPoint: position, characterSize: view.characterSize,
       visibleFrame: visibleFrame)

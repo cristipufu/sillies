@@ -22,54 +22,40 @@ final class FocusSkillSession: ActiveSkillSession {
 
   func start() {}
 
-  func tick(
-    now: TimeInterval,
-    startedAt: TimeInterval,
-    currentDetail: String,
-    currentAudioLevel: Double,
-    target: WindowTargetCandidate,
-    snapshot: WindowTargetSnapshot?,
-    frontmostPID: pid_t?
-  ) -> SkillTickDisposition {
-    let dt = max(0, now - lastTickAt)
-    lastTickAt = now
-    if frontmostPID == target.processID {
+  func tick(_ context: SkillTickContext) -> SkillTickDisposition {
+    let dt = max(0, context.now - lastTickAt)
+    lastTickAt = context.now
+    if context.frontmostPID == context.target.processID {
       focusedSeconds += dt
       awaySince = nil
     } else if awaySince == nil {
-      awaySince = now
+      awaySince = context.now
     }
-    let remaining = Self.sprintDuration - (now - startedAt)
+    let remaining = Self.sprintDuration - (context.now - context.startedAt)
     if remaining <= 0 {
       return .completeNow
     }
     let countdown = SessionRecord.formatDuration(remaining)
-    let awayDuration = awaySince.map { now - $0 } ?? 0
+    let awayDuration = awaySince.map { context.now - $0 } ?? 0
     let status =
       awayDuration >= Self.distractionThresholdSeconds
-      ? "Come back to \(target.appName) 👀 · \(countdown)"
+      ? "Come back to \(context.target.appName) 👀 · \(countdown)"
       : "Focus · \(countdown) left"
     return .keepRunning(statusDetail: status)
   }
 
-  func finalize(
-    now: TimeInterval,
-    startedAt: TimeInterval,
-    companionID: String,
-    companionName: String,
-    target: WindowTargetCandidate
-  ) -> SkillCompletionOutcome? {
-    let duration = max(0, now - startedAt)
+  func finalize(_ context: SkillFinalizeContext) -> SkillCompletionOutcome? {
+    let duration = max(0, context.now - context.startedAt)
     let ratio = duration > 0 ? Int((focusedSeconds / duration * 100).rounded()) : 100
     let summary =
-      "Focused on \(target.appName) for \(SessionRecord.formatDuration(focusedSeconds)) (\(ratio)% on-target)."
+      "Focused on \(context.target.appName) for \(SessionRecord.formatDuration(focusedSeconds)) (\(ratio)% on-target)."
     let record = SessionRecord(
       kind: .focus,
-      characterID: companionID,
-      characterName: companionName,
-      appName: target.appName,
-      bundleIdentifier: target.bundleIdentifier,
-      windowTitle: target.windowTitle,
+      characterID: context.companionID,
+      characterName: context.companionName,
+      appName: context.target.appName,
+      bundleIdentifier: context.target.bundleIdentifier,
+      windowTitle: context.target.windowTitle,
       durationSeconds: duration,
       summary: summary)
     return SkillCompletionOutcome(

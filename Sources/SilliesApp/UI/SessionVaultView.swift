@@ -6,6 +6,7 @@ struct SessionVaultView: View {
   private static let maxSidebarPreviewCharacters = 240
   private static let maxDetailDisplayCharacters = 8_192
   private static let maxSearchScanCharacters = 65_536
+  private static let copiedFeedbackDisplaySeconds: Double = 1.8
 
   let vault: SessionVaultStore
   @State private var selectedFilter: CompanionSkillKind?
@@ -675,8 +676,7 @@ struct SessionVaultView: View {
   }
 
   private func needsPermissionBanner(for record: SessionRecord) -> Bool {
-    record.summary.localizedCaseInsensitiveContains("Screen Recording permission")
-      || record.summary.localizedCaseInsensitiveContains("System Settings")
+    record.requiresPermissionAccess
   }
 
   private func permissionBanner(for record: SessionRecord) -> some View {
@@ -807,7 +807,7 @@ struct SessionVaultView: View {
 
   private func flashCopied(_ message: String) {
     copiedFeedback = message
-    DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
+    DispatchQueue.main.asyncAfter(deadline: .now() + Self.copiedFeedbackDisplaySeconds) {
       if copiedFeedback == message { copiedFeedback = nil }
     }
   }

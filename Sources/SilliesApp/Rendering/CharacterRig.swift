@@ -19,6 +19,7 @@ class CharacterRig {
   private static let feedbackChangeEpsilon: Double = 0.015
   private static let feedbackAnimationInterval: Double = 1.0 / 30.0
   private static let feedbackTimingFunction = CAMediaTimingFunction(name: .easeOut)
+  private static let uprightTransformTolerance: CGFloat = 0.0001
 
   let root = CALayer()
   let facing = CALayer()
@@ -40,6 +41,10 @@ class CharacterRig {
   let secondaryGrip = CALayer()
   private(set) var attachmentPose = AttachmentPose.standing
   var isHanging: Bool { attachmentPose.isHanging }
+  var isUpright: Bool {
+    abs(root.transform.m12) < Self.uprightTransformTolerance
+      && abs(root.transform.m21) < Self.uprightTransformTolerance
+  }
   let gripFill: String
   let sleeveFill: String
   let gripOutline: String

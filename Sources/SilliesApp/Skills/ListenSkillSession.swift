@@ -36,45 +36,31 @@ final class ListenSkillSession: ActiveSkillSession {
     }
   }
 
-  func tick(
-    now: TimeInterval,
-    startedAt: TimeInterval,
-    currentDetail: String,
-    currentAudioLevel: Double,
-    target: WindowTargetCandidate,
-    snapshot: WindowTargetSnapshot?,
-    frontmostPID: pid_t?
-  ) -> SkillTickDisposition {
-    guard snapshot != nil else { return .completeNow }
-    let elapsed = SessionRecord.formatDuration(now - startedAt)
+  func tick(_ context: SkillTickContext) -> SkillTickDisposition {
+    guard context.snapshot != nil else { return .completeNow }
+    let elapsed = SessionRecord.formatDuration(context.now - context.startedAt)
     return .keepRunning(
       statusDetail: "\(elapsed) · \(latestStatusMessage)",
-      audioLevel: currentAudioLevel)
+      audioLevel: context.currentAudioLevel)
   }
 
-  func finalize(
-    now: TimeInterval,
-    startedAt: TimeInterval,
-    companionID: String,
-    companionName: String,
-    target: WindowTargetCandidate
-  ) -> SkillCompletionOutcome? {
-    let duration = max(0, now - startedAt)
+  func finalize(_ context: SkillFinalizeContext) -> SkillCompletionOutcome? {
+    let duration = max(0, context.now - context.startedAt)
     let stoppedText = service?.stop() ?? ""
     service = nil
     let transcript = stoppedText.isEmpty ? liveTranscript : stoppedText
     let hasTranscript = !transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     let fallback =
       hasTranscript
-      ? "Transcribed \(target.displayTitle) (\(SessionRecord.formatDuration(duration)))."
-      : "Audio session on \(target.displayTitle) (\(SessionRecord.formatDuration(duration)))."
+      ? "Transcribed \(context.target.displayTitle) (\(SessionRecord.formatDuration(duration)))."
+      : "Audio session on \(context.target.displayTitle) (\(SessionRecord.formatDuration(duration)))."
     let record = SessionRecord(
       kind: .listen,
-      characterID: companionID,
-      characterName: companionName,
-      appName: target.appName,
-      bundleIdentifier: target.bundleIdentifier,
-      windowTitle: target.windowTitle,
+      characterID: context.companionID,
+      characterName: context.companionName,
+      appName: context.target.appName,
+      bundleIdentifier: context.target.bundleIdentifier,
+      windowTitle: context.target.windowTitle,
       durationSeconds: duration,
       transcript: transcript,
       summary: fallback,

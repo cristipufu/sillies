@@ -10,13 +10,99 @@ struct WindowTargetSnapshot: Sendable {
 /// Single-window metadata reads. Private to this file so callers must go through `WindowTargetMetadata`'s
 /// asynchronous worker queue and can never invoke WindowServer IPC on the main actor.
 private enum WindowTargetResolver {
-  static let defaultWindowAlpha: Double = 1.0
-  static let minimumVisibleAlpha: Double = 0.05
   static let maxInspectedWindowEntries = 256
-  private static let roleSnapshotCacheTTL: TimeInterval = 1.0
+  private static let maxCachedRoleSnapshots = 32
+  private static let maxCachedWindowCandidates = 128
+  private static let roleSnapshotCacheTTL: TimeInterval = 15.0
+  private static let candidateCacheTTL: TimeInterval = 2.0
   private static let roleSnapshotCacheLock = NSLock()
+  private static let candidateCacheLock = NSLock()
+  private static let roleSnapshotQueue = DispatchQueue(
+    label: "app.sillies.drag-target-ax-warmup", qos: .utility)
   private nonisolated(unsafe) static var cachedRoleSnapshots:
     [pid_t: (snapshot: AccessibilityWindowRoleSnapshot?, capturedAt: TimeInterval)] = [:]
+  private nonisolated(unsafe) static var pendingRoleSnapshotPIDs: Set<pid_t> = []
+  private nonisolated(unsafe) static var cachedWindowCandidates:
+    [CGWindowID: (candidate: WindowTargetCandidate?, capturedAt: TimeInterval)] = [:]
+
+  static func seedRoleSnapshot(_ snapshot: AccessibilityWindowRoleSnapshot?, for pid: pid_t) {
+    guard pid > 0 else { return }
+    let now = ProcessInfo.processInfo.systemUptime
+    roleSnapshotCacheLock.lock()
+    if cachedRoleSnapshots.count >= maxCachedRoleSnapshots {
+      cachedRoleSnapshots.removeAll(keepingCapacity: true)
+    }
+    cachedRoleSnapshots[pid] = (snapshot, now)
+    roleSnapshotCacheLock.unlock()
+  }
+
+  static func updateCachedCandidateFrame(_ frame: CGRect, for windowID: CGWindowID) {
+    candidateCacheLock.lock()
+    if let existing = cachedWindowCandidates[windowID], var candidate = existing.candidate {
+      candidate.frame = frame
+      cachedWindowCandidates[windowID] = (candidate, existing.capturedAt)
+    }
+    candidateCacheLock.unlock()
+  }
+
+  static func cacheCandidate(
+    _ candidate: WindowTargetCandidate?, for windowID: CGWindowID, at now: TimeInterval
+  ) {
+    candidateCacheLock.lock()
+    if cachedWindowCandidates.count >= maxCachedWindowCandidates {
+      cachedWindowCandidates.removeAll(keepingCapacity: true)
+    }
+    cachedWindowCandidates[windowID] = (candidate, now)
+    candidateCacheLock.unlock()
+  }
+
+  private static func lookupCachedCandidate(
+    for windowID: CGWindowID, at now: TimeInterval
+  ) -> (hit: Bool, candidate: WindowTargetCandidate?) {
+    candidateCacheLock.lock()
+    defer { candidateCacheLock.unlock() }
+    guard let entry = cachedWindowCandidates[windowID],
+      now - entry.capturedAt < candidateCacheTTL
+    else {
+      return (false, nil)
+    }
+    return (true, entry.candidate)
+  }
+
+  static func nonBlockingRoleSnapshot(for pid: pid_t) -> AccessibilityWindowRoleSnapshot? {
+    let now = ProcessInfo.processInfo.systemUptime
+    roleSnapshotCacheLock.lock()
+    if let entry = cachedRoleSnapshots[pid] {
+      let isFresh = now - entry.capturedAt < roleSnapshotCacheTTL
+      let snapshot = entry.snapshot
+      if isFresh {
+        roleSnapshotCacheLock.unlock()
+        return snapshot
+      }
+      scheduleRoleSnapshotWarmupLocked(for: pid)
+      roleSnapshotCacheLock.unlock()
+      return snapshot
+    }
+    scheduleRoleSnapshotWarmupLocked(for: pid)
+    roleSnapshotCacheLock.unlock()
+    return nil
+  }
+
+  private static func scheduleRoleSnapshotWarmupLocked(for pid: pid_t) {
+    guard pid > 0, !pendingRoleSnapshotPIDs.contains(pid) else { return }
+    pendingRoleSnapshotPIDs.insert(pid)
+    roleSnapshotQueue.async {
+      let fetched = AccessibilityWindowSource.roleSnapshot(for: pid)
+      let capturedAt = ProcessInfo.processInfo.systemUptime
+      roleSnapshotCacheLock.lock()
+      pendingRoleSnapshotPIDs.remove(pid)
+      if cachedRoleSnapshots.count >= maxCachedRoleSnapshots {
+        cachedRoleSnapshots.removeAll(keepingCapacity: true)
+      }
+      cachedRoleSnapshots[pid] = (fetched, capturedAt)
+      roleSnapshotCacheLock.unlock()
+    }
+  }
 
   private static func cachedRoleSnapshot(for pid: pid_t) -> AccessibilityWindowRoleSnapshot? {
     let now = ProcessInfo.processInfo.systemUptime
@@ -28,7 +114,7 @@ private enum WindowTargetResolver {
     roleSnapshotCacheLock.unlock()
     let fetched = AccessibilityWindowSource.roleSnapshot(for: pid)
     roleSnapshotCacheLock.lock()
-    if cachedRoleSnapshots.count >= 32 {
+    if cachedRoleSnapshots.count >= maxCachedRoleSnapshots {
       cachedRoleSnapshots.removeAll(keepingCapacity: true)
     }
     cachedRoleSnapshots[pid] = (fetched, ProcessInfo.processInfo.systemUptime)
@@ -40,61 +126,80 @@ private enum WindowTargetResolver {
     for windowID: CGWindowID, primaryScreenTop: Double
   ) -> WindowTargetCandidate? {
     dispatchPrecondition(condition: .notOnQueue(.main))
-    guard let entry = windowEntry(for: windowID),
-      let pid = entry[kCGWindowOwnerPID as String] as? Int32,
-      let layer = entry[kCGWindowLayer as String] as? Int,
-      WindowServerSource.isTrackableWindowLayer(layer, ownerPID: pid),
-      (entry[kCGWindowIsOnscreen as String] as? Bool) != false,
-      (entry[kCGWindowAlpha as String] as? Double ?? defaultWindowAlpha) > minimumVisibleAlpha,
-      let bounds = entry[kCGWindowBounds as String] as? [String: Any],
-      let cgFrame = CGRect(dictionaryRepresentation: bounds as CFDictionary),
-      WindowServerSource.isTrackableWindowSize(cgFrame.size)
-    else { return nil }
+    let now = ProcessInfo.processInfo.systemUptime
+    let cached = lookupCachedCandidate(for: windowID, at: now)
+    if cached.hit {
+      return cached.candidate
+    }
+    guard let parsed = parsedWindowEntry(for: windowID),
+      parsed.isTrackableLayer,
+      parsed.isVisible,
+      parsed.isTrackableSize
+    else {
+      cacheCandidate(nil, for: windowID, at: now)
+      return nil
+    }
+    let pid = parsed.ownerPID
     let currentPID = ProcessInfo.processInfo.processIdentifier
     let app = NSRunningApplication(processIdentifier: pid)
     if let app, pid != currentPID {
-      guard TrackableApplicationPolicy.isTrackable(app) else { return nil }
+      guard TrackableApplicationPolicy.isTrackable(app) else {
+        cacheCandidate(nil, for: windowID, at: now)
+        return nil
+      }
     }
-    let snapshot = pid == currentPID ? nil : cachedRoleSnapshot(for: pid)
-    let windowCandidate = WindowServerSource.Candidate(id: windowID, layer: layer, frame: cgFrame)
+    let snapshot: AccessibilityWindowRoleSnapshot?
+    if pid == currentPID {
+      snapshot = nil
+    } else if parsed.layer == WindowServerSource.normalWindowLayer {
+      snapshot = nonBlockingRoleSnapshot(for: pid)
+    } else {
+      snapshot = cachedRoleSnapshot(for: pid)
+    }
+    let windowCandidate = WindowServerSource.Candidate(
+      id: windowID, layer: parsed.layer, frame: parsed.frame)
     guard
       WindowServerSource.isEligibleCandidate(
         windowCandidate,
         roleSnapshot: snapshot,
         currentWindowID: nil,
         requiresVerifiedFloatingRole: snapshot != nil)
-    else { return nil }
-    return WindowTargetCandidate(
+    else {
+      cacheCandidate(nil, for: windowID, at: now)
+      return nil
+    }
+    let resolved = WindowTargetCandidate(
       windowID: windowID, processID: pid,
-      appName: app?.localizedName ?? (entry[kCGWindowOwnerName as String] as? String) ?? "App",
+      appName: app?.localizedName ?? parsed.ownerName ?? "App",
       bundleIdentifier: app?.bundleIdentifier,
-      windowTitle: entry[kCGWindowName as String] as? String,
+      windowTitle: parsed.windowTitle,
       frame: ScreenCoordinates.appKitRect(
-        fromAccessibility: cgFrame, primaryScreenTop: primaryScreenTop),
-      windowLayer: layer)
+        fromAccessibility: parsed.frame, primaryScreenTop: primaryScreenTop),
+      windowLayer: parsed.layer)
+    cacheCandidate(resolved, for: windowID, at: now)
+    return resolved
   }
 
   static func currentSnapshot(
     for windowID: CGWindowID, primaryScreenTop: Double
   ) -> WindowTargetSnapshot? {
     dispatchPrecondition(condition: .notOnQueue(.main))
-    guard let entry = windowEntry(for: windowID),
-      (entry[kCGWindowIsOnscreen as String] as? Bool) != false,
-      (entry[kCGWindowAlpha as String] as? Double ?? defaultWindowAlpha) > minimumVisibleAlpha,
-      let boundsDict = entry[kCGWindowBounds as String] as? [String: Any],
-      let cgFrame = CGRect(dictionaryRepresentation: boundsDict as CFDictionary)
+    guard let parsed = parsedWindowEntry(for: windowID),
+      parsed.isVisible
     else { return nil }
     let frame = ScreenCoordinates.appKitRect(
-      fromAccessibility: cgFrame, primaryScreenTop: primaryScreenTop)
-    let title = entry[kCGWindowName as String] as? String
-    return WindowTargetSnapshot(frame: frame, title: title)
+      fromAccessibility: parsed.frame, primaryScreenTop: primaryScreenTop)
+    return WindowTargetSnapshot(frame: frame, title: parsed.windowTitle)
   }
 
-  private static func windowEntry(for windowID: CGWindowID) -> [String: Any]? {
+  private static func parsedWindowEntry(
+    for windowID: CGWindowID
+  ) -> WindowServerSource.ParsedWindowEntry? {
     dispatchPrecondition(condition: .notOnQueue(.main))
     let list =
       CGWindowListCopyWindowInfo([.optionIncludingWindow], windowID) as? [[String: Any]]
-    return list?.first
+    guard let raw = list?.first else { return nil }
+    return WindowServerSource.ParsedWindowEntry(dictionary: raw)
   }
 }
 
@@ -106,6 +211,14 @@ final class WindowTargetMetadata: Sendable {
 
   init(read: @escaping Read = { WindowTargetResolver.candidate(for: $0, primaryScreenTop: $1) }) {
     self.read = read
+  }
+
+  func seedRoleSnapshot(_ snapshot: AccessibilityWindowRoleSnapshot?, for pid: pid_t) {
+    WindowTargetResolver.seedRoleSnapshot(snapshot, for: pid)
+  }
+
+  func updateCachedCandidateFrame(_ frame: CGRect, for windowID: CGWindowID) {
+    WindowTargetResolver.updateCachedCandidateFrame(frame, for: windowID)
   }
 
   func candidate(for windowID: CGWindowID, primaryScreenTop: Double) async -> WindowTargetCandidate?
@@ -150,42 +263,84 @@ final class WindowTargetMetadata: Sendable {
             [.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]
           ?? []
         let currentPID = ProcessInfo.processInfo.processIdentifier
-        var trackableProcesses: [pid_t: Bool] = [:]
+        let now = ProcessInfo.processInfo.systemUptime
+        var processInfoByPID:
+          [pid_t: (isTrackable: Bool, appName: String?, bundleIdentifier: String?)] = [:]
+        var preliminaryEntries: [WindowServerSource.ParsedWindowEntry] = []
+        var candidatesByPID: [pid_t: [WindowServerSource.Candidate]] = [:]
 
-        let regions = entries.prefix(WindowTargetResolver.maxInspectedWindowEntries).compactMap {
-          entry -> DragWindowRegion? in
-          guard let pid = entry[kCGWindowOwnerPID as String] as? Int32,
-            let layer = entry[kCGWindowLayer as String] as? Int,
-            WindowServerSource.isTrackableWindowLayer(layer, ownerPID: pid),
-            (entry[kCGWindowAlpha as String] as? Double ?? WindowTargetResolver.defaultWindowAlpha)
-              > WindowTargetResolver.minimumVisibleAlpha,
-            let id = entry[kCGWindowNumber as String] as? UInt32,
-            let bounds = entry[kCGWindowBounds as String] as? [String: Any],
-            let frame = CGRect(dictionaryRepresentation: bounds as CFDictionary),
-            WindowServerSource.isTrackableWindowSize(frame.size)
-          else { return nil }
-
-          let isProcessTrackable: Bool
-          if let cached = trackableProcesses[pid] {
-            isProcessTrackable = cached
+        for entry in entries.prefix(WindowTargetResolver.maxInspectedWindowEntries) {
+          guard let parsed = WindowServerSource.ParsedWindowEntry(dictionary: entry),
+            parsed.isTrackableLayer,
+            parsed.isVisible,
+            parsed.isTrackableSize
+          else { continue }
+          let pid = parsed.ownerPID
+          let info: (isTrackable: Bool, appName: String?, bundleIdentifier: String?)
+          if let cached = processInfoByPID[pid] {
+            info = cached
           } else {
+            let app = NSRunningApplication(processIdentifier: pid)
             let allowed: Bool
             if pid == currentPID {
               allowed = true
-            } else if let app = NSRunningApplication(processIdentifier: pid) {
+            } else if let app {
               allowed = TrackableApplicationPolicy.isTrackable(app)
             } else {
               allowed = true
             }
-            trackableProcesses[pid] = allowed
-            isProcessTrackable = allowed
+            let resolved = (
+              isTrackable: allowed,
+              appName: app?.localizedName,
+              bundleIdentifier: app?.bundleIdentifier
+            )
+            processInfoByPID[pid] = resolved
+            info = resolved
           }
-          guard isProcessTrackable else { return nil }
+          guard info.isTrackable else {
+            WindowTargetResolver.cacheCandidate(nil, for: parsed.id, at: now)
+            continue
+          }
+          preliminaryEntries.append(parsed)
+          candidatesByPID[pid, default: []].append(
+            WindowServerSource.Candidate(id: parsed.id, layer: parsed.layer, frame: parsed.frame))
+        }
 
-          return DragWindowRegion(
-            windowID: id,
-            frame: ScreenCoordinates.appKitRect(
-              fromAccessibility: frame, primaryScreenTop: primaryScreenTop))
+        let regions = preliminaryEntries.compactMap { parsed -> DragWindowRegion? in
+          let pid = parsed.ownerPID
+          let snapshot =
+            pid == currentPID ? nil : WindowTargetResolver.nonBlockingRoleSnapshot(for: pid)
+          let candidate = WindowServerSource.Candidate(
+            id: parsed.id, layer: parsed.layer, frame: parsed.frame)
+          let siblings = candidatesByPID[pid] ?? []
+          let isEligible =
+            WindowServerSource.isEligibleCandidate(
+              candidate,
+              roleSnapshot: snapshot,
+              currentWindowID: nil,
+              requiresVerifiedFloatingRole: snapshot != nil)
+            && !WindowServerSource.isInteriorOverlayCandidate(
+              candidate,
+              in: siblings,
+              roleSnapshot: snapshot,
+              currentWindowID: nil)
+          guard isEligible else {
+            WindowTargetResolver.cacheCandidate(nil, for: parsed.id, at: now)
+            return nil
+          }
+          let appKitFrame = ScreenCoordinates.appKitRect(
+            fromAccessibility: parsed.frame, primaryScreenTop: primaryScreenTop)
+          let info = processInfoByPID[pid]
+          let targetCandidate = WindowTargetCandidate(
+            windowID: parsed.id,
+            processID: pid,
+            appName: info?.appName ?? parsed.ownerName ?? "App",
+            bundleIdentifier: info?.bundleIdentifier,
+            windowTitle: parsed.windowTitle,
+            frame: appKitFrame,
+            windowLayer: parsed.layer)
+          WindowTargetResolver.cacheCandidate(targetCandidate, for: parsed.id, at: now)
+          return DragWindowRegion(windowID: parsed.id, frame: appKitFrame)
         }
         continuation.resume(returning: regions)
       }

@@ -478,6 +478,19 @@ func floatingForeignWindowsLikeBrowserPictureInPictureAreTrackableBelowCompanion
       roleSnapshot: staleMovedBrowserSnapshot,
       requiresVerifiedFloatingRole: true)?.id == 21)
 
+  // A full-sized standard window (e.g. 860x470 WindowPlayground) centered over a larger normal
+  // window of the same process remains selectable even when Accessibility is disabled.
+  let foregroundDocumentWindow = WindowServerSource.Candidate(
+    id: 27, layer: 0, frame: CGRect(x: 290, y: 200, width: 860, height: 470))
+  #expect(
+    WindowServerSource.chooseCandidate(
+      from: [foregroundDocumentWindow, mainBrowser],
+      preferredFrame: nil,
+      preferredPoint: nil,
+      currentWindowID: nil,
+      roleSnapshot: nil,
+      requiresVerifiedFloatingRole: false)?.id == 27)
+
   // 4. Clicking the exterior resize border (within hitSlop outside maxX, directly over the
   // background window) and resizing the active window keeps companions on the active window.
   let resizeBorderClick = CGPoint(

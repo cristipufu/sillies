@@ -30,7 +30,7 @@ final class DragWindowTargetResolver {
   }
   private static let nativeProbeInterval: TimeInterval = 1.0 / 60
   private static let nativeProbeTravel: Double = 12
-  private static let refreshInterval: TimeInterval = 1.0
+  private static let refreshInterval: TimeInterval = 15.0
   private static let maxCacheEntries = 32
   private static let maxStackDepth = 16
   private let hitTest: HitTest
@@ -116,24 +116,20 @@ final class DragWindowTargetResolver {
     }
   }
 
+  func updateKnownWindow(_ id: UInt32?, frame: CGRect?) {
+    guard active, let id, let frame else { return }
+    let key = Int(id)
+    if let existing = cache[key], var target = existing.target, target.frame != frame {
+      target.frame = frame
+      cache[key] = Entry(target: target, capturedAt: existing.capturedAt)
+    }
+  }
+
   func invalidateWindowStack() {
     nativeProbe = nil
-    let now = ProcessInfo.processInfo.systemUptime
-    for key in cache.keys {
-      if let existing = cache[key] {
-        let keepSeedFresh =
-          key == seededWindowID
-          && existing.target != nil
-          && now - existing.capturedAt < Self.refreshInterval
-        cache[key] = Entry(
-          target: existing.target,
-          capturedAt: keepSeedFresh ? existing.capturedAt : 0)
-      }
+    if inFlight == nil, let latest {
+      update(at: latest.point, excluding: latest.excluded)
     }
-    generation += 1
-    inFlight?.cancel()
-    inFlight = nil
-    if let latest { update(at: latest.point, excluding: latest.excluded) }
   }
 
   func cachedTarget(at point: CGPoint, excluding excluded: Set<Int>) -> WindowTargetCandidate? {
@@ -144,24 +140,11 @@ final class DragWindowTargetResolver {
     nativeProbe = nil
     let request = Request(
       point: point, excluded: excluded, primaryTop: Double(NSScreen.screens.first?.frame.maxY ?? 0))
-    var below = 0
-    var found: Int?
-    for _ in 0..<Self.maxStackDepth {
-      let id = dropHitTest(point, below)
-      guard id > 0, id != below else { break }
-      let rejected =
-        cache[id].map {
-          $0.target == nil
-            && ProcessInfo.processInfo.systemUptime - $0.capturedAt < Self.refreshInterval
-        } ?? false
-      if !excluded.contains(id), !rejected {
-        found = id
-        break
-      }
-      below = id
-    }
-    guard let id = found else { return nil }
     let now = ProcessInfo.processInfo.systemUptime
+    guard
+      let id = firstEligibleWindowNumber(
+        at: point, excluding: excluded, using: dropHitTest, now: now)
+    else { return nil }
     let cached = cache[id].flatMap { entry -> WindowTargetCandidate? in
       guard now - entry.capturedAt < Self.refreshInterval,
         let target = entry.target,
@@ -197,24 +180,33 @@ final class DragWindowTargetResolver {
         } ?? false
       if !leftKnownFrame { return probe.number }
     }
-    var below = 0
-    var result: Int?
-    for _ in 0..<Self.maxStackDepth {
-      let id = hitTest(request.point, below)
-      guard id > 0, id != below else { break }
-      let knownInvalid =
-        cache[id].map {
-          $0.target == nil && time - $0.capturedAt < Self.refreshInterval
-        } ?? false
-      if !request.excluded.contains(id), !knownInvalid {
-        result = id
-        break
-      }
-      below = id
-    }
+    let result = firstEligibleWindowNumber(
+      at: request.point, excluding: request.excluded, using: hitTest, now: time)
     nativeProbe = NativeProbe(
       point: request.point, excluded: request.excluded, number: result, capturedAt: time)
     return result
+  }
+
+  private func firstEligibleWindowNumber(
+    at point: CGPoint,
+    excluding excluded: Set<Int>,
+    using hitTester: HitTest,
+    now: TimeInterval
+  ) -> Int? {
+    var below = 0
+    for _ in 0..<Self.maxStackDepth {
+      let id = hitTester(point, below)
+      guard id > 0, id != below else { break }
+      let isKnownInvalid =
+        cache[id].map {
+          $0.target == nil && now - $0.capturedAt < Self.refreshInterval
+        } ?? false
+      if !excluded.contains(id), !isKnownInvalid {
+        return id
+      }
+      below = id
+    }
+    return nil
   }
 
   private func publish(_ target: WindowTargetCandidate?) {

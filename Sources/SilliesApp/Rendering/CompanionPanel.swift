@@ -6,11 +6,28 @@ import SilliesCore
 final class CompanionPanel: NSPanel {
   private static let windowLevelOffsetAboveTarget = 1
   private static let hudLevelOffsetAboveCompanion = 1
+  private static let defaultScreenVisibleFrame = CGRect(x: 0, y: 0, width: 1440, height: 900)
   static let normalOverlayLevel = NSWindow.Level(
     rawValue: NSWindow.Level.normal.rawValue + windowLevelOffsetAboveTarget)
   static let floatingOverlayLevel = NSWindow.Level(
     rawValue: NSWindow.Level.floating.rawValue + windowLevelOffsetAboveTarget)
   static let overlayLevel = floatingOverlayLevel
+
+  static var isRunningUnderUnitTests: Bool {
+    ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+      || ProcessInfo.processInfo.arguments.contains {
+        $0.contains("swift-testing") || $0.hasSuffix(".xctest")
+      }
+  }
+
+  static func visibleFrame(for preferredScreen: NSScreen? = nil) -> CGRect {
+    (preferredScreen ?? NSScreen.main ?? NSScreen.screens.first)?.visibleFrame
+      ?? defaultScreenVisibleFrame
+  }
+
+  static func visibleFrame(containing point: CGPoint) -> CGRect {
+    visibleFrame(for: NSScreen.screens.first { $0.frame.contains(point) })
+  }
 
   static func overlayLevel(
     forWindowLayer windowLayer: Int,
@@ -51,12 +68,7 @@ final class CompanionPanel: NSPanel {
     acceptsMouseMovedEvents = true
     collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle, .transient]
     animationBehavior = .none
-    let isUnitTest =
-      ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-      || ProcessInfo.processInfo.arguments.contains {
-        $0.contains("swift-testing") || $0.hasSuffix(".xctest")
-      }
-    if isUnitTest { alphaValue = 0 }
+    if Self.isRunningUnderUnitTests { alphaValue = 0 }
   }
 
   func updateOverlayLevel(forWindowLayer windowLayer: Int, isPickedUp: Bool) {
@@ -69,6 +81,11 @@ final class CompanionPanel: NSPanel {
 
 @MainActor
 final class CompanionView: NSView {
+  enum PresentationMode {
+    case interactiveCompanion
+    case staticPortrait
+  }
+
   let rig: CharacterRig
   let presentationLayer = CALayer()
   var onPickup: (() -> Void)?
@@ -79,7 +96,8 @@ final class CompanionView: NSView {
   private var dragged = false
   private var handlingInteraction = false
   private(set) var characterSize: Double
-  private let portrait: Bool
+  private let mode: PresentationMode
+  private var isPortraitMode: Bool { mode == .staticPortrait }
   private var attachmentPose = AttachmentPose.standing
   private var isAttachedToSurface = true
   private var clippingWindow: CGRect?
@@ -94,12 +112,17 @@ final class CompanionView: NSView {
   private static let minimumStrokeHitWidth: CGFloat = 6
   private static let maskSubpixelTolerance: CGFloat = 1.5
 
-  init(rig: CharacterRig, size: Double, portrait: Bool = false) {
+  static func makePortrait(rig: CharacterRig, size: Double) -> CompanionView {
+    CompanionView(rig: rig, size: size, mode: .staticPortrait)
+  }
+
+  init(rig: CharacterRig, size: Double, mode: PresentationMode = .interactiveCompanion) {
     self.rig = rig
-    self.portrait = portrait
+    self.mode = mode
     characterSize = size
     let baseDimension =
-      portrait ? AttachmentPose.designCanvasSize : CompanionWindowLayout.runtimeCanvasDimension
+      mode == .staticPortrait
+      ? AttachmentPose.designCanvasSize : CompanionWindowLayout.runtimeCanvasDimension
     let dimension = baseDimension * size / Self.percentScale
     super.init(frame: CGRect(x: 0, y: 0, width: dimension, height: dimension))
     wantsLayer = true
@@ -108,7 +131,7 @@ final class CompanionView: NSView {
     updateRigLayout()
     setAccessibilityElement(true)
     setAccessibilityRole(.image)
-    if !portrait {
+    if mode == .interactiveCompanion {
       registerForDraggedTypes([.string, .URL, .fileURL])
     }
   }
@@ -130,7 +153,7 @@ final class CompanionView: NSView {
   func resize(to size: Double) {
     guard characterSize != size else { return }
     characterSize = size
-    if portrait {
+    if isPortraitMode {
       let dimension = AttachmentPose.designCanvasSize * size / Self.percentScale
       frame.size = CGSize(width: dimension, height: dimension)
     }
@@ -172,7 +195,7 @@ final class CompanionView: NSView {
   }
 
   func updateWorldMask() {
-    guard !portrait, let panel = window else { return }
+    guard !isPortraitMode, let panel = window else { return }
     let origin = panel.frame.origin
     let visible: CGRect
     if isAttachedToSurface {
@@ -214,7 +237,7 @@ final class CompanionView: NSView {
   }
 
   func containsInteractiveArtwork(at screenPoint: CGPoint) -> Bool {
-    guard !portrait, let panel = window, panel.isVisible, presentationLayer.opacity > 0 else {
+    guard !isPortraitMode, let panel = window, panel.isVisible, presentationLayer.opacity > 0 else {
       return false
     }
     guard !isProtectedInputPoint(screenPoint) else { return false }
@@ -280,7 +303,7 @@ final class CompanionView: NSView {
     presentationLayer.position = contact
     rig.root.bounds = CGRect(x: 0, y: 0, width: canvasSize, height: canvasSize)
     rig.root.anchorPoint =
-      portrait
+      isPortraitMode
       ? CGPoint(x: 0.5, y: 0.5)
       : CGPoint(x: attachmentPose.anchor.x / canvasSize, y: attachmentPose.anchor.y / canvasSize)
     rig.root.position = contact
@@ -317,7 +340,7 @@ final class CompanionView: NSView {
   }
 
   override func draggingEntered(_ sender: any NSDraggingInfo) -> NSDragOperation {
-    guard !portrait else { return [] }
+    guard !isPortraitMode else { return [] }
     return sender.draggingPasteboard.canReadObject(
       forClasses: [NSURL.self, NSString.self], options: nil) ? .copy : []
   }

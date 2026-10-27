@@ -52,6 +52,7 @@ final class SessionVaultStore {
   nonisolated static let maxCacheBytes = 24 * 1024 * 1024
   nonisolated static let maxPreviewPixelDimension = 1280
   nonisolated private static let sessionsFilename = "sessions.json"
+  nonisolated private static let vaultDirectoryPermissions = 0o700
 
   private(set) var records: [SessionRecord] = []
   private(set) var pinnedRecordID: UUID?
@@ -453,14 +454,16 @@ final class SessionVaultStore {
     let fileURL = directory.appendingPathComponent(Self.sessionsFilename)
     Self.ioQueue.async {
       dispatchPrecondition(condition: .notOnQueue(.main))
-      try? FileManager.default.createDirectory(
-        at: directory, withIntermediateDirectories: true,
-        attributes: [.posixPermissions: 0o700])
       let encoder = JSONEncoder()
       encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
       encoder.dateEncodingStrategy = .iso8601
-      if let data = try? encoder.encode(snapshot) {
-        try? data.write(to: fileURL, options: .atomic)
+      do {
+        let data = try encoder.encode(snapshot)
+        Self.writeAtomically(data, to: fileURL, in: directory)
+      } catch {
+        fputs(
+          "SessionVaultStore failed to encode session records: \(error.localizedDescription)\n",
+          stderr)
       }
     }
   }
@@ -480,12 +483,27 @@ final class SessionVaultStore {
           self?.drainStagedPreviews()
         }
       }
-      try? FileManager.default.createDirectory(
-        at: directory, withIntermediateDirectories: true,
-        attributes: [.posixPermissions: 0o700])
       if let data = preencodedPNGData ?? Self.encodePNGData(from: cgImage) {
-        try? data.write(to: fileURL, options: .atomic)
+        Self.writeAtomically(data, to: fileURL, in: directory)
       }
+    }
+  }
+
+  private nonisolated static func writeAtomically(
+    _ data: Data,
+    to fileURL: URL,
+    in directory: URL
+  ) {
+    do {
+      try FileManager.default.createDirectory(
+        at: directory,
+        withIntermediateDirectories: true,
+        attributes: [.posixPermissions: vaultDirectoryPermissions])
+      try data.write(to: fileURL, options: .atomic)
+    } catch {
+      fputs(
+        "SessionVaultStore failed to write \(fileURL.lastPathComponent): \(error.localizedDescription)\n",
+        stderr)
     }
   }
 

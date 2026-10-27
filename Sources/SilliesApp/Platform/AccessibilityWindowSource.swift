@@ -38,18 +38,36 @@ final class AccessibilityWindowSource: @unchecked Sendable {
   private static let messagingTimeoutSeconds: Float = 0.10
   private static let lookupMessagingTimeoutSeconds: Float = 0.05
   private static let maxInspectedWindowCount = 12
-  private static let inspectedWindowAttributes: [String] = [
-    kAXRoleAttribute,
-    kAXSubroleAttribute,
-    kAXModalAttribute,
-    kAXMinimizedAttribute,
-    kAXCloseButtonAttribute,
-    kAXMinimizeButtonAttribute,
-    kAXZoomButtonAttribute,
-    kAXFullScreenButtonAttribute,
-    kAXPositionAttribute,
-    kAXSizeAttribute,
-  ]
+
+  private enum InspectedAttribute: Int, CaseIterable {
+    case role = 0
+    case subrole
+    case modal
+    case minimized
+    case closeButton
+    case minimizeButton
+    case zoomButton
+    case fullScreenButton
+    case position
+    case size
+
+    var key: String {
+      switch self {
+      case .role: kAXRoleAttribute
+      case .subrole: kAXSubroleAttribute
+      case .modal: kAXModalAttribute
+      case .minimized: kAXMinimizedAttribute
+      case .closeButton: kAXCloseButtonAttribute
+      case .minimizeButton: kAXMinimizeButtonAttribute
+      case .zoomButton: kAXZoomButtonAttribute
+      case .fullScreenButton: kAXFullScreenButtonAttribute
+      case .position: kAXPositionAttribute
+      case .size: kAXSizeAttribute
+      }
+    }
+  }
+
+  private static let inspectedWindowAttributes: [String] = InspectedAttribute.allCases.map(\.key)
 
   private struct InspectedWindow {
     let element: AXUIElement
@@ -148,9 +166,7 @@ final class AccessibilityWindowSource: @unchecked Sendable {
   func refresh(reason: String = AccessibilityWindowSource.sampleReason) {
     gate.lock()
     if let existing = pendingReason {
-      if !Self.isNonStructuralWindowNotification(reason)
-        || Self.isNonStructuralWindowNotification(existing)
-      {
+      if Self.notificationPriority(for: reason) >= Self.notificationPriority(for: existing) {
         pendingReason = reason
       }
     } else {
@@ -264,6 +280,15 @@ final class AccessibilityWindowSource: @unchecked Sendable {
       || reason == kAXSelectedChildrenChangedNotification
   }
 
+  private static func notificationPriority(for reason: String) -> Int {
+    if isNonStructuralWindowNotification(reason) { return 0 }
+    if reason == sampleReason { return 1 }
+    if reason == kAXFocusedWindowChangedNotification || reason == kAXMainWindowChangedNotification {
+      return 2
+    }
+    return 3
+  }
+
   private var applicationNotifications: [String] {
     [
       kAXFocusedWindowChangedNotification, kAXMainWindowChangedNotification,
@@ -339,7 +364,7 @@ final class AccessibilityWindowSource: @unchecked Sendable {
       inspectedWindows.append(inspected)
       if inspected.isStandardWindow {
         snapshot.standardWindowFrames.append(inspected.frame)
-      } else {
+      } else if !inspected.frame.isEmpty {
         snapshot.nonStandardWindowFrames.append(inspected.frame)
       }
     }
@@ -353,7 +378,7 @@ final class AccessibilityWindowSource: @unchecked Sendable {
       let inspected = inspectWindow(fallbackWindow, timeout: timeout)
     {
       fallbackInspected = inspected
-      if !inspected.isStandardWindow {
+      if !inspected.isStandardWindow && !inspected.frame.isEmpty {
         snapshot.nonStandardWindowFrames.append(inspected.frame)
       }
     }
@@ -404,21 +429,24 @@ final class AccessibilityWindowSource: @unchecked Sendable {
         [],
         &rawValues) == .success,
       let values = rawValues as? [AnyObject],
-      values.count == inspectedWindowAttributes.count,
-      let frame = extractFrame(positionRef: values[8], sizeRef: values[9])
+      values.count == inspectedWindowAttributes.count
     else { return nil }
 
-    let role = values[0] as? String
-    let subrole = values[1] as? String
-    let isModal = (values[2] as? Bool) == true
-    let isMinimized = (values[3] as? Bool) == true
-    let hasCloseButton = isUIElementAttributeValue(values[4])
+    let frame = extractFrame(
+      positionRef: attributeValue(.position, in: values),
+      sizeRef: attributeValue(.size, in: values))
+    let role = attributeValue(.role, in: values) as? String
+    let subrole = attributeValue(.subrole, in: values) as? String
+    let isModal = (attributeValue(.modal, in: values) as? Bool) == true
+    let isMinimized = (attributeValue(.minimized, in: values) as? Bool) == true
+    let hasCloseButton = isUIElementAttributeValue(attributeValue(.closeButton, in: values))
     let hasWindowControl =
-      isUIElementAttributeValue(values[5])
-      || isUIElementAttributeValue(values[6])
-      || isUIElementAttributeValue(values[7])
+      isUIElementAttributeValue(attributeValue(.minimizeButton, in: values))
+      || isUIElementAttributeValue(attributeValue(.zoomButton, in: values))
+      || isUIElementAttributeValue(attributeValue(.fullScreenButton, in: values))
     let isStandardWindow =
-      role == kAXWindowRole
+      frame != nil
+      && role == kAXWindowRole
       && subrole == kAXStandardWindowSubrole
       && !isModal
       && !isMinimized
@@ -426,8 +454,15 @@ final class AccessibilityWindowSource: @unchecked Sendable {
       && hasWindowControl
     return InspectedWindow(
       element: window,
-      frame: frame,
+      frame: frame ?? .zero,
       isStandardWindow: isStandardWindow)
+  }
+
+  private static func attributeValue(
+    _ attribute: InspectedAttribute,
+    in values: [AnyObject]
+  ) -> AnyObject {
+    values[attribute.rawValue]
   }
 
   private static func isUIElementAttributeValue(_ value: AnyObject) -> Bool {

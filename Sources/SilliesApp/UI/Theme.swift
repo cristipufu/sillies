@@ -25,7 +25,7 @@ struct CharacterPortrait: NSViewRepresentable {
 
   func makeNSView(context: Context) -> CompanionView {
     let rig = registry.make(renderer) ?? CharacterRig()
-    return CompanionView(rig: rig, size: size, portrait: true)
+    return CompanionView.makePortrait(rig: rig, size: size)
   }
 
   func updateNSView(_ view: CompanionView, context: Context) { view.resize(to: size) }

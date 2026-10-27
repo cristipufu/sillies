@@ -80,6 +80,7 @@ final class DragWindowSnapshot {
       regions.insert(DragWindowRegion(windowID: id, frame: frame), at: 0)
       refresh()
     }
+    WindowTargetMetadata.shared.updateCachedCandidateFrame(frame, for: id)
     recentFrames[id] = (frame, ProcessInfo.processInfo.systemUptime)
     onChange?()
   }

@@ -50,103 +50,123 @@ public struct WindowDragSession: Sendable {
     }
   }
 
-  public mutating func observe(_ frame: CGRect, capturedAt: TimeInterval, now: TimeInterval)
-    -> Decision
-  {
+  public mutating func observe(
+    _ frame: CGRect, capturedAt: TimeInterval, now: TimeInterval
+  ) -> Decision {
     guard capturedAt >= startedAt else { return .ignore }
     switch mode {
     case .pending:
-      let initial = gesture.initialFrame
-      let changed =
-        abs(frame.minX - initial.minX) + abs(frame.minY - initial.minY)
-        + abs(frame.width - initial.width) + abs(frame.height - initial.height)
-      guard changed > Self.minimumMovementThreshold else { return .useMetadata }
-      let movedWithoutResizing =
-        abs(frame.width - initial.width) < Self.sizeStabilityTolerance
-        && abs(frame.height - initial.height) < Self.sizeStabilityTolerance
-      if movedWithoutResizing {
-        gesture = PointerWindowGesture(
-          kind: .move, frame: initial, pointer: gesture.initialPointer, at: startedAt)
-      }
-      if gesture.matches(
-        frame,
-        recentPointers: pointerCandidates(near: capturedAt, window: Self.pendingCaptureWindow),
-        tolerance: Self.initialMatchTolerance)
-      {
-        mode = .pointer
-        confirmedAt = now
-        return .usePointer
-      }
-      // Custom toolbars may apply a small drag threshold before starting native window movement.
-      if movedWithoutResizing, let anchor = interpolatedPoint(at: capturedAt) {
-        gesture = PointerWindowGesture(
-          kind: .move, frame: frame, pointer: anchor, at: startedAt)
-        if !reanchoredPending {
-          reanchoredPending = true
-          return .useMetadata
-        }
-        mode = .pointer
-        confirmedAt = now
-        return .usePointer
-      }
-      lastMetadataObservation = MetadataObservation(
-        frame: frame,
-        pointer: interpolatedPoint(at: capturedAt) ?? gesture.initialPointer,
-        capturedAt: capturedAt)
-      mode = .metadata
-      return .useMetadata
+      return observePending(frame, capturedAt: capturedAt, now: now)
     case .pointer:
-      if gesture.matches(frame, recentPointers: subframePointerCandidates()) {
-        mismatchSince = nil
-        return .usePointer
-      }
-      guard now - confirmedAt > Self.confirmationGracePeriod else { return .ignore }
-      if mismatchSince == nil { mismatchSince = now }
-      guard now - (mismatchSince ?? now) > Self.sustainedMismatchDuration else { return .ignore }
-      // Keep the drag session alive: constrained windows still need fast geometry reads.
-      lastMetadataObservation = MetadataObservation(
-        frame: frame,
-        pointer: interpolatedPoint(at: capturedAt) ?? gesture.initialPointer,
-        capturedAt: capturedAt)
-      mode = .metadata
-      return .useMetadata
+      return observePointer(frame, capturedAt: capturedAt, now: now)
     case .metadata:
-      let currentPointer = interpolatedPoint(at: capturedAt) ?? gesture.initialPointer
-      if let previous = lastMetadataObservation {
-        let movedWithoutResizing =
-          abs(frame.width - previous.frame.width) < Self.sizeStabilityTolerance
-          && abs(frame.height - previous.frame.height) < Self.sizeStabilityTolerance
-        let displacement =
-          abs(frame.minX - previous.frame.minX) + abs(frame.minY - previous.frame.minY)
-        if gesture.kind == .move,
-          movedWithoutResizing,
-          displacement > Self.minimumMovementThreshold
-        {
-          let candidate = PointerWindowGesture(
-            kind: .move, frame: previous.frame, pointer: previous.pointer, at: startedAt)
-          if candidate.matches(
-            frame,
-            recentPointers: pointerCandidates(near: capturedAt, window: Self.pendingCaptureWindow),
-            tolerance: Self.initialMatchTolerance)
-          {
-            gesture = PointerWindowGesture(
-              kind: .move, frame: frame, pointer: currentPointer, at: startedAt)
-            mismatchSince = nil
-            confirmedAt = now
-            lastMetadataObservation = nil
-            mode = .pointer
-            return .usePointer
-          }
-        }
-      }
-      lastMetadataObservation = MetadataObservation(
-        frame: frame, pointer: currentPointer, capturedAt: capturedAt)
-      return .useMetadata
+      return observeMetadata(frame, capturedAt: capturedAt, now: now)
     }
   }
 
   public func predictedFrame(at pointer: CGPoint) -> CGRect? {
     mode == .pointer ? gesture.frame(at: pointer) : nil
+  }
+
+  private mutating func observePending(
+    _ frame: CGRect, capturedAt: TimeInterval, now: TimeInterval
+  ) -> Decision {
+    let initial = gesture.initialFrame
+    let changed =
+      abs(frame.minX - initial.minX) + abs(frame.minY - initial.minY)
+      + abs(frame.width - initial.width) + abs(frame.height - initial.height)
+    guard changed > Self.minimumMovementThreshold else { return .useMetadata }
+    let movedWithoutResizing = Self.framesHaveMatchingSize(frame, initial)
+    if movedWithoutResizing {
+      gesture = PointerWindowGesture(
+        kind: .move, frame: initial, pointer: gesture.initialPointer, at: startedAt)
+    }
+    if gesture.matches(
+      frame,
+      recentPointers: pointerCandidates(near: capturedAt, window: Self.pendingCaptureWindow),
+      tolerance: Self.initialMatchTolerance)
+    {
+      return confirmPointerMode(at: now)
+    }
+    // Custom toolbars may apply a small drag threshold before starting native window movement.
+    if movedWithoutResizing, let anchor = interpolatedPoint(at: capturedAt) {
+      gesture = PointerWindowGesture(
+        kind: .move, frame: frame, pointer: anchor, at: startedAt)
+      if !reanchoredPending {
+        reanchoredPending = true
+        return .useMetadata
+      }
+      return confirmPointerMode(at: now)
+    }
+    return fallbackToMetadataMode(frame: frame, capturedAt: capturedAt)
+  }
+
+  private mutating func observePointer(
+    _ frame: CGRect, capturedAt: TimeInterval, now: TimeInterval
+  ) -> Decision {
+    if gesture.matches(frame, recentPointers: subframePointerCandidates()) {
+      mismatchSince = nil
+      return .usePointer
+    }
+    guard now - confirmedAt > Self.confirmationGracePeriod else { return .ignore }
+    if mismatchSince == nil { mismatchSince = now }
+    guard now - (mismatchSince ?? now) > Self.sustainedMismatchDuration else { return .ignore }
+    // Keep the drag session alive: constrained windows still need fast geometry reads.
+    return fallbackToMetadataMode(frame: frame, capturedAt: capturedAt)
+  }
+
+  private mutating func observeMetadata(
+    _ frame: CGRect, capturedAt: TimeInterval, now: TimeInterval
+  ) -> Decision {
+    let currentPointer = interpolatedPoint(at: capturedAt) ?? gesture.initialPointer
+    if let previous = lastMetadataObservation {
+      let movedWithoutResizing = Self.framesHaveMatchingSize(frame, previous.frame)
+      let displacement =
+        abs(frame.minX - previous.frame.minX) + abs(frame.minY - previous.frame.minY)
+      if gesture.kind == .move,
+        movedWithoutResizing,
+        displacement > Self.minimumMovementThreshold
+      {
+        let candidate = PointerWindowGesture(
+          kind: .move, frame: previous.frame, pointer: previous.pointer, at: startedAt)
+        if candidate.matches(
+          frame,
+          recentPointers: pointerCandidates(near: capturedAt, window: Self.pendingCaptureWindow),
+          tolerance: Self.initialMatchTolerance)
+        {
+          gesture = PointerWindowGesture(
+            kind: .move, frame: frame, pointer: currentPointer, at: startedAt)
+          return confirmPointerMode(at: now)
+        }
+      }
+    }
+    lastMetadataObservation = MetadataObservation(
+      frame: frame, pointer: currentPointer, capturedAt: capturedAt)
+    return .useMetadata
+  }
+
+  private mutating func confirmPointerMode(at now: TimeInterval) -> Decision {
+    mismatchSince = nil
+    confirmedAt = now
+    lastMetadataObservation = nil
+    mode = .pointer
+    return .usePointer
+  }
+
+  private mutating func fallbackToMetadataMode(
+    frame: CGRect, capturedAt: TimeInterval
+  ) -> Decision {
+    lastMetadataObservation = MetadataObservation(
+      frame: frame,
+      pointer: interpolatedPoint(at: capturedAt) ?? gesture.initialPointer,
+      capturedAt: capturedAt)
+    mode = .metadata
+    return .useMetadata
+  }
+
+  private static func framesHaveMatchingSize(_ lhs: CGRect, _ rhs: CGRect) -> Bool {
+    abs(lhs.width - rhs.width) < sizeStabilityTolerance
+      && abs(lhs.height - rhs.height) < sizeStabilityTolerance
   }
 
   private func pointerCandidates(near time: TimeInterval, window: TimeInterval) -> [CGPoint] {

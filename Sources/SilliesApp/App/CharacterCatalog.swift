@@ -57,8 +57,8 @@ struct CharacterCatalog {
         "Catalog is empty or contains duplicate character IDs")
     }
     self.characters = characters.sorted {
-      let lhsOrder = $0.order ?? ($0.id == "mochi" ? 0 : Int.max)
-      let rhsOrder = $1.order ?? ($1.id == "mochi" ? 0 : Int.max)
+      let lhsOrder = $0.order ?? Int.max
+      let rhsOrder = $1.order ?? Int.max
       if lhsOrder != rhsOrder { return lhsOrder < rhsOrder }
       return $0.id < $1.id
     }

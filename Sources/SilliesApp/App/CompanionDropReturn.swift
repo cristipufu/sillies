@@ -17,9 +17,7 @@ final class CompanionDropReturn {
     isActive = true
     self.onArrival = onArrival
     destination = plan.destination
-    pet.tween = nil
-    pet.isStrolling = false
-    pet.strollReachesEdge = false
+    pet.clearMotion()
     pet.hud.hide()
     if reducedMotion {
       pet.place(at: plan.destination)

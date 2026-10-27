@@ -11,6 +11,158 @@ struct CompanionDiagnostics {
   let nonactivating: Bool
 }
 
+struct LaunchConfiguration {
+  let arguments: [String]
+
+  init(arguments: [String] = ProcessInfo.processInfo.arguments) {
+    self.arguments = arguments
+  }
+
+  var runsInputFixture: Bool { arguments.contains("--input-fixture") }
+  var usesDarkAppearance: Bool { arguments.contains("--dark") }
+  var usesAccessibility: Bool { !arguments.contains("--without-accessibility") }
+  var validatesCatalogOnly: Bool { arguments.contains("--validate-catalog") }
+  var showsPreview: Bool {
+    arguments.contains("--preview") || arguments.contains("--snapshot-dir")
+  }
+  var isAutomatedRun: Bool {
+    arguments.contains("--smoke-test") || arguments.contains("--snapshot-dir")
+      || arguments.contains("--performance-check") || arguments.contains("--window-test")
+      || arguments.contains("--external-drag-test")
+      || arguments.contains("--drag-latency-test")
+      || arguments.contains("--presentation-test")
+      || arguments.contains("--interaction-test")
+      || arguments.contains("--drop-return-test")
+      || arguments.contains("--companion-drag-test")
+  }
+
+  var watchdogTimeoutSeconds: Double {
+    arguments.contains("--performance-check") ? 45 : 25
+  }
+
+  func optionValue(after flag: String) -> String? {
+    guard let index = arguments.firstIndex(of: flag), arguments.indices.contains(index + 1) else {
+      return nil
+    }
+    return arguments[index + 1]
+  }
+
+  @MainActor
+  func apply(to settings: AppSettings) {
+    if isAutomatedRun { settings.followsWindows = false }
+    if arguments.contains("--window-test") { settings.followsWindows = true }
+    if arguments.contains("--drag-latency-test")
+      || arguments.contains("--external-drag-test")
+      || arguments.contains("--interaction-test")
+    {
+      settings.followsWindows = true
+      settings.reduceMotion = true
+    }
+    if arguments.contains("--performance-check") {
+      settings.followsWindows = true
+      settings.activity = .calm
+    }
+    if arguments.contains("--drop-return-test") || arguments.contains("--companion-drag-test") {
+      settings.followsWindows = true
+      settings.reduceMotion = false
+      settings.activity = .calm
+    }
+  }
+}
+
+/// Owns automated CLI/GUI check fixtures, watchdog timers, and command-line dispatch so
+/// `AppDelegate` stays focused on application lifecycle and user-facing windows.
+@MainActor
+final class AutomatedLaunchRunner {
+  private var inputFixture: InputWindowFixture?
+  private var externalDragCheck: ExternalDragCheck?
+  private var playInteractionCheck: PlayInteractionCheck?
+  private var companionDragCheck: CompanionDragResponseCheck?
+  private var watchdogTimer: DispatchSourceTimer?
+
+  func armWatchdogIfNeeded(for launch: LaunchConfiguration) {
+    guard launch.isAutomatedRun || launch.validatesCatalogOnly else { return }
+    let timeoutSeconds = launch.watchdogTimeoutSeconds
+    let timer = DispatchSource.makeTimerSource(
+      queue: DispatchQueue(label: "app.sillies.watchdog", qos: .userInteractive))
+    timer.schedule(deadline: .now() + timeoutSeconds)
+    timer.setEventHandler {
+      FileHandle.standardError.write(
+        Data("AUTOMATED CHECK WATCHDOG TIMEOUT after \(timeoutSeconds)s\n".utf8))
+      _exit(1)
+    }
+    timer.resume()
+    watchdogTimer = timer
+  }
+
+  func startInputFixture() {
+    let fixture = InputWindowFixture()
+    inputFixture = fixture
+    fixture.start()
+  }
+
+  func run(
+    _ launch: LaunchConfiguration,
+    controller: CompanionController,
+    openPlayground: () -> WindowPlayground,
+    exportPreviews: @escaping (URL) -> Void
+  ) {
+    let args = launch.arguments
+    if let snapshotPath = launch.optionValue(after: "--snapshot-dir") {
+      let directory = URL(fileURLWithPath: snapshotPath, isDirectory: true)
+      DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+        exportPreviews(directory)
+        NSApp.terminate(nil)
+      }
+    } else if args.contains("--smoke-test") {
+      RuntimeChecks.smokeTest(controller)
+    } else if args.contains("--presentation-test") {
+      RuntimeChecks.presentationTest()
+    } else if args.contains("--interaction-test") || args.contains("--drop-return-test") {
+      let previous = NSWorkspace.shared.frontmostApplication
+      let playground = openPlayground()
+      playInteractionCheck = PlayInteractionCheck(
+        controller: controller,
+        playground: playground,
+        previousApplication: previous,
+        mode: args.contains("--drop-return-test") ? .dropReturn : .interaction)
+      playInteractionCheck?.start()
+    } else if args.contains("--companion-drag-test") {
+      guard let target = launch.optionValue(after: "--target-bundle") else {
+        fputs("--companion-drag-test requires --target-bundle\n", stderr)
+        NSApp.terminate(nil)
+        return
+      }
+      companionDragCheck = CompanionDragResponseCheck(controller: controller, targetBundle: target)
+      companionDragCheck?.start()
+    } else if args.contains("--performance-check") {
+      _ = openPlayground()
+      RuntimeChecks.performanceCheck(controller)
+    } else if args.contains("--window-test") {
+      let playground = openPlayground()
+      RuntimeChecks.windowTest(controller, playground: playground)
+    } else if args.contains("--drag-latency-test") {
+      let playground = openPlayground()
+      DragLatencyCheck(
+        controller: controller,
+        playground: playground,
+        allowLag: args.contains("--allow-lag")
+      ).start()
+    } else if args.contains("--external-drag-test") {
+      let targetBundle = launch.optionValue(after: "--target-bundle")
+      let fraction = launch.optionValue(after: "--target-header-fraction").flatMap(Double.init)
+      externalDragCheck = ExternalDragCheck(
+        controller: controller,
+        targetBundle: targetBundle,
+        targetHeaderFraction: fraction,
+        expectsStationary: args.contains("--expect-stationary"))
+      externalDragCheck?.start()
+    } else if args.contains("--playground") {
+      _ = openPlayground()
+    }
+  }
+}
+
 /// Explicit command-line checks; never enabled in an ordinary app session.
 @MainActor
 enum RuntimeChecks {

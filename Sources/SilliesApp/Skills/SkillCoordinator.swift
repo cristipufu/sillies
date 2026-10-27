@@ -13,6 +13,8 @@ final class SkillCoordinator {
   static let selectionPromptDuration: TimeInterval = 5.5
   static let completionBannerDuration: TimeInterval = 6.5
   static let focusSprintDuration: TimeInterval = FocusSkillSession.sprintDuration
+  private static let tickInterval: TimeInterval = 1.0
+  private static let tickTolerance: TimeInterval = 0.15
 
   private struct TickRequestContext {
     let token: UInt64
@@ -20,6 +22,7 @@ final class SkillCoordinator {
   }
 
   let vault: SessionVaultStore
+  var savedRecordCount: Int { vault.records.count }
   var onBindingChanged: ((String, CompanionBindingState) -> Void)?
   var onEmitEvent: ((String, WorkspaceEvent) -> Void)?
   var onOpenVaultRecord: ((UUID) -> Void)?
@@ -167,6 +170,16 @@ final class SkillCoordinator {
     await vault.flush()
   }
 
+  func flushForTermination(completion: @escaping @Sendable () -> Void) {
+    stopAll()
+    vault.cancelPendingSummaries()
+    vault.flushOnIOQueue(completion: completion)
+  }
+
+  func drainPreviewsForTermination() {
+    vault.drainStagedPreviewsForTermination()
+  }
+
   /// Triggers an immediate metadata tick (used by the 1 Hz timer and unit tests).
   func pollBoundWindows() {
     tick()
@@ -242,8 +255,12 @@ final class SkillCoordinator {
     let session = sessions.removeValue(forKey: companionID)
     guard case .active(let target, let skill, let startedAt, _, _) = binding(for: companionID),
       let outcome = session?.finalize(
-        now: now, startedAt: startedAt, companionID: companionID,
-        companionName: characterName, target: target)
+        SkillFinalizeContext(
+          now: now,
+          startedAt: startedAt,
+          companionID: companionID,
+          companionName: characterName,
+          target: target))
     else {
       session?.cancel()
       advanceBindingToken(for: companionID)
@@ -310,10 +327,10 @@ final class SkillCoordinator {
       return
     }
     guard tickTimer == nil else { return }
-    let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
+    let timer = Timer(timeInterval: Self.tickInterval, repeats: true) { [weak self] _ in
       MainActor.assumeIsolated { self?.tick() }
     }
-    timer.tolerance = 0.15
+    timer.tolerance = Self.tickTolerance
     RunLoop.main.add(timer, forMode: .common)
     tickTimer = timer
   }
@@ -368,68 +385,109 @@ final class SkillCoordinator {
       case .followingFocusedWindow:
         bindings.removeValue(forKey: companionID)
 
-      case .awaitingSelection(var target, let expiresAt):
-        if now >= expiresAt {
-          advanceBindingToken(for: companionID)
-          setBinding(.followingFocusedWindow, for: companionID)
-        } else if let snapshot = snapshots[target.windowID] {
-          if snapshot.frame != target.frame {
-            target.frame = snapshot.frame
-            setBinding(
-              .awaitingSelection(target: target, expiresAt: expiresAt), for: companionID)
-          }
-        } else {
-          advanceBindingToken(for: companionID)
-          setBinding(.followingFocusedWindow, for: companionID)
-        }
-
-      case .completed(var target, let skill, let summary, let recordID, let expiresAt):
-        if now >= expiresAt {
-          advanceBindingToken(for: companionID)
-          setBinding(.followingFocusedWindow, for: companionID)
-        } else if let snapshot = snapshots[target.windowID] {
-          if snapshot.frame != target.frame {
-            target.frame = snapshot.frame
-            setBinding(
-              .completed(
-                target: target, skill: skill, summary: summary, recordID: recordID,
-                expiresAt: expiresAt),
-              for: companionID)
-          }
-        } else {
-          advanceBindingToken(for: companionID)
-          setBinding(.followingFocusedWindow, for: companionID)
-        }
-
-      case .active(var target, let skill, let startedAt, let detail, let audioLevel):
-        let snapshot = snapshots[target.windowID]
-        if let liveFrame = snapshot?.frame {
-          target.frame = liveFrame
-        }
-        guard let session = sessions[companionID] else { continue }
-        let disposition = session.tick(
-          now: now,
-          startedAt: startedAt,
-          currentDetail: detail,
-          currentAudioLevel: audioLevel,
+      case .awaitingSelection(let target, let expiresAt):
+        updateExpiringBinding(
+          for: companionID,
           target: target,
-          snapshot: snapshot,
-          frontmostPID: frontmostPID)
-        switch disposition {
-        case .completeNow:
-          finalizeActiveSkill(for: companionID)
-        case .keepRunning(let updatedDetail, let updatedAudioLevel):
-          setBinding(
-            .active(
-              target: target, skill: skill, startedAt: startedAt,
-              statusDetail: updatedDetail, audioLevel: updatedAudioLevel),
-            for: companionID)
+          expiresAt: expiresAt,
+          now: now,
+          snapshots: snapshots
+        ) { updatedTarget in
+          .awaitingSelection(target: updatedTarget, expiresAt: expiresAt)
         }
+
+      case .completed(let target, let skill, let summary, let recordID, let expiresAt):
+        updateExpiringBinding(
+          for: companionID,
+          target: target,
+          expiresAt: expiresAt,
+          now: now,
+          snapshots: snapshots
+        ) { updatedTarget in
+          .completed(
+            target: updatedTarget,
+            skill: skill,
+            summary: summary,
+            recordID: recordID,
+            expiresAt: expiresAt)
+        }
+
+      case .active(let target, let skill, let startedAt, let detail, let audioLevel):
+        tickActiveSession(
+          for: companionID,
+          target: target,
+          skill: skill,
+          startedAt: startedAt,
+          detail: detail,
+          audioLevel: audioLevel,
+          now: now,
+          frontmostPID: frontmostPID,
+          snapshots: snapshots)
       }
     }
     updateClock()
     if needsFollowupTick && !bindings.isEmpty {
       tick()
+    }
+  }
+
+  private func updateExpiringBinding(
+    for companionID: String,
+    target: WindowTargetCandidate,
+    expiresAt: TimeInterval,
+    now: TimeInterval,
+    snapshots: [CGWindowID: WindowTargetSnapshot],
+    rebuild: (WindowTargetCandidate) -> CompanionBindingState
+  ) {
+    guard now < expiresAt, let snapshot = snapshots[target.windowID] else {
+      advanceBindingToken(for: companionID)
+      setBinding(.followingFocusedWindow, for: companionID)
+      return
+    }
+    guard snapshot.frame != target.frame else { return }
+    var updatedTarget = target
+    updatedTarget.frame = snapshot.frame
+    setBinding(rebuild(updatedTarget), for: companionID)
+  }
+
+  private func tickActiveSession(
+    for companionID: String,
+    target: WindowTargetCandidate,
+    skill: CompanionSkillKind,
+    startedAt: TimeInterval,
+    detail: String,
+    audioLevel: Double,
+    now: TimeInterval,
+    frontmostPID: pid_t?,
+    snapshots: [CGWindowID: WindowTargetSnapshot]
+  ) {
+    var updatedTarget = target
+    let snapshot = snapshots[target.windowID]
+    if let liveFrame = snapshot?.frame {
+      updatedTarget.frame = liveFrame
+    }
+    guard let session = sessions[companionID] else { return }
+    let disposition = session.tick(
+      SkillTickContext(
+        now: now,
+        startedAt: startedAt,
+        currentDetail: detail,
+        currentAudioLevel: audioLevel,
+        target: updatedTarget,
+        snapshot: snapshot,
+        frontmostPID: frontmostPID))
+    switch disposition {
+    case .completeNow:
+      finalizeActiveSkill(for: companionID)
+    case .keepRunning(let updatedDetail, let updatedAudioLevel):
+      setBinding(
+        .active(
+          target: updatedTarget,
+          skill: skill,
+          startedAt: startedAt,
+          statusDetail: updatedDetail,
+          audioLevel: updatedAudioLevel),
+        for: companionID)
     }
   }
 }

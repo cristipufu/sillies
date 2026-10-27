@@ -14,25 +14,29 @@ enum SkillTickDisposition {
   case completeNow
 }
 
+struct SkillTickContext {
+  let now: TimeInterval
+  let startedAt: TimeInterval
+  let currentDetail: String
+  let currentAudioLevel: Double
+  let target: WindowTargetCandidate
+  let snapshot: WindowTargetSnapshot?
+  let frontmostPID: pid_t?
+}
+
+struct SkillFinalizeContext {
+  let now: TimeInterval
+  let startedAt: TimeInterval
+  let companionID: String
+  let companionName: String
+  let target: WindowTargetCandidate
+}
+
 @MainActor
 protocol ActiveSkillSession: AnyObject {
   var initialStatusDetail: String { get }
   func start()
-  func tick(
-    now: TimeInterval,
-    startedAt: TimeInterval,
-    currentDetail: String,
-    currentAudioLevel: Double,
-    target: WindowTargetCandidate,
-    snapshot: WindowTargetSnapshot?,
-    frontmostPID: pid_t?
-  ) -> SkillTickDisposition
-  func finalize(
-    now: TimeInterval,
-    startedAt: TimeInterval,
-    companionID: String,
-    companionName: String,
-    target: WindowTargetCandidate
-  ) -> SkillCompletionOutcome?
+  func tick(_ context: SkillTickContext) -> SkillTickDisposition
+  func finalize(_ context: SkillFinalizeContext) -> SkillCompletionOutcome?
   func cancel()
 }

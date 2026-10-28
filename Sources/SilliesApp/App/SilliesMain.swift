@@ -15,10 +15,6 @@ struct SilliesMain {
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
-  private static let controlCenterWidth: CGFloat = 388
-  private static let maxCompactControlCenterHeight: CGFloat = 640
-  private static let minControlCenterHeight: CGFloat = 240
-  private static let controlCenterScreenMargin: CGFloat = 24
   private static let initialVaultWindowSize = NSSize(width: 980, height: 660)
   private static let minVaultWindowSize = NSSize(width: 880, height: 560)
   private static let settingsWindowSize = NSSize(width: 560, height: 690)
@@ -179,21 +175,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
   private func controlCenterHost(
     _ controller: CompanionController, screen: NSScreen?
-  ) -> NSViewController {
-    let content = controlCenter(controller)
-    let idealHeight = NSHostingView(rootView: content).fittingSize.height
-    let availableHeight = min(
-      Self.maxCompactControlCenterHeight,
-      max(
-        Self.minControlCenterHeight,
-        (screen?.visibleFrame.height ?? idealHeight) - Self.controlCenterScreenMargin))
-    return NSHostingController(
-      rootView: ScrollView(.vertical) {
-        content
-      }
-      .scrollBounceBehavior(.basedOnSize)
-      .frame(width: Self.controlCenterWidth, height: min(idealHeight, availableHeight))
-      .background(SilliesTheme.paper))
+  ) -> ControlCenterHostingController {
+    ControlCenterHostingController(
+      content: controlCenter(controller), visibleFrame: CompanionPanel.visibleFrame(for: screen))
   }
 
   @objc private func togglePopover() {
@@ -205,10 +189,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     if popover.isShown {
       popover.performClose(nil)
     } else {
+      let screen = button.window?.screen ?? NSScreen.main
       if popover.contentViewController == nil, let controller {
-        popover.contentViewController = controlCenterHost(
-          controller, screen: button.window?.screen ?? NSScreen.main)
+        popover.contentViewController = controlCenterHost(controller, screen: screen)
       }
+      guard let host = popover.contentViewController as? ControlCenterHostingController else {
+        return
+      }
+      host.updateViewport(visibleFrame: CompanionPanel.visibleFrame(for: screen))
+      popover.contentSize = host.viewportSize
       popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
     }
   }
@@ -310,7 +299,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private func showPreview() {
     guard let controller else { return }
     let host = controlCenterHost(controller, screen: NSScreen.main)
-    let size = host.view.fittingSize
+    let size = host.viewportSize
     let window = NSWindow(
       contentRect: CGRect(origin: .zero, size: size), styleMask: [.titled, .closable],
       backing: .buffered, defer: false)

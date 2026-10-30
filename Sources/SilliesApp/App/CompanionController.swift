@@ -5,6 +5,8 @@ import SilliesCore
 /// Owns lifetimes and routes events; platform tracking, decisions, artwork, and clips stay separate.
 @MainActor @Observable
 final class CompanionController {
+  var activeSpeechModelID: String? { skills.activeAudioSession?.model.id }
+  var activeDiarizationModelID: String? { skills.activeAudioSession?.diarizationModel?.id }
   private static let baseCompanionSeed: UInt64 = 17
   private static let maxHopDuration: Double = 0.55
   private static let hopArcHeightRatio: Double = 0.22

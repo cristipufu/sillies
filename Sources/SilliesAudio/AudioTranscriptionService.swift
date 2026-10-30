@@ -1,6 +1,7 @@
 import AVFoundation
 import Foundation
 import SilliesCore
+import SilliesSpeech
 
 /// Commands enter one capture worker; synchronous buffer processing stays off the main actor.
 package final class AudioTranscriptionService: SessionAudioCapture {
@@ -14,10 +15,13 @@ package final class AudioTranscriptionService: SessionAudioCapture {
   private let storage: SerialQueueStorage<AudioCaptureState>
 
   package convenience init(
-    configuration: AudioCaptureConfiguration,
+    configuration: AudioCaptureConfiguration, speech: @escaping LocalSpeechFactory.Make,
+    diarization: SpeakerDiarizationFactory.Make? = nil,
     onUpdate: @escaping @Sendable (AudioCaptureUpdate) -> Void
   ) {
-    self.init(configuration: configuration, dependencies: .init(), onUpdate: onUpdate)
+    self.init(
+      configuration: configuration, dependencies: .init(speech: speech, diarization: diarization),
+      onUpdate: onUpdate)
   }
 
   init(
@@ -110,21 +114,59 @@ package final class AudioTranscriptionService: SessionAudioCapture {
     guard let language = configuration.language else {
       throw AudioCaptureFailure.unavailable("Choose a transcription language before starting.")
     }
+    let speakerChannels = try await prepareSpeakerChannels()
     try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
       queue.async { [self] in
         storage.withValue { state in
           guard state.lifecycle.phase == .preparing else {
+            for channel in speakerChannels.values { channel.cancel() }
             continuation.resume(throwing: CancellationError())
             return
           }
           let pipeline = SessionSpeechPipeline(
             configuration: .init(
-              sources: configuration.sources, queue: queue, makeChannel: dependencies.speech)
+              sources: configuration.sources, queue: queue, makeChannel: dependencies.speech),
+            speakerChannels: speakerChannels
           ) { [weak self] in self?.speechChanged($0) }
           state.speech = pipeline
           pipeline.start(language: language) { continuation.resume(with: $0) }
         }
       }
+    }
+  }
+
+  private func prepareSpeakerChannels() async throws -> [SessionAudioSource: any LocalSpeechChannel]
+  {
+    guard let make = dependencies.diarization else { return [:] }
+    var channels: [SessionAudioSource: any LocalSpeechChannel] = [:]
+    do {
+      for source in configuration.sources {
+        try Task.checkCancellation()
+        channels[source] = try await make(
+          .init(
+            output: { [weak self, queue] batch in
+              queue.async { [weak self] in
+                self?.storage.withValue { $0.speech?.receiveSpeakerActivity(batch, source: source) }
+              }
+            },
+            failure: { [weak self, queue] message in
+              queue.async { [weak self] in
+                self?.storage.withValue {
+                  $0.speech?.speakerDetectionFailed(message, source: source)
+                }
+              }
+            }))
+      }
+      try Task.checkCancellation()
+      return channels
+    } catch {
+      for channel in channels.values { channel.cancel() }
+      if Task.isCancelled { throw CancellationError() }
+      fputs("Speaker detection preparation failed: \(error.localizedDescription)\n", stderr)
+      let message =
+        "Speaker detection unavailable. Transcription continues. \(error.localizedDescription)"
+      queue.async { [weak self] in self?.speakerDetectionStopped(message) }
+      return [:]
     }
   }
 
@@ -135,8 +177,23 @@ package final class AudioTranscriptionService: SessionAudioCapture {
       case .textChanged: publish(level: 0)
       case .changingLanguage(let language): onUpdate(.changingLanguage(language))
       case .languageChanged(let language): onUpdate(.languageChanged(language))
-      case .failed(let failure): fail(failure)
+      case .speakerNotice(let message): speakerDetectionStopped(message)
+      case .failed(let failure):
+        if state.lifecycle.phase == .preparing {
+          fail(failure)
+        } else {
+          state.transcriptionFailure = failure
+          onUpdate(.transcriptionStopped(failure))
+        }
       }
+    }
+  }
+
+  private func speakerDetectionStopped(_ message: String) {
+    storage.withValue { state in
+      guard state.lifecycle.phase != .finished else { return }
+      state.speakerDetectionNotice = message
+      onUpdate(.speakerDetectionNotice(message))
     }
   }
 
@@ -320,9 +377,11 @@ package final class AudioTranscriptionService: SessionAudioCapture {
           SessionFailure(category: .recordingSave, message: message))
         fputs("\(message)\n", stderr)
       }
-      let result = AudioCaptureResult(
+      var result = AudioCaptureResult(
         transcript: state.speech?.text ?? "", recordingURL: audioURL,
-        duration: state.lifecycle.elapsed(at: dependencies.now()), failure: state.lifecycle.failure)
+        duration: state.lifecycle.elapsed(at: dependencies.now()),
+        failure: state.lifecycle.failure ?? state.transcriptionFailure)
+      result.speakerDetectionNotice = state.speakerDetectionNotice
       state.lifecycle.completeFinishing()
       state.result = result
       state.deadline?.cancel()

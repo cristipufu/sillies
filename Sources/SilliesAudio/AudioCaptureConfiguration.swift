@@ -1,11 +1,14 @@
 import Foundation
 import SilliesCore
+import SilliesSpeech
 
 package struct AudioCaptureConfiguration: Sendable {
   package let kind: CompanionSkillKind
   package let target: WindowTargetCandidate?
   package let recordingURL: URL?
   package var language: SpeechLanguage?
+  package var model: SpeechModelDescriptor = .apple
+  package var diarizationModel: SpeechModelDescriptor?
   package init(
     kind: CompanionSkillKind, target: WindowTargetCandidate?, recordingURL: URL?,
     language: SpeechLanguage? = nil

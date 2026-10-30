@@ -2,6 +2,32 @@ import Foundation
 import SilliesCore
 import Testing
 
+@Test func transcriptionProvenanceRoundTripsAndLegacyRecordsRemainReadable() throws {
+  let record = SessionRecord(
+    kind: .listen,
+    origin: .init(characterID: "mochi", characterName: "Mochi", source: .init(appName: "Meeting")),
+    content: .init(text: .init(transcript: "Bună ziua")),
+    metadata: .init(
+      transcription: .init(
+        languageIdentifier: "auto", provenance: SpeechModelDescriptor.apple.provenance,
+        diarizationProvenance: SpeechModelDescriptor.apple.provenance)))
+  let encoded = try JSONEncoder().encode(record)
+  let restored = try JSONDecoder().decode(SessionRecord.self, from: encoded)
+  #expect(restored.speechProvenance == record.speechProvenance)
+  #expect(restored.diarizationProvenance == record.diarizationProvenance)
+  #expect(SessionMarkdownFormatter.format(restored).contains("Speaker detection model"))
+  #expect(restored.languageIdentifier == "auto")
+  #expect(SessionMarkdownFormatter.format(restored).contains("Automatic (from speech)"))
+  var legacy = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+  legacy.removeValue(forKey: "speechProvenance")
+  legacy.removeValue(forKey: "diarizationProvenance")
+  let old = try JSONDecoder().decode(
+    SessionRecord.self, from: JSONSerialization.data(withJSONObject: legacy))
+  #expect(old.speechProvenance == nil)
+  #expect(old.diarizationProvenance == nil)
+  #expect(old.transcript == record.transcript)
+}
+
 @Test func sessionMarkdownPreservesAllExportSectionsAndTheirOrder() throws {
   let id = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000123"))
   let date = try #require(ISO8601DateFormatter().date(from: "2026-10-25T10:30:00Z"))
@@ -25,7 +51,9 @@ import Testing
         summaryPending: true,
         failure: .init(category: .captureInterrupted, message: "Input disconnected."),
         note: "Generated locally.")),
-    metadata: .init(id: id, createdAt: date, durationSeconds: 125, languageIdentifier: "en-US"))
+    metadata: .init(
+      id: id, createdAt: date, durationSeconds: 125,
+      transcription: .init(languageIdentifier: "en-US")))
   #expect(record.id == id)
   #expect(record.bundleIdentifier == "example.meeting")
   #expect(record.imageFilename == "snapshot.png")

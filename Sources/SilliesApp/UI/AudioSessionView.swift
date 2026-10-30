@@ -40,7 +40,18 @@ struct AudioSessionView: View {
   private var options: some View {
     VStack(alignment: .leading, spacing: Layout.spacing) {
       AudioLanguagePicker(model: model)
+      if model.diarizationModel != nil {
+        Label(
+          model.speakerDetectionNotice ?? "Speaker labels enabled · Labels may take a few seconds",
+          systemImage: "person.2.wave.2"
+        )
+        .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        .fixedSize(horizontal: false, vertical: true)
+      }
       if case .failed(let failure) = model.phase {
+        SessionFailureNotice(failure: failure)
+      }
+      if let failure = model.transcriptionFailure {
         SessionFailureNotice(failure: failure)
       }
       if model.kind == .participate { AudioMeetingSuggestionsView(model: model) }

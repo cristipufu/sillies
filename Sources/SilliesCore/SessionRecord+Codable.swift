@@ -20,6 +20,8 @@ extension SessionRecord {
     case stashedItems
     case summaryPending
     case failure
+    case speechProvenance
+    case diarizationProvenance
     case audioFilename, explanation, processingNote, suggestions, failureMessage, languageIdentifier
   }
 
@@ -51,6 +53,10 @@ extension SessionRecord {
     suggestions =
       try container.decodeIfPresent([MeetingSuggestion].self, forKey: .suggestions) ?? []
     languageIdentifier = try container.decodeIfPresent(String.self, forKey: .languageIdentifier)
+    speechProvenance = try container.decodeIfPresent(
+      SpeechProvenance.self, forKey: .speechProvenance)
+    diarizationProvenance = try container.decodeIfPresent(
+      SpeechProvenance.self, forKey: .diarizationProvenance)
   }
 
   public func encode(to encoder: Encoder) throws {
@@ -78,6 +84,8 @@ extension SessionRecord {
     try container.encode(processingNote, forKey: .processingNote)
     try container.encode(suggestions, forKey: .suggestions)
     try container.encodeIfPresent(languageIdentifier, forKey: .languageIdentifier)
+    try container.encodeIfPresent(speechProvenance, forKey: .speechProvenance)
+    try container.encodeIfPresent(diarizationProvenance, forKey: .diarizationProvenance)
   }
 
   /// Recognize only historical machine-generated errors, never words from a summary.

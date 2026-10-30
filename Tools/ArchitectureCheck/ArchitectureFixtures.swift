@@ -12,6 +12,19 @@ enum ArchitectureFixtures {
     let rendering = "Sources/SilliesApp/Rendering/CompanionPanel.swift"
     let fixtures: [Fixture] = [
       .init(
+        source: "import WhisperKit", path: "Sources/SilliesAudio/Capture.swift",
+        rules: ["module-boundary"]),
+      .init(
+        source: "import AppKit", path: "Sources/SilliesModelStore/Store.swift",
+        rules: ["module-boundary"]),
+      .init(
+        source: "func load() { readWeights() }",
+        path: "Sources/SilliesSpeechWhisper/WhisperWindowEngine.swift", rules: ["worker-entry"]),
+      .init(
+        source:
+          "func load() { dispatchPrecondition(condition: .notOnQueue(.main)); readWeights() }",
+        path: "Sources/SilliesSpeechWhisper/WhisperWindowEngine.swift", rules: []),
+      .init(
         source: "func withValue() { access() }",
         path: "Sources/SilliesAudio/SerialQueueStorage.swift", rules: ["worker-entry"]),
       .init(

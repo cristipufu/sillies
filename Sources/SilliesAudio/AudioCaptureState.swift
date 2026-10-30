@@ -6,6 +6,8 @@ final class AudioCaptureState {
   enum StopSource: Hashable { case microphone, application, speech }
   var lifecycle = AudioSessionLifecycle()
   var speech: SessionSpeechPipeline?
+  var transcriptionFailure: SessionFailure?
+  var speakerDetectionNotice: String?
   var microphone: (any MicrophoneCapture)?
   var application: (any ApplicationCapture)?
   var writer: AudioRecordingWriter?

@@ -1,6 +1,7 @@
 import AppKit
 import Darwin
 import SilliesCore
+import SilliesModelStore
 
 struct CompanionDiagnostics {
   let companionCount: Int
@@ -84,6 +85,22 @@ final class AutomatedLaunchRunner {
   private var playInteractionCheck: PlayInteractionCheck?
   private var companionDragCheck: CompanionDragResponseCheck?
   private var watchdogTimer: DispatchSourceTimer?
+
+  func validateCatalog(characterCount: Int) {
+    Task {
+      do {
+        let models = try await Task.detached { try SpeechModelCatalog.bundled().manifests.count }
+          .value
+        print(
+          "Validated \(characterCount) character packs, all animation references, and \(models) downloadable speech models."
+        )
+        NSApp.terminate(nil)
+      } catch {
+        fputs("Catalog validation failed: \(error.localizedDescription)\n", stderr)
+        exit(1)
+      }
+    }
+  }
 
   func armWatchdogIfNeeded(for launch: LaunchConfiguration) {
     guard launch.isAutomatedRun || launch.validatesCatalogOnly || launch.runsInputFixture else {

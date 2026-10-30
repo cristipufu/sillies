@@ -2,6 +2,7 @@ import AVFoundation
 import AppKit
 import SilliesAudioTestSupport
 import SilliesCore
+import SilliesSpeech
 import Testing
 
 @testable import SilliesApp

@@ -1,4 +1,5 @@
 import AppKit
+import Observation
 import SwiftUI
 
 @main
@@ -25,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private var statusItem: NSStatusItem?
   private let popover = NSPopover()
   private var settingsWindow: NSWindow?
+  private var speechServices: SpeechServices?
   private let audioSessionWindow = AudioSessionWindowController()
   private var vaultWindow: NSWindow?
   private var previewWindow: NSWindow?
@@ -64,16 +66,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       skills.onOpenAudioSession = { [weak self] in self?.audioSessionWindow.show($0) }
       self.controller = controller
       if launch.validatesCatalogOnly {
-        print(
-          "Validated \(controller.catalog.characters.count) character packs and all animation references."
-        )
-        NSApp.terminate(nil)
+        automatedRunner.validateCatalog(characterCount: controller.catalog.characters.count)
         return
       }
       if launch.isAutomatedRun {
         settings.enabledCharacters = Set(controller.catalog.characters.map(\.id))
       }
       controller.start()
+      speechServices?.start()
+      observeModelUpdateActivity()
       if !launch.isAutomatedRun {
         _ = Updates.shared
         installStatusItem()
@@ -107,8 +108,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     return settings
   }
 
+  private func observeModelUpdateActivity() {
+    guard !isTerminating, let controller, let updates = speechServices?.models.updates else {
+      return
+    }
+    withObservationTracking {
+      updates.setActivity(controller.shouldRun && controller.liveCount > 0 ? .active : .suspended)
+    } onChange: { [weak self] in
+      Task { @MainActor in self?.observeModelUpdateActivity() }
+    }
+  }
+
   private func makeSkillCoordinator(for launch: LaunchConfiguration) -> SkillCoordinator {
-    guard launch.isAutomatedRun else { return SkillCoordinator() }
+    guard launch.isAutomatedRun else {
+      let speech = SpeechServices()
+      speechServices = speech
+      return SkillCoordinator(audioFactory: speech.captureFactory, audioLanguages: speech.languages)
+    }
     let tempVault = FileManager.default.temporaryDirectory
       .appendingPathComponent("sillies-vault-\(UUID().uuidString)", isDirectory: true)
     return SkillCoordinator(vault: SessionVaultStore(directory: tempVault))
@@ -121,6 +137,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       return .terminateNow
     }
     isTerminating = true
+    speechServices?.stop()
     cleanupTemporaryPreferences()
     let approveTermination = onTerminationApproved
     let (stream, continuation) = AsyncStream<Void>.makeStream()
@@ -139,6 +156,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   }
 
   func applicationWillTerminate(_ notification: Notification) {
+    speechServices?.stop()
     controller?.stop()
     cleanupTemporaryPreferences()
   }
@@ -172,7 +190,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       controller: controller, openSettings: { [weak self] in self?.showSettings() },
       openPlayground: { [weak self] in self?.showPlayground() },
       openVault: { [weak self] in self?.showVault() },
-      quit: { NSApp.terminate(nil) })
+      quit: { NSApp.terminate(nil) }, speechModels: speechServices?.models)
   }
 
   private func controlCenterHost(
@@ -216,7 +234,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     vault.target = self
     menu.addItem(vault)
     let settings = NSMenuItem(
-      title: "Settings…", action: #selector(showSettings), keyEquivalent: ",")
+      title: speechServices?.models.availableUpdateCount ?? 0 > 0
+        ? "Settings… · Model updates available" : "Settings…",
+      action: #selector(showSettings), keyEquivalent: ",")
     settings.target = self
     menu.addItem(settings)
     let checkUpdates = NSMenuItem(
@@ -290,7 +310,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       window.titlebarAppearsTransparent = true
       window.isReleasedWhenClosed = false
       window.contentViewController = NSHostingController(
-        rootView: SettingsView(controller: controller))
+        rootView: SettingsView(controller: controller, speechModels: speechServices?.models))
       window.center()
       settingsWindow = window
     }

@@ -1,10 +1,11 @@
 import Foundation
-import FoundationModels
+import SilliesSpeech
 @preconcurrency import Speech
 
 /// Queries system capabilities off the UI thread. Discovery never installs speech assets.
-package enum SpeechLanguageDiscovery {
-  package static func load() async -> SpeechLanguageCatalog {
+package enum AppleSpeechLanguageDiscovery {
+  @concurrent package static func load() async -> SpeechLanguageCatalog {
+    dispatchPrecondition(condition: .notOnQueue(.main))
     guard SpeechTranscriber.isAvailable else { return SpeechLanguageCatalog(languages: []) }
     let supported = await SpeechTranscriber.supportedLocales
     let installed = Set(await SpeechTranscriber.installedLocales.map(\.identifier))
@@ -12,8 +13,7 @@ package enum SpeechLanguageDiscovery {
       SpeechLanguage(
         id: locale.identifier,
         name: Locale.current.localizedString(forIdentifier: locale.identifier) ?? locale.identifier,
-        isInstalled: installed.contains(locale.identifier),
-        supportsNotes: SystemLanguageModel.default.supportsLocale(locale))
+        isInstalled: installed.contains(locale.identifier))
     }
     return SpeechLanguageCatalog(
       languages: languages.sorted {

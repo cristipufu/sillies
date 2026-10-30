@@ -5,13 +5,30 @@ struct ArchitecturePolicy {
 
   static let imports: [String: Set<String>] = [
     "SilliesCore": ["Foundation", "CoreGraphics"],
+    "SilliesSpeech": [
+      "Foundation", "Dispatch", "Accelerate", "AVFoundation", "Synchronization", "SilliesCore",
+    ],
+    "SilliesSpeechApple": [
+      "Foundation", "AVFoundation", "Speech", "Synchronization", "SilliesSpeech",
+    ],
+    "SilliesSpeechWhisper": ["Foundation", "NaturalLanguage", "WhisperKit", "SilliesSpeech"],
+    "SilliesSpeechParakeet": ["Foundation", "FluidAudio", "SilliesSpeech"],
+    "SilliesDiarizationNemotron": ["Foundation", "FluidAudio", "SilliesSpeech"],
+    "SilliesModelStore": ["Foundation", "CryptoKit", "Synchronization", "SilliesCore"],
+    "SilliesModelValidation": ["Foundation", "CoreML"],
     "SilliesPersistence": ["Foundation", "Darwin", "SilliesCore"],
     "SilliesAudio": [
-      "Foundation", "FoundationModels", "AVFoundation", "CoreMedia", "CoreAudio", "Speech",
+      "Foundation", "AVFoundation", "CoreMedia", "CoreAudio", "SilliesSpeech",
       "ScreenCaptureKit", "CEchoCancellation", "SilliesCore", "Synchronization",
     ],
   ]
   static let workerEntries: [String: Set<String>] = [
+    "WhisperWindowEngine.swift": ["load", "transcribe"],
+    "ParakeetWindowEngine.swift": ["load", "transcribe"],
+    "NemotronDiarizationRuntime.swift": ["load", "process"],
+    "ModelFiles.swift": ["child", "verify", "write"],
+    "ModelInterfaceValidator.swift": ["validate"],
+    "SpeechLanguageDiscovery.swift": ["load"],
     "SerialQueueStorage.swift": ["withValue"],
     "WindowServerSource.swift": ["performRefresh"],
     "AccessibilityWindowSource.swift": ["readWindow", "roleSnapshot"],

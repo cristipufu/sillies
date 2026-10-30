@@ -3,6 +3,13 @@ import Foundation
 import NaturalLanguage
 import SilliesAudioTestSupport
 import SilliesCore
+import SilliesDiarizationNemotron
+import SilliesModelStore
+import SilliesSpeech
+import SilliesSpeechApple
+import SilliesSpeechParakeet
+import SilliesSpeechWhisper
+import Synchronization
 import Testing
 
 @testable import SilliesApp
@@ -52,15 +59,73 @@ func localNotesHonorTheSelectedLanguage() async {
   try await exerciseLocalModels {}
 }
 
+@Test(.enabled(if: ProcessInfo.processInfo.environment["SILLIES_DOWNLOADED_STT_CHECK"] == "1"))
+@MainActor func downloadedSpeechModelsKeepAllInteractionPathsWithinBudget() async throws {
+  try await exerciseLocalModels {
+    try windowDragSmoothnessBudgetAndSinglePassPlacement()
+    try windowResizeSmoothnessBudgetAndCompactionQuantization()
+    try windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition()
+    try companionDragSmoothnessBudgetAndUnclippedMaskStability(characterID: "pogo")
+  }
+}
+
+private func downloadedRuntime() async throws -> SpeechRuntimeRegistry.Runtime? {
+  try await downloadedRuntime(id: ProcessInfo.processInfo.environment["SILLIES_STT_MODEL"])
+}
+
+private func downloadedSpeakerRuntime() async throws -> SpeechRuntimeRegistry.Runtime? {
+  try await downloadedRuntime(id: ProcessInfo.processInfo.environment["SILLIES_DIARIZATION_MODEL"])
+}
+
+private func downloadedRuntime(id: String?) async throws -> SpeechRuntimeRegistry.Runtime? {
+  let runtime: SpeechRuntimeRegistry.Runtime?
+  if let id,
+    let root = ProcessInfo.processInfo.environment["SILLIES_STT_STORE"]
+  {
+    let registry = SpeechRuntimeRegistry(
+      store: ModelStore(root: URL(fileURLWithPath: root)),
+      providers: [WhisperSpeechProvider(), ParakeetSpeechProvider()],
+      diarizationProviders: [NemotronDiarizationProvider()])
+    runtime = try await registry.prepare(id)
+  } else {
+    runtime = nil
+  }
+  return runtime
+}
+
+@Test(.enabled(if: ProcessInfo.processInfo.environment["SILLIES_STT_PREPARE_ONLY"] == "1"))
+func prepareDownloadedSpeechModelForIntegration() async throws {
+  let runtime = try await downloadedRuntime()
+  let speakers = try await downloadedSpeakerRuntime()
+  #expect(runtime != nil)
+  withExtendedLifetime((runtime, speakers)) {}
+}
+
 @MainActor private func exerciseLocalModels(interaction: () throws -> Void) async throws {
   let fixturePath = try #require(ProcessInfo.processInfo.environment["SILLIES_SPEECH_FIXTURE"])
+  let runtime = try await downloadedRuntime()
+  let speakerRuntime = try await downloadedSpeakerRuntime()
+  let speakerFrames = Mutex(0)
   let outputs = [SpeechFixtureOutput(), SpeechFixtureOutput()]
   var channels: [any LocalSpeechChannel] = []
   for output in outputs {
-    channels.append(
-      try await LocalSpeechFactory.make(
-        language: fixtureEnglish,
-        output: { output.receive($0) }, failure: { output.failed($0) }))
+    let request = SpeechChannelRequest(
+      language: runtime == nil ? fixtureEnglish : .automatic,
+      output: { output.receive($0) }, failure: { output.failed($0) })
+    if let runtime {
+      channels.append(try await runtime.makeChannel(request))
+    } else {
+      channels.append(
+        try await AppleSpeechProvider.makeChannel(
+          language: request.language, output: request.output, failure: request.failure))
+    }
+    if let speakerRuntime {
+      channels.append(
+        try await speakerRuntime.makeChannel(
+          .init(
+            output: { batch in speakerFrames.withLock { $0 += batch.frameCount } },
+            failure: { output.failed($0) })))
+    }
   }
   let activeChannels = channels
   let source =
@@ -94,8 +159,11 @@ func localNotesHonorTheSelectedLanguage() async {
       await withCheckedContinuation { continuation in channel.finish { continuation.resume() } }
     }
   }
+  if runtime != nil { try await Task.sleep(for: .seconds(3)) }
   try interaction()
   try await speech.value
+  withExtendedLifetime((runtime, speakerRuntime)) {}
+  if speakerRuntime != nil { #expect(speakerFrames.withLock { $0 } > 0) }
   let result = await notes.value
   print("LOCAL NOTES: \(result.summary) | \(result.actions) | \(result.notice)")
   #expect(!result.summary.isEmpty)

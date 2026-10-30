@@ -12,4 +12,4 @@ export SILLIES_METADATA_HELPER="$race_binary_directory/SilliesWindowMetadata"
 export TSAN_OPTIONS="halt_on_error=1:exitcode=66"
 python3 scripts/run-bounded-test.py 90 swift test \
   --scratch-path "$race_build_directory" --sanitize thread --skip-build --no-parallel --filter \
-  'audioCaptureSequence|captureQueue|repeatedAudioOverload|highChannelCountAudio|duplicateRecognizer|recognizerTimeout|cancellationRejects|partialRecognizer|languageSwitch|finishingDuringLanguage|endingDuringSpeechPreparation|metadataProcess|metadataCacheSupportsConcurrent|blockedUI|progressCoalescing|cancelledDelivery'
+  'SpeechSchedulerTests|WindowSpeechChannelTests|SpeechWorkerExecutorTests|StreamingDiarizationTests|SpeakerAttributionTests|speakerActivity|diarization|speechRuntimeShares|transcriptionFailurePreserves|audioCaptureSequence|captureQueue|repeatedAudioOverload|highChannelCountAudio|duplicateRecognizer|recognizerTimeout|cancellationRejects|partialRecognizer|languageSwitch|finishingDuringLanguage|endingDuringSpeechPreparation|metadataProcess|metadataCacheSupportsConcurrent|blockedUI|progressCoalescing|cancelledDelivery'

@@ -1,10 +1,34 @@
 import AppKit
 import SilliesAudioTestSupport
 import SilliesCore
+import SilliesModelStore
+import SilliesSpeechApple
 import SwiftUI
 import Testing
 
 @testable import SilliesApp
+
+@Test @MainActor func downloadableModelSettingsFitTheSettingsWidth() async throws {
+  let suite = "sillies-model-ui-\(UUID())"
+  let defaults = try #require(UserDefaults(suiteName: suite))
+  defer { defaults.removePersistentDomain(forName: suite) }
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  let store = ModelStore(root: directory)
+  let registry = SpeechRuntimeRegistry(store: store, providers: [AppleSpeechProvider()])
+  let updates = ModelUpdatesPresentation(
+    checker: ModelUpdateChecker(
+      store: store, location: directory.appendingPathComponent("updates.json")),
+    registry: registry, defaults: defaults)
+  let model = SpeechModelsPresentation(
+    store: store, registry: registry, defaults: defaults, updates: updates)
+  await model.load()
+  #expect(model.manifests.count == 3)
+  #expect(model.error == nil)
+  try render(
+    ScrollView { SpeechModelSettingsView(model: model, activeModelID: nil).padding(20) }.background(
+      SilliesTheme.card),
+    size: CGSize(width: 520, height: 600), name: "sillies-speech-model-settings")
+}
 
 @Test @MainActor func sessionAndVaultInterfacesRenderWithMeetingAndRecordingContent() async throws {
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -17,6 +41,7 @@ import Testing
   model.languages = [fixtureEnglish, fixtureFrench]
   model.isLoadingLanguages = false
   model.selectedLanguageID = fixtureEnglish.id
+  model.diarizationModel = try SpeechModelCatalog.bundled().manifest(for: "nemotron-speakers").model
   model.transcript =
     "[01:24] Meeting: We will send the proposal next week. Nobody has been assigned to review it.\n[01:31] You · microphone: I can coordinate the customer call."
   let suggestion = MeetingSuggestion(
@@ -34,6 +59,8 @@ import Testing
     ))
   model.reasoningNotice =
     "Apple’s on-device AI does not support this language. Your transcript is saved."
+  model.speakerDetectionNotice =
+    "Speaker detection stopped. Transcription continued without speaker labels."
   try render(
     sessionView, size: CGSize(width: 560, height: 640), name: "sillies-session-minimum-preview")
   for recovery in [

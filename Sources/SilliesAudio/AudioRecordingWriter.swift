@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import SilliesSpeech
 
 /// Confined to the audio worker. A completed file is published only after its AAC container closes.
 final class AudioRecordingWriter {

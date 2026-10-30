@@ -1,4 +1,5 @@
 import Foundation
+import SilliesSpeech
 
 package protocol SessionAudioCapture: AnyObject, Sendable {
   func start()

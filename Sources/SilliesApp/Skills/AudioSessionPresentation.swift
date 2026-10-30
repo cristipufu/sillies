@@ -2,6 +2,7 @@ import Foundation
 import Observation
 import SilliesAudio
 import SilliesCore
+import SilliesSpeech
 
 @MainActor @Observable
 final class AudioSessionPresentation {
@@ -10,6 +11,10 @@ final class AudioSessionPresentation {
     case failed(SessionFailure)
   }
   let kind: CompanionSkillKind
+  var model: SpeechModelDescriptor = .apple
+  var diarizationModel: SpeechModelDescriptor?
+  var speakerDetectionNotice: String?
+  var transcriptionFailure: SessionFailure?
   var phase: Phase = .preparing
   var sourceLabel: String
   var status = "Preparing on-device speech…"
@@ -47,6 +52,7 @@ final class AudioSessionPresentation {
     languages.first { $0.id == (pendingLanguageID ?? selectedLanguageID) }
   }
   var canSelectLanguage: Bool {
+    guard transcriptionFailure == nil else { return false }
     guard !isLoadingLanguages, pendingLanguageID == nil else { return false }
     return phase == .capturing || phase == .paused
       || (phase == .preparing && selectedLanguageID == nil)

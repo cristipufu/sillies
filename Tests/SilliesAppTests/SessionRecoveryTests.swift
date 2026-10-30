@@ -2,6 +2,7 @@ import Foundation
 import SilliesAudio
 import SilliesCore
 import SilliesPersistence
+import SilliesSpeech
 import Testing
 
 @testable import SilliesApp

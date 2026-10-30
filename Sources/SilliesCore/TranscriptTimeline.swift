@@ -8,16 +8,18 @@ public struct TranscriptTimeline: Sendable {
     public let text: String
     public let isFinal: Bool
     public let finalizedThrough: TimeInterval?
+    public var speaker: TranscriptSpeaker?
 
     public init(
       source: String, range: Range<TimeInterval>, text: String, isFinal: Bool,
-      finalizedThrough: TimeInterval? = nil
+      finalizedThrough: TimeInterval? = nil, speaker: TranscriptSpeaker? = nil
     ) {
       self.source = source
       self.range = range
       self.text = text
       self.isFinal = isFinal
       self.finalizedThrough = finalizedThrough
+      self.speaker = speaker
     }
   }
   private var sources: [String: TranscriptSourceTimeline] = [:]

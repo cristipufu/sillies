@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import SilliesSpeech
 @preconcurrency import Speech
 import Synchronization
 
@@ -35,15 +36,16 @@ final class AnalyzerSpeechChannel: LocalSpeechChannel {
     locale: Locale, output: @escaping LocalSpeechFactory.Output,
     failure: @escaping LocalSpeechFactory.Failure
   ) async throws -> AnalyzerSpeechChannel {
-    let transcriber = SpeechTranscriber(locale: locale, preset: .progressiveTranscription)
+    let transcriber = SpeechTranscriber(
+      locale: locale, preset: .timeIndexedProgressiveTranscription)
     guard await AssetInventory.status(forModules: [transcriber]) == .installed else {
-      throw AudioCaptureFailure.unavailable(
+      throw SpeechError.unavailable(
         "This Apple speech model is not installed. Choose a language marked Ready on this Mac.")
     }
     try Task.checkCancellation()
     guard let format = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [transcriber])
     else {
-      throw AudioCaptureFailure.unavailable(
+      throw SpeechError.unavailable(
         "The on-device speech model is not ready for this language.")
     }
     let analyzer = SpeechAnalyzer(
@@ -53,11 +55,19 @@ final class AnalyzerSpeechChannel: LocalSpeechChannel {
     let resultsTask = Task.detached(priority: .utility) {
       do {
         for try await result in transcriber.results {
-          output(
-            SpeechPhrase(
-              text: String(result.text.characters), isFinal: result.isFinal,
-              startTime: result.range.start.seconds, duration: result.range.duration.seconds,
-              finalizedThrough: result.resultsFinalizationTime.seconds))
+          var phrase = SpeechPhrase(
+            text: String(result.text.characters), isFinal: result.isFinal,
+            startTime: result.range.start.seconds, duration: result.range.duration.seconds,
+            finalizedThrough: result.resultsFinalizationTime.seconds)
+          phrase.words = result.text.runs.compactMap { run in
+            guard let range = run.audioTimeRange else { return nil }
+            let text = String(result.text[run.range].characters)
+            return SpeechWord(
+              text: text.trimmingCharacters(in: .whitespacesAndNewlines),
+              start: range.start.seconds, end: range.end.seconds,
+              boundary: text.first?.isWhitespace == true ? .separated : .attached)
+          }
+          output(phrase)
         }
       } catch {
         if !Task.isCancelled {

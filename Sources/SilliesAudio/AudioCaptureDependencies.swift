@@ -1,5 +1,6 @@
 import Foundation
 import SilliesCore
+import SilliesSpeech
 
 protocol MicrophoneCapture: AnyObject, Sendable {
   func start() async throws -> String
@@ -26,9 +27,8 @@ struct AudioCaptureDependencies: Sendable {
       -> any ApplicationCapture = {
         ApplicationAudioSource(target: $0, receive: $1, failure: $2)
       }
-  var speech: LocalSpeechFactory.Make = {
-    try await LocalSpeechFactory.make(language: $0, output: $1, failure: $2)
-  }
+  var speech: LocalSpeechFactory.Make
+  var diarization: SpeakerDiarizationFactory.Make?
   var now: @Sendable () -> TimeInterval = { AudioCaptureClock.now }
   var finishTimeout: TimeInterval = 8
 }

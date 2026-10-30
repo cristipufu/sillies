@@ -5,15 +5,15 @@ public struct SessionMetadata: Sendable {
   public let id: UUID
   public let createdAt: Date
   public let durationSeconds: Double
-  public let languageIdentifier: String?
+  public let transcription: SessionTranscriptionMetadata
 
   public init(
     id: UUID = UUID(), createdAt: Date = Date(), durationSeconds: Double = 0,
-    languageIdentifier: String? = nil
+    transcription: SessionTranscriptionMetadata = .init()
   ) {
     self.id = id
     self.createdAt = createdAt
     self.durationSeconds = durationSeconds
-    self.languageIdentifier = languageIdentifier
+    self.transcription = transcription
   }
 }

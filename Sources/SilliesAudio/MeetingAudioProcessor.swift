@@ -1,5 +1,6 @@
 import AVFoundation
 import SilliesCore
+import SilliesSpeech
 
 /// Aligns both sources before AEC. The speaker reference is never sent to a playback device.
 final class MeetingAudioProcessor {

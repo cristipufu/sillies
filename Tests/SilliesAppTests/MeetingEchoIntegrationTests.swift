@@ -2,6 +2,8 @@ import AVFoundation
 import Foundation
 import SilliesAudioTestSupport
 import SilliesCore
+import SilliesSpeech
+import SilliesSpeechApple
 import Testing
 
 @testable import SilliesApp
@@ -30,7 +32,7 @@ private final class EchoTranscriptOutput: @unchecked Sendable {
   var channels: [any LocalSpeechChannel] = []
   for output in outputs {
     channels.append(
-      try await LocalSpeechFactory.make(
+      try await AppleSpeechProvider.makeChannel(
         language: fixtureEnglish, output: { output.receive($0) }, failure: { output.failed($0) }))
   }
   let activeChannels = channels

@@ -1,6 +1,7 @@
 import AVFoundation
 import Foundation
 import SilliesCore
+import SilliesSpeech
 
 /// Switches recognizers without restarting capture or the audio file. State lives on the capture queue.
 final class SessionSpeechPipeline: Sendable {
@@ -9,13 +10,12 @@ final class SessionSpeechPipeline: Sendable {
     case changingLanguage(SpeechLanguage)
     case languageChanged(SpeechLanguage)
     case failed(SessionFailure)
+    case speakerNotice(String)
   }
   struct Configuration: Sendable {
     let sources: [SessionAudioSource]
     let queue: DispatchQueue
-    var makeChannel: LocalSpeechFactory.Make = {
-      try await LocalSpeechFactory.make(language: $0, output: $1, failure: $2)
-    }
+    let makeChannel: LocalSpeechFactory.Make
   }
   private struct BufferedAudio {
     let buffer: AVAudioPCMBuffer
@@ -40,16 +40,29 @@ final class SessionSpeechPipeline: Sendable {
     var sourceTimes: [SessionAudioSource: TimeInterval] = [:]
     var sourceOffsets: [SessionAudioSource: TimeInterval] = [:]
     var transcript = SpeechTranscript()
+    var speakers: SessionDiarization?
     var finalizationNotice: String?
     var switchTime: TimeInterval = 0
 
   }
   private let storage: SerialQueueStorage<State>
 
-  init(configuration: Configuration, onEvent: @escaping @Sendable (Event) -> Void) {
+  init(
+    configuration: Configuration,
+    speakerChannels: [SessionAudioSource: any LocalSpeechChannel] = [:],
+    onEvent: @escaping @Sendable (Event) -> Void
+  ) {
     storage = SerialQueueStorage(queue: configuration.queue, makeValue: State.init)
     self.configuration = configuration
     self.onEvent = onEvent
+    if !speakerChannels.isEmpty {
+      storage.withValue { state in
+        state.speakers = SessionDiarization(
+          channels: speakerChannels, queue: configuration.queue,
+          output: { [weak self] phrase, source in self?.receiveAttributed(phrase, source: source) },
+          notice: { onEvent(.speakerNotice($0)) })
+      }
+    }
   }
 
   var text: String {
@@ -95,6 +108,7 @@ final class SessionSpeechPipeline: Sendable {
   func append(_ buffer: AVAudioPCMBuffer, source: SessionAudioSource, elapsed: TimeInterval) {
     storage.withValue { state in
       guard state.phase == .running || state.switching else { return }
+      state.speakers?.append(buffer, source: source, elapsed: elapsed)
       if state.switching {
         let duration = Double(buffer.frameLength) / buffer.format.sampleRate
         guard state.buffered.count < Self.maximumBufferedCallbacks,
@@ -111,13 +125,21 @@ final class SessionSpeechPipeline: Sendable {
         state.buffered.append(BufferedAudio(buffer: buffer, source: source, elapsed: elapsed))
         state.bufferedDurations[source, default: 0] += duration
       } else {
-        if state.sourceOffsets[source] == nil {
-          state.sourceOffsets[source] = max(
-            0, elapsed - Double(buffer.frameLength) / buffer.format.sampleRate)
-        }
-        state.sourceTimes[source] = elapsed
-        state.group?.append(buffer, source: source)
+        appendToRecognizer(buffer, source: source, elapsed: elapsed)
       }
+    }
+  }
+
+  private func appendToRecognizer(
+    _ buffer: AVAudioPCMBuffer, source: SessionAudioSource, elapsed: TimeInterval
+  ) {
+    storage.withValue { state in
+      if state.sourceOffsets[source] == nil {
+        state.sourceOffsets[source] = max(
+          0, elapsed - Double(buffer.frameLength) / buffer.format.sampleRate)
+      }
+      state.sourceTimes[source] = elapsed
+      state.group?.append(buffer, source: source)
     }
   }
 
@@ -129,8 +151,7 @@ final class SessionSpeechPipeline: Sendable {
       }
       stopPreparing()
       guard let group = state.group else {
-        state.phase = .finished
-        completion(state.finalizationNotice)
+        completeSessionDrain(state.finalizationNotice, completion: completion)
         return
       }
       group.finish(reason: .sessionEnd) { [weak self] notice in
@@ -147,6 +168,7 @@ final class SessionSpeechPipeline: Sendable {
     storage.withValue { state in
       stopPreparing()
       state.group?.cancel()
+      state.speakers?.cancel()
       state.transcript.preserveDrafts()
       state.group = nil
       state.phase = .finished
@@ -174,6 +196,7 @@ final class SessionSpeechPipeline: Sendable {
     storage.withValue { state in
       guard !state.stopped else { return }
       state.finalizationNotice = notice ?? state.finalizationNotice
+      state.speakers?.flushPending()
       state.transcript.preserveDrafts()
       state.group = nil
       prepare(language)
@@ -181,6 +204,17 @@ final class SessionSpeechPipeline: Sendable {
   }
 
   private func completeSessionDrain(
+    _ notice: String?, completion: @escaping @Sendable (String?) -> Void
+  ) {
+    let speakers = storage.withValue { $0.speakers }
+    if let speakers {
+      speakers.finish { [weak self] in self?.finalizeTranscript(notice, completion: completion) }
+    } else {
+      finalizeTranscript(notice, completion: completion)
+    }
+  }
+
+  private func finalizeTranscript(
     _ notice: String?, completion: @escaping @Sendable (String?) -> Void
   ) {
     storage.withValue { state in
@@ -194,6 +228,11 @@ final class SessionSpeechPipeline: Sendable {
   private func receiveFailure(_ message: String, groupID: UUID) {
     storage.withValue { state in
       guard state.group?.id == groupID else { return }
+      if state.phase == .finishing {
+        state.finalizationNotice = message
+        onEvent(.failed(SessionFailure(category: .transcription, message: message)))
+        return
+      }
       fail(SessionFailure(category: .transcription, message: message))
     }
   }
@@ -277,7 +316,9 @@ final class SessionSpeechPipeline: Sendable {
       let pending = state.buffered
       state.buffered.removeAll(keepingCapacity: true)
       state.bufferedDurations.removeAll()
-      for audio in pending { append(audio.buffer, source: audio.source, elapsed: audio.elapsed) }
+      for audio in pending {
+        appendToRecognizer(audio.buffer, source: audio.source, elapsed: audio.elapsed)
+      }
       state.startingCompletion?(.success(()))
       state.startingCompletion = nil
       onEvent(.textChanged)
@@ -287,11 +328,29 @@ final class SessionSpeechPipeline: Sendable {
   private func receive(_ phrase: SpeechPhrase, source: SessionAudioSource, groupID: UUID) {
     storage.withValue { state in
       guard state.group?.id == groupID else { return }
+      let shifted = phrase.shifted(by: state.sourceOffsets[source, default: state.switchTime])
+      if let speakers = state.speakers {
+        speakers.receive(shifted, source: source)
+      } else {
+        receiveAttributed(shifted, source: source)
+      }
+    }
+  }
+
+  private func receiveAttributed(_ phrase: SpeechPhrase, source: SessionAudioSource) {
+    storage.withValue { state in
       state.transcript.receive(
-        phrase.shifted(by: state.sourceOffsets[source, default: state.switchTime]),
-        source: source, elapsed: state.sourceTimes[source, default: 0])
+        phrase, source: source, elapsed: state.sourceTimes[source, default: 0])
       onEvent(.textChanged)
     }
+  }
+
+  func receiveSpeakerActivity(_ batch: SpeakerActivityBatch, source: SessionAudioSource) {
+    storage.withValue { $0.speakers?.receive(batch, source: source) }
+  }
+
+  func speakerDetectionFailed(_ message: String, source: SessionAudioSource) {
+    storage.withValue { $0.speakers?.fail(message, source: source) }
   }
 
   private func fail(_ failure: SessionFailure) {

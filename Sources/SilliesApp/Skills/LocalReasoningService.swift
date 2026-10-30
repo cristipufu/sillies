@@ -1,5 +1,6 @@
 import Foundation
 import FoundationModels
+import NaturalLanguage
 import SilliesCore
 
 struct LocalNotes: Sendable {
@@ -51,6 +52,12 @@ actor LocalReasoningService {
   private var occupied = false
   private var waiters: [CheckedContinuation<Void, Never>] = []
 
+  private func resolvedLanguage(_ identifier: String?, source: String) -> String? {
+    guard identifier == "auto" else { return identifier }
+    return NLLanguageRecognizer.dominantLanguage(
+      for: String(source.suffix(Self.sourceChunkCharacters)))?.rawValue ?? "und"
+  }
+
   func availabilityNotice(localeIdentifier: String? = nil) -> String? {
     if let localeIdentifier,
       !SystemLanguageModel.default.supportsLocale(Locale(identifier: localeIdentifier))
@@ -77,6 +84,7 @@ actor LocalReasoningService {
     guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
       return LocalNotes(summary: fallback, actions: [])
     }
+    let localeIdentifier = resolvedLanguage(localeIdentifier, source: text)
     if let notice = availabilityNotice(localeIdentifier: localeIdentifier) {
       return await extractedNotes(text: text, fallback: fallback, notice: notice)
     }
@@ -98,6 +106,7 @@ actor LocalReasoningService {
   func suggestion(source: String, elapsed: TimeInterval, localeIdentifier: String? = nil) async
     -> MeetingSuggestion?
   {
+    let localeIdentifier = resolvedLanguage(localeIdentifier, source: source)
     guard !occupied, availabilityNotice(localeIdentifier: localeIdentifier) == nil
     else { return nil }
     occupied = true

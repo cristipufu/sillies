@@ -1,5 +1,6 @@
 import Foundation
 import SilliesAudioTestSupport
+import SilliesSpeech
 
 @testable import SilliesApp
 @testable import SilliesAudio

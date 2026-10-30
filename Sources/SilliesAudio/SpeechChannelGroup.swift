@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import SilliesSpeech
 
 /// Serial-queue owner of the recognizers for one language. Draining is shared by switch and finish.
 final class SpeechChannelGroup: Sendable {

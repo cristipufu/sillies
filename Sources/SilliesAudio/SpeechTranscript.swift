@@ -1,5 +1,6 @@
 import Foundation
 import SilliesCore
+import SilliesSpeech
 
 struct SpeechTranscript {
   private static let previewCharacterLimit = 8_192
@@ -32,7 +33,8 @@ struct SpeechTranscript {
     timeline.receive(
       .init(
         source: source.rawValue, range: start..<(start + duration),
-        text: phrase.text, isFinal: phrase.isFinal, finalizedThrough: phrase.finalizedThrough))
+        text: phrase.text, isFinal: phrase.isFinal, finalizedThrough: phrase.finalizedThrough,
+        speaker: phrase.speaker))
     pendingStarts[source] = phrase.isFinal ? nil : start
   }
 

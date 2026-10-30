@@ -10,7 +10,7 @@ struct AudioLanguagePicker: View {
         VStack(alignment: .leading, spacing: 4) {
           Label("Spoken language", systemImage: "globe")
             .font(.callout.weight(.semibold))
-          Text("For transcription and notes")
+          Text(model.model.name)
             .font(.caption).foregroundStyle(SilliesTheme.secondary)
         }
         Spacer(minLength: 8)
@@ -30,12 +30,20 @@ struct AudioLanguagePicker: View {
         )
         .font(.caption).foregroundStyle(SilliesTheme.accent)
       } else if !model.isLoadingLanguages, !model.languages.contains(where: \.isInstalled) {
-        Text("No Apple speech languages are installed on this Mac. Sillies won’t download models.")
-          .font(.caption).foregroundStyle(SilliesTheme.secondary)
-          .fixedSize(horizontal: false, vertical: true)
+        Text(
+          model.model.isSystemManaged
+            ? "No Apple speech languages are installed. Choose a downloadable model in Settings."
+            : "This model is not installed. Open Settings → Transcription models to download it."
+        )
+        .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        .fixedSize(horizontal: false, vertical: true)
       } else {
-        Text("Changes apply to new speech. Only installed Apple speech models are used.")
-          .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        Text(
+          model.model.capabilities.languageControl == .automatic
+            ? "Detects the spoken language automatically, including English and Romanian."
+            : "Language changes apply to new speech. Model changes in Settings apply to the next session."
+        )
+        .font(.caption).foregroundStyle(SilliesTheme.secondary)
       }
       if let notice = model.reasoningNotice {
         Text(notice).font(.caption).foregroundStyle(SilliesTheme.secondary)
@@ -62,7 +70,10 @@ struct AudioLanguagePicker: View {
       }
       let unavailable = model.languages.filter { !$0.isInstalled }
       if !unavailable.isEmpty {
-        Section("Apple speech model not installed") {
+        Section(
+          model.model.isSystemManaged
+            ? "Apple speech model not installed" : "Model download required"
+        ) {
           ForEach(unavailable) { language in
             Text(language.name).tag(language.id).disabled(true)
           }

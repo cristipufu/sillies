@@ -22,8 +22,8 @@ race-check:
 	bash scripts/test-races.sh
 
 lint:
-	swift format lint --strict --recursive Package.swift Sources Tests Tools/ArchitectureCheck scripts/make-icon.swift
-	bash -n scripts/build-app.sh scripts/test.sh scripts/toolchain.sh scripts/check-main-thread.sh scripts/test-stress.sh scripts/test-races.sh
+	swift format lint --strict --recursive Package.swift Sources Tests Tools/ArchitectureCheck Tools/SpeechBenchmark scripts/make-icon.swift
+	bash -n scripts/build-app.sh scripts/test.sh scripts/toolchain.sh scripts/check-main-thread.sh scripts/test-stress.sh scripts/test-races.sh scripts/test-downloaded-speech.sh
 	bash scripts/check-main-thread.sh
 
 check: lint test debug

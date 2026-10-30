@@ -1,6 +1,7 @@
 import AVFoundation
 import Foundation
 import SilliesAudioTestSupport
+import SilliesSpeech
 import Synchronization
 import Testing
 

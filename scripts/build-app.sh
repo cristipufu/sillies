@@ -52,7 +52,11 @@ if [[ -n "${SILLIES_FEED_URL:-}" ]]; then
 fi
 
 rsync -a --delete Sources/SilliesApp/Resources/Characters/ "$app/Contents/Resources/Characters/"
+ditto "$binary_dir/Sillies_SilliesModelStore.bundle" "$app/Contents/Resources/Sillies_SilliesModelStore.bundle"
 mkdir -p "$app/Contents/Resources/ThirdPartyNotices"
+cp .build/checkouts/argmax-oss-swift/LICENSE "$app/Contents/Resources/ThirdPartyNotices/ARGMAX-LICENSE"
+cp .build/checkouts/argmax-oss-swift/NOTICES "$app/Contents/Resources/ThirdPartyNotices/ARGMAX-NOTICES"
+cp .build/checkouts/FluidAudio/LICENSE "$app/Contents/Resources/ThirdPartyNotices/FLUIDAUDIO-LICENSE"
 cp Vendor/AudioProcessing/WEBRTC-LICENSE Vendor/AudioProcessing/WEBRTC-PATENTS Vendor/AudioProcessing/ABSEIL-LICENSE "$app/Contents/Resources/ThirdPartyNotices/"
 cp Vendor/AudioProcessing/webrtc/LICENSE "$app/Contents/Resources/ThirdPartyNotices/WEBRTC-AUTHORS-LICENSE"
 cp Vendor/AudioProcessing/webrtc/third_party/pffft/LICENSE "$app/Contents/Resources/ThirdPartyNotices/PFFFT-LICENSE"

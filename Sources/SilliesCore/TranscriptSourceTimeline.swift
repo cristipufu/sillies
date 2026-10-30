@@ -13,7 +13,8 @@ struct TranscriptSourceTimeline: Sendable {
       self.sequence = sequence
       range = passage.range
       let time = SessionRecord.formatDuration(range.lowerBound)
-      renderedText = "[\(time)] \(passage.source): \(passage.text)"
+      let label = passage.speaker.map { passage.source + " · " + $0.label } ?? passage.source
+      renderedText = "[\(time)] \(label): \(passage.text)"
       characterCount = renderedText.count
       isFinal = passage.isFinal
     }
@@ -63,7 +64,8 @@ struct TranscriptSourceTimeline: Sendable {
     guard !entries[affected].contains(where: \.isFinal) else { return nil }
     let text = passage.text.trimmingCharacters(in: .whitespacesAndNewlines)
     let normalized = TranscriptTimeline.Passage(
-      source: passage.source, range: passage.range, text: text, isFinal: passage.isFinal)
+      source: passage.source, range: passage.range, text: text, isFinal: passage.isFinal,
+      speaker: passage.speaker)
     let entry = Entry(passage: normalized, sequence: entries[affected].first?.sequence ?? sequence)
     return Replacement(range: affected, entry: text.isEmpty ? nil : entry)
   }

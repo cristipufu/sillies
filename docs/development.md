@@ -16,7 +16,11 @@ Read `AGENTS.md` and the relevant ownership contract before changing a subsystem
 | Window discovery/publication | `WorkspaceTracker` and platform workers | Session generations reject stale worker callbacks; AX stays on its worker; window-list queries stay in the helper |
 | Window metadata cache | `WindowTargetCache` | State lives inside a `Mutex`; no IPC under the lock; generation checks reject stale refreshes |
 | Vault browsing and commands | `SessionVaultModel` | Owns selection, search, save/undo/delete, and cancellable feedback; views only render and forward actions |
-| Audio engine | `SilliesAudio` | Core + echo cancellation only; capture/language contracts use package access; no app/UI imports |
+| Speaker detection | `SilliesSpeech` / `SessionDiarization` / SDK adapter | Independent source identity, bounded history/pending phrases; failure preserves text |
+| Model updates | `SilliesModelStore` / `SilliesModelValidation` | Artifact discovery, daily persistence, worker schema/inference validation, atomic version selection and rollback |
+| Speech providers | `SilliesSpeech` + SDK adapter targets | Channels own independent decoding state; weights are shared; bounded queues and explicit finish/cancel |
+| Model installation | `SilliesModelStore` | Pinned HTTPS artifacts, hashes, atomic publication, active-use leases; all I/O off main |
+| Audio engine | `SilliesAudio` | Core + provider-neutral speech contracts + echo cancellation; capture/language contracts use package access; no app/UI imports |
 | Tracking schedule | `WindowTrackingSchedule` | One owner for workspace timer slots and discovery retries; replacement invalidates old callbacks; explicit stop |
 | Session failures and recovery | `SessionFailure` / `SessionRecovery` | Typed categories and actions; native adapters classify errors; user text never selects recovery |
 | Audio capture interface | `SessionAudioCapture` and capture contract values | Consumers do not depend on the concrete capture implementation |
@@ -60,3 +64,5 @@ Lifecycle changes should run the `audioLifecycle`, `audioCaptureSequence`, `work
 Saved-format changes must pass `LegacySessionRecordTests`. The committed `Fixtures/*.json` files are hand-authored examples of the historical formats, frozen independently of the current encoder. Do not regenerate them from `SessionRecord`; add a new fixture when a supported format changes. Tests compare every historical field after repository load/save as well as the typed recovery migration. Keep the legacy `failureMessage` key readable by older app versions.
 
 The `future-failures.json` fixture also protects unknown failure identifiers through load/save. Unsupported category/action values must preserve diagnostics without offering an unrecognized recovery command; malformed JSON types still fail. Export changes must pass the complete Markdown fixture, including section order, omission of empty sections, and explicit-locale language names.
+
+Downloadable speech runtimes require Swift 6.2 or later. Use the repository scripts so Xcode is selected locally for XCTest/Swift Testing; do not change the global xcode-select setting.

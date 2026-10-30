@@ -47,7 +47,7 @@ import Testing
     kind: .record,
     origin: .init(
       characterID: "mochi", characterName: "Mochi", source: .init(appName: "Microphone")),
-    metadata: .init(languageIdentifier: "fr-FR"))
+    metadata: .init(transcription: .init(languageIdentifier: "fr-FR")))
   let decoded = try JSONDecoder().decode(SessionRecord.self, from: JSONEncoder().encode(record))
   #expect(decoded.languageIdentifier == "fr-FR")
 }

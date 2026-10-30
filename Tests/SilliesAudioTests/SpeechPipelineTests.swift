@@ -1,6 +1,7 @@
 import AVFoundation
 import Foundation
 import SilliesAudioTestSupport
+import SilliesSpeech
 import Testing
 
 @testable import SilliesAudio
@@ -43,7 +44,7 @@ import Testing
 
 @Test func languageSelectionUsesInstalledRememberedOrMatchingDeviceLanguage() {
   let missing = SpeechLanguage(
-    id: "de-DE", name: "German", isInstalled: false, supportsNotes: true)
+    id: "de-DE", name: "German", isInstalled: false)
   let catalog = SpeechLanguageCatalog(languages: [fixtureEnglish, fixtureFrench, missing])
   #expect(catalog.preferredLanguage(savedIdentifier: "fr-FR") == fixtureFrench)
   #expect(
@@ -119,6 +120,46 @@ import Testing
   if case .success = result { Issue.record("A cancelled preparation must not start capture.") }
   try await Task.sleep(for: .milliseconds(20))
   #expect(harness.bank.channels.allSatisfy { $0.wasCancelled })
+}
+
+@Test func diarizationReceivesLanguageSwitchAudioExactlyOnce() async throws {
+  let queue = DispatchQueue(label: "sillies.test.speaker-language-switch")
+  let bank = SpeechFixtureBank()
+  let speaker = ControllableSpeechChannel(output: { _ in })
+  let pipeline = await withCheckedContinuation { continuation in
+    queue.async {
+      continuation.resume(
+        returning: SessionSpeechPipeline(
+          configuration: .init(
+            sources: [.application], queue: queue,
+            makeChannel: { _, output, _ in bank.make(output: output) }),
+          speakerChannels: [.application: speaker], onEvent: { _ in }))
+    }
+  }
+  try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+    queue.async { pipeline.start(language: fixtureEnglish) { continuation.resume(with: $0) } }
+  }
+  try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+    queue.async {
+      do {
+        pipeline.changeLanguage(fixtureFrench, elapsed: 5)
+        let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 24_000, channels: 1))
+        let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 240))
+        buffer.frameLength = 240
+        pipeline.append(buffer, source: .application, elapsed: 5.1)
+        bank.channels[0].complete()
+        continuation.resume()
+      } catch { continuation.resume(throwing: error) }
+    }
+  }
+  try await awaitSpeechCondition { bank.channels.count == 2 && bank.channels[1].frameCount == 240 }
+  #expect(speaker.frameCount == 240)
+  await withCheckedContinuation { continuation in
+    queue.async {
+      pipeline.cancel()
+      continuation.resume()
+    }
+  }
 }
 
 private final class SpeechPipelineHarness: @unchecked Sendable {

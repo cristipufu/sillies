@@ -2,6 +2,7 @@ import AVFoundation
 import Foundation
 import SilliesAudioTestSupport
 import SilliesCore
+import SilliesSpeech
 import Synchronization
 import Testing
 
@@ -175,6 +176,50 @@ import Testing
   completion.finish()
 }
 
+@Test func transcriptionFailurePreservesRecordingAndAvailableTranscript() async {
+  let harness = CaptureLifecycleHarness()
+  let service = harness.makeService()
+  service.start()
+  await harness.events.waitForCapture()
+  harness.speech.emit("Saved before recognition stopped")
+  harness.speech.fail("Inference could not keep up")
+  let failure = await harness.events.waitForTranscriptionStop()
+  #expect(failure?.category == .transcription)
+  #expect(harness.microphone.stopCount == 0)
+  harness.clock.withLock { $0 = 120 }
+  let (results, completion) = AsyncStream<AudioCaptureResult>.makeStream()
+  service.finish { completion.yield($0) }
+  await harness.checkpoint()
+  harness.microphone.completeStops()
+  var iterator = results.makeAsyncIterator()
+  let result = await iterator.next()
+  #expect(result?.duration == 20)
+  #expect(result?.transcript.contains("Saved before recognition stopped") == true)
+  #expect(result?.failure?.category == .transcription)
+  completion.finish()
+}
+
+@Test func diarizationPreparationFailurePreservesRecordingAndTheSavedNotice() async {
+  let harness = CaptureLifecycleHarness()
+  let service = harness.makeService(diarization: { _ in
+    throw SpeechError.unavailable("Fixture speaker model failure")
+  })
+  service.start()
+  await harness.events.waitForCapture()
+  harness.speech.emit("Words survive unavailable speaker detection")
+  #expect(harness.microphone.stopCount == 0)
+  let (results, completion) = AsyncStream<AudioCaptureResult>.makeStream()
+  service.finish { completion.yield($0) }
+  await harness.checkpoint()
+  harness.microphone.completeStops()
+  var iterator = results.makeAsyncIterator()
+  let result = await iterator.next()
+  #expect(result?.failure == nil)
+  #expect(result?.transcript.contains("Words survive") == true)
+  #expect(result?.speakerDetectionNotice?.contains("Fixture speaker model failure") == true)
+  completion.finish()
+}
+
 private final class CaptureLifecycleHarness: Sendable {
   let queue = DispatchQueue(label: "sillies.test.capture-lifecycle")
   let clock = Mutex(100.0)
@@ -184,17 +229,19 @@ private final class CaptureLifecycleHarness: Sendable {
   init(gate: CaptureStartupGate? = nil, startupFailure: SessionFailure? = nil) {
     microphone = LifecycleMicrophone(gate: gate, startupFailure: startupFailure)
   }
-  func makeService(finishTimeout: TimeInterval? = nil) -> AudioTranscriptionService {
+  func makeService(
+    finishTimeout: TimeInterval? = nil, diarization: SpeakerDiarizationFactory.Make? = nil
+  ) -> AudioTranscriptionService {
     var dependencies = AudioCaptureDependencies(
       queue: queue,
       microphone: { [microphone] _, failure in
         microphone.installFailure(failure)
         return microphone
       },
-      speech: { [speech] _, output, _ in
-        speech.install(output)
+      speech: { [speech] _, output, failure in
+        speech.install(output, failure: failure)
         return speech
-      }, now: { [self] in clock.withLock { $0 } })
+      }, diarization: diarization, now: { [self] in clock.withLock { $0 } })
     if let finishTimeout { dependencies.finishTimeout = finishTimeout }
     return AudioTranscriptionService(
       configuration: .init(kind: .record, target: nil, recordingURL: nil, language: fixtureEnglish),
@@ -220,6 +267,12 @@ private final class CaptureEvents: Sendable {
   }
   @discardableResult func waitForFailure() async -> SessionFailure? {
     for await update in updates { if case .failed(let failure) = update { return failure } }
+    return nil
+  }
+  func waitForTranscriptionStop() async -> SessionFailure? {
+    for await update in updates {
+      if case .transcriptionStopped(let failure) = update { return failure }
+    }
     return nil
   }
 }
@@ -267,9 +320,14 @@ private final class LifecycleMicrophone: MicrophoneCapture {
 
 private final class CaptureSpeechChannel: LocalSpeechChannel {
   private let output = Mutex<LocalSpeechFactory.Output?>(nil)
-  func install(_ output: @escaping LocalSpeechFactory.Output) {
+  private let failure = Mutex<LocalSpeechFactory.Failure?>(nil)
+  func install(
+    _ output: @escaping LocalSpeechFactory.Output, failure: @escaping LocalSpeechFactory.Failure
+  ) {
     self.output.withLock { $0 = output }
+    self.failure.withLock { $0 = failure }
   }
+  func fail(_ message: String) { failure.withLock { $0 }?(message) }
   func emit(_ text: String) { output.withLock { $0 }?(SpeechPhrase(text: text, isFinal: true)) }
   func append(_ buffer: AVAudioPCMBuffer) {}
   func finish(completion: @escaping @Sendable () -> Void) { completion() }

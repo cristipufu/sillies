@@ -10,7 +10,7 @@ The wheel and the mascot's context menu expose the same five actions. Hover over
 | Explain | One selected window image | PNG, Vision OCR, summary and plain-language explanation of the recognized text |
 | Record | Built-in microphone where available; otherwise default microphone | Playable `.m4a` AAC file, local transcript, summary and action items |
 
-ScreenCaptureKit's audio filter is application-wide. Selecting a Google Meet browser window includes audio playing in other tabs of that browser. Sillies does not claim per-tab isolation. Microphone speech is labeled separately from app speech; these are source labels, not speaker diarization. Both meeting skills apply local acoustic echo cancellation to support laptop speakers. Explain reasons over OCR text, not invisible content or the visual meaning of images alone.
+ScreenCaptureKit's audio filter is application-wide. Selecting a Google Meet browser window includes audio playing in other tabs of that browser. Sillies does not claim per-tab isolation. Microphone speech is labeled separately from app speech. Optional downloaded speaker detection adds anonymous, source-scoped speaker numbers; source labels alone do not identify individual people. Both meeting skills apply local acoustic echo cancellation to support laptop speakers. Explain reasons over OCR text, not invisible content or the visual meaning of images alone.
 
 ## Capture and meeting apps
 
@@ -54,7 +54,7 @@ Right-click a mascot → Save Clipboard, use Add text / link or Save Clipboard i
 
 File entries reference original paths; Sillies does not copy those files. Stashes persist until explicit deletion. The 200-record history limit applies to other skill records and removes their owned image/audio files. Old Watch and Focus records still decode. New optional record fields preserve backward compatibility.
 
-Storage is `~/Library/Application Support/Sillies/Vault`. AAC encoding, file finalization, PNG encoding, image decoding, OCR, speech recognition and reasoning run off the UI thread. Capture admission budgets 12 seconds per source, with a separate 4,096-callback memory cap, replacing the previous 128-callback limit. Admitted buffers drain before finalization. Variable speech callbacks are then combined into 100 ms chunks, giving each recognizer a separate bounded 12-second input stream. Overload stops with a visible partial-session message. HUD text has a fixed width and publishes at most twice per second; animation never follows per-word recognition updates.
+Storage is `~/Library/Application Support/Sillies/Vault`. AAC encoding, file finalization, PNG encoding, image decoding, OCR, speech recognition and reasoning run off the UI thread. Capture admission budgets 12 seconds per source, with a separate 4,096-callback memory cap, replacing the previous 128-callback limit. Admitted buffers drain before finalization. Apple speech callbacks are combined into 100 ms chunks with a bounded 12-second input stream. Downloadable engines use bounded rolling windows, shared weights, and serialized inference; see [local speech models](local-speech-models.md). Recognition overload stops transcription with a visible notice and keeps recording audio. Capture/DSP overload still stops capture to avoid silently losing the recording. HUD text has a fixed width and publishes at most twice per second; animation never follows per-word recognition updates.
 
 ## Validation
 
@@ -84,3 +84,11 @@ SILLIES_ECHO_SPEECH_CHECK=1 SILLIES_SPEECH_FIXTURE=/tmp/sillies-meeting-fixture.
 ```
 
 This feeds 24 seconds of simulated delayed speaker echo and overlapping local speech through the actual synchronization, AEC, two Apple recognizers, and AAC encoder while exercising all four interaction budgets. It checks that remote words do not appear in the microphone transcript and that the local speaker’s commitment survives. Separate deterministic tests measure echo reduction and near-speaker waveform preservation. This is not a live Meet/Zoom call or a measurement of this room’s acoustics.
+
+### Downloadable transcription
+
+Settings → Transcription models offers Apple Speech, Whisper Turbo, and Parakeet Ultra. Downloads are explicit, include progress and pause/retry, and verify every file before publishing the installation. Models can be removed when unused. Both downloadable models support English and Romanian. Whisper offers automatic detection and an explicit language; Parakeet detects the language automatically. Model changes apply to the next session. Speech recognition remains independent of Apple Intelligence language support; automatic notes use language detection on a bounded text excerpt and fall back to extracted highlights when unsupported.
+
+Audio and transcripts remain on the Mac. Model files are fetched from pinned Hugging Face revisions. Downloaded-model inference uses local assets; no tokenizer fallback download is allowed. Session JSON records the provider, model, and revision while older records continue to load. Model metadata is included in Markdown export.
+
+Settings also offers optional on-device speaker detection (up to eight speakers per source, with delayed and potentially incorrect labels), daily metadata-only model update checks, explicit update downloads with native compatibility validation, and rollback. Recording continues if speaker detection fails. See [local speech models](local-speech-models.md) for limits and short validation commands.

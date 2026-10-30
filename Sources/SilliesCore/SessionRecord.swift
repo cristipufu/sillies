@@ -25,6 +25,8 @@ public struct SessionRecord: Codable, Identifiable, Equatable, Sendable {
   public var processingNote: String
   public var suggestions: [MeetingSuggestion]
   public var languageIdentifier: String?
+  public let speechProvenance: SpeechProvenance?
+  public let diarizationProvenance: SpeechProvenance?
 
   public init(
     kind: CompanionSkillKind, origin: SessionOrigin, content: SessionContent = .init(),
@@ -39,7 +41,9 @@ public struct SessionRecord: Codable, Identifiable, Equatable, Sendable {
     self.windowTitle = origin.source.windowTitle
     self.createdAt = metadata.createdAt
     self.durationSeconds = metadata.durationSeconds
-    self.languageIdentifier = metadata.languageIdentifier
+    self.languageIdentifier = metadata.transcription.languageIdentifier
+    self.speechProvenance = metadata.transcription.provenance
+    self.diarizationProvenance = metadata.transcription.diarizationProvenance
     self.transcript = content.text.transcript
     self.extractedText = content.text.extractedText
     self.stashedItems = content.text.stashedItems

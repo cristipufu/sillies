@@ -69,6 +69,9 @@ struct AudioSessionHeader: View {
   }
 
   private var statusTitle: String {
+    if model.transcriptionFailure != nil, model.phase == .capturing {
+      return "Recording · Transcription stopped"
+    }
     if model.pendingLanguageID != nil { return "Changing language…" }
     switch model.phase {
     case .preparing:
@@ -96,6 +99,11 @@ struct AudioSessionHeader: View {
       }
       Text("Sillies does not change your meeting’s microphone, mute, volume, or audio routing.")
         .foregroundStyle(SilliesTheme.secondary)
+      if let maximumSpeakers = model.diarizationModel?.capabilities.maximumSpeakers {
+        Text(
+          "Speaker labels distinguish up to \(maximumSpeakers) voices per source. Speaker numbers belong to this meeting and source; a microphone speaker and a meeting speaker with the same number are not necessarily the same person. Check labels before relying on them."
+        )
+      }
     }.font(.callout).padding(18).frame(width: 320)
   }
 }

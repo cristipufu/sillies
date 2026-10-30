@@ -1,6 +1,8 @@
 import Foundation
 import SilliesAudio
 import SilliesCore
+import SilliesSpeech
+import SilliesSpeechApple
 
 struct AudioSkillRequest {
   let kind: CompanionSkillKind
@@ -30,7 +32,8 @@ final class AudioSkillSession: ActiveSkillSession {
   init(
     request: AudioSkillRequest,
     captureFactory: @escaping SessionAudioCaptureFactory = {
-      AudioTranscriptionService(configuration: $0, onUpdate: $1)
+      AudioTranscriptionService(
+        configuration: $0, speech: AppleSpeechProvider.makeChannel, onUpdate: $1)
     }, languages: AudioLanguageEnvironment = .live, onChange: @escaping () -> Void
   ) {
     self.captureFactory = captureFactory
@@ -52,12 +55,22 @@ final class AudioSkillSession: ActiveSkillSession {
   func start() {
     let load = languages.load
     languageTask = Task { [weak self] in
-      let catalog = await Task.detached(priority: .utility) { await load() }.value
+      let catalog: SpeechLanguageCatalog
+      do { catalog = try await load() } catch {
+        guard !Task.isCancelled, let self else { return }
+        self.presentation.isLoadingLanguages = false
+        self.presentation.phase = .failed(SessionFailure(error, category: .transcription))
+        self.presentation.status = "Transcription model unavailable · Open Settings"
+        self.onChange()
+        return
+      }
       guard !Task.isCancelled, let self, self.presentation.canFinish else { return }
+      self.presentation.model = catalog.model
+      self.presentation.diarizationModel = catalog.diarizationModel
       self.presentation.languages = catalog.languages
       self.presentation.isLoadingLanguages = false
       if let selected = catalog.preferredLanguage(
-        savedIdentifier: self.languages.preferences.selectedIdentifier)
+        savedIdentifier: self.languages.preferences.selectedIdentifier(for: catalog.model))
       {
         self.beginCapture(language: selected)
       } else {
@@ -73,8 +86,10 @@ final class AudioSkillSession: ActiveSkillSession {
     presentation.selectedLanguageID = language.id
     presentation.status = "Preparing \(language.name)…"
     let url = request.recordingDirectory.appendingPathComponent("\(recordID.uuidString).m4a")
-    let configuration = AudioCaptureConfiguration(
+    var configuration = AudioCaptureConfiguration(
       kind: request.kind, target: request.target, recordingURL: url, language: language)
+    configuration.model = presentation.model
+    configuration.diarizationModel = presentation.diarizationModel
     let delivery = AudioSessionUpdateDelivery { [weak self] in self?.apply($0) }
     updateDelivery = delivery
     let service = captureFactory(configuration) { delivery.enqueue($0) }
@@ -102,14 +117,10 @@ final class AudioSkillSession: ActiveSkillSession {
 
   private func refreshReasoningAvailability(_ language: SpeechLanguage) {
     availabilityTask?.cancel()
-    presentation.reasoningNotice =
-      language.supportsNotes
-      ? nil
-      : "Apple’s on-device AI does not support notes in \(language.name). Your transcript and recording are still saved."
-    guard language.supportsNotes else { return }
+    presentation.reasoningNotice = "Checking local notes availability…"
     availabilityTask = Task { [weak self] in
       let notice = await LocalReasoningService.shared.availabilityNotice(
-        localeIdentifier: language.id)
+        localeIdentifier: language.isAutomatic ? nil : language.id)
       guard !Task.isCancelled else { return }
       self?.presentation.reasoningNotice = notice
     }
@@ -129,7 +140,7 @@ final class AudioSkillSession: ActiveSkillSession {
     case .languageChanged(let language):
       presentation.selectedLanguageID = language.id
       presentation.pendingLanguageID = nil
-      languages.preferences.remember(language)
+      languages.preferences.remember(language, for: presentation.model)
       refreshReasoningAvailability(language)
       if presentation.phase != .preparing {
         presentation.status =
@@ -145,6 +156,14 @@ final class AudioSkillSession: ActiveSkillSession {
       presentation.phase = .failed(failure)
       presentation.status = "Stopped · Open details"
       presentation.audioLevel = 0
+    case .transcriptionStopped(let failure):
+      presentation.transcriptionFailure = failure
+      presentation.pendingLanguageID = nil
+      presentation.status = "Recording · Transcription stopped"
+      suggestionTask?.cancel()
+      suggestionTask = nil
+    case .speakerDetectionNotice(let message):
+      presentation.speakerDetectionNotice = message
     }
     onChange()
   }
@@ -164,7 +183,10 @@ final class AudioSkillSession: ActiveSkillSession {
     guard presentation.phase == .paused else { return }
     service?.resume()
     presentation.phase = .capturing
-    presentation.status = request.kind == .record ? "Recording microphone" : "Transcribing"
+    presentation.status =
+      presentation.transcriptionFailure == nil
+      ? (request.kind == .record ? "Recording microphone" : "Transcribing")
+      : "Recording · Transcription stopped"
     onChange()
   }
 
@@ -177,7 +199,8 @@ final class AudioSkillSession: ActiveSkillSession {
   private func considerSuggestion() {
     guard request.kind == .participate, presentation.phase == .capturing,
       presentation.pendingLanguageID == nil, presentation.suggestionsEnabled,
-      presentation.reasoningNotice == nil, suggestionTask == nil,
+      presentation.reasoningNotice == nil, presentation.transcriptionFailure == nil,
+      suggestionTask == nil,
       presentation.elapsed - lastSuggestionCheck >= Self.suggestionCheckInterval,
       presentation.transcript.count >= Self.minimumSourceCharacters,
       presentation.transcript != lastSuggestionSource
@@ -219,14 +242,19 @@ final class AudioSkillSession: ActiveSkillSession {
     let id = recordID
     let kind = request.kind
     let suggestions = presentation.suggestions
-    let language = presentation.selectedLanguageID
+    let transcription = SessionTranscriptionMetadata(
+      languageIdentifier: presentation.selectedLanguageID,
+      provenance: presentation.model.provenance,
+      diarizationProvenance: presentation.diarizationModel?.provenance)
     let completed: @Sendable (AudioCaptureResult) -> Void = { [weak self] result in
       let outcome = Self.makeOutcome(
         result,
         context: .init(
-          finalize: context, id: id, kind: kind, suggestions: suggestions, language: language))
+          finalize: context, id: id, kind: kind, suggestions: suggestions,
+          transcription: transcription))
       MainRunLoopDelivery.perform { [weak self] in
         self?.presentation.transcript = result.preview
+        self?.presentation.speakerDetectionNotice = result.speakerDetectionNotice
         self?.presentation.elapsed = result.duration
         self?.presentation.phase = .finished
         self?.presentation.status = outcome.bannerSummary
@@ -246,7 +274,7 @@ final class AudioSkillSession: ActiveSkillSession {
     let id: UUID
     let kind: CompanionSkillKind
     let suggestions: [MeetingSuggestion]
-    let language: String?
+    let transcription: SessionTranscriptionMetadata
   }
 
   nonisolated private static func makeOutcome(
@@ -267,9 +295,12 @@ final class AudioSkillSession: ActiveSkillSession {
           summary: hasText ? "Preparing local notes…" : "No speech was transcribed.",
           suggestions: context.suggestions),
         attachments: .init(audioFilename: result.recordingURL?.lastPathComponent),
-        processing: .init(summaryPending: hasText, failure: result.failure)),
+        processing: .init(
+          summaryPending: hasText, failure: result.failure,
+          note: result.speakerDetectionNotice ?? "")),
       metadata: .init(
-        id: context.id, durationSeconds: result.duration, languageIdentifier: context.language))
+        id: context.id, durationSeconds: result.duration,
+        transcription: context.transcription))
     let banner =
       result.failure != nil
       ? "Session needs attention · View details"

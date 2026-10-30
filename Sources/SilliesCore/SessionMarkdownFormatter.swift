@@ -24,8 +24,19 @@ public enum SessionMarkdownFormatter {
       lines.append("- **Duration**: \(SessionRecord.formatDuration(record.durationSeconds))")
     }
     if let language = record.languageIdentifier {
+      let name =
+        language == "auto"
+        ? "Automatic (from speech)" : (locale.localizedString(forIdentifier: language) ?? language)
       lines.append(
-        "- **Notes language**: \(locale.localizedString(forIdentifier: language) ?? language)")
+        "- **Notes language**: \(name)")
+    }
+    if let speech = record.speechProvenance {
+      lines.append("- **Transcription model**: \(speech.modelName) (\(speech.revision))")
+    }
+    if let speakers = record.diarizationProvenance {
+      lines.append(
+        "- **Speaker detection model**: \(speakers.modelName) (\(speakers.revision)); anonymous labels may need correction"
+      )
     }
     return lines
   }

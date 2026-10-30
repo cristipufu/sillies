@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
   let controller: CompanionController
+  var speechModels: SpeechModelsPresentation? = nil
   private var appVersion: String {
     Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
       ?? "Development"
@@ -103,6 +104,13 @@ struct SettingsView: View {
             }.buttonStyle(
               SoftButtonStyle())
           }.padding(.top, 4)
+        }
+        if let speechModels {
+          settingsSection("TRANSCRIPTION MODELS") {
+            SpeechModelSettingsView(
+              model: speechModels, activeModelID: controller.activeSpeechModelID,
+              activeDiarizationModelID: controller.activeDiarizationModelID)
+          }
         }
         settingsSection("UPDATES") {
           UpdatesSettingsView()

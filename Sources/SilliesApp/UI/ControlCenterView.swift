@@ -7,6 +7,7 @@ struct ControlCenterView: View {
   let openPlayground: () -> Void
   var openVault: () -> Void = {}
   let quit: () -> Void
+  var speechModels: SpeechModelsPresentation? = nil
 
   var body: some View {
     @Bindable var settings = controller.settings
@@ -166,6 +167,11 @@ struct ControlCenterView: View {
         }.padding(12).background(
           SilliesTheme.accent.opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
       }.buttonStyle(.plain)
+
+      if let speechModels, speechModels.availableUpdateCount > 0 {
+        Button("Model updates available", systemImage: "arrow.down.circle") { openSettings() }
+          .font(.caption.weight(.medium)).buttonStyle(.plain).foregroundStyle(SilliesTheme.accent)
+      }
 
       HStack {
         Image(systemName: "heart.fill").font(.system(size: 9)).foregroundStyle(Color(hex: "D79B91"))

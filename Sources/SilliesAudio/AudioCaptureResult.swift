@@ -7,6 +7,7 @@ package struct AudioCaptureResult: Sendable {
   package let recordingURL: URL?
   package let duration: TimeInterval
   package let failure: SessionFailure?
+  package var speakerDetectionNotice: String? = nil
   package init(
     transcript: String, recordingURL: URL?, duration: TimeInterval, failure: SessionFailure?
   ) {

@@ -3,6 +3,7 @@ import Foundation
 import Observation
 import SilliesAudio
 import SilliesCore
+import SilliesSpeechApple
 
 /// Owns skill lifetimes and one shared metadata clock. Capture and inference own their workers.
 @MainActor @Observable
@@ -49,7 +50,8 @@ final class SkillCoordinator {
   init(
     vault: SessionVaultStore = SessionVaultStore(),
     audioFactory: @escaping SessionAudioCaptureFactory = {
-      AudioTranscriptionService(configuration: $0, onUpdate: $1)
+      AudioTranscriptionService(
+        configuration: $0, speech: AppleSpeechProvider.makeChannel, onUpdate: $1)
     },
     audioLanguages: AudioLanguageEnvironment = .live,
     snapshotLoader: @escaping SnapshotLoader = { ids, top in

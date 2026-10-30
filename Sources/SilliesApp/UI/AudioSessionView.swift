@@ -11,44 +11,59 @@ struct AudioSessionView: View {
   let model: AudioSessionPresentation
 
   var body: some View {
-    ViewThatFits(in: .vertical) {
-      content
-      ScrollView { content }
-    }
-    .frame(minWidth: Layout.minimumWidth, minHeight: Layout.minimumHeight)
-    .background(SilliesTheme.paper).foregroundStyle(SilliesTheme.ink)
-    .tint(SilliesTheme.accent)
-    .onAppear { model.hasUnreadSuggestion = false }
-    .onChange(of: model.suggestions.count) { _, _ in model.hasUnreadSuggestion = false }
+    content
+      .frame(minWidth: Layout.minimumWidth, minHeight: Layout.minimumHeight)
+      .background(SilliesTheme.paper).foregroundStyle(SilliesTheme.ink)
+      .tint(SilliesTheme.accent)
+      .onAppear { model.hasUnreadSuggestion = false }
+      .onChange(of: model.suggestions.count) { _, _ in model.hasUnreadSuggestion = false }
   }
 
   private var content: some View {
     VStack(alignment: .leading, spacing: Layout.spacing) {
       AudioSessionHeader(model: model)
+        .fixedSize(horizontal: false, vertical: true)
+      // Only the controls participate in fitting. The native transcript keeps a stable viewport.
+      ViewThatFits(in: .vertical) {
+        options
+        ScrollView { options }
+          .scrollBounceBehavior(.basedOnSize)
+      }
+      AudioTranscriptView(model: model)
+      footer
+        .fixedSize(horizontal: false, vertical: true)
+    }
+    .padding(Layout.padding)
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+  }
+
+  private var options: some View {
+    VStack(alignment: .leading, spacing: Layout.spacing) {
       AudioLanguagePicker(model: model)
       if case .failed(let message) = model.phase {
         AudioSessionNotice(
           message: message, opensPrivacy: SessionRecord.indicatesPermissionNeeded(message))
       }
       if model.kind == .participate { AudioMeetingSuggestionsView(model: model) }
-      AudioTranscriptView(model: model)
-      footer
     }
-    .padding(Layout.padding)
   }
 
   private var footer: some View {
     HStack(alignment: .top, spacing: 8) {
       Image(systemName: "lock.shield").foregroundStyle(SilliesTheme.accent)
-      Text(
-        model.isFinished
-          ? "Saved on this Mac. Open the Vault for your transcript and notes."
-          : model.isPaused
-            ? "Paused audio isn’t saved or transcribed. Resume whenever you’re ready."
-            : "Processed on this Mac. Closing this window keeps the session running; Finish & Save stops it."
-      )
-      .fixedSize(horizontal: false, vertical: true)
+      Text(footerMessage)
+        .fixedSize(horizontal: false, vertical: true)
     }
     .font(.caption).foregroundStyle(SilliesTheme.secondary)
+  }
+
+  private var footerMessage: String {
+    switch model.phase {
+    case .finished: "Saved on this Mac. Open the Vault for your transcript and notes."
+    case .paused: "Paused audio isn’t saved or transcribed. Resume whenever you’re ready."
+    case .failed: "Choose Finish & Save to keep the available transcript and recording."
+    default:
+      "Processed on this Mac. Closing this window keeps the session running; Finish & Save stops it."
+    }
   }
 }

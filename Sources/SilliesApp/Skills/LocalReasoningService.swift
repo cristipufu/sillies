@@ -143,7 +143,7 @@ actor LocalReasoningService {
   }
 
   private func extractedNotes(text: String, fallback: String, notice: String) async -> LocalNotes {
-    let (summary, _) = await SessionSummarizer.summarizeOnWorker(
+    let (summary, _) = await SessionSummaryWorker.summarize(
       text: text, fallbackContext: fallback)
     // Keyword matching cannot reliably establish a commitment, owner, or deadline.
     return LocalNotes(summary: summary, actions: [], notice: notice)

@@ -6,13 +6,13 @@ final class DragResponseMetrics {
   enum Stage: String, CaseIterable {
     case movement, hitTest, releaseHitTest, targeting, highlight, wheel
   }
-  private let enabled: Bool
+  var isEnabled: Bool
   private var maxima: [Stage: TimeInterval] = [:]
 
-  init(enabled: Bool) { self.enabled = enabled }
+  init(enabled: Bool) { self.isEnabled = enabled }
 
   func measure<T>(_ stage: Stage, _ operation: () -> T) -> T {
-    guard enabled else { return operation() }
+    guard isEnabled else { return operation() }
     let start = ProcessInfo.processInfo.systemUptime
     defer {
       maxima[stage] = max(maxima[stage, default: 0], ProcessInfo.processInfo.systemUptime - start)

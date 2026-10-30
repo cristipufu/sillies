@@ -9,22 +9,16 @@ final class InteractionSmoothnessMetrics {
     case windowResize
     case windowSwitch
     case companionDrag
+  }
 
-    var p50BudgetMilliseconds: Double {
-      0.75
-    }
-
-    var p90BudgetMilliseconds: Double {
-      1.5
-    }
-
-    var p95BudgetMilliseconds: Double {
-      4.0
-    }
-
-    var maximumBudgetMilliseconds: Double {
-      1000.0 / 120.0
-    }
+  struct Budget {
+    static let standard = Self(p50Milliseconds: 0.75, p90Milliseconds: 1.5)
+    // Explicit opt-in for the stress fixture moving all 12 native mascot windows.
+    static let fullCrew = Self(p50Milliseconds: 2.5, p90Milliseconds: 3.0)
+    let p50Milliseconds: Double
+    let p90Milliseconds: Double
+    let p95Milliseconds: Double = 4.0
+    let maximumMilliseconds: Double = 1000.0 / 120.0
   }
 
   private static let millisecondsPerSecond: Double = 1000
@@ -92,19 +86,20 @@ final class InteractionSmoothnessMetrics {
     maxima[path, default: 0] * Self.millisecondsPerSecond
   }
 
-  func isWithinBudget(for path: Path) -> Bool {
+  func isWithinBudget(for path: Path, budget: Budget = .standard) -> Bool {
     sampleCount(for: path) > 0
-      && p50Milliseconds(for: path) <= path.p50BudgetMilliseconds
-      && p90Milliseconds(for: path) <= path.p90BudgetMilliseconds
-      && p95Milliseconds(for: path) <= path.p95BudgetMilliseconds
-      && maxMilliseconds(for: path) <= path.maximumBudgetMilliseconds
+      && p50Milliseconds(for: path) <= budget.p50Milliseconds
+      && p90Milliseconds(for: path) <= budget.p90Milliseconds
+      && p95Milliseconds(for: path) <= budget.p95Milliseconds
+      && maxMilliseconds(for: path) <= budget.maximumMilliseconds
   }
 
   var summary: String {
     Path.allCases.filter { sampleCount(for: $0) > 0 }.map { path in
       String(
-        format: "%@: p50 %.2f, p95 %.2f, max %.2f ms (%d samples)", path.rawValue,
-        p50Milliseconds(for: path), p95Milliseconds(for: path), maxMilliseconds(for: path),
+        format: "%@: p50 %.2f, p90 %.2f, p95 %.2f, max %.2f ms (%d samples)", path.rawValue,
+        p50Milliseconds(for: path), p90Milliseconds(for: path), p95Milliseconds(for: path),
+        maxMilliseconds(for: path),
         sampleCount(for: path))
     }.joined(separator: "; ")
   }

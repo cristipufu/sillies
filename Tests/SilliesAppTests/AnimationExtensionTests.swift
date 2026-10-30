@@ -144,7 +144,7 @@ private final class MockEventProducer: WorkspaceEventProducer {
   let focusedWindow = CGRect(x: 200, y: 200, width: 600, height: 400)
   let display = CGRect(x: 0, y: 0, width: 1440, height: 900)
   pet.view.configureSurface(pose: .standing, window: focusedWindow, display: display)
-  pet.isPickedUp = true
+  pet.beginPickup(fallbackTarget: nil)
   let insideWindow = CGPoint(x: 500, y: 400)
   pet.place(at: insideWindow)
   pet.panel.orderFrontRegardless()
@@ -582,7 +582,7 @@ private func spinModalPanelRunLoopUntil(_ condition: () -> Bool) {
   let recoveredVault = SessionVaultStore(
     directory: pendingDirectory,
     notesGenerator: { record in
-      let (summary, actions) = await SessionSummarizer.summarizeOnWorker(
+      let (summary, actions) = await SessionSummaryWorker.summarize(
         text: record.primaryText, fallbackContext: record.summary)
       return LocalNotes(summary: summary, actions: actions)
     })

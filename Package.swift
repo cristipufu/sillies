@@ -13,7 +13,14 @@ let package = Package(
     .package(path: "Vendor/AudioProcessing"),
   ],
   targets: [
-    .target(name: "SilliesCore"),
+    .target(name: "SilliesCore", exclude: ["AGENTS.md"]),
+    .target(name: "SilliesPersistence", dependencies: ["SilliesCore"], exclude: ["AGENTS.md"]),
+    .target(
+      name: "SilliesAudio",
+      dependencies: [
+        "SilliesCore", .product(name: "EchoCancellation", package: "AudioProcessing"),
+      ],
+      exclude: ["AGENTS.md"]),
     .target(name: "WindowMetadataProtocol"),
     .executableTarget(
       name: "SilliesWindowMetadata", dependencies: ["WindowMetadataProtocol"]),
@@ -21,16 +28,29 @@ let package = Package(
       name: "SilliesApp",
       dependencies: [
         .product(name: "Sparkle", package: "Sparkle"),
-        .product(name: "EchoCancellation", package: "AudioProcessing"),
+        "SilliesAudio",
         "SilliesCore",
+        "SilliesPersistence",
         "WindowMetadataProtocol",
       ],
+      exclude: ["Platform/AGENTS.md", "UI/AGENTS.md"],
       resources: [.copy("Resources/Characters")]
     ),
     .testTarget(name: "SilliesCoreTests", dependencies: ["SilliesCore"]),
+    .target(
+      name: "SilliesAudioTestSupport", dependencies: ["SilliesAudio"],
+      path: "Tests/SilliesAudioTestSupport"),
+    .testTarget(
+      name: "SilliesAudioTests",
+      dependencies: ["SilliesAudio", "SilliesCore", "SilliesAudioTestSupport"]),
+    .testTarget(
+      name: "SilliesPersistenceTests", dependencies: ["SilliesPersistence", "SilliesCore"]),
     .testTarget(
       name: "SilliesAppTests",
-      dependencies: ["SilliesApp", "SilliesCore", "WindowMetadataProtocol"]),
+      dependencies: [
+        "SilliesApp", "SilliesAudio", "SilliesAudioTestSupport", "SilliesCore",
+        "WindowMetadataProtocol",
+      ]),
   ],
   swiftLanguageModes: [.v6]
 )

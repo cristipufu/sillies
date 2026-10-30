@@ -13,6 +13,7 @@ final class MeetingSpeechBubbleBackground: NSView {
   private let bubble = CAShapeLayer()
   private var tail: SuggestionBubbleLayout.Tail?
   private var tailOffset: CGFloat?
+  private var appliedSize: CGSize?
   override var isFlipped: Bool { true }
 
   override init(frame: NSRect) {
@@ -30,9 +31,11 @@ final class MeetingSpeechBubbleBackground: NSView {
   required init?(coder: NSCoder) { nil }
 
   func update(_ layout: SuggestionBubbleLayout) {
-    guard tail != layout.tail || tailOffset != layout.tailOffset else { return }
+    guard tail != layout.tail || tailOffset != layout.tailOffset || appliedSize != bounds.size
+    else { return }
     tail = layout.tail
     tailOffset = layout.tailOffset
+    appliedSize = bounds.size
     let inset = SuggestionBubbleLayout.shadowInset
     let rect = bounds.insetBy(dx: inset, dy: inset)
     let path = SpeechBubbleShape(tail: layout.tail, tailOffset: layout.tailOffset - inset)

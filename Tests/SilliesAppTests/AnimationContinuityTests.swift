@@ -97,6 +97,17 @@ func smoothnessBudgetRejectsOneStallAndMissingMeasurements() {
 }
 
 @Test @MainActor
+func fullCrewBudgetRequiresOptInAndStillRejectsAFrameStall() {
+  let metrics = InteractionSmoothnessMetrics(enabled: true)
+  #expect(!metrics.isWithinBudget(for: .windowMove, budget: .fullCrew))
+  for _ in 0..<100 { metrics.record(0.0018, for: .windowMove) }
+  #expect(!metrics.isWithinBudget(for: .windowMove))
+  #expect(metrics.isWithinBudget(for: .windowMove, budget: .fullCrew))
+  metrics.record(0.010, for: .windowMove)
+  #expect(!metrics.isWithinBudget(for: .windowMove, budget: .fullCrew))
+}
+
+@Test @MainActor
 func nativeMinimizeSuppressesLateGeometryAndTracksRestoreWhilePaused() {
   let window = NSWindow(
     contentRect: CGRect(x: 100, y: 100, width: 700, height: 400),

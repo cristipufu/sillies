@@ -1,20 +1,19 @@
-import Foundation
+import Synchronization
 
 /// Shared by native notifications and metadata workers; no AppKit access is needed on a worker.
-final class WindowTrackingExclusions: @unchecked Sendable {
+final class WindowTrackingExclusions: Sendable {
   static let shared = WindowTrackingExclusions()
   static let transparentOverlays = WindowTrackingExclusions()
-  private let lock = NSLock()
-  private var windowIDs: Set<UInt32> = []
+  private let windowIDs = Mutex<Set<UInt32>>([])
 
-  func contains(_ id: UInt32) -> Bool { lock.withLock { windowIDs.contains(id) } }
+  func contains(_ id: UInt32) -> Bool { windowIDs.withLock { $0.contains(id) } }
 
   func register(_ id: UInt32) -> Registration {
-    _ = lock.withLock { windowIDs.insert(id) }
+    _ = windowIDs.withLock { $0.insert(id) }
     return Registration(windowID: id, registry: self)
   }
 
-  private func remove(_ id: UInt32) { _ = lock.withLock { windowIDs.remove(id) } }
+  private func remove(_ id: UInt32) { _ = windowIDs.withLock { $0.remove(id) } }
 
   final class Registration: Sendable {
     let windowID: UInt32

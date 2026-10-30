@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import Observation
+import SilliesAudio
 import SilliesCore
 
 /// Owns skill lifetimes and one shared metadata clock. Capture and inference own their workers.
@@ -74,6 +75,31 @@ final class SkillCoordinator {
 
   func binding(for id: String) -> CompanionBindingState { bindings[id] ?? .followingFocusedWindow }
 
+  func presentation(for id: String) -> SkillPresentation {
+    let completed: SessionRecord?
+    if case .completed(_, _, _, let recordID, _) = binding(for: id) {
+      completed = vault.records.first { $0.id == recordID }
+    } else {
+      completed = nil
+    }
+    return SkillPresentation(
+      persistenceError: vault.persistenceError, completedRecord: completed,
+      audioSession: audioPresentation(for: id))
+  }
+
+  func openAudioSession(for id: String) {
+    if let session = audioPresentation(for: id) { onOpenAudioSession?(session) }
+  }
+
+  func openActiveAudioSession() {
+    if let session = activeAudioSession { onOpenAudioSession?(session) }
+  }
+
+  func removeRecord(id: UUID) { vault.remove(id: id) }
+  func whenPersisted(_ completion: @escaping @MainActor @Sendable (String?) -> Void) {
+    vault.whenPersisted(completion)
+  }
+
   func startSkill(
     _ skill: CompanionSkillKind, for id: String, companionName: String,
     target: WindowTargetCandidate? = nil
@@ -102,16 +128,13 @@ final class SkillCoordinator {
     items: [String], for id: String, companionName: String,
     currentTarget: WindowTargetCandidate?
   ) -> UUID? {
-    let cleaned = items.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter {
-      !$0.isEmpty
-    }
-    guard !cleaned.isEmpty else { return nil }
+    guard let contents = StashContents(items) else { return nil }
     let target = binding(for: id).boundTarget ?? currentTarget
     let record = SessionRecord(
       kind: .stash, characterID: id, characterName: companionName,
       appName: target?.appName ?? "Pocket Stash", bundleIdentifier: target?.bundleIdentifier,
-      windowTitle: target?.windowTitle, summary: "Saved \(cleaned.count) item(s).",
-      stashedItems: cleaned, summaryPending: true)
+      windowTitle: target?.windowTitle, summary: contents.summary,
+      stashedItems: contents.items, summaryPending: true)
     vault.add(record)
     onEmitEvent?(id, WorkspaceEvent(.stashReceived, at: ProcessInfo.processInfo.systemUptime))
     if case .active = binding(for: id) { return record.id }

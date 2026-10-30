@@ -1,13 +1,8 @@
 import Foundation
+import SilliesAudioTestSupport
 
 @testable import SilliesApp
-
-let fixtureEnglish = SpeechLanguage(
-  id: "en-US", name: "English (United States)",
-  isInstalled: true, supportsNotes: true)
-let fixtureFrench = SpeechLanguage(
-  id: "fr-FR", name: "French (France)",
-  isInstalled: true, supportsNotes: true)
+@testable import SilliesAudio
 
 @MainActor func fixtureAudioLanguages() -> AudioLanguageEnvironment {
   let defaults = UserDefaults(suiteName: "sillies-tests-\(UUID().uuidString)")!

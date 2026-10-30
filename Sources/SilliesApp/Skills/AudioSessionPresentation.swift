@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import SilliesAudio
 import SilliesCore
 
 @MainActor @Observable

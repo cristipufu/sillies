@@ -66,6 +66,43 @@ private func makeLoadTestRecord(_ summary: String) -> SessionRecord {
     kind: .focus, characterID: "mochi", characterName: "Mochi", appName: "Test", summary: summary)
 }
 
+@Test @MainActor
+func vaultPreservesCorruptMetadataAndMergesPendingChangesAfterRecovery() async throws {
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { removeTestFile(at: directory) }
+  let original = SessionVaultStore(directory: directory)
+  let retained = makeLoadTestRecord("Retain after recovery")
+  let removed = makeLoadTestRecord("Remove during failed load")
+  original.add(retained)
+  original.add(removed)
+  await original.flush()
+  let url = directory.appendingPathComponent("sessions.json")
+  let recoverable = try Data(contentsOf: url)
+  let corrupted = Data("{ interrupted metadata".utf8)
+  try corrupted.write(to: url)
+
+  let vault = SessionVaultStore(directory: directory)
+  let added = makeLoadTestRecord("Added while storage is unavailable")
+  vault.add(added)
+  vault.remove(id: removed.id)
+  await vault.flush()
+  #expect(vault.persistenceError != nil)
+  #expect(try Data(contentsOf: url) == corrupted)
+  vault.retrySaving()
+  await vault.flush()
+  #expect(vault.persistenceError != nil)
+  #expect(try Data(contentsOf: url) == corrupted)
+
+  try recoverable.write(to: url)
+  vault.retrySaving()
+  await vault.flush()
+  #expect(vault.persistenceError == nil)
+  #expect(vault.records.map(\.id) == [added.id, retained.id])
+  let reloaded = SessionVaultStore(directory: directory)
+  await reloaded.waitUntilLoaded()
+  #expect(reloaded.records.map(\.id) == [added.id, retained.id])
+}
+
 @Test @MainActor func deliberateStashesSurviveHistoryLimitAndRelaunch() async throws {
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
   defer { removeTestFile(at: directory) }

@@ -27,9 +27,10 @@ final class CompanionDropReturn {
     switch plan.style {
     case .fall:
       pet.place(at: pet.position)
-      pet.tween = MotionTween(
-        from: pet.position, to: plan.destination,
-        at: ProcessInfo.processInfo.systemUptime, duration: plan.duration, curve: .accelerating)
+      pet.beginMotion(
+        MotionTween(
+          from: pet.position, to: plan.destination,
+          at: ProcessInfo.processInfo.systemUptime, duration: plan.duration, curve: .accelerating))
     case .relocate:
       let token = generation
       pet.presentation.hideForRelocation { [weak self, weak pet] in
@@ -45,7 +46,7 @@ final class CompanionDropReturn {
     let arrival = onArrival
     let target = destination ?? pet.position
     cancel()
-    pet.tween = nil
+    pet.clearMotion()
     pet.place(at: target)
     pet.presentation.show(reducedMotion: reducedMotion)
     arrival?()

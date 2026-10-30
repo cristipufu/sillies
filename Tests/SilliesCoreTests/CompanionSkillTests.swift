@@ -75,20 +75,20 @@ struct CompanionSkillTests {
   }
 
   @Test("SessionSummarizer bounds work on large transcripts and preserves late action items")
-  func sessionSummarizerBoundsLargeInput() async {
+  func sessionSummarizerBoundsLargeInput() {
     let filler = String(
       repeating:
         "We discussed the architecture and window tracking latency across multiple displays.\n",
       count: 600)
     let tail = "TODO: ship the notarized build with chunked summarization before Friday."
-    let result = await SessionSummarizer.summarizeOnWorker(
+    let result = SessionSummarizer.summarize(
       text: filler + tail, fallbackContext: "Fallback")
     #expect(result.summary.contains("•"))
     #expect(result.actionItems.contains { $0.contains("ship the notarized build") })
   }
 
   @Test("SessionSummarizer bounds chunks and output size on 800 KB delimiter-free input")
-  func sessionSummarizerBoundsDelimiterFreeInput() async {
+  func sessionSummarizerBoundsDelimiterFreeInput() {
     let unpunctuatedFiller = String(
       repeating: "continuous transcript stream without any sentence punctuation ",
       count: 14_000)
@@ -96,7 +96,7 @@ struct CompanionSkillTests {
     let unpunctuatedInput = unpunctuatedFiller + unpunctuatedTail
     #expect(unpunctuatedInput.utf8.count >= 800_000)
 
-    let unpunctuatedResult = await SessionSummarizer.summarizeOnWorker(
+    let unpunctuatedResult = SessionSummarizer.summarize(
       text: unpunctuatedInput, fallbackContext: "Fallback")
     #expect(unpunctuatedResult.summary.count <= SessionSummarizer.maxSummaryCharacters)
     #expect(

@@ -9,9 +9,9 @@ import Testing
   let pet = try dropTestCompanion()
   defer { pet.presentation.close() }
   let origin = pet.position
-  pet.isPickedUp = true
+  pet.beginPickup(fallbackTarget: nil)
   pet.place(at: CGPoint(x: origin.x + 90, y: origin.y + 120))
-  pet.isPickedUp = false
+  pet.endPickup()
   var landed = false
   let plan = DropReturnPlan(
     releasedAt: pet.position, pickedUpAt: origin, destination: origin, intent: .returnToPerch)
@@ -28,9 +28,9 @@ import Testing
   let pet = try dropTestCompanion()
   defer { pet.presentation.close() }
   let origin = pet.position
-  pet.isPickedUp = true
+  pet.beginPickup(fallbackTarget: nil)
   pet.place(at: CGPoint(x: origin.x + 90, y: origin.y - 100))
-  pet.isPickedUp = false
+  pet.endPickup()
   let plan = DropReturnPlan(
     releasedAt: pet.position, pickedUpAt: origin, destination: origin, intent: .returnToPerch)
   var arrivals = 0
@@ -57,7 +57,7 @@ import Testing
     reducedMotion: false
   ) { activated = true }
   pet.dropReturn.cancel()
-  pet.tween = nil
+  pet.clearMotion()
   pet.dropReturn.finish(for: pet, reducedMotion: false)
   #expect(!activated && !pet.isReturningFromDrop)
 }
@@ -110,7 +110,7 @@ private func dropTestCompanion() throws -> CompanionInstance {
     definition: definition, rig: CatRig(), size: 64, seed: 1, transitions: TransitionLibrary())
   let display = CGRect(x: 0, y: 0, width: 1500, height: 1000)
   let surface = PerchSurface(window: dropTestWindow, visibleFrame: display, characterSize: 64)
-  pet.surface = surface
+  pet.updateAttachment(.init(surface: surface, windowID: nil, windowLayer: 0))
   pet.view.configureSurface(pose: .standing, window: dropTestWindow, display: display)
   pet.place(at: surface.point(at: 0.35))
   return pet

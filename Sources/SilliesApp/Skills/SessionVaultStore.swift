@@ -1,43 +1,8 @@
 import AppKit
 import Foundation
-import ImageIO
 import Observation
 import SilliesCore
-
-private final class StagedPreviewBuffer: @unchecked Sendable {
-  private let lock = NSLock()
-  private var entries: [(filename: String, image: CGImage)] = []
-
-  func append(filename: String, image: CGImage) {
-    lock.lock()
-    entries.append((filename, image))
-    lock.unlock()
-  }
-
-  func remove(filename: String) {
-    lock.lock()
-    entries.removeAll { $0.filename == filename }
-    lock.unlock()
-  }
-
-  func removeAll() {
-    lock.lock()
-    entries.removeAll()
-    lock.unlock()
-  }
-
-  func drain() -> [(filename: String, image: CGImage)] {
-    lock.lock()
-    guard !entries.isEmpty else {
-      lock.unlock()
-      return []
-    }
-    let drained = entries
-    entries.removeAll()
-    lock.unlock()
-    return drained
-  }
-}
+import SilliesPersistence
 
 private struct WeakVaultBox {
   weak var store: SessionVaultStore?
@@ -48,46 +13,48 @@ private struct WeakVaultBox {
 @MainActor @Observable
 final class SessionVaultStore {
   nonisolated static let maxStoredRecords = 200
-  nonisolated static let maxCachedImages = 16
-  nonisolated static let maxCacheBytes = 24 * 1024 * 1024
-  nonisolated static let maxPreviewPixelDimension = 1280
-  nonisolated private static let sessionsFilename = "sessions.json"
-  nonisolated private static let vaultDirectoryPermissions = 0o700
+  nonisolated static let maxCacheBytes = VaultImageCache.maximumBytes
+  nonisolated static let maxPreviewPixelDimension = VaultImageCodec.maxPreviewPixelDimension
+  private enum LoadState { case loading, ready, failed }
+  private enum PreviewPreparation { case cached, worker }
 
   private(set) var records: [SessionRecord] = []
-  private(set) var persistenceError: String?
+  private var loadError: String?
+  private var writeError: String?
+  var persistenceError: String? { loadError ?? writeError }
   private(set) var pinnedRecordID: UUID?
-  private var cachedImages: [String: NSImage] = [:]
-  @ObservationIgnored private var cachedImageBytes: [String: Int] = [:]
-  @ObservationIgnored private(set) var totalCachedImageBytes = 0
-  @ObservationIgnored private var cachedImageOrder: [String] = []
+  private let imageCache = VaultImageCache()
+  var totalCachedImageBytes: Int { imageCache.totalBytes }
   @ObservationIgnored private var pendingImageLoads: Set<String> = []
-  typealias NotesGenerator = @Sendable (SessionRecord) async -> LocalNotes
-  @ObservationIgnored private let notesGenerator: NotesGenerator
-  @ObservationIgnored private var summaryTasks: [UUID: Task<Void, Never>] = [:]
-  @ObservationIgnored private var isLoading = true
+  typealias NotesGenerator = VaultSummaryScheduler.Generator
+  @ObservationIgnored private let summaries: VaultSummaryScheduler
+  @ObservationIgnored private var loadState = LoadState.loading
+  private var isLoading: Bool { loadState == .loading }
+  private var needsSuccessfulLoad: Bool { loadState != .ready }
   @ObservationIgnored private var loadCompletions: [() -> Void] = []
   @ObservationIgnored private var persistencePending = false
   @ObservationIgnored private var removedWhileLoading: Set<UUID> = []
   @ObservationIgnored private var discardLoadedRecords = false
-  @ObservationIgnored private var summariesEnabled = true
-  @ObservationIgnored private let stagedPreviews = StagedPreviewBuffer()
-  @ObservationIgnored private let pasteboard: NSPasteboard
-  @ObservationIgnored private var copyRequestGeneration: UInt64 = 0
+  @ObservationIgnored private let stagedPreviews = VaultPreviewBuffer()
+  @ObservationIgnored private let clipboard: VaultClipboard
   let storageDirectory: URL
+  private var repository: SessionRecordRepository {
+    SessionRecordRepository(directory: storageDirectory)
+  }
+  private var files: VaultFileStorage { VaultFileStorage(directory: storageDirectory) }
   @ObservationIgnored nonisolated private static let ioQueue = DispatchQueue(
     label: "app.sillies.session-vault", qos: .utility)
   @ObservationIgnored private static var activeStoresByDirectory: [URL: WeakVaultBox] = [:]
 
   var pendingSummaryCount: Int {
-    summaryTasks.count
+    summaries.count
   }
 
   init(
     directory: URL? = nil, pasteboard: NSPasteboard = .general,
     notesGenerator: @escaping NotesGenerator = { record in
       if record.kind == .stash {
-        let (summary, actions) = await SessionSummarizer.summarizeOnWorker(
+        let (summary, actions) = await SessionSummaryWorker.summarize(
           text: record.primaryText, fallbackContext: record.summary)
         return LocalNotes(summary: summary, actions: actions)
       }
@@ -96,8 +63,8 @@ final class SessionVaultStore {
         localeIdentifier: record.languageIdentifier)
     }
   ) {
-    self.notesGenerator = notesGenerator
-    self.pasteboard = pasteboard
+    summaries = VaultSummaryScheduler(generate: notesGenerator)
+    clipboard = VaultClipboard(pasteboard: pasteboard, queue: Self.ioQueue)
     if let directory {
       storageDirectory = directory
     } else {
@@ -129,14 +96,13 @@ final class SessionVaultStore {
         storeCachedImage(image, for: filename)
       }
       saveImageAsync(
-        image, preencodedPNGData: pngData, filename: filename, preparePreview: needsDownsampling)
+        image, preencodedPNGData: pngData, filename: filename,
+        preview: needsDownsampling ? .worker : .cached)
     }
     records.insert(updated, at: 0)
     trimHistory()
     persistAsync()
-    if updated.summaryPending && summariesEnabled {
-      scheduleSummaryRefinement(for: updated)
-    }
+    scheduleSummaryRefinement(for: updated)
   }
 
   func update(_ record: SessionRecord) {
@@ -146,7 +112,7 @@ final class SessionVaultStore {
   }
 
   func completePendingSummary(id: UUID, summary: String, actionItems: [String]) {
-    summaryTasks.removeValue(forKey: id)
+    summaries.cancel(id: id)
     guard let index = records.firstIndex(where: { $0.id == id }) else { return }
     var updated = records[index]
     updated.summary = summary
@@ -157,7 +123,7 @@ final class SessionVaultStore {
   }
 
   func resumePendingSummaries() {
-    summariesEnabled = true
+    summaries.resume()
     for record in records where record.summaryPending {
       scheduleSummaryRefinement(for: record)
     }
@@ -166,60 +132,49 @@ final class SessionVaultStore {
   func flushPendingSummaries() async {
     await waitUntilLoaded()
     resumePendingSummaries()
-    while !summaryTasks.isEmpty {
-      let current = Array(summaryTasks.values)
-      for task in current {
-        await task.value
-      }
-    }
+    await summaries.flush()
     await flush()
   }
 
-  func cancelPendingSummaries() {
-    summariesEnabled = false
-    for task in summaryTasks.values { task.cancel() }
-    summaryTasks.removeAll()
-  }
+  func cancelPendingSummaries() { summaries.stop() }
 
   func setPinnedRecord(_ id: UUID?) {
     pinnedRecordID = id
+    imageCache.pinnedFilename = id.flatMap { selected in
+      records.first { $0.id == selected }?.imageFilename
+    }
     if let id, let record = records.first(where: { $0.id == id }) {
       prepareImage(for: record)
     }
   }
 
   func remove(id: UUID) {
-    if isLoading {
+    if needsSuccessfulLoad {
       removedWhileLoading.insert(id)
       persistencePending = true
     }
-    summaryTasks[id]?.cancel()
-    summaryTasks.removeValue(forKey: id)
-    if pinnedRecordID == id { pinnedRecordID = nil }
+    summaries.cancel(id: id)
+    if pinnedRecordID == id { setPinnedRecord(nil) }
     guard let index = records.firstIndex(where: { $0.id == id }) else { return }
     let removed = records.remove(at: index)
     if let file = removed.imageFilename {
       evictCachedImage(for: file)
-      deleteImageAsync(filename: file)
+      deleteAttachmentAsync(filename: file)
     }
-    if let file = removed.audioFilename { deleteImageAsync(filename: file) }
+    if let file = removed.audioFilename { deleteAttachmentAsync(filename: file) }
     persistAsync()
   }
 
   func clearAll() {
-    if isLoading { discardLoadedRecords = true }
-    for task in summaryTasks.values { task.cancel() }
-    summaryTasks.removeAll()
+    if needsSuccessfulLoad { discardLoadedRecords = true }
+    summaries.removeAll()
     pinnedRecordID = nil
     let files = records.flatMap { [$0.imageFilename, $0.audioFilename].compactMap { $0 } }
     records.removeAll()
-    cachedImages.removeAll()
-    cachedImageBytes.removeAll()
-    totalCachedImageBytes = 0
-    cachedImageOrder.removeAll()
+    imageCache.removeAll()
     pendingImageLoads.removeAll()
     stagedPreviews.removeAll()
-    for file in files { deleteImageAsync(filename: file) }
+    for file in files { deleteAttachmentAsync(filename: file) }
     persistAsync()
   }
 
@@ -255,36 +210,28 @@ final class SessionVaultStore {
   }
 
   func imageURL(for record: SessionRecord) -> URL? {
-    guard let filename = record.imageFilename else { return nil }
-    return storageDirectory.appendingPathComponent(filename)
+    attachmentURL(for: record.imageFilename)
   }
 
   /// Non-blocking cache lookup for SwiftUI view rendering.
   func cachedImage(for record: SessionRecord) -> NSImage? {
     drainStagedPreviews()
     guard let filename = record.imageFilename else { return nil }
-    if let image = cachedImages[filename] {
-      if cachedImageOrder.last != filename {
-        cachedImageOrder.removeAll { $0 == filename }
-        cachedImageOrder.append(filename)
-      }
-      return image
-    }
-    return nil
+    return imageCache.image(named: filename)
   }
 
   /// Decodes a downsampled preview of the snapshot PNG on `ioQueue` if not already in memory.
   func prepareImage(for record: SessionRecord) {
     drainStagedPreviews()
     guard let filename = record.imageFilename,
-      cachedImages[filename] == nil,
+      imageCache.image(named: filename) == nil,
       !pendingImageLoads.contains(filename),
       let url = imageURL(for: record)
     else { return }
     pendingImageLoads.insert(filename)
     let staged = stagedPreviews
     Self.ioQueue.async { [weak self] in
-      if let decoded = Self.decodePreviewCGImage(at: url) {
+      if let decoded = VaultImageCodec.decodePreview(at: url) {
         staged.append(filename: filename, image: decoded)
       }
       Task { @MainActor [weak self] in
@@ -295,73 +242,16 @@ final class SessionVaultStore {
     }
   }
 
-  func copyText(_ text: String) {
-    guard !text.isEmpty else { return }
-    copyRequestGeneration &+= 1
-    pasteboard.clearContents()
-    pasteboard.setString(text, forType: .string)
-  }
+  func copyText(_ text: String) { clipboard.copyText(text) }
 
   func copyImage(for record: SessionRecord) {
-    copyRequestGeneration &+= 1
-    let requestGeneration = copyRequestGeneration
-    let expectedChangeCount = pasteboard.changeCount
-    let fallbackCG = cachedImage(for: record)?.cgImage(
-      forProposedRect: nil, context: nil, hints: nil)
-    guard let filename = record.imageFilename, let url = imageURL(for: record) else {
-      guard let fallbackCG else { return }
-      Self.ioQueue.async { [weak self] in
-        guard let pngData = Self.encodePNGData(from: fallbackCG) else { return }
-        Task { @MainActor [weak self] in
-          guard let self,
-            self.copyRequestGeneration == requestGeneration,
-            self.pasteboard.changeCount == expectedChangeCount
-          else { return }
-          self.pasteboard.clearContents()
-          self.pasteboard.setData(pngData, forType: .png)
-        }
-      }
-      return
-    }
-    let needsPreviewCache = cachedImage(for: record) == nil
-    Self.ioQueue.async { [weak self] in
-      let diskPNGData = Self.readImageData(at: url)
-      let resolvedPNGData = diskPNGData ?? fallbackCG.flatMap { Self.encodePNGData(from: $0) }
-      let previewCG = needsPreviewCache ? Self.decodePreviewCGImage(at: url) : nil
-      Task { @MainActor [weak self] in
-        guard let self else { return }
-        if let previewCG,
-          self.records.contains(where: { $0.imageFilename == filename })
-        {
-          self.storeCachedImage(previewCG, for: filename)
-        }
-        guard
-          self.copyRequestGeneration == requestGeneration,
-          self.pasteboard.changeCount == expectedChangeCount,
-          let resolvedPNGData
-        else { return }
-        self.pasteboard.clearContents()
-        self.pasteboard.setData(resolvedPNGData, forType: .png)
-      }
-    }
-  }
-
-  nonisolated private static func readImageData(at url: URL) -> Data? {
-    dispatchPrecondition(condition: .notOnQueue(.main))
-    do {
-      return try Data(contentsOf: url)
-    } catch {
-      fputs("Vault image read failed: \(error.localizedDescription)\n", stderr)
-      return nil
-    }
+    let fallback = cachedImage(for: record)?.cgImage(forProposedRect: nil, context: nil, hints: nil)
+    clipboard.copyImage(at: imageURL(for: record), fallback: fallback)
   }
 
   private func scheduleSummaryRefinement(for record: SessionRecord) {
-    guard summariesEnabled, summaryTasks[record.id] == nil else { return }
-    let generate = notesGenerator
-    summaryTasks[record.id] = Task { [weak self] in
-      let notes = await generate(record)
-      guard !Task.isCancelled, let self,
+    summaries.schedule(record) { [weak self] notes in
+      guard let self,
         let index = self.records.firstIndex(where: { $0.id == record.id })
       else { return }
       var updated = self.records[index]
@@ -371,14 +261,22 @@ final class SessionVaultStore {
       updated.processingNote = [updated.processingNote, notes.notice].filter { !$0.isEmpty }.joined(
         separator: "\n")
       updated.summaryPending = false
-      self.summaryTasks.removeValue(forKey: record.id)
       self.update(updated)
     }
   }
 
   func audioURL(for record: SessionRecord) -> URL? {
-    record.audioFilename.map {
-      storageDirectory.appendingPathComponent(URL(fileURLWithPath: $0).lastPathComponent)
+    attachmentURL(for: record.audioFilename)
+  }
+
+  private func attachmentURL(for filename: String?) -> URL? {
+    guard let filename else { return nil }
+    do {
+      return try files.attachmentURL(for: filename)
+    } catch {
+      fputs(
+        "SessionVaultStore rejected attachment filename: \(error.localizedDescription)\n", stderr)
+      return nil
     }
   }
 
@@ -390,20 +288,26 @@ final class SessionVaultStore {
       return historyCount > Self.maxStoredRecords
     }
     for record in expired {
-      summaryTasks.removeValue(forKey: record.id)?.cancel()
+      summaries.cancel(id: record.id)
       if let filename = record.imageFilename {
         evictCachedImage(for: filename)
-        deleteImageAsync(filename: filename)
+        deleteAttachmentAsync(filename: filename)
       }
-      if let filename = record.audioFilename { deleteImageAsync(filename: filename) }
+      if let filename = record.audioFilename { deleteAttachmentAsync(filename: filename) }
     }
     let expiredIDs = Set(expired.map(\.id))
     records.removeAll { expiredIDs.contains($0.id) }
   }
 
   func retrySaving() {
-    persistenceError = nil
-    persistAsync()
+    guard !isLoading else { return }
+    if loadState == .failed {
+      loadState = .loading
+      loadAsync()
+    } else {
+      writeError = nil
+      persistAsync()
+    }
   }
 
   private func drainStagedPreviews() {
@@ -416,95 +320,14 @@ final class SessionVaultStore {
     }
   }
 
-  private func storeCachedImage(_ cgImage: CGImage, for filename: String) {
-    let byteCost = Self.estimatedByteSize(of: cgImage)
-    if let previousCost = cachedImageBytes.removeValue(forKey: filename) {
-      totalCachedImageBytes = max(0, totalCachedImageBytes - previousCost)
-      cachedImageOrder.removeAll { $0 == filename }
-    }
-    let pinnedFilename =
-      pinnedRecordID.flatMap { id in records.first(where: { $0.id == id })?.imageFilename }
-    while !cachedImageOrder.isEmpty
-      && (totalCachedImageBytes + byteCost > Self.maxCacheBytes
-        || cachedImageOrder.count >= Self.maxCachedImages)
-    {
-      let evictionIndex =
-        cachedImageOrder.firstIndex(where: { $0 != pinnedFilename })
-        ?? cachedImageOrder.startIndex
-      let oldest = cachedImageOrder.remove(at: evictionIndex)
-      cachedImages.removeValue(forKey: oldest)
-      if let oldBytes = cachedImageBytes.removeValue(forKey: oldest) {
-        totalCachedImageBytes = max(0, totalCachedImageBytes - oldBytes)
-      }
-    }
-    guard byteCost <= Self.maxCacheBytes else { return }
-    let image = NSImage(
-      cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
-    cachedImageOrder.append(filename)
-    cachedImages[filename] = image
-    cachedImageBytes[filename] = byteCost
-    totalCachedImageBytes += byteCost
+  private func storeCachedImage(_ image: CGImage, for filename: String) {
+    imageCache.store(image, named: filename)
   }
 
   private func evictCachedImage(for filename: String) {
-    cachedImages.removeValue(forKey: filename)
-    if let removedBytes = cachedImageBytes.removeValue(forKey: filename) {
-      totalCachedImageBytes = max(0, totalCachedImageBytes - removedBytes)
-    }
-    cachedImageOrder.removeAll { $0 == filename }
+    imageCache.remove(named: filename)
     pendingImageLoads.remove(filename)
     stagedPreviews.remove(filename: filename)
-  }
-
-  private nonisolated static func estimatedByteSize(of cgImage: CGImage) -> Int {
-    max(cgImage.bytesPerRow * cgImage.height, cgImage.width * cgImage.height * 4)
-  }
-
-  private nonisolated static func makePreviewCGImage(from cgImage: CGImage) -> CGImage {
-    dispatchPrecondition(condition: .notOnQueue(.main))
-    let maxDimension = max(cgImage.width, cgImage.height)
-    guard maxDimension > maxPreviewPixelDimension, maxDimension > 0 else { return cgImage }
-    let scale = Double(maxPreviewPixelDimension) / Double(maxDimension)
-    let targetWidth = max(1, Int((Double(cgImage.width) * scale).rounded()))
-    let targetHeight = max(1, Int((Double(cgImage.height) * scale).rounded()))
-    let colorSpace = cgImage.colorSpace ?? CGColorSpaceCreateDeviceRGB()
-    guard
-      let context = CGContext(
-        data: nil,
-        width: targetWidth,
-        height: targetHeight,
-        bitsPerComponent: 8,
-        bytesPerRow: targetWidth * 4,
-        space: colorSpace,
-        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-    else { return cgImage }
-    context.interpolationQuality = .medium
-    context.draw(cgImage, in: CGRect(x: 0, y: 0, width: targetWidth, height: targetHeight))
-    return context.makeImage() ?? cgImage
-  }
-
-  private nonisolated static func decodePreviewCGImage(at url: URL) -> CGImage? {
-    dispatchPrecondition(condition: .notOnQueue(.main))
-    return autoreleasepool {
-      let sourceOptions: [CFString: Any] = [kCGImageSourceShouldCache: false]
-      guard let source = CGImageSourceCreateWithURL(url as CFURL, sourceOptions as CFDictionary)
-      else { return nil }
-      let options: [CFString: Any] = [
-        kCGImageSourceCreateThumbnailFromImageAlways: true,
-        kCGImageSourceShouldCacheImmediately: true,
-        kCGImageSourceCreateThumbnailWithTransform: true,
-        kCGImageSourceThumbnailMaxPixelSize: maxPreviewPixelDimension,
-      ]
-      return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
-    }
-  }
-
-  nonisolated static func encodePNGData(from cgImage: CGImage) -> Data? {
-    dispatchPrecondition(condition: .notOnQueue(.main))
-    return autoreleasepool {
-      let rep = NSBitmapImageRep(cgImage: cgImage)
-      return rep.representation(using: .png, properties: [:])
-    }
   }
 
   func waitUntilLoaded() async {
@@ -515,26 +338,31 @@ final class SessionVaultStore {
   }
 
   private func loadAsync() {
-    let fileURL = storageDirectory.appendingPathComponent(Self.sessionsFilename)
+    let repository = repository
     Self.ioQueue.async { [weak self] in
-      let loaded = Self.readRecords(at: fileURL)
-      MainRunLoopDelivery.perform { [weak self] in self?.finishLoading(loaded) }
+      dispatchPrecondition(condition: .notOnQueue(.main))
+      do {
+        let loaded = try repository.load()
+        MainRunLoopDelivery.perform { [weak self] in self?.finishLoading(loaded) }
+      } catch {
+        let message =
+          "Could not load saved sessions. Existing files have been preserved. \(error.localizedDescription)"
+        fputs("Session vault load failed: \(error.localizedDescription)\n", stderr)
+        MainRunLoopDelivery.perform { [weak self] in self?.failLoading(message) }
+      }
     }
   }
 
-  private nonisolated static func readRecords(at url: URL) -> [SessionRecord] {
-    dispatchPrecondition(condition: .notOnQueue(.main))
-    do {
-      let data = try Data(contentsOf: url)
-      let decoder = JSONDecoder()
-      decoder.dateDecodingStrategy = .iso8601
-      return try decoder.decode([SessionRecord].self, from: data)
-    } catch CocoaError.fileReadNoSuchFile {
-      return []
-    } catch {
-      fputs("SessionVaultStore failed to load records: \(error.localizedDescription)\n", stderr)
-      return []
-    }
+  private func failLoading(_ message: String) {
+    loadState = .failed
+    loadError = message
+    finishLoadCompletions()
+  }
+
+  private func finishLoadCompletions() {
+    let completions = loadCompletions
+    loadCompletions.removeAll()
+    for completion in completions { completion() }
   }
 
   private func finishLoading(_ loaded: [SessionRecord]) {
@@ -543,8 +371,8 @@ final class SessionVaultStore {
     for record in loaded {
       guard !currentIDs.contains(record.id) else { continue }
       if discardLoadedRecords || removedWhileLoading.contains(record.id) {
-        if let filename = record.imageFilename { deleteImageAsync(filename: filename) }
-        if let filename = record.audioFilename { deleteImageAsync(filename: filename) }
+        if let filename = record.imageFilename { deleteAttachmentAsync(filename: filename) }
+        if let filename = record.audioFilename { deleteAttachmentAsync(filename: filename) }
       } else {
         merged.append(record)
         currentIDs.insert(record.id)
@@ -552,104 +380,76 @@ final class SessionVaultStore {
     }
     records = merged
     trimHistory()
-    isLoading = false
+    loadState = .ready
+    loadError = nil
     removedWhileLoading.removeAll()
+    discardLoadedRecords = false
     if persistencePending {
       persistencePending = false
       persistAsync()
     }
-    if summariesEnabled { resumePendingSummaries() }
-    let completions = loadCompletions
-    loadCompletions.removeAll()
-    for completion in completions { completion() }
+    for record in records { scheduleSummaryRefinement(for: record) }
+    finishLoadCompletions()
   }
 
   private func persistAsync() {
-    guard !isLoading else {
+    guard !needsSuccessfulLoad else {
       persistencePending = true
       return
     }
     let snapshot = records
-    let directory = storageDirectory
-    let fileURL = directory.appendingPathComponent(Self.sessionsFilename)
+    let repository = repository
     Self.ioQueue.async { [weak self] in
       dispatchPrecondition(condition: .notOnQueue(.main))
-      let encoder = JSONEncoder()
-      encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-      encoder.dateEncodingStrategy = .iso8601
       do {
-        let data = try encoder.encode(snapshot)
-        let error = Self.writeAtomically(data, to: fileURL, in: directory)
-        if let error {
-          MainRunLoopDelivery.perform { [weak self] in self?.persistenceError = error }
-        }
+        try repository.save(snapshot)
       } catch {
-        fputs(
-          "SessionVaultStore failed to encode session records: \(error.localizedDescription)\n",
-          stderr)
         let message = "Could not save session notes: \(error.localizedDescription)"
-        MainRunLoopDelivery.perform { [weak self] in self?.persistenceError = message }
+        fputs("\(message)\n", stderr)
+        MainRunLoopDelivery.perform { [weak self] in self?.writeError = message }
       }
     }
   }
 
   private func saveImageAsync(
-    _ cgImage: CGImage, preencodedPNGData: Data?, filename: String, preparePreview: Bool
+    _ cgImage: CGImage, preencodedPNGData: Data?, filename: String, preview: PreviewPreparation
   ) {
-    let directory = storageDirectory
-    let fileURL = directory.appendingPathComponent(filename)
+    let files = files
     let staged = stagedPreviews
     Self.ioQueue.async { [weak self] in
       dispatchPrecondition(condition: .notOnQueue(.main))
-      if preparePreview {
-        let preview = Self.makePreviewCGImage(from: cgImage)
+      if preview == .worker {
+        let preview = VaultImageCodec.preparePreview(from: cgImage)
         staged.append(filename: filename, image: preview)
         Task { @MainActor [weak self] in
           self?.drainStagedPreviews()
         }
       }
-      guard let data = preencodedPNGData ?? Self.encodePNGData(from: cgImage) else {
+      guard let data = preencodedPNGData ?? VaultImageCodec.encodePNGData(from: cgImage) else {
         let message = "Could not encode the snapshot image."
         fputs("\(message)\n", stderr)
-        MainRunLoopDelivery.perform { [weak self] in self?.persistenceError = message }
+        MainRunLoopDelivery.perform { [weak self] in self?.writeError = message }
         return
       }
-      if let error = Self.writeAtomically(data, to: fileURL, in: directory) {
-        MainRunLoopDelivery.perform { [weak self] in self?.persistenceError = error }
+      do {
+        try files.write(data, named: filename)
+      } catch {
+        let message = "Could not save snapshot: \(error.localizedDescription)"
+        fputs("\(message)\n", stderr)
+        MainRunLoopDelivery.perform { [weak self] in self?.writeError = message }
       }
     }
   }
 
-  private nonisolated static func writeAtomically(
-    _ data: Data,
-    to fileURL: URL,
-    in directory: URL
-  ) -> String? {
-    do {
-      try FileManager.default.createDirectory(
-        at: directory,
-        withIntermediateDirectories: true,
-        attributes: [.posixPermissions: vaultDirectoryPermissions])
-      try data.write(to: fileURL, options: .atomic)
-      return nil
-    } catch {
-      fputs(
-        "SessionVaultStore failed to write \(fileURL.lastPathComponent): \(error.localizedDescription)\n",
-        stderr)
-      return "Could not save \(fileURL.lastPathComponent): \(error.localizedDescription)"
-    }
-  }
-
-  private func deleteImageAsync(filename: String) {
-    let fileURL = storageDirectory.appendingPathComponent(filename)
+  private func deleteAttachmentAsync(filename: String) {
+    let files = files
     Self.ioQueue.async {
       dispatchPrecondition(condition: .notOnQueue(.main))
       do {
-        try FileManager.default.removeItem(at: fileURL)
-      } catch CocoaError.fileNoSuchFile {
-        return
+        try files.removeAttachment(named: filename)
       } catch {
-        fputs("SessionVaultStore failed to remove image: \(error.localizedDescription)\n", stderr)
+        fputs(
+          "SessionVaultStore failed to remove attachment: \(error.localizedDescription)\n", stderr)
       }
     }
   }

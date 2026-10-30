@@ -64,7 +64,7 @@ final class WindowServerSource: @unchecked Sendable {
   struct Request {
     let processID: pid_t
     let windowID: CGWindowID?
-    let discover: Bool
+    let scope: WindowRefreshScope
     var preferredFrame: CGRect? = nil
     var preferredPoint: CGPoint? = nil
     var roleSnapshot: AccessibilityWindowRoleSnapshot? = nil
@@ -80,7 +80,7 @@ final class WindowServerSource: @unchecked Sendable {
     width: minimumTrackableWindowWidth, height: minimumTrackableWindowHeight)
   private static let defaultWindowAlpha: Double = 1.0
   private static let minimumVisibleAlpha: Double = 0.05
-  private static let preferredFrameTolerance: Double = 6.0
+  private static let preferredFrameTolerance = WindowFrameComparison.tolerance
   private static let interactiveBorderTolerance: Double = PointerWindowGesture.hitSlop
   private static let maxInteriorOverlayAreaRatio: Double = 0.65
   private static let maxUnverifiedOverlayMinorDimension: Double = 320.0
@@ -371,10 +371,6 @@ final class WindowServerSource: @unchecked Sendable {
 
   init(deliver: @escaping @Sendable (WindowServerObservation) -> Void) { self.deliver = deliver }
 
-  func refresh(processID: pid_t, windowID: CGWindowID?, discover: Bool) {
-    refresh(Request(processID: processID, windowID: windowID, discover: discover))
-  }
-
   func refresh(_ request: Request) {
     lock.lock()
     if pending {
@@ -389,14 +385,13 @@ final class WindowServerSource: @unchecked Sendable {
 
   private func mergedRequest(from incoming: Request, existing: Request?) -> Request {
     let sameProcess = existing?.processID == incoming.processID
-    let mergedDiscover =
-      incoming.isManipulatingWindow
-      ? incoming.discover
-      : ((sameProcess ? (existing?.discover ?? false) : false) || incoming.discover)
+    let scope = incoming.scope.merging(
+      sameProcess ? existing?.scope : nil,
+      during: incoming.isManipulatingWindow ? .manipulatingWindow : .idle)
     return Request(
       processID: incoming.processID,
       windowID: incoming.windowID,
-      discover: mergedDiscover,
+      scope: scope,
       preferredFrame: incoming.preferredFrame ?? (sameProcess ? existing?.preferredFrame : nil),
       preferredPoint: incoming.preferredPoint ?? (sameProcess ? existing?.preferredPoint : nil),
       roleSnapshot: incoming.roleSnapshot ?? (sameProcess ? existing?.roleSnapshot : nil),
@@ -423,7 +418,7 @@ final class WindowServerSource: @unchecked Sendable {
     dispatchPrecondition(condition: .notOnQueue(.main))
     let processID = request.processID
     let windowID = request.windowID
-    let discover = request.discover
+    let discover = request.scope == .applicationWindows
     let singleWindowRead = !discover && windowID != nil && request.isManipulatingWindow
     let options: CGWindowListOption =
       singleWindowRead ? [.optionIncludingWindow] : [.optionOnScreenOnly]
@@ -458,7 +453,7 @@ final class WindowServerSource: @unchecked Sendable {
         Request(
           processID: processID,
           windowID: nil,
-          discover: true,
+          scope: .applicationWindows,
           preferredFrame: request.preferredFrame,
           preferredPoint: request.preferredPoint,
           roleSnapshot: request.roleSnapshot,
@@ -508,9 +503,6 @@ final class WindowServerSource: @unchecked Sendable {
   }
 
   static func framesMatch(_ lhs: CGRect, _ rhs: CGRect) -> Bool {
-    abs(lhs.minX - rhs.minX) <= preferredFrameTolerance
-      && abs(lhs.minY - rhs.minY) <= preferredFrameTolerance
-      && abs(lhs.width - rhs.width) <= preferredFrameTolerance
-      && abs(lhs.height - rhs.height) <= preferredFrameTolerance
+    WindowFrameComparison.matches(lhs, rhs)
   }
 }

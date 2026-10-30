@@ -97,7 +97,7 @@ enum WindowSnapshotService {
 
   private static func imageResult(_ image: CGImage, summary: String) async -> WindowSnapshotResult {
     let pngData = await Task.detached(priority: .utility) {
-      SessionVaultStore.encodePNGData(from: image)
+      VaultImageCodec.encodePNGData(from: image)
     }.value
     return WindowSnapshotResult(
       image: image, pngData: pngData, extractedText: "",

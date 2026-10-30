@@ -62,7 +62,7 @@ func windowDragSmoothnessBudgetAndSinglePassPlacement() throws {
     * maximumFeedbackFraction
   #expect(Double(feedbackAnimationsDuringDrag) < maximumFeedbackUpdates)
   #expect(controller.smoothnessMetrics.sampleCount(for: .windowMove) == frameCount)
-  #expect(controller.smoothnessMetrics.isWithinBudget(for: .windowMove))
+  #expect(controller.smoothnessMetrics.isWithinBudget(for: .windowMove, budget: .fullCrew))
 }
 
 @Test @MainActor
@@ -104,7 +104,7 @@ func windowResizeSmoothnessBudgetAndCompactionQuantization() throws {
   let placementsDuringResize = controller.totalPlacementCount - initialPlacements
   #expect(placementsDuringResize == frameCount * settings.enabledCharacters.count)
   #expect(controller.smoothnessMetrics.sampleCount(for: .windowResize) == frameCount)
-  #expect(controller.smoothnessMetrics.isWithinBudget(for: .windowResize))
+  #expect(controller.smoothnessMetrics.isWithinBudget(for: .windowResize, budget: .fullCrew))
 
   // Sub-pixel vertical movement near the menu bar must quantize compacted presentationSize
   // so NSPanel backing stores are not resized on fractional jitter.
@@ -170,7 +170,7 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
   let placementsDuringSwitches = controller.totalPlacementCount - initialPlacements
   #expect(placementsDuringSwitches == switchCount * settings.enabledCharacters.count)
   #expect(controller.smoothnessMetrics.sampleCount(for: .windowSwitch) == switchCount)
-  #expect(controller.smoothnessMetrics.isWithinBudget(for: .windowSwitch))
+  #expect(controller.smoothnessMetrics.isWithinBudget(for: .windowSwitch, budget: .fullCrew))
 
   // Minimizing or closing the last window and restoring a window must also stay within the
   // windowSwitch frame budget.
@@ -187,7 +187,7 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
     controller.tracker.simulateTrackedWindow(restoredWindow, windowID: CGWindowID(500 + cycle))
   }
   #expect(controller.smoothnessMetrics.sampleCount(for: .windowSwitch) == 40)
-  #expect(controller.smoothnessMetrics.isWithinBudget(for: .windowSwitch))
+  #expect(controller.smoothnessMetrics.isWithinBudget(for: .windowSwitch, budget: .fullCrew))
 }
 
 @Test(arguments: [
@@ -206,6 +206,7 @@ func companionDragSmoothnessBudgetAndUnclippedMaskStability(characterID: String)
 
   let controller = try CompanionController(settings: settings, useAccessibility: false)
   controller.smoothnessMetrics.isEnabled = true
+  controller.dragTargeting.metrics.isEnabled = true
   controller.start()
   defer { controller.stop() }
 
@@ -234,5 +235,7 @@ func companionDragSmoothnessBudgetAndUnclippedMaskStability(characterID: String)
   #expect(pickupMaskPath === postDragMaskPath)
   #expect(controller.dragTargeting.usesHardwareBorderOutline)
   #expect(controller.smoothnessMetrics.sampleCount(for: .companionDrag) == frameCount)
-  #expect(controller.smoothnessMetrics.isWithinBudget(for: .companionDrag))
+  #expect(
+    controller.smoothnessMetrics.isWithinBudget(for: .companionDrag),
+    Comment(rawValue: controller.smoothnessMetrics.summary + "; " + controller.dragTimingSummary))
 }

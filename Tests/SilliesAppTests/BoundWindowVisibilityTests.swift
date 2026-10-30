@@ -49,7 +49,7 @@ import Testing
   #expect(pet.panel.isVisible)
   #expect(pet.hud.isVisible)
   let hudWindow = try #require(pet.hud.windowNumber.flatMap { NSApp.window(withWindowNumber: $0) })
-  #expect(hudWindow.level == .normal)
+  #expect(hudWindow.level == CompanionPanel.hudLevel(forWindowLayer: 0))
   target.isVisible = false
   pet.updateBinding(.active(target: target, skill: .listen, startedAt: 0))
   pet.presentation.show(reducedMotion: true)

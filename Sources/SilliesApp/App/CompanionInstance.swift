@@ -14,24 +14,61 @@ final class CompanionInstance {
   let hud = CompanionHUDController()
   let dropReturn = CompanionDropReturn()
   private let playback: BehaviorPlayback
-  var behavior: BehaviorEngine
-  var random: SeededRandom
-  var position = CGPoint.zero
-  var surface: PerchSurface?
-  var tween: MotionTween?
-  var isStrolling = false
-  var strollReachesEdge = false
+  private var behavior: BehaviorEngine
+  private var random: SeededRandom
+  private(set) var position = CGPoint.zero
+  private(set) var surface: PerchSurface?
+  private(set) var tween: MotionTween?
+  private(set) var isStrolling = false
+  private(set) var strollReachesEdge = false
   private(set) var isStashTargeted = false
-  var isPickedUp = false
-  var isWaitingForSpace = false
+  private(set) var isPickedUp = false
+  private(set) var isWaitingForSpace = false
   var isReturningFromDrop: Bool { dropReturn.isActive }
   var isUpright: Bool { view.rig.isUpright }
-  var pickupPosition = CGPoint.zero
-  var pickupFraction = CompanionInstance.defaultPickupFraction
-  var pickupWindowTarget: WindowTargetCandidate?
-  var attachedWindowID: CGWindowID?
-  var attachedWindowLayer: Int = WindowServerSource.normalWindowLayer
-  var bindingState: CompanionBindingState = .followingFocusedWindow
+  var attachmentPose: AttachmentPose { view.rig.attachmentPose }
+  var feedbackAnimationCount: Int { view.rig.feedbackAnimationCount }
+  var overlayWindowNumbers: Set<Int> { hud.windowNumbers.union([panel.windowNumber]) }
+
+  func resetPose() { view.rig.resetPose() }
+  func settleWorkspaceFeedback() { view.rig.workspaceFeedback(lean: 0, stretch: 0, settling: true) }
+  func configureSkillControls(_ controls: CompanionHUDModel.Controls) {
+    hud.configureControls(controls)
+  }
+  func updateSkillPresentation(_ presentation: SkillPresentation) {
+    hud.updatePresentation(presentation)
+  }
+
+  struct StashControls {
+    let menu: () -> NSMenu
+    let targetChanged: (Bool) -> Void
+    let dropped: ([String]) -> Void
+  }
+
+  func configureStashControls(_ controls: StashControls) {
+    view.onContextMenu = controls.menu
+    view.onStashTargetChanged = controls.targetChanged
+    view.onStashDropped = controls.dropped
+  }
+
+  enum ReleaseGesture { case click, drag }
+  struct DragControls {
+    let pickup: () -> Void
+    let drag: (CGPoint) -> Void
+    let release: (ReleaseGesture) -> Void
+  }
+
+  func configureDragControls(_ controls: DragControls) {
+    view.onPickup = controls.pickup
+    view.onDrag = controls.drag
+    view.onDrop = { controls.release($0 ? .drag : .click) }
+  }
+  private(set) var pickupPosition = CGPoint.zero
+  private(set) var pickupFraction = CompanionInstance.defaultPickupFraction
+  private(set) var pickupWindowTarget: WindowTargetCandidate?
+  private(set) var attachedWindowID: CGWindowID?
+  private(set) var attachedWindowLayer: Int = WindowServerSource.normalWindowLayer
+  private(set) var bindingState: CompanionBindingState = .followingFocusedWindow
   private var appliedLayoutSize: CGSize = .zero
   private(set) var placementCount = 0
 
@@ -39,6 +76,21 @@ final class CompanionInstance {
     return bindingState.boundTarget
   }
   var isAttachmentVisible: Bool { attachmentTarget?.isVisible ?? true }
+
+  var attachmentSnapshot: PerchAttachmentChange.Previous {
+    .init(
+      surface: surface, windowID: attachedWindowID, position: position,
+      heldFraction: isPickedUp || isReturningFromDrop ? pickupFraction : nil)
+  }
+
+  func configureSurface(_ surface: PerchSurface, window: CGRect?, display: CGRect) -> Bool {
+    let previousPose = view.rig.attachmentPose
+    view.resize(to: surface.presentationSize)
+    view.configureSurface(pose: surface.attachmentPose, window: window, display: display)
+    return previousPose != surface.attachmentPose
+  }
+
+  func refreshWorldMask() { view.updateWorldMask() }
 
   init(
     definition: CharacterDefinition, rig: CharacterRig, size: Double, seed: UInt64,
@@ -86,6 +138,31 @@ final class CompanionInstance {
     strollReachesEdge = false
   }
 
+  var behaviorState: BehaviorState { behavior.state }
+
+  func receive(_ event: WorkspaceEvent, activity: Double) -> BehaviorState? {
+    behavior.receive(event, activity: activity)
+  }
+
+  func beginSustainedReaction(_ event: WorkspaceEvent) -> BehaviorState? {
+    behavior.beginSustainedReaction(event)
+  }
+
+  func advanceBehavior(at time: Double, activity: Double, isIdle: Bool) -> BehaviorState? {
+    behavior.advance(
+      at: time, activity: activity, isIdle: isIdle,
+      ambientEvent: surface?.attachmentPose.isHanging == true ? .ambientWall : .ambient)
+  }
+
+  func planStroll(
+    activity: Double, until deadline: Double, reservations: [PerchReservation], at time: Double
+  ) -> StrollPlan? {
+    guard let surface else { return nil }
+    return StrollPlan(
+      from: position, on: surface, speed: definition.speed, activity: activity,
+      maxDuration: deadline - time, occupied: reservations, random: &random)
+  }
+
   func displayBehavior(
     _ state: BehaviorState, using library: AnimationLibrary, reducedMotion: Bool
   ) {
@@ -116,6 +193,67 @@ final class CompanionInstance {
     presentation.show(reducedMotion: true)
     place(at: position)
   }
+
+  struct Attachment {
+    let surface: PerchSurface
+    let windowID: CGWindowID?
+    let windowLayer: Int
+  }
+
+  enum MotionArrival { case travel, stroll, edge }
+
+  func updateAttachment(_ attachment: Attachment) {
+    surface = attachment.surface
+    attachedWindowID = attachment.windowID
+    attachedWindowLayer = attachment.windowLayer
+    updateOverlayLevel()
+  }
+
+  func stagePlacement(at target: CGPoint) {
+    dropReturn.cancel()
+    position = target
+  }
+
+  func resumePerching(at target: CGPoint) {
+    isWaitingForSpace = false
+    place(at: target)
+  }
+
+  func endPickup() {
+    isPickedUp = false
+    updateOverlayLevel()
+  }
+
+  func beginMotion(_ motion: MotionTween) {
+    clearMotion()
+    tween = motion
+  }
+
+  func move(to target: CGPoint, duration: Double, arcHeight: Double, at time: Double) {
+    if let tween { place(at: tween.position(at: time)) }
+    beginMotion(
+      MotionTween(
+        from: position, to: target, at: time, duration: duration, arcHeight: arcHeight,
+        arcDirection: surface?.outward ?? CGPoint(x: 0, y: 1)))
+  }
+
+  /// Samples movement on the shared clock and atomically completes its associated state.
+  func advanceMotion(at time: Double) -> MotionArrival? {
+    guard let tween else { return nil }
+    place(at: tween.position(at: time))
+    guard tween.isComplete(at: time) else { return nil }
+    let arrival: MotionArrival =
+      isStrolling
+      ? (strollReachesEdge && surface?.isAtBoundary(position) == true ? .edge : .stroll) : .travel
+    clearMotion()
+    return arrival
+  }
+
+  func applyWorkspaceFeedback(_ feedback: WindowMotionFeedback) {
+    view.rig.workspaceFeedback(lean: feedback.lean, stretch: feedback.stretch)
+  }
+
+  func resetWorkspaceFeedback() { view.rig.workspaceFeedback(lean: 0, stretch: 0) }
 
   func detachFromWindow(immediately: Bool) {
     presentation.hide(immediately: immediately)
@@ -169,16 +307,16 @@ final class CompanionInstance {
     position = point
     updateOverlayLevel()
     let layout = view.panelLayout(at: point, attached: !isPickedUp && !isReturningFromDrop)
+    let currentFrame = panel.frame
     let sizeChanged =
       abs(appliedLayoutSize.width - layout.frame.width) > Self.layoutPlacementTolerance
       || abs(appliedLayoutSize.height - layout.frame.height) > Self.layoutPlacementTolerance
-    if sizeChanged {
+    let originChanged =
+      abs(currentFrame.minX - layout.frame.minX) > Self.layoutPlacementTolerance
+      || abs(currentFrame.minY - layout.frame.minY) > Self.layoutPlacementTolerance
+    if sizeChanged || originChanged {
       appliedLayoutSize = layout.frame.size
       panel.setFrame(layout.frame, display: false)
-    } else if abs(panel.frame.minX - layout.frame.minX) > Self.layoutPlacementTolerance
-      || abs(panel.frame.minY - layout.frame.minY) > Self.layoutPlacementTolerance
-    {
-      panel.setFrameOrigin(layout.frame.origin)
     }
     view.applyPanelLayout(layout)
     view.updateWorldMask()

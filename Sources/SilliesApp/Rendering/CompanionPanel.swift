@@ -22,7 +22,7 @@ final class CompanionPanel: NSPanel {
   static let transcriptionLevel = NSWindow.Level(
     rawValue: floatingOverlayLevel.rawValue + hudLevelOffsetAboveCompanion + 1)
   static let overlayCollectionBehavior: NSWindow.CollectionBehavior = [
-    .canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle, .transient,
+    .canJoinAllSpaces, .canJoinAllApplications, .fullScreenAuxiliary, .ignoresCycle, .transient,
   ]
 
   static var isRunningUnderUnitTests: Bool {

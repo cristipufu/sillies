@@ -2,14 +2,12 @@ import SilliesCore
 import SwiftUI
 
 struct MeetingSpeechBubbleView: View {
-  private static let textInset: CGFloat = 18
-  private static let textLineLimit = 6
-  private static let rowSpacing: CGFloat = 12
+  private static let textInset: CGFloat = 12
+  private static let rowSpacing: CGFloat = 6
   private static let headerSpacing: CGFloat = 6
   private static let iconSize: CGFloat = 12
   private static let headerSize: CGFloat = 11
   private static let questionSize: CGFloat = 14
-  private static let footerSize: CGFloat = 10
   private static let lineSpacing: CGFloat = 3
   let suggestion: MeetingSuggestion
 
@@ -22,17 +20,11 @@ struct MeetingSpeechBubbleView: View {
       Text(suggestion.question)
         .font(.system(size: Self.questionSize, weight: .medium, design: .rounded))
         .lineSpacing(Self.lineSpacing).foregroundStyle(SilliesTheme.ink)
-        .lineLimit(Self.textLineLimit).fixedSize(horizontal: false, vertical: true)
-        .frame(maxWidth: .infinity, alignment: .leading)
-      Spacer(minLength: 0)
-      Text("Your meeting companion")
-        .font(.system(size: Self.footerSize, weight: .medium)).foregroundStyle(
-          SilliesTheme.secondary)
+        .fixedSize(horizontal: false, vertical: true)
     }
     .padding(Self.textInset)
     .padding(.horizontal, SuggestionBubbleLayout.tailDepth)
     .padding(SuggestionBubbleLayout.shadowInset)
-    .frame(width: SuggestionBubbleLayout.size.width, height: SuggestionBubbleLayout.size.height)
     .accessibilityElement(children: .combine)
     .accessibilityLabel("Meeting suggestion: \(suggestion.question)")
   }

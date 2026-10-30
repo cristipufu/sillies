@@ -243,7 +243,7 @@ func unselectedDropSkipsReleaseQueriesAndClearsOverlays() async throws {
     pet.hud.close()
     pet.presentation.close()
   }
-  pet.isPickedUp = true
+  pet.beginPickup(fallbackTarget: nil)
   controller.beginDrag(
     for: pet, seed: dragTestTarget(1), pointer: CGPoint(x: 200, y: 200))
   try await eventually {
@@ -288,9 +288,9 @@ func radialSelectionRequiresTheSameLiveWindowAtRelease(windowChanges: Bool) asyn
   controller.start()
 
   let anchor = CGPoint(x: 400, y: 400)
-  pet.pickupPosition = CGPoint(x: 100, y: 100)
+  pet.place(at: CGPoint(x: 100, y: 100))
+  pet.beginPickup(fallbackTarget: nil)
   pet.place(at: anchor)
-  pet.isPickedUp = true
 
   controller.beginDrag(for: pet, seed: dragTestTarget(1), pointer: anchor)
   controller.updateDrag(for: pet, at: anchor)

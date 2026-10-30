@@ -1,10 +1,12 @@
 import AVFoundation
 import Foundation
 import NaturalLanguage
+import SilliesAudioTestSupport
 import SilliesCore
 import Testing
 
 @testable import SilliesApp
+@testable import SilliesAudio
 
 private final class SpeechFixtureOutput: @unchecked Sendable {
   private let lock = NSLock()

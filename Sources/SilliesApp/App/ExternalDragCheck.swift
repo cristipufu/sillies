@@ -220,8 +220,9 @@ final class ExternalDragCheck: NSObject {
 
   @objc private func tick(_ link: CADisplayLink) {
     targetProbe?.refresh(
-      processID: targetProcessID, windowID: latest.map { UInt32($0.windowID) },
-      discover: latest == nil)
+      .init(
+        processID: targetProcessID, windowID: latest.map { UInt32($0.windowID) },
+        scope: latest == nil ? .applicationWindows : .trackedWindow))
     guard now - started < 16 else {
       fail(
         "Fixture/input timed out at \(phase); tracked=\(String(describing: controller.tracker.windowID)), expected=\(String(describing: latest?.windowID)), frontmostPID=\(NSWorkspace.shared.frontmostApplication?.processIdentifier ?? 0), fixturePID=\(targetProcessID)"

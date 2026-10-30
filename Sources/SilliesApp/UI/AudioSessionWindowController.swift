@@ -21,7 +21,9 @@ final class AudioSessionWindowController {
     }
     window?.title = "Sillies · \(model.kind.title)"
     if displayedSession !== model {
-      window?.contentView = NSHostingView(rootView: AudioSessionView(model: model))
+      let view = NSHostingView(rootView: AudioSessionView(model: model))
+      view.sizingOptions = []
+      window?.contentView = view
       displayedSession = model
     }
     model.hasUnreadSuggestion = false

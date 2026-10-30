@@ -1,9 +1,11 @@
 import AVFoundation
 import Foundation
+import SilliesAudioTestSupport
 import SilliesCore
 import Testing
 
 @testable import SilliesApp
+@testable import SilliesAudio
 
 private final class EchoTranscriptOutput: @unchecked Sendable {
   private let lock = NSLock()

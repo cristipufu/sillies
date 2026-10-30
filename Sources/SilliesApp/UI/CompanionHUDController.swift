@@ -66,6 +66,12 @@ final class CompanionHUDController {
   var windowNumber: Int? { panel?.windowNumber }
   var isVisible: Bool { panel?.isVisible == true }
   var currentPanelSize: CGSize? { panel?.frame.size }
+  var windowNumbers: Set<Int> { Set([windowNumber, speechBubble.windowNumber].compactMap { $0 }) }
+
+  func configureControls(_ controls: CompanionHUDModel.Controls) { model.configure(controls) }
+  func updatePresentation(_ presentation: SkillPresentation) {
+    model.updatePresentation(presentation)
+  }
 
   func update(
     state: CompanionBindingState, companionPoint: CGPoint, characterSize: Double,
@@ -95,16 +101,16 @@ final class CompanionHUDController {
   private func updateSpeechBubble(
     companionPoint: CGPoint, characterSize: Double, visibleFrame: CGRect
   ) {
-    guard let companionWindowNumber, let panel else {
+    guard companionWindowNumber != nil, panel != nil else {
       speechBubble.hide()
       return
     }
     speechBubble.update(
       suggestion: model.audioSession?.currentBubbleSuggestion,
       placement: .init(
-        layout: SuggestionBubbleLayout(
+        anchor: .init(
           companionPoint: companionPoint, characterSize: characterSize, visibleFrame: visibleFrame),
-        level: panel.level, companionWindowNumber: companionWindowNumber))
+        windowLayer: model.state.boundTarget?.windowLayer ?? attachedWindowLayer))
   }
 
   private func updateModel(_ state: CompanionBindingState) {
@@ -144,9 +150,8 @@ final class CompanionHUDController {
   }
 
   private func updatePanelLevel(for state: CompanionBindingState) {
-    let targetHUDLevel =
-      state.boundTarget.map { NSWindow.Level(rawValue: $0.windowLayer) }
-      ?? CompanionPanel.hudLevel(forWindowLayer: attachedWindowLayer)
+    let targetHUDLevel = CompanionPanel.hudLevel(
+      forWindowLayer: state.boundTarget?.windowLayer ?? attachedWindowLayer)
     if panel?.level != targetHUDLevel {
       panel?.level = targetHUDLevel
     }

@@ -4,68 +4,6 @@ import Observation
 import QuartzCore
 import SilliesCore
 
-@MainActor
-protocol WorkspaceEventProducer: AnyObject {
-  var onEvent: ((WorkspaceEvent) -> Void)? { get set }
-  func start()
-  func stop()
-  func configure(enabled: Bool, tracksWindows: Bool)
-}
-
-struct WindowGeometryChange {
-  private static let minimumFrameElapsed: Double = 0.016
-
-  let previous: CGRect
-  let current: CGRect
-  let elapsed: Double
-  let resized: Bool
-  var horizontalSpeed: Double {
-    (current.midX - previous.midX) / max(elapsed, Self.minimumFrameElapsed)
-  }
-  var verticalSpeed: Double {
-    (current.maxY - previous.maxY) / max(elapsed, Self.minimumFrameElapsed)
-  }
-  var widthSpeed: Double {
-    (current.width - previous.width) / max(elapsed, Self.minimumFrameElapsed)
-  }
-}
-
-enum TrackableApplicationPolicy {
-  private static let systemCoreServicesPrefix = "/System/Library/CoreServices/"
-  private static let systemFrameworksPrefix = "/System/Library/Frameworks/"
-  private static let systemPrivateFrameworksPrefix = "/System/Library/PrivateFrameworks/"
-  private static let allowedSystemBundleIdentifiers: Set<String> = [
-    "com.apple.finder"
-  ]
-
-  static func isTrackable(_ application: NSRunningApplication) -> Bool {
-    isTrackable(
-      activationPolicy: application.activationPolicy,
-      bundleIdentifier: application.bundleIdentifier,
-      bundlePath: application.bundleURL?.path)
-  }
-
-  static func isTrackable(
-    activationPolicy: NSApplication.ActivationPolicy,
-    bundleIdentifier: String?,
-    bundlePath: String?
-  ) -> Bool {
-    guard activationPolicy == .regular else { return false }
-    if let bundleIdentifier, allowedSystemBundleIdentifiers.contains(bundleIdentifier) {
-      return true
-    }
-    if let bundlePath {
-      if bundlePath.hasPrefix(systemCoreServicesPrefix)
-        || bundlePath.hasPrefix(systemFrameworksPrefix)
-        || bundlePath.hasPrefix(systemPrivateFrameworksPrefix)
-      {
-        return false
-      }
-    }
-    return true
-  }
-}
-
 @MainActor @Observable
 final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
   private static let accessibilityHeartbeatInterval: Double = 1.0
@@ -90,119 +28,9 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
   private static let manipulationSpeedScalePointsPerSecond: Double = 1200
   private static let minimumManipulationIntensity: Double = 0.25
   private static let maximumManipulationIntensity: Double = 1.0
-  private static let transitionSettleInterval: Double = 0.22
-  private static let minimumTransitionHideDuration: Double = 0.18
   private static let transitionPollInterval: Double = 0.09
-  private static let maxMinimizeTransitionDuration: Double = 0.60
-  private static let maxAutonomousTransitionDuration: Double = 1.20
   private nonisolated static let housekeepingQueue = DispatchQueue(
     label: "app.sillies.housekeeping", qos: .utility)
-
-  private struct AutonomousTransitionGate {
-    private(set) var isActive = false
-    private(set) var originWindowID: CGWindowID?
-    private(set) var isMinimizingOrigin = false
-    private(set) var startedAt: Double = 0
-    private(set) var lastActivityAt: Double = 0
-    private(set) var candidateWindowID: CGWindowID?
-    private(set) var candidateFrame: CGRect?
-    private(set) var candidateStableSince: Double = 0
-
-    mutating func begin(
-      originWindowID: CGWindowID?,
-      minimizing: Bool,
-      at now: Double
-    ) {
-      if !isActive {
-        isActive = true
-        self.originWindowID = originWindowID
-        isMinimizingOrigin = minimizing
-        startedAt = now
-        candidateWindowID = nil
-        candidateFrame = nil
-        candidateStableSince = now
-      } else {
-        if minimizing {
-          isMinimizingOrigin = true
-        }
-        if self.originWindowID == nil {
-          self.originWindowID = originWindowID
-        }
-      }
-      lastActivityAt = now
-    }
-
-    mutating func recordActivity(minimizing: Bool = false, at now: Double) {
-      guard isActive else { return }
-      if minimizing {
-        isMinimizingOrigin = true
-      }
-      lastActivityAt = now
-      candidateStableSince = now
-    }
-
-    mutating func observeCandidate(windowID: CGWindowID, frame: CGRect, at now: Double) {
-      if candidateWindowID != windowID
-        || candidateFrame.map({ !WindowServerSource.framesMatch($0, frame) }) != false
-      {
-        candidateWindowID = windowID
-        candidateFrame = frame
-        candidateStableSince = now
-      }
-    }
-
-    mutating func clearCandidate(at now: Double) {
-      candidateWindowID = nil
-      candidateFrame = nil
-      candidateStableSince = now
-    }
-
-    mutating func preserveAcrossApplicationSwitch(at now: Double) {
-      guard isActive && isMinimizingOrigin else {
-        reset()
-        return
-      }
-      clearCandidate(at: now)
-    }
-
-    mutating func reset() {
-      self = AutonomousTransitionGate()
-    }
-  }
-
-  private struct ClickSelectionState {
-    var point: CGPoint?
-    var capturedAt: Double = 0
-    var resolvedProcessID: pid_t = 0
-
-    mutating func record(at newPoint: CGPoint, now: Double) {
-      point = newPoint
-      capturedAt = now
-      resolvedProcessID = 0
-    }
-
-    mutating func clear() {
-      point = nil
-    }
-
-    mutating func markResolved(for processID: pid_t) {
-      if point != nil {
-        resolvedProcessID = processID
-      }
-    }
-
-    func isActive(at now: Double, expiration: Double) -> Bool {
-      point != nil && now - capturedAt < expiration
-    }
-
-    func activePoint(for processID: pid_t, at now: Double, expiration: Double) -> CGPoint? {
-      guard let point,
-        resolvedProcessID != processID,
-        now - capturedAt < expiration
-      else { return nil }
-      return point
-    }
-  }
 
   private(set) var hasAccessibility = false
   private(set) var applicationName = "Your desktop"
@@ -231,11 +59,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
   @ObservationIgnored private let dragTracker = ForeignWindowDragTracker()
   @ObservationIgnored private var globalMonitor: Any?
   @ObservationIgnored private var localMonitor: Any?
-  @ObservationIgnored private var heartbeat: Timer?
-  @ObservationIgnored private var idleTimer: Timer?
-  @ObservationIgnored private var settleTimer: Timer?
-  @ObservationIgnored private var transitionTimer: Timer?
-  @ObservationIgnored private var discoveryTasks: [DispatchWorkItem] = []
+  @ObservationIgnored private let schedule = WindowTrackingSchedule()
   @ObservationIgnored private var throttle = EventThrottle()
   @ObservationIgnored private var isEnabled = true
   @ObservationIgnored private var tracksWindows = true
@@ -245,8 +69,8 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
   @ObservationIgnored private var currentManipulation: EventKind?
   @ObservationIgnored private var preferredAccessibilityFrame: CGRect?
   @ObservationIgnored private var roleSnapshot: AccessibilityWindowRoleSnapshot?
-  @ObservationIgnored private var clickSelection = ClickSelectionState()
-  @ObservationIgnored private var transitionGate = AutonomousTransitionGate()
+  @ObservationIgnored private var clickSelection = WindowClickSelection()
+  @ObservationIgnored private var transitionGate = WindowTransitionState()
   @ObservationIgnored private var minimizingNativeWindowIDs: Set<Int> = []
   @ObservationIgnored private var isLeftMouseDown = false
   @ObservationIgnored private var housekeepingInFlight = false
@@ -293,12 +117,10 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
       self?.refreshGeometry()
     }
     dragTracker.onDragStarted = { [weak self] in
-      self?.settleTimer?.invalidate()
-      self?.settleTimer = nil
+      self?.schedule.cancel(.settle)
     }
     dragTracker.onEnded = { [weak self] in
-      self?.settleTimer?.invalidate()
-      self?.settleTimer = nil
+      self?.schedule.cancel(.settle)
       self?.settle()
     }
   }
@@ -358,7 +180,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
       NotificationCenter.default.addObserver(
         self, selector: #selector(localWindowChanged(_:)), name: name, object: nil)
     }
-    followFrontmostApplication(force: true)
+    followFrontmostApplication(.reconcileCurrent)
     configureTimers()
   }
 
@@ -373,12 +195,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
     cancelFollowUpDiscovery()
     cancelAutonomousTransition()
     dragTracker.cancel()
-    heartbeat?.invalidate()
-    heartbeat = nil
-    idleTimer?.invalidate()
-    idleTimer = nil
-    settleTimer?.invalidate()
-    settleTimer = nil
+    schedule.stop()
     NSWorkspace.shared.notificationCenter.removeObserver(self)
     NotificationCenter.default.removeObserver(self)
   }
@@ -389,7 +206,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
     self.tracksWindows = tracksWindows
     endDrag()
     if enabled && tracksWindows {
-      followFrontmostApplication(force: true)
+      followFrontmostApplication(.reconcileCurrent)
     } else {
       accessibilitySource?.stop()
     }
@@ -399,11 +216,11 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
   func requestAccessibility() {
     hasAccessibility = AXIsProcessTrustedWithOptions(
       ["AXTrustedCheckOptionPrompt": true] as CFDictionary)
-    if hasAccessibility { followFrontmostApplication(force: true) }
+    if hasAccessibility { followFrontmostApplication(.reconcileCurrent) }
     configureTimers()
   }
 
-  func refreshFocus() { followFrontmostApplication(force: true) }
+  func refreshFocus() { followFrontmostApplication(.reconcileCurrent) }
 
   func simulateTrackedWindow(
     _ frame: CGRect?,
@@ -437,7 +254,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
     guard started, isEnabled, !isSuspended, !tracksWindows, backgroundWindowIDs.isEmpty else {
       return
     }
-    geometrySource?.refresh(processID: processID, windowID: nil, discover: true)
+    geometrySource?.refresh(.init(processID: processID, windowID: nil, scope: .applicationWindows))
   }
 
   func openAccessibilitySettings() {
@@ -458,10 +275,8 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
 
   private func configureTimers() {
     updateMetadataWorkerActivity()
-    heartbeat?.invalidate()
-    heartbeat = nil
-    idleTimer?.invalidate()
-    idleTimer = nil
+    schedule.cancel(.heartbeat)
+    schedule.cancel(.housekeeping)
     guard started, isEnabled, !isSuspended else {
       cancelFollowUpDiscovery()
       cancelAutonomousTransition()
@@ -472,27 +287,27 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
     if tracksWindows {
       let interval =
         hasAccessibility ? Self.accessibilityHeartbeatInterval : Self.pollingHeartbeatInterval
-      let timer = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
-        MainActor.assumeIsolated {
-          guard let self, !self.dragTracker.isDragging else { return }
-          self.followFrontmostApplication()
-          self.heartbeatTicks += 1
-          self.refreshGeometry(
-            discover: self.windowID == nil
-              || self.heartbeatTicks.isMultiple(of: Self.discoveryTickMultiple))
-        }
+      schedule.repeating(
+        .heartbeat,
+        cadence: .init(
+          interval: interval,
+          tolerance: hasAccessibility
+            ? Self.accessibilityTimerTolerance : Self.pollingTimerTolerance)
+      ) { [weak self] in
+        guard let self, !self.dragTracker.isDragging else { return }
+        self.followFrontmostApplication()
+        self.heartbeatTicks += 1
+        let needsDiscovery =
+          self.windowID == nil || self.heartbeatTicks.isMultiple(of: Self.discoveryTickMultiple)
+        self.refreshGeometry(scope: needsDiscovery ? .applicationWindows : .trackedWindow)
       }
-      timer.tolerance =
-        hasAccessibility ? Self.accessibilityTimerTolerance : Self.pollingTimerTolerance
-      RunLoop.main.add(timer, forMode: .common)
-      heartbeat = timer
     }
-    idleTimer = Timer.scheduledTimer(
-      withTimeInterval: Self.housekeepingInterval, repeats: true
-    ) { [weak self] _ in
-      MainActor.assumeIsolated { self?.housekeeping() }
-    }
-    idleTimer?.tolerance = Self.housekeepingTimerTolerance
+    schedule.repeating(
+      .housekeeping,
+      cadence: .init(
+        interval: Self.housekeepingInterval, tolerance: Self.housekeepingTimerTolerance,
+        mode: .default)
+    ) { [weak self] in self?.housekeeping() }
   }
 
   private func installInputMonitorsIfNeeded() {
@@ -519,9 +334,11 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
     localMonitor = nil
   }
 
-  private func followFrontmostApplication(force: Bool = false) {
+  private enum FocusRefresh { case applicationChanged, reconcileCurrent }
+
+  private func followFrontmostApplication(_ refresh: FocusRefresh = .applicationChanged) {
     guard let app = NSWorkspace.shared.frontmostApplication else { return }
-    if !force && processID == app.processIdentifier { return }
+    if refresh == .applicationChanged && processID == app.processIdentifier { return }
     if app.processIdentifier == ProcessInfo.processInfo.processIdentifier {
       if NSApp.keyWindow is CompanionUtilityWindow { return }
       guard
@@ -532,15 +349,13 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
     } else {
       guard TrackableApplicationPolicy.isTrackable(app) else { return }
     }
-    guard force || processID != app.processIdentifier else { return }
     let now = ProcessInfo.processInfo.systemUptime
-    if force {
+    if refresh == .reconcileCurrent {
       cancelAutonomousTransition()
     } else {
       transitionGate.preserveAcrossApplicationSwitch(at: now)
       if !transitionGate.isActive {
-        transitionTimer?.invalidate()
-        transitionTimer = nil
+        schedule.cancel(.transition)
       }
     }
     let hadTrackedWindow = (windowID != nil || windowFrame != nil) && !transitionGate.isActive
@@ -558,40 +373,31 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
       if hasAccessibility {
         accessibilitySource?.observe(processID: processID)
       } else {
-        refreshGeometry(discover: true)
+        refreshGeometry(scope: .applicationWindows)
       }
       scheduleFollowUpDiscovery()
     }
     onApplicationChanged?()
   }
 
-  private func cancelFollowUpDiscovery() {
-    for task in discoveryTasks { task.cancel() }
-    discoveryTasks.removeAll()
-  }
+  private func cancelFollowUpDiscovery() { schedule.cancelDiscoveries() }
 
   private func scheduleFollowUpDiscovery() {
     cancelFollowUpDiscovery()
     guard started, isEnabled, tracksWindows, !isSuspended else { return }
     for (index, delay) in Self.followUpDiscoveryDelays.enumerated() {
-      let task = DispatchWorkItem { [weak self] in
-        MainActor.assumeIsolated {
-          guard let self, !self.isActivelyManipulatingTrackedWindow else { return }
-          self.followFrontmostApplication()
-          if self.hasAccessibility && index >= 2 {
-            self.accessibilitySource?.refresh()
-          }
-          if !self.hasAccessibility || self.roleSnapshot != nil || index > 0 {
-            self.refreshGeometry(discover: true)
-          }
+      schedule.once(.discovery(index), after: delay) { [weak self] in
+        guard let self, !self.isActivelyManipulatingTrackedWindow else { return }
+        self.followFrontmostApplication()
+        if self.hasAccessibility && index >= 2 { self.accessibilitySource?.refresh() }
+        if !self.hasAccessibility || self.roleSnapshot != nil || index > 0 {
+          self.refreshGeometry(scope: .applicationWindows)
         }
       }
-      discoveryTasks.append(task)
-      DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: task)
     }
   }
 
-  private func refreshGeometry(discover: Bool = false) {
+  private func refreshGeometry(scope: WindowRefreshScope = .trackedWindow) {
     guard started, isEnabled, tracksWindows, !isSuspended, processID != 0 else { return }
     let now = ProcessInfo.processInfo.systemUptime
     let lockedToCurrentWindow = isActivelyManipulatingTrackedWindow
@@ -604,7 +410,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
       WindowServerSource.Request(
         processID: processID,
         windowID: windowID,
-        discover: lockedToCurrentWindow ? false : discover,
+        scope: lockedToCurrentWindow ? .trackedWindow : scope,
         preferredFrame: lockedToCurrentWindow ? nil : preferredAccessibilityFrame,
         preferredPoint: activeClickPoint,
         roleSnapshot: roleSnapshot,
@@ -669,16 +475,15 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
 
   private func beginAutonomousTransition(
     originWindowID: CGWindowID?,
-    minimizing: Bool,
+    reason: WindowTransitionState.Reason,
     at now: Double
   ) {
     if !dragTracker.isDragging {
       dragTracker.invalidateSession()
     }
-    settleTimer?.invalidate()
-    settleTimer = nil
+    schedule.cancel(.settle)
     currentManipulation = nil
-    transitionGate.begin(originWindowID: originWindowID, minimizing: minimizing, at: now)
+    transitionGate.begin(originWindowID: originWindowID, reason: reason, at: now)
     if windowID != nil || windowFrame != nil {
       publishGeometry(nil, windowID: nil, suppressManipulationEvent: true)
     }
@@ -686,32 +491,25 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
   }
 
   private func cancelAutonomousTransition() {
-    transitionTimer?.invalidate()
-    transitionTimer = nil
+    schedule.cancel(.transition)
     transitionGate.reset()
   }
 
   private func scheduleTransitionPoll() {
-    guard transitionTimer == nil, started, isEnabled, tracksWindows, !isSuspended else { return }
-    let timer = Timer(timeInterval: Self.transitionPollInterval, repeats: false) { [weak self] _ in
-      MainActor.assumeIsolated {
-        guard let self else { return }
-        self.transitionTimer = nil
-        guard self.transitionGate.isActive, !self.isActivelyManipulatingTrackedWindow else {
-          return
-        }
-        self.followFrontmostApplication()
-        if self.hasAccessibility {
-          self.accessibilitySource?.refresh(reason: AccessibilityWindowSource.sampleReason)
-        }
-        self.refreshGeometry(discover: true)
-        if self.transitionGate.isActive {
-          self.scheduleTransitionPoll()
-        }
-      }
+    guard !schedule.contains(.transition), started, isEnabled, tracksWindows, !isSuspended else {
+      return
     }
-    transitionTimer = timer
-    RunLoop.main.add(timer, forMode: .common)
+    schedule.once(.transition, after: Self.transitionPollInterval) { [weak self] in
+      guard let self, self.transitionGate.isActive, !self.isActivelyManipulatingTrackedWindow else {
+        return
+      }
+      self.followFrontmostApplication()
+      if self.hasAccessibility {
+        self.accessibilitySource?.refresh(reason: AccessibilityWindowSource.sampleReason)
+      }
+      self.refreshGeometry(scope: .applicationWindows)
+      if self.transitionGate.isActive { self.scheduleTransitionPoll() }
+    }
   }
 
   private func shouldHoldAutonomousTransition(
@@ -731,162 +529,49 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
       }
       return false
     }
+    let observation = transitionObservation(
+      resolvedWindowID: resolvedWindowID, resolvedFrame: resolvedFrame,
+      priorInputFrames: priorInputFrames)
     if !transitionGate.isActive {
       guard isForeignAutonomousTransitionEligible && !dragTracker.hasActiveSession else {
         return false
       }
-      return beginAutonomousTransitionIfNeeded(
-        resolvedWindowID: resolvedWindowID,
-        resolvedFrame: resolvedFrame,
-        priorInputFrames: priorInputFrames,
-        at: now)
+      return beginAutonomousTransitionIfNeeded(observation, at: now)
     }
-    return evaluateActiveAutonomousTransition(
-      resolvedWindowID: resolvedWindowID,
-      resolvedFrame: resolvedFrame,
-      priorInputFrames: priorInputFrames,
-      at: now)
+    return evaluateActiveAutonomousTransition(observation, at: now)
+  }
+
+  private func transitionObservation(
+    resolvedWindowID: CGWindowID?, resolvedFrame: CGRect?, priorInputFrames: [Int: CGRect]
+  ) -> WindowTransitionObservation {
+    WindowTransitionObservation(
+      current: .init(id: windowID, frame: windowFrame),
+      resolved: .init(id: resolvedWindowID, frame: resolvedFrame),
+      visibility: .init(
+        currentFrames: inputWindowFrames, priorFrames: priorInputFrames,
+        verifiedStandardFrames: roleSnapshot?.hasVerifiedWindowList == true
+          ? roleSnapshot?.standardWindowFrames : nil))
   }
 
   private func beginAutonomousTransitionIfNeeded(
-    resolvedWindowID: CGWindowID?,
-    resolvedFrame: CGRect?,
-    priorInputFrames: [Int: CGRect],
-    at now: Double
+    _ observation: WindowTransitionObservation, at now: Double
   ) -> Bool {
-    if let currentID = windowID, let currentFrame = windowFrame {
-      guard let nextID = resolvedWindowID, let nextFrame = resolvedFrame else {
-        let isStillOnScreen = inputWindowFrames[Int(currentID)] != nil
-        let isRemovedFromStandardWindows =
-          roleSnapshot?.hasVerifiedWindowList == true
-          && !(roleSnapshot?.standardWindowFrames.contains(where: {
-            WindowServerSource.framesMatch($0, currentFrame)
-          }) ?? false)
-        if isStillOnScreen || isRemovedFromStandardWindows {
-          beginAutonomousTransition(
-            originWindowID: currentID,
-            minimizing: isRemovedFromStandardWindows || isStillOnScreen,
-            at: now)
-          return true
-        }
-        return false
-      }
-      if nextID == currentID {
-        guard !WindowServerSource.framesMatch(currentFrame, nextFrame) else { return false }
-        beginAutonomousTransition(originWindowID: currentID, minimizing: false, at: now)
-        transitionGate.observeCandidate(windowID: nextID, frame: nextFrame, at: now)
-        return true
-      }
-      if let latestOriginFrame = inputWindowFrames[Int(currentID)] {
-        let originFrameChanged = !WindowServerSource.framesMatch(currentFrame, latestOriginFrame)
-        let originRemovedFromAX =
-          roleSnapshot?.hasVerifiedWindowList == true
-          && !(roleSnapshot?.standardWindowFrames.contains(where: {
-            WindowServerSource.framesMatch($0, currentFrame)
-          }) ?? false)
-        if originFrameChanged || originRemovedFromAX {
-          beginAutonomousTransition(originWindowID: currentID, minimizing: true, at: now)
-          transitionGate.observeCandidate(windowID: nextID, frame: nextFrame, at: now)
-          return true
-        }
-      }
-      return false
+    guard let initiation = observation.initiation else { return false }
+    beginAutonomousTransition(
+      originWindowID: initiation.originWindowID, reason: initiation.reason, at: now)
+    if let candidate = initiation.candidate {
+      transitionGate.observeCandidate(windowID: candidate.id, frame: candidate.frame, at: now)
     }
-    if let nextID = resolvedWindowID,
-      let nextFrame = resolvedFrame,
-      let priorFrame = priorInputFrames[Int(nextID)],
-      !WindowServerSource.framesMatch(priorFrame, nextFrame)
-    {
-      beginAutonomousTransition(originWindowID: nextID, minimizing: false, at: now)
-      transitionGate.observeCandidate(windowID: nextID, frame: nextFrame, at: now)
-      return true
-    }
-    return false
+    return true
   }
 
   private func evaluateActiveAutonomousTransition(
-    resolvedWindowID: CGWindowID?,
-    resolvedFrame: CGRect?,
-    priorInputFrames: [Int: CGRect],
-    at now: Double
+    _ observation: WindowTransitionObservation, at now: Double
   ) -> Bool {
-    if now - transitionGate.startedAt >= Self.maxAutonomousTransitionDuration {
-      cancelAutonomousTransition()
-      return false
-    }
-    if let originID = transitionGate.originWindowID,
-      let currentOriginFrame = inputWindowFrames[Int(originID)],
-      let priorOriginFrame = priorInputFrames[Int(originID)],
-      !WindowServerSource.framesMatch(priorOriginFrame, currentOriginFrame),
-      resolvedWindowID == nil || resolvedWindowID == originID
-    {
-      transitionGate.recordActivity(at: now)
-    }
-    guard let nextID = resolvedWindowID, let nextFrame = resolvedFrame else {
-      if let originID = transitionGate.originWindowID,
-        inputWindowFrames[Int(originID)] == nil,
-        roleSnapshot?.hasVerifiedWindowList == true,
-        roleSnapshot?.standardWindowFrames.isEmpty == true,
-        now - transitionGate.lastActivityAt >= Self.transitionSettleInterval
-      {
-        cancelAutonomousTransition()
-        return false
-      }
-      transitionGate.clearCandidate(at: now)
-      scheduleTransitionPoll()
-      return true
-    }
-    if transitionGate.isMinimizingOrigin,
-      nextID == transitionGate.originWindowID,
-      now - transitionGate.startedAt < Self.maxMinimizeTransitionDuration
-    {
-      scheduleTransitionPoll()
-      return true
-    }
-    if transitionGate.isMinimizingOrigin,
-      let originID = transitionGate.originWindowID,
-      nextID != originID,
-      inputWindowFrames[Int(originID)] != nil,
-      now - transitionGate.startedAt < Self.maxMinimizeTransitionDuration
-    {
-      transitionGate.observeCandidate(windowID: nextID, frame: nextFrame, at: now)
-      scheduleTransitionPoll()
-      return true
-    }
-    let matchesPriorInput =
-      priorInputFrames[Int(nextID)].map { WindowServerSource.framesMatch($0, nextFrame) } ?? false
-    if let priorNextFrame = priorInputFrames[Int(nextID)],
-      !WindowServerSource.framesMatch(priorNextFrame, nextFrame)
-    {
-      transitionGate.recordActivity(at: now)
-      transitionGate.observeCandidate(windowID: nextID, frame: nextFrame, at: now)
-      scheduleTransitionPoll()
-      return true
-    }
-    let matchesCandidate =
-      transitionGate.candidateWindowID == nextID
-      && transitionGate.candidateFrame.map({ WindowServerSource.framesMatch($0, nextFrame) })
-        == true
-    transitionGate.observeCandidate(windowID: nextID, frame: nextFrame, at: now)
-    let stableElapsed = now - transitionGate.candidateStableSince
-    let quietElapsed = now - transitionGate.lastActivityAt
-    let totalElapsed = now - transitionGate.startedAt
-    let isSettledReplacementWindow =
-      transitionGate.isMinimizingOrigin
-      && nextID != transitionGate.originWindowID
-      && matchesPriorInput
-      && totalElapsed >= Self.minimumTransitionHideDuration
-    if isSettledReplacementWindow
-      || (matchesCandidate
-        && stableElapsed >= Self.transitionSettleInterval
-        && quietElapsed >= Self.transitionSettleInterval
-        && totalElapsed >= Self.minimumTransitionHideDuration)
-    {
-      cancelAutonomousTransition()
-      return false
-    }
-    scheduleTransitionPoll()
-    return true
+    let hold = WindowTransitionEvaluation.shouldHold(
+      &transitionGate, observation: observation, at: now)
+    if hold { scheduleTransitionPoll() } else { cancelAutonomousTransition() }
+    return hold
   }
 
   private func updateBackgroundAndInputFrames(
@@ -961,16 +646,10 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
         emit(kind, intensity: intensity)
       }
       if !dragTracker.isDragging && !isLeftMouseButtonPressed {
-        settleTimer?.invalidate()
-        let timer = Timer(timeInterval: Self.settleDelaySeconds, repeats: false) { [weak self] _ in
-          MainActor.assumeIsolated { self?.settle() }
-        }
-        settleTimer = timer
-        RunLoop.main.add(timer, forMode: .common)
+        schedule.once(.settle, after: Self.settleDelaySeconds) { [weak self] in self?.settle() }
       }
     } else if !suppressManipulationEvent, currentManipulation != nil {
-      settleTimer?.invalidate()
-      settleTimer = nil
+      schedule.cancel(.settle)
       currentManipulation = nil
     }
     lastGeometryTime = time
@@ -1003,8 +682,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
       }
     }
     if (isWindowRemovedNotification || isFocusChangedNotification) && !dragTracker.isDragging {
-      settleTimer?.invalidate()
-      settleTimer = nil
+      schedule.cancel(.settle)
       currentManipulation = nil
     }
     let isWindowLifecycleNotification =
@@ -1035,19 +713,19 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
       && processID != ProcessInfo.processInfo.processIdentifier
     {
       if observation.reason == kAXWindowMiniaturizedNotification {
-        beginAutonomousTransition(originWindowID: windowID, minimizing: true, at: now)
+        beginAutonomousTransition(originWindowID: windowID, reason: .minimize, at: now)
       } else if observation.reason == kAXWindowDeminiaturizedNotification {
-        beginAutonomousTransition(originWindowID: windowID, minimizing: false, at: now)
+        beginAutonomousTransition(originWindowID: windowID, reason: .geometry, at: now)
       } else if isGeometryNotification
         && isForeignAutonomousTransitionEligible
         && !dragTracker.hasActiveSession
         && (windowID != nil || transitionGate.isActive)
       {
-        beginAutonomousTransition(originWindowID: windowID, minimizing: false, at: now)
+        beginAutonomousTransition(originWindowID: windowID, reason: .geometry, at: now)
       }
     }
     if !(isGeometryNotification && dragTracker.isPointerConfirmed) {
-      refreshGeometry(discover: discover)
+      refreshGeometry(scope: discover ? .applicationWindows : .trackedWindow)
       if isWindowLifecycleNotification && !isActivelyManipulatingTrackedWindow {
         scheduleFollowUpDiscovery()
       }
@@ -1082,8 +760,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
   private func handleMouseDown(_ event: NSEvent, at now: Double) {
     guard tracksWindows else { return }
     isLeftMouseDown = true
-    settleTimer?.invalidate()
-    settleTimer = nil
+    schedule.cancel(.settle)
     currentManipulation = nil
     let eventPoint = event.cgEvent?.location
     let top = NSScreen.screens.first?.frame.maxY ?? 0
@@ -1100,26 +777,27 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
     if dragTracker.isResizeCandidate {
       clickSelection.clear()
       cancelFollowUpDiscovery()
-      refreshGeometry(discover: false)
+      refreshGeometry(scope: .trackedWindow)
       return
     }
     clickSelection.record(at: eventPoint ?? CGPoint(x: point.x, y: top - point.y), now: now)
-    refreshGeometry(discover: !dragTracker.hasActiveSession)
+    refreshGeometry(scope: dragTracker.hasActiveSession ? .trackedWindow : .applicationWindows)
     scheduleFollowUpDiscovery()
   }
 
   private func handleMouseDragged(at now: Double) {
     guard tracksWindows else { return }
     isLeftMouseDown = true
-    settleTimer?.invalidate()
-    settleTimer = nil
+    schedule.cancel(.settle)
     let handled = dragTracker.updateDrag(
       frame: windowFrame, hasWindow: windowID != nil, at: now, isLowPower: isLowPower)
     if handled && windowID != nil {
       clickSelection.clear()
       cancelFollowUpDiscovery()
     } else {
-      refreshGeometry(discover: windowID == nil || clickSelection.point != nil)
+      refreshGeometry(
+        scope: windowID == nil || clickSelection.point != nil ? .applicationWindows : .trackedWindow
+      )
     }
   }
 
@@ -1131,11 +809,11 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
     guard tracksWindows else { return }
     if !wasDragging {
       accessibilitySource?.refresh()
-      refreshGeometry(discover: true)
+      refreshGeometry(scope: .applicationWindows)
       scheduleFollowUpDiscovery()
     } else {
       accessibilitySource?.refresh(reason: AccessibilityWindowSource.sampleReason)
-      refreshGeometry(discover: windowID == nil)
+      refreshGeometry(scope: windowID == nil ? .applicationWindows : .trackedWindow)
     }
   }
 
@@ -1157,8 +835,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
   }
 
   private func settle() {
-    settleTimer?.invalidate()
-    settleTimer = nil
+    schedule.cancel(.settle)
     guard currentManipulation != nil else { return }
     currentManipulation = nil
     latestGeometry = nil
@@ -1183,7 +860,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
         guard self.isEnabled, !self.isSuspended else { return }
         if trusted != self.hasAccessibility {
           self.hasAccessibility = trusted
-          self.followFrontmostApplication(force: true)
+          self.followFrontmostApplication(.reconcileCurrent)
           self.configureTimers()
           self.onEnvironmentChanged?()
         }
@@ -1210,7 +887,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
   @objc private func applicationVisibilityChanged() {
     followFrontmostApplication()
     if hasAccessibility { accessibilitySource?.refresh() }
-    refreshGeometry(discover: true)
+    refreshGeometry(scope: .applicationWindows)
     scheduleFollowUpDiscovery()
   }
   @objc private func localWindowChanged(_ notification: Notification) {
@@ -1235,7 +912,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
       if UInt32(window.windowNumber) == windowID {
         publishGeometry(nil, windowID: nil)
       }
-      refreshGeometry(discover: true)
+      refreshGeometry(scope: .applicationWindows)
       scheduleFollowUpDiscovery()
       return
     }
@@ -1254,11 +931,11 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
   @objc private func spaceChanged() {
     followFrontmostApplication()
     if hasAccessibility { accessibilitySource?.refresh() }
-    refreshGeometry(discover: true)
+    refreshGeometry(scope: .applicationWindows)
     scheduleFollowUpDiscovery()
   }
   @objc private func displaysChanged() {
-    refreshGeometry(discover: true)
+    refreshGeometry(scope: .applicationWindows)
     onGeometryChanged?()
   }
   @objc private func environmentChanged() {
@@ -1273,7 +950,7 @@ final class WorkspaceTracker: NSObject, WorkspaceEventProducer {
   }
   @objc private func resume() {
     isSuspended = false
-    followFrontmostApplication(force: true)
+    followFrontmostApplication(.reconcileCurrent)
     configureTimers()
     onEnvironmentChanged?()
   }

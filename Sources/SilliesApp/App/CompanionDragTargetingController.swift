@@ -96,6 +96,13 @@ final class CompanionDragTargetingController {
     windowSnapshot.onChange = nil
   }
 
+  func refreshWindowSnapshot() { windowSnapshot.refresh() }
+
+  func updateKnownWindow(_ id: CGWindowID?, frame: CGRect?) {
+    windowSnapshot.updateKnownWindow(id, frame: frame)
+    targets.updateKnownWindow(id, frame: frame)
+  }
+
   func prepareOverlays() {
     windowHighlight.prepare()
     radialWheel.prepare()

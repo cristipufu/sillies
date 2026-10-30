@@ -1,4 +1,5 @@
 import Foundation
+import SilliesAudio
 import SilliesCore
 
 struct AudioSkillRequest {
@@ -18,6 +19,7 @@ final class AudioSkillSession: ActiveSkillSession {
   private let onChange: () -> Void
   private let recordID = UUID()
   private var service: (any SessionAudioCapture)?
+  private var updateDelivery: AudioSessionUpdateDelivery?
   private var suggestionTask: Task<Void, Never>?
   private var availabilityTask: Task<Void, Never>?
   private var languageTask: Task<Void, Never>?
@@ -73,9 +75,9 @@ final class AudioSkillSession: ActiveSkillSession {
     let url = request.recordingDirectory.appendingPathComponent("\(recordID.uuidString).m4a")
     let configuration = AudioCaptureConfiguration(
       kind: request.kind, target: request.target, recordingURL: url, language: language)
-    let service = captureFactory(configuration) { [weak self] update in
-      MainRunLoopDelivery.perform { [weak self] in self?.apply(update) }
-    }
+    let delivery = AudioSessionUpdateDelivery { [weak self] in self?.apply($0) }
+    updateDelivery = delivery
+    let service = captureFactory(configuration) { delivery.enqueue($0) }
     self.service = service
     service.start()
     refreshReasoningAvailability(language)
@@ -113,7 +115,7 @@ final class AudioSkillSession: ActiveSkillSession {
     }
   }
 
-  private func apply(_ update: AudioTranscriptionService.Update) {
+  private func apply(_ update: AudioCaptureUpdate) {
     guard presentation.canFinish else { return }
     switch update {
     case .preparing(let message): presentation.status = message
@@ -209,6 +211,7 @@ final class AudioSkillSession: ActiveSkillSession {
     }
     let service = service
     self.service = nil
+    stopReceivingUpdates()
     stopReasoning()
     presentation.phase = .finishing
     presentation.status = "Saving audio and transcript…"
@@ -223,7 +226,7 @@ final class AudioSkillSession: ActiveSkillSession {
         context: .init(
           finalize: context, id: id, kind: kind, suggestions: suggestions, language: language))
       MainRunLoopDelivery.perform { [weak self] in
-        self?.presentation.transcript = SpeechTranscript.preview(of: result.transcript)
+        self?.presentation.transcript = result.preview
         self?.presentation.elapsed = result.duration
         self?.presentation.phase = .finished
         self?.presentation.status = outcome.bannerSummary
@@ -277,7 +280,13 @@ final class AudioSkillSession: ActiveSkillSession {
     availabilityTask = nil
   }
 
+  private func stopReceivingUpdates() {
+    updateDelivery?.stop()
+    updateDelivery = nil
+  }
+
   func cancel() {
+    stopReceivingUpdates()
     stopReasoning()
     service?.finish { _ in }
     service = nil

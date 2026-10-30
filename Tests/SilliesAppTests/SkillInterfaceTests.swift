@@ -1,4 +1,5 @@
 import AppKit
+import SilliesAudioTestSupport
 import SilliesCore
 import SwiftUI
 import Testing
@@ -65,6 +66,12 @@ import Testing
   let fitting = host.sizeThatFits(in: size)
   #expect(fitting.width <= size.width)
   #expect(fitting.height <= size.height)
+  if let transcript = findTranscriptScrollView(in: view) {
+    let viewport = view.convert(transcript.bounds, from: transcript)
+    #expect(
+      view.bounds.contains(viewport),
+      "Transcript viewport must fit without clipping at minimum window size")
+  }
   if ProcessInfo.processInfo.environment["SILLIES_SKILL_UI_SNAPSHOTS"] == "1" {
     let rep = try #require(view.bitmapImageRepForCachingDisplay(in: view.bounds))
     view.cacheDisplay(in: view.bounds, to: rep)

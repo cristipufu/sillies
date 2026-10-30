@@ -24,115 +24,45 @@ struct WindowTargetSnapshot: Sendable {
 /// asynchronous worker queue and can never invoke WindowServer IPC on the main actor.
 private enum WindowTargetResolver {
   static let maxInspectedWindowEntries = 256
-  private static let maxCachedRoleSnapshots = 32
-  private static let maxCachedWindowCandidates = 128
-  private static let roleSnapshotCacheTTL: TimeInterval = 15.0
-  private static let candidateCacheTTL: TimeInterval = 2.0
-  private static let roleSnapshotCacheLock = NSLock()
-  private static let candidateCacheLock = NSLock()
+  private static let cache = WindowTargetCache()
   private static let roleSnapshotQueue = DispatchQueue(
     label: "app.sillies.drag-target-ax-warmup", qos: .utility)
-  private nonisolated(unsafe) static var cachedRoleSnapshots:
-    [pid_t: (snapshot: AccessibilityWindowRoleSnapshot?, capturedAt: TimeInterval)] = [:]
-  private nonisolated(unsafe) static var pendingRoleSnapshotPIDs: Set<pid_t> = []
-  private nonisolated(unsafe) static var cachedWindowCandidates:
-    [CGWindowID: (candidate: WindowTargetCandidate?, capturedAt: TimeInterval)] = [:]
 
   static func seedRoleSnapshot(_ snapshot: AccessibilityWindowRoleSnapshot?, for pid: pid_t) {
-    guard pid > 0 else { return }
-    let now = ProcessInfo.processInfo.systemUptime
-    roleSnapshotCacheLock.lock()
-    if cachedRoleSnapshots.count >= maxCachedRoleSnapshots {
-      cachedRoleSnapshots.removeAll(keepingCapacity: true)
-    }
-    cachedRoleSnapshots[pid] = (snapshot, now)
-    roleSnapshotCacheLock.unlock()
+    cache.storeRole(snapshot, for: pid, at: ProcessInfo.processInfo.systemUptime)
   }
 
   static func updateCachedCandidateFrame(_ frame: CGRect, for windowID: CGWindowID) {
-    candidateCacheLock.lock()
-    if let existing = cachedWindowCandidates[windowID], var candidate = existing.candidate {
-      candidate.frame = frame
-      cachedWindowCandidates[windowID] = (candidate, existing.capturedAt)
-    }
-    candidateCacheLock.unlock()
+    cache.updateCandidateFrame(frame, for: windowID)
   }
 
   static func cacheCandidate(
     _ candidate: WindowTargetCandidate?, for windowID: CGWindowID, at now: TimeInterval
   ) {
-    candidateCacheLock.lock()
-    if cachedWindowCandidates.count >= maxCachedWindowCandidates {
-      cachedWindowCandidates.removeAll(keepingCapacity: true)
-    }
-    cachedWindowCandidates[windowID] = (candidate, now)
-    candidateCacheLock.unlock()
-  }
-
-  private static func lookupCachedCandidate(
-    for windowID: CGWindowID, at now: TimeInterval
-  ) -> (hit: Bool, candidate: WindowTargetCandidate?) {
-    candidateCacheLock.lock()
-    defer { candidateCacheLock.unlock() }
-    guard let entry = cachedWindowCandidates[windowID],
-      now - entry.capturedAt < candidateCacheTTL
-    else {
-      return (false, nil)
-    }
-    return (true, entry.candidate)
+    cache.storeCandidate(candidate, for: windowID, at: now)
   }
 
   static func nonBlockingRoleSnapshot(for pid: pid_t) -> AccessibilityWindowRoleSnapshot? {
-    let now = ProcessInfo.processInfo.systemUptime
-    roleSnapshotCacheLock.lock()
-    if let entry = cachedRoleSnapshots[pid] {
-      let isFresh = now - entry.capturedAt < roleSnapshotCacheTTL
-      let snapshot = entry.snapshot
-      if isFresh {
-        roleSnapshotCacheLock.unlock()
-        return snapshot
+    let request = cache.requestRole(for: pid, at: ProcessInfo.processInfo.systemUptime)
+    if let generation = request.refresh {
+      roleSnapshotQueue.async {
+        let snapshot = AccessibilityWindowSource.roleSnapshot(for: pid)
+        cache.finishRoleRefresh(
+          snapshot, for: pid, generation: generation,
+          at: ProcessInfo.processInfo.systemUptime)
       }
-      scheduleRoleSnapshotWarmupLocked(for: pid)
-      roleSnapshotCacheLock.unlock()
-      return snapshot
     }
-    scheduleRoleSnapshotWarmupLocked(for: pid)
-    roleSnapshotCacheLock.unlock()
-    return nil
-  }
-
-  private static func scheduleRoleSnapshotWarmupLocked(for pid: pid_t) {
-    guard pid > 0, !pendingRoleSnapshotPIDs.contains(pid) else { return }
-    pendingRoleSnapshotPIDs.insert(pid)
-    roleSnapshotQueue.async {
-      let fetched = AccessibilityWindowSource.roleSnapshot(for: pid)
-      let capturedAt = ProcessInfo.processInfo.systemUptime
-      roleSnapshotCacheLock.lock()
-      pendingRoleSnapshotPIDs.remove(pid)
-      if cachedRoleSnapshots.count >= maxCachedRoleSnapshots {
-        cachedRoleSnapshots.removeAll(keepingCapacity: true)
-      }
-      cachedRoleSnapshots[pid] = (fetched, capturedAt)
-      roleSnapshotCacheLock.unlock()
-    }
+    return request.snapshot
   }
 
   private static func cachedRoleSnapshot(for pid: pid_t) -> AccessibilityWindowRoleSnapshot? {
-    let now = ProcessInfo.processInfo.systemUptime
-    roleSnapshotCacheLock.lock()
-    if let entry = cachedRoleSnapshots[pid], now - entry.capturedAt < roleSnapshotCacheTTL {
-      roleSnapshotCacheLock.unlock()
-      return entry.snapshot
-    }
-    roleSnapshotCacheLock.unlock()
+    let request = cache.requestRole(for: pid, at: ProcessInfo.processInfo.systemUptime)
+    guard let generation = request.refresh else { return request.snapshot }
     let fetched = AccessibilityWindowSource.roleSnapshot(for: pid)
-    roleSnapshotCacheLock.lock()
-    if cachedRoleSnapshots.count >= maxCachedRoleSnapshots {
-      cachedRoleSnapshots.removeAll(keepingCapacity: true)
-    }
-    cachedRoleSnapshots[pid] = (fetched, ProcessInfo.processInfo.systemUptime)
-    roleSnapshotCacheLock.unlock()
-    return fetched
+    cache.finishRoleRefresh(
+      fetched, for: pid, generation: generation,
+      at: ProcessInfo.processInfo.systemUptime)
+    return cache.roleSnapshot(for: pid)
   }
 
   static func candidate(
@@ -141,9 +71,8 @@ private enum WindowTargetResolver {
     dispatchPrecondition(condition: .notOnQueue(.main))
     guard !WindowTrackingExclusions.shared.contains(windowID) else { return nil }
     let now = ProcessInfo.processInfo.systemUptime
-    let cached = lookupCachedCandidate(for: windowID, at: now)
-    if cached.hit {
-      return cached.candidate
+    if case .cached(let candidate) = cache.candidate(for: windowID, at: now) {
+      return candidate
     }
     guard let parsed = parsedWindowEntry(for: windowID),
       parsed.isTrackableLayer,

@@ -1,14 +1,16 @@
 import AVFoundation
 import AppKit
+import SilliesAudioTestSupport
 import SilliesCore
 import Testing
 
 @testable import SilliesApp
+@testable import SilliesAudio
 
 private final class FixtureAudioCapture: SessionAudioCapture, @unchecked Sendable {
-  private let update: @Sendable (AudioTranscriptionService.Update) -> Void
+  private let update: @Sendable (AudioCaptureUpdate) -> Void
   private let queue = DispatchQueue(label: "sillies.test.capture")
-  init(update: @escaping @Sendable (AudioTranscriptionService.Update) -> Void) {
+  init(update: @escaping @Sendable (AudioCaptureUpdate) -> Void) {
     self.update = update
   }
   func start() {

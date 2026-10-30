@@ -69,16 +69,6 @@ public enum SessionSummarizer: Sendable {
     return (summary, orderedActions)
   }
 
-  /// Processes arbitrarily long transcripts in chunks on a background worker.
-  public static func summarizeOnWorker(
-    text: String, fallbackContext: String
-  ) async -> (summary: String, actionItems: [String]) {
-    await Task.detached(priority: .userInitiated) {
-      dispatchPrecondition(condition: .notOnQueue(.main))
-      return summarize(text: text, fallbackContext: fallbackContext)
-    }.value
-  }
-
   private static func collectScoredFragmentsAndActions(in text: String) -> ExtractionState {
     var state = ExtractionState()
     forEachChunk(in: text) { chunk in

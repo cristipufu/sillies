@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct AudioTranscriptView: View {
-  private static let endAnchor = "transcript-end"
   private static let minimumTranscriptHeight: CGFloat = 160
   let model: AudioSessionPresentation
 
@@ -15,37 +14,35 @@ struct AudioTranscriptView: View {
           Toggle("Follow live", isOn: $session.followsLiveTranscript).toggleStyle(.checkbox)
             .font(.caption).foregroundStyle(SilliesTheme.secondary)
         }
-      }
-      ScrollViewReader { proxy in
-        ScrollView {
-          if model.transcript.isEmpty {
-            VStack(spacing: 10) {
-              Image(systemName: "waveform").font(.system(size: 28)).foregroundStyle(
-                SilliesTheme.accent)
-              Text(
-                model.phase == .capturing
-                  ? "Ready for your words" : "Your transcript will appear here"
-              )
-              .font(.callout.weight(.medium))
-              Text(
-                model.displayedLanguage.map {
-                  "Speak in \($0.name). Speech may take a moment to appear."
-                }
-                  ?? "Choose a ready language to begin."
-              )
-              .font(.caption).foregroundStyle(SilliesTheme.secondary)
-            }.frame(maxWidth: .infinity).padding(.vertical, 32)
-          } else {
-            Text(model.transcript).font(.system(size: 14)).lineSpacing(6).textSelection(.enabled)
-              .frame(maxWidth: .infinity, alignment: .leading)
+        if !model.followsLiveTranscript, !model.transcript.isEmpty {
+          Button("Jump to latest", systemImage: "arrow.down") {
+            model.followsLiveTranscript = true
           }
-          Color.clear.frame(height: 1).id(Self.endAnchor)
+          .buttonStyle(.borderedProminent).controlSize(.small)
+          .help("Show the newest speech and resume following the transcript")
         }
-        .onChange(of: model.transcript) { _, _ in
-          if model.followsLiveTranscript { proxy.scrollTo(Self.endAnchor, anchor: .bottom) }
-        }
-        .onChange(of: model.followsLiveTranscript) { _, enabled in
-          if enabled { proxy.scrollTo(Self.endAnchor, anchor: .bottom) }
+      }
+      Group {
+        if model.transcript.isEmpty {
+          VStack(spacing: 10) {
+            Image(systemName: "waveform").font(.system(size: 28)).foregroundStyle(
+              SilliesTheme.accent)
+            Text(
+              model.phase == .capturing
+                ? "Ready for your words" : "Your transcript will appear here"
+            )
+            .font(.callout.weight(.medium))
+            Text(
+              model.displayedLanguage.map {
+                "Speak in \($0.name). Speech may take a moment to appear."
+              }
+                ?? "Choose a ready language to begin."
+            )
+            .font(.caption).foregroundStyle(SilliesTheme.secondary)
+          }.frame(maxWidth: .infinity).padding(.vertical, 32)
+        } else {
+          LiveTranscriptTextView(
+            text: model.transcript, followsLive: $session.followsLiveTranscript)
         }
       }
       .frame(minHeight: Self.minimumTranscriptHeight, maxHeight: .infinity)

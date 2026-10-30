@@ -22,7 +22,12 @@ enum PlayfulAdventureAnimations {
     library.register("scene.clamber") { rig in
       rig.leftArm.opacity = 0
       rig.rightArm.opacity = 0
-      rig.preparePlayfulProps().clamber()
+      rig.preparePlayfulProps().clamber(.pullUp)
+    }
+    library.register("scene.lower") { rig in
+      rig.leftArm.opacity = 0
+      rig.rightArm.opacity = 0
+      rig.preparePlayfulProps().clamber(.lowerDown)
     }
     library.register("scene.fall") { rig in
       RigAnimation.swing(rig.leftArm, "transform.rotation.z", from: -1.8, to: -2.4, duration: 0.16)
@@ -43,7 +48,8 @@ enum PlayfulAdventureAnimations {
       RigAnimation.swing(rig.head, "transform.rotation.z", from: -0.08, to: 0.08, duration: 0.3)
     }
     for id: AnimationID in [
-      "scene.shove", "scene.fall", "scene.clamber", "scene.parachute", "scene.grumpy",
+      "scene.shove", "scene.fall", "scene.clamber", "scene.lower", "scene.parachute",
+      "scene.grumpy",
     ] {
       library.registerReducedMotion(id) { rig in
         rig.eyes.opacity = 0

@@ -45,15 +45,14 @@ final class PlayfulContactArtwork {
     }
   }
 
-  func clamber(actor: PlayfulScenePlan.Actor, duration: Double) {
+  func clamber(motion: PlayfulClamberMotion, duration: Double) {
     layer.opacity = 1
     let samples = (0...Self.clamberSampleCount).map { Double($0) / Double(Self.clamberSampleCount) }
     let times = samples.map { NSNumber(value: $0) }
-    let pullUp = PlayfulClamberMotion(actor: actor)
-    let grips = samples.map { pullUp.handPoints(at: $0) }
+    let grips = samples.map { motion.handPoints(at: $0) }
     for (index, arm) in arms.enumerated() {
       let points = grips.map { $0[index] }
-      arm.pose(at: pullUp.handPoints(at: 1)[index])
+      arm.pose(at: motion.handPoints(at: 1)[index])
       let paths = points.map { arm.path(to: $0) }
       let motion = Timing(times: times, duration: duration, curve: .linear)
       animate(arm.outline, key: "path", values: paths, timing: motion)

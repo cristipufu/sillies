@@ -12,7 +12,17 @@ public struct PlayfulSceneDefinition: Codable, Sendable, Equatable, Identifiable
   public enum Trigger: String, Codable, Sendable { case ambient, idle, landing, windowSettled }
   public enum Layout: String, Codable, Sendable { case perches, together, exterior }
   public enum Facing: String, Codable, Sendable { case left, right }
-  public enum Travel: String, Codable, Sendable { case direct, cornerPullUp }
+  public enum Travel: String, Codable, Sendable {
+    case direct, cornerPullUp, cornerLowering
+
+    var clamberDirection: PlayfulClamberMotion.Direction? {
+      switch self {
+      case .direct: nil
+      case .cornerPullUp: .pullUp
+      case .cornerLowering: .lowerDown
+      }
+    }
+  }
   public enum Role: String, Codable, Sendable, CaseIterable { case lead, partner }
   public enum Destination: String, Codable, Sendable { case home, stage, corner, outside, below }
   public enum Prop: String, Codable, Sendable {
@@ -133,12 +143,15 @@ public struct PlayfulSceneDefinition: Codable, Sendable, Equatable, Identifiable
   }
 
   private func validateTravel(_ cue: Cue, previous: Cue?, motion: PlayfulSceneMotion?) throws {
-    guard cue.travel == .cornerPullUp else { return }
-    guard layout == .exterior, previous?.destination == .outside, previous?.pose == .hangingRight,
-      cue.destination == .corner, (cue.pose ?? .standing) == .standing,
+    guard let direction = cue.travel?.clamberDirection else { return }
+    let grip = direction == .pullUp ? previous : cue
+    let landing = direction == .pullUp ? cue : previous
+    guard layout == .exterior, grip?.destination == .outside, grip?.pose == .hangingRight,
+      landing?.destination == .corner, (landing?.pose ?? .standing) == .standing,
       cue.facing == .left, (cue.movementStart ?? 0) == 0, motion == nil
     else {
-      throw CharacterDefinition.ValidationError("Pull-up must follow a corner grip: \(id)")
+      throw CharacterDefinition.ValidationError(
+        "Corner travel must connect a ledge and side grip: \(id)")
     }
   }
 }

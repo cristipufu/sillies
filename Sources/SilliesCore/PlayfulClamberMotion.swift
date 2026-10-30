@@ -1,7 +1,8 @@
 import CoreGraphics
 
-/// Body travel and hand placement share one corner pull-up, independent of renderer clocks.
+/// Body travel and hand placement share one reversible corner path, independent of renderer clocks.
 public struct PlayfulClamberMotion: Sendable {
+  public enum Direction: Sendable { case pullUp, lowerDown }
   private enum Timing {
     static let transferStart = 0.58
     static let ledgeGripEnd = 0.76
@@ -23,13 +24,21 @@ public struct PlayfulClamberMotion: Sendable {
     }
   }
   private let actor: PlayfulScenePlan.Actor
+  private let direction: Direction
   private var size: Double { actor.participant.surface.presentationSize }
   private var scale: Double { size / Geometry.referenceSize }
   private var start: CGPoint { actor.point(for: .outside, pose: .hangingRight) }
 
-  public init(actor: PlayfulScenePlan.Actor) { self.actor = actor }
+  public init(actor: PlayfulScenePlan.Actor, direction: Direction = .pullUp) {
+    self.actor = actor
+    self.direction = direction
+  }
 
   public func position(at progress: Double) -> CGPoint {
+    pullUpPosition(at: pullUpProgress(progress))
+  }
+
+  private func pullUpPosition(at progress: Double) -> CGPoint {
     let raised = CGPoint(x: start.x, y: actor.corner.y + size * Geometry.liftClearanceRatio)
     if progress < Timing.transferStart {
       return interpolate(start, raised, progress: progress / Timing.transferStart)
@@ -40,11 +49,12 @@ public struct PlayfulClamberMotion: Sendable {
   }
 
   public func edge(at progress: Double) -> PerchSurface.Edge {
-    progress < Timing.transferStart ? .right : .top
+    pullUpProgress(progress) < Timing.transferStart ? .right : .top
   }
 
   public func handPoints(at progress: Double) -> [CGPoint] {
-    let body = position(at: progress)
+    let progress = pullUpProgress(progress)
+    let body = pullUpPosition(at: progress)
     let offset = AttachmentPose.hangingRight.contactOffset(from: .standing, size: size)
     let release = (progress - Timing.releaseStart) / (1 - Timing.releaseStart)
     return Hand.allCases.map { hand in
@@ -66,6 +76,10 @@ public struct PlayfulClamberMotion: Sendable {
         y: AttachmentPose.standing.anchor.y + (world.y - body.y) / scale)
       return interpolate(held, hand.restingPoint, progress: release)
     }
+  }
+
+  private func pullUpProgress(_ progress: Double) -> Double {
+    direction == .pullUp ? progress : 1 - progress
   }
 
   private func interpolate(_ from: CGPoint, _ to: CGPoint, progress: Double) -> CGPoint {

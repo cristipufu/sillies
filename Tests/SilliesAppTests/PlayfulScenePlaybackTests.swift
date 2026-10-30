@@ -52,6 +52,7 @@ import Testing
 }
 
 @Test @MainActor func playfulTravelUsesBoundedNativeFrameWork() throws {
+  try measurePlayfulTravel(scene: "edge-climb", startingAt: 1.5)
   try measurePlayfulTravel(scene: "edge-climb", startingAt: 2.6)
   try measurePlayfulTravel(scene: "edge-climb", startingAt: 9.9)
 }
@@ -91,7 +92,7 @@ import Testing
     var time = 0.0
     for (index, phase) in scene.phases.enumerated() {
       let samples =
-        phase.cues.contains { $0.travel == .cornerPullUp }
+        phase.cues.contains { [.cornerPullUp, .cornerLowering].contains($0.travel) }
         ? [0.25, 0.55, 0.65, 0.8, 0.95] : [0.55]
       for progress in samples {
         try fixture.start(scene.id)
@@ -99,7 +100,8 @@ import Testing
         fixture.sampleAnimations(
           at: phase.duration * progress, phase: index, clock: PlayfulPreviewClock())
         try DisplayFrameSequence.presentCreatedWindows()
-        let suffix = progress == 0.55 ? "" : "-pullup-\(Int(progress * 100))"
+        let travel = phase.cues.contains { $0.travel == .cornerLowering } ? "lowering" : "pullup"
+        let suffix = progress == 0.55 ? "" : "-\(travel)-\(Int(progress * 100))"
         try fixture.snapshot(named: "\(scene.id)-\(index)\(suffix)")
       }
       time += phase.duration

@@ -157,6 +157,19 @@ func playfulScenePlanningSupportsSizesAndNegativeScreenOrigins(size: Double) thr
       previousX = body.x
     }
     #expect(pullUp.position(at: 1) == actor.corner)
+    let lowering = PlayfulClamberMotion(actor: actor, direction: .lowerDown)
+    #expect(lowering.position(at: 0) == actor.corner)
+    #expect(lowering.position(at: 1) == actor.point(for: .outside, pose: .hangingRight))
+    for sample in 0...100 {
+      let progress = Double(sample) / 100
+      let body = lowering.position(at: progress)
+      #expect(body.x <= actor.point(for: .outside, pose: .hangingRight).x)
+      if lowering.edge(at: progress) == .top {
+        #expect(body.y >= window.maxY)
+      } else {
+        #expect(body.x >= window.maxX)
+      }
+    }
   }
   let crampedScreen = CGRect(
     x: screen.minX, y: screen.minY, width: screen.width,

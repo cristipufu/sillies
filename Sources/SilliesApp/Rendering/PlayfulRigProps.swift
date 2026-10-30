@@ -31,9 +31,11 @@ final class PlayfulRigProps {
 
   func configureScene(_ frame: PlayfulSceneSession.Frame) { sceneFrame = frame }
 
-  func clamber() {
+  func clamber(_ direction: PlayfulClamberMotion.Direction) {
     guard let sceneFrame else { return }
-    contact.clamber(actor: sceneFrame.actor, duration: sceneFrame.duration)
+    contact.clamber(
+      motion: PlayfulClamberMotion(actor: sceneFrame.actor, direction: direction),
+      duration: sceneFrame.duration)
   }
 
   func reset() {

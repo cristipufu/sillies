@@ -534,24 +534,15 @@
         "prop": "none"
       },
       {
-        "duration": 1,
+        "duration": 1.7,
         "cues": [
           {
             "role": "lead",
-            "animation": "walk",
-            "destination": "outside"
-          }
-        ],
-        "prop": "none"
-      },
-      {
-        "duration": 0.7,
-        "cues": [
-          {
-            "role": "lead",
-            "animation": "hangCatch",
+            "animation": "scene.lower",
             "destination": "outside",
-            "pose": "hangingRight"
+            "pose": "hangingRight",
+            "facing": "left",
+            "travel": "cornerLowering"
           }
         ],
         "prop": "none"

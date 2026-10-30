@@ -57,16 +57,18 @@ public struct PlayfulSceneSession: Sendable {
       let to = actor.point(for: cue.destination, pose: pose)
       let sway =
         phase.motion?.offset(at: progress, size: actor.participant.surface.presentationSize) ?? 0
-      let pullUp = cue.travel == .cornerPullUp ? PlayfulClamberMotion(actor: actor) : nil
+      let clamber = cue.travel?.clamberDirection.map {
+        PlayfulClamberMotion(actor: actor, direction: $0)
+      }
       let point =
-        pullUp?.position(at: progress)
+        clamber?.position(at: progress)
         ?? CGPoint(
           x: from.x + (to.x - from.x) * eased + sway, y: from.y + (to.y - from.y) * eased)
       let isDescending = cue.destination == .below || previous?.destination == .below
       return Frame(
         actor: actor, position: point,
         animation: actor.participant.profile.animation(for: cue.animation),
-        edge: pullUp?.edge(at: progress)
+        edge: clamber?.edge(at: progress)
           ?? (isDescending || pose.isHanging || previous?.pose?.isHanging == true
             ? .right : actor.participant.surface.edge),
         facingRight: cue.facing.map { $0 == .right }
@@ -75,7 +77,8 @@ public struct PlayfulSceneSession: Sendable {
               origin: actor.participant.position, visible: plan.visibleFrame)
             : abs(to.x - from.x) > 0.01
               ? to.x > from.x : (!isDescending && actor.role == .lead)),
-        duration: phase.duration, pose: pose)
+        // Corner clips animate their own grips; the cue's pose describes the route endpoint.
+        duration: phase.duration, pose: clamber == nil ? pose : .standing)
     }
   }
 

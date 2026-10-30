@@ -593,13 +593,14 @@
         "prop": "none"
       },
       {
-        "duration": 0.8,
+        "duration": 1.05,
         "cues": [
           {
             "role": "lead",
             "animation": "scene.clamber",
-            "destination": "outside",
-            "facing": "left"
+            "destination": "corner",
+            "facing": "left",
+            "travel": "cornerPullUp"
           }
         ],
         "prop": "none"
@@ -743,7 +744,7 @@
         "prop": "none"
       },
       {
-        "duration": 0.8,
+        "duration": 1.05,
         "cues": [
           {
             "role": "lead",
@@ -753,8 +754,9 @@
           {
             "role": "partner",
             "animation": "scene.clamber",
-            "destination": "outside",
-            "facing": "left"
+            "destination": "corner",
+            "facing": "left",
+            "travel": "cornerPullUp"
           }
         ],
         "prop": "none"
@@ -879,13 +881,14 @@
         "prop": "none"
       },
       {
-        "duration": 0.8,
+        "duration": 1.05,
         "cues": [
           {
             "role": "lead",
             "animation": "scene.clamber",
-            "destination": "outside",
-            "facing": "left"
+            "destination": "corner",
+            "facing": "left",
+            "travel": "cornerPullUp"
           }
         ],
         "prop": "none"

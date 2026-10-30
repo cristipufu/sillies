@@ -56,7 +56,13 @@ final class CompanionInstance {
 
   func placeInScene(_ frame: PlayfulSceneSession.Frame) {
     view.rig.setFacing(right: frame.facingRight)
-    if view.setSceneEdge(frame.edge) { needsPlacementAfterScene = true }
+    let edgeChanged = view.setSceneEdge(frame.edge)
+    if edgeChanged {
+      needsPlacementAfterScene = true
+      CATransaction.begin()
+      CATransaction.setDisableActions(true)
+    }
+    defer { if edgeChanged { CATransaction.commit() } }
     guard position != frame.position || needsPlacementAfterScene else { return }
     place(at: frame.position)
   }

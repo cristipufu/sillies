@@ -143,6 +143,20 @@ func playfulScenePlanningSupportsSizesAndNegativeScreenOrigins(size: Double) thr
       #expect(!bounds.frame.intersects(window))
       #expect(abs(bounds.contactOffset.x) < 0.01)
     }
+    let pullUp = PlayfulClamberMotion(actor: actor)
+    var previousX = pullUp.position(at: 0).x
+    for sample in 0...100 {
+      let progress = Double(sample) / 100
+      let body = pullUp.position(at: progress)
+      #expect(body.x <= previousX)
+      if pullUp.edge(at: progress) == .top {
+        #expect(body.y >= window.maxY)
+      } else {
+        #expect(body.x >= window.maxX)
+      }
+      previousX = body.x
+    }
+    #expect(pullUp.position(at: 1) == actor.corner)
   }
   let crampedScreen = CGRect(
     x: screen.minX, y: screen.minY, width: screen.width,

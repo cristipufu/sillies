@@ -12,6 +12,7 @@ public struct PlayfulSceneDefinition: Codable, Sendable, Equatable, Identifiable
   public enum Trigger: String, Codable, Sendable { case ambient, idle, landing, windowSettled }
   public enum Layout: String, Codable, Sendable { case perches, together, exterior }
   public enum Facing: String, Codable, Sendable { case left, right }
+  public enum Travel: String, Codable, Sendable { case direct, cornerPullUp }
   public enum Role: String, Codable, Sendable, CaseIterable { case lead, partner }
   public enum Destination: String, Codable, Sendable { case home, stage, corner, outside, below }
   public enum Prop: String, Codable, Sendable {
@@ -19,23 +20,40 @@ public struct PlayfulSceneDefinition: Codable, Sendable, Equatable, Identifiable
   }
 
   public struct Cue: Codable, Sendable, Equatable {
+    public struct Staging: Sendable {
+      public let pose: AttachmentPose?
+      public let facing: Facing?
+      public let movementStart: Double?
+      public let travel: Travel?
+
+      public init(
+        pose: AttachmentPose? = nil, facing: Facing? = nil,
+        movementStart: Double? = nil, travel: Travel? = nil
+      ) {
+        self.pose = pose
+        self.facing = facing
+        self.movementStart = movementStart
+        self.travel = travel
+      }
+    }
     public let role: Role
     public let animation: AnimationID
     public let destination: Destination
     public let pose: AttachmentPose?
     public let facing: Facing?
     public let movementStart: Double?
+    public let travel: Travel?
 
     public init(
-      role: Role, animation: AnimationID, destination: Destination, pose: AttachmentPose? = nil,
-      facing: Facing? = nil, movementStart: Double? = nil
+      role: Role, animation: AnimationID, destination: Destination, staging: Staging = .init()
     ) {
       self.role = role
       self.animation = animation
       self.destination = destination
-      self.pose = pose
-      self.facing = facing
-      self.movementStart = movementStart
+      pose = staging.pose
+      facing = staging.facing
+      movementStart = staging.movementStart
+      travel = staging.travel
     }
   }
 
@@ -98,17 +116,29 @@ public struct PlayfulSceneDefinition: Codable, Sendable, Equatable, Identifiable
       throw CharacterDefinition.ValidationError("Playful scene must return home: \(id)")
     }
     for role in roles {
-      var previous = Destination.home
+      var previous: Cue?
       for phase in phases {
         guard let cue = phase.cues.first(where: { $0.role == role }) else { continue }
-        if cue.destination == .below || previous == .below {
-          guard [.below, .outside].contains(previous), [.below, .outside].contains(cue.destination)
+        try validateTravel(cue, previous: previous, motion: phase.motion)
+        if cue.destination == .below || previous?.destination == .below {
+          guard [.below, .outside].contains(previous?.destination ?? .home),
+            [.below, .outside].contains(cue.destination)
           else {
             throw CharacterDefinition.ValidationError("Exterior route must clear the corner: \(id)")
           }
         }
-        previous = cue.destination
+        previous = cue
       }
+    }
+  }
+
+  private func validateTravel(_ cue: Cue, previous: Cue?, motion: PlayfulSceneMotion?) throws {
+    guard cue.travel == .cornerPullUp else { return }
+    guard layout == .exterior, previous?.destination == .outside, previous?.pose == .hangingRight,
+      cue.destination == .corner, (cue.pose ?? .standing) == .standing,
+      cue.facing == .left, (cue.movementStart ?? 0) == 0, motion == nil
+    else {
+      throw CharacterDefinition.ValidationError("Pull-up must follow a corner grip: \(id)")
     }
   }
 }

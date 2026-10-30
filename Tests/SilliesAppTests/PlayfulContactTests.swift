@@ -104,6 +104,7 @@ import Testing
 }
 
 @Test @MainActor func playfulClamberKeepsNativePlacementContinuousWithoutPropWindows() throws {
+  let nativeRoundingTolerance = 1.01
   let fixture = try PlayfulSceneFixture()
   defer { fixture.stop() }
   for id in ["edge-climb", "shove", "parachute"] {
@@ -134,11 +135,19 @@ import Testing
     fixture.coordinator.advance(at: boundary + 0.0001)
     #expect(climber.panel.frame.size == nativeBefore.size)
     #expect(abs(climber.panel.frame.minY - nativeBefore.minY) < 0.01)
-    for progress in [0.0, 0.5, 0.99] {
+    for sample in 0...100 {
+      let progress = Double(sample) / 100
       fixture.coordinator.advance(at: boundary + phase.duration * progress)
       #expect(fixture.coordinator.windowNumbers.isEmpty)
       #expect(!fixture.coordinator.hasVisibleProp)
       #expect(!climber.panel.frame.intersects(fixture.window))
+      let localFeet = climber.view.rig.stage.convert(
+        AttachmentPose.standing.anchor, to: climber.view.layer)
+      let worldFeet = CGPoint(
+        x: localFeet.x + climber.panel.frame.minX, y: localFeet.y + climber.panel.frame.minY)
+      #expect(
+        hypot(worldFeet.x - climber.position.x, worldFeet.y - climber.position.y)
+          < nativeRoundingTolerance)
     }
     fixture.coordinator.advance(at: session.endsAt)
     #expect(fixture.coordinator.windowNumbers.isEmpty)
@@ -146,25 +155,36 @@ import Testing
   }
 }
 
-@Test @MainActor func playfulClamberKeepsTheHandsPlantedUntilRelease() throws {
+@Test @MainActor func playfulClamberMovesTheHandsOntoTheLedgeBeforeCrossingTheCorner() throws {
   let fixture = try PlayfulSceneFixture()
   defer { fixture.stop() }
   let plan = try fixture.plan("edge-climb")
   let actor = try #require(plan.actors.first)
+  let motion = PlayfulClamberMotion(actor: actor)
   let scale = actor.participant.surface.presentationSize / 100
-  let from = actor.point(for: .outside, pose: .hangingRight)
-  let to = actor.point(for: .outside)
-  let original = PlayfulClamberGrip.points(actor: actor, progress: 0)
-  for sample in 0...68 {
+  let standing = AttachmentPose.standing.anchor
+  var previous = actor.point(for: .outside, pose: .hangingRight)
+  var planted: [CGPoint] = []
+  for sample in 0...100 {
     let progress = Double(sample) / 100
-    let eased = progress * progress * (3 - 2 * progress)
-    let body = CGPoint(x: from.x + (to.x - from.x) * eased, y: from.y + (to.y - from.y) * eased)
-    for (grip, start) in zip(PlayfulClamberGrip.points(actor: actor, progress: progress), original)
-    {
-      let world = CGPoint(x: body.x + (64 - grip.x) * scale, y: body.y + (grip.y - 20) * scale)
-      let anchor = CGPoint(x: from.x + (64 - start.x) * scale, y: from.y + (start.y - 20) * scale)
-      #expect(hypot(world.x - anchor.x, world.y - anchor.y) < 0.01)
-      #expect(abs(world.x - fixture.window.maxX) < 0.01)
+    let body = motion.position(at: progress)
+    #expect(body.x <= previous.x + 0.01)
+    #expect(hypot(body.x - previous.x, body.y - previous.y) < 4)
+    if body.x < actor.exteriorEdgeX {
+      #expect(body.y >= actor.corner.y)
+      #expect(motion.edge(at: progress) == .top)
     }
+    let hands = motion.handPoints(at: progress).map {
+      CGPoint(x: body.x + (standing.x - $0.x) * scale, y: body.y + ($0.y - standing.y) * scale)
+    }
+    if (0.78...0.86).contains(progress) {
+      #expect(hands.allSatisfy { $0.x < actor.exteriorEdgeX && $0.y >= actor.corner.y })
+      if planted.isEmpty { planted = hands }
+      for (hand, anchor) in zip(hands, planted) {
+        #expect(hypot(hand.x - anchor.x, hand.y - anchor.y) < 0.01)
+      }
+    }
+    previous = body
   }
+  #expect(motion.position(at: 1) == actor.corner)
 }

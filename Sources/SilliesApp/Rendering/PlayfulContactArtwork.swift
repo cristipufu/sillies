@@ -12,7 +12,7 @@ final class PlayfulContactArtwork {
     static let reach: [CGFloat] = [88, 84, 116, 121, 92]
     static let heights: [CGFloat] = [58, 73]
   }
-  private static let clamberSampleCount = 20
+  private static let clamberSampleCount = 40
   let layer = CALayer()
   private let arms: [CharacterFlexibleArmArtwork]
   var gripPoints: [CGPoint] { arms.map { $0.hand.position } }
@@ -49,10 +49,11 @@ final class PlayfulContactArtwork {
     layer.opacity = 1
     let samples = (0...Self.clamberSampleCount).map { Double($0) / Double(Self.clamberSampleCount) }
     let times = samples.map { NSNumber(value: $0) }
-    let grips = samples.map { PlayfulClamberGrip.points(actor: actor, progress: $0) }
+    let pullUp = PlayfulClamberMotion(actor: actor)
+    let grips = samples.map { pullUp.handPoints(at: $0) }
     for (index, arm) in arms.enumerated() {
       let points = grips.map { $0[index] }
-      arm.pose(at: PlayfulClamberGrip.points(actor: actor, progress: 1)[index])
+      arm.pose(at: pullUp.handPoints(at: 1)[index])
       let paths = points.map { arm.path(to: $0) }
       let motion = Timing(times: times, duration: duration, curve: .linear)
       animate(arm.outline, key: "path", values: paths, timing: motion)

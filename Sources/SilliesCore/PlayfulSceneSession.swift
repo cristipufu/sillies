@@ -57,14 +57,18 @@ public struct PlayfulSceneSession: Sendable {
       let to = actor.point(for: cue.destination, pose: pose)
       let sway =
         phase.motion?.offset(at: progress, size: actor.participant.surface.presentationSize) ?? 0
-      let point = CGPoint(
-        x: from.x + (to.x - from.x) * eased + sway, y: from.y + (to.y - from.y) * eased)
+      let pullUp = cue.travel == .cornerPullUp ? PlayfulClamberMotion(actor: actor) : nil
+      let point =
+        pullUp?.position(at: progress)
+        ?? CGPoint(
+          x: from.x + (to.x - from.x) * eased + sway, y: from.y + (to.y - from.y) * eased)
       let isDescending = cue.destination == .below || previous?.destination == .below
       return Frame(
         actor: actor, position: point,
         animation: actor.participant.profile.animation(for: cue.animation),
-        edge: isDescending || pose.isHanging || previous?.pose?.isHanging == true
-          ? .right : actor.participant.surface.edge,
+        edge: pullUp?.edge(at: progress)
+          ?? (isDescending || pose.isHanging || previous?.pose?.isHanging == true
+            ? .right : actor.participant.surface.edge),
         facingRight: cue.facing.map { $0 == .right }
           ?? (phase.prop == .plane
             ? PlayfulPlaneFlight.facesRight(

@@ -53,6 +53,7 @@ import Testing
 
 @Test @MainActor func playfulTravelUsesBoundedNativeFrameWork() throws {
   try measurePlayfulTravel(scene: "edge-climb", startingAt: 2.6)
+  try measurePlayfulTravel(scene: "edge-climb", startingAt: 9.9)
 }
 
 @Test @MainActor func playfulSharedTravelUsesBoundedNativeFrameWork() throws {
@@ -89,12 +90,18 @@ import Testing
   for scene in fixture.catalog.scenes {
     var time = 0.0
     for (index, phase) in scene.phases.enumerated() {
-      try fixture.start(scene.id)
-      fixture.coordinator.advance(at: time + phase.duration * 0.55)
-      fixture.sampleAnimations(
-        at: phase.duration * 0.55, phase: index, clock: PlayfulPreviewClock())
-      try DisplayFrameSequence.presentCreatedWindows()
-      try fixture.snapshot(named: "\(scene.id)-\(index)")
+      let samples =
+        phase.cues.contains { $0.travel == .cornerPullUp }
+        ? [0.25, 0.55, 0.65, 0.8, 0.95] : [0.55]
+      for progress in samples {
+        try fixture.start(scene.id)
+        fixture.coordinator.advance(at: time + phase.duration * progress)
+        fixture.sampleAnimations(
+          at: phase.duration * progress, phase: index, clock: PlayfulPreviewClock())
+        try DisplayFrameSequence.presentCreatedWindows()
+        let suffix = progress == 0.55 ? "" : "-pullup-\(Int(progress * 100))"
+        try fixture.snapshot(named: "\(scene.id)-\(index)\(suffix)")
+      }
       time += phase.duration
     }
   }

@@ -44,11 +44,13 @@ let package = Package(
       name: "SilliesAudioTests",
       dependencies: ["SilliesAudio", "SilliesCore", "SilliesAudioTestSupport"]),
     .testTarget(
-      name: "SilliesPersistenceTests", dependencies: ["SilliesPersistence", "SilliesCore"]),
+      name: "SilliesPersistenceTests", dependencies: ["SilliesPersistence", "SilliesCore"],
+      resources: [.copy("Fixtures")]),
     .testTarget(
       name: "SilliesAppTests",
       dependencies: [
         "SilliesApp", "SilliesAudio", "SilliesAudioTestSupport", "SilliesCore",
+        "SilliesPersistence",
         "WindowMetadataProtocol",
       ]),
   ],

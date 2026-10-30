@@ -125,7 +125,7 @@ private final class AudioEnduranceWorker {
     #expect(abs(duration - Double(Self.durationSeconds)) < 0.1)
     return AudioCaptureResult(
       transcript: transcript.text, recordingURL: url,
-      duration: Double(Self.durationSeconds), error: nil)
+      duration: Double(Self.durationSeconds), failure: nil)
   }
 
   private func processFrame(second: Int, frame: Int) throws {

@@ -11,7 +11,9 @@ import Testing
   await vault.waitUntilLoaded()
   let records = (0..<3).map {
     SessionRecord(
-      kind: .record, characterID: "mochi", characterName: "Mochi", appName: "Meeting \($0)")
+      kind: .record,
+      origin: .init(
+        characterID: "mochi", characterName: "Mochi", source: .init(appName: "Meeting \($0)")))
   }
   for record in records.reversed() { vault.add(record) }
   let model = SessionVaultModel(vault: vault, initialRecordID: records[1].id)

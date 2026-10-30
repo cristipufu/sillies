@@ -9,7 +9,8 @@ import Testing
   let repository = SessionRecordRepository(directory: directory)
   #expect(try repository.load().isEmpty)
   let record = SessionRecord(
-    kind: .focus, characterID: "mochi", characterName: "Mochi", appName: "Test")
+    kind: .focus,
+    origin: .init(characterID: "mochi", characterName: "Mochi", source: .init(appName: "Test")))
   try repository.save([record])
   #expect(try repository.load().map(\.id) == [record.id])
   let data = try Data(contentsOf: directory.appendingPathComponent("sessions.json"))

@@ -140,9 +140,9 @@ final class AudioSkillSession: ActiveSkillSession {
       presentation.transcript = text
       presentation.elapsed = elapsed
       presentation.audioLevel = presentation.isPaused ? 0 : level
-    case .failed(let message):
+    case .failed(let failure):
       presentation.pendingLanguageID = nil
-      presentation.phase = .failed(message)
+      presentation.phase = .failed(failure)
       presentation.status = "Stopped · Open details"
       presentation.audioLevel = 0
     }
@@ -237,7 +237,7 @@ final class AudioSkillSession: ActiveSkillSession {
     if let service {
       service.finish(completion: completed)
     } else {
-      completed(AudioCaptureResult(transcript: "", recordingURL: nil, duration: 0, error: nil))
+      completed(AudioCaptureResult(transcript: "", recordingURL: nil, duration: 0, failure: nil))
     }
   }
 
@@ -254,18 +254,24 @@ final class AudioSkillSession: ActiveSkillSession {
   ) -> SkillCompletionOutcome {
     let hasText = !result.transcript.isEmpty
     let record = SessionRecord(
-      id: context.id, kind: context.kind, characterID: context.finalize.companionID,
-      characterName: context.finalize.companionName,
-      appName: context.finalize.target?.appName ?? "Microphone",
-      bundleIdentifier: context.finalize.target?.bundleIdentifier,
-      windowTitle: context.finalize.target?.windowTitle, durationSeconds: result.duration,
-      transcript: result.transcript,
-      summary: hasText ? "Preparing local notes…" : "No speech was transcribed.",
-      summaryPending: hasText, failureMessage: result.error,
-      audioFilename: result.recordingURL?.lastPathComponent,
-      suggestions: context.suggestions, languageIdentifier: context.language)
+      kind: context.kind,
+      origin: .init(
+        characterID: context.finalize.companionID, characterName: context.finalize.companionName,
+        source: .init(
+          appName: context.finalize.target?.appName ?? "Microphone",
+          bundleIdentifier: context.finalize.target?.bundleIdentifier,
+          windowTitle: context.finalize.target?.windowTitle)),
+      content: .init(
+        text: .init(transcript: result.transcript),
+        notes: .init(
+          summary: hasText ? "Preparing local notes…" : "No speech was transcribed.",
+          suggestions: context.suggestions),
+        attachments: .init(audioFilename: result.recordingURL?.lastPathComponent),
+        processing: .init(summaryPending: hasText, failure: result.failure)),
+      metadata: .init(
+        id: context.id, durationSeconds: result.duration, languageIdentifier: context.language))
     let banner =
-      result.error != nil
+      result.failure != nil
       ? "Session needs attention · View details"
       : (hasText ? "Transcript ready · Preparing notes" : "Session finished · View details")
     return SkillCompletionOutcome(record: record, image: nil, bannerSummary: banner)

@@ -263,3 +263,33 @@ The final `make check` passed 105 Core, 14 audio, 5 persistence, and 107 app tes
 The short prerecorded Apple Speech integration also passed in 27.2 seconds after the synchronization changes, preserving both streams and the AAC recording. It does not require a live microphone session.
 
 The rebuilt release app passed the native focused-window fixture (move, resize, settlement, exterior placement, minimize/restore, and close with Accessibility disabled), and its Developer ID signature passed deep/strict verification.
+
+## Explicit lifecycle and coordinator follow-up
+
+Capture now uses a Core phase model and virtual timestamps. The fast suite exhausts 4,096 six-command pause/resume/repeated-start sequences, then verifies that completed sessions cannot restart or accumulate duration. Device fakes cover shutdown during permission preparation, failure while paused, duplicate finish subscribers and stop callbacks, zero-delay finalization deadlines, final-result reuse, and release of the service after draining. Native owner checks exercise 100 subscription start/stop cycles and 1,000 application-focus switches without waiting for real-time delays.
+
+The final `make stress` run passed 23 cases in about 21 seconds, still under the 90-second execution watchdog. The 600-second synthetic audio fixture with four hours of transcript history measured scroll p95 of 0.427 ms; 100,000 progress updates coalesced into one delivery in 25 ms. The final `make check` passed 108 Core, 20 audio, 5 persistence, and 109 app test entries, 25 architecture-checker fixtures, all four unchanged native interaction budgets, and all 12 packs. Live transcript update p95 ranged from 4.85 to 5.31 ms.
+
+Six coordinating types now use checked Sendable conformance. Four audio owners put their private mutable state behind one small queue-asserting adapter; window request scheduling and metadata ownership use Mutex state. Six explicit unchecked exceptions remain, covering this adapter, retained SDK buffers/handles, AX ownership, and the socket connection. The adapter's confinement assertion is itself enforced by syntax-checker fixtures. This reduces the unchecked surface; it does not turn SDK threading assumptions into compiler proofs.
+
+The prerecorded Apple Speech and AAC integration passed in 30.7 seconds, preserving both streams. The release build passed the native focused-window fixture with Accessibility disabled (move, resize, settlement, exterior placement, minimize/restore, and close), and its Developer ID signature passed deep/strict verification.
+
+## Typed failures and compatibility follow-up
+
+Permission recovery now follows explicit failure data through capture, presentation, and saving. Ordinary summary text cannot trigger a permission warning. Frozen historical JSON fixtures verify every original field after repository load/save, missing-field defaults, and migration of known legacy permission errors. Coordinator dependencies are grouped by responsibility, startup wires named event handlers, and geometry publication distinguishes manipulation from reconciliation explicitly.
+
+The final `SILLIES_SKILL_UI_SNAPSHOTS=1 make check` passed 109 Core, 22 audio, 8 persistence, and 111 app test entries, all 25 architecture-checker fixtures, all four unchanged interaction budgets, and all 12 character packs. Live transcript update p95 ranged from 4.77 to 5.45 ms. Minimum-size microphone/screen-permission notices and a saved session containing both a failure and useful notes were visually inspected; recovery controls fit, and summary/transcript content remains visible.
+
+`make stress` passed 24 cases in about 19 seconds under the existing 90-second execution watchdog. The accelerated 600-second audio fixture with four hours of transcript history measured scroll p95 of 0.236 ms. The 100,000-update UI fixture retained one pending update and one scheduled delivery; 100,000 audio callbacks across 20 lifecycles drained with zero pending packets.
+
+The release build passed the native focused-window fixture (move, resize, settlement, exterior placement, minimize/restore, and close with Accessibility disabled) and deep/strict Developer ID signature verification.
+
+## Session construction and race-detection follow-up
+
+Session construction now uses cohesive origin/content/metadata inputs, and Markdown export has a dedicated formatter with complete-output regressions. Failure decoding preserves unknown category/action identifiers through saving, keeps the diagnostic message visible, and offers no unsupported recovery action. Historical and future-format JSON fixtures pass without changing the flat saved schema.
+
+`make check` passed 113 Core, 23 audio, 9 persistence, and 111 app test entries, the 25 architecture-checker fixtures, all four unchanged interaction budgets, and all 12 character packs. Live transcript update p95 ranged from 4.58 to 5.33 ms.
+
+The new `make race-check` uses a separate Thread Sanitizer build and a 90-second test-execution watchdog. Its final run passed 25 selected audio/UI-delivery/metadata tests in about 2 seconds of test execution with no sanitizer reports. Coverage includes eight concurrent audio producers racing shutdown, language-change cancellation, queued-buffer release, native metadata-helper restart, and concurrent cache access. The cold instrumented build is separate from this duration. These checks exercise the selected application paths, not every SDK/device implementation, and sanitizer timings are not frame-budget measurements.
+
+The rebuilt release app passed the native move/resize/minimize/restore/close fixture with Accessibility disabled, and deep/strict Developer ID signature verification passed.

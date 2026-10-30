@@ -1,0 +1,53 @@
+[
+  {
+    "id": "00000000-0000-0000-0000-000000000002",
+    "kind": "participate",
+    "characterID": "kiko",
+    "characterName": "Kiko",
+    "appName": "Meeting",
+    "createdAt": "2026-10-27T11:00:00Z",
+    "durationSeconds": 125.5,
+    "transcript": "[00:01] Meeting: Ship Friday.\n[00:03] You · microphone: I’ll review it.",
+    "extractedText": "",
+    "summary": "Ship Friday",
+    "actionItems": ["Review the draft"],
+    "stashedItems": [],
+    "summaryPending": false,
+    "failureMessage": "Microphone permission needed. Enable Sillies in System Settings → Privacy & Security → Microphone.",
+    "audioFilename": "meeting.m4a",
+    "explanation": "",
+    "processingNote": "Generated on this Mac.",
+    "suggestions": [],
+    "languageIdentifier": "en-US"
+  },
+  {
+    "id": "00000000-0000-0000-0000-000000000003",
+    "kind": "snap",
+    "characterID": "mochi",
+    "characterName": "Mochi",
+    "appName": "Notes",
+    "createdAt": "2026-10-27T12:00:00Z",
+    "durationSeconds": 0,
+    "transcript": "",
+    "extractedText": "",
+    "summary": "Screen Recording permission is required to capture Notes.",
+    "actionItems": [],
+    "stashedItems": [],
+    "failureMessage": "Screen capture permission required"
+  },
+  {
+    "id": "00000000-0000-0000-0000-000000000004",
+    "kind": "record",
+    "characterID": "mochi",
+    "characterName": "Mochi",
+    "appName": "Microphone",
+    "createdAt": "2026-10-27T13:00:00Z",
+    "durationSeconds": 10,
+    "transcript": "Preserve these words.",
+    "extractedText": "",
+    "summary": "Discuss screen recording permission and system settings.",
+    "actionItems": [],
+    "stashedItems": [],
+    "failureMessage": "An unknown error mentioned system settings."
+  }
+]

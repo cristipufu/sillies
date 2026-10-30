@@ -32,7 +32,7 @@ final class SnapSkillSession: ActiveSkillSession {
         NSPasteboard.general.setData(png, forType: .png)
       }
       var text = ""
-      var notice = result.errorDescription ?? ""
+      var notice = ""
       if request.kind == .explain, let image = result.image {
         do { text = try await WindowTextRecognition.recognize(image) } catch {
           notice = "Text recognition failed: \(error.localizedDescription)"
@@ -46,11 +46,16 @@ final class SnapSkillSession: ActiveSkillSession {
       guard !Task.isCancelled else { return }
       let pending = request.kind == .explain && !text.isEmpty
       let record = SessionRecord(
-        kind: request.kind, characterID: request.companionID,
-        characterName: request.companionName, appName: request.target.appName,
-        bundleIdentifier: request.target.bundleIdentifier, windowTitle: request.target.windowTitle,
-        extractedText: text, summary: pending ? "Preparing a local explanation…" : result.summary,
-        summaryPending: pending, failureMessage: result.errorDescription, processingNote: notice)
+        kind: request.kind,
+        origin: .init(
+          characterID: request.companionID, characterName: request.companionName,
+          source: .init(
+            appName: request.target.appName, bundleIdentifier: request.target.bundleIdentifier,
+            windowTitle: request.target.windowTitle)),
+        content: .init(
+          text: .init(extractedText: text),
+          notes: .init(summary: pending ? "Preparing a local explanation…" : result.summary),
+          processing: .init(summaryPending: pending, failure: result.failure, note: notice)))
       let banner =
         result.pngData == nil
         ? "Capture unavailable · View details"

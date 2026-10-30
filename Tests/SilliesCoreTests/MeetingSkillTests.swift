@@ -42,30 +42,12 @@ import Testing
   #expect(later)
 }
 
-@Test func legacyRecordsDecodeWithoutNewAudioAndExplanationFields() throws {
-  let record = SessionRecord(
-    kind: .watch, characterID: "mochi", characterName: "Mochi", appName: "Notes",
-    summary: "Legacy record")
-  let encoded = try JSONEncoder().encode(record)
-  var object = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
-  for key in [
-    "audioFilename", "explanation", "processingNote", "suggestions", "languageIdentifier",
-  ] {
-    object.removeValue(forKey: key)
-  }
-  let oldData = try JSONSerialization.data(withJSONObject: object)
-  let decoded = try JSONDecoder().decode(SessionRecord.self, from: oldData)
-  #expect(decoded.kind == .watch)
-  #expect(decoded.audioFilename == nil)
-  #expect(decoded.suggestions.isEmpty)
-  #expect(decoded.explanation.isEmpty)
-  #expect(decoded.languageIdentifier == nil)
-}
-
 @Test func sessionPreservesSelectedLanguageForNotesAfterRelaunch() throws {
   let record = SessionRecord(
-    kind: .record, characterID: "mochi", characterName: "Mochi", appName: "Microphone",
-    languageIdentifier: "fr-FR")
+    kind: .record,
+    origin: .init(
+      characterID: "mochi", characterName: "Mochi", source: .init(appName: "Microphone")),
+    metadata: .init(languageIdentifier: "fr-FR"))
   let decoded = try JSONDecoder().decode(SessionRecord.self, from: JSONEncoder().encode(record))
   #expect(decoded.languageIdentifier == "fr-FR")
 }

@@ -32,8 +32,9 @@ import Testing
   settings.reduceMotion = true
   settings.enabledCharacters = Set(characters.map(\.id))
   let controller = try CompanionController(
-    settings: settings, useAccessibility: false, renderers: renderers,
-    catalog: CharacterCatalog(characters: characters))
+    settings: settings,
+    assets: .init(catalog: CharacterCatalog(characters: characters), renderers: renderers),
+    services: .init(accessibility: .disabled))
   controller.start()
   defer { controller.stop() }
 

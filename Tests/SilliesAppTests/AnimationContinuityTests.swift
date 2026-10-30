@@ -60,7 +60,8 @@ func applicationDiscoveryAndUnrelatedSettingsPreservePlayingClips() throws {
   let settings = AppSettings(defaults: defaults)
   settings.enabledCharacters = ["mochi"]
   settings.followsWindows = true
-  let controller = try CompanionController(settings: settings, useAccessibility: false)
+  let controller = try CompanionController(
+    settings: settings, services: .init(accessibility: .disabled))
   controller.start()
   defer { controller.stop() }
   controller.tracker.simulateTrackedWindow(
@@ -116,7 +117,7 @@ func nativeMinimizeSuppressesLateGeometryAndTracksRestoreWhilePaused() {
   window.alphaValue = 0
   window.orderFrontRegardless()
   defer { window.close() }
-  let tracker = WorkspaceTracker(useAccessibility: false)
+  let tracker = WorkspaceTracker(accessibility: .disabled)
   tracker.start()
   defer { tracker.stop() }
   tracker.simulateApplicationSwitchInFlight(processID: ProcessInfo.processInfo.processIdentifier)

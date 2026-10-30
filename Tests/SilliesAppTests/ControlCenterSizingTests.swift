@@ -11,8 +11,10 @@ import Testing
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(suite)
   defer { removeTestFile(at: directory) }
   let controller = try CompanionController(
-    settings: AppSettings(defaults: defaults), useAccessibility: false,
-    skills: SkillCoordinator(vault: SessionVaultStore(directory: directory)))
+    settings: AppSettings(defaults: defaults),
+    services: .init(
+      accessibility: .disabled,
+      skills: SkillCoordinator(vault: SessionVaultStore(directory: directory))))
   let content = ControlCenterView(
     controller: controller, openSettings: {}, openPlayground: {}, quit: {})
   let host = ControlCenterHostingController(

@@ -42,13 +42,7 @@ final class CompanionController {
   @ObservationIgnored private(set) var interactionCounts: [EventKind: Int] = [:]
 
   init(
-    settings: AppSettings, useAccessibility: Bool = true,
-    renderers: RendererRegistry = RendererRegistry(),
-    animations: AnimationLibrary = AnimationLibrary(),
-    transitions: TransitionLibrary = TransitionLibrary(),
-    catalog: CharacterCatalog? = nil,
-    skills: SkillCoordinator = SkillCoordinator(),
-    eventProducers: [any WorkspaceEventProducer] = []
+    settings: AppSettings, assets: CompanionAssets = .init(), services: CompanionServices = .init()
   ) throws {
     let traceEnabled =
       ProcessInfo.processInfo.arguments.contains("--trace-drag")
@@ -57,15 +51,13 @@ final class CompanionController {
     self.smoothnessMetrics = InteractionSmoothnessMetrics(enabled: traceEnabled)
     self.dragTargeting = CompanionDragTargetingController(metrics: metrics)
     self.settings = settings
-    self.renderers = renderers
-    self.animations = animations
-    self.transitions = transitions
-    self.skills = skills
-    self.additionalEventProducers = eventProducers
-    tracker = WorkspaceTracker(useAccessibility: useAccessibility)
-    self.catalog = try catalog ?? CharacterCatalog()
-    try self.catalog.validateAssets(
-      renderers: renderers, animations: animations, transitions: transitions)
+    self.renderers = assets.renderers
+    self.animations = assets.animations
+    self.transitions = assets.transitions
+    self.skills = services.skills
+    self.additionalEventProducers = services.eventProducers
+    tracker = WorkspaceTracker(accessibility: services.accessibility)
+    self.catalog = try assets.validatedCatalog()
   }
 
   var isExcluded: Bool {
@@ -98,75 +90,86 @@ final class CompanionController {
   func start() {
     guard !started else { return }
     started = true
-    motionClock.onFrame = { [weak self] time in self?.tick(at: time) }
+    connectCallbacks()
+    dragTargeting.start()
+    reconcile()
+    tracker.start()
+    for producer in additionalEventProducers { producer.start() }
+  }
+
+  private func connectCallbacks() {
+    motionClock.onFrame = { [weak self] in self?.tick(at: $0) }
     deadlineClock.onDeadline = { [weak self] in self?.advanceBehaviors() }
+    settings.onChange = { [weak self] in self?.reconcile() }
+    connectDragTargeting()
+    connectWorkspaceEvents()
+    connectSkillEvents()
+    for producer in additionalEventProducers {
+      producer.onEvent = { [weak self] in self?.route($0) }
+    }
+  }
+
+  private func connectDragTargeting() {
     dragTargeting.companionLookup = { [weak self] id in
       self?.companions.first(where: { $0.definition.id == id })
     }
     dragTargeting.excludedOverlayWindowNumbers = { [weak self] in
       self?.companionAndHUDWindowNumbers() ?? []
     }
-    dragTargeting.currentTrackerWindowFrame = { [weak self] in
-      self?.tracker.windowFrame
-    }
-    dragTargeting.currentCharacterSize = { [weak self] in
-      self?.settings.size ?? 64
-    }
-    dragTargeting.start()
-    settings.onChange = { [weak self] in self?.reconcile() }
+    dragTargeting.currentTrackerWindowFrame = { [weak self] in self?.tracker.windowFrame }
+    dragTargeting.currentCharacterSize = { [weak self] in self?.settings.size ?? 64 }
+  }
+
+  private func connectWorkspaceEvents() {
     tracker.onEvent = { [weak self] in self?.route($0) }
     tracker.onGeometryChanged = { [weak self] in self?.geometryChanged() }
     tracker.onEnvironmentChanged = { [weak self] in self?.reconcile() }
-    tracker.onApplicationChanged = { [weak self] in
-      self?.dragTargeting.refreshWindowSnapshot()
-      self?.skills.refreshBoundWindows()
-      self?.reconcile()
-    }
-    skills.onBindingChanged = { [weak self] companionID, state in
-      guard let self, let pet = self.companions.first(where: { $0.definition.id == companionID })
-      else { return }
-      let previousTarget = pet.attachmentTarget
-      let wasVisible = pet.isAttachmentVisible
-      pet.updateBinding(state)
-      pet.updateSkillPresentation(self.skills.presentation(for: companionID))
-      let targetChanged = previousTarget != pet.attachmentTarget
-      if targetChanged {
-        self.updateSurfaces(mode: .animated)
-        if !wasVisible, pet.isAttachmentVisible {
-          pet.displayBehavior(
-            pet.behaviorState, using: self.animations,
-            reducedMotion: self.reducedMotion || self.tracker.isLowPower)
-        }
-        self.scheduleDeadline()
-        self.updateMotionClock()
-      }
-      pet.refreshHUD()
-      if targetChanged, self.interaction.isEnabled { self.interaction.refresh() }
-    }
-    skills.onEmitEvent = { [weak self] companionID, event in
-      guard let self, let pet = self.companions.first(where: { $0.definition.id == companionID })
-      else { return }
-      if case .active(_, let skill, _, _, _) = pet.bindingState, skill.isAudioSession,
-        event.kind == skill.eventKind, let state = pet.beginSustainedReaction(event)
-      {
-        self.apply(state, to: pet)
-      } else {
-        self.react(pet, to: event)
-      }
-      self.scheduleDeadline()
-      self.updateMotionClock()
-    }
-    skills.onOpenVaultRecord = { [weak self] recordID in
-      self?.onOpenVault?(recordID)
-    }
-    for producer in additionalEventProducers {
-      producer.onEvent = { [weak self] in self?.route($0) }
-    }
+    tracker.onApplicationChanged = { [weak self] in self?.applicationChanged() }
+  }
+
+  private func connectSkillEvents() {
+    skills.onBindingChanged = { [weak self] in self?.skillBindingChanged(for: $0, state: $1) }
+    skills.onEmitEvent = { [weak self] in self?.skillEvent($1, for: $0) }
+    skills.onOpenVaultRecord = { [weak self] in self?.onOpenVault?($0) }
+  }
+
+  private func applicationChanged() {
+    dragTargeting.refreshWindowSnapshot()
+    skills.refreshBoundWindows()
     reconcile()
-    tracker.start()
-    for producer in additionalEventProducers {
-      producer.start()
+  }
+
+  private func skillBindingChanged(for companionID: String, state: CompanionBindingState) {
+    guard let pet = companions.first(where: { $0.definition.id == companionID }) else { return }
+    let previousTarget = pet.attachmentTarget
+    let wasVisible = pet.isAttachmentVisible
+    pet.updateBinding(state)
+    pet.updateSkillPresentation(skills.presentation(for: companionID))
+    let targetChanged = previousTarget != pet.attachmentTarget
+    if targetChanged {
+      updateSurfaces(mode: .animated)
+      if !wasVisible, pet.isAttachmentVisible {
+        pet.displayBehavior(
+          pet.behaviorState, using: animations, reducedMotion: reducedMotion || tracker.isLowPower)
+      }
+      scheduleDeadline()
+      updateMotionClock()
     }
+    pet.refreshHUD()
+    if targetChanged, interaction.isEnabled { interaction.refresh() }
+  }
+
+  private func skillEvent(_ event: WorkspaceEvent, for companionID: String) {
+    guard let pet = companions.first(where: { $0.definition.id == companionID }) else { return }
+    if case .active(_, let skill, _, _, _) = pet.bindingState, skill.isAudioSession,
+      event.kind == skill.eventKind, let state = pet.beginSustainedReaction(event)
+    {
+      apply(state, to: pet)
+    } else {
+      react(pet, to: event)
+    }
+    scheduleDeadline()
+    updateMotionClock()
   }
 
   func stop() {

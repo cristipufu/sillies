@@ -27,11 +27,23 @@ import Testing
   try render(
     sessionView, size: CGSize(width: 640, height: 760), name: "sillies-participate-preview")
   model.phase = .failed(
-    "Speech processing couldn’t keep pace with the audio. Finish to save the available transcript.")
+    .init(
+      category: .audioProcessing,
+      message:
+        "Speech processing couldn’t keep pace with the audio. Finish to save the available transcript."
+    ))
   model.reasoningNotice =
     "Apple’s on-device AI does not support this language. Your transcript is saved."
   try render(
     sessionView, size: CGSize(width: 560, height: 640), name: "sillies-session-minimum-preview")
+  for recovery in [
+    SessionFailure.RecoveryAction.openMicrophoneSettings, .openScreenRecordingSettings,
+  ] {
+    model.phase = .failed(.permissionDenied(recovery))
+    try render(
+      sessionView, size: CGSize(width: 560, height: 640),
+      name: "sillies-session-\(recovery.rawValue)-preview")
+  }
   let recording = AudioSessionPresentation(kind: .record, sourceLabel: "MacBook Pro Microphone")
   recording.languages = model.languages
   recording.isLoadingLanguages = false
@@ -42,13 +54,29 @@ import Testing
     name: "sillies-record-language-preview")
   let vault = SessionVaultStore(directory: directory)
   let record = SessionRecord(
-    kind: .participate, characterID: "mochi", characterName: "Mochi", appName: "Design review",
-    durationSeconds: 125, transcript: model.transcript,
-    summary: "The proposal is due next week. A reviewer is still needed.",
-    actionItems: ["Coordinate the customer call."], suggestions: [suggestion])
+    kind: .participate,
+    origin: .init(
+      characterID: "mochi", characterName: "Mochi", source: .init(appName: "Design review")),
+    content: .init(
+      text: .init(transcript: model.transcript),
+      notes: .init(
+        summary: "The proposal is due next week. A reviewer is still needed.",
+        actionItems: ["Coordinate the customer call."], suggestions: [suggestion])),
+    metadata: .init(durationSeconds: 125))
   vault.add(record)
   let vaultView = SessionVaultView(vault: vault, initialRecordID: record.id)
   try render(vaultView, size: CGSize(width: 980, height: 660), name: "sillies-vault-preview")
+  let interrupted = SessionRecord(
+    kind: .listen,
+    origin: .init(characterID: "mochi", characterName: "Mochi", source: .init(appName: "Meeting")),
+    content: .init(
+      text: .init(transcript: model.transcript),
+      notes: .init(summary: "Discuss system settings tomorrow. Keep these notes."),
+      processing: .init(failure: .permissionDenied(.openScreenRecordingSettings))))
+  vault.add(interrupted)
+  try render(
+    SessionVaultView(vault: vault, initialRecordID: interrupted.id),
+    size: CGSize(width: 980, height: 660), name: "sillies-vault-permission-preview")
   await vault.flush()
 }
 

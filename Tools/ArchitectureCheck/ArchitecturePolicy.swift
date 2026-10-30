@@ -12,6 +12,7 @@ struct ArchitecturePolicy {
     ],
   ]
   static let workerEntries: [String: Set<String>] = [
+    "SerialQueueStorage.swift": ["withValue"],
     "WindowServerSource.swift": ["performRefresh"],
     "AccessibilityWindowSource.swift": ["readWindow", "roleSnapshot"],
     "WindowMetadataReader.swift": ["snapshot"],

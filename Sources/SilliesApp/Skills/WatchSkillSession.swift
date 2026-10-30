@@ -63,13 +63,13 @@ final class WatchSkillSession: ActiveSkillSession {
       ?? "Watched \(target.displayTitle) for \(SessionRecord.formatDuration(duration))."
     let record = SessionRecord(
       kind: .watch,
-      characterID: context.companionID,
-      characterName: context.companionName,
-      appName: target.appName,
-      bundleIdentifier: target.bundleIdentifier,
-      windowTitle: latestTitle ?? target.windowTitle,
-      durationSeconds: duration,
-      summary: note)
+      origin: .init(
+        characterID: context.companionID, characterName: context.companionName,
+        source: .init(
+          appName: target.appName, bundleIdentifier: target.bundleIdentifier,
+          windowTitle: latestTitle ?? target.windowTitle)),
+      content: .init(notes: .init(summary: note)),
+      metadata: .init(durationSeconds: duration))
     return SkillCompletionOutcome(
       record: record, image: nil, bannerSummary: "Watch complete · Focus \(target.appName)")
   }

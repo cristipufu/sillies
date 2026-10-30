@@ -63,7 +63,9 @@ func quittingBeforeVaultLoadFinishesFlushesInTheModalRunLoop() throws {
 
 private func makeLoadTestRecord(_ summary: String) -> SessionRecord {
   SessionRecord(
-    kind: .focus, characterID: "mochi", characterName: "Mochi", appName: "Test", summary: summary)
+    kind: .focus,
+    origin: .init(characterID: "mochi", characterName: "Mochi", source: .init(appName: "Test")),
+    content: .init(notes: .init(summary: summary)))
 }
 
 @Test @MainActor
@@ -108,13 +110,18 @@ func vaultPreservesCorruptMetadataAndMergesPendingChangesAfterRecovery() async t
   defer { removeTestFile(at: directory) }
   let vault = SessionVaultStore(directory: directory)
   let stash = SessionRecord(
-    kind: .stash, characterID: "mochi", characterName: "Mochi", appName: "Pocket Stash",
-    stashedItems: ["Keep until I delete it"])
+    kind: .stash,
+    origin: .init(
+      characterID: "mochi", characterName: "Mochi", source: .init(appName: "Pocket Stash")),
+    content: .init(text: .init(stashedItems: ["Keep until I delete it"])))
   vault.add(stash)
   for index in 0..<(SessionVaultStore.maxStoredRecords + 2) {
     vault.add(
       SessionRecord(
-        kind: .snap, characterID: "mochi", characterName: "Mochi", appName: "Capture \(index)"))
+        kind: .snap,
+        origin: .init(
+          characterID: "mochi", characterName: "Mochi", source: .init(appName: "Capture \(index)")))
+    )
   }
   await vault.flush()
   #expect(vault.records.count == SessionVaultStore.maxStoredRecords + 1)

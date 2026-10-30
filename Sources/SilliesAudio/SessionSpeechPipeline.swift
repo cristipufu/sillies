@@ -1,13 +1,14 @@
 import AVFoundation
 import Foundation
+import SilliesCore
 
 /// Switches recognizers without restarting capture or the audio file. State lives on the capture queue.
-final class SessionSpeechPipeline: @unchecked Sendable {
+final class SessionSpeechPipeline: Sendable {
   enum Event: Sendable {
     case textChanged
     case changingLanguage(SpeechLanguage)
     case languageChanged(SpeechLanguage)
-    case failed(String)
+    case failed(SessionFailure)
   }
   struct Configuration: Sendable {
     let sources: [SessionAudioSource]
@@ -25,134 +26,209 @@ final class SessionSpeechPipeline: @unchecked Sendable {
   private static let maximumBufferedCallbacks = 2_048
   private let configuration: Configuration
   private let onEvent: @Sendable (Event) -> Void
-  private var group: SpeechChannelGroup?
-  private var preparation: Task<Void, Never>?
-  private var generation = UUID()
-  private var startingCompletion: (@Sendable (Result<Void, Error>) -> Void)?
-  private var switching = false
-  private var stopped = false
-  private var buffered: [BufferedAudio] = []
-  private var bufferedDurations: [SessionAudioSource: TimeInterval] = [:]
-  private var sourceTimes: [SessionAudioSource: TimeInterval] = [:]
-  private var sourceOffsets: [SessionAudioSource: TimeInterval] = [:]
-  private var transcript = SpeechTranscript()
-  private var finalizationNotice: String?
-  private var switchTime: TimeInterval = 0
+  private final class State {
+    var group: SpeechChannelGroup?
+    var preparation: Task<Void, Never>?
+    var generation = UUID()
+    var startingCompletion: (@Sendable (Result<Void, Error>) -> Void)?
+    enum Phase { case idle, preparing, running, switching, finishing, finished }
+    var phase = Phase.idle
+    var switching: Bool { phase == .switching }
+    var stopped: Bool { phase == .finishing || phase == .finished }
+    var buffered: [BufferedAudio] = []
+    var bufferedDurations: [SessionAudioSource: TimeInterval] = [:]
+    var sourceTimes: [SessionAudioSource: TimeInterval] = [:]
+    var sourceOffsets: [SessionAudioSource: TimeInterval] = [:]
+    var transcript = SpeechTranscript()
+    var finalizationNotice: String?
+    var switchTime: TimeInterval = 0
+
+  }
+  private let storage: SerialQueueStorage<State>
 
   init(configuration: Configuration, onEvent: @escaping @Sendable (Event) -> Void) {
+    storage = SerialQueueStorage(queue: configuration.queue, makeValue: State.init)
     self.configuration = configuration
     self.onEvent = onEvent
   }
 
   var text: String {
-    assertCaptureQueue()
-    return transcript.text
+    return storage.withValue { state in
+      return state.transcript.text
+    }
   }
   var preview: String {
-    assertCaptureQueue()
-    return transcript.preview
-  }
-
-  private func assertCaptureQueue() {
-    dispatchPrecondition(condition: .onQueue(configuration.queue))
+    return storage.withValue { state in
+      return state.transcript.preview
+    }
   }
 
   func start(
     language: SpeechLanguage, completion: @escaping @Sendable (Result<Void, Error>) -> Void
   ) {
-    assertCaptureQueue()
-    startingCompletion = completion
-    prepare(language)
+    storage.withValue { state in
+      guard state.phase == .idle else {
+        completion(.failure(CancellationError()))
+        return
+      }
+      state.startingCompletion = completion
+      prepare(language)
+    }
   }
 
   func changeLanguage(_ language: SpeechLanguage, elapsed: TimeInterval) {
-    assertCaptureQueue()
-    guard !stopped, !switching, preparation == nil, language.isInstalled else { return }
-    switching = true
-    switchTime = elapsed
-    onEvent(.changingLanguage(language))
-    guard let group else {
-      prepare(language)
-      return
-    }
-    group.finish(reason: .languageChange) { [weak self] notice in
-      guard let self, !self.stopped else { return }
-      self.finalizationNotice = notice ?? self.finalizationNotice
-      self.transcript.preserveDrafts()
-      self.group = nil
-      self.prepare(language)
+    storage.withValue { state in
+      guard state.phase == .running, language.isInstalled else { return }
+      state.phase = .switching
+      state.switchTime = elapsed
+      onEvent(.changingLanguage(language))
+      guard let group = state.group else {
+        prepare(language)
+        return
+      }
+      group.finish(reason: .languageChange) { [weak self] notice in
+        self?.completeLanguageDrain(notice, language: language)
+      }
     }
   }
 
   func append(_ buffer: AVAudioPCMBuffer, source: SessionAudioSource, elapsed: TimeInterval) {
-    assertCaptureQueue()
-    guard !stopped else { return }
-    if switching {
-      let duration = Double(buffer.frameLength) / buffer.format.sampleRate
-      guard buffered.count < Self.maximumBufferedCallbacks,
-        bufferedDurations[source, default: 0] + duration <= Self.maximumBufferedDuration
-      else {
-        fail("Changing language took too long. Finish to save the available transcript and audio.")
-        return
+    storage.withValue { state in
+      guard state.phase == .running || state.switching else { return }
+      if state.switching {
+        let duration = Double(buffer.frameLength) / buffer.format.sampleRate
+        guard state.buffered.count < Self.maximumBufferedCallbacks,
+          state.bufferedDurations[source, default: 0] + duration <= Self.maximumBufferedDuration
+        else {
+          fail(
+            SessionFailure(
+              category: .transcription,
+              message:
+                "Changing language took too long. Finish to save the available transcript and audio."
+            ))
+          return
+        }
+        state.buffered.append(BufferedAudio(buffer: buffer, source: source, elapsed: elapsed))
+        state.bufferedDurations[source, default: 0] += duration
+      } else {
+        if state.sourceOffsets[source] == nil {
+          state.sourceOffsets[source] = max(
+            0, elapsed - Double(buffer.frameLength) / buffer.format.sampleRate)
+        }
+        state.sourceTimes[source] = elapsed
+        state.group?.append(buffer, source: source)
       }
-      buffered.append(BufferedAudio(buffer: buffer, source: source, elapsed: elapsed))
-      bufferedDurations[source, default: 0] += duration
-    } else {
-      if sourceOffsets[source] == nil {
-        sourceOffsets[source] = max(
-          0, elapsed - Double(buffer.frameLength) / buffer.format.sampleRate)
-      }
-      sourceTimes[source] = elapsed
-      group?.append(buffer, source: source)
     }
   }
 
-  func finish(completion: @escaping (String?) -> Void) {
-    assertCaptureQueue()
-    stopPreparing()
-    guard let group else {
-      completion(finalizationNotice)
-      return
-    }
-    group.finish(reason: .sessionEnd) { [weak self] notice in
-      guard let self else {
-        completion(notice)
+  func finish(completion: @escaping @Sendable (String?) -> Void) {
+    storage.withValue { state in
+      if state.phase == .finished {
+        completion(state.finalizationNotice)
         return
       }
-      self.transcript.preserveDrafts()
-      self.group = nil
-      completion(notice ?? self.finalizationNotice)
+      stopPreparing()
+      guard let group = state.group else {
+        state.phase = .finished
+        completion(state.finalizationNotice)
+        return
+      }
+      group.finish(reason: .sessionEnd) { [weak self] notice in
+        guard let self else {
+          completion(notice)
+          return
+        }
+        self.completeSessionDrain(notice, completion: completion)
+      }
     }
   }
 
   func cancel() {
-    assertCaptureQueue()
-    stopPreparing()
-    group?.cancel()
-    transcript.preserveDrafts()
-    group = nil
+    storage.withValue { state in
+      stopPreparing()
+      state.group?.cancel()
+      state.transcript.preserveDrafts()
+      state.group = nil
+      state.phase = .finished
+    }
   }
 
   private func stopPreparing() {
-    stopped = true
-    generation = UUID()
-    preparation?.cancel()
-    preparation = nil
-    if !buffered.isEmpty {
-      finalizationNotice =
-        "The session ended while language was changing. Earlier text was preserved; speech during the change may be missing from the transcript."
+    storage.withValue { state in
+      state.phase = .finishing
+      state.generation = UUID()
+      state.preparation?.cancel()
+      state.preparation = nil
+      if !state.buffered.isEmpty {
+        state.finalizationNotice =
+          "The session ended while language was changing. Earlier text was preserved; speech during the change may be missing from the transcript."
+      }
+      state.buffered.removeAll()
+      state.bufferedDurations.removeAll()
+      state.startingCompletion?(.failure(CancellationError()))
+      state.startingCompletion = nil
     }
-    buffered.removeAll()
-    bufferedDurations.removeAll()
-    startingCompletion?(.failure(CancellationError()))
-    startingCompletion = nil
+  }
+
+  private func completeLanguageDrain(_ notice: String?, language: SpeechLanguage) {
+    storage.withValue { state in
+      guard !state.stopped else { return }
+      state.finalizationNotice = notice ?? state.finalizationNotice
+      state.transcript.preserveDrafts()
+      state.group = nil
+      prepare(language)
+    }
+  }
+
+  private func completeSessionDrain(
+    _ notice: String?, completion: @escaping @Sendable (String?) -> Void
+  ) {
+    storage.withValue { state in
+      state.transcript.preserveDrafts()
+      state.group = nil
+      state.phase = .finished
+      completion(notice ?? state.finalizationNotice)
+    }
+  }
+
+  private func receiveFailure(_ message: String, groupID: UUID) {
+    storage.withValue { state in
+      guard state.group?.id == groupID else { return }
+      fail(SessionFailure(category: .transcription, message: message))
+    }
+  }
+
+  private func acceptPrepared(
+    _ channels: [SessionAudioSource: any LocalSpeechChannel], language: SpeechLanguage, id: UUID
+  ) {
+    storage.withValue { state in
+      guard !state.stopped, state.generation == id else {
+        for channel in channels.values { channel.cancel() }
+        return
+      }
+      install(channels, language: language, id: id)
+    }
+  }
+
+  private func preparationFailed(_ error: Error, id: UUID) {
+    storage.withValue { state in
+      guard !state.stopped, state.generation == id else { return }
+      state.preparation = nil
+      let completion = state.startingCompletion
+      state.startingCompletion = nil
+      completion?(.failure(error))
+      fail(SessionFailure(error, category: .transcription))
+    }
   }
 
   private func prepare(_ language: SpeechLanguage) {
     let id = UUID()
-    generation = id
+    storage.withValue { state in
+      state.generation = id
+      if !state.switching { state.phase = .preparing }
+    }
     let configuration = configuration
-    preparation = Task.detached(priority: .utility) { [weak self] in
+    let task = Task.detached(priority: .utility) { [weak self] in
       var channels: [SessionAudioSource: any LocalSpeechChannel] = [:]
       do {
         for source in configuration.sources {
@@ -165,63 +241,64 @@ final class SessionSpeechPipeline: @unchecked Sendable {
               }
             },
             { [weak self] message in
-              configuration.queue.async { [weak self] in
-                guard self?.group?.id == id else { return }
-                self?.fail(message)
+              configuration.queue.async { [weak self] in self?.receiveFailure(message, groupID: id)
               }
             })
         }
         try Task.checkCancellation()
         let prepared = channels
         configuration.queue.async { [weak self] in
-          guard let self, !self.stopped, self.generation == id else {
+          guard let self else {
             for channel in prepared.values { channel.cancel() }
             return
           }
-          self.install(prepared, language: language, id: id)
+          self.acceptPrepared(prepared, language: language, id: id)
         }
       } catch {
         for channel in channels.values { channel.cancel() }
-        configuration.queue.async { [weak self] in
-          guard let self, !self.stopped, self.generation == id else { return }
-          self.preparation = nil
-          self.startingCompletion?(.failure(error))
-          self.startingCompletion = nil
-          self.fail(error.localizedDescription)
-        }
+        configuration.queue.async { [weak self] in self?.preparationFailed(error, id: id) }
       }
+    }
+    storage.withValue { state in
+      if state.stopped || state.generation != id { task.cancel() } else { state.preparation = task }
     }
   }
 
   private func install(
     _ channels: [SessionAudioSource: any LocalSpeechChannel], language: SpeechLanguage, id: UUID
   ) {
-    preparation = nil
-    group = SpeechChannelGroup(id: id, channels: channels, queue: configuration.queue)
-    sourceOffsets.removeAll()
-    if switching { transcript.markLanguage(language.name, elapsed: switchTime) }
-    switching = false
-    onEvent(.languageChanged(language))
-    let pending = buffered
-    buffered.removeAll(keepingCapacity: true)
-    bufferedDurations.removeAll()
-    for audio in pending { append(audio.buffer, source: audio.source, elapsed: audio.elapsed) }
-    startingCompletion?(.success(()))
-    startingCompletion = nil
-    onEvent(.textChanged)
+    storage.withValue { state in
+      state.preparation = nil
+      state.group = SpeechChannelGroup(id: id, channels: channels, queue: configuration.queue)
+      state.sourceOffsets.removeAll()
+      if state.switching { state.transcript.markLanguage(language.name, elapsed: state.switchTime) }
+      state.phase = .running
+      onEvent(.languageChanged(language))
+      let pending = state.buffered
+      state.buffered.removeAll(keepingCapacity: true)
+      state.bufferedDurations.removeAll()
+      for audio in pending { append(audio.buffer, source: audio.source, elapsed: audio.elapsed) }
+      state.startingCompletion?(.success(()))
+      state.startingCompletion = nil
+      onEvent(.textChanged)
+    }
   }
 
   private func receive(_ phrase: SpeechPhrase, source: SessionAudioSource, groupID: UUID) {
-    guard group?.id == groupID else { return }
-    transcript.receive(
-      phrase.shifted(by: sourceOffsets[source, default: switchTime]),
-      source: source, elapsed: sourceTimes[source, default: 0])
-    onEvent(.textChanged)
+    storage.withValue { state in
+      guard state.group?.id == groupID else { return }
+      state.transcript.receive(
+        phrase.shifted(by: state.sourceOffsets[source, default: state.switchTime]),
+        source: source, elapsed: state.sourceTimes[source, default: 0])
+      onEvent(.textChanged)
+    }
   }
 
-  private func fail(_ message: String) {
-    guard !stopped else { return }
-    cancel()
-    onEvent(.failed(message))
+  private func fail(_ failure: SessionFailure) {
+    storage.withValue { state in
+      guard !state.stopped else { return }
+      cancel()
+      onEvent(.failed(failure))
+    }
   }
 }

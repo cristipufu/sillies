@@ -3,7 +3,8 @@ import Testing
 
 @Test func recordSearchHonorsKindAndFindsAccentedTextInSessionContent() {
   var record = SessionRecord(
-    kind: .listen, characterID: "mochi", characterName: "Mochi", appName: "Meeting")
+    kind: .listen,
+    origin: .init(characterID: "mochi", characterName: "Mochi", source: .init(appName: "Meeting")))
   record.transcript = "Discuss the café launch"
   #expect(SessionRecordSearch(kind: .listen, query: "  CAFE  ").matches(record))
   #expect(!SessionRecordSearch(kind: .stash, query: "cafe").matches(record))

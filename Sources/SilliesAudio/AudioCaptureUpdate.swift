@@ -1,4 +1,5 @@
 import Foundation
+import SilliesCore
 
 /// Capture lifecycle and progress contract shared by producers and presenters.
 package enum AudioCaptureUpdate: Sendable {
@@ -7,5 +8,5 @@ package enum AudioCaptureUpdate: Sendable {
   case changingLanguage(SpeechLanguage)
   case languageChanged(SpeechLanguage)
   case transcript(String, level: Double, elapsed: TimeInterval)
-  case failed(String)
+  case failed(SessionFailure)
 }

@@ -52,7 +52,7 @@ import Testing
   delivery?.enqueue(.capturing("Meeting"))
   delivery?.enqueue(.transcript("old", level: 0, elapsed: 1))
   delivery?.enqueue(.transcript("latest", level: 0, elapsed: 2))
-  delivery?.enqueue(.failed("Capture ended"))
+  delivery?.enqueue(.failed(.init(category: .captureInterrupted, message: "Capture ended")))
   delivery?.enqueue(.transcript("late", level: 0, elapsed: 3))
   scheduler.drain()
   #expect(received == ["capturing", "latest", "failed"])

@@ -1,4 +1,4 @@
-.PHONY: build debug run preview test check gui-check lint stress clean
+.PHONY: build debug run preview test check gui-check lint stress race-check clean
 
 build:
 	bash scripts/build-app.sh release
@@ -18,9 +18,12 @@ test:
 stress:
 	bash scripts/test-stress.sh
 
+race-check:
+	bash scripts/test-races.sh
+
 lint:
 	swift format lint --strict --recursive Package.swift Sources Tests Tools/ArchitectureCheck scripts/make-icon.swift
-	bash -n scripts/build-app.sh scripts/test.sh scripts/toolchain.sh scripts/check-main-thread.sh scripts/test-stress.sh
+	bash -n scripts/build-app.sh scripts/test.sh scripts/toolchain.sh scripts/check-main-thread.sh scripts/test-stress.sh scripts/test-races.sh
 	bash scripts/check-main-thread.sh
 
 check: lint test debug

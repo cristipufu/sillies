@@ -59,15 +59,14 @@ struct CompanionSkillTests {
     #expect(SessionRecord.formatDuration(125) == "02:05")
     let record = SessionRecord(
       kind: .listen,
-      characterID: "mochi",
-      characterName: "Mochi",
-      appName: "Zoom",
-      windowTitle: "Weekly Sync",
-      durationSeconds: 125,
-      transcript: "Hello team.",
-      summary: "• Discussed launch.",
-      actionItems: ["Send release notes"])
-    let markdown = record.markdownExport
+      origin: .init(
+        characterID: "mochi", characterName: "Mochi",
+        source: .init(appName: "Zoom", windowTitle: "Weekly Sync")),
+      content: .init(
+        text: .init(transcript: "Hello team."),
+        notes: .init(summary: "• Discussed launch.", actionItems: ["Send release notes"])),
+      metadata: .init(durationSeconds: 125))
+    let markdown = SessionMarkdownFormatter.format(record)
     #expect(markdown.contains("# Zoom — Weekly Sync"))
     #expect(markdown.contains("## Summary"))
     #expect(markdown.contains("- [ ] Send release notes"))

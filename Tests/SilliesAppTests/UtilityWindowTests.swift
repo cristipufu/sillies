@@ -51,7 +51,7 @@ import Testing
 
 @Test @MainActor func utilityWindowNotificationsLeaveTheTrackedWindowUnchanged() {
   _ = NSApplication.shared
-  let tracker = WorkspaceTracker(useAccessibility: false)
+  let tracker = WorkspaceTracker(accessibility: .disabled)
   tracker.start()
   defer { tracker.stop() }
   tracker.simulateApplicationSwitchInFlight(processID: ProcessInfo.processInfo.processIdentifier)

@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import SilliesCore
+import Synchronization
 
 struct WindowServerObservation: Sendable {
   let processID: pid_t
@@ -14,7 +15,7 @@ struct WindowServerObservation: Sendable {
 
 /// Public window metadata only. No images, window titles, or screen-capture permission.
 /// Discovery is infrequent; manipulation reads are restricted to one known window.
-final class WindowServerSource: @unchecked Sendable {
+final class WindowServerSource: Sendable {
   struct Candidate: Sendable, Equatable {
     let id: UInt32
     let layer: Int
@@ -61,7 +62,7 @@ final class WindowServerSource: @unchecked Sendable {
     }
   }
 
-  struct Request {
+  struct Request: Sendable {
     let processID: pid_t
     let windowID: CGWindowID?
     let scope: WindowRefreshScope
@@ -364,23 +365,25 @@ final class WindowServerSource: @unchecked Sendable {
   }
 
   private let queue = DispatchQueue(label: "app.sillies.window-geometry", qos: .userInteractive)
-  private let lock = NSLock()
-  private var pending = false
-  private var queued: Request?
+  private struct WorkState {
+    var pending = false
+    var queued: Request?
+  }
+  private let work = Mutex(WorkState())
   private let deliver: @Sendable (WindowServerObservation) -> Void
 
   init(deliver: @escaping @Sendable (WindowServerObservation) -> Void) { self.deliver = deliver }
 
   func refresh(_ request: Request) {
-    lock.lock()
-    if pending {
-      queued = mergedRequest(from: request, existing: queued)
-      lock.unlock()
-      return
+    let begin = work.withLock { work in
+      if work.pending {
+        work.queued = mergedRequest(from: request, existing: work.queued)
+        return false
+      }
+      work.pending = true
+      return true
     }
-    pending = true
-    lock.unlock()
-    enqueue(request)
+    if begin { enqueue(request) }
   }
 
   private func mergedRequest(from incoming: Request, existing: Request?) -> Request {
@@ -402,15 +405,13 @@ final class WindowServerSource: @unchecked Sendable {
   private func enqueue(_ request: Request) {
     queue.async { [self] in
       performRefresh(request)
-      lock.lock()
-      if let next = queued {
-        queued = nil
-        lock.unlock()
-        enqueue(next)
-      } else {
-        pending = false
-        lock.unlock()
+      let next = work.withLock { work in
+        let next = work.queued
+        work.queued = nil
+        work.pending = next != nil
+        return next
       }
+      if let next { enqueue(next) }
     }
   }
 

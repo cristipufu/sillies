@@ -112,7 +112,7 @@ struct SessionVaultDetailHeader: View {
         toolbarButton(
           "Copy Markdown", symbol: "square.and.arrow.up", emphasis: .standard
         ) {
-          model.copyText(record.markdownExport, feedback: "Markdown copied")
+          model.copyText(SessionMarkdownFormatter.format(record), feedback: "Markdown copied")
         }
         Spacer()
       }

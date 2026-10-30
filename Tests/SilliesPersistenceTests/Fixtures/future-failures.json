@@ -1,0 +1,42 @@
+[
+  {
+    "id": "00000000-0000-0000-0000-000000000005",
+    "kind": "listen",
+    "characterID": "mochi",
+    "characterName": "Mochi",
+    "appName": "Meeting",
+    "createdAt": "2026-10-30T10:30:00Z",
+    "durationSeconds": 30,
+    "transcript": "Keep this transcript from a newer version.",
+    "extractedText": "",
+    "summary": "Useful saved notes.",
+    "actionItems": [],
+    "stashedItems": [],
+    "failureMessage": "A newer capture error occurred.",
+    "failure": {
+      "category": "futureCaptureIssue",
+      "message": "A newer capture error occurred.",
+      "recovery": "openMicrophoneSettings"
+    }
+  },
+  {
+    "id": "00000000-0000-0000-0000-000000000006",
+    "kind": "record",
+    "characterID": "kiko",
+    "characterName": "Kiko",
+    "appName": "Microphone",
+    "createdAt": "2026-10-30T10:31:00Z",
+    "durationSeconds": 5,
+    "transcript": "The available words.",
+    "extractedText": "",
+    "summary": "Still readable.",
+    "actionItems": [],
+    "stashedItems": [],
+    "failureMessage": "A new permission is required.",
+    "failure": {
+      "category": "permissionDenied",
+      "message": "A new permission is required.",
+      "recovery": "openFuturePermissionSettings"
+    }
+  }
+]

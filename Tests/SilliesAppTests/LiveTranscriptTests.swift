@@ -135,7 +135,7 @@ private let liveTranscriptFixture = String(
   for index in 0..<10_000 {
     delivery.enqueue(.transcript("Draft \(index)", level: 0.2, elapsed: Double(index)))
   }
-  delivery.enqueue(.failed("Fixture failure"))
+  delivery.enqueue(.failed(.init(category: .captureInterrupted, message: "Fixture failure")))
   _ = RunLoop.main.run(mode: .default, before: Date().addingTimeInterval(0.01))
   #expect(received.count == 3)
   if case .transcript(let text, _, let elapsed) = received.dropFirst().first {

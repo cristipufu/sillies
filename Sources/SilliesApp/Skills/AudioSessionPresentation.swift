@@ -7,7 +7,7 @@ import SilliesCore
 final class AudioSessionPresentation {
   enum Phase: Equatable {
     case preparing, capturing, paused, finishing, finished
-    case failed(String)
+    case failed(SessionFailure)
   }
   let kind: CompanionSkillKind
   var phase: Phase = .preparing

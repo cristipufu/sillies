@@ -86,28 +86,26 @@ struct CompanionHUDView: View {
   private func completedCard(
     target: WindowTargetCandidate?, skill: CompanionSkillKind, summary: String, recordID: UUID
   ) -> some View {
-    let needsPermission =
-      model.persistenceError != nil || model.completedRecord?.failureMessage != nil
-      || model.completedRecord?.requiresPermissionAccess == true
     return HStack(spacing: 9) {
       ZStack {
         Circle()
           .fill(
-            needsPermission
+            completionNeedsAttention
               ? Color.orange.opacity(0.15)
               : Color(red: 0.28, green: 0.64, blue: 0.43).opacity(0.15)
           )
           .frame(width: 28, height: 28)
         Image(
-          systemName: needsPermission ? "exclamationmark.triangle.fill" : "checkmark.circle.fill"
+          systemName: completionNeedsAttention
+            ? "exclamationmark.triangle.fill" : "checkmark.circle.fill"
         )
         .font(.system(size: 14, weight: .semibold))
         .foregroundStyle(
-          needsPermission ? Color.orange : Color(red: 0.28, green: 0.64, blue: 0.43))
+          completionNeedsAttention ? Color.orange : Color(red: 0.28, green: 0.64, blue: 0.43))
       }
 
       VStack(alignment: .leading, spacing: 1.5) {
-        Text(completionHeadline(for: skill, needsPermission: needsPermission))
+        Text(completionHeadline(for: skill))
           .font(.system(size: 11, weight: .bold, design: .rounded))
           .foregroundStyle(SilliesTheme.ink)
           .lineLimit(1)
@@ -166,8 +164,12 @@ struct CompanionHUDView: View {
     .background(hudCardBackground(accentBorder: false))
   }
 
-  private func completionHeadline(for skill: CompanionSkillKind, needsPermission: Bool) -> String {
-    needsPermission ? "\(skill.title) Needs Attention" : skill.completionHeadline
+  private var completionNeedsAttention: Bool {
+    model.persistenceError != nil || model.completedRecord?.failure != nil
+  }
+
+  private func completionHeadline(for skill: CompanionSkillKind) -> String {
+    completionNeedsAttention ? "\(skill.title) Needs Attention" : skill.completionHeadline
   }
 
   private func dismissButton(helpText: String, action: @escaping () -> Void) -> some View {

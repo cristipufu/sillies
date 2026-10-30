@@ -35,8 +35,11 @@ final class SessionVaultModel {
       return
     }
     let record = SessionRecord(
-      kind: .stash, characterID: "workspace", characterName: "Sillies",
-      appName: "Pocket Stash", summary: contents.summary, stashedItems: contents.items)
+      kind: .stash,
+      origin: .init(
+        characterID: "workspace", characterName: "Sillies", source: .init(appName: "Pocket Stash")),
+      content: .init(
+        text: .init(stashedItems: contents.items), notes: .init(summary: contents.summary)))
     vault.add(record)
     selectedFilter = .stash
     searchQuery = ""

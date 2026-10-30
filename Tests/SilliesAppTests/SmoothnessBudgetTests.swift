@@ -16,7 +16,8 @@ func windowDragSmoothnessBudgetAndSinglePassPlacement() throws {
   settings.reduceMotion = false
   settings.enabledCharacters = Set(try CharacterCatalog().characters.map(\.id))
 
-  let controller = try CompanionController(settings: settings, useAccessibility: false)
+  let controller = try CompanionController(
+    settings: settings, services: .init(accessibility: .disabled))
   controller.smoothnessMetrics.isEnabled = true
   controller.start()
   defer { controller.stop() }
@@ -76,7 +77,8 @@ func windowResizeSmoothnessBudgetAndCompactionQuantization() throws {
   settings.reduceMotion = false
   settings.enabledCharacters = Set(try CharacterCatalog().characters.map(\.id))
 
-  let controller = try CompanionController(settings: settings, useAccessibility: false)
+  let controller = try CompanionController(
+    settings: settings, services: .init(accessibility: .disabled))
   controller.smoothnessMetrics.isEnabled = true
   controller.start()
   defer { controller.stop() }
@@ -130,7 +132,8 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
   settings.reduceMotion = false
   settings.enabledCharacters = Set(try CharacterCatalog().characters.map(\.id))
 
-  let controller = try CompanionController(settings: settings, useAccessibility: false)
+  let controller = try CompanionController(
+    settings: settings, services: .init(accessibility: .disabled))
   controller.smoothnessMetrics.isEnabled = true
   controller.start()
   defer { controller.stop() }
@@ -204,7 +207,8 @@ func companionDragSmoothnessBudgetAndUnclippedMaskStability(characterID: String)
   settings.reduceMotion = false
   settings.enabledCharacters = [characterID]
 
-  let controller = try CompanionController(settings: settings, useAccessibility: false)
+  let controller = try CompanionController(
+    settings: settings, services: .init(accessibility: .disabled))
   controller.smoothnessMetrics.isEnabled = true
   controller.dragTargeting.metrics.isEnabled = true
   controller.start()

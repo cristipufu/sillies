@@ -27,7 +27,7 @@ private final class FixtureAudioCapture: SessionAudioCapture, @unchecked Sendabl
       completion(
         AudioCaptureResult(
           transcript: "Please ship the report on Friday.", recordingURL: nil, duration: 4,
-          error: nil))
+          failure: nil))
     }
   }
 }

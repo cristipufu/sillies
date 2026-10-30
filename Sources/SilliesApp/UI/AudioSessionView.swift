@@ -40,9 +40,8 @@ struct AudioSessionView: View {
   private var options: some View {
     VStack(alignment: .leading, spacing: Layout.spacing) {
       AudioLanguagePicker(model: model)
-      if case .failed(let message) = model.phase {
-        AudioSessionNotice(
-          message: message, opensPrivacy: SessionRecord.indicatesPermissionNeeded(message))
+      if case .failed(let failure) = model.phase {
+        SessionFailureNotice(failure: failure)
       }
       if model.kind == .participate { AudioMeetingSuggestionsView(model: model) }
     }

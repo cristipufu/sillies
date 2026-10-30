@@ -2,7 +2,7 @@ import AVFoundation
 import Foundation
 
 /// Serial-queue owner of the recognizers for one language. Draining is shared by switch and finish.
-final class SpeechChannelGroup {
+final class SpeechChannelGroup: Sendable {
   enum FinishReason {
     case languageChange, sessionEnd
   }
@@ -20,16 +20,21 @@ final class SpeechChannelGroup {
   private let channels: [SessionAudioSource: any LocalSpeechChannel]
   private let queue: DispatchQueue
   private let timeouts: Timeouts
-  private var completions: [(String?) -> Void] = []
-  private var unfinishedSources: Set<SessionAudioSource>?
-  private var deadline: DispatchWorkItem?
-  private var completed = false
-  private var notice: String?
+  private final class State {
+    var completions: [(String?) -> Void] = []
+    var unfinishedSources: Set<SessionAudioSource>?
+    var deadline: DispatchWorkItem?
+    var completed = false
+    var notice: String?
+
+  }
+  private let storage: SerialQueueStorage<State>
 
   init(
     id: UUID, channels: [SessionAudioSource: any LocalSpeechChannel], queue: DispatchQueue,
     timeouts: Timeouts = .init()
   ) {
+    storage = SerialQueueStorage(queue: queue, makeValue: State.init)
     self.id = id
     self.channels = channels
     self.queue = queue
@@ -42,31 +47,28 @@ final class SpeechChannelGroup {
   }
 
   func finish(reason: FinishReason, completion: @escaping (String?) -> Void) {
-    dispatchPrecondition(condition: .onQueue(queue))
-    if completed {
-      completion(notice)
-      return
-    }
-    completions.append(completion)
-    guard unfinishedSources == nil else { return }
-    unfinishedSources = Set(channels.keys)
-    if channels.isEmpty {
-      complete()
-      return
-    }
-    for (source, channel) in channels {
-      channel.finish { [weak self, queue] in
-        queue.async { [weak self] in self?.channelFinished(source) }
+    storage.withValue { state in
+      dispatchPrecondition(condition: .onQueue(queue))
+      if state.completed {
+        completion(state.notice)
+        return
       }
+      state.completions.append(completion)
+      guard state.unfinishedSources == nil else { return }
+      state.unfinishedSources = Set(channels.keys)
+      if channels.isEmpty {
+        complete()
+        return
+      }
+      for (source, channel) in channels {
+        channel.finish { [weak self, queue] in
+          queue.async { [weak self] in self?.channelFinished(source) }
+        }
+      }
+      let work = DispatchWorkItem { [weak self] in self?.timedOut() }
+      state.deadline = work
+      queue.asyncAfter(deadline: .now() + timeouts.duration(for: reason), execute: work)
     }
-    let deadline = DispatchWorkItem { [weak self] in
-      guard let self, !self.completed else { return }
-      self.notice = "Speech finalization took too long. The latest available text was preserved."
-      self.cancelChannels()
-      self.complete()
-    }
-    self.deadline = deadline
-    queue.asyncAfter(deadline: .now() + timeouts.duration(for: reason), execute: deadline)
   }
 
   func cancel() {
@@ -75,24 +77,34 @@ final class SpeechChannelGroup {
     complete()
   }
 
+  private func timedOut() {
+    storage.withValue { state in
+      guard !state.completed else { return }
+      state.notice = "Speech finalization took too long. The latest available text was preserved."
+      cancelChannels()
+      complete()
+    }
+  }
+
   private func channelFinished(_ source: SessionAudioSource) {
-    dispatchPrecondition(condition: .onQueue(queue))
-    guard !completed, unfinishedSources?.remove(source) != nil else { return }
-    if unfinishedSources?.isEmpty == true { complete() }
+    storage.withValue { state in
+      dispatchPrecondition(condition: .onQueue(queue))
+      guard !state.completed, state.unfinishedSources?.remove(source) != nil else { return }
+      if state.unfinishedSources?.isEmpty == true { complete() }
+    }
   }
 
   private func cancelChannels() { for channel in channels.values { channel.cancel() } }
 
   private func complete() {
-    guard !completed else { return }
-    completed = true
-    deadline?.cancel()
-    deadline = nil
-    let callbacks = completions
-    completions.removeAll()
-    for callback in callbacks { callback(notice) }
+    storage.withValue { state in
+      guard !state.completed else { return }
+      state.completed = true
+      state.deadline?.cancel()
+      state.deadline = nil
+      let callbacks = state.completions
+      state.completions.removeAll()
+      for callback in callbacks { callback(state.notice) }
+    }
   }
 }
-
-// All mutable state and callbacks are confined to the supplied serial queue.
-extension SpeechChannelGroup: @unchecked Sendable {}

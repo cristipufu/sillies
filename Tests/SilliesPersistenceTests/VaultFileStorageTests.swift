@@ -36,7 +36,8 @@ import Testing
   let fixture = try VaultStorageFixture()
   defer { fixture.remove() }
   var record = SessionRecord(
-    kind: .record, characterID: "mochi", characterName: "Mochi", appName: "Test")
+    kind: .record,
+    origin: .init(characterID: "mochi", characterName: "Mochi", source: .init(appName: "Test")))
   record.audioFilename = "/"
   let encoder = JSONEncoder()
   encoder.dateEncodingStrategy = .iso8601

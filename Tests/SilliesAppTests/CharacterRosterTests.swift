@@ -99,7 +99,8 @@ import Testing
   settings.enabledCharacters = Set(catalog.characters.map(\.id))
   settings.followsWindows = false
   settings.reduceMotion = true
-  let controller = try CompanionController(settings: settings, useAccessibility: false)
+  let controller = try CompanionController(
+    settings: settings, services: .init(accessibility: .disabled))
   controller.start()
   defer { controller.stop() }
   let attachments = controller.attachmentDiagnostics

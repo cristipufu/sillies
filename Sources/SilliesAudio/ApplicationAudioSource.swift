@@ -11,7 +11,7 @@ final class ApplicationAudioSource: NSObject, SCStreamOutput, SCStreamDelegate, 
   private static let unusedVideoDimension = 2
   private let target: WindowTargetCandidate
   private let receive: AudioCaptureInputQueue.Receiver
-  private let failure: @Sendable (String) -> Void
+  private let failure: @Sendable (SessionFailure) -> Void
   private let queue = DispatchQueue(label: "app.sillies.application-audio", qos: .userInitiated)
   // SCStream has no Sendable conformance. This slot is accessed only under the state Mutex;
   // start publishes it once, and stop removes it before awaiting SDK shutdown.
@@ -23,7 +23,7 @@ final class ApplicationAudioSource: NSObject, SCStreamOutput, SCStreamDelegate, 
 
   init(
     target: WindowTargetCandidate, receive: @escaping AudioCaptureInputQueue.Receiver,
-    failure: @escaping @Sendable (String) -> Void
+    failure: @escaping @Sendable (SessionFailure) -> Void
   ) {
     self.target = target
     self.receive = receive
@@ -31,6 +31,23 @@ final class ApplicationAudioSource: NSObject, SCStreamOutput, SCStreamDelegate, 
   }
 
   func start() async throws {
+    do { try await startCapture() } catch {
+      if error is CancellationError { throw error }
+      throw Self.captureFailure(error)
+    }
+  }
+
+  static func captureFailure(_ error: Error) -> SessionFailure {
+    let native = error as NSError
+    if native.domain == SCStreamErrorDomain,
+      native.code == SCStreamError.Code.userDeclined.rawValue
+    {
+      return .permissionDenied(.openScreenRecordingSettings)
+    }
+    return SessionFailure(error, category: .captureUnavailable)
+  }
+
+  private func startCapture() async throws {
     let content = try await SCShareableContent.excludingDesktopWindows(
       false, onScreenWindowsOnly: false)
     guard let display = content.displays.first,
@@ -94,6 +111,12 @@ final class ApplicationAudioSource: NSObject, SCStreamOutput, SCStreamDelegate, 
 
   func stream(_ stream: SCStream, didStopWithError error: Error) {
     guard !state.withLock({ $0.stopped }) else { return }
-    failure("Application audio stopped: \(error.localizedDescription)")
+    let mapped = Self.captureFailure(error)
+    failure(
+      mapped.recovery != nil
+        ? mapped
+        : SessionFailure(
+          category: .captureInterrupted,
+          message: "Application audio stopped: \(error.localizedDescription)"))
   }
 }

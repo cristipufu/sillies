@@ -1,0 +1,19 @@
+[
+  {
+    "id": "00000000-0000-0000-0000-000000000001",
+    "kind": "watch",
+    "characterID": "mochi",
+    "characterName": "Mochi",
+    "appName": "Notes",
+    "bundleIdentifier": "com.apple.Notes",
+    "windowTitle": "Planning",
+    "createdAt": "2026-10-25T10:30:00Z",
+    "durationSeconds": 42,
+    "transcript": "",
+    "extractedText": "Discuss system settings tomorrow.\nNo permission needed for this task.",
+    "summary": "Discuss system settings tomorrow. No permission needed for this task.",
+    "actionItems": ["Review the plan"],
+    "imageFilename": "planning.png",
+    "stashedItems": []
+  }
+]

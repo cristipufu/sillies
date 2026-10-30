@@ -70,7 +70,8 @@ import Testing
   settings.followsWindows = true
   settings.reduceMotion = true
   settings.enabledCharacters = ["mochi"]
-  let controller = try CompanionController(settings: settings, useAccessibility: false)
+  let controller = try CompanionController(
+    settings: settings, services: .init(accessibility: .disabled))
   controller.start()
   defer { controller.stop() }
   controller.tracker.simulateTrackedWindow(dropTestWindow, windowID: 401)

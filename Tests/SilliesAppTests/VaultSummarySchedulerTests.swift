@@ -10,8 +10,9 @@ import Testing
   let scheduler = VaultSummaryScheduler { await generator.generate($0.summary) }
   defer { scheduler.stop() }
   var record = SessionRecord(
-    kind: .focus, characterID: "mochi", characterName: "Mochi", appName: "Test",
-    summary: "Original", summaryPending: true)
+    kind: .focus,
+    origin: .init(characterID: "mochi", characterName: "Mochi", source: .init(appName: "Test")),
+    content: .init(notes: .init(summary: "Original"), processing: .init(summaryPending: true)))
   var delivered: [String] = []
   scheduler.schedule(record) { delivered.append($0.summary) }
   try await generator.waitForRequest("Original")

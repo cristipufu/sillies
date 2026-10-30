@@ -25,8 +25,10 @@ struct SessionVaultDetailView: View {
 
           Divider().overlay(SilliesTheme.border.opacity(0.65))
 
-          if record.requiresPermissionAccess {
-            permissionBanner(for: record)
+          if let failure = record.failure {
+            SessionFailureNotice(
+              failure: failure,
+              refreshScreenRecordingPermission: WindowSnapshotService.resetAndRequestPermission)
           }
 
           if let image = previewImage {
@@ -42,10 +44,7 @@ struct SessionVaultDetailView: View {
               Text("Preparing local notes…").font(.callout)
             }
           }
-          if let failure = record.failureMessage {
-            Label(failure, systemImage: "exclamationmark.triangle.fill")
-              .font(.callout).foregroundStyle(.orange).textSelection(.enabled)
-          }
+
           if !record.processingNote.isEmpty {
             Text(record.processingNote).font(.callout).foregroundStyle(SilliesTheme.secondary)
               .textSelection(.enabled)
@@ -73,7 +72,6 @@ struct SessionVaultDetailView: View {
 
           let shouldShowSummary =
             !record.summary.isEmpty
-            && !record.requiresPermissionAccess
             && !(record.kind == .stash && record.actionItems.isEmpty)
           if shouldShowSummary {
             let hasStructuredHighlights =
@@ -300,46 +298,6 @@ struct SessionVaultDetailView: View {
     .overlay(
       RoundedRectangle(cornerRadius: 15, style: .continuous)
         .strokeBorder(SilliesTheme.border.opacity(0.8), lineWidth: 0.75))
-  }
-
-  private func permissionBanner(for record: SessionRecord) -> some View {
-    HStack(spacing: 14) {
-      Image(systemName: "lock.shield.fill")
-        .font(.system(size: 21))
-        .foregroundStyle(Color.orange)
-      VStack(alignment: .leading, spacing: 4) {
-        Text("Screen & Audio Recording Access Needed")
-          .font(.system(size: 13, weight: .bold, design: .rounded))
-        Text(record.summary)
-          .font(.system(size: 11.5))
-          .lineSpacing(2)
-          .foregroundStyle(SilliesTheme.secondary)
-      }
-      Spacer(minLength: 10)
-      HStack(spacing: 8) {
-        Button("Refresh Permission") {
-          WindowSnapshotService.resetAndRequestPermission()
-        }
-        .buttonStyle(SoftButtonStyle())
-        .fixedSize(horizontal: true, vertical: false)
-        .help(
-          "Resets stale macOS permission cache from older local builds and opens Screen & System Audio Recording"
-        )
-        Button("Open System Settings") {
-          WindowSnapshotService.openSystemSettings()
-        }
-        .buttonStyle(SoftButtonStyle())
-        .fixedSize(horizontal: true, vertical: false)
-      }
-    }
-    .padding(16)
-    .background(
-      Color.orange.opacity(0.08),
-      in: RoundedRectangle(cornerRadius: 14, style: .continuous)
-    )
-    .overlay(
-      RoundedRectangle(cornerRadius: 14, style: .continuous)
-        .strokeBorder(Color.orange.opacity(0.35), lineWidth: 0.9))
   }
 
   private static func boundedDisplayText(_ text: String) -> String {

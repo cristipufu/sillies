@@ -58,13 +58,13 @@ final class FocusSkillSession: ActiveSkillSession {
       "Focused on \(target.appName) for \(SessionRecord.formatDuration(focusedSeconds)) (\(ratio)% on-target)."
     let record = SessionRecord(
       kind: .focus,
-      characterID: context.companionID,
-      characterName: context.companionName,
-      appName: target.appName,
-      bundleIdentifier: target.bundleIdentifier,
-      windowTitle: target.windowTitle,
-      durationSeconds: duration,
-      summary: summary)
+      origin: .init(
+        characterID: context.companionID, characterName: context.companionName,
+        source: .init(
+          appName: target.appName, bundleIdentifier: target.bundleIdentifier,
+          windowTitle: target.windowTitle)),
+      content: .init(notes: .init(summary: summary)),
+      metadata: .init(durationSeconds: duration))
     return SkillCompletionOutcome(
       record: record, image: nil,
       bannerSummary: "Focus logged (\(SessionRecord.formatDuration(focusedSeconds)))")

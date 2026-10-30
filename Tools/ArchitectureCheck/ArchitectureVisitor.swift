@@ -87,8 +87,10 @@ final class ArchitectureVisitor: SyntaxVisitor {
     let filename = path.split(separator: "/").last.map(String.init) ?? ""
     if ArchitecturePolicy.workerEntries[filename]?.contains(node.name.text) == true {
       let first = node.body?.statements.first.map { compact($0.item) }
-      if first != "dispatchPrecondition(condition:.notOnQueue(.main))" {
-        report(node, "worker-entry", "\(node.name.text) must assert off-main execution at entry.")
+      let condition =
+        filename == "SerialQueueStorage.swift" ? ".onQueue(queue)" : ".notOnQueue(.main)"
+      if first != "dispatchPrecondition(condition:\(condition))" {
+        report(node, "worker-entry", "\(node.name.text) must assert \(condition) at entry.")
       }
     }
     return .visitChildren

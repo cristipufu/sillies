@@ -74,11 +74,11 @@ Behavior preparation preserves continuous window inertia; a full stop resets bot
 
 The vault delegates preview eviction and byte accounting to `VaultImageCache`, worker image conversion to `VaultImageCodec`, asynchronous clipboard ownership to `VaultClipboard`, and cancellable note generation to `VaultSummaryScheduler`. The scheduler rejects cancelled or replaced results; only the store merges completed notes into current records. `VaultPreviewBuffer` uses a lock to stage worker results that can also be drained during modal termination.
 
-Audio producers and presenters exchange `AudioCaptureUpdate`, `AudioCaptureConfiguration`, and `AudioCaptureResult` through `SessionAudioCapture`. These contracts do not reference the concrete capture service. `SessionSpeechPipeline` and `SpeechChannelGroup` assert their owning serial queue at public state-access entry points; their unchecked Sendable conformance depends on that confinement. `AudioSessionUpdateDelivery` instead protects its pending messages with a lock and delivers only on the main actor.
+Audio producers and presenters exchange `AudioCaptureUpdate`, `AudioCaptureConfiguration`, and `AudioCaptureResult` through `SessionAudioCapture`. These contracts do not reference the concrete capture service. `SessionSpeechPipeline` and `SpeechChannelGroup` use checked Sendable conformance; their private mutable state is confined by the audited `SerialQueueStorage` adapter, which asserts the owning serial queue at every access. `AudioSessionUpdateDelivery` instead protects its pending messages with a lock and delivers only on the main actor.
 
 See [development.md](development.md) for ownership boundaries and the checks expected when changing them.
 
-The controller accepts a catalog, renderer registry, behavior animation library, and transition library at construction. The bundled defaults keep normal startup simple; extensions and tests can supply their own registrations. Catalog validation checks data, duplicate identities, renderers, behavior clips, and transition references before panels appear.
+The controller accepts `CompanionAssets` (catalog, renderer registry, behavior clips, and transitions) and `CompanionServices` (native-access policy, skills, and additional event producers) at construction. Startup wires named event handlers; geometry publication explicitly distinguishes manipulation from reconciliation. The bundled defaults keep normal startup simple; extensions and tests can supply their own registrations. Catalog validation checks data, duplicate identities, renderers, behavior clips, and transition references before panels appear.
 
 Settings and UI use Observation. Animation position is deliberately kept out of observed SwiftUI state: moving a character must not rebuild the menu-bar interface every frame.
 
@@ -115,3 +115,22 @@ Meeting capture uses `MeetingAudioTimeline` in SilliesCore for bounded sample-ti
 
 
 At the audio window's minimum size, language controls, notices, and meeting suggestions can scroll independently when their combined height exceeds the available space. The header, finish controls, transcript viewport, and footer remain inside the window. `ViewThatFits` is confined to these short controls; it never measures or wraps the live native transcript. Failure-state guidance asks the user to save the available recording instead of claiming capture is still running.
+
+## Lifecycle ownership
+
+`WorkspaceNotifications` owns native subscriptions, `WorkspaceInputMonitor` owns mouse monitors, and `WorkspaceFocusSession` owns application identity and pending-discovery continuity. Native move/resize callbacks remain synchronous. `WorkspaceTracker` composes those owners with the existing pure transition policy and scheduler; fresh observation generations reject callbacks from stopped sessions, including housekeeping completions.
+
+`AudioSessionLifecycle` represents idle, preparing, capturing, paused, failed, finishing, and finished states with explicit transitions and monotonic time inputs. Duplicate startup cannot replace an active capture. Multiple finish callers share one resource drain; each audio/speech source completes once, and later subscribers receive the cached result. A bounded finalization lease retains the service through draining and releases it on completion or deadline. Startup tasks do not retain the whole service across native device permission waits.
+
+Capture, microphone, speech-pipeline, and recognizer-group mutable state is private to `SerialQueueStorage`. Its one audited unchecked adapter asserts the owning serial queue for every access, allows only Sendable return values, and never blocks via synchronous dispatch. Callers must provide a serial queue and must not let its state escape. The coordinating types use checked Sendable conformance. Window request scheduling and metadata-client ownership instead use compiler-checked Mutex state; slow socket I/O uses a separate worker-only request lock so main-thread stop remains independent.
+
+
+## Failure and recovery contracts
+
+`SessionFailure` carries a category, message, and optional recovery action from capture through presentation and persistence. Permission decisions never inspect summary or diagnostic wording. Microphone denial comes from the device authorization result; application-audio denial is mapped from ScreenCaptureKit's error domain/code. Live and saved sessions share `SessionFailureNotice`, and `SessionRecovery` opens the specific permission pane. Existing summaries remain visible even when a session failed.
+
+`SessionRecord+Codable` preserves existing keys and writes the legacy `failureMessage` alongside the optional typed `failure` value for older readers. Legacy decoding recognizes only specific historical failure markers, never summary text; other messages remain visible as unknown failures without a permission action. Fixed JSON fixtures in the persistence tests preserve historical fields, dates, identifiers, and missing-field defaults independently of today's encoder. This is an additive format extension; incompatible changes require an explicit migration/versioning design.
+
+`SessionRecord` construction takes the skill kind plus `SessionOrigin`, `SessionContent`, and `SessionMetadata`. Content groups source text, notes, attachments, and processing state; these are construction values, not a replacement disk schema. `SessionMarkdownFormatter` owns export section order and formatting, with a supplied locale for deterministic checks.
+
+Failure decoding retains category and recovery identifiers verbatim. Unknown categories present as `.unknown`; recovery is offered only for a recognized permission-denied category and action. Unknown actions remain inert, and their identifiers survive saving so a newer reader can recover them. Missing required fields and incorrect JSON types still fail decoding rather than masking corrupted storage.

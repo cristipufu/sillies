@@ -12,6 +12,12 @@ enum ArchitectureFixtures {
     let rendering = "Sources/SilliesApp/Rendering/CompanionPanel.swift"
     let fixtures: [Fixture] = [
       .init(
+        source: "func withValue() { access() }",
+        path: "Sources/SilliesAudio/SerialQueueStorage.swift", rules: ["worker-entry"]),
+      .init(
+        source: "func withValue() { dispatchPrecondition(condition: .onQueue(queue)); access() }",
+        path: "Sources/SilliesAudio/SerialQueueStorage.swift", rules: []),
+      .init(
         source: "Task.detached { summarize() }", path: "Sources/SilliesCore/Model.swift",
         rules: ["core-effects"]),
       .init(

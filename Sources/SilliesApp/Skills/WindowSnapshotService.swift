@@ -9,7 +9,7 @@ struct WindowSnapshotResult: Sendable {
   let extractedText: String
   let summary: String
   let actionItems: [String]
-  let errorDescription: String?
+  let failure: SessionFailure?
 }
 
 /// Captures a clean image of a single target window via ScreenCaptureKit and extracts text on-device
@@ -17,14 +17,6 @@ struct WindowSnapshotResult: Sendable {
 enum WindowSnapshotService {
   static var hasScreenCapturePermission: Bool {
     CGPreflightScreenCaptureAccess()
-  }
-
-  static func openSystemSettings() {
-    if let url = URL(
-      string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")
-    {
-      NSWorkspace.shared.open(url)
-    }
   }
 
   /// Clears stale ad-hoc CDHash entries from macOS TCC on a background worker so a freshly built
@@ -50,7 +42,7 @@ enum WindowSnapshotService {
       }
       _ = CGRequestScreenCaptureAccess()
       await MainActor.run {
-        openSystemSettings()
+        SessionRecovery.open(.openScreenRecordingSettings)
       }
     }
   }
@@ -75,10 +67,8 @@ enum WindowSnapshotService {
         image: nil,
         pngData: nil,
         extractedText: "",
-        summary:
-          "Screen Recording permission is required to capture \(target.appName). If Sillies is already enabled in System Settings › Privacy & Security › Screen & System Audio Recording, a local rebuild updated the app binary—click “Refresh Permission” below, toggle Sillies back on, and relaunch.",
-        actionItems: [],
-        errorDescription: "Screen capture permission required")
+        summary: "", actionItems: [],
+        failure: .permissionDenied(.openScreenRecordingSettings))
     }
 
     let cgImage = await captureWindowImage(target: target)
@@ -90,7 +80,8 @@ enum WindowSnapshotService {
         summary:
           "Could not capture \(target.displayTitle). Make sure the window is visible on screen and not minimized.",
         actionItems: [],
-        errorDescription: "Window capture unavailable")
+        failure: SessionFailure(
+          category: .captureUnavailable, message: "Window capture unavailable"))
     }
     return await imageResult(cgImage, summary: fallback)
   }
@@ -102,7 +93,9 @@ enum WindowSnapshotService {
     return WindowSnapshotResult(
       image: image, pngData: pngData, extractedText: "",
       summary: summary, actionItems: [],
-      errorDescription: pngData == nil ? "Could not encode the snapshot image." : nil)
+      failure: pngData == nil
+        ? SessionFailure(category: .recordingSave, message: "Could not encode the snapshot image.")
+        : nil)
   }
 
   private static func captureWindowImage(target: WindowTargetCandidate) async -> CGImage? {

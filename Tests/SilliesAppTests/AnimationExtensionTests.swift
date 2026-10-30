@@ -119,7 +119,7 @@ private final class MockEventProducer: WorkspaceEventProducer {
   settings.followsWindows = false
   let producer = MockEventProducer()
   let controller = try CompanionController(
-    settings: settings, useAccessibility: false, eventProducers: [producer])
+    settings: settings, services: .init(accessibility: .disabled, eventProducers: [producer]))
   controller.start()
   #expect(producer.isStarted)
   #expect(producer.isEnabled)
@@ -162,12 +162,12 @@ private final class MockEventProducer: WorkspaceEventProducer {
   let store = SessionVaultStore(directory: directory)
   let record = SessionRecord(
     kind: .snap,
-    characterID: "mochi",
-    characterName: "Mochi",
-    appName: "Xcode",
-    windowTitle: "CompanionController.swift",
-    extractedText: "final class CompanionController",
-    summary: "• Captured CompanionController.swift")
+    origin: .init(
+      characterID: "mochi", characterName: "Mochi",
+      source: .init(appName: "Xcode", windowTitle: "CompanionController.swift")),
+    content: .init(
+      text: .init(extractedText: "final class CompanionController"),
+      notes: .init(summary: "• Captured CompanionController.swift")))
   store.add(record)
   await store.flush()
   #expect(store.records.count == 1)
@@ -242,7 +242,8 @@ private final class MockEventProducer: WorkspaceEventProducer {
   let settings = AppSettings(defaults: defaults)
   settings.followsWindows = false
   settings.reduceMotion = true
-  let controller = try CompanionController(settings: settings, useAccessibility: false)
+  let controller = try CompanionController(
+    settings: settings, services: .init(accessibility: .disabled))
   controller.start()
   defer { controller.stop() }
 
@@ -268,8 +269,9 @@ private final class MockEventProducer: WorkspaceEventProducer {
       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
   let cgImage = try #require(context.makeImage())
   let record = SessionRecord(
-    kind: .snap, characterID: "mochi", characterName: "Mochi", appName: "Preview",
-    summary: "Captured")
+    kind: .snap,
+    origin: .init(characterID: "mochi", characterName: "Mochi", source: .init(appName: "Preview")),
+    content: .init(notes: .init(summary: "Captured")))
   store.add(record, image: cgImage)
   let stored = try #require(store.records.first)
   // Immediately available in memory before ioQueue even finishes writing the PNG.
@@ -431,15 +433,19 @@ private actor DelayedSnapshotProbe {
   let largeImage = try #require(context.makeImage())
 
   let pinnedRecord = SessionRecord(
-    kind: .snap, characterID: "mochi", characterName: "Mochi",
-    appName: "Pinned Display", summary: "Pinned Snapshot")
+    kind: .snap,
+    origin: .init(
+      characterID: "mochi", characterName: "Mochi", source: .init(appName: "Pinned Display")),
+    content: .init(notes: .init(summary: "Pinned Snapshot")))
   store.add(pinnedRecord, image: largeImage)
   store.setPinnedRecord(pinnedRecord.id)
 
   for index in 0..<24 {
     let record = SessionRecord(
-      kind: .snap, characterID: "mochi", characterName: "Mochi",
-      appName: "Display \(index)", summary: "Snapshot \(index)")
+      kind: .snap,
+      origin: .init(
+        characterID: "mochi", characterName: "Mochi", source: .init(appName: "Display \(index)")),
+      content: .init(notes: .init(summary: "Snapshot \(index)")))
     store.add(record, image: largeImage)
   }
   await store.flush()
@@ -484,7 +490,7 @@ private func spinModalPanelRunLoopUntil(_ condition: () -> Bool) {
   let vault = SessionVaultStore(directory: directory)
   let coordinator = SkillCoordinator(vault: vault)
   let controller = try CompanionController(
-    settings: settings, useAccessibility: false, skills: coordinator)
+    settings: settings, services: .init(accessibility: .disabled, skills: coordinator))
   let delegate = AppDelegate()
   var terminationApproved = false
   delegate.configureForTesting(controller: controller)
@@ -497,8 +503,9 @@ private func spinModalPanelRunLoopUntil(_ condition: () -> Bool) {
   // 1. Save a baseline record so sessions.json already exists on disk.
   vault.add(
     SessionRecord(
-      kind: .focus, characterID: "mochi", characterName: "Mochi",
-      appName: "Notes", summary: "Baseline focus session"))
+      kind: .focus,
+      origin: .init(characterID: "mochi", characterName: "Mochi", source: .init(appName: "Notes")),
+      content: .init(notes: .init(summary: "Baseline focus session"))))
   await vault.flush()
 
   // 2. Queue a large snapshot image I/O job and a large stash simultaneously.
@@ -509,8 +516,9 @@ private func spinModalPanelRunLoopUntil(_ condition: () -> Bool) {
       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
   let snapshotImage = try #require(imageContext.makeImage())
   let snapRecord = SessionRecord(
-    kind: .snap, characterID: "mochi", characterName: "Mochi",
-    appName: "Notes", summary: "Queued snapshot")
+    kind: .snap,
+    origin: .init(characterID: "mochi", characterName: "Mochi", source: .init(appName: "Notes")),
+    content: .init(notes: .init(summary: "Queued snapshot")))
   vault.add(snapRecord, image: snapshotImage)
 
   let largeTranscriptFiller = String(
@@ -566,14 +574,13 @@ private func spinModalPanelRunLoopUntil(_ condition: () -> Bool) {
   try FileManager.default.createDirectory(at: pendingDirectory, withIntermediateDirectories: true)
   let unrefinedRecord = SessionRecord(
     kind: .listen,
-    characterID: "mochi",
-    characterName: "Mochi",
-    appName: "Zoom",
-    transcript:
-      "We decided to persist pending summaries across app restarts.\nTODO: resume unrefined records on launch.",
-    summary: "Fallback summary before refinement.",
-    actionItems: [],
-    summaryPending: true)
+    origin: .init(characterID: "mochi", characterName: "Mochi", source: .init(appName: "Zoom")),
+    content: .init(
+      text: .init(
+        transcript:
+          "We decided to persist pending summaries across app restarts.\nTODO: resume unrefined records on launch."
+      ), notes: .init(summary: "Fallback summary before refinement.", actionItems: []),
+      processing: .init(summaryPending: true)))
   let encoder = JSONEncoder()
   encoder.dateEncodingStrategy = .iso8601
   let data = try encoder.encode([unrefinedRecord])
@@ -614,8 +621,9 @@ private func spinModalPanelRunLoopUntil(_ condition: () -> Bool) {
       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
   let cgImage = try #require(context.makeImage())
   let record = SessionRecord(
-    kind: .snap, characterID: "mochi", characterName: "Mochi",
-    appName: "Preview", summary: "Snapshot")
+    kind: .snap,
+    origin: .init(characterID: "mochi", characterName: "Mochi", source: .init(appName: "Preview")),
+    content: .init(notes: .init(summary: "Snapshot")))
   store.add(record, image: cgImage)
   await store.flush()
   let savedRecord = try #require(store.records.first)

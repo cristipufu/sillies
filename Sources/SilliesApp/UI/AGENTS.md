@@ -7,3 +7,5 @@ Keep header, finish controls, transcript viewport, and footer visible at minimum
 Example: a new transcript status is a presentation-model property, not view-level string matching. A vault action belongs in `SessionVaultModel`; a view invokes it instead of editing stores directly.
 
 Run `LiveTranscriptTests`, `SkillInterfaceTests`, `MeetingSpeechBubbleTests`, `SessionVaultModelTests`, `make stress`, and `make check` as relevant. Use the opt-in UI snapshots for visual changes and inspect minimum-size, reading/selection, failure, and long-text states.
+
+Live and saved session errors use `SessionFailureNotice`. Recovery actions come from `SessionFailure`, and `SessionRecovery` opens the corresponding permission pane. Keep partial transcripts and summaries visible alongside failures; never choose recovery by searching their text.

@@ -38,6 +38,34 @@ import Testing
   #expect(probe.frames > 0 && probe.frames < 5_000 * 48)
 }
 
+@Test func captureQueueConcurrentProducersAndStopLeaveNoRetainedPackets() async throws {
+  let queue = DispatchQueue(label: "sillies.test.concurrent-capture")
+  let input = AudioCaptureInputQueue(queue: queue)
+  let packet = try oneMillisecondOfMeetingAudio()
+  let probe = AudioInputProbe()
+  input.enqueue(packet, receive: { probe.receive($0) }, overflow: { probe.overflow() })
+  await withTaskGroup(of: Void.self) { tasks in
+    for producer in 0..<8 {
+      tasks.addTask {
+        for index in 0..<1_000 {
+          input.enqueue(packet, receive: { probe.receive($0) }, overflow: { probe.overflow() })
+          if producer == 0, index == 100 { input.stop() }
+        }
+      }
+    }
+  }
+  await withCheckedContinuation { continuation in queue.async { continuation.resume() } }
+  #expect(probe.frames >= 48)
+  #expect(probe.overflows <= 1)
+  #expect(input.metrics.pendingPackets == 0)
+  #expect(input.metrics.retainedBytes == 0)
+  #expect(input.metrics.peakRetainedBytes <= AudioCaptureInputQueue.maximumQueuedBytes)
+  let drainedFrames = probe.frames
+  input.enqueue(packet, receive: { probe.receive($0) }, overflow: { probe.overflow() })
+  await withCheckedContinuation { continuation in queue.async { continuation.resume() } }
+  #expect(probe.frames == drainedFrames)
+}
+
 private func oneMillisecondOfMeetingAudio(channels: AVAudioChannelCount = 1) throws
   -> AudioCaptureInputQueue.Packet
 {

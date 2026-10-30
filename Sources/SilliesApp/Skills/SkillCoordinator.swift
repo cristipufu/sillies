@@ -131,10 +131,15 @@ final class SkillCoordinator {
     guard let contents = StashContents(items) else { return nil }
     let target = binding(for: id).boundTarget ?? currentTarget
     let record = SessionRecord(
-      kind: .stash, characterID: id, characterName: companionName,
-      appName: target?.appName ?? "Pocket Stash", bundleIdentifier: target?.bundleIdentifier,
-      windowTitle: target?.windowTitle, summary: contents.summary,
-      stashedItems: contents.items, summaryPending: true)
+      kind: .stash,
+      origin: .init(
+        characterID: id, characterName: companionName,
+        source: .init(
+          appName: target?.appName ?? "Pocket Stash", bundleIdentifier: target?.bundleIdentifier,
+          windowTitle: target?.windowTitle)),
+      content: .init(
+        text: .init(stashedItems: contents.items), notes: .init(summary: contents.summary),
+        processing: .init(summaryPending: true)))
     vault.add(record)
     onEmitEvent?(id, WorkspaceEvent(.stashReceived, at: ProcessInfo.processInfo.systemUptime))
     if case .active = binding(for: id) { return record.id }

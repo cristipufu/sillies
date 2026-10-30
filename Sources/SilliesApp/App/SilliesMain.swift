@@ -55,7 +55,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       let settings = makeSettings(for: launch)
       let skills = makeSkillCoordinator(for: launch)
       let controller = try CompanionController(
-        settings: settings, useAccessibility: launch.usesAccessibility, skills: skills)
+        settings: settings,
+        services: .init(
+          accessibility: launch.usesAccessibility ? .enabled : .disabled, skills: skills))
       controller.onOpenVault = { [weak self] recordID in
         self?.showVault(recordID: recordID)
       }

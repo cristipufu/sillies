@@ -15,7 +15,7 @@ public struct PlayfulSceneDefinition: Codable, Sendable, Equatable, Identifiable
   public enum Role: String, Codable, Sendable, CaseIterable { case lead, partner }
   public enum Destination: String, Codable, Sendable { case home, stage, corner, outside, below }
   public enum Prop: String, Codable, Sendable {
-    case none, sign, rope, campfire, plane, letter, score, descentRope, retractingRope, parachute
+    case none, sign, rope, campfire, plane, letter, score, parachute
   }
 
   public struct Cue: Codable, Sendable, Equatable {

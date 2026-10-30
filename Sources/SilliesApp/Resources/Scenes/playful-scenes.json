@@ -512,7 +512,7 @@
     "clearanceAbove": 1.5
   },
   {
-    "id": "rope-descent",
+    "id": "edge-climb",
     "title": "A tiny expedition",
     "trigger": "ambient",
     "layout": "exterior",
@@ -542,8 +542,7 @@
             "destination": "outside"
           }
         ],
-        "prop": "descentRope",
-        "propOwner": "lead"
+        "prop": "none"
       },
       {
         "duration": 0.7,
@@ -555,8 +554,7 @@
             "pose": "hangingRight"
           }
         ],
-        "prop": "descentRope",
-        "propOwner": "lead"
+        "prop": "none"
       },
       {
         "duration": 3,
@@ -568,8 +566,7 @@
             "pose": "hangingRight"
           }
         ],
-        "prop": "descentRope",
-        "propOwner": "lead"
+        "prop": "none"
       },
       {
         "duration": 0.8,
@@ -581,8 +578,7 @@
             "pose": "hangingRight"
           }
         ],
-        "prop": "descentRope",
-        "propOwner": "lead"
+        "prop": "none"
       },
       {
         "duration": 3,
@@ -594,8 +590,7 @@
             "pose": "hangingRight"
           }
         ],
-        "prop": "descentRope",
-        "propOwner": "lead"
+        "prop": "none"
       },
       {
         "duration": 0.8,
@@ -607,8 +602,7 @@
             "facing": "left"
           }
         ],
-        "prop": "descentRope",
-        "propOwner": "lead"
+        "prop": "none"
       },
       {
         "duration": 1.5,
@@ -619,8 +613,7 @@
             "destination": "home"
           }
         ],
-        "prop": "retractingRope",
-        "propOwner": "lead"
+        "prop": "none"
       },
       {
         "duration": 0.8,
@@ -713,12 +706,11 @@
             "destination": "below"
           }
         ],
-        "prop": "descentRope",
-        "propOwner": "partner"
+        "prop": "none"
       },
       {
         "duration": 0.6,
-        "prop": "descentRope",
+        "prop": "none",
         "cues": [
           {
             "role": "lead",
@@ -731,8 +723,7 @@
             "destination": "below",
             "pose": "hangingRight"
           }
-        ],
-        "propOwner": "partner"
+        ]
       },
       {
         "duration": 3,
@@ -749,8 +740,7 @@
             "pose": "hangingRight"
           }
         ],
-        "prop": "descentRope",
-        "propOwner": "partner"
+        "prop": "none"
       },
       {
         "duration": 0.8,
@@ -767,8 +757,7 @@
             "facing": "left"
           }
         ],
-        "prop": "descentRope",
-        "propOwner": "partner"
+        "prop": "none"
       },
       {
         "duration": 1.6,
@@ -784,8 +773,7 @@
             "destination": "home"
           }
         ],
-        "prop": "retractingRope",
-        "propOwner": "partner"
+        "prop": "none"
       },
       {
         "duration": 1,
@@ -864,8 +852,7 @@
             "destination": "below"
           }
         ],
-        "prop": "descentRope",
-        "propOwner": "lead"
+        "prop": "none"
       },
       {
         "duration": 0.6,
@@ -877,8 +864,7 @@
             "pose": "hangingRight"
           }
         ],
-        "prop": "descentRope",
-        "propOwner": "lead"
+        "prop": "none"
       },
       {
         "duration": 3,
@@ -890,8 +876,7 @@
             "pose": "hangingRight"
           }
         ],
-        "prop": "descentRope",
-        "propOwner": "lead"
+        "prop": "none"
       },
       {
         "duration": 0.8,
@@ -903,8 +888,7 @@
             "facing": "left"
           }
         ],
-        "prop": "descentRope",
-        "propOwner": "lead"
+        "prop": "none"
       },
       {
         "duration": 1.5,
@@ -915,8 +899,7 @@
             "destination": "home"
           }
         ],
-        "prop": "retractingRope",
-        "propOwner": "lead"
+        "prop": "none"
       },
       {
         "duration": 0.8,

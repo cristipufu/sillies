@@ -10,8 +10,6 @@ public enum PlayfulPropLayout {
   private static let parachuteHeightRatio = 1.75
   private static let referenceSize = 100.0
   private static let messageHeightAllowance = 120.0
-  private static let ropeTailRatio = 0.36
-  private static let ropeAnchorBackingHeight = 20.0
   public static let parachuteTemplateSize = CGSize(width: 90, height: 112)
   public static let parachuteLeftGrip = CGPoint(x: 26, y: 70)
   public static let parachuteRightGrip = CGPoint(x: 102, y: 70)
@@ -61,57 +59,6 @@ public enum PlayfulPropLayout {
     }
   }
 
-  public struct RopeGeometry: Equatable, Sendable {
-    public let strand: CGRect
-    public let cornerStart: CGPoint
-    public let cornerEnd: CGPoint
-    public let clipHeight: Double
-
-    public var cornerPath: CGPath {
-      let bendRadius = 8.0
-      let path = CGMutablePath()
-      path.move(to: cornerStart)
-      path.addLine(to: CGPoint(x: cornerEnd.x - bendRadius, y: cornerStart.y))
-      path.addQuadCurve(to: cornerEnd, control: CGPoint(x: cornerEnd.x, y: cornerStart.y))
-      return path
-    }
-  }
-
-  public static func rope(
-    in frame: CGRect, actor: PlayfulSceneSession.Frame, window: CGRect,
-    retraction: Double = 0
-  )
-    -> RopeGeometry
-  {
-    let size = actor.actor.participant.surface.presentationSize
-    let offset = AttachmentPose.hangingRight.contactOffset(from: .standing, size: size)
-    let anchor = actor.actor.point(for: .outside, pose: .hangingRight)
-    let grip = CGPoint(x: anchor.x + offset.x, y: anchor.y + offset.y)
-    let cornerStart = CGPoint(x: window.maxX - 24 - frame.minX, y: window.maxY + 1.5 - frame.minY)
-    let cornerEnd = CGPoint(x: grip.x - frame.minX, y: cornerStart.y - 8)
-    let end =
-      actor.actor.point(for: .below, pose: .hangingRight).y + offset.y - size * ropeTailRatio
-    let restingBottom = max(0, min(cornerEnd.y, end - frame.minY))
-    let top = max(cornerEnd.y, grip.y - frame.minY)
-    let bottom = restingBottom + max(0, min(retraction, 1)) * (top - restingBottom)
-    return RopeGeometry(
-      strand: CGRect(x: cornerEnd.x - 1.5, y: bottom, width: 3, height: max(3, top - bottom)),
-      cornerStart: cornerStart, cornerEnd: cornerEnd, clipHeight: window.maxY - frame.minY)
-  }
-
-  public static func ropeTopFrame(actor: PlayfulSceneSession.Frame, plan: PlayfulScenePlan)
-    -> CGRect?
-  {
-    guard let window = plan.window else { return nil }
-    let size = actor.actor.participant.surface.presentationSize
-    let offset = AttachmentPose.hangingRight.contactOffset(from: .standing, size: size)
-    let gripX = actor.actor.point(for: .outside, pose: .hangingRight).x + offset.x
-    let frame = CGRect(
-      x: window.maxX - 26, y: window.maxY, width: gripX - window.maxX + 32,
-      height: ropeAnchorBackingHeight)
-    return plan.visibleFrame.contains(frame) ? frame : nil
-  }
-
   public static func frame(for request: Request) -> CGRect? {
     guard request.prop != .none,
       let lead = request.frames.first(where: { $0.actor.role == request.owner })
@@ -147,17 +94,6 @@ public enum PlayfulPropLayout {
       result = CGRect(
         x: origin.x - parachuteSize.width / 2, y: origin.y + size * handHeightRatio,
         width: parachuteSize.width, height: parachuteSize.height)
-    case .descentRope, .retractingRope:
-      let gripOffset = AttachmentPose.hangingRight.contactOffset(from: .standing, size: size)
-      let top = lead.actor.outside.y + ropeMargin / 2
-      let bottom =
-        lead.actor.point(for: .below, pose: .hangingRight).y + gripOffset.y - size * ropeTailRatio
-      let edge = request.plan.window?.maxX ?? origin.x - ropeMargin / 2
-      result = CGRect(
-        x: edge, y: min(top, bottom),
-        width: lead.actor.point(for: .outside, pose: .hangingRight).x + gripOffset.x - edge
-          + ropeMargin / 2,
-        height: max(ropeMargin, abs(top - bottom)))
     case .sign, .letter, .score:
       let proposedX = origin.x - request.textSize.width / 2
       let x = min(

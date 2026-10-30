@@ -39,7 +39,7 @@ final class PlayfulSceneCoordinator {
   private var needsFrames: Bool {
     guard let session, let phaseIndex, availability == .animated else { return false }
     let phase = session.plan.definition.phases[phaseIndex]
-    if phase.motion != nil || [.plane, .retractingRope].contains(phase.prop) { return true }
+    if phase.motion != nil || phase.prop == .plane { return true }
     return phase.cues.contains { cue in
       let previous =
         phaseIndex == 0

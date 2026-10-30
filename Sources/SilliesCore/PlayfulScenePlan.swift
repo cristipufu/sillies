@@ -22,8 +22,7 @@ public struct PlayfulSceneParticipant: Sendable {
 
 public struct PlayfulScenePlan: Sendable {
   public struct Actor: Sendable {
-    private static let ropeClearance: Double = 6
-    private static let ropeBendDrop: Double = 6.5
+    private static let cornerGripDrop: Double = 6.5
     public let participant: PlayfulSceneParticipant
     public let role: PlayfulSceneDefinition.Role
     public let stage: CGPoint
@@ -46,8 +45,8 @@ public struct PlayfulScenePlan: Sendable {
       guard pose.isHanging else { return point }
       let offset = pose.contactOffset(from: .standing, size: participant.surface.presentationSize)
       return CGPoint(
-        x: exteriorEdgeX + Self.ropeClearance - offset.x,
-        y: destination == .outside ? point.y - offset.y - Self.ropeBendDrop : point.y)
+        x: exteriorEdgeX - offset.x,
+        y: destination == .outside ? point.y - offset.y - Self.cornerGripDrop : point.y)
     }
   }
   public let definition: PlayfulSceneDefinition

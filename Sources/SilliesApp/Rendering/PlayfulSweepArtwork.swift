@@ -26,7 +26,8 @@ final class PlayfulSweepArtwork {
     rig.stage.addSublayer(layer)
     configureBrush(rig)
     arms = [
-      makeArm(rig.leftArm, height: 39, rig: rig), makeArm(rig.rightArm, height: 18, rig: rig),
+      makeArm(rig.leftArm, height: 39, depth: .foreground, rig: rig),
+      makeArm(rig.rightArm, height: 18, depth: .background, rig: rig),
     ]
     applyRestingPose()
     reset()
@@ -88,10 +89,12 @@ final class PlayfulSweepArtwork {
     rig.pill(on: broom, CGRect(x: -7, y: 16, width: 14, height: 5), "A57779", radius: 2)
   }
 
-  private func makeArm(_ source: CALayer, height: CGFloat, rig: CharacterRig) -> Arm {
+  private func makeArm(
+    _ source: CALayer, height: CGFloat, depth: CharacterFlexibleArmArtwork.Depth, rig: CharacterRig
+  ) -> Arm {
     Arm(
       gripHeight: height,
-      artwork: CharacterFlexibleArmArtwork(source: source, parent: layer, rig: rig))
+      artwork: CharacterFlexibleArmArtwork(source: source, parent: layer, rig: rig, depth: depth))
   }
 
   private func applyRestingPose() {

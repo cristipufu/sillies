@@ -72,27 +72,7 @@ import Testing
   #expect(abs(bubble.midX - actor.position.x) < 0.01)
 }
 
-@Test @MainActor func playfulRopeAnchorKeepsItsUpperBackingTransparent() throws {
-  let fixture = try PlayfulSceneFixture()
-  defer { fixture.stop() }
-  try fixture.start("rope-descent")
-  fixture.coordinator.advance(at: 4)
-  try DisplayFrameSequence.presentCreatedWindows()
-  let anchor = try #require(
-    fixture.coordinator.propPreviews.first {
-      $0.0 is PlayfulRopeAnchorView
-    }?.0)
-  let nativeFrame = try #require(anchor.superview)
-  let bitmap = try #require(nativeFrame.bitmapImageRepForCachingDisplay(in: nativeFrame.bounds))
-  nativeFrame.cacheDisplay(in: nativeFrame.bounds, to: bitmap)
-  for y in 0..<(bitmap.pixelsHigh / 2) {
-    for x in 0..<bitmap.pixelsWide {
-      #expect(try #require(bitmap.colorAt(x: x, y: y)).alphaComponent < 0.01)
-    }
-  }
-}
-
-@Test @MainActor func playfulShoveWaitsForContactAndReturnsThePartnerOnTheRope() throws {
+@Test @MainActor func playfulShoveWaitsForContactAndReturnsThePartnerAlongTheBorder() throws {
   let fixture = try PlayfulSceneFixture()
   defer { fixture.stop() }
   let plan = try fixture.plan("shove")
@@ -114,25 +94,19 @@ import Testing
   #expect(moving.position.x > victim.position.x)
   let recovery = try #require(
     plan.definition.phases.firstIndex {
-      $0.prop == .descentRope && $0.cues.contains { $0.role == .partner && $0.animation == .climb }
+      $0.cues.contains { $0.role == .partner && $0.animation == .climb }
     })
-  let recoveryPhase = plan.definition.phases[recovery]
-  #expect(recoveryPhase.owningRole == .partner)
   let frames = session.frames(at: session.phaseStart(recovery) + 0.5)
   let returning = try #require(frames.first { $0.actor.role == .partner })
-  let rope = try #require(
-    PlayfulPropLayout.frame(
-      for: .init(
-        prop: recoveryPhase.prop, frames: frames, plan: plan, textSize: .zero,
-        owner: recoveryPhase.owningRole)))
   #expect(returning.pose == .hangingRight)
-  #expect(rope.contains(returning.gripPoint))
+  #expect(abs(returning.gripPoint.x - fixture.window.maxX) < 0.01)
+
 }
 
-@Test @MainActor func playfulRopeRemainsVisibleThroughTheClamberAndRetractsAfterward() throws {
+@Test @MainActor func playfulClamberKeepsNativePlacementContinuousWithoutPropWindows() throws {
   let fixture = try PlayfulSceneFixture()
   defer { fixture.stop() }
-  for id in ["rope-descent", "shove", "parachute"] {
+  for id in ["edge-climb", "shove", "parachute"] {
     let plan = try fixture.plan(id)
     let session = PlayfulSceneSession(plan: plan, at: 0)
     let index = try #require(
@@ -141,13 +115,14 @@ import Testing
       })
     let boundary = session.phaseStart(index)
     let phase = plan.definition.phases[index]
+    let role = try #require(phase.cues.first { $0.animation == "scene.clamber" }).role
     let before = try #require(
       session.frames(at: boundary - 0.0001).first {
-        $0.actor.role == phase.owningRole
+        $0.actor.role == role
       })
     let after = try #require(
       session.frames(at: boundary + 0.0001).first {
-        $0.actor.role == phase.owningRole
+        $0.actor.role == role
       })
     #expect(
       hypot(before.position.x - after.position.x, before.position.y - after.position.y) < 0.01)
@@ -159,15 +134,12 @@ import Testing
     fixture.coordinator.advance(at: boundary + 0.0001)
     #expect(climber.panel.frame.size == nativeBefore.size)
     #expect(abs(climber.panel.frame.minY - nativeBefore.minY) < 0.01)
-    let panels = fixture.coordinator.windowNumbers
-    #expect(panels.count == 2)
     for progress in [0.0, 0.5, 0.99] {
       fixture.coordinator.advance(at: boundary + phase.duration * progress)
-      #expect(fixture.coordinator.windowNumbers == panels)
-      #expect(fixture.coordinator.hasVisibleProp)
+      #expect(fixture.coordinator.windowNumbers.isEmpty)
+      #expect(!fixture.coordinator.hasVisibleProp)
+      #expect(!climber.panel.frame.intersects(fixture.window))
     }
-    let retraction = plan.definition.phases[index + 1]
-    #expect(retraction.prop == .retractingRope)
     fixture.coordinator.advance(at: session.endsAt)
     #expect(fixture.coordinator.windowNumbers.isEmpty)
     #expect(fixture.coordinator.propPreviews.isEmpty)
@@ -177,7 +149,7 @@ import Testing
 @Test @MainActor func playfulClamberKeepsTheHandsPlantedUntilRelease() throws {
   let fixture = try PlayfulSceneFixture()
   defer { fixture.stop() }
-  let plan = try fixture.plan("rope-descent")
+  let plan = try fixture.plan("edge-climb")
   let actor = try #require(plan.actors.first)
   let scale = actor.participant.surface.presentationSize / 100
   let from = actor.point(for: .outside, pose: .hangingRight)
@@ -192,6 +164,7 @@ import Testing
       let world = CGPoint(x: body.x + (64 - grip.x) * scale, y: body.y + (grip.y - 20) * scale)
       let anchor = CGPoint(x: from.x + (64 - start.x) * scale, y: from.y + (start.y - 20) * scale)
       #expect(hypot(world.x - anchor.x, world.y - anchor.y) < 0.01)
+      #expect(abs(world.x - fixture.window.maxX) < 0.01)
     }
   }
 }

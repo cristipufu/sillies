@@ -8,30 +8,19 @@ final class PlayfulSharedArtwork {
   private let rope = CAShapeLayer()
   private let fire = PlayfulCampfireArtwork()
   private let plane = CAShapeLayer()
-  private let descentRope = CALayer()
-  private let ropeAnchor = CAShapeLayer()
   private let parachute = PlayfulParachuteArtwork()
   private var lastSize = CGSize.zero
-  private var ropeCorner: (start: CGPoint, end: CGPoint)?
 
   init() {
     root.addSublayer(rope)
     root.addSublayer(fire.layer)
     root.addSublayer(plane)
-    root.addSublayer(descentRope)
-    root.addSublayer(ropeAnchor)
     root.addSublayer(parachute.layer)
     rope.strokeColor = NSColor(hex: "B18B60").cgColor
     rope.fillColor = nil
     rope.lineWidth = 3
     rope.lineCap = .round
     configurePlane()
-    descentRope.backgroundColor = rope.strokeColor
-    descentRope.cornerRadius = 1.5
-    ropeAnchor.strokeColor = rope.strokeColor
-    ropeAnchor.fillColor = nil
-    ropeAnchor.lineWidth = rope.lineWidth
-    ropeAnchor.lineCap = .round
     hide()
   }
 
@@ -40,8 +29,6 @@ final class PlayfulSharedArtwork {
     rope.isHidden = prop != .rope
     fire.layer.isHidden = prop != .campfire
     plane.isHidden = prop != .plane
-    descentRope.isHidden = ![.descentRope, .retractingRope].contains(prop)
-    ropeAnchor.isHidden = descentRope.isHidden
     parachute.layer.isHidden = prop != .parachute
     guard !reducedMotion else { return }
     if prop == .campfire {
@@ -79,22 +66,10 @@ final class PlayfulSharedArtwork {
       size.width / template.width, size.height / template.height, 1)
   }
 
-  func updateRope(_ geometry: PlayfulPropLayout.RopeGeometry) {
-    if descentRope.frame != geometry.strand { descentRope.frame = geometry.strand }
-    guard ropeCorner?.start != geometry.cornerStart || ropeCorner?.end != geometry.cornerEnd else {
-      return
-    }
-    ropeCorner = (geometry.cornerStart, geometry.cornerEnd)
-    ropeAnchor.frame = CGRect(
-      x: 0, y: 0, width: lastSize.width, height: max(0, geometry.clipHeight))
-    ropeAnchor.masksToBounds = true
-    ropeAnchor.path = geometry.cornerPath
-  }
-
   func hide() {
     fire.stop()
     parachute.stop()
-    for layer in [rope, fire.layer, plane, descentRope, ropeAnchor, parachute.layer] {
+    for layer in [rope, fire.layer, plane, parachute.layer] {
       layer.isHidden = true
       layer.removeAllAnimations()
       for child in layer.sublayers ?? [] { child.removeAllAnimations() }

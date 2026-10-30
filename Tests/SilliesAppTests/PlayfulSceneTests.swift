@@ -98,10 +98,10 @@ import Testing
   #expect(!WindowTrackingExclusions.transparentOverlays.contains(UInt32(prop.windowNumber)))
 }
 
-@Test @MainActor func playfulRopeUsesTheExistingSideGripAndRestoresItsPerch() throws {
+@Test @MainActor func playfulBorderClimbUsesTheExistingSideGripAndRestoresItsPerch() throws {
   let fixture = try PlayfulSceneFixture()
   defer { fixture.stop() }
-  try fixture.start("rope-descent")
+  try fixture.start("edge-climb")
   fixture.coordinator.advance(at: 4)
   let actor = try #require(fixture.companions.first { $0.isPerformingScene })
   #expect(actor.attachmentPose == .hangingRight)

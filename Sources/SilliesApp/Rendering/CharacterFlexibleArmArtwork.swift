@@ -4,6 +4,10 @@ import QuartzCore
 /// A continuous sleeve and rounded fingers, shared by tools and contact gestures.
 @MainActor
 final class CharacterFlexibleArmArtwork {
+  enum Depth: CGFloat {
+    case background = 0
+    case foreground = 1
+  }
   private enum Geometry {
     static let shoulderHeight = 0.88
     static let outlineWidth = 12.0
@@ -14,9 +18,16 @@ final class CharacterFlexibleArmArtwork {
   let outline = CAShapeLayer()
   let sleeve = CAShapeLayer()
   let hand = CALayer()
+  private let layer = CALayer()
   private let shoulder: CGPoint
 
-  init(source: CALayer, parent: CALayer, rig: CharacterRig) {
+  init(source: CALayer, parent: CALayer, rig: CharacterRig, depth: Depth) {
+    layer.zPosition = depth.rawValue
+    if let foreground = parent.sublayers?.first(where: { $0.zPosition > depth.rawValue }) {
+      parent.insertSublayer(layer, below: foreground)
+    } else {
+      parent.addSublayer(layer)
+    }
     shoulder = CGPoint(
       x: source.frame.midX, y: source.frame.minY + source.bounds.height * Geometry.shoulderHeight)
     for (part, width, color) in [
@@ -27,11 +38,11 @@ final class CharacterFlexibleArmArtwork {
       part.strokeColor = NSColor(hex: color).cgColor
       part.lineWidth = width
       part.lineCap = .round
-      parent.addSublayer(part)
+      layer.addSublayer(part)
     }
     hand.bounds = Geometry.handBounds
     CharacterHandArtwork.draw(on: hand, at: Geometry.handBounds.origin, rig: rig)
-    parent.addSublayer(hand)
+    layer.addSublayer(hand)
   }
 
   func path(to grip: CGPoint) -> CGPath {

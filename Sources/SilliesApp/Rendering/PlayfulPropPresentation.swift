@@ -6,20 +6,18 @@ import SilliesCore
 @MainActor
 final class PlayfulPropPresentation {
   private let panel = PlayfulPropPanel()
-  private let ropeAnchor = PlayfulRopeAnchorPresentation()
   private let root = CALayer()
   private let artwork = PlayfulSharedArtwork()
   private let messageBubble = PlayfulMessageArtwork()
   private var current: PlayfulSceneDefinition.Prop = .none
   private var owner: PlayfulSceneDefinition.Role = .lead
   private var cardSize = CGSize.zero
-  private var fixedRopeIsPlaced = false
   private var artworkSize = CGSize.zero
-  var isVisible: Bool { panel.isVisible || ropeAnchor.isVisible }
+  var isVisible: Bool { panel.isVisible }
   var windowNumber: Int { panel.windowNumber }
-  var previews: [(NSView, CGRect)] { [panel.preview, ropeAnchor.preview].compactMap { $0 } }
+  var previews: [(NSView, CGRect)] { [panel.preview].compactMap { $0 } }
   var windowNumbers: Set<Int> {
-    (panel.isVisible ? [panel.windowNumber] : Set<Int>()).union(ropeAnchor.windowNumbers)
+    panel.isVisible ? [panel.windowNumber] : []
   }
 
   init() {
@@ -47,12 +45,6 @@ final class PlayfulPropPresentation {
     let prop = request.prop
     let owner = request.owner
     guard prop != current || self.owner != owner else { return }
-    if [.descentRope, .retractingRope].contains(current),
-      [.descentRope, .retractingRope].contains(prop), self.owner == owner
-    {
-      current = prop
-      return
-    }
     hide()
     current = prop
     self.owner = owner
@@ -75,7 +67,6 @@ final class PlayfulPropPresentation {
     frames: [PlayfulSceneSession.Frame], plan: PlayfulScenePlan,
     windowLayer: Int, progress: Double = 0
   ) {
-    if current == .descentRope, fixedRopeIsPlaced { return }
     guard
       let proposed = PlayfulPropLayout.frame(
         for: .init(
@@ -83,10 +74,9 @@ final class PlayfulPropPresentation {
           plan: plan, textSize: cardSize, owner: owner, progress: progress))
     else {
       panel.hide()
-      ropeAnchor.hide()
       return
     }
-    let isHeldProp = [.rope, .descentRope, .retractingRope, .parachute].contains(current)
+    let isHeldProp = [.rope, .parachute].contains(current)
     let level =
       isHeldProp
       ? NSWindow.Level(
@@ -97,22 +87,11 @@ final class PlayfulPropPresentation {
     let artworkNeedsLayout =
       abs(artworkSize.width - proposed.width) > PlayfulPropPanel.geometryTolerance
       || abs(artworkSize.height - proposed.height) > PlayfulPropPanel.geometryTolerance
-      || current == .retractingRope
     if artworkNeedsLayout {
       artworkSize = proposed.size
       CATransaction.begin()
       CATransaction.setDisableActions(true)
       artwork.resize(to: proposed.size)
-      if [.descentRope, .retractingRope].contains(current),
-        let actor = frames.first(where: { $0.actor.role == owner }),
-        let window = plan.window
-      {
-        artwork.updateRope(
-          PlayfulPropLayout.rope(
-            in: proposed, actor: actor, window: window,
-            retraction: current == .retractingRope ? progress : 0))
-        ropeAnchor.place(actor: actor, plan: plan, level: level)
-      }
       if current == .plane, let actor = frames.first(where: { $0.actor.role == owner }) {
         artwork.facePlane(
           right: PlayfulPlaneFlight.facesRight(
@@ -121,23 +100,19 @@ final class PlayfulPropPresentation {
       CATransaction.commit()
     }
     panel.present(frame: proposed, level: level)
-    fixedRopeIsPlaced = current == .descentRope
   }
 
   func hide() {
-    fixedRopeIsPlaced = false
     artworkSize = .zero
     messageBubble.hide()
     artwork.hide()
     root.removeAllAnimations()
     panel.hide()
-    ropeAnchor.hide()
     current = .none
   }
 
   func close() {
     hide()
     panel.close()
-    ropeAnchor.close()
   }
 }

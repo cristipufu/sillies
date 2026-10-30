@@ -20,10 +20,11 @@ final class PlayfulContactArtwork {
   init(rig: CharacterRig) {
     layer.frame = rig.stage.bounds
     rig.stage.addSublayer(layer)
-    let parent = layer
-    arms = [rig.leftArm, rig.rightArm].map {
-      CharacterFlexibleArmArtwork(source: $0, parent: parent, rig: rig)
-    }
+    arms = [
+      CharacterFlexibleArmArtwork(source: rig.leftArm, parent: layer, rig: rig, depth: .foreground),
+      CharacterFlexibleArmArtwork(
+        source: rig.rightArm, parent: layer, rig: rig, depth: .background),
+    ]
     reset()
   }
 

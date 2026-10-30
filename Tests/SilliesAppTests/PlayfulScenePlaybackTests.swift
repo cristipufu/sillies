@@ -37,7 +37,7 @@ import Testing
     uniqueKeysWithValues: fixture.companions.map {
       ($0.definition.id, $0.surface?.fraction(for: $0.position))
     })
-  try fixture.start("rope-descent")
+  try fixture.start("edge-climb")
   fixture.coordinator.advance(at: 4)
   let pet = try #require(fixture.companions.first { $0.isPerformingScene })
   let point = pet.position
@@ -52,7 +52,7 @@ import Testing
 }
 
 @Test @MainActor func playfulTravelUsesBoundedNativeFrameWork() throws {
-  try measurePlayfulTravel(scene: "rope-descent", startingAt: 2.6)
+  try measurePlayfulTravel(scene: "edge-climb", startingAt: 2.6)
 }
 
 @Test @MainActor func playfulSharedTravelUsesBoundedNativeFrameWork() throws {
@@ -100,44 +100,31 @@ import Testing
   }
 }
 
-@Test @MainActor func playfulRopeStaysConnectedToTheMarginAndBothHands() throws {
+@Test @MainActor func playfulClimbingUsesTheWindowBorderWithoutExtraWindows() throws {
   let fixture = try PlayfulSceneFixture()
   defer { fixture.stop() }
-  let definition = try #require(fixture.catalog.scenes.first { $0.id == "rope-descent" })
-  let pet = try #require(fixture.companions.last)
-  let participant = PlayfulSceneParticipant(
-    id: pet.definition.id, profile: try #require(pet.definition.playful),
-    surface: try #require(pet.surface), position: pet.position, windowID: pet.attachedWindowID)
-  let plan = try #require(
-    PlayfulSceneLayout.plan(
-      .init(
-        definition: definition, participants: [participant], bystanders: [],
-        window: fixture.window, visibleFrame: fixture.visible, message: "")))
-  let session = PlayfulSceneSession(plan: plan, at: 0)
-  for sample in 0..<200 {
-    let time = definition.duration * Double(sample) / 200
-    let index = try #require(session.phaseIndex(at: time))
-    guard definition.phases[index].prop == .descentRope else { continue }
-    let frames = session.frames(at: time)
-    let actor = try #require(frames.first)
-    let frame = try #require(
-      PlayfulPropLayout.frame(
-        for: .init(
-          prop: .descentRope, frames: frames, plan: plan, textSize: .zero)))
-    let rope = PlayfulPropLayout.rope(in: frame, actor: actor, window: fixture.window)
-    let top = try #require(PlayfulPropLayout.ropeTopFrame(actor: actor, plan: plan))
-    #expect(top.minY == fixture.window.maxY && top.minX < fixture.window.maxX)
-    #expect(!top.intersects(fixture.window))
-    #expect(rope.cornerStart.x + frame.minX < fixture.window.maxX)
-    #expect(rope.cornerStart.y + frame.minY > fixture.window.maxY)
-    guard actor.pose.isHanging, actor.animation != .hangCatch else { continue }
-    let grip = CGPoint(x: actor.gripPoint.x - frame.minX, y: actor.gripPoint.y - frame.minY)
-    #expect(abs(rope.strand.midX - grip.x) < 0.01)
-    #expect(rope.strand.minY <= grip.y && rope.strand.maxY >= grip.y)
-    #expect(rope.strand.minY <= grip.y - 0.29 * participant.surface.presentationSize)
-    #expect(abs(rope.strand.midX - rope.cornerEnd.x) < 0.01)
-    #expect(rope.strand.minY <= rope.cornerEnd.y && rope.strand.maxY >= rope.cornerEnd.y)
-    #expect(frame.minX == fixture.window.maxX)
-    #expect(!frame.intersects(fixture.window))
+  for id in ["edge-climb", "shove", "parachute"] {
+    let plan = try fixture.plan(id)
+    let session = PlayfulSceneSession(plan: plan, at: 0)
+    try fixture.start(id)
+    for sample in 0..<200 {
+      let time = plan.definition.duration * Double(sample) / 200
+      let index = try #require(session.phaseIndex(at: time))
+      let phase = plan.definition.phases[index]
+      fixture.coordinator.advance(at: time)
+      if phase.prop == .none {
+        #expect(fixture.coordinator.windowNumbers.isEmpty)
+        #expect(fixture.coordinator.propPreviews.isEmpty)
+      }
+      for actor in session.frames(at: time)
+      where actor.pose.isHanging && actor.animation != .hangCatch {
+        #expect(abs(actor.gripPoint.x - fixture.window.maxX) < 0.01)
+        #expect(actor.gripPoint.y < fixture.window.maxY)
+      }
+      for pet in fixture.companions where pet.isPerformingScene && pet.attachmentPose.isHanging {
+        #expect(!pet.panel.frame.intersects(fixture.window))
+        #expect(abs(pet.panel.frame.minX - fixture.window.maxX) < 0.01)
+      }
+    }
   }
 }

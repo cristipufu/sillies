@@ -133,6 +133,17 @@ func playfulScenePlanningSupportsSizesAndNegativeScreenOrigins(size: Double) thr
         definition: SceneFixture.definition, participants: cast, bystanders: [],
         window: window, visibleFrame: screen, message: "")))
   #expect(plan.actors.allSatisfy { screen.contains($0.stage) })
+  let grip = AttachmentPose.hangingRight.contactOffset(from: .standing, size: size)
+  for actor in plan.actors {
+    for destination: PlayfulSceneDefinition.Destination in [.outside, .below] {
+      let body = actor.point(for: destination, pose: .hangingRight)
+      let bounds = CompanionWindowLayout.exteriorScene(
+        bodyPosition: body, pose: .hangingRight, size: size, window: window)
+      #expect(abs(body.x + grip.x - window.maxX) < 0.01)
+      #expect(!bounds.frame.intersects(window))
+      #expect(abs(bounds.contactOffset.x) < 0.01)
+    }
+  }
   let crampedScreen = CGRect(
     x: screen.minX, y: screen.minY, width: screen.width,
     height: window.maxY - screen.minY + size)

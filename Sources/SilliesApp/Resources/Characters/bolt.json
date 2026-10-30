@@ -313,5 +313,29 @@
       "animation": "fade",
       "duration": 0.16
     }
+  },
+  "playful": {
+    "scenes": [
+      "dance",
+      "monocle",
+      "sweep",
+      "protest",
+      "tug-of-war",
+      "campfire",
+      "paper-plane",
+      "scoreboard",
+      "sit",
+      "lift",
+      "rope-descent",
+      "shove",
+      "parachute"
+    ],
+    "clips": {
+      "scene.dance": "scene.robotDance"
+    },
+    "signs": [
+      "CUT TOKEN WASTE",
+      "LET TESTS FINISH"
+    ]
   }
 }

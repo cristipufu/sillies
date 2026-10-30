@@ -1,0 +1,934 @@
+[
+  {
+    "id": "dance",
+    "title": "Tiny dance crew",
+    "trigger": "ambient",
+    "layout": "perches",
+    "participants": 2,
+    "cooldown": 480,
+    "weight": 1,
+    "messages": [],
+    "phases": [
+      {
+        "duration": 0.8,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "scene.danceIntro",
+            "destination": "home"
+          },
+          {
+            "role": "partner",
+            "animation": "scene.danceIntro",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      },
+      {
+        "duration": 4.8,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "scene.dance",
+            "destination": "home"
+          },
+          {
+            "role": "partner",
+            "animation": "scene.dance",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      },
+      {
+        "duration": 1.2,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "scene.danceFinish",
+            "destination": "home"
+          },
+          {
+            "role": "partner",
+            "animation": "scene.danceFinish",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      }
+    ],
+    "clearanceAbove": 1.5
+  },
+  {
+    "id": "monocle",
+    "title": "A closer look",
+    "trigger": "ambient",
+    "layout": "perches",
+    "participants": 1,
+    "cooldown": 480,
+    "weight": 1,
+    "messages": [],
+    "phases": [
+      {
+        "duration": 0.6,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "peek",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      },
+      {
+        "duration": 3,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "scene.monocle",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      },
+      {
+        "duration": 1,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "surprised",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      }
+    ],
+    "clearanceAbove": 1.5
+  },
+  {
+    "id": "sweep",
+    "title": "Title bar housekeeping",
+    "trigger": "ambient",
+    "layout": "perches",
+    "participants": 1,
+    "cooldown": 480,
+    "weight": 1,
+    "messages": [],
+    "phases": [
+      {
+        "duration": 4,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "scene.sweep",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      },
+      {
+        "duration": 1,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "happy",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      }
+    ],
+    "clearanceAbove": 1.5
+  },
+  {
+    "id": "protest",
+    "title": "Tiny developer protest",
+    "trigger": "ambient",
+    "layout": "perches",
+    "participants": 1,
+    "cooldown": 480,
+    "weight": 1,
+    "messages": [
+      "CUT TOKEN WASTE",
+      "LET TESTS FINISH",
+      "MORE BREAKS"
+    ],
+    "phases": [
+      {
+        "duration": 5,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "scene.sign",
+            "destination": "home"
+          }
+        ],
+        "prop": "sign"
+      },
+      {
+        "duration": 1,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "wave",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      }
+    ],
+    "clearanceAbove": 2.8
+  },
+  {
+    "id": "tug-of-war",
+    "title": "The smallest tug of war",
+    "trigger": "ambient",
+    "layout": "together",
+    "participants": 2,
+    "cooldown": 480,
+    "weight": 1,
+    "messages": [],
+    "phases": [
+      {
+        "duration": 1.5,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "walk",
+            "destination": "stage"
+          },
+          {
+            "role": "partner",
+            "animation": "walk",
+            "destination": "stage"
+          }
+        ],
+        "prop": "none"
+      },
+      {
+        "duration": 4.4,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "scene.tug",
+            "destination": "stage"
+          },
+          {
+            "role": "partner",
+            "animation": "scene.tug",
+            "destination": "stage"
+          }
+        ],
+        "prop": "rope",
+        "motion": {
+          "direction": "alternating",
+          "distance": 0.4,
+          "cycles": 2,
+          "bank": 0
+        }
+      },
+      {
+        "duration": 1,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "wave",
+            "destination": "stage"
+          },
+          {
+            "role": "partner",
+            "animation": "tumble",
+            "destination": "stage"
+          }
+        ],
+        "prop": "none"
+      },
+      {
+        "duration": 1.5,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "walk",
+            "destination": "home"
+          },
+          {
+            "role": "partner",
+            "animation": "walk",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      }
+    ],
+    "clearanceAbove": 1.5
+  },
+  {
+    "id": "campfire",
+    "title": "A little warmth",
+    "trigger": "idle",
+    "layout": "together",
+    "participants": 2,
+    "cooldown": 480,
+    "weight": 1,
+    "messages": [],
+    "phases": [
+      {
+        "duration": 1.5,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "walk",
+            "destination": "stage"
+          },
+          {
+            "role": "partner",
+            "animation": "walk",
+            "destination": "stage"
+          }
+        ],
+        "prop": "none"
+      },
+      {
+        "duration": 9,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "scene.warmHands",
+            "destination": "stage"
+          },
+          {
+            "role": "partner",
+            "animation": "scene.warmHands",
+            "destination": "stage"
+          }
+        ],
+        "prop": "campfire"
+      },
+      {
+        "duration": 1,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "happy",
+            "destination": "stage"
+          },
+          {
+            "role": "partner",
+            "animation": "happy",
+            "destination": "stage"
+          }
+        ],
+        "prop": "none"
+      },
+      {
+        "duration": 1.5,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "walk",
+            "destination": "home"
+          },
+          {
+            "role": "partner",
+            "animation": "walk",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      }
+    ],
+    "clearanceAbove": 1.5
+  },
+  {
+    "id": "paper-plane",
+    "title": "A note for you",
+    "trigger": "ambient",
+    "layout": "perches",
+    "participants": 1,
+    "cooldown": 480,
+    "weight": 1,
+    "messages": [
+      "Your rubber duck believes in you.",
+      "This meeting could have been a nap.",
+      "A tiny note: take a little break.",
+      "I reviewed your vibes. Approved."
+    ],
+    "phases": [
+      {
+        "duration": 3.6,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "scene.throw",
+            "destination": "home"
+          }
+        ],
+        "prop": "plane"
+      },
+      {
+        "duration": 5,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "peek",
+            "destination": "home"
+          }
+        ],
+        "prop": "letter"
+      },
+      {
+        "duration": 1,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "wave",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      }
+    ],
+    "clearanceAbove": 2.8
+  },
+  {
+    "id": "scoreboard",
+    "title": "Window landing judges",
+    "trigger": "windowSettled",
+    "layout": "perches",
+    "participants": 1,
+    "cooldown": 480,
+    "weight": 1,
+    "messages": [
+      "WINDOW LANDING\n9/10",
+      "STYLE POINTS\n10/10",
+      "SMOOTH MOVES\n9.5/10"
+    ],
+    "phases": [
+      {
+        "duration": 4,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "scene.sign",
+            "destination": "home"
+          }
+        ],
+        "prop": "score"
+      },
+      {
+        "duration": 1,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "happy",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      }
+    ],
+    "clearanceAbove": 2.8
+  },
+  {
+    "id": "sit",
+    "title": "Just hanging out",
+    "trigger": "ambient",
+    "layout": "perches",
+    "participants": 1,
+    "cooldown": 480,
+    "weight": 1,
+    "messages": [],
+    "phases": [
+      {
+        "duration": 8,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "scene.sit",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      },
+      {
+        "duration": 1,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "happy",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      }
+    ],
+    "clearanceAbove": 1.5
+  },
+  {
+    "id": "lift",
+    "title": "Extremely heavy window",
+    "trigger": "ambient",
+    "layout": "perches",
+    "participants": 1,
+    "cooldown": 480,
+    "weight": 1,
+    "messages": [],
+    "phases": [
+      {
+        "duration": 3.5,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "scene.lift",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      },
+      {
+        "duration": 1,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "tumble",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      },
+      {
+        "duration": 1.5,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "surprised",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      }
+    ],
+    "clearanceAbove": 1.5
+  },
+  {
+    "id": "rope-descent",
+    "title": "A tiny expedition",
+    "trigger": "ambient",
+    "layout": "exterior",
+    "participants": 1,
+    "cooldown": 720,
+    "weight": 0.6,
+    "clearanceAbove": 1.5,
+    "messages": [],
+    "phases": [
+      {
+        "duration": 1.5,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "walk",
+            "destination": "corner"
+          }
+        ],
+        "prop": "none"
+      },
+      {
+        "duration": 1,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "walk",
+            "destination": "outside"
+          }
+        ],
+        "prop": "descentRope",
+        "propOwner": "lead"
+      },
+      {
+        "duration": 0.7,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "hangCatch",
+            "destination": "outside",
+            "pose": "hangingRight"
+          }
+        ],
+        "prop": "descentRope",
+        "propOwner": "lead"
+      },
+      {
+        "duration": 3,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "climb",
+            "destination": "below",
+            "pose": "hangingRight"
+          }
+        ],
+        "prop": "descentRope",
+        "propOwner": "lead"
+      },
+      {
+        "duration": 0.8,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "hang",
+            "destination": "below",
+            "pose": "hangingRight"
+          }
+        ],
+        "prop": "descentRope",
+        "propOwner": "lead"
+      },
+      {
+        "duration": 3,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "climb",
+            "destination": "outside",
+            "pose": "hangingRight"
+          }
+        ],
+        "prop": "descentRope",
+        "propOwner": "lead"
+      },
+      {
+        "duration": 0.8,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "scene.clamber",
+            "destination": "outside",
+            "facing": "left"
+          }
+        ],
+        "prop": "descentRope",
+        "propOwner": "lead"
+      },
+      {
+        "duration": 1.5,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "walk",
+            "destination": "home"
+          }
+        ],
+        "prop": "retractingRope",
+        "propOwner": "lead"
+      },
+      {
+        "duration": 0.8,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "happy",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      }
+    ]
+  },
+  {
+    "id": "shove",
+    "title": "A very small betrayal",
+    "trigger": "ambient",
+    "layout": "exterior",
+    "participants": 2,
+    "cooldown": 720,
+    "weight": 0.6,
+    "clearanceAbove": 1.5,
+    "messages": [],
+    "phases": [
+      {
+        "duration": 1.6,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "walk",
+            "destination": "corner",
+            "facing": "right"
+          },
+          {
+            "role": "partner",
+            "animation": "walk",
+            "destination": "corner",
+            "facing": "right"
+          }
+        ],
+        "prop": "none"
+      },
+      {
+        "duration": 0.9,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "scene.shove",
+            "destination": "corner",
+            "facing": "right"
+          },
+          {
+            "role": "partner",
+            "animation": "surprised",
+            "destination": "outside",
+            "movementStart": 0.35,
+            "facing": "right"
+          }
+        ],
+        "prop": "none"
+      },
+      {
+        "duration": 0.7,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "peek",
+            "destination": "corner"
+          },
+          {
+            "role": "partner",
+            "animation": "scene.fall",
+            "destination": "below"
+          }
+        ],
+        "prop": "none"
+      },
+      {
+        "duration": 1,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "peek",
+            "destination": "corner"
+          },
+          {
+            "role": "partner",
+            "animation": "scene.grumpy",
+            "destination": "below"
+          }
+        ],
+        "prop": "descentRope",
+        "propOwner": "partner"
+      },
+      {
+        "duration": 0.6,
+        "prop": "descentRope",
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "peek",
+            "destination": "corner"
+          },
+          {
+            "role": "partner",
+            "animation": "hangCatch",
+            "destination": "below",
+            "pose": "hangingRight"
+          }
+        ],
+        "propOwner": "partner"
+      },
+      {
+        "duration": 3,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "peek",
+            "destination": "corner"
+          },
+          {
+            "role": "partner",
+            "animation": "climb",
+            "destination": "outside",
+            "pose": "hangingRight"
+          }
+        ],
+        "prop": "descentRope",
+        "propOwner": "partner"
+      },
+      {
+        "duration": 0.8,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "peek",
+            "destination": "corner"
+          },
+          {
+            "role": "partner",
+            "animation": "scene.clamber",
+            "destination": "outside",
+            "facing": "left"
+          }
+        ],
+        "prop": "descentRope",
+        "propOwner": "partner"
+      },
+      {
+        "duration": 1.6,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "walk",
+            "destination": "home"
+          },
+          {
+            "role": "partner",
+            "animation": "walk",
+            "destination": "home"
+          }
+        ],
+        "prop": "retractingRope",
+        "propOwner": "partner"
+      },
+      {
+        "duration": 1,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "peek",
+            "destination": "home"
+          },
+          {
+            "role": "partner",
+            "animation": "scene.grumpy",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      }
+    ]
+  },
+  {
+    "id": "parachute",
+    "title": "Permission to land",
+    "trigger": "ambient",
+    "layout": "exterior",
+    "participants": 1,
+    "cooldown": 720,
+    "weight": 0.6,
+    "clearanceAbove": 3.1,
+    "messages": [],
+    "phases": [
+      {
+        "duration": 1.5,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "walk",
+            "destination": "corner"
+          }
+        ],
+        "prop": "none"
+      },
+      {
+        "duration": 1,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "scene.parachute",
+            "destination": "outside"
+          }
+        ],
+        "prop": "none"
+      },
+      {
+        "duration": 4,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "scene.parachute",
+            "destination": "below"
+          }
+        ],
+        "prop": "parachute",
+        "motion": {
+          "direction": "outward",
+          "distance": 0.5,
+          "cycles": 2,
+          "bank": 0.12
+        }
+      },
+      {
+        "duration": 0.7,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "wave",
+            "destination": "below"
+          }
+        ],
+        "prop": "descentRope",
+        "propOwner": "lead"
+      },
+      {
+        "duration": 0.6,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "hangCatch",
+            "destination": "below",
+            "pose": "hangingRight"
+          }
+        ],
+        "prop": "descentRope",
+        "propOwner": "lead"
+      },
+      {
+        "duration": 3,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "climb",
+            "destination": "outside",
+            "pose": "hangingRight"
+          }
+        ],
+        "prop": "descentRope",
+        "propOwner": "lead"
+      },
+      {
+        "duration": 0.8,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "scene.clamber",
+            "destination": "outside",
+            "facing": "left"
+          }
+        ],
+        "prop": "descentRope",
+        "propOwner": "lead"
+      },
+      {
+        "duration": 1.5,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "walk",
+            "destination": "home"
+          }
+        ],
+        "prop": "retractingRope",
+        "propOwner": "lead"
+      },
+      {
+        "duration": 0.8,
+        "cues": [
+          {
+            "role": "lead",
+            "animation": "happy",
+            "destination": "home"
+          }
+        ],
+        "prop": "none"
+      }
+    ]
+  }
+]

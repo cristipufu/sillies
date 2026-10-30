@@ -3,12 +3,36 @@ import CoreGraphics
 /// Native bounds stay outside the attached window, independently of decorative layer masks.
 public struct CompanionWindowLayout: Sendable {
   public static let runtimeCanvasDimension: Double = 256
+  public static let exteriorSceneClearanceRatio: Double = 2.2
+  private static let exteriorBodyInsetRatio: Double = 0.8
   private static let halfRuntimeCanvas: Double = runtimeCanvasDimension / 2
   private static let percentScale: Double = 100
   private static let minimumCroppedDimension: Double = 1
 
   public let frame: CGRect
   public let contactOffset: CGPoint
+
+  /// Exterior choreography moves the body inside a constant-width side panel. Changing grips
+  /// must not resize the native surface or shift its origin independently of the body.
+  public static func exteriorScene(
+    bodyPosition: CGPoint, pose: AttachmentPose, size: Double, window: CGRect
+  ) -> CompanionWindowLayout {
+    let half = halfRuntimeCanvas * size / percentScale
+    let inset = size * exteriorBodyInsetRatio
+    let frame = CGRect(
+      x: max(window.maxX, bodyPosition.x - inset), y: bodyPosition.y - half,
+      width: inset * 2, height: half * 2)
+    let grip = pose.contactOffset(from: .standing, size: size)
+    return CompanionWindowLayout(
+      frame: frame,
+      contactOffset: CGPoint(
+        x: bodyPosition.x + grip.x - frame.minX, y: bodyPosition.y + grip.y - frame.minY))
+  }
+
+  private init(frame: CGRect, contactOffset: CGPoint) {
+    self.frame = frame
+    self.contactOffset = contactOffset
+  }
 
   public init(contact: CGPoint, size: Double, window: CGRect?, edge: PerchSurface.Edge) {
     let half = Self.halfRuntimeCanvas * size / Self.percentScale

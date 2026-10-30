@@ -193,9 +193,10 @@ struct CompanionSurfacePlacement {
         pet.refreshWorldMask()
         return requiresArrangement
       }
-      if change.transition != .unchanged {
+      if change.transition != .unchanged || pet.needsPlacementAfterScene {
         pet.stagePlacement(at: change.target)
-        pendingPlacements[ObjectIdentifier(pet)] = change.transition
+        pendingPlacements[ObjectIdentifier(pet)] =
+          change.transition == .unchanged ? .moved : change.transition
       } else {
         pet.refreshWorldMask()
         pet.refreshHUD()

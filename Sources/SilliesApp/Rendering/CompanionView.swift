@@ -32,6 +32,26 @@ final class CompanionView: NSView {
   private let worldMask = CAShapeLayer()
   private let artworkHitTester = ArtworkHitTester()
   private var contactOffset: CGPoint?
+  private var sceneEdge: PerchSurface.Edge?
+  private var scenePose: AttachmentPose?
+  private var effectivePose: AttachmentPose { scenePose ?? attachmentPose }
+
+  @discardableResult
+  func setSceneEdge(_ edge: PerchSurface.Edge?) -> Bool {
+    guard sceneEdge != edge else { return false }
+    sceneEdge = edge
+    return true
+  }
+
+  @discardableResult
+  func setScenePose(_ pose: AttachmentPose?) -> Bool {
+    let previous = effectivePose
+    scenePose = pose
+    guard previous != effectivePose else { return false }
+    rig.setAttachmentPose(effectivePose)
+    updateRigLayout()
+    return true
+  }
 
   private static let percentScale: Double = 100
   private static let pickupDragThreshold: Double = 3
@@ -88,7 +108,7 @@ final class CompanionView: NSView {
   func configureSurface(pose: AttachmentPose, window: CGRect?, display: CGRect?) {
     let poseChanged = attachmentPose != pose
     attachmentPose = pose
-    rig.setAttachmentPose(pose)
+    rig.setAttachmentPose(effectivePose)
     clippingWindow = window
     clippingDisplay = display
     if poseChanged { updateRigLayout() }
@@ -96,14 +116,21 @@ final class CompanionView: NSView {
 
   func panelLayout(at point: CGPoint, attached: Bool) -> CompanionWindowLayout {
     isAttachedToSurface = attached
+    if sceneEdge == .right, attached, let clippingWindow {
+      return .exteriorScene(
+        bodyPosition: point, pose: effectivePose, size: characterSize, window: clippingWindow)
+    }
     let edge: PerchSurface.Edge =
       switch attachmentPose {
       case .standing: (attached && clippingWindow == nil) ? .desktop : .top
       case .hangingLeft: .left
       case .hangingRight: .right
       }
+    let offset = effectivePose.contactOffset(from: attachmentPose, size: characterSize)
+    let contact = CGPoint(x: point.x + offset.x, y: point.y + offset.y)
     return CompanionWindowLayout(
-      contact: point, size: characterSize, window: attached ? clippingWindow : nil, edge: edge)
+      contact: contact, size: characterSize, window: attached ? clippingWindow : nil,
+      edge: sceneEdge ?? edge)
   }
 
   func applyPanelLayout(_ layout: CompanionWindowLayout) {
@@ -194,7 +221,7 @@ final class CompanionView: NSView {
     rig.root.anchorPoint =
       isPortraitMode
       ? CGPoint(x: 0.5, y: 0.5)
-      : CGPoint(x: attachmentPose.anchor.x / canvasSize, y: attachmentPose.anchor.y / canvasSize)
+      : CGPoint(x: effectivePose.anchor.x / canvasSize, y: effectivePose.anchor.y / canvasSize)
     rig.root.position = contact
     rig.root.transform = CATransform3DMakeScale(scale, scale, 1)
     rig.updateContentsScale(window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2)

@@ -55,7 +55,7 @@ let package = Package(
         "WindowMetadataProtocol",
       ],
       exclude: ["Platform/AGENTS.md", "UI/AGENTS.md"],
-      resources: [.copy("Resources/Characters")]
+      resources: [.copy("Resources/Characters"), .copy("Resources/Scenes")]
     ),
     .executableTarget(
       name: "SpeechBenchmark",

@@ -309,5 +309,29 @@
       "animation": "fade",
       "duration": 0.14
     }
+  },
+  "playful": {
+    "scenes": [
+      "dance",
+      "monocle",
+      "sweep",
+      "protest",
+      "tug-of-war",
+      "campfire",
+      "paper-plane",
+      "scoreboard",
+      "sit",
+      "lift",
+      "rope-descent",
+      "shove",
+      "parachute"
+    ],
+    "clips": {
+      "scene.dance": "scene.dance"
+    },
+    "signs": [
+      "SMALL DIFFS PLEASE",
+      "SILENCE THE FLAKES"
+    ]
   }
 }

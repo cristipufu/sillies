@@ -37,9 +37,11 @@ struct LaunchConfiguration {
       || arguments.contains("--interaction-test")
       || arguments.contains("--drop-return-test")
       || arguments.contains("--companion-drag-test")
+      || arguments.contains("--playful-scene")
   }
 
   var watchdogTimeoutSeconds: Double {
+    if arguments.contains("--playful-scene") { return 40 }
     if arguments.contains("--interaction-test") || arguments.contains("--drop-return-test") {
       return Self.inputCheckWatchdogTimeoutSeconds
     }
@@ -84,7 +86,13 @@ final class AutomatedLaunchRunner {
   private var externalDragCheck: ExternalDragCheck?
   private var playInteractionCheck: PlayInteractionCheck?
   private var companionDragCheck: CompanionDragResponseCheck?
+  private var playfulPreview: PlayfulScenePreview?
   private var watchdogTimer: DispatchSourceTimer?
+
+  func stopPreview() {
+    playfulPreview?.stop()
+    playfulPreview = nil
+  }
 
   func validateCatalog(characterCount: Int) {
     Task {
@@ -132,7 +140,11 @@ final class AutomatedLaunchRunner {
     exportPreviews: @escaping (URL) -> Void
   ) {
     let args = launch.arguments
-    if let snapshotPath = launch.optionValue(after: "--snapshot-dir") {
+    if let sceneID = launch.optionValue(after: "--playful-scene") {
+      let preview = PlayfulScenePreview(controller: controller)
+      playfulPreview = preview
+      preview.start(sceneID: sceneID)
+    } else if let snapshotPath = launch.optionValue(after: "--snapshot-dir") {
       let directory = URL(fileURLWithPath: snapshotPath, isDirectory: true)
       DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
         exportPreviews(directory)

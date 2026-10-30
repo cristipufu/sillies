@@ -19,6 +19,7 @@ final class CompanionController {
   let animations: AnimationLibrary
   let transitions: TransitionLibrary
   let skills: SkillCoordinator
+  let playfulScenes: PlayfulSceneCoordinator
   @ObservationIgnored var onOpenVault: ((UUID?) -> Void)?
   @ObservationIgnored private let additionalEventProducers: [any WorkspaceEventProducer]
   @ObservationIgnored private lazy var skillControls = CompanionSkillControls(
@@ -59,7 +60,13 @@ final class CompanionController {
     self.skills = services.skills
     self.additionalEventProducers = services.eventProducers
     tracker = WorkspaceTracker(accessibility: services.accessibility)
-    self.catalog = try assets.validatedCatalog()
+    let catalog = try assets.validatedCatalog()
+    let scenes = try PlayfulSceneCatalog()
+    try scenes.validate(characters: catalog, animations: assets.animations)
+    self.catalog = catalog
+    playfulScenes = PlayfulSceneCoordinator(
+      catalog: scenes, animations: assets.animations,
+      seed: UInt64.random(in: 1...UInt64.max))
   }
 
   var isExcluded: Bool {
@@ -142,6 +149,7 @@ final class CompanionController {
   }
 
   private func skillBindingChanged(for companionID: String, state: CompanionBindingState) {
+    playfulScenes.cancel(.restorePerches)
     guard let pet = companions.first(where: { $0.definition.id == companionID }) else { return }
     let previousTarget = pet.attachmentTarget
     let wasVisible = pet.isAttachmentVisible
@@ -159,6 +167,8 @@ final class CompanionController {
     }
     pet.refreshHUD()
     if targetChanged, interaction.isEnabled { interaction.refresh() }
+    refreshPlayfulAvailability()
+    scheduleDeadline()
   }
 
   private func skillEvent(_ event: WorkspaceEvent, for companionID: String) {
@@ -175,6 +185,7 @@ final class CompanionController {
   }
 
   func stop() {
+    playfulScenes.stop()
     dragTargeting.stop()
     dragTargeting.companionLookup = nil
     dragTargeting.excludedOverlayWindowNumbers = nil
@@ -298,8 +309,59 @@ final class CompanionController {
 
   private var now: Double { ProcessInfo.processInfo.systemUptime }
 
+  private func refreshPlayfulAvailability() {
+    let available =
+      shouldRun && settings.activity == .playful && !companions.isEmpty
+      && skills.activeAudioSession == nil && !tracker.isManipulatingWindow
+    playfulScenes.configure(
+      available ? (reducedMotion || tracker.isLowPower ? .reducedMotion : .animated) : .suspended,
+      at: now)
+  }
+
+  private func playfulOpportunity(trigger: PlayfulSceneDefinition.Trigger)
+    -> PlayfulSceneDirector.Opportunity
+  {
+    let available = companions.compactMap { pet -> PlayfulSceneParticipant? in
+      guard let profile = pet.definition.playful, let surface = pet.surface,
+        pet.panel.isVisible, pet.isAttachmentVisible, !pet.isPickedUp, !pet.isReturningFromDrop,
+        !pet.isWaitingForSpace, !pet.isStashTargeted, !pet.bindingState.isBound
+      else { return nil }
+      return PlayfulSceneParticipant(
+        id: pet.definition.id, profile: profile, surface: surface,
+        position: pet.position, windowID: pet.attachedWindowID)
+    }
+    let availableIDs = Set(available.map(\.id))
+    let occupiedFrames = companions.filter {
+      $0.panel.isVisible && !availableIDs.contains($0.definition.id)
+    }.map { $0.panel.frame }
+    return .init(
+      time: now, trigger: trigger, participants: available,
+      window: settings.followsWindows ? tracker.windowFrame : nil,
+      visibleFrame: CompanionPanel.visibleFrame(for: companions.first?.panel.screen),
+      occupiedFrames: occupiedFrames)
+  }
+
+  private func considerPlayfulScene(trigger: PlayfulSceneDefinition.Trigger) {
+    guard !playfulScenes.isActive, let deadline = playfulScenes.nextDeadline, now >= deadline else {
+      return
+    }
+    playfulScenes.consider(playfulOpportunity(trigger: trigger), companions: companions)
+  }
+
+  @discardableResult
+  func previewPlayfulScene(_ id: String) -> Bool {
+    refreshPlayfulAvailability()
+    let started = playfulScenes.preview(
+      id, opportunity: playfulOpportunity(trigger: .ambient), companions: companions)
+    scheduleDeadline()
+    updateMotionClock()
+    return started
+  }
+
   private func reconcile() {
+    playfulScenes.cancel(.geometryChanging)
     reconcileEnabledCharacters()
+    refreshPlayfulAvailability()
     if !shouldRun || companions.isEmpty {
       dragTargeting.resetAndHideOverlays()
       ApplicationIconCache.shared.cancelPending()
@@ -403,6 +465,7 @@ final class CompanionController {
   }
 
   private func pickUp(_ pet: CompanionInstance) {
+    playfulScenes.cancel(.pickup(pet.definition.id))
     let target = currentFocusedWindowCandidate()
     pet.beginPickup(fallbackTarget: settings.followsWindows ? target : nil)
     dragTargeting.beginDrag(for: pet, seed: target, pointer: NSEvent.mouseLocation)
@@ -429,6 +492,7 @@ final class CompanionController {
   }
 
   private func handleDrop(_ pet: CompanionInstance, gesture: CompanionInstance.ReleaseGesture) {
+    playfulScenes.cancel(.restorePerches)
     let selection = dragTargeting.finishDrag()
     let releasePosition = pet.position
     pet.endPickup()
@@ -453,6 +517,7 @@ final class CompanionController {
       [weak self, weak pet] in
       guard let self, let pet, self.shouldRun else { return }
       self.react(pet, to: WorkspaceEvent(.dropped, at: self.now))
+      self.considerPlayfulScene(trigger: .landing)
       if let selection {
         self.skills.startSkill(
           selection.skill, for: pet.definition.id, companionName: pet.definition.name,
@@ -468,7 +533,7 @@ final class CompanionController {
   }
 
   private func companionAndHUDWindowNumbers() -> Set<Int> {
-    companions.reduce(into: Set<Int>()) { $0.formUnion($1.overlayWindowNumbers) }
+    companions.reduce(into: playfulScenes.windowNumbers) { $0.formUnion($1.overlayWindowNumbers) }
   }
 
   private func currentFocusedWindowCandidate() -> WindowTargetCandidate? {
@@ -514,6 +579,7 @@ final class CompanionController {
   }
 
   private func updateSurfaces(mode: CompanionSurfacePlacement.Mode) {
+    playfulScenes.cancel(.geometryChanging)
     var placement = surfacePlacement
     switch placement.update(mode: mode) {
     case .awaitingWindow: return
@@ -528,7 +594,14 @@ final class CompanionController {
 
   private func route(_ event: WorkspaceEvent) {
     guard shouldRun else { return }
+    if [.windowMoved, .windowResized, .appChanged, .windowDisappeared].contains(
+      event.kind)
+    {
+      playfulScenes.cancel(.geometryChanging)
+    }
+    if event.kind == .userReturned { playfulScenes.cancel(.restorePerches) }
     if event.kind == .windowSettled {
+      considerPlayfulScene(trigger: .windowSettled)
       for pet in companions {
         if reducedMotion { pet.resetWorkspaceFeedback() } else { pet.settleWorkspaceFeedback() }
       }
@@ -545,6 +618,7 @@ final class CompanionController {
   }
 
   private func react(_ pet: CompanionInstance, to event: WorkspaceEvent) {
+    guard !pet.isPerformingScene else { return }
     guard let state = pet.receive(event, activity: settings.activity.multiplier) else {
       return
     }
@@ -573,7 +647,8 @@ final class CompanionController {
     if pet.isStrolling {
       pet.clearMotion()
     }
-    guard !reducedMotion, !tracker.isManipulatingWindow, !pet.isPickedUp, !pet.isStashTargeted,
+    guard !playfulScenes.isActive, !reducedMotion, !tracker.isManipulatingWindow, !pet.isPickedUp,
+      !pet.isStashTargeted,
       !pet.isReturningFromDrop, let surface = pet.surface,
       surface.isAvailable
     else {
@@ -622,8 +697,12 @@ final class CompanionController {
   private func advanceBehaviors() {
     guard shouldRun, !tracker.isManipulatingWindow else { return }
     let time = now
+    refreshPlayfulAvailability()
+    playfulScenes.advance(at: time)
+    considerPlayfulScene(trigger: tracker.isIdle ? .idle : .ambient)
     for pet in companions
-    where !pet.isPickedUp && !pet.isReturningFromDrop && pet.isAttachmentVisible
+    where !pet.isPerformingScene && !pet.isPickedUp && !pet.isReturningFromDrop
+      && pet.isAttachmentVisible
       && (!settings.followsWindows || pet.surface?.isAvailable == true)
     {
       if let state = pet.advanceBehavior(
@@ -639,10 +718,14 @@ final class CompanionController {
   private func scheduleDeadline() {
     deadlineClock.cancel()
     guard shouldRun,
-      let deadline = companions.filter({
-        !$0.isPickedUp && !$0.isReturningFromDrop && $0.isAttachmentVisible
-          && (!settings.followsWindows || $0.surface?.isAvailable == true)
-      }).map(\.behaviorState.expiresAt).filter(\.isFinite).min()
+      let deadline =
+        (companions.filter({
+          !$0.isPerformingScene && !$0.isPickedUp && !$0.isReturningFromDrop
+            && $0.isAttachmentVisible
+            && (!settings.followsWindows || $0.surface?.isAvailable == true)
+        }).map(\.behaviorState.expiresAt) + [playfulScenes.nextDeadline].compactMap { $0 }).filter(
+          \.isFinite
+        ).min()
     else { return }
     deadlineClock.schedule(at: deadline)
   }
@@ -651,7 +734,10 @@ final class CompanionController {
     let count = shouldRun ? companions.filter { $0.tween != nil && !$0.isPickedUp }.count : 0
     if count != movingCount { movingCount = count }
     let pickedUp = companions.first(where: \.isPickedUp)
-    guard shouldRun, let active = pickedUp ?? companions.first(where: { $0.tween != nil }) else {
+    guard shouldRun,
+      let active = pickedUp ?? playfulScenes.motionCompanion
+        ?? companions.first(where: { $0.tween != nil })
+    else {
       motionClock.stop()
       return
     }
@@ -663,11 +749,14 @@ final class CompanionController {
   }
 
   private func tick(at time: Double) {
+    let sceneWasActive = playfulScenes.isActive
+    playfulScenes.advance(at: time)
+    if sceneWasActive && !playfulScenes.isActive { scheduleDeadline() }
     for pet in companions where pet.isPickedUp {
       pet.view.continueDrag(at: NSEvent.mouseLocation)
     }
     var deadlineNeedsUpdate = false
-    for pet in companions where !pet.isPickedUp {
+    for pet in companions where !pet.isPerformingScene && !pet.isPickedUp {
       guard let arrival = pet.advanceMotion(at: time) else { continue }
       if pet.isReturningFromDrop {
         pet.dropReturn.finish(for: pet, reducedMotion: reducedMotion || tracker.isLowPower)
@@ -696,7 +785,7 @@ final class CompanionController {
     if interaction.isEnabled && !companions.contains(where: \.isPickedUp) {
       interaction.refresh()
     }
-    if time >= nextNeighborCheck, companions.count > 1 {
+    if !playfulScenes.isActive, time >= nextNeighborCheck, companions.count > 1 {
       let nearby = NeighborProximity.nearbyIndices(
         positions: companions.map(\.position),
         edges: companions.map {

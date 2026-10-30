@@ -63,6 +63,25 @@ class CharacterRig {
     let opacity: Float
   }
   private var details: [DetailPose] = []
+  private var playfulProps: PlayfulRigProps?
+  private var playfulArticulation: PlayfulArticulation?
+
+  func preparePlayfulProps() -> PlayfulRigProps {
+    if let playfulProps { return playfulProps }
+    let props = PlayfulRigProps(rig: self)
+    playfulProps = props
+    playfulArticulation = PlayfulArticulation(rig: self)
+    return props
+  }
+
+  func articulatePlayfulPose() { playfulArticulation?.activate() }
+
+  func holdPlayfulProp(
+    at point: CGPoint, hand: PlayfulArticulation.Hand = .right, angle: CGFloat = 0.9
+  ) {
+    _ = preparePlayfulProps()
+    playfulArticulation?.holdProp(at: point, hand: hand, angle: angle)
+  }
 
   /// Artwork registers local moving details once; interruption and Reduce Motion reset them.
   func addDetail(
@@ -177,14 +196,7 @@ class CharacterRig {
     shape(on: secondaryGrip, path: lower, fill: nil, stroke: sleeveFill, lineWidth: 9)
     hangingArms.addSublayer(secondaryGrip)
     for (parent, y) in [(hangingArms, 96.0), (secondaryGrip, 72.0)] {
-      pill(
-        on: parent, CGRect(x: 105, y: y, width: 13, height: 11), gripFill, radius: 5,
-        stroke: gripOutline)
-      for offset in [2.0, 5.0, 8.0] {
-        line(
-          on: parent, points: [CGPoint(x: 110, y: y + offset), CGPoint(x: 114, y: y + offset)],
-          color: gripOutline, width: 1)
-      }
+      CharacterHandArtwork.draw(on: parent, at: CGPoint(x: 105, y: y), rig: self)
     }
     hangingArms.opacity = 0
   }
@@ -196,8 +208,9 @@ class CharacterRig {
   }
 
   func setFacing(right: Bool) {
+    let changed = standingFacingRight != right || facingRight != right
     standingFacingRight = right
-    guard !isHanging else { return }
+    guard !isHanging, changed else { return }
     facingRight = right
     CATransaction.begin()
     CATransaction.setDisableActions(true)
@@ -245,6 +258,8 @@ class CharacterRig {
     behaviorResetGeneration += 1
     CATransaction.begin()
     CATransaction.setDisableActions(true)
+    playfulProps?.reset()
+    playfulArticulation?.restore()
     for layer in animatableLayers { layer.removeAllAnimations() }
     for detail in details {
       detail.layer.removeAllAnimations()

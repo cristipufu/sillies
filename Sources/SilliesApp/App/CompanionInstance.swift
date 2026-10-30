@@ -1,4 +1,5 @@
 import AppKit
+import QuartzCore
 import SilliesCore
 
 @MainActor
@@ -24,6 +25,57 @@ final class CompanionInstance {
   private(set) var isStashTargeted = false
   private(set) var isPickedUp = false
   private(set) var isWaitingForSpace = false
+  private(set) var isPerformingScene = false
+  private(set) var needsPlacementAfterScene = false
+  private var facingBeforeScene = true
+  private var scenePickupFraction: Double?
+  enum SceneReturn { case restorePerch, awaitGeometry, keepForPickup }
+
+  func beginPlayfulScene() {
+    isPerformingScene = true
+    facingBeforeScene = view.rig.facingRight
+    clearMotion()
+    _ = view.rig.preparePlayfulProps()
+  }
+
+  func playSceneClip(
+    _ frame: PlayfulSceneSession.Frame, library: AnimationLibrary,
+    startingAt time: CFTimeInterval, reducedMotion: Bool
+  ) {
+    view.rig.preparePlayfulProps().configureScene(frame)
+    if view.setScenePose(frame.pose) { needsPlacementAfterScene = true }
+    library.apply(
+      BehaviorState(animation: frame.animation), to: view.rig,
+      characterID: definition.id, reducedMotion: reducedMotion)
+    view.rig.articulatePlayfulPose()
+    if !reducedMotion {
+      PlayfulClipTiming.synchronize(view.rig.stage, startingAt: time)
+      PlayfulClipTiming.synchronize(view.rig.hangingArms, startingAt: time)
+    }
+  }
+
+  func placeInScene(_ frame: PlayfulSceneSession.Frame) {
+    view.rig.setFacing(right: frame.facingRight)
+    if view.setSceneEdge(frame.edge) { needsPlacementAfterScene = true }
+    guard position != frame.position || needsPlacementAfterScene else { return }
+    place(at: frame.position)
+  }
+
+  func endPlayfulScene(at home: CGPoint, placement: SceneReturn) {
+    isPerformingScene = false
+    view.setSceneEdge(nil)
+    view.setScenePose(nil)
+    view.rig.resetBehaviorPose()
+    view.rig.setFacing(right: facingBeforeScene)
+    switch placement {
+    case .restorePerch: place(at: home)
+    case .awaitGeometry:
+      position = home
+      needsPlacementAfterScene = true
+    case .keepForPickup:
+      scenePickupFraction = surface?.fraction(for: home)
+    }
+  }
   var isReturningFromDrop: Bool { dropReturn.isActive }
   var isUpright: Bool { view.rig.isUpright }
   var attachmentPose: AttachmentPose { view.rig.attachmentPose }
@@ -97,6 +149,7 @@ final class CompanionInstance {
     transitions: TransitionLibrary
   ) {
     self.definition = definition
+    if definition.playful != nil { _ = rig.preparePlayfulProps() }
     playback = BehaviorPlayback(rig: rig, characterID: definition.id)
     behavior = BehaviorEngine(character: definition, seed: seed)
     random = SeededRandom(seed: seed &+ Self.motionSeedOffset)
@@ -180,7 +233,9 @@ final class CompanionInstance {
 
   func beginPickup(fallbackTarget: WindowTargetCandidate?) {
     pickupPosition = position
-    pickupFraction = surface?.fraction(for: position) ?? Self.defaultPickupFraction
+    pickupFraction =
+      scenePickupFraction ?? surface?.fraction(for: position) ?? Self.defaultPickupFraction
+    scenePickupFraction = nil
     pickupWindowTarget = attachmentTarget ?? fallbackTarget
     isPickedUp = true
     updateOverlayLevel()
@@ -303,6 +358,7 @@ final class CompanionInstance {
   }
 
   func place(at point: CGPoint) {
+    needsPlacementAfterScene = false
     placementCount += 1
     position = point
     updateOverlayLevel()
@@ -314,9 +370,11 @@ final class CompanionInstance {
     let originChanged =
       abs(currentFrame.minX - layout.frame.minX) > Self.layoutPlacementTolerance
       || abs(currentFrame.minY - layout.frame.minY) > Self.layoutPlacementTolerance
-    if sizeChanged || originChanged {
+    if sizeChanged {
       appliedLayoutSize = layout.frame.size
       panel.setFrame(layout.frame, display: false)
+    } else if originChanged {
+      panel.setFrameOrigin(layout.frame.origin)
     }
     view.applyPanelLayout(layout)
     view.updateWorldMask()

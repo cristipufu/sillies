@@ -137,6 +137,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       return .terminateNow
     }
     isTerminating = true
+    automatedRunner.stopPreview()
     speechServices?.stop()
     cleanupTemporaryPreferences()
     let approveTermination = onTerminationApproved

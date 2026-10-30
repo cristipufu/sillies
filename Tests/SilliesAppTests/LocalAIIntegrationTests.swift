@@ -66,6 +66,8 @@ func localNotesHonorTheSelectedLanguage() async {
     try windowResizeSmoothnessBudgetAndCompactionQuantization()
     try windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition()
     try companionDragSmoothnessBudgetAndUnclippedMaskStability(characterID: "pogo")
+    try playfulTravelUsesBoundedNativeFrameWork()
+    try playfulSharedTravelUsesBoundedNativeFrameWork()
   }
 }
 

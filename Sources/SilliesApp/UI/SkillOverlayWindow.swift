@@ -192,6 +192,8 @@ final class WindowDropHighlightController {
   func prestage(target: WindowTargetCandidate?) {
     guard let target else { return }
     applyTarget(target, hoveredSkill: nil)
+    // Resolve the target-specific badge before the first moving drag frame reveals it.
+    if let badge = outlineView?.badge { SkillOverlayPreparation.render(badge) }
   }
 
   func show(target: WindowTargetCandidate, hoveredSkill: CompanionSkillKind?) {

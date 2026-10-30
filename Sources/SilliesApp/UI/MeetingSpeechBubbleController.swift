@@ -95,7 +95,7 @@ final class MeetingSpeechBubbleController {
 
   private func animateAppearance() {
     guard !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
-      let layer = host?.view.layer
+      let layer = background?.layer
     else { return }
     // A finite compositor animation; no timer, focus change, or animation-driven SwiftUI state.
     let fade = CABasicAnimation(keyPath: "opacity")
@@ -103,7 +103,15 @@ final class MeetingSpeechBubbleController {
     fade.toValue = 1
     fade.duration = Self.transitionDuration
     fade.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-    layer.add(fade, forKey: "suggestionAppearance")
+    let lift = CABasicAnimation(keyPath: "transform.translation.y")
+    lift.fromValue = 3
+    lift.toValue = 0
+    lift.duration = Self.transitionDuration
+    lift.timingFunction = CAMediaTimingFunction(name: .easeOut)
+    let appearance = CAAnimationGroup()
+    appearance.animations = [fade, lift]
+    appearance.duration = Self.transitionDuration
+    layer.add(appearance, forKey: "suggestionAppearance")
   }
 
   func hide() {

@@ -129,5 +129,9 @@ import Testing
     view.cacheDisplay(in: view.bounds, to: rep)
     let data = try #require(rep.representation(using: .png, properties: [:]))
     try data.write(to: URL(fileURLWithPath: "/tmp/sillies-speech-bubble-\(name).png"))
+    let previews = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+      .appendingPathComponent("build/playful-previews/bubbles")
+    try FileManager.default.createDirectory(at: previews, withIntermediateDirectories: true)
+    try data.write(to: previews.appendingPathComponent("suggestion-\(name).png"), options: .atomic)
   }
 }

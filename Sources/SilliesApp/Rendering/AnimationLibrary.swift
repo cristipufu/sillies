@@ -14,6 +14,10 @@ final class AnimationLibrary {
 
   init() {
     BuiltinAnimations.register(in: self)
+    PlayfulDanceAnimations.register(in: self)
+    PlayfulAnimations.register(in: self)
+    PlayfulSocialAnimations.register(in: self)
+    PlayfulAdventureAnimations.register(in: self)
     FrogAnimations.register(in: self)
     RobotAnimations.register(in: self)
     GhostAnimations.register(in: self)

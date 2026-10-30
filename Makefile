@@ -1,4 +1,4 @@
-.PHONY: build debug run preview test check gui-check lint stress race-check clean
+.PHONY: build debug run preview test check gui-check playful-gui-check lint stress race-check clean
 
 build:
 	bash scripts/build-app.sh release
@@ -34,6 +34,9 @@ gui-check: check
 	build/Sillies.app/Contents/MacOS/Sillies --presentation-test
 	build/Sillies.app/Contents/MacOS/Sillies --window-test --without-accessibility
 	build/Sillies.app/Contents/MacOS/Sillies --drag-latency-test --without-accessibility
+
+playful-gui-check: debug
+	python3 scripts/test-playful-scenes.py
 
 clean:
 	swift package clean

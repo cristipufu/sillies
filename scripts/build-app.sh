@@ -52,6 +52,7 @@ if [[ -n "${SILLIES_FEED_URL:-}" ]]; then
 fi
 
 rsync -a --delete Sources/SilliesApp/Resources/Characters/ "$app/Contents/Resources/Characters/"
+rsync -a --delete Sources/SilliesApp/Resources/Scenes/ "$app/Contents/Resources/Scenes/"
 ditto "$binary_dir/Sillies_SilliesModelStore.bundle" "$app/Contents/Resources/Sillies_SilliesModelStore.bundle"
 mkdir -p "$app/Contents/Resources/ThirdPartyNotices"
 cp .build/checkouts/argmax-oss-swift/LICENSE "$app/Contents/Resources/ThirdPartyNotices/ARGMAX-LICENSE"

@@ -323,5 +323,29 @@
       "animation": "fade",
       "duration": 0.16
     }
+  },
+  "playful": {
+    "scenes": [
+      "dance",
+      "monocle",
+      "sweep",
+      "protest",
+      "tug-of-war",
+      "campfire",
+      "paper-plane",
+      "scoreboard",
+      "sit",
+      "lift",
+      "rope-descent",
+      "shove",
+      "parachute"
+    ],
+    "clips": {
+      "scene.dance": "scene.bounceDance"
+    },
+    "signs": [
+      "SHIP SMALL. HOP BIG.",
+      "MORE BREAKS"
+    ]
   }
 }

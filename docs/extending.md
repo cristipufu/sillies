@@ -127,3 +127,37 @@ Companions support five skills coordinated by `SkillCoordinator` and persisted b
 - **Radial menu**: `RadialSkillMenuLayout` owns all five positions, screen-edge flipping, and hit testing. The renderer uses those same offsets. Watch/Focus and Stash are not in the wheel.
 - **Window attachment**: microphone-only Record has no bound window. It follows normal perch selection and survives empty metadata snapshots. An unselected drag preserves an active skill.
 - **Capture and local reasoning**: see [skills.md](skills.md) for source scope, permissions, lifecycle, storage, and testing. New skills must keep capture, transcription, reasoning, and presentation separate.
+
+## Playful scenes
+
+Packs opt in through an optional `playful` object. Existing packs without it continue to use ordinary reactions:
+
+```json
+"playful": {
+  "scenes": ["dance", "monocle", "sweep", "protest"],
+  "clips": { "scene.dance": "scene.bounceDance" },
+  "signs": ["CUT TOKEN WASTE"]
+}
+```
+
+`Resources/Scenes/playful-scenes.json` owns the choreography. A scene declares its trigger (`ambient`, `idle`, `landing`, or `windowSettled`), layout (`perches`, `together`, or `exterior`), one or two participants, cooldown, selection weight, headroom in character-size units, message choices, and finite phases. Each phase supplies its duration, prop, optional `propOwner` (defaults to `lead`), and a cue for each role (`lead` / `partner`). A cue selects an animation ID and destination (`home`, `stage`, `corner`, `outside`, or `below`), plus an optional `pose` (`standing` or `hangingRight` for the current right-side routes). A cue may set `facing` (`left`/`right`) and `movementStart` (a phase fraction in `[0, 1)`) to delay movement until contact. Optional phase `motion` declares `direction` (`alternating` or `outward`), `distance` in character-size units, whole `cycles`, and maximum canopy `bank` in radians. The layout reserves the extra travel before starting; all cast members and their shared prop sample the same displacement. Side poses are restricted to exterior `outside`/`below` destinations. Rope scenes reuse the existing `climb`, `hang`, and `hangCatch` clips, with the original planted primary grip and animated secondary grip. Every scene must end at home. Reaching or leaving `below` requires passing through `outside`, keeping travel out of the document. Catalog validation rejects unsupported clips and malformed routes before playback.
+
+Keep selection and geometry in `PlayfulSceneDirector`, `PlayfulSceneLayout`, and `PlayfulSceneSession`. They receive monotonic timestamps and immutable participant snapshots. `PlayfulSceneCoordinator` applies plans on the main actor through companion commands and the existing shared clocks. The director retains a bounded recent-history list and cooldowns; resume schedules a fresh opportunity instead of replaying missed scenes. Layout considers both eligible bystanders and occupied frames belonging to busy companions. Do not add character IDs or scene IDs to window tracking.
+
+Artwork belongs in the renderer, while `Playful*Animations` owns clips. Shoulder, ankle, and neck pivots are activated only for scenes and restored with the normal behavior pose. Both tug grips are shared with prop geometry through `PlayfulPropLayout.tugGripsInDesignSpace`. `CharacterFlexibleArmArtwork` supplies continuous sleeves and fingers for the broom, two-handed tug, shove, and clamber. `PlayfulClamberGrip` compensates for body movement until the hands release. Handheld artwork and its grips must share a motion source. `PlayfulSweepArtwork` moves the broom, both hands, and flexible forearms through one compositor timeline; `CharacterHandArtwork` supplies the same fingers used on window edges. Shared props use a small, nonactivating, input-transparent panel. The rope has one additional tiny panel above the top ledge; the two portions share the same curve and meet at the window boundary, without a rectangular native overlay over document content. The anchor uses a cleared, static drawing surface with transparent headroom and no native separator. The descent rope stays anchored through the clamber, then `retractingRope` withdraws the strand inside fixed native bounds. Consecutive rope phases retain their panels. Held props render beneath the hands; text stays above the mascots. `PlayfulPlaneFlight` bounds a long arc within the visible screen using one 80×64-point moving panel. Props and joints are prepared when an opted-in companion is created. Do not allocate artwork or measure text in a frame callback.
+
+Stationary clips use Core Animation and do not require a movement clock. Actor travel, plane flight, and rope retraction join the existing display link; phase deadlines join the existing decision clock. Pickup, native window movement/resizing/switching, skill activation, pause, exclusions, and stop cancel scenes immediately. Reduced Motion uses static perch expressions; recordings/transcription suppress new antics. Every animation must have a static expression and a reset path. Signs are fictional reactions to known window events; they never inspect the user's document or keyboard input.
+
+`PlayfulParachuteArtwork` tilts the canopy and its four suspension lines on one precomputed compositor timeline, keeping the lower anchors on the hands while Core supplies lateral travel. The shared `MascotBubbleContour` and `MascotBubbleArtwork` supply curved tails and light/dark material for Participate suggestions and every playful message, including protest and scoreboard. `PlayfulMessageArtwork` measures styled text once per phase; scores use distinct caption and number sizes. `PlayfulCampfireArtwork` reuses three morphing silhouettes, a small glow, and four recycled ember layers; Reduced Motion keeps them static. Meeting text measurement stays cached by content and available width; geometry-only updates must not rebuild SwiftUI content.
+
+After `make debug`, preview a scene with temporary settings and automatic shutdown:
+
+```sh
+build/Sillies.app/Contents/MacOS/Sillies --playful-scene dance --without-accessibility
+```
+
+Export phases with `SILLIES_PLAYFUL_SNAPSHOTS=1 bash scripts/test.sh --filter playfulSceneVisualPreviews`. Export presentation frames with `SILLIES_PLAYFUL_MOVIES=dance,monocle,sweep bash scripts/test.sh --filter playfulAnimatedPreviewFrames`. Both render Sillies-owned layers into `build/playful-previews`; neither captures the desktop. Movie export is opt-in and takes only the requested scenes' finite durations. Normal checks sample complete scenes in virtual time, plus a short native frame-budget check. Inspect actual motion as well as the still images when changing choreography.
+
+Run `make playful-gui-check` to build and play every bundled scene sequentially in real native windows. Each process uses temporary preferences, a 40-second internal watchdog and a 45-second external timeout, and verifies timeline completion and prop cleanup. To reuse an already-built release app, run `python3 scripts/test-playful-scenes.py`.
+
+To replay only affected scenes in a specific order, pass their IDs: `python3 scripts/test-playful-scenes.py shove rope-descent parachute tug-of-war campfire paper-plane`.

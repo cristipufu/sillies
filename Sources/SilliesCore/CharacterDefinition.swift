@@ -48,13 +48,15 @@ public struct CharacterDefinition: Codable, Sendable, Identifiable {
   public let order: Int?
   public let reactions: [ReactionDefinition]
   public let transitions: CharacterTransitions?
+  public let playful: PlayfulCharacterProfile?
 
   public var presentationTransitions: CharacterTransitions { transitions ?? CharacterTransitions() }
 
   public init(
     schemaVersion: Int = Self.supportedSchemaVersion, id: String, name: String, subtitle: String,
     bio: String, renderer: String, accent: String, speed: Double, order: Int? = nil,
-    reactions: [ReactionDefinition], transitions: CharacterTransitions? = nil
+    reactions: [ReactionDefinition], transitions: CharacterTransitions? = nil,
+    playful: PlayfulCharacterProfile? = nil
   ) {
     self.schemaVersion = schemaVersion
     self.id = id
@@ -67,6 +69,7 @@ public struct CharacterDefinition: Codable, Sendable, Identifiable {
     self.order = order
     self.reactions = reactions
     self.transitions = transitions
+    self.playful = playful
   }
 
   public func validate() throws {
@@ -89,6 +92,7 @@ public struct CharacterDefinition: Codable, Sendable, Identifiable {
       throw ValidationError("\(id) needs an ambient reaction")
     }
     try presentationTransitions.validate(characterID: id)
+    try playful?.validate()
     for reaction in reactions {
       guard !reaction.id.isEmpty, !reaction.event.rawValue.isEmpty,
         !reaction.animation.rawValue.isEmpty,

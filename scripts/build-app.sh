@@ -24,6 +24,7 @@ if [[ -n "${SILLIES_BUILD_NUMBER:-}" && ! "$SILLIES_BUILD_NUMBER" =~ ^[0-9]+$ ]]
 fi
 
 swift build --configuration "$configuration"
+python3 scripts/third-party-notices.py --check
 binary_dir="$(swift build --configuration "$configuration" --show-bin-path)"
 output="${SILLIES_BUILD_DIRECTORY:-$PWD/build}"
 app="$output/Sillies.app"
@@ -61,23 +62,7 @@ fi
 rsync -a --delete Sources/SilliesApp/Resources/Characters/ "$app/Contents/Resources/Characters/"
 rsync -a --delete Sources/SilliesApp/Resources/Scenes/ "$app/Contents/Resources/Scenes/"
 ditto "$binary_dir/Sillies_SilliesModelStore.bundle" "$app/Contents/Resources/Sillies_SilliesModelStore.bundle"
-mkdir -p "$app/Contents/Resources/ThirdPartyNotices"
-cp .build/checkouts/argmax-oss-swift/LICENSE "$app/Contents/Resources/ThirdPartyNotices/ARGMAX-LICENSE"
-cp .build/checkouts/argmax-oss-swift/NOTICES "$app/Contents/Resources/ThirdPartyNotices/ARGMAX-NOTICES"
-for dependency in mlx-swift mlx-swift-lm swift-transformers swift-jinja swift-huggingface swift-collections swift-crypto swift-asn1 swift-numerics yyjson EventSource; do
-  license=".build/checkouts/$dependency/LICENSE"
-  if [[ -f "$license.txt" ]]; then license="$license.txt"; fi
-  if [[ -f "$license.md" ]]; then license="$license.md"; fi
-  cp "$license" "$app/Contents/Resources/ThirdPartyNotices/$dependency-LICENSE"
-done
-cp .build/checkouts/FluidAudio/LICENSE "$app/Contents/Resources/ThirdPartyNotices/FLUIDAUDIO-LICENSE"
-cp Vendor/AudioProcessing/WEBRTC-LICENSE Vendor/AudioProcessing/WEBRTC-PATENTS Vendor/AudioProcessing/ABSEIL-LICENSE "$app/Contents/Resources/ThirdPartyNotices/"
-cp Vendor/AudioProcessing/webrtc/LICENSE "$app/Contents/Resources/ThirdPartyNotices/WEBRTC-AUTHORS-LICENSE"
-cp Vendor/AudioProcessing/webrtc/third_party/pffft/LICENSE "$app/Contents/Resources/ThirdPartyNotices/PFFFT-LICENSE"
-cp Vendor/AudioProcessing/webrtc/third_party/rnnoise/COPYING "$app/Contents/Resources/ThirdPartyNotices/RNNOISE-LICENSE"
-cp Vendor/AudioProcessing/webrtc/common_audio/third_party/ooura/LICENSE "$app/Contents/Resources/ThirdPartyNotices/OOURA-LICENSE"
-cp Vendor/AudioProcessing/webrtc/common_audio/third_party/spl_sqrt_floor/LICENSE "$app/Contents/Resources/ThirdPartyNotices/SPL-SQRT-LICENSE"
-cp Vendor/AudioProcessing/webrtc/modules/third_party/fft/LICENSE "$app/Contents/Resources/ThirdPartyNotices/FFT-LICENSE"
+cp LICENSE PRIVACY.md THIRD_PARTY_NOTICES.md "$app/Contents/Resources/"
 swift scripts/make-icon.swift "$output"
 cp "$output/Sillies.icns" "$app/Contents/Resources/Sillies.icns"
 

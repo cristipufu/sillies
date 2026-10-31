@@ -26,6 +26,10 @@
 
 ## Meet your crew
 
+<p align="center">
+  <img src="docs/images/crew.png" width="1000" alt="All twelve Sillies companions: Mochi, Kiko, Pogo, Bolt, Boo, Bloop, Sprout, Pip, Pebble, Taro, Nib, and Mallow, with their personality captions">
+</p>
+
 Mochi naps on the title bar. Kiko takes the dramatic route. Pogo climbs the side of your window.
 Bolt is doing his very best. Pick your favorites from twelve companions, each with its own artwork,
 personality, and reactions.
@@ -152,6 +156,8 @@ Use the built `.app` for permission testing. [Development setup and checks →](
 
 Bring a new personality, interaction, skill, or local model. Each has a dedicated contributor guide:
 
+Start with [Contributing to Sillies](CONTRIBUTING.md) for setup, bug reports, checks, and pull requests.
+
 | I want to add… | Start here |
 | --- | --- |
 | **A companion** | [Character packs, artwork, and personality](docs/contributing/companions.md) |
@@ -172,7 +178,19 @@ preserve cancellation and recovery, and keep work off the UI thread.
 make check BUILD_DIR=/tmp/sillies-check   # Validate without replacing your running app
 ```
 
-[Architecture](docs/architecture.md) · [Performance](docs/performance.md) ·
-[Development guide](docs/development.md) · [Detailed character and scene contracts](docs/extending.md)
+<p align="center">
+  <a href="docs/architecture.md">Architecture</a> ·
+  <a href="docs/performance.md">Performance</a> ·
+  <a href="docs/development.md">Development guide</a> ·
+  <a href="docs/extending.md">Detailed character and scene contracts</a>
+</p>
+
+<p align="center">
+  <a href="CONTRIBUTING.md">Contributing</a> ·
+  <a href="SECURITY.md">Security</a> ·
+  <a href="PRIVACY.md">Privacy policy</a> ·
+  <a href="THIRD_PARTY_NOTICES.md">Third-party notices</a> ·
+  <a href="LICENSE">MIT License</a>
+</p>
 
 <p align="center"><sub>A little company. A little mischief. Everything local.</sub></p>

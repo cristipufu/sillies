@@ -5,6 +5,9 @@ Read `AGENTS.md` and the relevant ownership contract before changing a subsystem
 For an extension, start with the dedicated guide: [companions](contributing/companions.md),
 [interactions](contributing/interactions.md), [skills](contributing/skills.md),
 [speech models](contributing/speech-models.md), or [text models](contributing/text-models.md).
+The repository's [contribution guide](../CONTRIBUTING.md), [security policy](../SECURITY.md),
+[privacy policy](../PRIVACY.md), and [license notices](../THIRD_PARTY_NOTICES.md) describe the shared
+contributor and user-facing obligations. Keep them aligned with changes in data handling or dependencies.
 
 | Responsibility | Owner | Contract |
 | --- | --- | --- |
@@ -55,6 +58,7 @@ See [local text model extension contracts](local-text-models.md) and [speech pro
 ## Verification
 
 - Run `swift format` on changed Swift files and `make check` for behavior/platform changes. Use `make check BUILD_DIR=/tmp/sillies-verification` to avoid replacing a running app bundle. Native MLX builds require Xcode’s Metal toolchain; the packaged helper receives a real GPU-kernel check.
+- After resolving a dependency/catalog change, regenerate `THIRD_PARTY_NOTICES.md` with `python3 scripts/third-party-notices.py`. Review enabled traits, nested native code, model provenance, and license terms. App packaging checks that the committed notices match the resolved local sources and bundles the complete document, Sillies' MIT license, and privacy policy. The generator performs no downloads. Offline notice-regression tests run with `make lint`.
 - Pure model tests live in `SilliesCoreTests`; audio-only tests in `SilliesAudioTests`; file-format and storage tests live in `SilliesPersistenceTests`; native integration belongs in `SilliesAppTests`.
 - Use `bash scripts/test.sh --filter <test-name>` for targeted checks. The script serializes native tests because they share AppKit and WindowServer state.
 - Use the standard smoothness budget by default; only the 12-mascot stress fixtures select the explicitly approved `fullCrew` budget. Preserve both profiles' p95/frame-stall limits and the single-pass-placement assertions. Report measured budget failures explicitly; a structural refactor is not proof of a performance improvement.
@@ -79,8 +83,8 @@ SILLIES_README_PREVIEWS="$PWD/build/readme-previews" \
 The opt-in fixture exports light/dark skill scenes, a crew sheet, and a light listening scene at 2×
 resolution. It uses temporary hidden windows, sample text, and no live preferences or audio capture.
 Without the environment variable, the fixture returns immediately. Review candidates before replacing
-`docs/images/skills-light.png` and `docs/images/listening-light.png`; those two are the selected README
-images. The app icon comes from `scripts/make-icon.swift`.
+`docs/images/skills-light.png`, `docs/images/listening-light.png`, and `docs/images/crew.png`; those are
+the selected README images. The app icon comes from `scripts/make-icon.swift`.
 
 ## Local contracts and automated boundaries
 

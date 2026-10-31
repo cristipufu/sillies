@@ -17,7 +17,7 @@ final class SpeechServices {
   private let preferences: SpeechLanguagePreferences
   private var startup: Task<Void, Never>?
 
-  init(defaults: UserDefaults = .standard, modelDirectory: URL? = nil) {
+  init(defaults: UserDefaults = .standard, modelDirectory: URL? = nil) throws {
     vocabulary = VocabularyPreferences(defaults: defaults)
     let support =
       FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
@@ -26,7 +26,7 @@ final class SpeechServices {
     let root =
       modelDirectory ?? support.appendingPathComponent("Sillies/SpeechModels", isDirectory: true)
     let store = ModelStore(root: root)
-    let registry = SpeechRuntimeRegistry(
+    let registry = try SpeechRuntimeRegistry(
       store: store,
       providers: [AppleSpeechProvider(), WhisperSpeechProvider(), ParakeetSpeechProvider()],
       diarizationProviders: [NemotronDiarizationProvider()])

@@ -11,6 +11,14 @@ final class InteractionSmoothnessMetrics {
     case companionDrag
   }
 
+  enum Stage: String, CaseIterable {
+    case targeting, surfaces, screenGeometry, surfaceConfiguration, arrangement, nativePlacement
+    case behavior, interaction, clocks
+  }
+  private struct Frame {
+    var stages: [Stage: TimeInterval] = [:]
+  }
+
   struct Budget {
     static let standard = Self(p50Milliseconds: 0.75, p90Milliseconds: 1.5)
     // Explicit opt-in for the stress fixture moving all 12 native mascot windows.
@@ -27,14 +35,21 @@ final class InteractionSmoothnessMetrics {
   private static let p95Percentile: Double = 0.95
   private static let sampleCapacity = 4096
 
+  private let clock: () -> TimeInterval
   var isEnabled: Bool
   private var samples: [Path: [TimeInterval]] = [:]
   private var nextSampleIndex: [Path: Int] = [:]
   private var totals: [Path: Int] = [:]
   private var maxima: [Path: TimeInterval] = [:]
+  private var currentFrame: Frame?
+  private var slowestFrames: [Path: Frame] = [:]
 
-  init(enabled: Bool = false) {
+  init(
+    enabled: Bool = false,
+    clock: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }
+  ) {
     self.isEnabled = enabled
+    self.clock = clock
   }
 
   func reset() {
@@ -42,15 +57,34 @@ final class InteractionSmoothnessMetrics {
     nextSampleIndex.removeAll(keepingCapacity: true)
     totals.removeAll(keepingCapacity: true)
     maxima.removeAll(keepingCapacity: true)
+    slowestFrames.removeAll(keepingCapacity: true)
   }
 
   func measure<T>(_ path: Path, _ operation: () -> T) -> T {
     guard isEnabled else { return operation() }
-    let start = ProcessInfo.processInfo.systemUptime
+    let preceding = currentFrame
+    currentFrame = Frame()
+    let start = clock()
     defer {
-      record(ProcessInfo.processInfo.systemUptime - start, for: path)
+      let duration = clock() - start
+      if duration >= maxima[path, default: 0] { slowestFrames[path] = currentFrame }
+      record(duration, for: path)
+      currentFrame = preceding
     }
     return operation()
+  }
+
+  func measureStage<T>(_ stage: Stage, _ operation: () -> T) -> T {
+    guard isEnabled, currentFrame != nil else { return operation() }
+    let start = clock()
+    defer {
+      currentFrame?.stages[stage, default: 0] += clock() - start
+    }
+    return operation()
+  }
+
+  func slowestFrameMilliseconds(for path: Path, stage: Stage) -> Double {
+    (slowestFrames[path]?.stages[stage] ?? 0) * Self.millisecondsPerSecond
   }
 
   func sampleCount(for path: Path) -> Int {
@@ -96,12 +130,22 @@ final class InteractionSmoothnessMetrics {
 
   var summary: String {
     Path.allCases.filter { sampleCount(for: $0) > 0 }.map { path in
-      String(
+      let timing = String(
         format: "%@: p50 %.2f, p90 %.2f, p95 %.2f, max %.2f ms (%d samples)", path.rawValue,
         p50Milliseconds(for: path), p90Milliseconds(for: path), p95Milliseconds(for: path),
         maxMilliseconds(for: path),
         sampleCount(for: path))
+      let stages = Stage.allCases.compactMap { stage -> String? in
+        guard let duration = slowestFrames[path]?.stages[stage] else { return nil }
+        return String(format: "%@ %.2f", stage.rawValue, duration * Self.millisecondsPerSecond)
+      }.joined(separator: ", ")
+      return stages.isEmpty ? timing : timing + "; slowest frame stages (inclusive ms): " + stages
     }.joined(separator: "; ")
+  }
+
+  var diagnosticReport: String {
+    summary
+      + "; thermal state \(ProcessInfo.processInfo.thermalState.rawValue), low power \(ProcessInfo.processInfo.isLowPowerModeEnabled)"
   }
 
   private func percentileMilliseconds(_ percentile: Double, for path: Path) -> Double {

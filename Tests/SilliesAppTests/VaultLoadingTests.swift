@@ -69,6 +69,19 @@ private func makeLoadTestRecord(_ summary: String) -> SessionRecord {
 }
 
 @Test @MainActor
+func vaultLoadingSearchToleratesRepeatedRecordIdentifiers() async throws {
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { removeTestFile(at: directory) }
+  let vault = SessionVaultStore(directory: directory)
+  let record = makeLoadTestRecord("Repeated capture")
+  vault.add(record)
+  vault.add(record)
+  await vault.flush()
+  #expect(vault.persistenceError == nil)
+  #expect(try await vault.search(.init(kind: nil, query: "Repeated")) == [record.id])
+}
+
+@Test @MainActor
 func vaultPreservesCorruptMetadataAndMergesPendingChangesAfterRecovery() async throws {
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
   defer { removeTestFile(at: directory) }

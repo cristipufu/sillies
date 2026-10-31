@@ -53,6 +53,17 @@ For changes to saved data, preserve backward decoding and existing identifiers. 
 
 For concurrency changes, document the actor, serial queue, or lock owning each mutable field. Assert queue confinement at worker entry points. Keep unchecked Sendable implementations small and audit callbacks, cancellation, and shutdown together. Main-actor completions needed during termination must use `MainRunLoopDelivery`.
 
+Vault mutations pass through `VaultWriteCoordinator`: one active commit and one replaceable pending
+snapshot. `VaultCommitRepository` owns attachment/index ordering and its recovery journal. Retry must
+include failed attachment payloads, not just metadata. Search tracks per-record revisions and changes
+only dirty documents. `VaultSummaryScheduler` admits one producer and retains the occupied slot until
+canceled work actually returns. Regressions for these contracts use injected failures and thousands of
+synthetic operations; they do not require hours of wall-clock execution.
+
+Writing tools depend on `WritingCompanionHost`, `RecordingActivity`, and explicitly supplied Vault/command
+services. Wire concrete owners in `SilliesMain`; do not recover them by reaching through a companion
+controller. The syntax checker enforces the writing coordinator's concrete-type boundary.
+
 See [local text model extension contracts](local-text-models.md) and [speech provider contracts](local-speech-models.md) before adding a runtime or model.
 
 ## Verification

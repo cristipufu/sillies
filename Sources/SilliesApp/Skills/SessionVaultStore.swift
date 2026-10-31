@@ -20,6 +20,7 @@ final class SessionVaultStore {
 
   private(set) var records: [SessionRecord] = [] { didSet { searchRevision &+= 1 } }
   private(set) var searchRevision = 0
+  @ObservationIgnored private var searchVersions: [UUID: Int] = [:]
   @ObservationIgnored private lazy var searchIndex = VaultSearchService(directory: storageDirectory)
   @ObservationIgnored private var searchCleanup: Task<Void, Never>?
   @ObservationIgnored private let screenshotText = VaultOCRScheduler()
@@ -27,12 +28,15 @@ final class SessionVaultStore {
   private(set) var retentionPolicy: VaultRetentionPolicy
 
   func search(_ request: SessionRecordSearch) async throws -> Set<UUID> {
-    try await searchIndex.search(request, records: records, revision: searchRevision)
+    try await searchIndex.search(
+      request, snapshot: .init(records: records, versions: searchVersions, revision: searchRevision)
+    )
   }
-  private func discardSearchCache() {
+  private func removeSearchEntries(_ ids: Set<UUID>) {
+    let revision = searchRevision
     searchCleanup = Task.detached { [searchIndex, preceding = searchCleanup] in
       await preceding?.value
-      do { try await searchIndex.discard() } catch {
+      do { try await searchIndex.remove(ids, at: revision) } catch {
         fputs("Could not clear the search cache: \(error)\n", stderr)
       }
     }
@@ -57,9 +61,10 @@ final class SessionVaultStore {
   @ObservationIgnored private let stagedPreviews = VaultPreviewBuffer()
   @ObservationIgnored private let clipboard: VaultClipboard
   let storageDirectory: URL
-  private var repository: SessionRecordRepository {
-    SessionRecordRepository(directory: storageDirectory)
+  private var repository: VaultCommitRepository {
+    VaultCommitRepository(directory: storageDirectory)
   }
+  @ObservationIgnored private let writer: VaultWriteCoordinator
   private var files: VaultFileStorage { VaultFileStorage(directory: storageDirectory) }
   @ObservationIgnored nonisolated private static let ioQueue = DispatchQueue(
     label: "app.sillies.session-vault", qos: .utility)
@@ -96,6 +101,8 @@ final class SessionVaultStore {
         ?? URL(fileURLWithPath: NSTemporaryDirectory())
       storageDirectory = appSupport.appendingPathComponent("Sillies/Vault", isDirectory: true)
     }
+    writer = VaultWriteCoordinator(directory: storageDirectory, queue: Self.ioQueue)
+    writer.report = { [weak self] in self?.writeError = $0 }
     let directoryKey = storageDirectory.standardizedFileURL
     if let previousStore = Self.activeStoresByDirectory[directoryKey]?.store,
       previousStore !== self
@@ -131,6 +138,7 @@ final class SessionVaultStore {
         preview: needsDownsampling ? .worker : .cached)
     }
     records.insert(updated, at: 0)
+    searchVersions[updated.id] = searchRevision
     trimHistory()
     persistAsync()
     scheduleSummaryRefinement(for: updated)
@@ -140,6 +148,7 @@ final class SessionVaultStore {
   func update(_ record: SessionRecord) {
     guard let index = records.firstIndex(where: { $0.id == record.id }) else { return }
     records[index] = record
+    searchVersions[record.id] = searchRevision
     persistAsync()
   }
 
@@ -165,8 +174,7 @@ final class SessionVaultStore {
     updated.summary = summary
     updated.actionItems = actionItems
     updated.summaryPending = false
-    records[index] = updated
-    persistAsync()
+    update(updated)
   }
 
   func resumePendingSummaries() {
@@ -244,12 +252,13 @@ final class SessionVaultStore {
     if pinnedRecordID == id { setPinnedRecord(nil) }
     guard let index = records.firstIndex(where: { $0.id == id }) else { return }
     let removed = records.remove(at: index)
+    searchVersions.removeValue(forKey: id)
     if let file = removed.imageFilename {
       evictCachedImage(for: file)
-      deleteAttachmentAsync(filename: file)
+      retireAttachment(filename: file)
     }
-    if let file = removed.audioFilename { deleteAttachmentAsync(filename: file) }
-    discardSearchCache()
+    if let file = removed.audioFilename { retireAttachment(filename: file) }
+    removeSearchEntries([id])
     persistAsync()
   }
 
@@ -257,13 +266,15 @@ final class SessionVaultStore {
     if needsSuccessfulLoad { discardLoadedRecords = true }
     summaries.removeAll()
     pinnedRecordID = nil
+    let removedIDs = Set(records.map(\.id))
     let files = records.flatMap { [$0.imageFilename, $0.audioFilename].compactMap { $0 } }
     records.removeAll()
+    searchVersions.removeAll()
     imageCache.removeAll()
     pendingImageLoads.removeAll()
     stagedPreviews.removeAll()
-    for file in files { deleteAttachmentAsync(filename: file) }
-    discardSearchCache()
+    for file in files { retireAttachment(filename: file) }
+    removeSearchEntries(removedIDs)
     persistAsync()
   }
 
@@ -281,11 +292,12 @@ final class SessionVaultStore {
       loadCompletions.append { self.flushOnIOQueue(completion: completion) }
       return
     }
-    Self.ioQueue.async { [searchCleanup] in
-      dispatchPrecondition(condition: .notOnQueue(.main))
-      Task.detached {
-        await searchCleanup?.value
-        MainRunLoopDelivery.perform { completion() }
+    writer.flush { [searchCleanup] in
+      Self.ioQueue.async {
+        Task.detached {
+          await searchCleanup?.value
+          MainRunLoopDelivery.perform { completion() }
+        }
       }
     }
   }
@@ -379,13 +391,14 @@ final class SessionVaultStore {
       summaries.cancel(id: record.id)
       if let filename = record.imageFilename {
         evictCachedImage(for: filename)
-        deleteAttachmentAsync(filename: filename)
+        retireAttachment(filename: filename)
       }
-      if let filename = record.audioFilename { deleteAttachmentAsync(filename: filename) }
+      if let filename = record.audioFilename { retireAttachment(filename: filename) }
     }
     let expiredIDs = Set(expired.map(\.id))
     records.removeAll { expiredIDs.contains($0.id) }
-    if !expired.isEmpty { discardSearchCache() }
+    for id in expiredIDs { searchVersions.removeValue(forKey: id) }
+    removeSearchEntries(expiredIDs)
   }
 
   func retrySaving() {
@@ -394,8 +407,8 @@ final class SessionVaultStore {
       loadState = .loading
       loadAsync()
     } else {
-      writeError = nil
       persistAsync()
+      writer.retry()
     }
   }
 
@@ -460,14 +473,15 @@ final class SessionVaultStore {
     for record in loaded {
       guard !currentIDs.contains(record.id) else { continue }
       if discardLoadedRecords || removedWhileLoading.contains(record.id) {
-        if let filename = record.imageFilename { deleteAttachmentAsync(filename: filename) }
-        if let filename = record.audioFilename { deleteAttachmentAsync(filename: filename) }
+        if let filename = record.imageFilename { retireAttachment(filename: filename) }
+        if let filename = record.audioFilename { retireAttachment(filename: filename) }
       } else {
         merged.append(record)
         currentIDs.insert(record.id)
       }
     }
     records = merged
+    searchVersions = records.reduce(into: [:]) { $0[$1.id] = searchRevision }
     trimHistory()
     if records.count != merged.count { persistencePending = true }
     loadState = .ready
@@ -488,60 +502,24 @@ final class SessionVaultStore {
       persistencePending = true
       return
     }
-    let snapshot = records
-    let repository = repository
-    Self.ioQueue.async { [weak self] in
-      dispatchPrecondition(condition: .notOnQueue(.main))
-      do {
-        try repository.save(snapshot)
-      } catch {
-        let message = "Could not save session notes: \(error.localizedDescription)"
-        fputs("\(message)\n", stderr)
-        MainRunLoopDelivery.perform { [weak self] in self?.writeError = message }
-      }
-    }
+    writer.save(records)
   }
 
   private func saveImageAsync(
     _ cgImage: CGImage, preencodedPNGData: Data?, filename: String, preview: PreviewPreparation
   ) {
-    let files = files
+    writer.stage(cgImage, encoded: preencodedPNGData, filename: filename)
+    guard preview == .worker else { return }
     let staged = stagedPreviews
     Self.ioQueue.async { [weak self] in
       dispatchPrecondition(condition: .notOnQueue(.main))
-      if preview == .worker {
-        let preview = VaultImageCodec.preparePreview(from: cgImage)
-        staged.append(filename: filename, image: preview)
-        Task { @MainActor [weak self] in
-          self?.drainStagedPreviews()
-        }
-      }
-      guard let data = preencodedPNGData ?? VaultImageCodec.encodePNGData(from: cgImage) else {
-        let message = "Could not encode the snapshot image."
-        fputs("\(message)\n", stderr)
-        MainRunLoopDelivery.perform { [weak self] in self?.writeError = message }
-        return
-      }
-      do {
-        try files.write(data, named: filename)
-      } catch {
-        let message = "Could not save snapshot: \(error.localizedDescription)"
-        fputs("\(message)\n", stderr)
-        MainRunLoopDelivery.perform { [weak self] in self?.writeError = message }
-      }
+      let preview = VaultImageCodec.preparePreview(from: cgImage)
+      staged.append(filename: filename, image: preview)
+      MainRunLoopDelivery.perform { [weak self] in self?.drainStagedPreviews() }
     }
   }
 
-  private func deleteAttachmentAsync(filename: String) {
-    let files = files
-    Self.ioQueue.async {
-      dispatchPrecondition(condition: .notOnQueue(.main))
-      do {
-        try files.removeAttachment(named: filename)
-      } catch {
-        fputs(
-          "SessionVaultStore failed to remove attachment: \(error.localizedDescription)\n", stderr)
-      }
-    }
+  private func retireAttachment(filename: String) {
+    writer.removeAttachment(filename)
   }
 }

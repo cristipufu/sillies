@@ -17,7 +17,8 @@ public struct VaultFileStorage: Sendable {
 
   public func attachmentURL(for filename: String) throws -> URL {
     let reserved = [
-      SessionRecordRepository.filename, "search.sqlite", "search.sqlite-journal",
+      SessionRecordRepository.filename, VaultCommitRepository.journalFilename, "search.sqlite",
+      "search.sqlite-journal",
       "search.sqlite-wal", "search.sqlite-shm",
     ]
     guard !reserved.contains(where: { filename.caseInsensitiveCompare($0) == .orderedSame }) else {

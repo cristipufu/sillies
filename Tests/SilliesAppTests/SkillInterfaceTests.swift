@@ -14,7 +14,7 @@ import Testing
   defer { defaults.removePersistentDomain(forName: suite) }
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
   let store = ModelStore(root: directory)
-  let registry = SpeechRuntimeRegistry(store: store, providers: [AppleSpeechProvider()])
+  let registry = try SpeechRuntimeRegistry(store: store, providers: [AppleSpeechProvider()])
   let updates = ModelUpdatesPresentation(
     checker: ModelUpdateChecker(
       store: store, location: directory.appendingPathComponent("updates.json")),

@@ -11,7 +11,7 @@ import Testing
   let provider = PreparationProbe()
   let store = ModelStore(
     root: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString))
-  let registry = SpeechRuntimeRegistry(store: store, providers: [provider])
+  let registry = try SpeechRuntimeRegistry(store: store, providers: [provider])
   let first = Task { try await registry.prepare(SpeechModelDescriptor.apple.id) }
   while await provider.starts == 0 { await Task.yield() }
   let second = Task { try await registry.prepare(SpeechModelDescriptor.apple.id) }

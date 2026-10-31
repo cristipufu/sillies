@@ -17,22 +17,24 @@ import SwiftUI
     pasteboard: .general, queue: .init(label: "app.sillies.writing-clipboard"))
   private var historyWindow: NSWindow?
   private let recoveredText = SavedTranscriptWindow()
-  private weak var controller: CompanionController?
+  private weak var companions: (any WritingCompanionHost)?
+  private let services: WritingServices
   private var isSuspended = false
   private var hasVisibleAnchor = false
   private let speech: SpeechServices
   var modelID: String { speech.models.selectedModelID }
 
   init(
-    speech: SpeechServices, controller: CompanionController,
+    speech: SpeechServices, companions: any WritingCompanionHost, services: WritingServices,
     preferences: DictationPreferences = .init()
   ) {
-    self.controller = controller
+    self.companions = companions
+    self.services = services
     self.speech = speech
     vocabulary = speech.vocabulary
     languages = speech.languages
-    stash = StashPickerController(vault: controller.skills.vault)
-    let historyDirectory = controller.skills.vault.storageDirectory.deletingLastPathComponent()
+    stash = StashPickerController(vault: services.vault)
+    let historyDirectory = services.vault.storageDirectory.deletingLastPathComponent()
       .appendingPathComponent("Dictation", isDirectory: true)
     let history = WritingHistory(directory: historyDirectory)
     let cleanup = BoundedTextCleanup()
@@ -42,59 +44,73 @@ import SwiftUI
         factory: speech.captureFactory, languages: speech.languages, cleanup: cleanup),
       preferences: preferences, history: history,
       vocabulary: speech.vocabulary)
+    connectSessions()
+    connectCommands()
+    companions.onOpenWritingSession = { [weak self] in self?.openSessionOrHistory() }
+    companions.onWritingAnchorChanged = { [weak self] in self?.attach(to: $0) }
+    preparePanels()
+  }
+
+  private func connectSessions() {
     dictation.environment = .init(
-      canStart: { [weak controller, weak selection] in
-        controller?.skills.activeAudioSession == nil && selection?.isWorking != true
+      canStart: { [weak recording = services.recording, weak selection] in
+        recording?.hasActiveRecording != true && selection?.isWorking != true
       },
       activityChanged: { [weak self] in self?.setActivity($0) },
       changed: { [weak self] in self?.present() })
     selection.activityChanged = { [weak self] in self?.setActivity($0) }
-    selection.changed = { [weak self] in
-      guard let self, !self.isSuspended else { return }
-      self.selectionPanel.show(
-        self.selection, copy: { [weak self] in self?.clipboard.copyText($0) },
-        history: { [weak self] in self?.openHistory() })
-      self.releaseCompanionIfDismissed()
-    }
-    controller.commands.onWritingCommand = { [weak self] in self?.perform($0) ?? false }
-    controller.commands.onReleaseDictation = { [weak self] in self?.dictation.releaseHold() }
-    controller.commands.onStopWriting = { [weak self] in self?.stop() }
-    controller.onOpenWritingSession = { [weak self] in
-      guard let self else { return }
-      if self.dictation.phase != .idle {
-        self.panel.openSession(
-          self.dictation, copy: { [weak self] in self?.clipboard.copyText($0) },
-          history: { [weak self] in self?.openHistory() })
-      } else {
-        self.openHistory()
-      }
-    }
-    controller.onWritingAnchorChanged = { [weak self] anchor in
-      guard let self else { return }
-      guard let anchor else {
-        self.hasVisibleAnchor = false
-        self.panel.close()
-        self.selectionPanel.close()
-        return
-      }
-      let needsPresentation = !self.hasVisibleAnchor
-      self.hasVisibleAnchor = true
-      self.panel.attach(to: anchor)
-      self.selectionPanel.attach(to: anchor)
-      if needsPresentation {
-        self.present()
-        self.selectionPanel.show(
-          self.selection, copy: { [weak self] in self?.clipboard.copyText($0) },
-          history: { [weak self] in self?.openHistory() })
-      }
-    }
-    controller.skills.canStartAudio = { [weak self] in self?.isBusy != true }
+    selection.changed = { [weak self] in self?.presentSelection() }
+    services.recording.canStartAudio = { [weak self] in self?.isBusy != true }
+  }
+
+  private func connectCommands() {
+    services.commands.onWritingCommand = { [weak self] in self?.perform($0) ?? false }
+    services.commands.onReleaseDictation = { [weak self] in self?.dictation.releaseHold() }
+    services.commands.onStopWriting = { [weak self] in self?.stop() }
+  }
+
+  private func preparePanels() {
     panel.prepare(
       dictation, copy: { [weak self] in self?.clipboard.copyText($0) },
       history: { [weak self] in self?.openHistory() })
     selectionPanel.prepare(
       selection, copy: { [weak self] in self?.clipboard.copyText($0) },
       history: { [weak self] in self?.openHistory() })
+  }
+
+  private func openSessionOrHistory() {
+    guard dictation.phase != .idle else {
+      openHistory()
+      return
+    }
+    panel.openSession(
+      dictation, copy: { [weak self] in self?.clipboard.copyText($0) },
+      history: { [weak self] in self?.openHistory() })
+  }
+
+  private func presentSelection() {
+    guard !isSuspended else { return }
+    selectionPanel.show(
+      selection, copy: { [weak self] in self?.clipboard.copyText($0) },
+      history: { [weak self] in self?.openHistory() })
+    releaseCompanionIfDismissed()
+  }
+
+  private func attach(to anchor: WritingCompanionAnchor?) {
+    guard let anchor else {
+      hasVisibleAnchor = false
+      panel.close()
+      selectionPanel.close()
+      return
+    }
+    let needsPresentation = !hasVisibleAnchor
+    hasVisibleAnchor = true
+    panel.attach(to: anchor)
+    selectionPanel.attach(to: anchor)
+    if needsPresentation {
+      present()
+      presentSelection()
+    }
   }
   private var isBusy: Bool { dictation.isBusy || selection.isWorking }
   func enableInsertionAccess() {
@@ -123,13 +139,13 @@ import SwiftUI
   }
 
   private func prepareCompanion() -> Bool {
-    guard let controller else { return false }
-    guard controller.skills.activeAudioSession == nil else {
+    guard let companions else { return false }
+    guard !services.recording.hasActiveRecording else {
       feedback.showMessage(
         "Finish the current recording before writing.", at: NSEvent.mouseLocation)
       return false
     }
-    guard controller.hasAvailableWritingCompanion else {
+    guard companions.hasAvailableWritingCompanion else {
       feedback.showMessage(
         "All companions are busy. Free one to start writing.", at: NSEvent.mouseLocation)
       return false
@@ -138,7 +154,7 @@ import SwiftUI
     selection.dismiss()
     panel.close()
     selectionPanel.close()
-    guard let anchor = controller.beginWritingIndicator() else { return false }
+    guard let anchor = companions.beginWritingIndicator() else { return false }
     hasVisibleAnchor = true
     panel.attach(to: anchor)
     selectionPanel.attach(to: anchor)
@@ -146,18 +162,18 @@ import SwiftUI
   }
 
   private func setActivity(_ active: Bool) {
-    guard let controller else { return }
+    guard let companions else { return }
     if active {
-      controller.skills.vault.suspendBackgroundProcessing()
-      if let anchor = controller.beginWritingIndicator() {
+      services.vault.suspendBackgroundProcessing()
+      if let anchor = companions.beginWritingIndicator() {
         panel.attach(to: anchor)
         selectionPanel.attach(to: anchor)
       }
     } else {
       guard !dictation.isActive, !selection.isWorking else { return }
-      controller.finishWritingIndicator()
+      companions.finishWritingIndicator()
       releaseCompanionIfDismissed()
-      if !isSuspended, controller.shouldRun { controller.skills.vault.resumeBackgroundProcessing() }
+      if !isSuspended, companions.shouldRun { services.vault.resumeBackgroundProcessing() }
     }
   }
   private func present() {
@@ -168,7 +184,7 @@ import SwiftUI
     releaseCompanionIfDismissed()
   }
   private func releaseCompanionIfDismissed() {
-    if dictation.phase == .idle, !selection.isPresented { controller?.endWritingIndicator() }
+    if dictation.phase == .idle, !selection.isPresented { companions?.endWritingIndicator() }
   }
   func openHistory() {
     if historyWindow == nil {
@@ -201,10 +217,10 @@ import SwiftUI
     panel.close()
     selectionPanel.close()
     feedback.close()
-    controller?.endWritingIndicator()
+    companions?.endWritingIndicator()
     stash.stop()
     pasteBack.release()
-    controller?.skills.vault.suspendBackgroundProcessing()
+    services.vault.suspendBackgroundProcessing()
     speech.releaseInteractiveResources()
   }
 }

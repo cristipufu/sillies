@@ -6,7 +6,8 @@ import SilliesCore
 public final class VaultSearchIndex {
   private static let maximumQueryTokens = 32
   private var database: OpaquePointer?
-  private var fingerprints: [UUID: Int] = [:]
+  private var identifiers: Set<UUID> = []
+  public private(set) var indexedDocumentCount = 0
   private static let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 
   public init(directory: URL) throws {
@@ -40,27 +41,25 @@ public final class VaultSearchIndex {
   }
 
   public func synchronize(_ records: [SessionRecord]) throws {
-    var next: [UUID: Int] = [:]
+    try apply(upserting: records, removing: identifiers.subtracting(records.map(\.id)))
+  }
+
+  public func apply(upserting records: [SessionRecord], removing deleted: Set<UUID>) throws {
     try execute("BEGIN IMMEDIATE")
     do {
+      for id in deleted {
+        try execute("DELETE FROM documents WHERE id = ?", values: [id.uuidString])
+      }
       for record in records {
-        let body = Self.body(record)
-        var hasher = Hasher()
-        hasher.combine(record.kind.rawValue)
-        hasher.combine(body)
-        let fingerprint = hasher.finalize()
-        next[record.id] = fingerprint
-        guard fingerprints[record.id] != fingerprint else { continue }
         try execute("DELETE FROM documents WHERE id = ?", values: [record.id.uuidString])
         try execute(
           "INSERT INTO documents(id,kind,body) VALUES(?,?,?)",
-          values: [record.id.uuidString, record.kind.rawValue, body])
-      }
-      for id in fingerprints.keys where next[id] == nil {
-        try execute("DELETE FROM documents WHERE id = ?", values: [id.uuidString])
+          values: [record.id.uuidString, record.kind.rawValue, Self.body(record)])
       }
       try execute("COMMIT")
-      fingerprints = next
+      identifiers.subtract(deleted)
+      identifiers.formUnion(records.map(\.id))
+      indexedDocumentCount += records.count
     } catch {
       do { try execute("ROLLBACK") } catch { fputs("Search rollback failed: \(error)\n", stderr) }
       throw error

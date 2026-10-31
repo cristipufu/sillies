@@ -33,7 +33,8 @@ adapter even when the files install correctly.
 ## Add a runtime
 
 1. Create an adapter target implementing `SpeechProvider` and `PreparedSpeechModel` from `SilliesSpeech`.
-   Register it once in `SpeechServices`, and use its provider ID in the catalog.
+   Register it once in `SpeechServices`, and use its provider ID in the catalog. Duplicate speech or
+   diarization provider IDs are rejected at startup instead of silently choosing an adapter.
 2. Keep the SDK dependency inside that adapter; update the package and architecture policy accordingly.
    Do not import it into Core, views, capture, or model storage.
 3. Give each audio source independent bounded recognition state while sharing immutable weights.
@@ -45,6 +46,12 @@ adapter even when the files install correctly.
 5. Load only verified local artifacts. Disable every automatic network fallback, including tokenizer
    downloads. Reuse installation leases, progress, errors, and teardown from the shared infrastructure.
 
+`SpeechProvider.languages(_:)` owns language discovery. Downloaded adapters inherit the implementation
+that combines catalog capabilities with installation availability. Override it for system-managed assets
+or runtime-specific discovery; discovery must not install assets or prepare a recognition model. Check
+cancellation before preparation or discovery starts. The registry selects the provider and owns leases;
+it does not call a particular provider's discovery implementation directly.
+
 Speaker detection is a separate capability with `DiarizationProvider` and `PreparedDiarizationModel`.
 Do not imply an STT engine identifies speakers just because its transcript has source labels.
 
@@ -53,6 +60,12 @@ Do not imply an STT engine identifies speakers just because its transcript has s
 Run `make check BUILD_DIR=/tmp/sillies-check`, `make stress`, and `make race-check` as applicable.
 Cover both audio channels, silence, window boundaries, short final chunks, overload, language changes,
 cancel/restart, and offline failure. Default tests must not download weights.
+
+Add the adapter/model pair to `SpeechProviderContractTests` and reuse `verifySpeechProviderContract`.
+It exercises installed/missing language availability, unsupported-language handling, and cancellation
+before model loading. Keep each model's language acceptance cases explicit; the bundled fixtures cover
+English/Romanian providers. Runtime channel tests must additionally cover draining and cancellation during
+active inference, using a fake engine in the normal suite and short real-model checks when opted in.
 
 Use the [bounded real-model benchmark](../local-speech-models.md#short-validation) for short, consented
 English and Romanian fixtures. Separate download/preparation from the timed inference run. Evaluate

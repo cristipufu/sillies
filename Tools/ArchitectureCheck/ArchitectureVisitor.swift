@@ -107,11 +107,27 @@ final class ArchitectureVisitor: SyntaxVisitor {
     return .visitChildren
   }
 
+  override func visit(_ node: IdentifierTypeSyntax) -> SyntaxVisitorContinueKind {
+    checkWritingBoundary(node, name: node.name.text)
+    return .visitChildren
+  }
+
+  private func checkWritingBoundary(_ node: some SyntaxProtocol, name: String) {
+    if path == "Sources/SilliesApp/App/WritingTools.swift",
+      ["CompanionController", "WorkspaceTracker", "SkillCoordinator"].contains(name)
+    {
+      report(
+        node, "writing-boundary",
+        "Inject WritingCompanionHost and RecordingActivity at the composition root.")
+    }
+  }
+
   override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
     let expression = compact(node.calledExpression)
     let name =
       node.calledExpression.as(MemberAccessExprSyntax.self)?.declName.baseName.text
       ?? node.calledExpression.as(DeclReferenceExprSyntax.self)?.baseName.text ?? expression
+    checkWritingBoundary(node, name: name)
     if path.hasPrefix("Sources/SilliesCore/"),
       ["Task", "Timer", "DispatchQueue", "FileManager", "URLSession"].contains(where: {
         expression == $0 || expression.hasPrefix($0 + ".")

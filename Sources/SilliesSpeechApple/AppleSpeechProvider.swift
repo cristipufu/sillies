@@ -4,6 +4,13 @@ package struct AppleSpeechProvider: SpeechProvider, PreparedSpeechModel {
   package let id = "apple"
   package init() {}
 
+  package func languages(_ request: SpeechLanguageRequest) async throws -> SpeechLanguageCatalog {
+    try Task.checkCancellation()
+    let discovered = await AppleSpeechLanguageDiscovery.load()
+    try Task.checkCancellation()
+    return SpeechLanguageCatalog(languages: discovered.languages, model: request.model)
+  }
+
   package func prepare(_ request: SpeechPreparation) async throws -> any PreparedSpeechModel {
     try Task.checkCancellation()
     return self

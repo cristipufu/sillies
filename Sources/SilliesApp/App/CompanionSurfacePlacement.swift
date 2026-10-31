@@ -32,14 +32,19 @@ struct CompanionSurfacePlacement {
   private let companions: [CompanionInstance]
   private let environment: Environment
   private let animations: AnimationLibrary
+  private let metrics: InteractionSmoothnessMetrics?
   private var pendingPlacements: [ObjectIdentifier: PerchAttachmentChange.Transition] = [:]
   private var shouldRun: Bool { environment.isRunning }
   private var reducedMotion: Bool { environment.reducedMotion }
 
-  init(companions: [CompanionInstance], environment: Environment, animations: AnimationLibrary) {
+  init(
+    companions: [CompanionInstance], environment: Environment, animations: AnimationLibrary,
+    metrics: InteractionSmoothnessMetrics? = nil
+  ) {
     self.companions = companions
     self.environment = environment
     self.animations = animations
+    self.metrics = metrics
   }
 
   @MainActor
@@ -104,7 +109,12 @@ struct CompanionSurfacePlacement {
       }
     }
     if needsSurfaceArrangement {
-      arrangeRestingCompanionsOnSurfaces()
+      let metrics = metrics
+      if let metrics {
+        metrics.measureStage(.arrangement) { arrangeRestingCompanionsOnSurfaces() }
+      } else {
+        arrangeRestingCompanionsOnSurfaces()
+      }
     }
     flushPendingPlacements()
     let location =
@@ -160,7 +170,9 @@ struct CompanionSurfacePlacement {
       targetWindow.frame == context.window
       ? context.screen : Self.preferredScreen(for: targetWindow.frame)
     guard let screen else { return false }
-    let visibleFrame = context.visibleFrame(for: screen)
+    let visibleFrame =
+      metrics?.measureStage(.screenGeometry) { context.visibleFrame(for: screen) }
+      ?? context.visibleFrame(for: screen)
     let surface = PerchSurface(
       window: targetWindow.frame, visibleFrame: visibleFrame,
       characterSize: environment.characterSize,
@@ -182,8 +194,10 @@ struct CompanionSurfacePlacement {
     let requiresArrangement = change.needsArrangement || pet.tween != nil || pet.isWaitingForSpace
     pet.updateAttachment(
       .init(surface: surface, windowID: targetWindow.windowID, windowLayer: targetWindow.layer))
-    let poseChanged = pet.configureSurface(
-      surface, window: targetWindow.frame, display: context.visibleFrame)
+    let configure = {
+      pet.configureSurface(surface, window: targetWindow.frame, display: context.visibleFrame)
+    }
+    let poseChanged = metrics?.measureStage(.surfaceConfiguration, configure) ?? configure()
     guard surface.isAvailable || pet.isPickedUp else {
       pet.hideForUnavailableSurface()
       return requiresArrangement
@@ -255,12 +269,20 @@ struct CompanionSurfacePlacement {
       guard let reattached = pendingPlacements.removeValue(forKey: ObjectIdentifier(pet)) else {
         continue
       }
-      pet.place(at: pet.position)
+      place(pet, at: pet.position)
       if !pet.isWaitingForSpace {
         pet.presentation.show(
           reattached: reattached == .reattached,
           reducedMotion: reducedMotion || environment.isLowPower)
       }
+    }
+  }
+
+  private func place(_ companion: CompanionInstance, at target: CGPoint) {
+    if let metrics {
+      metrics.measureStage(.nativePlacement) { companion.place(at: target) }
+    } else {
+      companion.place(at: target)
     }
   }
 
@@ -334,7 +356,7 @@ struct CompanionSurfacePlacement {
           to: target, duration: settlement.duration, arcHeight: 0,
           at: ProcessInfo.processInfo.systemUptime)
       } else {
-        pet.place(at: target)
+        place(pet, at: target)
       }
       if let reattached = pendingReattach, !pet.isWaitingForSpace {
         pet.presentation.show(

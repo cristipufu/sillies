@@ -19,8 +19,8 @@ import Testing
   scheduler.cancel(id: record.id)
   record.summary = "Replacement"
   scheduler.schedule(record) { delivered.append($0.summary) }
-  try await generator.waitForRequest("Replacement")
   generator.finish("Original")
+  try await generator.waitForRequest("Replacement")
   generator.finish("Replacement")
   await scheduler.flush()
   #expect(delivered == ["Replacement"])
@@ -32,6 +32,7 @@ import Testing
 
 @MainActor private final class SuspendedVaultNotes {
   private var requests: [String: CheckedContinuation<LocalNotes, Never>] = [:]
+  var requestedNames: Set<String> { Set(requests.keys) }
 
   func generate(_ name: String) async -> LocalNotes {
     await withCheckedContinuation { requests[name] = $0 }
@@ -52,4 +53,34 @@ import Testing
   func finishAll() {
     for name in Array(requests.keys) { finish(name) }
   }
+}
+
+@Test @MainActor func thousandsOfPendingNotesAdmitOnlyOneProducerAndStopWithoutStartingTheRest()
+  async throws
+{
+  let generator = SuspendedVaultNotes()
+  defer { generator.finishAll() }
+  let scheduler = VaultSummaryScheduler { await generator.generate($0.summary) }
+  defer { scheduler.stop() }
+  var delivered: [String] = []
+  for index in 0..<2_000 {
+    let record = SessionRecord(
+      kind: .record,
+      origin: .init(
+        characterID: "mochi", characterName: "Mochi", source: .init(appName: "Fixture")),
+      content: .init(notes: .init(summary: "Job \(index)"), processing: .init(summaryPending: true))
+    )
+    scheduler.schedule(record) { delivered.append($0.summary) }
+  }
+  try await generator.waitForRequest("Job 0")
+  #expect(generator.requestedNames == ["Job 0"])
+  generator.finish("Job 0")
+  try await generator.waitForRequest("Job 1")
+  #expect(generator.requestedNames == ["Job 1"])
+  scheduler.stop()
+  generator.finish("Job 1")
+  await scheduler.flush()
+  #expect(generator.requestedNames.isEmpty)
+  #expect(delivered == ["Job 0"])
+  #expect(scheduler.count == 0)
 }

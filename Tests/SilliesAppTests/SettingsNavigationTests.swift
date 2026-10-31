@@ -18,10 +18,13 @@ import Testing
       accessibility: .disabled,
       skills: SkillCoordinator(
         vault: SessionVaultStore(directory: directory.appendingPathComponent("Vault")))))
-  let speech = SpeechServices(
+  let speech = try SpeechServices(
     defaults: defaults, modelDirectory: directory.appendingPathComponent("Models"))
   let writing = WritingTools(
-    speech: speech, controller: controller, preferences: DictationPreferences(defaults: defaults))
+    speech: speech, companions: controller,
+    services: .init(
+      vault: controller.skills.vault, recording: controller.skills, commands: controller.commands),
+    preferences: DictationPreferences(defaults: defaults))
   let shortcuts = CommandShortcuts(defaults: defaults)
   await speech.models.load()
   let textModels = TextModelsPresentation()

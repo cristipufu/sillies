@@ -64,7 +64,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       }
       if launch.usesDarkAppearance { NSApp.appearance = NSAppearance(named: .darkAqua) }
       let settings = makeSettings(for: launch)
-      let skills = makeSkillCoordinator(for: launch)
+      let skills = try makeSkillCoordinator(for: launch)
       let controller = try CompanionController(
         settings: settings,
         services: .init(
@@ -87,7 +87,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       observeModelUpdateActivity()
       if !launch.isAutomatedRun {
         if let speechServices {
-          writingTools = WritingTools(speech: speechServices, controller: controller)
+          writingTools = WritingTools(
+            speech: speechServices, companions: controller,
+            services: .init(vault: skills.vault, recording: skills, commands: controller.commands))
         }
         let shortcuts = CommandShortcuts()
         shortcuts.onEvent = { [weak controller] command, edge in
@@ -167,9 +169,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     }
   }
 
-  private func makeSkillCoordinator(for launch: LaunchConfiguration) -> SkillCoordinator {
+  private func makeSkillCoordinator(for launch: LaunchConfiguration) throws -> SkillCoordinator {
     guard launch.isAutomatedRun else {
-      let speech = SpeechServices()
+      let speech = try SpeechServices()
       speechServices = speech
       return SkillCoordinator(audioFactory: speech.captureFactory, audioLanguages: speech.languages)
     }

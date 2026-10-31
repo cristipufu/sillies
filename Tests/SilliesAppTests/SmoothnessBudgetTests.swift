@@ -63,7 +63,9 @@ func windowDragSmoothnessBudgetAndSinglePassPlacement() throws {
     * maximumFeedbackFraction
   #expect(Double(feedbackAnimationsDuringDrag) < maximumFeedbackUpdates)
   #expect(controller.smoothnessMetrics.sampleCount(for: .windowMove) == frameCount)
-  #expect(controller.smoothnessMetrics.isWithinBudget(for: .windowMove, budget: .fullCrew))
+  #expect(
+    controller.smoothnessMetrics.isWithinBudget(for: .windowMove, budget: .fullCrew),
+    "\(controller.smoothnessMetrics.diagnosticReport)")
 }
 
 @Test @MainActor
@@ -106,7 +108,9 @@ func windowResizeSmoothnessBudgetAndCompactionQuantization() throws {
   let placementsDuringResize = controller.totalPlacementCount - initialPlacements
   #expect(placementsDuringResize == frameCount * settings.enabledCharacters.count)
   #expect(controller.smoothnessMetrics.sampleCount(for: .windowResize) == frameCount)
-  #expect(controller.smoothnessMetrics.isWithinBudget(for: .windowResize, budget: .fullCrew))
+  #expect(
+    controller.smoothnessMetrics.isWithinBudget(for: .windowResize, budget: .fullCrew),
+    "\(controller.smoothnessMetrics.diagnosticReport)")
 
   // Sub-pixel vertical movement near the menu bar must quantize compacted presentationSize
   // so NSPanel backing stores are not resized on fractional jitter.
@@ -173,7 +177,9 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
   let placementsDuringSwitches = controller.totalPlacementCount - initialPlacements
   #expect(placementsDuringSwitches == switchCount * settings.enabledCharacters.count)
   #expect(controller.smoothnessMetrics.sampleCount(for: .windowSwitch) == switchCount)
-  #expect(controller.smoothnessMetrics.isWithinBudget(for: .windowSwitch, budget: .fullCrew))
+  #expect(
+    controller.smoothnessMetrics.isWithinBudget(for: .windowSwitch, budget: .fullCrew),
+    "\(controller.smoothnessMetrics.diagnosticReport)")
 
   // Minimizing or closing the last window and restoring a window must also stay within the
   // windowSwitch frame budget.
@@ -190,7 +196,9 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
     controller.tracker.simulateTrackedWindow(restoredWindow, windowID: CGWindowID(500 + cycle))
   }
   #expect(controller.smoothnessMetrics.sampleCount(for: .windowSwitch) == 40)
-  #expect(controller.smoothnessMetrics.isWithinBudget(for: .windowSwitch, budget: .fullCrew))
+  #expect(
+    controller.smoothnessMetrics.isWithinBudget(for: .windowSwitch, budget: .fullCrew),
+    "\(controller.smoothnessMetrics.diagnosticReport)")
 }
 
 @Test(arguments: [
@@ -241,5 +249,7 @@ func companionDragSmoothnessBudgetAndUnclippedMaskStability(characterID: String)
   #expect(controller.smoothnessMetrics.sampleCount(for: .companionDrag) == frameCount)
   #expect(
     controller.smoothnessMetrics.isWithinBudget(for: .companionDrag),
-    Comment(rawValue: controller.smoothnessMetrics.summary + "; " + controller.dragTimingSummary))
+    Comment(
+      rawValue: controller.smoothnessMetrics.diagnosticReport + "; " + controller.dragTimingSummary)
+  )
 }

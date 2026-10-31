@@ -36,37 +36,31 @@ final class CompanionController {
   @ObservationIgnored var onOpenVault: ((UUID?) -> Void)?
   @ObservationIgnored var onWritingAnchorChanged: ((WritingCompanionAnchor?) -> Void)?
   @ObservationIgnored var onOpenWritingSession: (() -> Void)?
-  private var writingCompanionID: String?
+  @ObservationIgnored private let writingSelection = WritingCompanionSelection()
+  private var writingCompanionID: String? { writingSelection.companionID }
 
   var hasAvailableWritingCompanion: Bool {
-    companions.contains { $0.isAvailableForWriting || $0.isWritingIndicator }
+    writingSelection.isAvailable(in: companions)
   }
 
   @discardableResult func beginWritingIndicator() -> WritingCompanionAnchor? {
     playfulScenes.cancel(.restorePerches)
-    if let existing = companions.first(where: { $0.isWritingIndicator }) {
-      return existing.writingAnchor
-    }
-    guard let pet = companions.filter(\.isAvailableForWriting).randomElement() else { return nil }
-    writingCompanionID = pet.definition.id
-    if let state = pet.beginWritingIndicator(at: now) { apply(state, to: pet) }
+    guard let activation = writingSelection.begin(in: companions, at: now) else { return nil }
+    if let state = activation.state { apply(state, to: activation.companion) }
     refreshPlayfulAvailability()
     scheduleDeadline()
     updateMotionClock()
-    return pet.writingAnchor
+    return activation.companion.writingAnchor
   }
 
   func endWritingIndicator() {
-    for pet in companions where pet.isWritingIndicator { pet.endWritingIndicator() }
-    writingCompanionID = nil
+    writingSelection.end()
     refreshPlayfulAvailability()
     scheduleDeadline()
   }
   func finishWritingIndicator() {
-    for pet in companions where pet.isWritingIndicator {
-      pet.displayBehavior(
-        pet.finishWritingIndicator(), using: animations, reducedMotion: reducedMotion)
-    }
+    guard let activation = writingSelection.finish(), let state = activation.state else { return }
+    activation.companion.displayBehavior(state, using: animations, reducedMotion: reducedMotion)
   }
   @ObservationIgnored private let additionalEventProducers: [any WorkspaceEventProducer]
   @ObservationIgnored private lazy var skillControls = CompanionSkillControls(
@@ -238,6 +232,7 @@ final class CompanionController {
 
   func stop() {
     commands.stop()
+    writingSelection.end()
     playfulScenes.stop()
     dragTargeting.stop()
     dragTargeting.companionLookup = nil
@@ -470,7 +465,9 @@ final class CompanionController {
     }
     advanceBehaviors()
     updateMotionClock()
-    if interaction.isEnabled { interaction.refresh() }
+    if interaction.isEnabled {
+      smoothnessMetrics.measureStage(.interaction) { interaction.refresh() }
+    }
   }
 
   private func reconcileEnabledCharacters() {
@@ -531,7 +528,9 @@ final class CompanionController {
     interactionCounts[.pickedUp, default: 0] += 1
     react(pet, to: WorkspaceEvent(.pickedUp, at: now))
     updateMotionClock()
-    if interaction.isEnabled { interaction.refresh() }
+    if interaction.isEnabled {
+      smoothnessMetrics.measureStage(.interaction) { interaction.refresh() }
+    }
   }
 
   private func drag(_ pet: CompanionInstance, by delta: CGPoint) {
@@ -609,7 +608,9 @@ final class CompanionController {
     }
     scheduleDeadline()
     updateMotionClock()
-    if interaction.isEnabled { interaction.refresh() }
+    if interaction.isEnabled {
+      smoothnessMetrics.measureStage(.interaction) { interaction.refresh() }
+    }
   }
 
   private func companionAndHUDWindowNumbers() -> Set<Int> {
@@ -632,17 +633,19 @@ final class CompanionController {
         .windowSwitch
       }
     smoothnessMetrics.measure(path) {
-      dragTargeting.updateKnownWindow(tracker.windowID, frame: tracker.windowFrame)
-      if tracker.latestGeometry == nil {
-        skills.refreshBoundWindows()
+      smoothnessMetrics.measureStage(.targeting) {
+        dragTargeting.updateKnownWindow(tracker.windowID, frame: tracker.windowFrame)
+        if tracker.latestGeometry == nil { skills.refreshBoundWindows() }
       }
       if !shouldRun {
         reconcile()
         return
       }
-      updateSurfaces(mode: .animated)
-      if !deadlineClock.isScheduled && !tracker.isManipulatingWindow { advanceBehaviors() }
-      updateMotionClock()
+      smoothnessMetrics.measureStage(.surfaces) { updateSurfaces(mode: .animated) }
+      smoothnessMetrics.measureStage(.behavior) {
+        if !deadlineClock.isScheduled && !tracker.isManipulatingWindow { advanceBehaviors() }
+      }
+      smoothnessMetrics.measureStage(.clocks) { updateMotionClock() }
     }
   }
 
@@ -655,7 +658,7 @@ final class CompanionController {
         isAwaitingWindow: tracker.isAwaitingApplicationWindow,
         isRunning: shouldRun, reducedMotion: reducedMotion, isLowPower: tracker.isLowPower,
         characterSize: settings.size, geometryChange: tracker.latestGeometry),
-      animations: animations)
+      animations: animations, metrics: smoothnessMetrics)
   }
 
   private func updateSurfaces(mode: CompanionSurfacePlacement.Mode) {
@@ -670,12 +673,10 @@ final class CompanionController {
     case .positioned(let location):
       if perchLocation != location { perchLocation = location }
     }
-    if let writingCompanionID,
-      let pet = companions.first(where: { $0.definition.id == writingCompanionID })
-    {
-      onWritingAnchorChanged?(pet.isAttachmentVisible ? pet.writingAnchor : nil)
+    if writingCompanionID != nil { onWritingAnchorChanged?(writingSelection.anchor) }
+    if interaction.isEnabled {
+      smoothnessMetrics.measureStage(.interaction) { interaction.refresh() }
     }
-    if interaction.isEnabled { interaction.refresh() }
   }
 
   private func route(_ event: WorkspaceEvent) {

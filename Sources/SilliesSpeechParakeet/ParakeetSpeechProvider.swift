@@ -7,6 +7,7 @@ package struct ParakeetSpeechProvider: SpeechProvider {
   package init() {}
 
   package func prepare(_ request: SpeechPreparation) async throws -> any PreparedSpeechModel {
+    try Task.checkCancellation()
     guard let directory = request.directory else {
       throw SpeechError.unavailable("Parakeet has not been downloaded.")
     }

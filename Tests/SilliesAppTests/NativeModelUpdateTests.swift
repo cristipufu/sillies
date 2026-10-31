@@ -30,7 +30,7 @@ func nativeModelUpdateValidatesBeforeActivationAndCanRollBack() async throws {
     model: original.model.revised(to: "compatibility-fixture"), artifacts: original.artifacts)
   try await store.stageUpdate(candidate, replacing: original) { _ in }
   #expect(try await store.currentManifest(original) == original)
-  let registry = SpeechRuntimeRegistry(
+  let registry = try SpeechRuntimeRegistry(
     store: store, providers: [WhisperSpeechProvider(), ParakeetSpeechProvider()],
     diarizationProviders: [NemotronDiarizationProvider()])
   try await registry.validateAndActivate(candidate)

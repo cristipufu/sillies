@@ -12,6 +12,18 @@ enum ArchitectureFixtures {
     let rendering = "Sources/SilliesApp/Rendering/CompanionPanel.swift"
     let fixtures: [Fixture] = [
       .init(
+        source: "let controller: CompanionController",
+        path: "Sources/SilliesApp/App/WritingTools.swift", rules: ["writing-boundary"]),
+      .init(
+        source: "let skills = SkillCoordinator()",
+        path: "Sources/SilliesApp/App/WritingTools.swift", rules: ["writing-boundary"]),
+      .init(
+        source: "let host: any WritingCompanionHost",
+        path: "Sources/SilliesApp/App/WritingTools.swift", rules: []),
+      .init(
+        source: "let controller: CompanionController",
+        path: "Sources/SilliesApp/App/SilliesMain.swift", rules: []),
+      .init(
         source: "import MLX", path: "Sources/SilliesApp/Skills/Text.swift",
         rules: ["inference-isolation"]),
       .init(source: "import MLX", path: "Sources/SilliesTextInference/Runtime.swift", rules: []),

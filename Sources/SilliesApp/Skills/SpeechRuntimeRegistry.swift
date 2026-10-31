@@ -3,7 +3,6 @@ import SilliesCore
 import SilliesModelStore
 import SilliesModelValidation
 import SilliesSpeech
-import SilliesSpeechApple
 
 /// The composition root registers providers. Runtime selection never branches on model names.
 actor SpeechRuntimeRegistry {
@@ -62,12 +61,16 @@ actor SpeechRuntimeRegistry {
   init(
     store: ModelStore, providers: [any SpeechProvider],
     diarizationProviders: [any DiarizationProvider] = []
-  ) {
+  ) throws {
+    guard Set(providers.map(\.id)).count == providers.count,
+      Set(diarizationProviders.map(\.id)).count == diarizationProviders.count
+    else {
+      throw SpeechError.unavailable("Duplicate speech or speaker provider registration.")
+    }
     self.store = store
-    self.providers = Dictionary(
-      providers.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+    self.providers = Dictionary(uniqueKeysWithValues: providers.map { ($0.id, $0) })
     self.diarizationProviders = Dictionary(
-      diarizationProviders.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+      uniqueKeysWithValues: diarizationProviders.map { ($0.id, $0) })
   }
 
   func modelCatalog() throws -> SpeechModelCatalog {
@@ -78,27 +81,21 @@ actor SpeechRuntimeRegistry {
   }
 
   func languages(for id: String) async throws -> SpeechLanguageCatalog {
-    if id == SpeechModelDescriptor.apple.id { return await AppleSpeechLanguageDiscovery.load() }
-    let manifest = try await currentManifest(id)
-    guard !manifest.model.isDiarizationModel else { throw ModelStoreError.unknownModel }
-    try checkHardware(manifest.model)
-    let installed = try await store.isInstalled(manifest)
-    let capabilities = manifest.model.capabilities
-    var languages: [SpeechLanguage] = []
-    if capabilities.supportsAutomaticDetection {
-      languages.append(
-        .init(
-          id: SpeechLanguage.automatic.id, name: SpeechLanguage.automatic.name,
-          isInstalled: installed))
+    let model: SpeechModelDescriptor
+    let availability: SpeechLanguageRequest.Availability
+    if id == SpeechModelDescriptor.apple.id {
+      model = .apple
+      availability = .installed
+    } else {
+      let manifest = try await currentManifest(id)
+      model = manifest.model
+      availability = try await store.isInstalled(manifest) ? .installed : .missing
     }
-    if capabilities.languageControl != .automatic {
-      languages += capabilities.languages.map {
-        SpeechLanguage(
-          id: $0, name: Locale.current.localizedString(forLanguageCode: $0) ?? $0,
-          isInstalled: installed)
-      }.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    guard !model.isDiarizationModel, let provider = providers[model.providerID] else {
+      throw ModelStoreError.unknownModel
     }
-    return SpeechLanguageCatalog(languages: languages, model: manifest.model)
+    try checkHardware(model)
+    return try await provider.languages(.init(model: model, availability: availability))
   }
 
   func currentManifest(_ id: String) async throws -> SpeechModelManifest {

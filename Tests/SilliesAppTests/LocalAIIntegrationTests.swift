@@ -84,7 +84,7 @@ private func downloadedRuntime(id: String?) async throws -> SpeechRuntimeRegistr
   if let id,
     let root = ProcessInfo.processInfo.environment["SILLIES_STT_STORE"]
   {
-    let registry = SpeechRuntimeRegistry(
+    let registry = try SpeechRuntimeRegistry(
       store: ModelStore(root: URL(fileURLWithPath: root)),
       providers: [WhisperSpeechProvider(), ParakeetSpeechProvider()],
       diarizationProviders: [NemotronDiarizationProvider()])

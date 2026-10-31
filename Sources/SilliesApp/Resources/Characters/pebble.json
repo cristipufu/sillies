@@ -298,6 +298,16 @@
       "cooldown": 0,
       "weight": 1,
       "motion": "none"
+    },
+    {
+      "id": "chat-ready",
+      "event": "skill.chat",
+      "animation": "listen",
+      "duration": 3,
+      "priority": 85,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
     }
   ],
   "transitions": {
@@ -337,5 +347,14 @@
       "SOFT LANDINGS PLEASE",
       "LESS PRICKLY REVIEWS"
     ]
+  },
+  "chat": {
+    "personality": "Polite, composed and mildly formal, with understated wit.",
+    "languageIdentifier": "en",
+    "preferredVoices": {
+      "kokoro": "am_michael",
+      "pocket-tts": "marius",
+      "qwen3-tts": "ryan"
+    }
   }
 }

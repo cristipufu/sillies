@@ -49,6 +49,7 @@ public struct CharacterDefinition: Codable, Sendable, Identifiable {
   public let reactions: [ReactionDefinition]
   public let transitions: CharacterTransitions?
   public let playful: PlayfulCharacterProfile?
+  public let chat: CharacterChatProfile?
 
   public var presentationTransitions: CharacterTransitions { transitions ?? CharacterTransitions() }
 
@@ -56,7 +57,7 @@ public struct CharacterDefinition: Codable, Sendable, Identifiable {
     schemaVersion: Int = Self.supportedSchemaVersion, id: String, name: String, subtitle: String,
     bio: String, renderer: String, accent: String, speed: Double, order: Int? = nil,
     reactions: [ReactionDefinition], transitions: CharacterTransitions? = nil,
-    playful: PlayfulCharacterProfile? = nil
+    playful: PlayfulCharacterProfile? = nil, chat: CharacterChatProfile? = nil
   ) {
     self.schemaVersion = schemaVersion
     self.id = id
@@ -70,6 +71,7 @@ public struct CharacterDefinition: Codable, Sendable, Identifiable {
     self.reactions = reactions
     self.transitions = transitions
     self.playful = playful
+    self.chat = chat
   }
 
   public func validate() throws {
@@ -93,6 +95,7 @@ public struct CharacterDefinition: Codable, Sendable, Identifiable {
     }
     try presentationTransitions.validate(characterID: id)
     try playful?.validate()
+    try chat?.validate()
     for reaction in reactions {
       guard !reaction.id.isEmpty, !reaction.event.rawValue.isEmpty,
         !reaction.animation.rawValue.isEmpty,

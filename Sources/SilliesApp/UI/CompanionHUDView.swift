@@ -34,10 +34,16 @@ struct CompanionHUDView: View {
       statusIndicator(for: skill, audioLevel: audioLevel)
 
       SessionHUDLabel(
-        title: "\(skill.title) · \(target?.appName ?? "Microphone")", status: statusDetail)
+        title:
+          "\(skill.title) · \(target?.appName ?? (skill == .chat ? "Your companion" : "Microphone"))",
+        status: statusDetail)
 
       if let session = model.audioSession, skill.isAudioSession {
         AudioHUDControls(session: session, open: { model.onOpenSession?() })
+      }
+
+      if skill == .chat {
+        SessionHUDAction(title: "Open Chat") { model.onOpenSession?() }
       }
 
       if let stopTitle = skill.stopActionTitle {
@@ -79,11 +85,13 @@ struct CompanionHUDView: View {
           .font(.system(size: 11, weight: .bold, design: .rounded))
           .foregroundStyle(SilliesTheme.ink)
           .lineLimit(1)
-        Text("\((target?.appName ?? "Microphone")) · \(summary)")
-          .font(.system(size: 10, weight: .medium))
-          .foregroundStyle(SilliesTheme.secondary)
-          .lineLimit(1)
-          .frame(maxWidth: 205, alignment: .leading)
+        Text(
+          "\((target?.appName ?? (skill == .chat ? "Your companion" : "Microphone"))) · \(summary)"
+        )
+        .font(.system(size: 10, weight: .medium))
+        .foregroundStyle(SilliesTheme.secondary)
+        .lineLimit(1)
+        .frame(maxWidth: 205, alignment: .leading)
       }
 
       if skill.offersTargetActivationOnCompletion {

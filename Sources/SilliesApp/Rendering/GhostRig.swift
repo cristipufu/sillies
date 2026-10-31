@@ -58,7 +58,11 @@ final class GhostRig: CharacterRig {
   private func drawFace() {
     makeEyes(in: head, left: 24, right: 50, y: 52, color: "655B78")
     cheeks(on: head, centers: [CGPoint(x: 14, y: 41), CGPoint(x: 60, y: 41)], color: "EBC3CE")
-    oval(on: head, CGRect(x: 34, y: 36, width: 6, height: 8), "8D7D9F")
+    speechAnimation.registerMouth(
+      shape(
+        on: head,
+        path: CGPath(ellipseIn: CGRect(x: 34, y: 36, width: 6, height: 8), transform: nil),
+        fill: "8D7D9F"))
   }
 
   private func drawFold() {

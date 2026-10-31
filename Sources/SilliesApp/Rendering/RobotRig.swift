@@ -96,7 +96,12 @@ final class RobotRig: CharacterRig {
           CGPoint(x: x + 10, y: 28),
         ], color: "8ADBE4", width: 2.5)
     }
-    pill(on: head, CGRect(x: 35, y: 15, width: 10, height: 2), "8ADBE4", radius: 1)
+    speechAnimation.registerMouth(
+      shape(
+        on: head,
+        path: CGPath(
+          roundedRect: CGRect(x: 35, y: 15, width: 10, height: 2), cornerWidth: 1, cornerHeight: 1,
+          transform: nil), fill: "8ADBE4"))
     closedEyes.opacity = 0
   }
 

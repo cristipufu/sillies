@@ -1,6 +1,6 @@
 # Local text models
 
-Settings → **Local AI** offers Apple Intelligence plus four optional MLX models. Speech recognition stays in **Speech & Meetings** and has its own selection. Downloading never selects a model automatically. Selection applies to notes, Participate suggestions, dictation cleanup, and selection commands. The Vault's **Regenerate notes** action applies the selected model to an existing transcript without transcribing or recording again.
+Settings → **Local AI** offers Apple Intelligence plus four optional MLX models. Speech recognition stays in **Speech & Meetings** and has its own selection. Downloading never selects a model automatically. Selection applies to notes, Participate suggestions, Chat replies, dictation cleanup, and selection commands. The Vault's **Regenerate notes** action applies the selected model to an existing transcript without transcribing or recording again.
 
 | Model | Approximate download | Required unified memory |
 | --- | --- | --- |

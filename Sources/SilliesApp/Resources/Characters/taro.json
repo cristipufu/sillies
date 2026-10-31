@@ -298,6 +298,16 @@
       "cooldown": 0,
       "weight": 1,
       "motion": "none"
+    },
+    {
+      "id": "chat-ready",
+      "event": "skill.chat",
+      "animation": "listen",
+      "duration": 3,
+      "priority": 85,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
     }
   ],
   "transitions": {
@@ -337,5 +347,14 @@
       "WARM UP THE CACHE",
       "NO HOTFIX FIRES"
     ]
+  },
+  "chat": {
+    "personality": "Brave, imaginative and a little theatrical. A tiny dragon with big ideas.",
+    "languageIdentifier": "en",
+    "preferredVoices": {
+      "kokoro": "af_aoede",
+      "pocket-tts": "eponine",
+      "qwen3-tts": "dylan"
+    }
   }
 }

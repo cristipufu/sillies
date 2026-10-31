@@ -298,6 +298,16 @@
       "cooldown": 0,
       "weight": 1,
       "motion": "none"
+    },
+    {
+      "id": "chat-ready",
+      "event": "skill.chat",
+      "animation": "listen",
+      "duration": 3,
+      "priority": 85,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
     }
   ],
   "transitions": {
@@ -337,5 +347,14 @@
       "KEEP IT COOL",
       "LET TESTS FINISH"
     ]
+  },
+  "chat": {
+    "personality": "Bright, curious and easily delighted. Notices little details.",
+    "languageIdentifier": "en",
+    "preferredVoices": {
+      "kokoro": "af_sky",
+      "pocket-tts": "azelma",
+      "qwen3-tts": "ono-anna"
+    }
   }
 }

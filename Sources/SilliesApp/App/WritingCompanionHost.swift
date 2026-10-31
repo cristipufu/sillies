@@ -19,7 +19,7 @@ import SilliesReasoning
 
 extension CompanionController: WritingCompanionHost {}
 extension SkillCoordinator: RecordingActivity {
-  var hasActiveRecording: Bool { activeAudioSession != nil }
+  var hasActiveRecording: Bool { hasActiveCaptureSkill }
 }
 
 @MainActor struct WritingServices {

@@ -8,6 +8,8 @@ enum ArchitectureFixtures {
 
       "let t = [.target(name: \"SilliesReasoning\", dependencies: [\"SilliesCore\", \"SilliesTextModels\"])]",
       "let t = [.target(name: \"SilliesVault\", dependencies: [\"SilliesCore\", \"SilliesPersistence\"])]",
+      "let t = [.executableTarget(name: \"SilliesTTSInference\", dependencies: [\"SilliesFishSpeech\", \"SilliesTTS\"])]",
+      "let t = [.target(name: \"SilliesChat\", dependencies: [\"SilliesReasoning\", \"SilliesTTS\"])]",
     ]
     let invalid = [
       "let t = [.target(name: \"SilliesWriting\", dependencies: [\"SilliesApp\"])]",
@@ -18,6 +20,10 @@ enum ArchitectureFixtures {
       "let t = [.target(name: \"SilliesVault\", dependencies: [\"SilliesAudio\"])]",
       "let t = [.target(name: \"SilliesCore\", dependencies: injectedDependencies)]",
       "let t = [.target(name: \"UnreviewedFeature\", dependencies: [])]",
+      "let t = [.executableTarget(name: \"SilliesApp\", dependencies: [\"SilliesFishSpeech\"])]",
+      "let t = [.executableTarget(name: \"SilliesApp\", dependencies: [.product(name: \"MLX\", package: \"mlx-swift\")])]",
+      "let t = [.target(name: \"SilliesChat\", dependencies: [\"SilliesFishSpeech\"])]",
+      "let t = [.target(name: \"SilliesTTS\", dependencies: [\"SilliesApp\"])]",
     ]
     let success =
       valid.allSatisfy { PackageBoundaryCheck.check($0).isEmpty }
@@ -119,6 +125,19 @@ enum ArchitectureFixtures {
         source: "import MLX", path: "Sources/SilliesApp/Skills/Text.swift",
         rules: ["inference-isolation"]),
       .init(source: "import MLX", path: "Sources/SilliesTextInference/Runtime.swift", rules: []),
+      .init(source: "import MLX", path: "Sources/SilliesFishSpeech/Runtime.swift", rules: []),
+      .init(
+        source: "import SilliesFishSpeech", path: "Sources/SilliesTTSInference/Runtime.swift",
+        rules: []),
+      .init(
+        source: "import SilliesFishSpeech", path: "Sources/SilliesApp/App/Composition/Voice.swift",
+        rules: ["inference-isolation"]),
+      .init(
+        source: "import AppKit", path: "Sources/SilliesChat/Session.swift",
+        rules: ["module-boundary"]),
+      .init(
+        source: "import FluidAudio", path: "Sources/SilliesTTS/Provider.swift",
+        rules: ["module-boundary"]),
       .init(
         source: "import AppKit", path: "Sources/SilliesTextModels/Provider.swift",
         rules: ["module-boundary"]),

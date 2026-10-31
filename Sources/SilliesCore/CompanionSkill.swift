@@ -8,21 +8,24 @@ public enum CompanionSkillKind: String, Codable, CaseIterable, Sendable, Identif
   case participate
   case explain
   case record
+  case chat
   // Retained for decoding existing Vault records.
   case watch
   case focus
   case stash
 
   public var isAudioSession: Bool { self == .listen || self == .participate || self == .record }
+  public var keepsCompanionStill: Bool { isAudioSession || self == .chat }
   public var isMeetingSession: Bool { self == .listen || self == .participate }
-  public var requiresWindow: Bool { self != .record && self != .stash }
+  public var requiresWindow: Bool { self != .record && self != .stash && self != .chat }
 
   public var id: Self { self }
 
-  public static let radialSkills: [Self] = [.listen, .participate, .snap, .explain, .record]
+  public static let radialSkills: [Self] = [.listen, .participate, .snap, .explain, .record, .chat]
 
   public var title: String {
     switch self {
+    case .chat: "Chat"
     case .snap: "Snap"
     case .participate: "Participate"
     case .explain: "Explain"
@@ -36,6 +39,7 @@ public enum CompanionSkillKind: String, Codable, CaseIterable, Sendable, Identif
 
   public var shortTitle: String {
     switch self {
+    case .chat: "Chat"
     case .snap: "Snap"
     case .participate: "Participate"
     case .explain: "Explain"
@@ -49,6 +53,7 @@ public enum CompanionSkillKind: String, Codable, CaseIterable, Sendable, Identif
 
   public var symbolName: String {
     switch self {
+    case .chat: "bubble.left.and.bubble.right.fill"
     case .snap: "camera.viewfinder"
     case .participate: "person.wave.2.fill"
     case .explain: "text.viewfinder"
@@ -62,6 +67,7 @@ public enum CompanionSkillKind: String, Codable, CaseIterable, Sendable, Identif
 
   public var activeVerb: String {
     switch self {
+    case .chat: "Chatting"
     case .snap: "Capturing"
     case .participate: "Participating"
     case .explain: "Explaining"
@@ -75,6 +81,7 @@ public enum CompanionSkillKind: String, Codable, CaseIterable, Sendable, Identif
 
   public var eventKind: EventKind {
     switch self {
+    case .chat: .skillChat
     case .snap: .skillSnap
     case .participate: .skillParticipate
     case .explain: .skillExplain
@@ -88,6 +95,7 @@ public enum CompanionSkillKind: String, Codable, CaseIterable, Sendable, Identif
 
   public var completionHeadline: String {
     switch self {
+    case .chat: "Chat Saved"
     case .snap: "Snapshot Saved"
     case .participate: "Meeting Transcript Ready"
     case .explain: "Explain"
@@ -101,6 +109,7 @@ public enum CompanionSkillKind: String, Codable, CaseIterable, Sendable, Identif
 
   public var stopActionTitle: String? {
     switch self {
+    case .chat: "Finish Chat"
     case .listen, .participate, .record: "Finish"
     case .watch, .focus: "Done"
     case .snap, .explain, .stash: nil
@@ -112,6 +121,6 @@ public enum CompanionSkillKind: String, Codable, CaseIterable, Sendable, Identif
   }
 
   public var savesPartialOnCancel: Bool {
-    isAudioSession || self == .focus
+    isAudioSession || self == .focus || self == .chat
   }
 }

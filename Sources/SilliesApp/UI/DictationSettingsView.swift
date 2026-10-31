@@ -52,7 +52,7 @@ struct DictationSettingsView: View {
         Text(
           languageControl == .hinted
             ? SpeechLanguageGuidance.detail(for: languageControl)
-            : "Mixing English and Romanian? Use automatic detection with a multilingual model."
+            : "For speech that mixes languages, use automatic detection with a multilingual model."
         )
         .font(.caption).foregroundStyle(SilliesTheme.secondary)
         Button("Choose a speech model…", action: openSpeech).buttonStyle(.link)

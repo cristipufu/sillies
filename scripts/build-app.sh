@@ -39,6 +39,14 @@ install -m 755 "$binary_dir/SilliesTextInference" "$text_helper/Contents/MacOS/S
 cp Resources/TextInference-Info.plist "$text_helper/Contents/Info.plist"
 cp "$binary_dir/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib" "$text_helper/Contents/Resources/mlx.metallib"
 ditto "$binary_dir/swift-transformers_Hub.bundle" "$text_helper/Contents/Resources/swift-transformers_Hub.bundle"
+voice_helper="$app/Contents/Helpers/SilliesTTSInference.app"
+mkdir -p "$voice_helper/Contents/MacOS" "$voice_helper/Contents/Resources"
+install -m 755 "$binary_dir/SilliesTTSInference" "$voice_helper/Contents/MacOS/SilliesTTSInference"
+cp Resources/TTSInference-Info.plist "$voice_helper/Contents/Info.plist"
+cp "$binary_dir/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib" "$voice_helper/Contents/Resources/mlx.metallib"
+ditto "$binary_dir/swift-transformers_Hub.bundle" "$voice_helper/Contents/Resources/swift-transformers_Hub.bundle"
+ditto "$binary_dir/FluidAudio_LuxTtsG2pResources.bundle" "$voice_helper/Contents/Resources/FluidAudio_LuxTtsG2pResources.bundle"
+ditto "$binary_dir/FluidAudio_LuxTtsG2pResources.bundle" "$app/Contents/Resources/FluidAudio_LuxTtsG2pResources.bundle"
 
 bash scripts/embed-sparkle.sh .build/artifacts "$app"
 
@@ -77,6 +85,7 @@ codesign "${sign[@]}" "$framework/Versions/B/Autoupdate" >/dev/null
 codesign "${sign[@]}" "$framework/Versions/B/Updater.app" >/dev/null
 codesign "${sign[@]}" "$framework" >/dev/null
 codesign "${sign[@]}" --identifier app.sillies.text-inference "$text_helper" >/dev/null
+codesign "${sign[@]}" --identifier app.sillies.tts-inference "$voice_helper" >/dev/null
 codesign "${sign[@]}" --identifier app.sillies.window-metadata "$app/Contents/Helpers/SilliesWindowMetadata" >/dev/null
 codesign "${sign[@]}" --entitlements Sillies.entitlements --identifier app.sillies.macos "$app" >/dev/null
 

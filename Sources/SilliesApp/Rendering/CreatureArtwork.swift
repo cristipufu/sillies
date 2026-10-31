@@ -29,6 +29,8 @@ extension CharacterRig {
     path.addQuadCurve(
       to: CGPoint(x: center.x + width / 2, y: center.y),
       control: CGPoint(x: center.x, y: center.y - width * Self.smileDepthRatio))
-    shape(on: layer, path: path, fill: nil, stroke: color, lineWidth: Self.smileStrokeWidth)
+    let mouth = shape(
+      on: layer, path: path, fill: nil, stroke: color, lineWidth: Self.smileStrokeWidth)
+    if layer === head { speechAnimation.registerMouth(mouth) }
   }
 }

@@ -34,6 +34,7 @@ public struct EventKind: RawRepresentable, Hashable, Codable, Sendable, Expressi
   public static let skillParticipate: Self = "skill.participate"
   public static let skillExplain: Self = "skill.explain"
   public static let skillRecord: Self = "skill.record"
+  public static let skillChat: Self = "skill.chat"
   public static let skillWatch: Self = "skill.watch"
   public static let skillFocus: Self = "skill.focus"
   public static let skillCompleted: Self = "skill.completed"

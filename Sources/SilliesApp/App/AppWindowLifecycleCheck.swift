@@ -6,6 +6,7 @@ import AppKit
     let prepareControlCenter: () -> ControlCenter
     let openSettings: () -> NSWindow?
     let openVault: () -> NSWindow?
+    let openChat: () -> NSWindow?
   }
   @MainActor struct ControlCenter {
     let button: NSStatusBarButton?
@@ -31,7 +32,7 @@ import AppKit
       NSApp.activate(ignoringOtherApps: true)
       try await waitUntil("application activation") { NSApp.isActive }
       for repetition in 0..<Limits.repetitions {
-        for openWindow in [actions.openSettings, actions.openVault] {
+        for openWindow in [actions.openSettings, actions.openVault, actions.openChat] {
           controlCenter.button?.performClick(nil)
           let popover = controlCenter.popover
           try await waitUntil("control center opens") { popover.isShown }
@@ -62,7 +63,7 @@ import AppKit
         }
       }
       print(
-        "APP WINDOW CHECK PASSED: menu popover → Settings/Vault, activation, close/reopen, own-window exclusion, foreground/background stacking"
+        "APP WINDOW CHECK PASSED: menu popover → Settings/Vault/Chat, activation, close/reopen, own-window exclusion, foreground/background stacking"
       )
       previousApplication?.activate(options: [])
       NSApp.terminate(nil)

@@ -298,6 +298,16 @@
       "cooldown": 0,
       "weight": 1,
       "motion": "hop"
+    },
+    {
+      "id": "chat-ready",
+      "event": "skill.chat",
+      "animation": "listen",
+      "duration": 3,
+      "priority": 85,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
     }
   ],
   "transitions": {
@@ -333,5 +343,14 @@
       "MORE NAPS",
       "LESS YAK SHAVING"
     ]
+  },
+  "chat": {
+    "personality": "Warm, gently cheeky and comforting. Enjoys small everyday pleasures.",
+    "languageIdentifier": "en",
+    "preferredVoices": {
+      "kokoro": "af_heart",
+      "pocket-tts": "alba",
+      "qwen3-tts": "serena"
+    }
   }
 }

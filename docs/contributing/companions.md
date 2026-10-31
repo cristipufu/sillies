@@ -1,5 +1,10 @@
 # Add a companion
 
+For Chat, the optional `chat` object defines `personality`, `languageIdentifier`, and `preferredVoices`
+(provider ID → voice ID). Keep personality in the character pack; never branch on a character ID in
+the conversation controller. Voice selection falls back to a compatible supplied voice. A provider
+with automatic voices cannot promise a fixed voice identity. See [voice providers](voice-models.md).
+
 Start with a personality using existing artwork, or bring a new character to life. A companion is a
 JSON pack plus a registered renderer and animation clips. Packs are bundled with the app; there is no
 runtime executable-plugin loader.

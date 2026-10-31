@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
   let controller: CompanionController
   var speechModels: SpeechModelsPresentation? = nil
+  var voiceModels: VoiceModelsPresentation? = nil
   var textModels: TextModelsPresentation? = nil
   var shortcuts: CommandShortcuts? = nil
   var loginItems: LoginItemSettings? = nil
@@ -92,6 +93,8 @@ struct SettingsView: View {
       }
     case .intelligence:
       if let textModels { TextModelSettingsView(model: textModels) }
+    case .voices:
+      if let voiceModels { VoiceModelSettingsView(model: voiceModels) }
     case .shortcuts:
       if let shortcuts { CommandSettingsView(shortcuts: shortcuts) }
     }

@@ -25,11 +25,14 @@ enum CompanionActionMenu {
     menu.autoenablesItems = false
     for skill in CompanionSkillKind.radialSkills {
       let item = add(skill.title, symbol: skill.symbolName, to: menu) { perform(.skill(skill)) }
-      item.isEnabled = !skill.requiresWindow || windowName != nil
-      item.toolTip =
-        skill == .record
-        ? "Record the microphone and save playable audio with notes."
-        : "\(skill.title) · \(windowName ?? "Choose a window first")"
+      item.isEnabled =
+        (!skill.requiresWindow || windowName != nil)
+        && !(hasAudioSession && skill.keepsCompanionStill)
+      switch skill {
+      case .record: item.toolTip = "Record the microphone and save playable audio with notes."
+      case .chat: item.toolTip = "Chat with your companion by typing or speaking."
+      default: item.toolTip = "\(skill.title) · \(windowName ?? "Choose a window first")"
+      }
     }
     if hasAudioSession {
       add("Open current session", symbol: "waveform", to: menu) { perform(.openSession) }

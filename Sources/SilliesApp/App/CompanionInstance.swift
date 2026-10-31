@@ -121,6 +121,9 @@ final class CompanionInstance {
   }
   func updateSkillPresentation(_ presentation: SkillPresentation) {
     hud.updatePresentation(presentation)
+    view.rig.speechAnimation.update(
+      level: NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        ? 0 : presentation.speakingLevel)
   }
 
   struct StashControls {
@@ -197,7 +200,7 @@ final class CompanionInstance {
     updateOverlayLevel()
     panel.restoreAttachmentOrder()
     if !isAttachmentVisible, !isPickedUp { hideForUnavailableSurface() }
-    if case .active(_, let skill, _, _, _) = state, skill.isAudioSession { return }
+    if case .active(_, let skill, _, _, _) = state, skill.keepsCompanionStill { return }
     behavior.endSustainedReaction()
   }
 

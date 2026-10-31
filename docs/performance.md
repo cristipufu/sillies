@@ -370,3 +370,36 @@ Validation: `make check BUILD_DIR=/tmp/sillies-paged-vault-verification`, `make 
 close/reopen, own-window exclusion, and foreground/background stacking. Thread Sanitizer reported
 no races in the selected concurrency cases. Both accelerated test commands retain their 90-second
 execution watchdogs; builds are outside that limit. Interaction budgets were not changed.
+
+## Local voice checks — October 31, 2026
+
+Short real-model checks ran on an M4 Pro with 48 GiB, using the packaged debug TTS helper with network
+access denied. Kokoro, Pocket TTS, Qwen3-TTS 0.6B, and Fish S2 Pro all produced non-silent audio.
+Separate English synthesis/transcription round trips recovered the intended words for all four.
+A second-language Fish sample remained intelligible but its round trip differed in a few words and
+diacritics. These checks do not certify every language, voice, or the larger Qwen variant.
+
+| Packaged runtime | First audio, including verification/loading | Total synthesis |
+| --- | --- | --- |
+| Kokoro | 16.8 s | 16.8 s |
+| Pocket TTS | 6.3 s | 6.6 s |
+| Qwen3-TTS 0.6B | 17.1 s | 21.4 s |
+| Fish S2 Pro | 15.5 s | 15.7 s |
+
+The input was “Hello. How are you today?” These are cold-process observations, not warm latency
+targets or end-to-end Chat timings; they exclude reply generation and hardware playback. The UI
+keeps the written reply visible while the voice prepares. Installed models and kernel caches already
+existed on disk.
+
+Running Fish alongside the native interaction checks initially exposed occasional 20–35 ms mascot-drag
+updates. Limiting MLX command buffers and its reusable allocation cache removed the observed budget
+failures in the follow-up checks. Two consecutive interaction passes covered a complete, roughly
+33-second Fish request, including audio decoding: window move, resize, switch, and all twelve individual
+mascot drags passed their existing budgets. This is a bounded workload check, not a guarantee against
+all operating-system or GPU contention. No timing thresholds were raised.
+
+Voice lifecycle tests cover stalled-helper cancellation, invalid PCM, bounded playback, duplicate and
+stale callbacks, and priority over background text work. Chat tests preserve finalized microphone
+words before saving, retain written replies on synthesis failure, and reject late replies after stop.
+Native UI checks cover minimum-size and long-error states, transcript scrolling, activation, stacking,
+and own-window exclusion.

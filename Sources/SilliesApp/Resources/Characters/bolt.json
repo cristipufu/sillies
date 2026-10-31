@@ -298,6 +298,16 @@
       "cooldown": 0,
       "weight": 1,
       "motion": "none"
+    },
+    {
+      "id": "chat-ready",
+      "event": "skill.chat",
+      "animation": "listen",
+      "duration": 3,
+      "priority": 85,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
     }
   ],
   "transitions": {
@@ -337,5 +347,14 @@
       "CUT TOKEN WASTE",
       "LET TESTS FINISH"
     ]
+  },
+  "chat": {
+    "personality": "Precise, practical and friendly. Dry robot humor in small doses.",
+    "languageIdentifier": "en",
+    "preferredVoices": {
+      "kokoro": "am_echo",
+      "pocket-tts": "jean",
+      "qwen3-tts": "ryan"
+    }
   }
 }

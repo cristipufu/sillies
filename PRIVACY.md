@@ -17,6 +17,7 @@ GitHub, model-hosting services, or another app into which you insert or export c
 | Window companions | App/window identifiers, titles, geometry, focus and lifecycle events, pointer interactions, and time since input, used to place companions and select reactions. |
 | Listen and Participate | Audio from the selected application's output and your microphone, recordings, transcripts, timestamps, optional speaker labels, notes, and suggestions. |
 | Record | Microphone audio, a playable recording, transcript, and notes. |
+| Chat | Messages you type, microphone audio after choosing Speak, recognized words, local replies, and optional synthesized speech. Chat saves conversation text when finished; it does not save microphone recordings or generated audio. |
 | Snap and Explain | An explicitly selected window image, recognized text, and, for Explain, a local explanation. Snap's text recognition makes saved screenshots searchable. |
 | Dictation | Microphone audio during the session, recognized text, optional cleanup, destination information, and a short text recovery history. Dictation does not save an audio recording. |
 | Selection commands and insertion | The selected text and bounded focused-field/destination context needed to shorten, correct, translate, or insert text. |
@@ -40,7 +41,7 @@ part of the recording's local record.
 ## Local AI
 
 Apple Speech, Whisper, Parakeet, speaker detection, screenshot text recognition, Apple Intelligence,
-and downloaded text models run locally. Audio and text are not sent to Hugging Face or a cloud model
+downloaded text models, and optional voice synthesis run locally. Audio and text are not sent to Hugging Face or a cloud model
 API for inference. Apple's frameworks and system-managed model assets have their own availability and
 language requirements. macOS may download those assets through Apple's services.
 
@@ -56,6 +57,7 @@ The default application data lives under `~/Library/Application Support/Sillies/
 | `Vault/` | Saved session metadata, recordings, screenshots, transcripts, recognized screenshot text, notes, speaker names, stash items, a local SQLite database containing record bodies, listing metadata, full-text search documents, and an attachment-cleanup journal. Records can include source app/window titles and model revisions. |
 | `SpeechModels/` | Downloaded speech/speaker models, installation state, partial downloads/resume information, and model-update metadata. |
 | `TextModels/` | Downloaded text models and installation state, including partial downloads. |
+| `VoiceModels/` | Downloaded voice models, codecs, supplied voices, installation state, and partial downloads. |
 | `Dictation/` | The separate text recovery history, including original/result text and destination app labels. |
 
 Preferences, the personal dictionary, exclusions, and shortcuts use macOS preferences under

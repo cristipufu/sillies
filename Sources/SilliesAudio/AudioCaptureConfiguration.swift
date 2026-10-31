@@ -24,7 +24,7 @@ package struct AudioCaptureConfiguration: Sendable {
   package var sources: [SessionAudioSource] {
     switch kind {
     case .listen, .participate: [.application, .microphone]
-    case .record: [.microphone]
+    case .record, .chat: [.microphone]
     default: [.application]
     }
   }

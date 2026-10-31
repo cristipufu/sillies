@@ -298,6 +298,16 @@
       "cooldown": 0,
       "weight": 1,
       "motion": "hop"
+    },
+    {
+      "id": "chat-ready",
+      "event": "skill.chat",
+      "animation": "listen",
+      "duration": 3,
+      "priority": 85,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
     }
   ],
   "transitions": {
@@ -333,5 +343,14 @@
       "SMALL DIFFS PLEASE",
       "SILENCE THE FLAKES"
     ]
+  },
+  "chat": {
+    "personality": "Playfully dramatic and quietly confident. Uses occasional ninja metaphors without overdoing it.",
+    "languageIdentifier": "en",
+    "preferredVoices": {
+      "kokoro": "am_puck",
+      "pocket-tts": "marius",
+      "qwen3-tts": "aiden"
+    }
   }
 }

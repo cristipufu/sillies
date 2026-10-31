@@ -107,11 +107,12 @@ final class AutomatedLaunchRunner {
         let models = try await Task.detached {
           (
             speech: try SpeechModelCatalog.bundled().manifests.count,
-            text: try TextModelCatalog.bundled().manifests.count
+            text: try TextModelCatalog.bundled().manifests.count,
+            voice: try TTSModelCatalog.bundled().manifests.count
           )
         }.value
         print(
-          "Validated \(characterCount) character packs, all animation references, \(models.speech) downloadable speech models, and \(models.text) downloadable text models."
+          "Validated \(characterCount) character packs, all animation references, \(models.speech) downloadable speech models, \(models.text) downloadable text models, and \(models.voice) downloadable voice models."
         )
         NSApp.terminate(nil)
       } catch {

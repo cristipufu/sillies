@@ -60,7 +60,8 @@ final class PenguinRig: CharacterRig {
     beak.addQuadCurve(to: CGPoint(x: 43, y: 18), control: CGPoint(x: 36, y: 23))
     beak.addQuadCurve(to: CGPoint(x: 29, y: 18), control: CGPoint(x: 36, y: 8))
     beak.closeSubpath()
-    shape(on: head, path: beak, fill: Design.gold, stroke: "BD986A", lineWidth: 1.2)
+    speechAnimation.registerMouth(
+      shape(on: head, path: beak, fill: Design.gold, stroke: "BD986A", lineWidth: 1.2))
     let tuft = CGMutablePath()
     tuft.move(to: CGPoint(x: 28, y: 47))
     tuft.addQuadCurve(to: CGPoint(x: 44, y: 53), control: CGPoint(x: 25, y: 61))

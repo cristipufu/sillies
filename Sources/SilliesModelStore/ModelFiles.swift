@@ -2,7 +2,7 @@ import CryptoKit
 import Foundation
 
 /// Filesystem operations run on ModelStore's actor, never on the main actor.
-enum ModelFiles {
+package enum ModelFiles {
   private static let hashChunkBytes = 1_048_576
   private static let diskReserveBytes: Int64 = 256 * 1_048_576
 
@@ -21,7 +21,7 @@ enum ModelFiles {
       }
   }
 
-  static func child(_ path: String, in root: URL) throws -> URL {
+  package static func child(_ path: String, in root: URL) throws -> URL {
     dispatchPrecondition(condition: .notOnQueue(.main))
     guard isSafeRelativePath(path) else { throw ModelStoreError.unsafePath }
     var candidate = root
@@ -39,7 +39,7 @@ enum ModelFiles {
     return candidate
   }
 
-  static func createDirectory(_ url: URL) throws {
+  package static func createDirectory(_ url: URL) throws {
     try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
   }
 
@@ -74,7 +74,7 @@ enum ModelFiles {
     }
   }
 
-  static func write<T: Encodable>(_ value: T, to url: URL) throws {
+  package static func write<T: Encodable>(_ value: T, to url: URL) throws {
     dispatchPrecondition(condition: .notOnQueue(.main))
     try JSONEncoder().encode(value).write(to: url, options: .atomic)
   }

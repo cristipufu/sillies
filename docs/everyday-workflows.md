@@ -20,7 +20,7 @@ Focus a text field, press the shortcut, and wait for **Listening** before speaki
 
 The shortcut selects a random available, visible mascot and holds its recording reaction. Its compact controls reuse Record’s microphone indicator, status label, Finish, and Cancel controls. The transcript button (or the mascot’s Open session menu action) opens the familiar session window without activating Sillies. The full transcript shares Record’s selectable native viewport, Follow live, and Jump to latest controls. The mascot remains with the result until dismissal. If every mascot is busy, Sillies explains this instead of starting an unattached recording.
 
-The microphone and selected local speech model produce the transcript. Dictation does not save an audio recording. Automatic language detection on a multilingual model is appropriate for English/Romanian mixing; an explicit language choice is honored or reported unavailable. Recognition quality depends on the model, microphone, and speech. “Verbatim” skips cleanup but cannot undo normalization performed by the recognizer itself.
+The microphone and selected local speech model produce the transcript. Dictation does not save an audio recording. Automatic language detection on a multilingual model can handle mixed-language speech; an explicit language choice is honored or reported unavailable. Recognition quality depends on the model, microphone, and speech. “Verbatim” skips cleanup but cannot undo normalization performed by the recognizer itself.
 
 Light cleanup has 750 ms after recognition finalization. Unavailable, unsafe, or late cleanup falls back to the finalized transcript. A late model response never rewrites the destination. Names from the dictionary, numeric values, and technical tokens are protected. No automatic cleanup can guarantee semantic equivalence; the original remains available in recovery.
 
@@ -32,7 +32,7 @@ Writing recovery keeps the latest 20 dictations and selection edits separately f
 
 ## Captures and Stash
 
-Snap saves the image immediately. Background OCR later adds searchable text; failures can be retried. Search indexes full transcripts, OCR, notes, and Stashes on a worker and supports Romanian diacritics. Results are shown in pages; Show more reveals older matches. Long saved transcripts open in their own native scrolling window.
+Snap saves the image immediately. Background OCR later adds searchable text; failures can be retried. Search indexes full transcripts, OCR, notes, and Stashes on a worker and preserves diacritics. Results are shown in pages; Show more reveals older matches. Long saved transcripts open in their own native scrolling window.
 
 Search Pocket Stash captures the original destination before opening. Type to search, use arrows, and press Return to paste; Escape closes. Incompatible destinations offer Copy. The Vault also offers paste-back after being opened from a destination application. Nothing monitors clipboard history automatically.
 

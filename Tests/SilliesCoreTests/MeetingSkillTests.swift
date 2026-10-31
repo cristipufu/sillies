@@ -2,8 +2,9 @@ import Foundation
 import SilliesCore
 import Testing
 
-@Test func skillWheelHasFiveSeparatedTargets() {
-  #expect(CompanionSkillKind.radialSkills == [.listen, .participate, .snap, .explain, .record])
+@Test func skillWheelIncludesChatAndKeepsEveryTargetSeparated() {
+  #expect(
+    CompanionSkillKind.radialSkills == [.listen, .participate, .snap, .explain, .record, .chat])
   for direction in [RadialSkillMenuLayout.Direction.upward, .downward] {
     let items = RadialSkillMenuLayout.items(around: .zero, direction: direction)
     for (index, item) in items.enumerated() {

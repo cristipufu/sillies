@@ -115,10 +115,15 @@ import Testing
   window.isReleasedWhenClosed = false
   defer { window.close() }
   let host = NSHostingController(rootView: rootView)
+  host.sizingOptions = []
   window.contentViewController = host
   let view = host.view
   view.frame = CGRect(origin: .zero, size: size)
+  window.setContentSize(size)
+  window.orderFront(nil)
+  try DisplayFrameSequence.presentCreatedWindows()
   view.layoutSubtreeIfNeeded()
+  #expect(view.bounds.size == size)
   let fitting = host.sizeThatFits(in: size)
   #expect(fitting.width <= size.width)
   #expect(fitting.height <= size.height)

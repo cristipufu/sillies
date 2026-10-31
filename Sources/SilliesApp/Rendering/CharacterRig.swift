@@ -28,6 +28,7 @@ class CharacterRig {
   let stage = CALayer()
   let torso = CALayer()
   let head = CALayer()
+  lazy var speechAnimation = CharacterSpeechAnimation(head: head)
   let leftArm = CALayer()
   let rightArm = CALayer()
   let leftFoot = CALayer()
@@ -255,6 +256,7 @@ class CharacterRig {
   }
 
   func resetBehaviorPose() {
+    speechAnimation.update(level: 0)
     behaviorResetGeneration += 1
     CATransaction.begin()
     CATransaction.setDisableActions(true)

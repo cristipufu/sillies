@@ -6,7 +6,7 @@ final class PackageBoundaryCheck: SyntaxVisitor {
   private(set) var failures: [String] = []
   private static let platformTargets: Set<String> = [
     "SilliesApp", "SilliesWindowMetadata", "WindowMetadataProtocol", "SpeechBenchmark",
-    "TextModelBenchmark", "SilliesAudioTestSupport",
+    "TextModelBenchmark", "TTSBenchmark", "SilliesAudioTestSupport",
   ]
 
   static func check(_ source: String) -> [String] {
@@ -24,8 +24,9 @@ final class PackageBoundaryCheck: SyntaxVisitor {
       failures.append("Production target names must be explicit literals.")
       return .skipChildren
     }
-    guard !Self.platformTargets.contains(name) else { return .skipChildren }
-    guard let allowed = ArchitecturePolicy.imports[name] else {
+    let isPlatform = Self.platformTargets.contains(name)
+    let allowed = ArchitecturePolicy.imports[name]
+    guard allowed != nil || isPlatform else {
       failures.append("\(name) needs an explicit architecture dependency policy.")
       return .skipChildren
     }
@@ -44,7 +45,17 @@ final class PackageBoundaryCheck: SyntaxVisitor {
         literal(dependency.expression)
         ?? literal(product?.arguments.first { $0.label?.text == "name" }?.expression)
       let audioAdapter = name == "SilliesAudio" && target == "EchoCancellation"
-      if let target, allowed.contains(target) || audioAdapter { continue }
+      if target == "SilliesFishSpeech", name != "SilliesTTSInference" {
+        failures.append("\(name) cannot load the Fish runtime outside its helper process.")
+        continue
+      }
+      if let target, ["MLX", "MLXLLM", "MLXLMCommon", "Tokenizers"].contains(target),
+        !["SilliesTextInference", "SilliesFishSpeech"].contains(name)
+      {
+        failures.append("\(name) cannot load native inference SDKs outside a helper process.")
+        continue
+      }
+      if let target, isPlatform || allowed?.contains(target) == true || audioAdapter { continue }
       failures.append("\(name) cannot depend on \(target ?? "a computed target").")
     }
     return .skipChildren

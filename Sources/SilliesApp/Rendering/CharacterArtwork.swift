@@ -61,7 +61,8 @@ final class CatRig: CharacterRig {
     mouth.addQuadCurve(to: CGPoint(x: 37, y: 17), control: CGPoint(x: 43, y: 13))
     mouth.move(to: CGPoint(x: 44, y: 20))
     mouth.addQuadCurve(to: CGPoint(x: 51, y: 17), control: CGPoint(x: 45, y: 13))
-    shape(on: head, path: mouth, fill: nil, stroke: "9D655B", lineWidth: 1.6)
+    speechAnimation.registerMouth(
+      shape(on: head, path: mouth, fill: nil, stroke: "9D655B", lineWidth: 1.6))
     for side in [-1.0, 1.0] {
       let x = side < 0 ? 16.0 : 72.0
       for offset in [-3.0, 3.0] {

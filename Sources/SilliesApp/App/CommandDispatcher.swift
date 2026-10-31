@@ -60,7 +60,7 @@ final class CommandDispatcher {
     }
     if onWritingCommand?(command) == true { return }
     if command.skill?.isAudioSession == true, skills.activeAudioSession != nil {
-      skills.openActiveAudioSession()
+      skills.openActiveSession()
       return
     }
     if command.skill?.isAudioSession == true, !skills.canStartAudio() {
@@ -107,7 +107,7 @@ final class CommandDispatcher {
 
   private func start(_ skill: CompanionSkillKind, context: Context) {
     if skill.isAudioSession, skills.activeAudioSession != nil {
-      skills.openActiveAudioSession()
+      skills.openActiveSession()
       return
     }
     skills.startSkill(

@@ -27,7 +27,18 @@ struct ArchitecturePolicy {
     "SilliesSpeechParakeet": ["Foundation", "FluidAudio", "SilliesSpeech"],
     "SilliesDiarizationNemotron": ["Foundation", "FluidAudio", "SilliesSpeech"],
     "SilliesModelStore": ["Foundation", "CryptoKit", "Synchronization", "SilliesCore"],
-    "SilliesInference": ["Foundation"],
+    "SilliesInference": ["Foundation", "Darwin"],
+    "SilliesChat": [
+      "Foundation", "Observation", "SilliesCore", "SilliesAudio", "SilliesSpeech",
+      "SilliesReasoning", "SilliesTTS",
+    ],
+    "SilliesTTS": ["Foundation", "SilliesCore", "SilliesModelStore", "SilliesInference"],
+    "SilliesFishSpeech": ["Foundation", "MLX", "Tokenizers", "SilliesTTS"],
+    "SilliesVoicePlayback": ["Foundation", "AVFoundation", "SilliesTTS"],
+    "SilliesTTSInference": [
+      "Foundation", "Darwin", "Synchronization", "FluidAudio", "TTSKit", "SilliesTTS",
+      "SilliesInference", "SilliesModelStore", "SilliesFishSpeech",
+    ],
     "SilliesTextModels": [
       "Foundation", "Darwin", "SilliesCore", "SilliesModelStore", "SilliesInference",
     ],
@@ -59,6 +70,11 @@ struct ArchitecturePolicy {
     "WindowMetadataClient.swift": ["read"],
     "WindowMetadataConnection.swift": ["read"],
     "TextWorkerConnection.swift": ["generate"],
+    "InferenceWorkerConnection.swift": ["send", "receive"],
+    "VoicePlayback.swift": ["schedule"],
+    "NativeVoiceOutput.swift": ["schedule"],
+    "KokoroPackagePreparation.swift": ["prepare"],
+    "FishSpeechEngine.swift": ["synthesize"],
     "ApplicationIconCache.swift": ["load"],
   ]
 }

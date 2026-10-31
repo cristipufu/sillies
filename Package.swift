@@ -16,12 +16,35 @@ let package = Package(
     .package(path: "Vendor/AudioProcessing"),
     .package(url: "https://github.com/argmaxinc/argmax-oss-swift.git", exact: "1.1.1"),
     .package(
-      url: "https://github.com/FluidInference/FluidAudio.git", exact: "0.18.0", traits: ["Diarizer"]
+      url: "https://github.com/FluidInference/FluidAudio.git", exact: "0.18.0",
+      traits: ["Diarizer", "TTS"]
     ),
   ],
   targets: [
     .target(name: "SilliesCore", exclude: ["AGENTS.md"]),
     .target(name: "SilliesInference"),
+    .target(
+      name: "SilliesTTS", dependencies: ["SilliesCore", "SilliesModelStore", "SilliesInference"]),
+    .target(
+      name: "SilliesFishSpeech",
+      dependencies: [
+        "SilliesTTS",
+        .product(name: "MLX", package: "mlx-swift"),
+        .product(name: "Tokenizers", package: "swift-transformers"),
+      ]),
+    .target(name: "SilliesVoicePlayback", dependencies: ["SilliesTTS"]),
+    .target(
+      name: "SilliesChat",
+      dependencies: [
+        "SilliesCore", "SilliesAudio", "SilliesSpeech", "SilliesReasoning", "SilliesTTS",
+      ]),
+    .executableTarget(
+      name: "SilliesTTSInference",
+      dependencies: [
+        "SilliesTTS", "SilliesInference", "SilliesModelStore", "SilliesFishSpeech",
+        .product(name: "FluidAudio", package: "FluidAudio"),
+        .product(name: "TTSKit", package: "argmax-oss-swift"),
+      ]),
     .target(
       name: "SilliesWriting",
       dependencies: ["SilliesCore", "SilliesAudio", "SilliesSpeech", "SilliesReasoning"],
@@ -84,6 +107,7 @@ let package = Package(
         "SilliesTextModels", "SilliesInference",
         "SilliesReasoning",
         "SilliesVault", "SilliesWriting",
+        "SilliesChat", "SilliesTTS", "SilliesVoicePlayback",
       ],
       exclude: ["Platform/AGENTS.md", "UI/AGENTS.md"],
       resources: [.copy("Resources/Characters"), .copy("Resources/Scenes")]
@@ -97,12 +121,30 @@ let package = Package(
     .executableTarget(
       name: "TextModelBenchmark", dependencies: ["SilliesModelStore", "SilliesTextModels"],
       path: "Tools/TextModelBenchmark"),
+    .executableTarget(
+      name: "TTSBenchmark", dependencies: ["SilliesModelStore", "SilliesTTS", "SilliesInference"],
+      path: "Tools/TTSBenchmark"),
     .testTarget(
       name: "SilliesWritingTests",
       dependencies: [
         "SilliesWriting", "SilliesCore", "SilliesAudio", "SilliesSpeech", "SilliesReasoning",
       ]),
     .testTarget(name: "SilliesCoreTests", dependencies: ["SilliesCore"]),
+    .testTarget(
+      name: "SilliesVoicePlaybackTests", dependencies: ["SilliesVoicePlayback", "SilliesTTS"]),
+    .testTarget(
+      name: "SilliesFishSpeechTests",
+      dependencies: ["SilliesFishSpeech", .product(name: "MLX", package: "mlx-swift")],
+      resources: [.copy("Fixtures")]),
+    .testTarget(
+      name: "SilliesChatTests",
+      dependencies: [
+        "SilliesChat", "SilliesCore", "SilliesAudio", "SilliesSpeech", "SilliesReasoning",
+        "SilliesTTS",
+      ]),
+    .testTarget(
+      name: "SilliesTTSTests",
+      dependencies: ["SilliesTTS", "SilliesModelStore", "SilliesInference"]),
     .testTarget(
       name: "SilliesVaultTests",
       dependencies: ["SilliesVault", "SilliesCore", "SilliesPersistence", "SilliesReasoning"]),

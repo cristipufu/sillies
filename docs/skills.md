@@ -1,6 +1,6 @@
 # Companion skills
 
-The wheel and the mascot's context menu expose the same five actions. Hover over a target window while dragging to reveal the wheel, move to a bubble, then release. Without a choice, the mascot returns quietly and preserves any running skill. Record is also in the menu bar and needs no selected window.
+The wheel and the mascot's context menu expose the same six actions. Hover over a target window while dragging to reveal the wheel, move to a bubble, then release. Without a choice, the mascot returns quietly and preserves any running skill. Record is also in the menu bar and needs no selected window. Chat can also start from a companion's menu without a target window.
 
 | Skill | Input | Result |
 | --- | --- | --- |
@@ -9,6 +9,13 @@ The wheel and the mascot's context menu expose the same five actions. Hover over
 | Snap | One selected window image | PNG on clipboard and in the Vault immediately; background OCR adds searchable text |
 | Explain | One selected window image | PNG, Vision OCR, summary and plain-language explanation of the recognized text |
 | Record | Built-in microphone where available; otherwise default microphone | Playable `.m4a` AAC file, local transcript, summary and action items |
+| Chat | Typed messages or explicit microphone turns | A conversation with the companion, optional spoken replies, and a saved transcript |
+
+Chat reuses the session window's selectable transcript, follow controls, and typed failures. Speak starts
+an explicit microphone turn; Done speaking finalizes it for review before Send. Stop reply interrupts
+generation and playback. Finish & Save keeps the conversation and any unsent draft. Chat does not save
+microphone audio, read screen contents, or perform actions in other apps. Personality and preferred
+voices belong to character JSON. See [local voices and Chat](local-voice-models.md).
 
 ScreenCaptureKit's audio filter is application-wide. Selecting a Google Meet browser window includes audio playing in other tabs of that browser. Sillies does not claim per-tab isolation. Microphone speech is labeled separately from app speech. Optional downloaded speaker detection adds source-scoped speaker numbers. Users can name speakers per saved recording; names update transcript headers and regenerated notes without changing spoken words. Source labels alone do not identify individual people. Both meeting skills apply local acoustic echo cancellation to support laptop speakers. Explain reasons over OCR text, not invisible content or the visual meaning of images alone.
 
@@ -87,7 +94,7 @@ This feeds 24 seconds of simulated delayed speaker echo and overlapping local sp
 
 ### Downloadable transcription
 
-Settings → Speech & Meetings offers Apple Speech, Whisper Turbo, and Parakeet Ultra. Downloads are explicit, include progress and pause/retry, and verify every file before publishing the installation. Models can be removed when unused. Both downloadable models support English and Romanian. Whisper offers automatic detection and an explicit language; Parakeet detects the language automatically and offers script-based language hints. Model changes apply to the next session. Speech recognition remains independent of the selected text model’s language support; automatic notes use language detection on a bounded text excerpt and fall back to extracted highlights when unavailable or generation fails.
+Settings → Speech & Meetings offers Apple Speech, Whisper Turbo, and Parakeet Ultra. Downloads are explicit, include progress and pause/retry, and verify every file before publishing the installation. Models can be removed when unused. Both downloadable models support multiple languages; Settings lists their coverage. Whisper offers automatic detection and an explicit language; Parakeet detects the language automatically and offers script-based language hints. Model changes apply to the next session. Speech recognition remains independent of the selected text model’s language support; automatic notes use language detection on a bounded text excerpt and fall back to extracted highlights when unavailable or generation fails.
 
 Audio and transcripts remain on the Mac. Model files are fetched from pinned Hugging Face revisions. Downloaded-model inference uses local assets; no tokenizer fallback download is allowed. Session JSON records the provider, model, and revision while older records continue to load. Model metadata is included in Markdown export.
 

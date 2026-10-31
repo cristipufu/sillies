@@ -11,7 +11,7 @@
         "sourceURL": "https://huggingface.co/mlx-community/Qwen3.5-4B-MLX-4bit",
         "minimumMemoryGB": 16,
         "contextTokens": 4096,
-        "languagesDescription": "201 languages and dialects; includes English and Romanian."
+        "languagesDescription": "201 languages and dialects."
       },
       "artifacts": [
         {
@@ -63,7 +63,7 @@
         "sourceURL": "https://huggingface.co/mlx-community/Qwen3.5-9B-MLX-4bit",
         "minimumMemoryGB": 24,
         "contextTokens": 4096,
-        "languagesDescription": "201 languages and dialects; includes English and Romanian."
+        "languagesDescription": "201 languages and dialects."
       },
       "artifacts": [
         {
@@ -179,7 +179,7 @@
         "sourceURL": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit",
         "minimumMemoryGB": 24,
         "contextTokens": 4096,
-        "languagesDescription": "Dozens of languages. Romanian quality requires evaluation."
+        "languagesDescription": "Dozens of languages; quality varies by language."
       },
       "artifacts": [
         {

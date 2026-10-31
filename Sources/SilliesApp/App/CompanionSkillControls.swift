@@ -60,7 +60,7 @@ final class CompanionSkillControls {
     let id = pet.definition.id
     pet.configureSkillControls(
       .init(
-        openSession: { [weak self] in self?.skills.openAudioSession(for: id) },
+        openSession: { [weak self] in self?.skills.openSession(for: id) },
         undoStash: { [weak self] recordID in
           self?.skills.removeRecord(id: recordID)
           self?.skills.unbind(companionID: id)
@@ -75,7 +75,7 @@ final class CompanionSkillControls {
     let target = pet.attachmentTarget ?? environment.focusedTarget()
     return CompanionActionMenu.make(
       windowName: target?.appName,
-      hasAudioSession: skills.activeAudioSession != nil || pet.isWritingIndicator
+      hasAudioSession: skills.hasActiveCaptureSkill || pet.isWritingIndicator
     ) {
       [weak self, weak pet] action in
       guard let self, self.isActive, let pet, self.environment.isRunning() else { return }
@@ -95,7 +95,7 @@ final class CompanionSkillControls {
       if pet.isWritingIndicator {
         environment.openWritingSession()
       } else {
-        skills.openActiveAudioSession()
+        skills.openActiveSession()
       }
     }
   }

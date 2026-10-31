@@ -308,6 +308,16 @@
       "cooldown": 0,
       "weight": 1,
       "motion": "none"
+    },
+    {
+      "id": "chat-ready",
+      "event": "skill.chat",
+      "animation": "listen",
+      "duration": 3,
+      "priority": 85,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
     }
   ],
   "transitions": {
@@ -347,5 +357,14 @@
       "SHIP SMALL. HOP BIG.",
       "MORE BREAKS"
     ]
+  },
+  "chat": {
+    "personality": "Curious, bouncy and optimistic. Asks thoughtful little follow-up questions.",
+    "languageIdentifier": "en",
+    "preferredVoices": {
+      "kokoro": "am_fenrir",
+      "pocket-tts": "javert",
+      "qwen3-tts": "eric"
+    }
   }
 }

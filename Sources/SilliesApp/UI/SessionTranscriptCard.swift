@@ -1,17 +1,18 @@
 import SwiftUI
 
-/// Recording and dictation share the same stable, selectable transcript viewport and follow controls.
+/// Skills share the same stable, selectable transcript viewport and follow controls.
 struct SessionTranscriptCard<EmptyContent: View>: View {
   private static var minimumHeight: CGFloat { 160 }
   let text: String
   let isFinished: Bool
   @Binding var followsLive: Bool
+  var title: String? = nil
   @ViewBuilder let emptyContent: () -> EmptyContent
 
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
       HStack {
-        Text(isFinished ? "Transcript" : "Live transcript").font(.headline)
+        Text(title ?? (isFinished ? "Transcript" : "Live transcript")).font(.headline)
         Spacer()
         if !isFinished, !text.isEmpty {
           Toggle("Follow live", isOn: $followsLive).toggleStyle(.checkbox)

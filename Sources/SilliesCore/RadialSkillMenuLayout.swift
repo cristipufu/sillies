@@ -11,12 +11,15 @@ public struct RadialSkillMenuLayout: Equatable, Sendable {
     public var id: CompanionSkillKind { skill }
   }
 
-  public static let orbitRadius: Double = 118
+  public static let orbitRadius = radius(for: CompanionSkillKind.radialSkills.count)
   public static let bubbleHitRadius: Double = 36
-  public static let screenMargin: Double = 156
+  public static let screenMargin = orbitRadius + bubbleHitRadius + screenEdgePadding
+  private static let screenEdgePadding: Double = 2
   private static let topFlipClearanceMargin: Double = 12
-  private static let upwardAnglesDegrees: [Double] = [166, 128, 90, 52, 14]
-  private static let downwardAnglesDegrees: [Double] = [-166, -128, -90, -52, -14]
+  private static let edgeAngleDegrees: Double = 14
+  private static let arcDegrees = 180 - edgeAngleDegrees * 2
+  private static let minimumOrbitRadius: Double = 118
+  private static let targetGap: Double = 8
 
   public let anchor: CGPoint
   public let items: [Item]
@@ -25,16 +28,18 @@ public struct RadialSkillMenuLayout: Equatable, Sendable {
     center: CGPoint, visibleFrame: CGRect,
     skills: [CompanionSkillKind] = CompanionSkillKind.radialSkills
   ) {
+    let radius = Self.radius(for: skills.count)
+    let margin = radius + Self.bubbleHitRadius + Self.screenEdgePadding
     let clampedX = min(
-      max(center.x, visibleFrame.minX + Self.screenMargin),
-      visibleFrame.maxX - Self.screenMargin)
+      max(center.x, visibleFrame.minX + margin),
+      visibleFrame.maxX - margin)
     let clampedY = min(
-      max(center.y, visibleFrame.minY + Self.screenMargin),
-      visibleFrame.maxY - Self.screenMargin)
+      max(center.y, visibleFrame.minY + margin),
+      visibleFrame.maxY - margin)
     let clampedAnchor = CGPoint(x: clampedX, y: clampedY)
     anchor = clampedAnchor
     let flipDownward =
-      clampedAnchor.y + Self.orbitRadius + Self.bubbleHitRadius
+      clampedAnchor.y + radius + Self.bubbleHitRadius
       > visibleFrame.maxY - Self.topFlipClearanceMargin
     items = Self.items(
       around: clampedAnchor, direction: flipDownward ? .downward : .upward, skills: skills)
@@ -44,15 +49,24 @@ public struct RadialSkillMenuLayout: Equatable, Sendable {
     around center: CGPoint, direction: Direction,
     skills: [CompanionSkillKind] = CompanionSkillKind.radialSkills
   ) -> [Item] {
-    let angles = direction == .downward ? downwardAnglesDegrees : upwardAnglesDegrees
-    return zip(skills, angles).map { skill, degrees in
-      let radians = degrees * .pi / 180
+    let radius = radius(for: skills.count)
+    return skills.enumerated().map { index, skill in
+      let fraction = skills.count > 1 ? Double(index) / Double(skills.count - 1) : 0.5
+      let degrees = 180 - edgeAngleDegrees - fraction * arcDegrees
+      let radians = degrees * .pi / 180 * (direction == .downward ? -1 : 1)
       return Item(
         skill: skill,
         center: CGPoint(
-          x: center.x + cos(radians) * orbitRadius,
-          y: center.y + sin(radians) * orbitRadius))
+          x: center.x + cos(radians) * radius,
+          y: center.y + sin(radians) * radius))
     }
+  }
+
+  private static func radius(for count: Int) -> Double {
+    guard count > 1 else { return minimumOrbitRadius }
+    let angularGap = arcDegrees * .pi / 180 / Double(count - 1)
+    let required = (bubbleHitRadius * 2 + targetGap) / (2 * sin(angularGap / 2))
+    return max(minimumOrbitRadius, required)
   }
 
   public func selectedSkill(at pointer: CGPoint) -> CompanionSkillKind? {

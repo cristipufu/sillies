@@ -48,6 +48,12 @@ Vault pagination uses a stable `(createdAt, id)` cursor. Show more reads one fol
 
 `SilliesReasoning` owns the `LocalReasoning` capability, task prompts, validation, and inference admission. It has no dependency on the app, UI, audio, or persistence. `App/Composition/ReasoningServices` owns one `TextModelEnvironment` and supplies a backend resolver to `LocalReasoningService`. Skills and writing receive the capability explicitly; there are no shared reasoning/model-environment instances or default live services. Test-only composition supplies isolated fake backends.
 
+`SilliesChat` owns explicit microphone turns and conversation state. It receives capture, language discovery, `ConversationResponding`, and `ChatSpeechOutput` capabilities; it imports no UI or inference SDK. `ChatSkillSession` adapts it to the existing skill lifecycle and Vault. Character JSON supplies personality and preferred voices. Transcript rendering, selection, and follow controls reuse the session UI.
+
+`SilliesTTS` owns provider contracts, model leases, exclusive admission, and bounded process messages. `SilliesTTSInference` hosts Core ML runtimes and the app-owned `SilliesFishSpeech` MLX implementation. Package/import checks forbid the app and feature targets from depending on Fish or its tensor SDK. Only pinned local artifacts enter inference; downloading belongs to `SilliesModelStore`. Cancellation kills and reaps a stalled helper. An idle model is released after 60 seconds.
+
+`SilliesVoicePlayback` owns the audio device and at most 0.75 seconds of queued PCM, applying backpressure to synthesis. Native playback callbacks report amplitude to the mascot's existing artwork. No companion owns an audio engine, model, or timer. `InferenceActivity` arbitrates speech recognition, voice synthesis, and text work; microphone capture preempts synthesis, and synthesis preempts background text work. Stop, pause, exclusion, and termination cancel active work and release resources.
+
 ```mermaid
 flowchart TD
     App[SilliesApp · composition and native UI] --> Vault[SilliesVault · paging and work admission]

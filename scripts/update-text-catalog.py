@@ -27,13 +27,13 @@ MODELS = [
         repository="mlx-community/Qwen3.5-4B-MLX-4bit",
         revision="32f3e8ecf65426fc3306969496342d504bfa13f3", memory_gb=16,
         detail="Compact multilingual notes and writing.",
-        languages="201 languages and dialects; includes English and Romanian."),
+        languages="201 languages and dialects."),
     ModelEntry(
         identifier="qwen-3.5-9b", name="Qwen3.5 9B",
         repository="mlx-community/Qwen3.5-9B-MLX-4bit",
         revision="938d8919941c6e7efd3c7150eff7fe9d12afa631", memory_gb=24,
         detail="Larger multilingual model for more demanding summaries.",
-        languages="201 languages and dialects; includes English and Romanian."),
+        languages="201 languages and dialects."),
     ModelEntry(
         identifier="gemma-4-e4b", name="Gemma 4 E4B",
         repository="mlx-community/gemma-4-E4B-it-4bit",
@@ -45,7 +45,7 @@ MODELS = [
         repository="mlx-community/Ministral-3-8B-Instruct-2512-4bit",
         revision="182f003f01daa75f9de0f2c4d379722fd0bc1c61", memory_gb=24,
         detail="Mistral’s multilingual model for local notes and writing.",
-        languages="Dozens of languages. Romanian quality requires evaluation."),
+        languages="Dozens of languages; quality varies by language."),
 ]
 SUPPORT_FILES = {"config.json", "tokenizer.json", "tokenizer_config.json", "chat_template.jinja", "generation_config.json", "model.safetensors.index.json", "special_tokens_map.json"}
 

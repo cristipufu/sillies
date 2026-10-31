@@ -219,7 +219,7 @@ final class CompanionController {
 
   private func skillEvent(_ event: WorkspaceEvent, for companionID: String) {
     guard let pet = companions.first(where: { $0.definition.id == companionID }) else { return }
-    if case .active(_, let skill, _, _, _) = pet.bindingState, skill.isAudioSession,
+    if case .active(_, let skill, _, _, _) = pet.bindingState, skill.keepsCompanionStill,
       event.kind == skill.eventKind, let state = pet.beginSustainedReaction(event)
     {
       apply(state, to: pet)

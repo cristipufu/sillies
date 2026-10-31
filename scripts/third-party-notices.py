@@ -17,10 +17,10 @@ class PackageNotices:
 
 
 PACKAGES = {
-    "argmax-oss-swift": PackageNotices("argmax-oss-swift", "WhisperKit speech recognition", ("LICENSE", "NOTICES")),
+    "argmax-oss-swift": PackageNotices("argmax-oss-swift", "WhisperKit recognition and TTSKit speech synthesis", ("LICENSE", "NOTICES")),
     "eventsource": PackageNotices("EventSource", "Transitive Hugging Face dependency; no cloud inference is enabled", ("LICENSE.md",)),
-    "fluidaudio": PackageNotices("FluidAudio", "Parakeet recognition and speaker detection", ("LICENSE", "ThirdPartyLicenses/fastcluster-LICENSE.md", "ThirdPartyLicenses/vbx-LICENSE.md")),
-    "mlx-swift": PackageNotices("mlx-swift", "Native text inference and Metal kernels", (
+    "fluidaudio": PackageNotices("FluidAudio", "Parakeet recognition, speaker detection, and Core ML speech synthesis", ("LICENSE", "ThirdPartyLicenses/fastcluster-LICENSE.md", "ThirdPartyLicenses/vbx-LICENSE.md", "ThirdPartyLicenses/JapaneseG2P-LICENSE.md", "ThirdPartyLicenses/LuxTtsEnglishG2P-LICENSE.md", "ThirdPartyLicenses/KokoroAneSpanishFrenchG2P-LICENSE.md", "ThirdPartyLicenses/KokoroANE-v3/conversion-LICENSE", "ThirdPartyLicenses/KokoroANE-v3/NOTICE", "ThirdPartyLicenses/KokoroANE-v3/mattmireles-LICENSE")),
+    "mlx-swift": PackageNotices("mlx-swift", "Native text and Fish speech inference with Metal kernels", (
         "LICENSE", "ACKNOWLEDGMENTS.md", "Source/Cmlx/mlx/LICENSE", "Source/Cmlx/mlx/ACKNOWLEDGMENTS.md",
         "Source/Cmlx/mlx-c/LICENSE", "Source/Cmlx/mlx-c/ACKNOWLEDGMENTS.md", "Source/Cmlx/metal-cpp/LICENSE.txt",
         "Source/Cmlx/fmt/LICENSE", "Source/Cmlx/json/LICENSE.MIT")),
@@ -56,7 +56,7 @@ This document ships as `Sillies.app/Contents/Resources/THIRD_PARTY_NOTICES.md`, 
 
 The inventory below follows `Package.resolved`, including transitive and build-time dependencies.
 It is not a claim that every feature in each upstream package is enabled. Sillies uses FluidAudio's
-Diarizer trait without TTS or NeMo text processing, and does not enable MLX guided generation.
+Diarizer and TTS traits without NeMo text processing, and does not enable MLX guided generation.
 Apple's AppKit, SwiftUI, Core ML, Metal, Speech, Vision, Foundation Models, and other system frameworks
 are supplied by macOS under Apple's terms, not relicensed by Sillies.
 
@@ -84,6 +84,20 @@ weights and does not claim authorship of them.
   The pinned community conversion's model-card metadata says `gemma`; the base model's official
   license is linked here to make that metadata discrepancy explicit.
 - **Ministral 3 8B:** Mistral AI, with MLX quantization by MLX Community; Apache 2.0.
+
+- **Kokoro:** hexgrad's Kokoro 82M, with Core ML conversion by Fluid Inference; Apache 2.0.
+  The catalog includes the ANE-v3 conversion, pinned base modules, pronunciation files, and voice embeddings.
+- **Pocket TTS:** Kyutai's English model, with Core ML conversion by Fluid Inference; CC BY 4.0.
+  [Kyutai model and voice attribution](https://huggingface.co/kyutai/pocket-tts) and
+  [converted artifacts](https://huggingface.co/FluidInference/pocket-tts-coreml).
+  Sillies uses supplied voices and does not expose voice cloning.
+- **Qwen3-TTS:** Qwen/Alibaba, with Core ML conversion by Argmax; Apache 2.0.
+  The catalog includes both 0.6B and 1.7B CustomVoice variants and a separately pinned tokenizer.
+- **Fish S2 Pro:** Fish Audio, with 8-bit MLX conversion by MLX Community; Fish Audio Research License.
+  Built with Fish Audio. This optional model permits research and non-commercial use; commercial use
+  requires a separate license. The original model license and Swift-reference attribution are retained below.
+  Sillies implements its own native inference module using existing MLX and tokenizer dependencies.
+  It does not depend on or bundle the mlx-audio-swift package.
 
 Apple Speech and Apple Intelligence assets are managed by macOS and remain subject to Apple's terms.
 Review the upstream model cards and applicable license before redistributing weights or conversions.
@@ -134,8 +148,9 @@ def model_inventory(root):
     folder = root / "Sources/SilliesModelStore/Resources"
     speech = json.loads((folder / "speech-models.json").read_text())
     text = json.loads((folder / "text-models.json").read_text())["manifests"]
+    voices = json.loads((folder / "tts-models.json").read_text())["manifests"]
     lines = ["| Model | License in catalog | Publisher | Pinned artifacts |", "| --- | --- | --- | --- |"]
-    for manifest in speech + text:
+    for manifest in speech + text + voices:
         model = manifest["model"]
         repository = manifest["artifacts"][0]["url"].split("/resolve/")[0]
         revision = model["revision"]
@@ -173,7 +188,10 @@ def audio_licenses(root):
 
 def render(root):
     pins = resolved_packages(root)
-    return INTRODUCTION + model_inventory(root) + package_inventory(pins) + MAINTENANCE + package_licenses(root, pins) + audio_licenses(root)
+    fish = "## Fish runtime references and model license\n\nThe Sillies Fish implementation was informed by Fish Audio's S2 Pro architecture and the MIT-licensed Swift reference at Blaizzy/mlx-audio-swift, revision d4fa7be1c2fef65ed13a4f73bd58e0a23a0ba307. Runtime code, bounds, ownership, and validation live in SilliesFishSpeech. The reference package is not a dependency.\n\n"
+    fish += notice_section("Swift reference — MIT attribution", root / "Resources/Licenses/FishSwiftReference-MIT.txt")
+    fish += notice_section("Fish S2 Pro — model license", root / "Resources/Licenses/FishS2Pro-Research.txt")
+    return INTRODUCTION + model_inventory(root) + package_inventory(pins) + MAINTENANCE + package_licenses(root, pins) + audio_licenses(root) + fish
 
 
 def write_atomic(destination, content):

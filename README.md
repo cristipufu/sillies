@@ -48,6 +48,7 @@ Right-click menus and configurable global shortcuts offer the same actions.
 | Skill | What happens |
 | --- | --- |
 | **Listen** | Record app audio and your microphone, follow a live transcript, and save the conversation with notes and action items. |
+| **Chat** | Type or speak with a companion. Optional local voice models read its replies aloud, with speaking animation. |
 | **Participate** | Everything in Listen, with suggested questions in your companion’s speech bubble, grounded in the conversation. |
 | **Snap** | Capture a window to the clipboard and Vault. Background text recognition makes the screenshot searchable. |
 | **Explain** | Read the text in a window screenshot and explain it with your chosen local text model. |
@@ -92,17 +93,34 @@ Settings → **Speech & Meetings**
 | Engine | Download | Language controls |
 | --- | --- | --- |
 | **Apple Speech** | Managed by macOS | Installed languages supported on your Mac |
-| **Whisper Large v3 Turbo** | ~630 MB | Multilingual, including English and Romanian; automatic or explicit language |
-| **Parakeet Ultra** | ~632 MB | Multilingual, including English and Romanian; automatic detection with language hints |
+| **Whisper Large v3 Turbo** | ~630 MB | Multilingual; automatic detection or explicit language selection |
+| **Parakeet Ultra** | ~632 MB | 25 languages; automatic detection with language hints |
 
 Optional **Nemotron speaker detection** adds a separate ~102 MB download and works alongside any speech
 engine. Speaker labels can be wrong; you can rename speakers per recording. Parakeet’s hints guide the writing
-script, so they do not strictly force Romanian over English.
+script; they do not strictly force the detected language.
 
 Installed speech models can be checked daily for updates. You choose when to download an update;
 validation happens before switching, and the previous version remains available for rollback.
 
 [Speech models, languages, and updates →](docs/local-speech-models.md)
+
+### Words → voices
+
+Settings → **Voices**
+
+| Model | Download | Supported languages |
+| --- | --- | --- |
+| **Kokoro** | ~243 MB | English |
+| **Pocket TTS** | ~530 MB | English |
+| **Qwen3-TTS 0.6B / 1.7B** | ~1.33 / 2.53 GB | Chinese, English, French, German, Italian, Japanese, Korean, Portuguese, Russian, Spanish |
+| **Fish S2 Pro** | ~6.73 GB | [80+ languages](https://huggingface.co/fishaudio/s2-pro#supported-languages) |
+
+Voices are optional. Chat works in text without one. Each model lists its memory requirements and
+license in Settings. Fish uses an automatic voice that can vary between replies; the other packs
+offer supplied voices. All run locally, with no Python environment or server to manage.
+
+[Voice models and Chat →](docs/local-voice-models.md)
 
 ### Words → notes, explanations, and edits
 
@@ -165,6 +183,7 @@ Start with [Contributing to Sillies](CONTRIBUTING.md) for setup, bug reports, ch
 | **A skill** | [Session lifecycle, commands, UI, and saved results](docs/contributing/skills.md) |
 | **A speech model or STT engine** | [Model manifests and speech-provider adapters](docs/contributing/speech-models.md) |
 | **A text / LLM model** | [Model manifests and text-provider adapters](docs/contributing/text-models.md) |
+| **A voice / TTS model** | [Voice providers, native runtimes, and playback](docs/contributing/voice-models.md) |
 
 An existing animation can become a new reaction through JSON. A compatible model can join the catalog
 without new settings UI. New artwork, behavior, and runtimes have their own registration points;

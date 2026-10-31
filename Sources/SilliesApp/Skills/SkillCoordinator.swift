@@ -2,6 +2,7 @@ import AppKit
 import Foundation
 import Observation
 import SilliesAudio
+import SilliesChat
 import SilliesCore
 import SilliesSpeechApple
 
@@ -34,6 +35,8 @@ final class SkillCoordinator {
   var onEmitEvent: ((String, WorkspaceEvent) -> Void)?
   var onOpenVaultRecord: ((UUID) -> Void)?
   var onOpenAudioSession: ((AudioSessionPresentation) -> Void)?
+  var onOpenChatSession: ((ChatSession) -> Void)?
+  var makeChatSession: ((String, String) -> ChatSession?)?
   var canStartAudio: () -> Bool = { true }
   private var sessions: [String: any ActiveSkillSession] = [:]
   private var bindings: [String: CompanionBindingState] = [:]
@@ -65,6 +68,14 @@ final class SkillCoordinator {
     }.first
   }
 
+  var activeChatSession: ChatSession? {
+    (Array(sessions.values) + Array(finishingSessions.values)).compactMap {
+      ($0 as? ChatSkillSession)?.presentation
+    }.first
+  }
+
+  var hasActiveCaptureSkill: Bool { activeAudioSession != nil || activeChatSession != nil }
+
   func audioPresentation(for id: String) -> AudioSessionPresentation? {
     (sessions[id] as? AudioSkillSession)?.presentation
   }
@@ -80,15 +91,25 @@ final class SkillCoordinator {
     }
     return SkillPresentation(
       persistenceError: vault.persistenceError, completedRecord: completed,
-      audioSession: audioPresentation(for: id))
+      audioSession: audioPresentation(for: id),
+      speakingLevel: (sessions[id] as? ChatSkillSession)?.presentation.phase == .speaking
+        ? (sessions[id] as? ChatSkillSession)?.presentation.audioLevel ?? 0 : 0)
   }
 
-  func openAudioSession(for id: String) {
-    if let session = audioPresentation(for: id) { onOpenAudioSession?(session) }
+  func openSession(for id: String) {
+    if let session = (sessions[id] as? ChatSkillSession)?.presentation {
+      onOpenChatSession?(session)
+    } else if let session = audioPresentation(for: id) {
+      onOpenAudioSession?(session)
+    }
   }
 
-  func openActiveAudioSession() {
-    if let session = activeAudioSession { onOpenAudioSession?(session) }
+  func openActiveSession() {
+    if let session = activeChatSession {
+      onOpenChatSession?(session)
+    } else if let session = activeAudioSession {
+      onOpenAudioSession?(session)
+    }
   }
 
   func removeRecord(id: UUID) { vault.remove(id: id) }
@@ -102,12 +123,12 @@ final class SkillCoordinator {
   ) {
     guard !skill.requiresWindow || target != nil else { return }
     // One audio session prevents duplicate system/microphone taps across the whole crew.
-    if skill.isAudioSession, activeAudioSession != nil || !canStartAudio() { return }
+    if skill.keepsCompanionStill, hasActiveCaptureSkill || !canStartAudio() { return }
     finishOrCancelSession(for: id)
     companionNames[id] = companionName
     let request = SessionRequest(
       skill: skill, companionID: id, companionName: companionName,
-      target: skill == .record ? nil : target, startedAt: ProcessInfo.processInfo.systemUptime,
+      target: skill.requiresWindow ? target : nil, startedAt: ProcessInfo.processInfo.systemUptime,
       token: advanceBindingToken(for: id))
     guard let session = makeSession(request) else { return }
     sessions[id] = session
@@ -117,6 +138,7 @@ final class SkillCoordinator {
         statusDetail: session.initialStatusDetail), for: id)
     onEmitEvent?(id, WorkspaceEvent(skill.eventKind, at: request.startedAt))
     session.start()
+    if let chat = session as? ChatSkillSession { onOpenChatSession?(chat.presentation) }
   }
 
   @discardableResult
@@ -222,6 +244,21 @@ final class SkillCoordinator {
       return request.target.map { WatchSkillSession(target: $0) }
     case .focus:
       return request.target.map { FocusSkillSession(target: $0, startedAt: request.startedAt) }
+    case .chat:
+      guard let presentation = makeChatSession?(request.companionID, request.companionName) else {
+        return nil
+      }
+      presentation.onFinish = { [weak self] in self?.stopSkill(for: request.companionID) }
+      presentation.onChange = { [weak self, weak presentation] in
+        guard let self, let presentation, self.bindingTokens[request.companionID] == request.token
+        else { return }
+        self.setBinding(
+          .active(
+            target: nil, skill: .chat, startedAt: request.startedAt,
+            statusDetail: presentation.status, audioLevel: presentation.audioLevel),
+          for: request.companionID)
+      }
+      return ChatSkillSession(presentation: presentation)
     case .stash: return nil
     }
   }

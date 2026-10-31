@@ -41,10 +41,14 @@ final class ArchitectureVisitor: SyntaxVisitor {
       report(node, "module-boundary", "\(owner) cannot import \(module).")
     }
     if ["MLX", "MLXLLM", "MLXLMCommon", "Tokenizers"].contains(module),
-      owner != "SilliesTextInference"
+      !["SilliesTextInference", "SilliesFishSpeech"].contains(owner)
     {
       report(
-        node, "inference-isolation", "Downloaded text inference SDKs belong in the helper process.")
+        node, "inference-isolation",
+        "Inference SDKs belong in helper processes and their isolated runtime targets.")
+    }
+    if module == "SilliesFishSpeech", owner != "SilliesTTSInference" {
+      report(node, "inference-isolation", "The Fish runtime must only be loaded by the TTS helper.")
     }
     return .skipChildren
   }

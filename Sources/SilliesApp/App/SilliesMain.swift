@@ -1,5 +1,7 @@
 import AppKit
 import Observation
+import SilliesChat
+import SilliesCore
 import SwiftUI
 
 @main
@@ -28,6 +30,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private let controlCenterDismissal = ControlCenterDismissal()
   private var settingsWindow: NSWindow?
   private var speechServices: SpeechServices?
+  private var voiceServices: VoiceServices?
+  private let chatWindow = ChatSessionWindowController()
   private let reasoningServices = ReasoningServices()
   private lazy var textModels = TextModelsPresentation(environment: reasoningServices.models)
   private var shortcuts: CommandShortcuts?
@@ -75,6 +79,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       }
       skills.onOpenAudioSession = { [weak self] in self?.audioSessionWindow.show($0) }
       self.controller = controller
+      if let speechServices {
+        try configureChat(
+          skills: skills, speech: speechServices, characters: controller.catalog.characters)
+      }
       if launch.validatesCatalogOnly {
         automatedRunner.validateCatalog(characterCount: controller.catalog.characters.count)
         return
@@ -84,7 +92,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       }
       controller.start()
       speechServices?.start()
-      if !launch.isAutomatedRun { textModels.start() }
+      if !launch.isAutomatedRun {
+        textModels.start()
+        voiceServices?.models.start()
+      }
       observeModelUpdateActivity()
       if !launch.isAutomatedRun {
         if let speechServices {
@@ -121,6 +132,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         openVault: { [unowned self] in
           self.showVault()
           return self.vaultWindow
+        },
+        openChat: { [unowned self] in
+          self.popover.close()
+          self.chatWindow.show(ChatWindowFixture.makeSession(), openSettings: {})
+          return self.chatWindow.window
         })
       automatedRunner.run(
         launch,
@@ -157,8 +173,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     withObservationTracking {
       let active = controller.shouldRun && controller.liveCount > 0
       updates.setActivity(active ? .active : .suspended)
-      Task { [models = reasoningServices.models] in
+      Task { [models = reasoningServices.models, voices = voiceServices?.environment] in
         await models.setActivity(active ? .active : .suspended)
+        if active { await voices?.resume() } else { await voices?.stop() }
       }
     } onChange: { [weak self] in
       Task { @MainActor in self?.observeModelUpdateActivity() }
@@ -171,6 +188,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       shortcuts.configure(controller.shouldRun && controller.liveCount > 0 ? .active : .suspended)
     } onChange: { [weak self] in
       Task { @MainActor in self?.observeCommandAvailability() }
+    }
+  }
+
+  private func configureChat(
+    skills: SkillCoordinator, speech: SpeechServices, characters: [CharacterDefinition]
+  ) throws {
+    let voices = try VoiceServices()
+    voiceServices = voices
+    let profiles = Dictionary(
+      uniqueKeysWithValues: characters.compactMap { character in
+        character.chat.map { (character.id, $0) }
+      })
+    let services = ChatServices(
+      captureFactory: speech.captureFactory, loadLanguages: speech.languages.load,
+      conversation: reasoningServices.conversation, speech: voices.speech,
+      deliver: { MainRunLoopDelivery.perform($0) })
+    skills.makeChatSession = { id, name in
+      guard let profile = profiles[id] else { return nil }
+      return ChatSession(companionName: name, profile: profile, services: services)
+    }
+    skills.onOpenChatSession = { [weak self] session in
+      self?.chatWindow.show(session, openSettings: { [weak self] in self?.showSettings() })
     }
   }
 
@@ -206,6 +245,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     automatedRunner.stopPreview()
     speechServices?.stop()
     textModels.stop()
+    voiceServices?.models.stop()
     cleanupTemporaryPreferences()
     let approveTermination = onTerminationApproved
     let (stream, continuation) = AsyncStream<Void>.makeStream()
@@ -236,6 +276,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     shortcuts?.stop()
     speechServices?.stop()
     textModels.stop()
+    voiceServices?.models.stop()
     controller?.stop()
     cleanupTemporaryPreferences()
   }
@@ -434,7 +475,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       window.isReleasedWhenClosed = false
       window.contentViewController = NSHostingController(
         rootView: SettingsView(
-          controller: controller, speechModels: speechServices?.models, textModels: textModels,
+          controller: controller, speechModels: speechServices?.models,
+          voiceModels: voiceServices?.models, textModels: textModels,
           shortcuts: shortcuts, loginItems: loginItems, writingTools: writingTools))
       window.center()
       settingsWindow = window

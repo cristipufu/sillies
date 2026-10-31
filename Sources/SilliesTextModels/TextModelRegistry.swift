@@ -53,7 +53,7 @@ package actor TextModelRegistry {
   {
     while true {
       try Task.checkCancellation()
-      try await activity.waitForSpeech()
+      try await activity.waitForBackgroundAdmission()
       let id = UUID()
       let cancellation = InferenceCancellation()
       guard await activity.claimText(id, cancel: { cancellation.cancel() }) else { continue }

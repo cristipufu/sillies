@@ -2,7 +2,7 @@
 
 The first catalog contains Whisper Large v3 Turbo compressed (WhisperKit, approximately 629.5 MB including tokenizer) and Parakeet Ultra (FluidAudio, approximately 632.3 MB). Apple Speech remains the default. Downloadable engines require Apple Silicon. Package versions and every model artifact revision/hash are pinned; downloading weights does not download executable plugins.
 
-Parakeet offers automatic detection and optional language hints. FluidAudio 0.18.0 uses hints to filter decoder tokens by script; Romanian and English share the Latin script, so a hint does not strictly force one over the other. Keep this distinction in the capability metadata and language controls. The provider pads final windows shorter than the runtime's 300 ms minimum with silence; transcript timing and retirement still use the original audio length.
+Parakeet offers automatic detection and optional language hints. FluidAudio 0.18.0 uses hints to filter decoder tokens by script; a hint cannot strictly distinguish languages that share a writing script. Keep this distinction in the capability metadata and language controls. The provider pads final windows shorter than the runtime's 300 ms minimum with silence; transcript timing and retirement still use the original audio length.
 
 Model transfers use explicit URLSession download tasks: the async convenience download API does not reliably deliver intermediate delegate byte callbacks on macOS. Progress measures aggregate artifact bytes, switches to verification before hashing each file, and returns to downloading before the next file starts. Core ML preparation is a separate indeterminate phase. Loopback HTTP tests cover actual progress, cancellation/resumption, and oversized responses without downloading weights.
 

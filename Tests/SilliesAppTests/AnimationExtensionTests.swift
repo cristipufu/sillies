@@ -1,6 +1,8 @@
 import AppKit
 import QuartzCore
 import SilliesCore
+import SilliesPersistence
+import SilliesReasoning
 import Testing
 
 @testable import SilliesApp
@@ -175,7 +177,8 @@ private final class MockEventProducer: WorkspaceEventProducer {
   let reloaded = SessionVaultStore(directory: directory)
   await reloaded.waitUntilLoaded()
   #expect(reloaded.records.count == 1)
-  #expect(reloaded.records.first?.extractedText == "final class CompanionController")
+  #expect(
+    try await reloaded.record(id: record.id)?.extractedText == "final class CompanionController")
   reloaded.remove(id: record.id)
   await reloaded.flush()
   #expect(reloaded.records.isEmpty)
@@ -556,7 +559,8 @@ private func spinModalPanelRunLoopUntil(_ condition: () -> Bool) {
   let reloadedCoordinator = SkillCoordinator(vault: reloadedVault)
   await reloadedCoordinator.flushPendingSummaries()
 
-  let stashRecord = try #require(reloadedVault.records.first { $0.kind == .stash })
+  let stashID = try #require(reloadedVault.records.first { $0.kind == .stash }?.id)
+  let stashRecord = try #require(try await reloadedVault.record(id: stashID))
   #expect(!stashRecord.summaryPending)
   #expect(stashRecord.summary.contains("•"))
   #expect(
@@ -581,10 +585,10 @@ private func spinModalPanelRunLoopUntil(_ condition: () -> Bool) {
           "We decided to persist pending summaries across app restarts.\nTODO: resume unrefined records on launch."
       ), notes: .init(summary: "Fallback summary before refinement.", actionItems: []),
       processing: .init(summaryPending: true)))
-  let encoder = JSONEncoder()
-  encoder.dateEncodingStrategy = .iso8601
-  let data = try encoder.encode([unrefinedRecord])
-  try data.write(to: pendingDirectory.appendingPathComponent("sessions.json"), options: .atomic)
+  try await Task.detached {
+    let database = try VaultDatabase(directory: pendingDirectory)
+    try database.commit(.init(records: [.insert(unrefinedRecord)]))
+  }.value
 
   let recoveredVault = SessionVaultStore(
     directory: pendingDirectory,
@@ -597,7 +601,7 @@ private func spinModalPanelRunLoopUntil(_ condition: () -> Bool) {
   #expect(recoveredVault.pendingSummaryCount <= 1)
   await recoveredCoordinator.flushPendingSummaries()
 
-  let recovered = try #require(recoveredVault.records.first)
+  let recovered = try #require(try await recoveredVault.record(id: unrefinedRecord.id))
   #expect(!recovered.summaryPending)
   #expect(recovered.summary.contains("•"))
   #expect(

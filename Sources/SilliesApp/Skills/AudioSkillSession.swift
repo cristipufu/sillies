@@ -1,6 +1,7 @@
 import Foundation
 import SilliesAudio
 import SilliesCore
+import SilliesReasoning
 import SilliesSpeech
 import SilliesSpeechApple
 
@@ -15,6 +16,7 @@ final class AudioSkillSession: ActiveSkillSession {
   private static let suggestionCheckInterval: TimeInterval = 20
   private static let minimumSourceCharacters = 160
   let presentation: AudioSessionPresentation
+  private let reasoning: any LocalReasoning
   private let request: AudioSkillRequest
   private let captureFactory: SessionAudioCaptureFactory
   private let languages: AudioLanguageEnvironment
@@ -31,13 +33,11 @@ final class AudioSkillSession: ActiveSkillSession {
 
   init(
     request: AudioSkillRequest,
-    captureFactory: @escaping SessionAudioCaptureFactory = {
-      AudioTranscriptionService(
-        configuration: $0, speech: AppleSpeechProvider.makeChannel, onUpdate: $1)
-    }, languages: AudioLanguageEnvironment = .live, onChange: @escaping () -> Void
+    services: AudioSkillServices, onChange: @escaping () -> Void
   ) {
-    self.captureFactory = captureFactory
-    self.languages = languages
+    self.captureFactory = services.captureFactory
+    self.languages = services.languages
+    self.reasoning = services.reasoning
     self.request = request
     self.onChange = onChange
     let source =
@@ -118,8 +118,8 @@ final class AudioSkillSession: ActiveSkillSession {
   private func refreshReasoningAvailability(_ language: SpeechLanguage) {
     availabilityTask?.cancel()
     presentation.reasoningNotice = "Checking local notes availability…"
-    availabilityTask = Task { [weak self] in
-      let notice = await LocalReasoningService.shared.availabilityNotice(
+    availabilityTask = Task { [weak self, reasoning] in
+      let notice = await reasoning.availabilityNotice(
         localeIdentifier: language.isAutomatic ? nil : language.id)
       guard !Task.isCancelled else { return }
       self?.presentation.reasoningNotice = notice
@@ -210,8 +210,8 @@ final class AudioSkillSession: ActiveSkillSession {
     let language = presentation.selectedLanguageID
     lastSuggestionSource = source
     lastSuggestionCheck = elapsed
-    suggestionTask = Task { [weak self] in
-      let suggestion = await LocalReasoningService.shared.suggestion(
+    suggestionTask = Task { [weak self, reasoning] in
+      let suggestion = await reasoning.suggestion(
         source: source, elapsed: elapsed, localeIdentifier: language)
       guard !Task.isCancelled, let self else { return }
       self.suggestionTask = nil

@@ -1,5 +1,6 @@
 import AppKit
 import SilliesCore
+import SilliesWriting
 
 @MainActor
 final class CommandDispatcher {

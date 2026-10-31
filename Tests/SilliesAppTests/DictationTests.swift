@@ -1,6 +1,8 @@
 import AppKit
 import SilliesCore
+import SilliesReasoning
 import SilliesSpeech
+import SilliesWriting
 import SwiftUI
 import Synchronization
 import Testing
@@ -41,8 +43,7 @@ private actor DictationInsertionFixture: TextInserting {
   func capture(_ application: FrontmostApplication) throws -> TextDestination {
     if !permissionGranted { throw TextAccessError.permission }
     return .init(
-      id: UUID(), processID: application.processID, applicationName: application.name,
-      bundleIdentifier: application.bundleIdentifier, selection: selection)
+      id: UUID(), application: application, selection: selection)
   }
   func insert(_ text: String, into destination: TextDestination) throws {
     if changed { throw TextAccessError.changed }
@@ -62,6 +63,10 @@ private actor CleanupFixture {
 
 @MainActor private struct DictationFixture {
   let model: DictationCoordinator
+  let history: WritingHistory
+  var currentApplication: () -> FrontmostApplication? {
+    { .init(processID: 42, name: "Editor", bundleIdentifier: "test.editor") }
+  }
   let insertion = DictationInsertionFixture()
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
   let domain = "sillies-dictation-tests-\(UUID())"
@@ -78,21 +83,26 @@ private actor CleanupFixture {
       load: {
         SpeechLanguageCatalog(languages: [.init(id: "en-US", name: "English", isInstalled: true)])
       })
+    history = WritingHistory(directory: directory)
     model = DictationCoordinator(
       services: .init(
-        factory: { _, update in
-          DictationCaptureFixture(text: text, update: update)
-        },
-        languages: languages, insertion: insertion, transform: transform),
-      preferences: preferences, history: WritingHistory(directory: directory),
-      vocabulary: VocabularyPreferences(defaults: defaults))
-    model.environment.currentApplication = {
-      .init(processID: 42, name: "Editor", bundleIdentifier: "test.editor")
-    }
+        capture: .init(
+          factory: { _, update in DictationCaptureFixture(text: text, update: update) },
+          loadLanguages: { try await languages.load() },
+          deliver: { MainRunLoopDelivery.perform($0) }),
+        text: .init(
+          insertion: insertion, cleanup: BoundedTextCleanup(),
+          transform: { source, _ in try await transform(source) }),
+        context: .init(
+          currentApplication: {
+            .init(processID: 42, name: "Editor", bundleIdentifier: "test.editor")
+          }, vocabularyHints: { [] })),
+      preferences: preferences, history: history)
   }
+
   func finish() async {
     model.cancel()
-    await model.history.flush()
+    await history.flush()
     defaults.removePersistentDomain(forName: domain)
     removeTestFile(at: directory)
   }
@@ -120,7 +130,7 @@ private actor CleanupFixture {
   await cleanup.complete()
   try await Task.sleep(for: .milliseconds(30))
   #expect(await fixture.insertion.inserted.count == 1)
-  #expect(fixture.model.history.results.count == 1)
+  #expect(fixture.history.results.count == 1)
   await fixture.finish()
 }
 
@@ -133,7 +143,7 @@ private actor CleanupFixture {
   try await waitForDictation { fixture.model.result != nil }
   #expect(await fixture.insertion.inserted.isEmpty)
   #expect(fixture.model.result?.delivery == .needsPaste)
-  #expect(fixture.model.history.results.first?.text.contains("Ștefan") == true)
+  #expect(fixture.history.results.first?.text.contains("Ștefan") == true)
   await fixture.finish()
 }
 
@@ -144,7 +154,7 @@ private actor CleanupFixture {
   try await Task.sleep(for: .milliseconds(50))
   #expect(!fixture.model.isBusy)
   #expect(await fixture.insertion.inserted.isEmpty)
-  #expect(fixture.model.history.results.isEmpty)
+  #expect(fixture.history.results.isEmpty)
   await fixture.finish()
 }
 
@@ -179,8 +189,8 @@ private actor CleanupFixture {
     fixture.model.flushForTermination { continuation.resume() }
   }
   #expect(await fixture.insertion.inserted.isEmpty)
-  #expect(fixture.model.history.results.first?.delivery == .needsPaste)
-  #expect(fixture.model.history.results.first?.text.contains("Ștefan") == true)
+  #expect(fixture.history.results.first?.delivery == .needsPaste)
+  #expect(fixture.history.results.first?.text.contains("Ștefan") == true)
   await fixture.finish()
 }
 
@@ -188,18 +198,19 @@ private actor CleanupFixture {
   let fixture = try DictationFixture()
   await fixture.insertion.select("Please ship the report tomorrow.")
   let model = SelectionCommandCoordinator(
-    history: fixture.model.history,
+    history: fixture.history,
     services: .init(
-      insertion: fixture.insertion,
-      currentApplication: fixture.model.environment.currentApplication,
-      transform: { _, _ in "Ship the report tomorrow." }))
+      text: .init(
+        insertion: fixture.insertion, cleanup: BoundedTextCleanup(),
+        transform: { _, _ in "Ship the report tomorrow." }),
+      currentApplication: fixture.currentApplication))
   await fixture.insertion.changeFocus()
   model.start(.shorten)
   try await waitForDictation { !model.isWorking }
   #expect(model.result?.text == "Ship the report tomorrow.")
   #expect(model.result?.delivery == .needsPaste)
   #expect(await fixture.insertion.inserted.isEmpty)
-  #expect(fixture.model.history.results.first?.text == model.result?.text)
+  #expect(fixture.history.results.first?.text == model.result?.text)
   await fixture.finish()
 }
 
@@ -208,11 +219,12 @@ private actor CleanupFixture {
   await fixture.insertion.select("Original selected text")
   let cleanup = CleanupFixture()
   let model = SelectionCommandCoordinator(
-    history: fixture.model.history,
+    history: fixture.history,
     services: .init(
-      insertion: fixture.insertion,
-      currentApplication: fixture.model.environment.currentApplication,
-      transform: { _, _ in await cleanup.run() }))
+      text: .init(
+        insertion: fixture.insertion, cleanup: BoundedTextCleanup(),
+        transform: { _, _ in await cleanup.run() }),
+      currentApplication: fixture.currentApplication))
   model.start(.grammar)
   for _ in 0..<200 {
     if await cleanup.continuation != nil { break }
@@ -280,7 +292,7 @@ private actor CleanupFixture {
   try await waitForDictation { fixture.model.result != nil }
   #expect(await fixture.insertion.inserted.isEmpty)
   #expect(fixture.model.result?.delivery == .needsPaste)
-  #expect(fixture.model.history.results.count == 1)
+  #expect(fixture.history.results.count == 1)
   await fixture.finish()
 }
 
@@ -313,5 +325,51 @@ private actor CleanupFixture {
   NSApp.appearance = nil
   details.close()
   #expect(fixture.model.isActive)
+  await fixture.finish()
+}
+
+@Test(arguments: [true, false]) @MainActor
+func dictationHistoryFailureUsesTheSharedNoticeAndRetryWithoutLosingText(permissionGranted: Bool)
+  async throws
+{
+  let fixture = try DictationFixture()
+  await fixture.history.load()
+  if !permissionGranted { await fixture.insertion.denyPermission() }
+  let blocker = fixture.directory.appendingPathComponent("history.json")
+  try FileManager.default.createDirectory(at: blocker, withIntermediateDirectories: true)
+  let panel = DictationPanelController()
+  panel.attach(
+    to: .init(
+      name: "Kiko", position: .init(x: 300, y: 300), characterSize: 64, windowLayer: 0,
+      windowNumber: 0))
+  fixture.model.start(.toggle)
+  try await waitForDictation { fixture.model.canFinish }
+  panel.show(fixture.model, copy: { _ in }, history: {})
+  let compact = try #require(panel.frame)
+  fixture.model.finish()
+  try await waitForDictation { fixture.model.result != nil }
+  await fixture.history.flush()
+  let failure = try #require(fixture.model.historyFailure)
+  panel.show(fixture.model, copy: { _ in }, history: {})
+  let warning = try #require(panel.frame)
+  #expect(warning.width == compact.width)
+  #expect(warning.height > compact.height)
+  #expect(warning.height < 360)
+  #expect(fixture.model.preview.contains("Ștefan"))
+  try renderSkillInterface(
+    WritingHistoryNotice(failure: failure, retry: {}), size: .init(width: 420, height: 170),
+    name: "sillies-history-retry-notice")
+  try renderSkillInterface(
+    DictationSessionView(model: fixture.model, companionName: "Kiko", copy: { _ in }, history: {}),
+    size: .init(width: 560, height: 640), name: "sillies-dictation-history-failure")
+  try FileManager.default.removeItem(at: blocker)
+  fixture.model.retryHistory()
+  try await fixture.history.flush().get()
+  #expect(fixture.model.historyFailure == nil)
+  #expect(await fixture.insertion.inserted.count == (permissionGranted ? 1 : 0))
+  panel.show(fixture.model, copy: { _ in }, history: {})
+  #expect(panel.frame?.height == compact.height)
+  #expect(fixture.model.result?.text.contains("Ștefan") == true)
+  panel.close()
   await fixture.finish()
 }

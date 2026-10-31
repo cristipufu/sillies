@@ -3,7 +3,7 @@ import Foundation
 /// Keeps the saved keys and legacy decoding separate from presentation and session data.
 extension SessionRecord {
   private enum CodingKeys: String, CodingKey {
-    case id
+    case id, processingRevision
     case kind
     case characterID
     case characterName
@@ -31,6 +31,9 @@ extension SessionRecord {
   public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     id = try container.decode(UUID.self, forKey: .id)
+    processingRevision =
+      try container.decodeIfPresent(SessionProcessingRevision.self, forKey: .processingRevision)
+      ?? .init(seed: id)
     kind = try container.decode(CompanionSkillKind.self, forKey: .kind)
     characterID = try container.decode(String.self, forKey: .characterID)
     characterName = try container.decode(String.self, forKey: .characterName)
@@ -77,6 +80,7 @@ extension SessionRecord {
   public func encode(to encoder: Encoder) throws {
     var container = encoder.container(keyedBy: CodingKeys.self)
     try container.encode(id, forKey: .id)
+    try container.encode(processingRevision, forKey: .processingRevision)
     try container.encode(kind, forKey: .kind)
     try container.encode(characterID, forKey: .characterID)
     try container.encode(characterName, forKey: .characterName)

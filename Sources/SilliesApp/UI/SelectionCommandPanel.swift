@@ -1,4 +1,5 @@
 import AppKit
+import SilliesWriting
 import SwiftUI
 
 private struct SelectionCommandView: View {
@@ -27,6 +28,9 @@ private struct SelectionCommandView: View {
         SessionHUDDismiss(title: model.isWorking ? "Cancel writing" : "Dismiss") { model.dismiss() }
       }
       if let failure = model.insertionFailure { SessionFailureNotice(failure: failure) }
+      if let failure = model.historyFailure {
+        WritingHistoryNotice(failure: failure, retry: model.retryHistory)
+      }
     }
     .padding(.horizontal, 11).padding(.vertical, 8)
     .frame(width: WritingFeedbackLayout.width)
@@ -55,7 +59,7 @@ private struct SelectionCommandView: View {
     }
     panel.show(
       SelectionCommandView(model: model, copy: copy, history: history),
-      sizing: model.insertionFailure.map { .notice($0.message) } ?? .compact)
+      sizing: .init(notices: [model.insertionFailure?.message, model.historyFailure?.message]))
   }
   func close() { panel.close() }
 }

@@ -18,9 +18,8 @@ struct WritingHistoryView: View {
       Text(
         "Your latest 20 results stay here, separately from meetings. Audio isn’t saved."
       ).font(.callout).foregroundStyle(SilliesTheme.secondary)
-      if let error = model.error {
-        Text(error).foregroundStyle(.red)
-        Button("Retry loading history") { Task { await model.load() } }
+      if let failure = model.persistence.failure {
+        WritingHistoryNotice(failure: failure, retry: model.retry)
       }
       if model.results.isEmpty {
         ContentUnavailableView(

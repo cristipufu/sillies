@@ -1,5 +1,6 @@
 import AppKit
 import Carbon
+import SilliesWriting
 
 /// The clipboard is restored only while this transaction still owns its change count.
 actor ClipboardPasteTransaction: ClipboardPasting {

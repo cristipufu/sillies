@@ -3,523 +3,345 @@ import Foundation
 import Observation
 import SilliesCore
 import SilliesPersistence
+import SilliesReasoning
+import SilliesVault
 
-private struct WeakVaultBox {
-  weak var store: SessionVaultStore?
-}
-
-/// Views read downsampled preview images from a byte-bounded memory cache; disk reads, PNG
-/// encoding, preview downsampling, and decoding run on `ioQueue`.
-@MainActor @Observable
-final class SessionVaultStore {
-  nonisolated static let maxStoredRecords = 200
+/// Native adapter for a paged Vault. Only recent headers and pending unsaved captures live here.
+@MainActor @Observable final class SessionVaultStore {
   nonisolated static let maxCacheBytes = VaultImageCache.maximumBytes
   nonisolated static let maxPreviewPixelDimension = VaultImageCodec.maxPreviewPixelDimension
   private enum LoadState { case loading, ready, failed }
-  private enum PreviewPreparation { case cached, worker }
-
-  private(set) var records: [SessionRecord] = [] { didSet { searchRevision &+= 1 } }
-  private(set) var searchRevision = 0
-  @ObservationIgnored private var searchVersions: [UUID: Int] = [:]
-  @ObservationIgnored private lazy var searchIndex = VaultSearchService(directory: storageDirectory)
-  @ObservationIgnored private var searchCleanup: Task<Void, Never>?
-  @ObservationIgnored private let screenshotText = VaultOCRScheduler()
-  private let defaults: UserDefaults
+  private(set) var records: [SessionRecordHeader] = []
+  private(set) var recordCount = 0
+  private(set) var eligibleRetentionCount = 0
+  private(set) var changes = VaultChangeJournal()
+  var searchRevision: Int { changes.version }
   private(set) var retentionPolicy: VaultRetentionPolicy
-
-  func search(_ request: SessionRecordSearch) async throws -> Set<UUID> {
-    try await searchIndex.search(
-      request, snapshot: .init(records: records, versions: searchVersions, revision: searchRevision)
-    )
-  }
-  private func removeSearchEntries(_ ids: Set<UUID>) {
-    let revision = searchRevision
-    searchCleanup = Task.detached { [searchIndex, preceding = searchCleanup] in
-      await preceding?.value
-      do { try await searchIndex.remove(ids, at: revision) } catch {
-        fputs("Could not clear the search cache: \(error)\n", stderr)
-      }
-    }
-  }
-  private var loadError: String?
-  private var writeError: String?
-  var persistenceError: String? { loadError ?? writeError }
   private(set) var pinnedRecordID: UUID?
-  private let imageCache = VaultImageCache()
-  var totalCachedImageBytes: Int { imageCache.totalBytes }
-  @ObservationIgnored private var pendingImageLoads: Set<String> = []
-  typealias NotesGenerator = VaultSummaryScheduler.Generator
-  @ObservationIgnored private let summaries: VaultSummaryScheduler
+  private(set) var persistenceError: String?
+  private(set) var isLoading = true
   @ObservationIgnored private var loadState = LoadState.loading
-  private var isLoading: Bool { loadState == .loading }
-  private var needsSuccessfulLoad: Bool { loadState != .ready }
-  var isReadyForRetention: Bool { loadState == .ready }
-  @ObservationIgnored private var loadCompletions: [() -> Void] = []
-  @ObservationIgnored private var persistencePending = false
-  @ObservationIgnored private var removedWhileLoading: Set<UUID> = []
-  @ObservationIgnored private var discardLoadedRecords = false
-  @ObservationIgnored private let stagedPreviews = VaultPreviewBuffer()
-  @ObservationIgnored private let clipboard: VaultClipboard
-  let storageDirectory: URL
-  private var repository: VaultCommitRepository {
-    VaultCommitRepository(directory: storageDirectory)
-  }
+  @ObservationIgnored private var loadCompletions: [@MainActor () -> Void] = []
+  @ObservationIgnored private let defaults: UserDefaults
   @ObservationIgnored private let writer: VaultWriteCoordinator
-  private var files: VaultFileStorage { VaultFileStorage(directory: storageDirectory) }
-  @ObservationIgnored nonisolated private static let ioQueue = DispatchQueue(
-    label: "app.sillies.session-vault", qos: .utility)
-  @ObservationIgnored private static var activeStoresByDirectory: [URL: WeakVaultBox] = [:]
-
-  var pendingSummaryCount: Int {
-    summaries.count
-  }
+  @ObservationIgnored private lazy var editor = makeEditor()
+  @ObservationIgnored private let media: VaultMediaStore
+  @ObservationIgnored private let summaries: VaultSummaryScheduler
+  @ObservationIgnored private let screenshotText = VaultOCRScheduler()
+  @ObservationIgnored private var notesLoading: Task<Void, Never>?
+  @ObservationIgnored private var notesGeneration = UUID()
+  @ObservationIgnored private var backgroundEnabled = true
+  let library: VaultLibrary
+  let storageDirectory: URL
+  typealias NotesGenerator = VaultSummaryScheduler.Generator
+  nonisolated private static let imageQueue = DispatchQueue(
+    label: "app.sillies.vault-images", qos: .utility)
+  var totalCachedImageBytes: Int { media.cachedBytes }
+  var pendingSummaryCount: Int { summaries.count }
+  var isReadyForRetention: Bool { loadState == .ready }
 
   init(
-    directory: URL? = nil, pasteboard: NSPasteboard = .general,
-    defaults: UserDefaults = .standard,
-    notesGenerator: @escaping NotesGenerator = { record in
-      if record.kind == .stash {
-        let (summary, actions) = await SessionSummaryWorker.summarize(
-          text: record.primaryText, fallbackContext: record.summary)
-        return LocalNotes(summary: summary, actions: actions)
-      }
-      return await LocalReasoningService.shared.notes(
-        for: record.primaryText, kind: record.kind, fallback: record.summary,
-        localeIdentifier: record.languageIdentifier)
-    }
+    directory: URL? = nil, pasteboard: NSPasteboard = .general, defaults: UserDefaults = .standard,
+    notesGenerator: @escaping NotesGenerator
   ) {
     self.defaults = defaults
     retentionPolicy =
       VaultRetentionPolicy(rawValue: defaults.string(forKey: "vault.retention") ?? "") ?? .keepAll
-    summaries = VaultSummaryScheduler(generate: notesGenerator)
-    clipboard = VaultClipboard(pasteboard: pasteboard, queue: Self.ioQueue)
-    if let directory {
-      storageDirectory = directory
-    } else {
-      let appSupport =
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-        ?? URL(fileURLWithPath: NSTemporaryDirectory())
-      storageDirectory = appSupport.appendingPathComponent("Sillies/Vault", isDirectory: true)
-    }
-    writer = VaultWriteCoordinator(directory: storageDirectory, queue: Self.ioQueue)
-    writer.report = { [weak self] in self?.writeError = $0 }
-    let directoryKey = storageDirectory.standardizedFileURL
-    if let previousStore = Self.activeStoresByDirectory[directoryKey]?.store,
-      previousStore !== self
-    {
-      previousStore.cancelPendingSummaries()
-    }
-    Self.activeStoresByDirectory[directoryKey] = WeakVaultBox(store: self)
-    screenshotText.next = { [weak self] in
-      guard let self,
-        let record = self.records.first(where: { $0.screenshotTextState == .pending }),
-        let url = self.imageURL(for: record)
+    storageDirectory =
+      directory
+      ?? FileManager.default.homeDirectoryForCurrentUser
+      .appendingPathComponent("Library/Application Support/Sillies/Vault", isDirectory: true)
+    let library = VaultLibrary(directory: storageDirectory)
+    self.library = library
+    writer = VaultWriteCoordinator(library: library)
+    media = VaultMediaStore(
+      directory: storageDirectory, pasteboard: pasteboard, queue: Self.imageQueue)
+    summaries = VaultSummaryScheduler(
+      load: { try await library.record(id: $0) }, generate: notesGenerator)
+    writer.report = { [weak self] in self?.persistenceError = $0 }
+    writer.committed = { [weak self] in self?.receive($0) }
+    screenshotText.next = { [weak self, library] in
+      guard let header = try await library.pendingScreenshot(),
+        let url = self?.media.url(header.imageFilename)
       else { return nil }
-      return .init(id: record.id, url: url)
+      return .init(id: header.id, url: url, revision: header.screenshotRevision)
     }
-    screenshotText.complete = { [weak self] in self?.completeScreenshotText(id: $0, result: $1) }
-    loadAsync()
+    screenshotText.complete = { [weak self] in
+      await self?.completeScreenshotText(request: $0, result: $1)
+    }
+    load()
   }
 
+  private func makeEditor() -> VaultRecordEditor {
+    let library = library
+    return VaultRecordEditor(
+      load: { id in try await library.record(id: id) },
+      context: .init(
+        revision: { [weak self] in self?.changes.revision(for: $0) ?? Int.max },
+        pending: { [weak self] in self?.writer.record($0) },
+        isRemoved: { [weak self] in self?.writer.isRemoved($0) ?? true },
+        save: { [weak self] in
+          self?.writer.save(.update($0))
+          self?.present($0)
+        }))
+  }
+
+  func page(_ request: VaultPageRequest) async throws -> VaultPage {
+    await flush()
+    if let persistenceError { throw VaultStorageError(message: persistenceError) }
+    return try await library.page(request)
+  }
+  func matchingHeaders(_ ids: Set<UUID>, search: SessionRecordSearch) async throws
+    -> VaultHeaderMatches
+  {
+    await flush()
+    if let persistenceError { throw VaultStorageError(message: persistenceError) }
+    return try await library.matchingHeaders(ids, search: search)
+  }
+  func record(id: UUID) async throws -> SessionRecord? {
+    await waitUntilLoaded()
+    while true {
+      try Task.checkCancellation()
+      let revision = changes.revision(for: id)
+      if let record = writer.record(id) { return record }
+      guard !writer.isRemoved(id) else { return nil }
+      let loaded = try await library.record(id: id)
+      guard changes.revision(for: id) == revision else { continue }
+      guard !writer.isRemoved(id) else { return nil }
+      return writer.record(id) ?? loaded
+    }
+  }
+  @discardableResult func edit(id: UUID, _ command: VaultRecordEdit) async throws -> Bool {
+    try Task.checkCancellation()
+    return try await withCheckedThrowingContinuation { continuation in
+      submitEdit(id: id, command) { continuation.resume(with: $0) }
+    }
+  }
+  func submitEdit(
+    id: UUID, _ command: VaultRecordEdit, completion: @escaping VaultRecordEditor.Completion
+  ) {
+    if command.requestsNotes { summaries.cancel(id: id) }
+    editor.submit(id: id, edit: command) { [weak self] result in
+      if case .success(true) = result, command.requestsNotes || command.requestsScreenshot {
+        self?.scheduleProcessing(id: id, notesPending: command.requestsNotes)
+      }
+      completion(result)
+    }
+  }
   func add(_ record: SessionRecord, image: CGImage? = nil, pngData: Data? = nil) {
     var updated = record
     if let image {
       let filename = "\(record.id.uuidString).png"
       updated.imageFilename = filename
-      let needsDownsampling =
-        max(image.width, image.height) > Self.maxPreviewPixelDimension
-      if needsDownsampling {
-        pendingImageLoads.insert(filename)
-      } else {
-        storeCachedImage(image, for: filename)
-      }
-      saveImageAsync(
-        image, preencodedPNGData: pngData, filename: filename,
-        preview: needsDownsampling ? .worker : .cached)
+      writer.stage(image, encoded: pngData, filename: filename)
+      media.stage(image, filename: filename)
     }
-    records.insert(updated, at: 0)
-    searchVersions[updated.id] = searchRevision
-    trimHistory()
-    persistAsync()
-    scheduleSummaryRefinement(for: updated)
-    whenPersisted { [weak self] error in if error == nil { self?.screenshotText.pump() } }
+    if !records.contains(where: { $0.id == updated.id }) { recordCount += 1 }
+    writer.save(.insert(updated))
+    present(updated)
+    scheduleProcessing(id: updated.id, notesPending: updated.summaryPending)
   }
-
-  func update(_ record: SessionRecord) {
-    guard let index = records.firstIndex(where: { $0.id == record.id }) else { return }
-    records[index] = record
-    searchVersions[record.id] = searchRevision
-    persistAsync()
-  }
-
-  func updateTranscript(_ record: SessionRecord) {
-    summaries.cancel(id: record.id)
-    var updated = record
-    updated.summaryPending = true
-    update(updated)
-    scheduleSummaryRefinement(for: updated)
-  }
-
-  func regenerateNotes(id: UUID) {
-    guard let record = records.first(where: { $0.id == id }), !record.summaryPending,
-      !record.transcript.isEmpty || !record.extractedText.isEmpty
-    else { return }
-    updateTranscript(record)
-  }
-
-  func completePendingSummary(id: UUID, summary: String, actionItems: [String]) {
-    summaries.cancel(id: id)
-    guard let index = records.firstIndex(where: { $0.id == id }) else { return }
-    var updated = records[index]
-    updated.summary = summary
-    updated.actionItems = actionItems
-    updated.summaryPending = false
-    update(updated)
-  }
-
-  func resumePendingSummaries() {
-    summaries.resume()
-    for record in records where record.summaryPending {
-      scheduleSummaryRefinement(for: record)
-    }
-  }
-
-  func flushPendingSummaries() async {
-    await waitUntilLoaded()
-    resumePendingSummaries()
-    await summaries.flush()
-    await flush()
-  }
-
-  func cancelPendingSummaries() { summaries.stop() }
-
-  func suspendBackgroundProcessing() {
-    summaries.stop()
-    screenshotText.stop()
-  }
-  func resumeBackgroundProcessing() {
-    resumePendingSummaries()
-    screenshotText.resume()
-  }
-
-  func retryScreenshotText(_ record: SessionRecord) {
-    var record = record
-    record.screenshotTextState = .pending
-    update(record)
-    screenshotText.pump()
-  }
-
-  private func completeScreenshotText(id: UUID, result: Result<String, Error>) {
-    guard var record = records.first(where: { $0.id == id }), record.screenshotTextState == .pending
-    else { return }
-    switch result {
-    case .success(let text):
-      record.extractedText = text
-      record.screenshotTextState = .complete
-      record.processingNote = text.isEmpty ? "No readable text was found in this screenshot." : ""
-    case .failure(let error):
-      record.screenshotTextState = .failed
-      record.processingNote = "Screenshot text recognition failed: \(error.localizedDescription)"
-      fputs("\(record.processingNote)\n", stderr)
-    }
-    update(record)
-  }
-
   func applyRetention(_ policy: VaultRetentionPolicy) {
     guard isReadyForRetention else { return }
     retentionPolicy = policy
     defaults.set(policy.rawValue, forKey: "vault.retention")
-    trimHistory()
-    persistAsync()
+    writer.applyRetention(policy)
   }
-
-  func setPinnedRecord(_ id: UUID?) {
-    pinnedRecordID = id
-    imageCache.pinnedFilename = id.flatMap { selected in
-      records.first { $0.id == selected }?.imageFilename
-    }
-    if let id, let record = records.first(where: { $0.id == id }) {
-      prepareImage(for: record)
-    }
-  }
-
   func remove(id: UUID) {
-    if needsSuccessfulLoad {
-      removedWhileLoading.insert(id)
-      persistencePending = true
-    }
     summaries.cancel(id: id)
     if pinnedRecordID == id { setPinnedRecord(nil) }
-    guard let index = records.firstIndex(where: { $0.id == id }) else { return }
-    let removed = records.remove(at: index)
-    searchVersions.removeValue(forKey: id)
-    if let file = removed.imageFilename {
-      evictCachedImage(for: file)
-      retireAttachment(filename: file)
-    }
-    if let file = removed.audioFilename { retireAttachment(filename: file) }
-    removeSearchEntries([id])
-    persistAsync()
+    if let header = records.first(where: { $0.id == id }) { media.remove(header.imageFilename) }
+    records.removeAll { $0.id == id }
+    recordCount = max(0, recordCount - 1)
+    writer.remove(id)
+    changes.record([id])
   }
-
   func clearAll() {
-    if needsSuccessfulLoad { discardLoadedRecords = true }
     summaries.removeAll()
-    pinnedRecordID = nil
-    let removedIDs = Set(records.map(\.id))
-    let files = records.flatMap { [$0.imageFilename, $0.audioFilename].compactMap { $0 } }
     records.removeAll()
-    searchVersions.removeAll()
-    imageCache.removeAll()
-    pendingImageLoads.removeAll()
-    stagedPreviews.removeAll()
-    for file in files { retireAttachment(filename: file) }
-    removeSearchEntries(removedIDs)
-    persistAsync()
+    recordCount = 0
+    eligibleRetentionCount = 0
+    pinnedRecordID = nil
+    media.clear()
+    writer.clear()
+    changes.reset()
   }
-
-  func flush() async {
-    await withCheckedContinuation { continuation in
-      flushOnIOQueue {
-        continuation.resume()
-      }
+  func retrySaving() {
+    guard !isLoading else { return }
+    if loadState == .failed {
+      loadState = .loading
+      isLoading = true
+      load()
+    } else {
+      writer.retry()
     }
-    drainStagedPreviews()
   }
 
+  private func present(_ record: SessionRecord) {
+    let header = SessionRecordHeader(record)
+    records.removeAll { $0.id == record.id }
+    records.insert(header, at: 0)
+    records = Array(
+      records.sorted { $0.createdAt > $1.createdAt }.prefix(VaultPageRequest.maximumPageSize))
+    changes.record([record.id])
+  }
+  private func receive(_ snapshot: VaultSnapshot) {
+    let pending = writer.pendingHeaders
+    let pendingIDs = Set(pending.map(\.id))
+    records = Array(
+      (pending
+        + snapshot.page.records.filter { !pendingIDs.contains($0.id) && !writer.isRemoved($0.id) })
+        .sorted { $0.createdAt > $1.createdAt }.prefix(VaultPageRequest.maximumPageSize))
+    recordCount = snapshot.page.total
+    eligibleRetentionCount = snapshot.eligibleRetentionCount
+    changes.record(snapshot.removedRecordIDs)
+  }
+  private func load() {
+    Task.detached { [weak self, library] in
+      let result: Result<VaultSnapshot, Error>
+      do { result = .success(try await library.snapshot()) } catch { result = .failure(error) }
+      MainRunLoopDelivery.perform { self?.finishLoading(result) }
+    }
+  }
+  private func finishLoading(_ result: Result<VaultSnapshot, Error>) {
+    isLoading = false
+    switch result {
+    case .success(let snapshot):
+      loadState = .ready
+      persistenceError = nil
+      receive(snapshot)
+      changes.reset()
+      if retentionPolicy.limit != nil { writer.applyRetention(retentionPolicy) }
+      writer.activate()
+      resumePendingSummaries()
+      screenshotText.pump()
+    case .failure(let error):
+      loadState = .failed
+      persistenceError =
+        "Could not open the Vault. Existing files were preserved. \(error.localizedDescription)"
+      fputs("Vault open failed: \(error)\n", stderr)
+    }
+    let completions = loadCompletions
+    loadCompletions.removeAll()
+    for completion in completions { completion() }
+  }
+  func waitUntilLoaded() async {
+    guard isLoading else { return }
+    await withCheckedContinuation { continuation in loadCompletions.append { continuation.resume() }
+    }
+  }
+  func flush() async {
+    await withCheckedContinuation { continuation in flushOnIOQueue { continuation.resume() } }
+    media.drain()
+  }
   func flushOnIOQueue(completion: @escaping @Sendable () -> Void) {
     guard !isLoading else {
       loadCompletions.append { self.flushOnIOQueue(completion: completion) }
       return
     }
-    writer.flush { [searchCleanup] in
-      Self.ioQueue.async {
-        Task.detached {
-          await searchCleanup?.value
-          MainRunLoopDelivery.perform { completion() }
-        }
+    editor.flush { [writer] in
+      writer.flush {
+        Self.imageQueue.async { MainRunLoopDelivery.perform { completion() } }
       }
     }
   }
-
-  /// Acknowledges image and JSON writes, including a load still in flight at Save.
   func whenPersisted(_ completion: @escaping @MainActor (String?) -> Void) {
-    flushOnIOQueue { [weak self] in
-      MainActor.assumeIsolated { completion(self?.persistenceError) }
+    flushOnIOQueue { [weak self] in MainActor.assumeIsolated { completion(self?.persistenceError) }
     }
   }
+  func drainStagedPreviewsForTermination() { media.drain() }
 
-  func drainStagedPreviewsForTermination() {
-    drainStagedPreviews()
-  }
-
-  func imageURL(for record: SessionRecord) -> URL? {
-    attachmentURL(for: record.imageFilename)
-  }
-
-  /// Non-blocking cache lookup for SwiftUI view rendering.
-  func cachedImage(for record: SessionRecord) -> NSImage? {
-    drainStagedPreviews()
-    guard let filename = record.imageFilename else { return nil }
-    return imageCache.image(named: filename)
-  }
-
-  /// Decodes a downsampled preview of the snapshot PNG on `ioQueue` if not already in memory.
-  func prepareImage(for record: SessionRecord) {
-    drainStagedPreviews()
-    guard let filename = record.imageFilename,
-      imageCache.image(named: filename) == nil,
-      !pendingImageLoads.contains(filename),
-      let url = imageURL(for: record)
-    else { return }
-    pendingImageLoads.insert(filename)
-    let staged = stagedPreviews
-    Self.ioQueue.async { [weak self] in
-      if let decoded = VaultImageCodec.decodePreview(at: url) {
-        staged.append(filename: filename, image: decoded)
-      }
-      Task { @MainActor [weak self] in
-        guard let self else { return }
-        self.pendingImageLoads.remove(filename)
-        self.drainStagedPreviews()
-      }
+  private func scheduleProcessing(id: UUID, notesPending: Bool) {
+    whenPersisted { [weak self] error in
+      guard let self, error == nil, self.backgroundEnabled else { return }
+      if notesPending { self.scheduleSummary(id) }
+      self.screenshotText.pump()
     }
   }
-
-  func copyText(_ text: String) { clipboard.copyText(text) }
-
-  func copyImage(for record: SessionRecord) {
-    let fallback = cachedImage(for: record)?.cgImage(forProposedRect: nil, context: nil, hints: nil)
-    clipboard.copyImage(at: imageURL(for: record), fallback: fallback)
-  }
-
-  private func scheduleSummaryRefinement(for record: SessionRecord) {
-    summaries.schedule(record) { [weak self] notes in
-      guard let self,
-        let index = self.records.firstIndex(where: { $0.id == record.id })
-      else { return }
-      var updated = self.records[index]
-      updated.summary = notes.summary
-      updated.notesSource = notes.source
-      updated.actionItems = notes.actions
-      updated.explanation = notes.explanation
-      updated.notesNotice = notes.notice
-      updated.summaryPending = false
-      self.update(updated)
-    }
-  }
-
-  func audioURL(for record: SessionRecord) -> URL? {
-    attachmentURL(for: record.audioFilename)
-  }
-
-  private func attachmentURL(for filename: String?) -> URL? {
-    guard let filename else { return nil }
-    do {
-      return try files.attachmentURL(for: filename)
-    } catch {
-      fputs(
-        "SessionVaultStore rejected attachment filename: \(error.localizedDescription)\n", stderr)
-      return nil
-    }
-  }
-
-  private func trimHistory() {
-    let expired = retentionPolicy.expired(in: records)
-    guard !expired.isEmpty else { return }
-    for record in expired {
-      summaries.cancel(id: record.id)
-      if let filename = record.imageFilename {
-        evictCachedImage(for: filename)
-        retireAttachment(filename: filename)
-      }
-      if let filename = record.audioFilename { retireAttachment(filename: filename) }
-    }
-    let expiredIDs = Set(expired.map(\.id))
-    records.removeAll { expiredIDs.contains($0.id) }
-    for id in expiredIDs { searchVersions.removeValue(forKey: id) }
-    removeSearchEntries(expiredIDs)
-  }
-
-  func retrySaving() {
-    guard !isLoading else { return }
-    if loadState == .failed {
-      loadState = .loading
-      loadAsync()
-    } else {
-      persistAsync()
-      writer.retry()
-    }
-  }
-
-  private func drainStagedPreviews() {
-    let drained = stagedPreviews.drain()
-    guard !drained.isEmpty else { return }
-    for entry in drained {
-      pendingImageLoads.remove(entry.filename)
-      guard records.contains(where: { $0.imageFilename == entry.filename }) else { continue }
-      storeCachedImage(entry.image, for: entry.filename)
-    }
-  }
-
-  private func storeCachedImage(_ image: CGImage, for filename: String) {
-    imageCache.store(image, named: filename)
-  }
-
-  private func evictCachedImage(for filename: String) {
-    imageCache.remove(named: filename)
-    pendingImageLoads.remove(filename)
-    stagedPreviews.remove(filename: filename)
-  }
-
-  func waitUntilLoaded() async {
-    guard isLoading else { return }
-    await withCheckedContinuation { continuation in
-      loadCompletions.append { continuation.resume() }
-    }
-  }
-
-  private func loadAsync() {
-    let repository = repository
-    Self.ioQueue.async { [weak self] in
-      dispatchPrecondition(condition: .notOnQueue(.main))
+  private func scheduleSummary(_ id: UUID) {
+    summaries.schedule(id) { [weak self] notes, revision in
       do {
-        let loaded = try repository.load()
-        MainRunLoopDelivery.perform { [weak self] in self?.finishLoading(loaded) }
-      } catch {
-        let message =
-          "Could not load saved sessions. Existing files have been preserved. \(error.localizedDescription)"
-        fputs("Session vault load failed: \(error.localizedDescription)\n", stderr)
-        MainRunLoopDelivery.perform { [weak self] in self?.failLoading(message) }
-      }
+        try await self?.edit(id: id, .completeNotes(notes, revision: revision))
+        await self?.flush()
+      } catch { fputs("Could not update Vault notes: \(error)\n", stderr) }
     }
   }
-
-  private func failLoading(_ message: String) {
-    loadState = .failed
-    loadError = message
-    finishLoadCompletions()
-  }
-
-  private func finishLoadCompletions() {
-    let completions = loadCompletions
-    loadCompletions.removeAll()
-    for completion in completions { completion() }
-  }
-
-  private func finishLoading(_ loaded: [SessionRecord]) {
-    var currentIDs = Set(records.map(\.id))
-    var merged = records
-    for record in loaded {
-      guard !currentIDs.contains(record.id) else { continue }
-      if discardLoadedRecords || removedWhileLoading.contains(record.id) {
-        if let filename = record.imageFilename { retireAttachment(filename: filename) }
-        if let filename = record.audioFilename { retireAttachment(filename: filename) }
-      } else {
-        merged.append(record)
-        currentIDs.insert(record.id)
-      }
-    }
-    records = merged
-    searchVersions = records.reduce(into: [:]) { $0[$1.id] = searchRevision }
-    trimHistory()
-    if records.count != merged.count { persistencePending = true }
-    loadState = .ready
-    loadError = nil
-    removedWhileLoading.removeAll()
-    discardLoadedRecords = false
-    if persistencePending {
-      persistencePending = false
-      persistAsync()
-    }
-    for record in records { scheduleSummaryRefinement(for: record) }
-    screenshotText.pump()
-    finishLoadCompletions()
-  }
-
-  private func persistAsync() {
-    guard !needsSuccessfulLoad else {
-      persistencePending = true
-      return
-    }
-    writer.save(records)
-  }
-
-  private func saveImageAsync(
-    _ cgImage: CGImage, preencodedPNGData: Data?, filename: String, preview: PreviewPreparation
-  ) {
-    writer.stage(cgImage, encoded: preencodedPNGData, filename: filename)
-    guard preview == .worker else { return }
-    let staged = stagedPreviews
-    Self.ioQueue.async { [weak self] in
-      dispatchPrecondition(condition: .notOnQueue(.main))
-      let preview = VaultImageCodec.preparePreview(from: cgImage)
-      staged.append(filename: filename, image: preview)
-      MainRunLoopDelivery.perform { [weak self] in self?.drainStagedPreviews() }
+  func resumePendingSummaries() {
+    guard backgroundEnabled, loadState == .ready, notesLoading == nil else { return }
+    summaries.resume()
+    let generation = UUID()
+    notesGeneration = generation
+    notesLoading = Task { [weak self, library] in
+      do {
+        let ids = try await library.pendingSummaryIDs()
+        guard !Task.isCancelled, let self else { return }
+        for id in ids { self.scheduleSummary(id) }
+      } catch { fputs("Could not resume Vault notes: \(error)\n", stderr) }
+      if self?.notesGeneration == generation { self?.notesLoading = nil }
     }
   }
-
-  private func retireAttachment(filename: String) {
-    writer.removeAttachment(filename)
+  func flushPendingSummaries() async {
+    await flush()
+    resumePendingSummaries()
+    await notesLoading?.value
+    await summaries.flush()
+    await flush()
   }
+  func cancelPendingSummaries() {
+    notesGeneration = UUID()
+    notesLoading?.cancel()
+    notesLoading = nil
+    summaries.stop()
+  }
+  func suspendBackgroundProcessing() {
+    backgroundEnabled = false
+    cancelPendingSummaries()
+    screenshotText.stop()
+  }
+  func resumeBackgroundProcessing() {
+    backgroundEnabled = true
+    resumePendingSummaries()
+    screenshotText.resume()
+  }
+  private func completeScreenshotText(
+    request: VaultOCRScheduler.Request, result: Result<String, Error>
+  ) async {
+    let command: VaultRecordEdit
+    switch result {
+    case .success(let text): command = .completeScreenshot(text: text, revision: request.revision)
+    case .failure(let error):
+      let message = "Screenshot text recognition failed: \(error.localizedDescription)"
+      fputs("\(message)\n", stderr)
+      command = .failScreenshot(message: message, revision: request.revision)
+    }
+    do {
+      try await edit(id: request.id, command)
+      await flush()
+    } catch { fputs("Could not update screenshot text: \(error)\n", stderr) }
+  }
+
+  func setPinnedRecord(_ id: UUID?) {
+    pinnedRecordID = id
+    media.pin(records.first { $0.id == id }?.imageFilename)
+  }
+  func pin(_ record: SessionRecord) {
+    pinnedRecordID = record.id
+    media.pin(record.imageFilename)
+  }
+  func imageURL(for record: some SessionAttachmentReference) -> URL? {
+    media.url(record.imageFilename)
+  }
+  func audioURL(for record: some SessionAttachmentReference) -> URL? {
+    media.url(record.audioFilename)
+  }
+  func cachedImage(for record: some SessionAttachmentReference) -> NSImage? {
+    media.image(record.imageFilename)
+  }
+  func prepareImage(for record: some SessionAttachmentReference) {
+    media.prepare(record.imageFilename)
+  }
+  func copyImage(for record: some SessionAttachmentReference) {
+    media.copyImage(record.imageFilename)
+  }
+  func copyText(_ text: String) { media.copyText(text) }
 }

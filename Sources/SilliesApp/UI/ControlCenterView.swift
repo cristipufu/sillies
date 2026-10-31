@@ -1,4 +1,5 @@
 import SilliesCore
+import SilliesWriting
 import SwiftUI
 
 struct ControlCenterView: View {

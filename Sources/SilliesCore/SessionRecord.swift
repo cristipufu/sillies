@@ -34,12 +34,14 @@ public struct SessionRecord: Codable, Identifiable, Equatable, Sendable {
   public var transcriptSegments: [TranscriptSegment] = []
   public var speakerNames: [String: String] = [:]
   public var originalSpeakerTranscript: String?
+  public var processingRevision: SessionProcessingRevision
 
   public init(
     kind: CompanionSkillKind, origin: SessionOrigin, content: SessionContent = .init(),
     metadata: SessionMetadata = .init()
   ) {
     self.id = metadata.id
+    self.processingRevision = .init(seed: metadata.id)
     self.kind = kind
     self.characterID = origin.characterID
     self.characterName = origin.characterName

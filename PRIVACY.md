@@ -53,7 +53,7 @@ The default application data lives under `~/Library/Application Support/Sillies/
 
 | Location | Contents |
 | --- | --- |
-| `Vault/` | Saved session metadata, recordings, screenshots, transcripts, recognized screenshot text, notes, speaker names, stash items, the rebuildable full-text search index, and a pending-attachment cleanup journal. Records can include source app/window titles and model revisions. |
+| `Vault/` | Saved session metadata, recordings, screenshots, transcripts, recognized screenshot text, notes, speaker names, stash items, a local SQLite database containing record bodies, listing metadata, full-text search documents, and an attachment-cleanup journal. Records can include source app/window titles and model revisions. |
 | `SpeechModels/` | Downloaded speech/speaker models, installation state, partial downloads/resume information, and model-update metadata. |
 | `TextModels/` | Downloaded text models and installation state, including partial downloads. |
 | `Dictation/` | The separate text recovery history, including original/result text and destination app labels. |

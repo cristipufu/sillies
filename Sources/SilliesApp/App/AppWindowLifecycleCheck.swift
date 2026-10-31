@@ -7,7 +7,7 @@ import AppKit
     let openSettings: () -> NSWindow?
     let openVault: () -> NSWindow?
   }
-  struct ControlCenter {
+  @MainActor struct ControlCenter {
     let button: NSStatusBarButton?
     let popover: NSPopover
     var isReady: Bool {

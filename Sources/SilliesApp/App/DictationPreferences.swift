@@ -1,9 +1,10 @@
 import Foundation
 import Observation
 import SilliesCore
+import SilliesWriting
 
 @MainActor @Observable
-final class DictationPreferences {
+final class DictationPreferences: WritingPreferencesReading {
   private let defaults: UserDefaults
   var style: DictationOutputStyle {
     didSet { defaults.set(style.rawValue, forKey: "dictation.outputStyle") }

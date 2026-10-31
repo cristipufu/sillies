@@ -40,13 +40,7 @@ cp Resources/TextInference-Info.plist "$text_helper/Contents/Info.plist"
 cp "$binary_dir/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib" "$text_helper/Contents/Resources/mlx.metallib"
 ditto "$binary_dir/swift-transformers_Hub.bundle" "$text_helper/Contents/Resources/swift-transformers_Hub.bundle"
 
-sparkle=$(find .build/artifacts -path "*Sparkle.xcframework/macos-*/Sparkle.framework" -maxdepth 6 -type d 2>/dev/null | head -1)
-if [[ -n "$sparkle" ]]; then
-  mkdir -p "$app/Contents/Frameworks"
-  ditto "$sparkle" "$app/Contents/Frameworks/Sparkle.framework"
-  rm -rf "$app/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices" "$app/Contents/Frameworks/Sparkle.framework/XPCServices"
-  install_name_tool -add_rpath "@executable_path/../Frameworks" "$app/Contents/MacOS/Sillies" 2>/dev/null || true
-fi
+bash scripts/embed-sparkle.sh .build/artifacts "$app"
 
 cp Info.plist "$app/Contents/Info.plist"
 if [[ -n "${SILLIES_VERSION:-}" ]]; then
@@ -79,11 +73,9 @@ else
 fi
 
 framework="$app/Contents/Frameworks/Sparkle.framework"
-if [[ -d "$framework" ]]; then
-  codesign "${sign[@]}" "$framework/Versions/B/Autoupdate" >/dev/null
-  codesign "${sign[@]}" "$framework/Versions/B/Updater.app" >/dev/null
-  codesign "${sign[@]}" "$framework" >/dev/null
-fi
+codesign "${sign[@]}" "$framework/Versions/B/Autoupdate" >/dev/null
+codesign "${sign[@]}" "$framework/Versions/B/Updater.app" >/dev/null
+codesign "${sign[@]}" "$framework" >/dev/null
 codesign "${sign[@]}" --identifier app.sillies.text-inference "$text_helper" >/dev/null
 codesign "${sign[@]}" --identifier app.sillies.window-metadata "$app/Contents/Helpers/SilliesWindowMetadata" >/dev/null
 codesign "${sign[@]}" --entitlements Sillies.entitlements --identifier app.sillies.macos "$app" >/dev/null

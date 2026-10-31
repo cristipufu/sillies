@@ -1,24 +1,29 @@
 import AppKit
+import Observation
 import SilliesCore
+import SilliesPersistence
 import SwiftUI
 
 struct StashPickerView: View {
+  struct Actions {
+    let choose: (UUID) -> Void
+    let close: () -> Void
+  }
   let vault: SessionVaultStore
   let paste: PasteBackCoordinator
-  let choose: (SessionRecord) -> Void
-  let close: () -> Void
+  let actions: Actions
+  let readError: () -> String?
   @State private var model: SessionVaultModel
   @State private var selected: UUID?
   @FocusState private var searchFocused: Bool
   init(
     vault: SessionVaultStore, paste: PasteBackCoordinator,
-    choose: @escaping (SessionRecord) -> Void,
-    close: @escaping () -> Void
+    actions: Actions, readError: @escaping () -> String? = { nil }
   ) {
     self.vault = vault
     self.paste = paste
-    self.choose = choose
-    self.close = close
+    self.actions = actions
+    self.readError = readError
     let model = SessionVaultModel(vault: vault)
     model.selectedFilter = .stash
     _model = State(initialValue: model)
@@ -46,14 +51,17 @@ struct StashPickerView: View {
       }
       if model.isSearching { ProgressView().controlSize(.small) }
       if let error = model.searchError { Text(error).foregroundStyle(.red) }
+      if let error = readError() {
+        Text(error).font(.caption).foregroundStyle(.red).textSelection(.enabled)
+      }
       List(model.filteredRecords, selection: $selected) { record in
         VStack(alignment: .leading, spacing: 4) {
-          Text(record.primaryText).lineLimit(3)
+          Text(record.preview).lineLimit(3)
           Text(record.createdAt, style: .date).font(.caption).foregroundStyle(
             SilliesTheme.secondary)
         }.padding(.vertical, 4).tag(record.id)
           .listRowBackground(SilliesTheme.card)
-          .onTapGesture(count: 2) { choose(record) }
+          .onTapGesture(count: 2) { actions.choose(record.id) }
       }.scrollContentBackground(.hidden)
         .background(SilliesTheme.card, in: RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(SilliesTheme.border))
@@ -78,7 +86,8 @@ struct StashPickerView: View {
       .background(SilliesTheme.paper).foregroundStyle(SilliesTheme.ink).tint(SilliesTheme.accent)
       .task(id: model.searchIdentity) { await model.refreshSearch() }
       .onAppear { searchFocused = true }
-      .onExitCommand(perform: close)
+      .onExitCommand(perform: actions.close)
+      .onDisappear { model.stop() }
   }
   private func moveSelection(by offset: Int) {
     let records = model.filteredRecords
@@ -90,19 +99,21 @@ struct StashPickerView: View {
     if let record = model.filteredRecords.first(where: { $0.id == selected })
       ?? model.filteredRecords.first
     {
-      choose(record)
+      actions.choose(record.id)
     }
   }
 }
 
-@MainActor final class StashPickerController {
+@MainActor @Observable final class StashPickerController {
   let paste = PasteBackCoordinator()
   private let vault: SessionVaultStore
-  private var window: NSWindow?
-  private var opening: Task<Void, Never>?
-  private var insertion: Task<Void, Never>?
+  private var readError: String?
+  @ObservationIgnored private var window: NSWindow?
+  @ObservationIgnored private var opening: Task<Void, Never>?
+  @ObservationIgnored private var insertion: Task<Void, Never>?
   init(vault: SessionVaultStore) { self.vault = vault }
   func show() {
+    readError = nil
     opening?.cancel()
     opening = Task { [weak self] in
       guard let self else { return }
@@ -123,23 +134,38 @@ struct StashPickerView: View {
       window.contentViewController = NSHostingController(
         rootView: StashPickerView(
           vault: vault, paste: paste,
-          choose: { [weak self] in self?.choose($0) }, close: { [weak self] in self?.stop() }))
+          actions: .init(
+            choose: { [weak self] in self?.choose($0) }, close: { [weak self] in self?.stop() }),
+          readError: { [weak self] in self?.readError }))
       window.center()
       self.window = window
     }
     NSApp.activate(ignoringOtherApps: true)
     window?.makeKeyAndOrderFront(nil)
   }
-  private func choose(_ record: SessionRecord) {
-    window?.orderOut(nil)
-    guard paste.destination != nil else {
-      vault.copyText(record.primaryText)
-      return
-    }
+  private func choose(_ id: UUID) {
+    insertion?.cancel()
+    readError = nil
     insertion = Task { [weak self] in
       guard let self else { return }
-      do { try await paste.paste(record.primaryText) } catch {
-        if !Task.isCancelled { present() }
+      do {
+        let record = try await vault.record(id: id)
+        try Task.checkCancellation()
+        guard let record else {
+          throw VaultStorageError(
+            message: "This stash is no longer available. Choose another item.")
+        }
+        window?.orderOut(nil)
+        if paste.destination == nil {
+          vault.copyText(record.primaryText)
+        } else {
+          try await paste.paste(record.primaryText)
+        }
+      } catch {
+        if !Task.isCancelled {
+          readError = error.localizedDescription
+          present()
+        }
         fputs("Stash insertion failed: \(error.localizedDescription)\n", stderr)
       }
     }

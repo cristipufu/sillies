@@ -23,7 +23,8 @@ import Testing
   let writing = WritingTools(
     speech: speech, companions: controller,
     services: .init(
-      vault: controller.skills.vault, recording: controller.skills, commands: controller.commands),
+      vault: controller.skills.vault, recording: controller.skills, commands: controller.commands,
+      reasoning: FixtureReasoning()),
     preferences: DictationPreferences(defaults: defaults))
   let shortcuts = CommandShortcuts(defaults: defaults)
   await speech.models.load()
@@ -48,6 +49,6 @@ import Testing
         name: "sillies-settings-\(destination.rawValue)-\(appearance.rawValue)")
     }
   }
-  await writing.dictation.history.flush()
+  await writing.history.flush()
   await controller.skills.vault.flush()
 }

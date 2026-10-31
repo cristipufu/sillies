@@ -1,9 +1,13 @@
 import AppKit
 import SilliesCore
+import SilliesReasoning
+import SilliesWriting
 import SwiftUI
 
 /// Composition of interactive writing; neither the window tracker nor mascot owns capture.
 @MainActor final class WritingTools {
+  let preferences: DictationPreferences
+  let history: WritingHistory
   let dictation: DictationCoordinator
   let selection: SelectionCommandCoordinator
   let vocabulary: VocabularyPreferences
@@ -28,6 +32,7 @@ import SwiftUI
     speech: SpeechServices, companions: any WritingCompanionHost, services: WritingServices,
     preferences: DictationPreferences = .init()
   ) {
+    self.preferences = preferences
     self.companions = companions
     self.services = services
     self.speech = speech
@@ -36,14 +41,29 @@ import SwiftUI
     stash = StashPickerController(vault: services.vault)
     let historyDirectory = services.vault.storageDirectory.deletingLastPathComponent()
       .appendingPathComponent("Dictation", isDirectory: true)
-    let history = WritingHistory(directory: historyDirectory)
+    history = WritingHistory(directory: historyDirectory)
     let cleanup = BoundedTextCleanup()
-    selection = SelectionCommandCoordinator(history: history, services: .init(cleanup: cleanup))
+    let reasoning = services.reasoning
+    let text = WritingTextServices(insertion: TextInsertionService(), cleanup: cleanup) {
+      try await reasoning.transform($0, operation: $1)
+    }
+    selection = SelectionCommandCoordinator(
+      history: history, services: .init(text: text, currentApplication: { .current }))
     dictation = DictationCoordinator(
       services: .init(
-        factory: speech.captureFactory, languages: speech.languages, cleanup: cleanup),
-      preferences: preferences, history: history,
-      vocabulary: speech.vocabulary)
+        capture: .init(
+          factory: speech.captureFactory,
+          loadLanguages: { [languages = speech.languages] in try await languages.load() },
+          deliver: { MainRunLoopDelivery.perform($0) }),
+        text: text,
+        context: .init(
+          currentApplication: { .current },
+          vocabularyHints: { [vocabulary = speech.vocabulary] in vocabulary.snapshot().hints })),
+      preferences: preferences, history: history)
+    history.onPersistenceChange = { [weak self] in
+      self?.present()
+      self?.presentSelection()
+    }
     connectSessions()
     connectCommands()
     companions.onOpenWritingSession = { [weak self] in self?.openSessionOrHistory() }
@@ -132,7 +152,7 @@ import SwiftUI
     case .shortenSelection: if !isBusy { selection.start(.shorten) }
     case .fixSelectionGrammar: if !isBusy { selection.start(.grammar) }
     case .translateSelection:
-      if !isBusy { selection.start(.translate(dictation.preferences.translationLanguage)) }
+      if !isBusy { selection.start(.translate(preferences.translationLanguage)) }
     default: return false
     }
     return true
@@ -197,7 +217,7 @@ import SwiftUI
       window.contentMinSize = CGSize(width: 560, height: 400)
       window.contentViewController = NSHostingController(
         rootView: WritingHistoryView(
-          model: dictation.history,
+          model: history,
           copy: { [weak self] in self?.clipboard.copyText($0) },
           openText: { [weak self] result in
             self?.recoveredText.show(

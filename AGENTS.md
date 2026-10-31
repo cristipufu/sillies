@@ -1,6 +1,8 @@
 # Sillies development
 
 - Keep behavior and geometry in `SilliesCore`, free of AppKit and timers.
+- Own local reasoning in `App/Composition`; inject `LocalReasoning` into consumers. Never add shared reasoning/model-environment instances, service locators, or default live backends. `SilliesReasoning`, `SilliesVault`, and `SilliesWriting` enforce reusable feature boundaries; the architecture checker validates imports and `Package.swift` dependencies for new files and targets. Do not widen a policy to bypass a failed boundary check.
+- Vault listings contain bounded `SessionRecordHeader` pages. Load full records by ID, keep detail caches byte-bounded, and queue background work by ID. SQLite is the initial Vault format; no pre-release JSON archive migration is required. Body/header/search changes share a transaction, and failed writes retain their recovery payloads. UI/background edits use `VaultRecordEdit` against the latest record, never whole-record replacement from a view snapshot. Notes and OCR completions must carry their processing revision. Use stable cursor pages and changed-ID invalidation; unrelated saves must not restart selected-detail loads.
 - Character-specific event responses belong in JSON, not conditionals in the controller.
 - Keep platform event producers, behavior selection, artwork, and clips separate.
 - Strictly follow Robert C. Martin's *Clean Code* principles across all modules:

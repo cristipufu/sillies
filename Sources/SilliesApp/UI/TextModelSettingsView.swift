@@ -22,7 +22,7 @@ struct TextModelSettingsView: View {
         detail:
           "Built into macOS. No Sillies model download. Available languages depend on Apple Intelligence on this Mac."
       ) {
-        selectionButton(TextModelEnvironment.appleID)
+        selectionButton(TextModelsPresentation.systemModelID)
       }
       if model.isLoading { ProgressView("Checking installed models…") }
       ForEach(model.manifests, id: \.modelID) { manifest in

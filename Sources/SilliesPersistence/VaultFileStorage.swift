@@ -17,7 +17,8 @@ public struct VaultFileStorage: Sendable {
 
   public func attachmentURL(for filename: String) throws -> URL {
     let reserved = [
-      SessionRecordRepository.filename, VaultCommitRepository.journalFilename, "search.sqlite",
+      "sessions.json", "pending-attachments.json", "search.sqlite",
+      VaultDatabase.filename, "vault.sqlite-journal", "vault.sqlite-wal", "vault.sqlite-shm",
       "search.sqlite-journal",
       "search.sqlite-wal", "search.sqlite-shm",
     ]

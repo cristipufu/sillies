@@ -22,8 +22,8 @@ Models are pinned in `Sources/SilliesModelStore/Resources/text-models.json`, inc
 | Runtime contracts and one loaded model | `SilliesTextModels.TextModelProvider`, `PreparedTextModel`, `TextModelRegistry` |
 | CPU/GPU work priority | `SilliesInference.InferenceActivity` |
 | Native MLX inference, tokenizer adaptation, context and output limits | `SilliesTextInference` helper |
-| Apple/downloaded backend selection | `TextModelEnvironment` |
-| Task prompts, languages, source evidence and protected-content checks | `LocalReasoningService`, `ReasoningBackend`, `LocalTextTransform` |
+| App-owned backend selection and lifetime | `App/Composition/ReasoningServices`, `TextModelEnvironment` |
+| Task prompts, languages, source evidence and protected-content checks | `SilliesReasoning`: `LocalReasoning`, `LocalReasoningService`, `ReasoningBackend`, `LocalTextTransform` |
 | Download presentation and Settings actions | `TextModelsPresentation`, `TextModelSettingsView` |
 
 Adding another compatible MLX model:
@@ -35,7 +35,7 @@ Adding another compatible MLX model:
 
 Adding a different text runtime:
 
-1. Implement `TextModelProvider.prepare` and `PreparedTextModel.generate/stop`, returning plain text through `TextGenerationRequest`. Register the provider once in `TextModelEnvironment`; the catalog supplies its `providerID`.
+1. Implement `TextModelProvider.prepare` and `PreparedTextModel.generate/stop`, returning plain text through `TextGenerationRequest`. Register the provider once in `App/Composition/ReasoningServices`; the catalog supplies its `providerID`.
 2. Keep heavyweight SDK imports and native inference in a separate helper target. The architecture checker rejects MLX/tokenizer SDK imports in the app. Use bounded IPC with an execution deadline, cancellation, crash recovery, and explicit teardown. Do not move inference into a view or the meeting controller.
 3. Reuse `ModelArtifactManifest`/`ModelStore` and `TextModelRegistry`; do not create another downloader, selection flow, or cache. Add the helper/resources/licenses to `scripts/build-app.sh`.
 4. Satisfy the same provider contract tests. A compatible text model needs no changes to capture, transcript rendering, mascot behavior, or window tracking.

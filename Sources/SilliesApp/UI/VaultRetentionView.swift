@@ -7,7 +7,7 @@ struct VaultRetentionView: View {
   @State private var selection = VaultRetentionPolicy.keepAll
   @State private var confirmsDeletion = false
   @State private var confirmsClear = false
-  private var count: Int { selection.expired(in: vault.records).count }
+  private var count: Int { selection.limit.map { max(0, vault.eligibleRetentionCount - $0) } ?? 0 }
   var body: some View {
     VStack(alignment: .leading, spacing: 18) {
       SessionIdentityHeader(title: "Keep what matters", symbol: "archivebox") {
@@ -38,7 +38,7 @@ struct VaultRetentionView: View {
       }
       Divider()
       Button("Delete all Vault records…", role: .destructive) { confirmsClear = true }
-        .disabled(!vault.isReadyForRetention || vault.records.isEmpty)
+        .disabled(!vault.isReadyForRetention || vault.recordCount == 0)
     }.padding(24).frame(width: 470)
       .background(SilliesTheme.paper).foregroundStyle(SilliesTheme.ink).tint(SilliesTheme.accent)
       .onAppear { selection = vault.retentionPolicy }
@@ -51,7 +51,7 @@ struct VaultRetentionView: View {
         "Delete every Vault record, including protected sessions and Pocket Stash items? Saved attachments will also be deleted.",
         isPresented: $confirmsClear
       ) {
-        Button("Delete all \(vault.records.count) records", role: .destructive) {
+        Button("Delete all \(vault.recordCount) records", role: .destructive) {
           vault.clearAll()
           dismiss()
         }

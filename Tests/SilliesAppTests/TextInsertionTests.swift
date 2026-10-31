@@ -1,4 +1,5 @@
 import Foundation
+import SilliesWriting
 import Testing
 
 @testable import SilliesApp
@@ -11,8 +12,7 @@ private actor TextAccessFixture: TextDestinationAccess {
   func changeFocus() { changed = true }
   func capture(_ app: FrontmostApplication) -> TextDestination {
     .init(
-      id: UUID(), processID: app.processID, applicationName: app.name,
-      bundleIdentifier: app.bundleIdentifier, selection: "")
+      id: UUID(), application: app, selection: "")
   }
   func insert(_ text: String, into destination: TextDestination) -> NativeTextInsertion {
     if requiresClipboard { return .requiresClipboard }

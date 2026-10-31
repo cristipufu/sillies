@@ -2,6 +2,8 @@ import AVFoundation
 import AppKit
 import SilliesAudioTestSupport
 import SilliesCore
+import SilliesPersistence
+import SilliesReasoning
 import SilliesSpeech
 import Testing
 
@@ -106,7 +108,8 @@ private final class FixtureAudioCapture: SessionAudioCapture, @unchecked Sendabl
   await coordinator.shutdown()
   let reloaded = SessionVaultStore(directory: directory)
   await reloaded.waitUntilLoaded()
-  #expect(reloaded.records.contains { $0.kind == .record && !$0.transcript.isEmpty })
+  let recordingID = try #require(reloaded.records.first { $0.kind == .record }?.id)
+  #expect(try await reloaded.record(id: recordingID)?.transcript.isEmpty == false)
   #expect(reloaded.records.contains { $0.kind == .stash })
   reloaded.cancelPendingSummaries()
   await reloaded.flush()
@@ -126,8 +129,9 @@ private final class FixtureAudioCapture: SessionAudioCapture, @unchecked Sendabl
   coordinator.flushForTermination { MainActor.assumeIsolated { finished = true } }
   pumpTerminationRunLoop { finished }
   #expect(finished)
-  let data = try Data(contentsOf: directory.appendingPathComponent("sessions.json"))
-  #expect(String(decoding: data, as: UTF8.self).contains("Please ship the report"))
+  let recordingID = try #require(vault.records.first?.id)
+  #expect(
+    try await vault.record(id: recordingID)?.transcript.contains("Please ship the report") == true)
 }
 
 @MainActor private func pumpTerminationRunLoop(until finished: () -> Bool) {

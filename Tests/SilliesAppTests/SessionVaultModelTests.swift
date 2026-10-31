@@ -1,5 +1,6 @@
 import Foundation
 import SilliesCore
+import SilliesReasoning
 import Testing
 
 @testable import SilliesApp
@@ -12,8 +13,8 @@ import Testing
     directory: directory,
     notesGenerator: { _ in
       LocalNotes(
-        summary: "• Ședința începe mâine.", actions: [], notice: "Generated notes unavailable.",
-        source: .extracted)
+        summary: "• Ședința începe mâine.", actions: [],
+        provenance: .init(source: .extracted, notice: "Generated notes unavailable."))
     })
   await vault.waitUntilLoaded()
   let record = SessionRecord(
@@ -26,7 +27,7 @@ import Testing
         failure: SessionFailure(category: .finalization, message: "Partial audio failure"))))
   vault.add(record)
   await vault.flushPendingSummaries()
-  let saved = try #require(vault.records.first)
+  let saved = try #require(try await vault.record(id: record.id))
   #expect(saved.notesSource == .extracted)
   #expect(!saved.summaryPending)
   #expect(saved.transcript == record.transcript)
@@ -43,7 +44,8 @@ import Testing
     SessionRecord(
       kind: .record,
       origin: .init(
-        characterID: "mochi", characterName: "Mochi", source: .init(appName: "Meeting \($0)")))
+        characterID: "mochi", characterName: "Mochi", source: .init(appName: "Meeting \($0)")),
+      metadata: .init(createdAt: Date(timeIntervalSince1970: Double(3 - $0))))
   }
   for record in records.reversed() { vault.add(record) }
   let model = SessionVaultModel(vault: vault, initialRecordID: records[1].id)
@@ -55,7 +57,7 @@ import Testing
   model.delete(records[2])
   #expect(model.selectedRecordID == records[0].id)
   model.delete(records[0])
-  #expect(model.selectedRecord(in: model.filteredRecords) == nil)
+  #expect(model.selectedHeader(in: model.filteredRecords) == nil)
   await vault.flush()
 }
 
@@ -69,9 +71,10 @@ import Testing
   #expect(vault.records.isEmpty)
   model.saveStash([" first ", "\n", " second\n"])
   let firstID = try #require(model.lastStashID)
-  #expect(vault.records.first?.stashedItems == ["first", "second"])
+  #expect(try await vault.record(id: firstID)?.stashedItems == ["first", "second"])
   model.searchQuery = "unrelated search"
   model.saveStash(["new item"])
+  await model.refreshSearch()
   #expect(model.filteredRecords.first?.id == model.lastStashID)
   model.undoStash()
   #expect(vault.records.map(\.id) == [firstID])

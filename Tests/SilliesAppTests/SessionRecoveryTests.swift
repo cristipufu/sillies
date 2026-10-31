@@ -2,6 +2,7 @@ import Foundation
 import SilliesAudio
 import SilliesCore
 import SilliesPersistence
+import SilliesReasoning
 import SilliesSpeech
 import Testing
 
@@ -45,7 +46,8 @@ import Testing
   #expect(await iterator.next() == failure)
   #expect(coordinator.activeAudioSession?.canFinish == true)
   await coordinator.shutdown()
-  let saved = try #require(SessionRecordRepository(directory: directory).load().first)
+  let id = try #require(vault.records.first?.id)
+  let saved = try #require(try await vault.record(id: id))
   #expect(saved.failure == failure)
   #expect(saved.transcript == "Preserved words before interruption.")
   #expect(saved.requiresPermissionAccess)

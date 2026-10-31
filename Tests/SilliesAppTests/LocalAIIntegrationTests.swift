@@ -5,6 +5,7 @@ import SilliesAudioTestSupport
 import SilliesCore
 import SilliesDiarizationNemotron
 import SilliesModelStore
+import SilliesReasoning
 import SilliesSpeech
 import SilliesSpeechApple
 import SilliesSpeechParakeet
@@ -30,9 +31,10 @@ private final class SpeechFixtureOutput: @unchecked Sendable {
 
 @Test(.enabled(if: ProcessInfo.processInfo.environment["SILLIES_LOCAL_AI_CHECK"] == "1"))
 func localNotesHonorTheSelectedLanguage() async {
-  let notice = await LocalReasoningService.shared.availabilityNotice(localeIdentifier: "fr-FR")
+  let notice = await LocalReasoningService(backend: AppleReasoningBackend()).availabilityNotice(
+    localeIdentifier: "fr-FR")
   guard notice == nil else { return }
-  let result = await LocalReasoningService.shared.notes(
+  let result = await LocalReasoningService(backend: AppleReasoningBackend()).notes(
     for: "We agreed to ship the report on Friday. Alex will review the draft tomorrow.",
     kind: .record, fallback: "Fixture", localeIdentifier: "fr-FR")
   print("FRENCH NOTES: \(result.summary) | \(result.actions)")
@@ -133,9 +135,10 @@ func prepareDownloadedSpeechModelForIntegration() async throws {
   let source =
     "We agreed to ship the report on Friday. Alex will review the draft tomorrow. The owner of the customer follow-up is still undecided."
   let notes = Task.detached {
-    await LocalReasoningService.shared.notes(for: source, kind: .participate, fallback: "Fixture")
+    await LocalReasoningService(backend: AppleReasoningBackend()).notes(
+      for: source, kind: .participate, fallback: "Fixture")
   }
-  let notice = await LocalReasoningService.shared.availabilityNotice()
+  let notice = await LocalReasoningService(backend: AppleReasoningBackend()).availabilityNotice()
   print("LOCAL AI AVAILABILITY: \(notice ?? "available")")
   let speech = Task.detached(priority: .utility) {
     let file = try AVAudioFile(forReading: URL(fileURLWithPath: fixturePath))

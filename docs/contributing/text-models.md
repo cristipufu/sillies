@@ -37,13 +37,14 @@ the speech-model update mechanism does not discover text-model updates.
 
 1. Implement `TextModelProvider.prepare` and `PreparedTextModel.generate/stop` in `SilliesTextModels`'s
    contract. Requests and results use the shared text types. Register the provider once in
-   `TextModelEnvironment` and reference its provider ID from the catalog.
+   `App/Composition/ReasoningServices` and reference its provider ID from the catalog.
+   Features receive `LocalReasoning`; never construct a runtime or reach for a shared service there.
 2. Isolate the heavy SDK and native inference in a helper target. Keep those imports out of the app.
    Reuse bounded IPC, request deadlines, cancellation, crash recovery, and explicit asynchronous teardown.
 3. Integrate with `SilliesInference.InferenceActivity`: interactive speech takes priority, and background
    notes must yield. Keep one downloaded model loaded at a time and release it when idle or stopped.
 4. Reuse storage, installation leases, selection, and resource limits. Add helper resources and licenses
-   to `scripts/build-app.sh`. Keep task prompts and output validation in the existing reasoning services.
+   to `scripts/build-app.sh`. Keep task prompts and output validation in `SilliesReasoning`.
 5. Respect each consumer's deadline. In particular, late dictation cleanup must never rewrite a field
    after the finalized transcript has already been inserted.
 

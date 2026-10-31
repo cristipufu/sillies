@@ -2,22 +2,28 @@ import Foundation
 import Observation
 import SilliesCore
 import SilliesPersistence
+import SilliesWriting
 
-/// Failed loads never authorize overwriting the separate, bounded recovery journal.
+/// One active write and the latest pending revision; failures retain unsaved recovery text.
 @MainActor @Observable
-final class WritingHistory {
+final class WritingHistory: WritingHistoryRecording {
   static let maximumResults = 20
+  private enum LoadState { case unavailable, loading, ready }
   private(set) var results: [WritingResult] = []
-  private(set) var error: String?
+  private(set) var persistence = WritingHistoryPersistence.loading
+  var error: String? { persistence.failure?.message }
+  @ObservationIgnored var onPersistenceChange: (() -> Void)?
   private let repository: WritingHistoryRepository
   private let queue = DispatchQueue(label: "app.sillies.dictation-history", qos: .utility)
-  private var loaded = false
-  private var loading = false
+  private var loadState = LoadState.unavailable
+  private var isWriting = false
   private var removed: Set<UUID> = []
   private var discardsLoaded = false
   private var revision = 0
-  private var waiters: [CheckedContinuation<Void, Never>] = []
-  private var loadCompletions: [@MainActor @Sendable () -> Void] = []
+  private var savedRevision = 0
+  private var loadWaiters: [CheckedContinuation<Void, Never>] = []
+  private var flushWaiters: [@MainActor @Sendable (Result<Void, WritingHistoryFailure>) -> Void] =
+    []
 
   init(directory: URL) {
     repository = .init(directory: directory)
@@ -25,14 +31,19 @@ final class WritingHistory {
   }
 
   func load() async {
-    guard !loaded else { return }
+    guard loadState != .ready else { return }
     startLoading()
-    await withCheckedContinuation { waiters.append($0) }
+    await withCheckedContinuation { loadWaiters.append($0) }
+  }
+
+  func retry() {
+    if loadState == .ready { startWriting() } else { startLoading() }
   }
 
   private func startLoading() {
-    guard !loading, !loaded else { return }
-    loading = true
+    guard loadState == .unavailable else { return }
+    loadState = .loading
+    setPersistence(.loading)
     queue.async { [weak self, repository] in
       let result = Result { try repository.load() }
       MainRunLoopDelivery.perform { self?.finishLoading(result) }
@@ -40,75 +51,102 @@ final class WritingHistory {
   }
 
   private func finishLoading(_ result: Result<[WritingResult], Error>) {
-    loading = false
     switch result {
     case .success(let stored):
-      let currentIDs = Set(results.map(\.id))
-      if !discardsLoaded {
-        results += stored.filter { !currentIDs.contains($0.id) && !removed.contains($0.id) }
-      }
-      results = Array(results.sorted { $0.createdAt > $1.createdAt }.prefix(Self.maximumResults))
-      loaded = true
-      removed.removeAll()
-      discardsLoaded = false
-      error = nil
-      if revision > 0 || stored.count > Self.maximumResults { persist() }
-    case .failure(let failure): report(failure)
+      merge(stored)
+      loadState = .ready
+      if revision > savedRevision { startWriting() } else { setPersistence(.saved) }
+    case .failure(let error):
+      loadState = .unavailable
+      report(.load(error.localizedDescription), diagnostic: error)
     }
-    let pending = waiters
-    waiters.removeAll()
+    let pending = loadWaiters
+    loadWaiters.removeAll()
     for waiter in pending { waiter.resume() }
-    let completions = loadCompletions
-    loadCompletions.removeAll()
-    for completion in completions { flush(completion: completion) }
+    completeFlushIfSettled()
+  }
+
+  private func merge(_ stored: [WritingResult]) {
+    let currentIDs = Set(results.map(\.id))
+    if !discardsLoaded {
+      results += stored.filter { !currentIDs.contains($0.id) && !removed.contains($0.id) }
+    }
+    results = Array(results.sorted { $0.createdAt > $1.createdAt }.prefix(Self.maximumResults))
+    removed.removeAll()
+    discardsLoaded = false
+    if stored.count > Self.maximumResults { revision += 1 }
   }
 
   func save(_ result: WritingResult) {
     results.removeAll { $0.id == result.id }
     results.insert(result, at: 0)
     results = Array(results.prefix(Self.maximumResults))
-    persist()
+    changed()
   }
   func remove(_ id: UUID) {
-    if !loaded { removed.insert(id) }
+    if loadState != .ready { removed.insert(id) }
     results.removeAll { $0.id == id }
-    persist()
+    changed()
   }
   func clear() {
-    if !loaded { discardsLoaded = true }
+    if loadState != .ready { discardsLoaded = true }
     results.removeAll()
-    persist()
+    changed()
   }
 
-  func flush(completion: @escaping @MainActor @Sendable () -> Void) {
-    if loading {
-      loadCompletions.append(completion)
-      return
-    }
-    queue.async { MainRunLoopDelivery.perform(completion) }
+  func flush(
+    completion: @escaping @MainActor @Sendable (Result<Void, WritingHistoryFailure>) -> Void
+  ) {
+    flushWaiters.append(completion)
+    completeFlushIfSettled()
   }
-  func flush() async {
-    await withCheckedContinuation { continuation in flush { continuation.resume() } }
+  @discardableResult func flush() async -> Result<Void, WritingHistoryFailure> {
+    await withCheckedContinuation { continuation in flush { continuation.resume(returning: $0) } }
   }
 
-  private func persist() {
+  private func changed() {
     revision += 1
-    guard loaded else { return }
+    startWriting()
+  }
+  private func startWriting() {
+    guard loadState == .ready, !isWriting, revision > savedRevision else { return }
+    isWriting = true
+    setPersistence(.saving)
     let snapshot = results
     let version = revision
     queue.async { [weak self, repository] in
       let result = Result { try repository.save(snapshot) }
-      MainRunLoopDelivery.perform {
-        guard let self, self.revision == version else { return }
-        switch result {
-        case .success: self.error = nil
-        case .failure(let failure): self.report(failure)
-        }
-      }
+      MainRunLoopDelivery.perform { self?.finishWriting(result, version: version) }
     }
   }
-  private func report(_ error: Error) {
-    self.error = "Recovery history could not be saved or loaded: \(error.localizedDescription)"
-    fputs("Writing history: \(error)\n", stderr)
+  private func finishWriting(_ result: Result<Void, Error>, version: Int) {
+    isWriting = false
+    switch result {
+    case .success:
+      savedRevision = version
+      if revision > savedRevision { startWriting() } else { setPersistence(.saved) }
+    case .failure(let error): report(.save(error.localizedDescription), diagnostic: error)
+    }
+    completeFlushIfSettled()
+  }
+  private func completeFlushIfSettled() {
+    let result: Result<Void, WritingHistoryFailure>
+    switch persistence {
+    case .loading, .saving: return
+    case .saved: result = .success(())
+    case .failed(let failure): result = .failure(failure)
+    }
+    let completions = flushWaiters
+    flushWaiters.removeAll()
+    for completion in completions { completion(result) }
+  }
+  private func setPersistence(_ value: WritingHistoryPersistence) {
+    guard persistence != value else { return }
+    persistence = value
+    onPersistenceChange?()
+  }
+  private func report(_ failure: WritingHistoryFailure, diagnostic: Error) {
+    fputs("Writing history: \(diagnostic)\n", stderr)
+    setPersistence(.failed(failure))
   }
 }

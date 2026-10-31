@@ -1,5 +1,7 @@
 import AppKit
 import SilliesCore
+import SilliesPersistence
+import SilliesVault
 import Testing
 
 @testable import SilliesApp
@@ -39,7 +41,7 @@ func vaultLoadingMergesEarlyChangesWithoutOverwritingSavedSessions() async throw
 }
 
 @Test @MainActor
-func quittingBeforeVaultLoadFinishesFlushesInTheModalRunLoop() throws {
+func quittingBeforeVaultLoadFinishesFlushesInTheModalRunLoop() async throws {
   let directory = FileManager.default.temporaryDirectory
     .appendingPathComponent("sillies-load-quit-\(UUID().uuidString)")
   defer { removeTestFile(at: directory) }
@@ -50,15 +52,9 @@ func quittingBeforeVaultLoadFinishesFlushesInTheModalRunLoop() throws {
   vault.flushOnIOQueue {
     MainActor.assumeIsolated { finished = true }
   }
-  let deadline = ProcessInfo.processInfo.systemUptime + 3
-  while !finished, ProcessInfo.processInfo.systemUptime < deadline {
-    CFRunLoopRunInMode(CFRunLoopMode(RunLoop.Mode.modalPanel.rawValue as CFString), 0.01, true)
-  }
+  pumpVaultModalRunLoop { finished }
   #expect(finished)
-  let data = try Data(contentsOf: directory.appendingPathComponent("sessions.json"))
-  let decoder = JSONDecoder()
-  decoder.dateDecodingStrategy = .iso8601
-  #expect(try decoder.decode([SessionRecord].self, from: data).map(\.id) == [record.id])
+  #expect(try await vault.record(id: record.id)?.summary == record.summary)
 }
 
 private func makeLoadTestRecord(_ summary: String) -> SessionRecord {
@@ -78,20 +74,22 @@ func vaultLoadingSearchToleratesRepeatedRecordIdentifiers() async throws {
   vault.add(record)
   await vault.flush()
   #expect(vault.persistenceError == nil)
-  #expect(try await vault.search(.init(kind: nil, query: "Repeated")) == [record.id])
+  #expect(
+    Set(try await vault.page(.init(search: .init(kind: nil, query: "Repeated"))).records.map(\.id))
+      == [record.id])
 }
 
 @Test @MainActor
 func vaultPreservesCorruptMetadataAndMergesPendingChangesAfterRecovery() async throws {
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
   defer { removeTestFile(at: directory) }
-  let original = SessionVaultStore(directory: directory)
   let retained = makeLoadTestRecord("Retain after recovery")
   let removed = makeLoadTestRecord("Remove during failed load")
-  original.add(retained)
-  original.add(removed)
-  await original.flush()
-  let url = directory.appendingPathComponent("sessions.json")
+  try await Task.detached {
+    let database = try VaultDatabase(directory: directory)
+    try database.commit(.init(records: [.insert(retained), .insert(removed)]))
+  }.value
+  let url = directory.appendingPathComponent(VaultDatabase.filename)
   let recoverable = try Data(contentsOf: url)
   let corrupted = Data("{ interrupted metadata".utf8)
   try corrupted.write(to: url)
@@ -131,7 +129,7 @@ func vaultPreservesCorruptMetadataAndMergesPendingChangesAfterRecovery() async t
       characterID: "mochi", characterName: "Mochi", source: .init(appName: "Pocket Stash")),
     content: .init(text: .init(stashedItems: ["Keep until I delete it"])))
   vault.add(stash)
-  for index in 0..<(SessionVaultStore.maxStoredRecords + 2) {
+  for index in 0..<(VaultPageRequest.maximumPageSize + 2) {
     vault.add(
       SessionRecord(
         kind: .snap,
@@ -140,16 +138,16 @@ func vaultPreservesCorruptMetadataAndMergesPendingChangesAfterRecovery() async t
     )
   }
   await vault.flush()
-  #expect(vault.records.count == SessionVaultStore.maxStoredRecords + 3)
+  #expect(vault.recordCount == VaultPageRequest.maximumPageSize + 3)
   vault.applyRetention(.recent200)
   await vault.flush()
-  #expect(vault.records.count == SessionVaultStore.maxStoredRecords + 1)
+  #expect(vault.recordCount == VaultPageRequest.maximumPageSize + 1)
   let loaded = SessionVaultStore(directory: directory, defaults: defaults)
   await loaded.waitUntilLoaded()
-  #expect(loaded.records.contains { $0.id == stash.id })
+  #expect(try await loaded.record(id: stash.id) != nil)
   loaded.remove(id: stash.id)
   await loaded.flush()
-  #expect(!loaded.records.contains { $0.id == stash.id })
+  #expect(try await loaded.record(id: stash.id) == nil)
 }
 
 @Test @MainActor func vaultReportsUnwritableStorageInsteadOfAcknowledgingASave() async throws {
@@ -163,4 +161,29 @@ func vaultPreservesCorruptMetadataAndMergesPendingChangesAfterRecovery() async t
   }
   #expect(error != nil)
   #expect(vault.persistenceError != nil)
+}
+
+@MainActor private func pumpVaultModalRunLoop(_ complete: () -> Bool) {
+  let deadline = ProcessInfo.processInfo.systemUptime + 3
+  while !complete(), ProcessInfo.processInfo.systemUptime < deadline {
+    CFRunLoopRunInMode(CFRunLoopMode(RunLoop.Mode.modalPanel.rawValue as CFString), 0.01, true)
+  }
+}
+
+@Test @MainActor func quittingFlushesFieldEditsWhileOnlyTheModalRunLoopIsPumping() async throws {
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { removeTestFile(at: directory) }
+  let vault = SessionVaultStore(directory: directory)
+  let record = makeLoadTestRecord("Protected during quit")
+  vault.add(record)
+  await vault.flush()
+  let model = SessionVaultModel(vault: vault)
+  model.toggleProtection(record)
+  var finished = false
+  vault.flushOnIOQueue { MainActor.assumeIsolated { finished = true } }
+  pumpVaultModalRunLoop { finished }
+  #expect(finished)
+  let reloaded = SessionVaultStore(directory: directory)
+  #expect(try await reloaded.record(id: record.id)?.isProtected == true)
+  model.stop()
 }

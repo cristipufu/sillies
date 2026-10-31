@@ -28,7 +28,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private let controlCenterDismissal = ControlCenterDismissal()
   private var settingsWindow: NSWindow?
   private var speechServices: SpeechServices?
-  private let textModels = TextModelsPresentation()
+  private let reasoningServices = ReasoningServices()
+  private lazy var textModels = TextModelsPresentation(environment: reasoningServices.models)
   private var shortcuts: CommandShortcuts?
   private var writingTools: WritingTools?
   private let loginItems = LoginItemSettings()
@@ -89,7 +90,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         if let speechServices {
           writingTools = WritingTools(
             speech: speechServices, companions: controller,
-            services: .init(vault: skills.vault, recording: skills, commands: controller.commands))
+            services: .init(
+              vault: skills.vault, recording: skills, commands: controller.commands,
+              reasoning: reasoningServices.reasoning))
         }
         let shortcuts = CommandShortcuts()
         shortcuts.onEvent = { [weak controller] command, edge in
@@ -154,7 +157,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     withObservationTracking {
       let active = controller.shouldRun && controller.liveCount > 0
       updates.setActivity(active ? .active : .suspended)
-      Task { await TextModelEnvironment.shared.setActivity(active ? .active : .suspended) }
+      Task { [models = reasoningServices.models] in
+        await models.setActivity(active ? .active : .suspended)
+      }
     } onChange: { [weak self] in
       Task { @MainActor in self?.observeModelUpdateActivity() }
     }
@@ -173,11 +178,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     guard launch.isAutomatedRun else {
       let speech = try SpeechServices()
       speechServices = speech
-      return SkillCoordinator(audioFactory: speech.captureFactory, audioLanguages: speech.languages)
+      return SkillCoordinator(
+        vault: reasoningServices.makeVault(),
+        audio: .init(
+          captureFactory: speech.captureFactory, languages: speech.languages,
+          reasoning: reasoningServices.reasoning))
     }
     let tempVault = FileManager.default.temporaryDirectory
       .appendingPathComponent("sillies-vault-\(UUID().uuidString)", isDirectory: true)
-    return SkillCoordinator(vault: SessionVaultStore(directory: tempVault))
+    let speech = try SpeechServices()
+    return SkillCoordinator(
+      vault: reasoningServices.makeVault(directory: tempVault),
+      audio: .init(
+        captureFactory: speech.captureFactory, languages: speech.languages,
+        reasoning: reasoningServices.reasoning))
   }
 
   func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {

@@ -1,4 +1,5 @@
 import AppKit
+import SilliesWriting
 import SwiftUI
 
 /// A familiar session window that opens only on request and preserves the destination app's focus.

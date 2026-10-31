@@ -29,7 +29,7 @@ final class SkillCoordinator {
   }
 
   let vault: SessionVaultStore
-  var savedRecordCount: Int { vault.records.count }
+  var savedRecordCount: Int { vault.recordCount }
   var onBindingChanged: ((String, CompanionBindingState) -> Void)?
   var onEmitEvent: ((String, WorkspaceEvent) -> Void)?
   var onOpenVaultRecord: ((UUID) -> Void)?
@@ -40,8 +40,7 @@ final class SkillCoordinator {
   private var bindingTokens: [String: UInt64] = [:]
   private var nextBindingToken: UInt64 = 0
   private var companionNames: [String: String] = [:]
-  @ObservationIgnored private let audioFactory: SessionAudioCaptureFactory
-  @ObservationIgnored private let audioLanguages: AudioLanguageEnvironment
+  @ObservationIgnored private let audio: AudioSkillServices
   @ObservationIgnored private let snapshotLoader: SnapshotLoader
   private var finishingSessions: [UUID: any ActiveSkillSession] = [:]
   @ObservationIgnored private var finishWaiters: [() -> Void] = []
@@ -49,18 +48,12 @@ final class SkillCoordinator {
   @ObservationIgnored private var tickTask: Task<Void, Never>?
 
   init(
-    vault: SessionVaultStore = SessionVaultStore(),
-    audioFactory: @escaping SessionAudioCaptureFactory = {
-      AudioTranscriptionService(
-        configuration: $0, speech: AppleSpeechProvider.makeChannel, onUpdate: $1)
-    },
-    audioLanguages: AudioLanguageEnvironment = .live,
+    vault: SessionVaultStore, audio: AudioSkillServices,
     snapshotLoader: @escaping SnapshotLoader = { ids, top in
       await WindowTargetMetadata.shared.snapshots(for: ids, primaryScreenTop: top)
     }
   ) {
-    self.audioFactory = audioFactory
-    self.audioLanguages = audioLanguages
+    self.audio = audio
     self.vault = vault
     self.snapshotLoader = snapshotLoader
     vault.resumePendingSummaries()
@@ -79,7 +72,7 @@ final class SkillCoordinator {
   func binding(for id: String) -> CompanionBindingState { bindings[id] ?? .followingFocusedWindow }
 
   func presentation(for id: String) -> SkillPresentation {
-    let completed: SessionRecord?
+    let completed: SessionRecordHeader?
     if case .completed(_, _, _, let recordID, _) = binding(for: id) {
       completed = vault.records.first { $0.id == recordID }
     } else {
@@ -238,8 +231,7 @@ final class SkillCoordinator {
     let session = AudioSkillSession(
       request: .init(
         kind: request.skill, target: request.target,
-        recordingDirectory: vault.storageDirectory), captureFactory: audioFactory,
-      languages: audioLanguages
+        recordingDirectory: vault.storageDirectory), services: audio
     ) { [weak self] in
       guard let self, self.bindingTokens[id] == request.token,
         let presentation = self.audioPresentation(for: id),

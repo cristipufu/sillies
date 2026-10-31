@@ -1,4 +1,5 @@
 import Foundation
+import SilliesReasoning
 
 /// Writing observes a companion's presentation without owning its controller or capture lifetime.
 @MainActor protocol WritingCompanionHost: AnyObject {
@@ -25,4 +26,5 @@ extension SkillCoordinator: RecordingActivity {
   let vault: SessionVaultStore
   let recording: any RecordingActivity
   let commands: CommandDispatcher
+  let reasoning: any LocalReasoning
 }

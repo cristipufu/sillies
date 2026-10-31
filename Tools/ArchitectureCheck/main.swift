@@ -2,6 +2,11 @@ import Foundation
 
 func run() throws -> Bool {
   guard ArchitectureFixtures.verify() else { return false }
+  let package = try String(contentsOfFile: "Package.swift", encoding: .utf8)
+  let dependencyFailures = PackageBoundaryCheck.check(package)
+  for failure in dependencyFailures {
+    fputs("Package.swift: [package-boundary] \(failure)\n", stderr)
+  }
   let manifest = URL(fileURLWithPath: "Tools/ArchitectureCheck/UncheckedOwners.json")
   let owners = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: manifest))
   let policy = ArchitecturePolicy(uncheckedOwners: owners)
@@ -18,7 +23,7 @@ func run() throws -> Bool {
   for diagnostic in diagnostics.sorted(by: { $0.description < $1.description }) {
     fputs("\(diagnostic)\n", stderr)
   }
-  return diagnostics.isEmpty
+  return diagnostics.isEmpty && dependencyFailures.isEmpty
 }
 
 do { exit(try run() ? 0 : 1) } catch {

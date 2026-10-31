@@ -23,6 +23,18 @@ let package = Package(
     .target(name: "SilliesCore", exclude: ["AGENTS.md"]),
     .target(name: "SilliesInference"),
     .target(
+      name: "SilliesWriting",
+      dependencies: ["SilliesCore", "SilliesAudio", "SilliesSpeech", "SilliesReasoning"],
+      exclude: ["AGENTS.md"]),
+    .target(
+      name: "SilliesVault",
+      dependencies: ["SilliesCore", "SilliesPersistence", "SilliesReasoning"],
+      exclude: ["AGENTS.md"]),
+    .target(
+      name: "SilliesReasoning",
+      dependencies: ["SilliesCore", "SilliesTextModels", "SilliesModelStore"],
+      exclude: ["AGENTS.md"]),
+    .target(
       name: "SilliesTextModels",
       dependencies: ["SilliesCore", "SilliesModelStore", "SilliesInference"]),
     .executableTarget(
@@ -70,6 +82,8 @@ let package = Package(
         "SilliesModelStore", "SilliesModelValidation", "SilliesDiarizationNemotron",
         "WindowMetadataProtocol",
         "SilliesTextModels", "SilliesInference",
+        "SilliesReasoning",
+        "SilliesVault", "SilliesWriting",
       ],
       exclude: ["Platform/AGENTS.md", "UI/AGENTS.md"],
       resources: [.copy("Resources/Characters"), .copy("Resources/Scenes")]
@@ -83,7 +97,18 @@ let package = Package(
     .executableTarget(
       name: "TextModelBenchmark", dependencies: ["SilliesModelStore", "SilliesTextModels"],
       path: "Tools/TextModelBenchmark"),
+    .testTarget(
+      name: "SilliesWritingTests",
+      dependencies: [
+        "SilliesWriting", "SilliesCore", "SilliesAudio", "SilliesSpeech", "SilliesReasoning",
+      ]),
     .testTarget(name: "SilliesCoreTests", dependencies: ["SilliesCore"]),
+    .testTarget(
+      name: "SilliesVaultTests",
+      dependencies: ["SilliesVault", "SilliesCore", "SilliesPersistence", "SilliesReasoning"]),
+    .testTarget(
+      name: "SilliesReasoningTests",
+      dependencies: ["SilliesReasoning", "SilliesCore", "SilliesTextModels"]),
     .testTarget(
       name: "SilliesTextModelsTests",
       dependencies: ["SilliesTextModels", "SilliesModelStore", "SilliesInference"]),
@@ -104,6 +129,8 @@ let package = Package(
       dependencies: [
         "SilliesApp", "SilliesAudio", "SilliesAudioTestSupport", "SilliesCore",
         "SilliesPersistence",
+        "SilliesReasoning",
+        "SilliesVault", "SilliesWriting",
         "SilliesSpeech", "SilliesSpeechApple", "SilliesSpeechWhisper", "SilliesSpeechParakeet",
         "SilliesModelStore", "SilliesDiarizationNemotron",
         "WindowMetadataProtocol",

@@ -4,6 +4,7 @@ import SilliesModelStore
 
 @MainActor @Observable
 final class TextModelsPresentation {
+  static let systemModelID = TextModelEnvironment.appleID
   private(set) var manifests: [TextModelManifest] = []
   private(set) var selectedModelID = TextModelEnvironment.appleID
   private(set) var states: [String: ModelInstallationState] = [:]
@@ -14,7 +15,7 @@ final class TextModelsPresentation {
   @ObservationIgnored private var loading: Task<Void, Never>?
   private(set) var activeID: String?
 
-  init(environment: TextModelEnvironment = .shared) { self.environment = environment }
+  init(environment: TextModelEnvironment) { self.environment = environment }
 
   func start() {
     guard loading == nil else { return }

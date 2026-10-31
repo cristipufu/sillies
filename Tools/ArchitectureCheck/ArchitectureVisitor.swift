@@ -109,10 +109,94 @@ final class ArchitectureVisitor: SyntaxVisitor {
 
   override func visit(_ node: IdentifierTypeSyntax) -> SyntaxVisitorContinueKind {
     checkWritingBoundary(node, name: node.name.text)
+    checkReasoningBoundary(node, name: node.name.text)
     return .visitChildren
   }
 
+  override func visit(_ node: MemberTypeSyntax) -> SyntaxVisitorContinueKind {
+    checkWritingBoundary(node, name: node.name.text)
+    checkReasoningBoundary(node, name: node.name.text)
+    return .visitChildren
+  }
+
+  override func visit(_ node: DeclReferenceExprSyntax) -> SyntaxVisitorContinueKind {
+    checkWritingBoundary(node, name: node.baseName.text)
+    checkReasoningBoundary(node, name: node.baseName.text)
+    return .visitChildren
+  }
+
+  override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
+    let isGlobal =
+      node.modifiers.contains { ["static", "class"].contains($0.name.text) }
+      || node.parent?.parent?.parent?.is(SourceFileSyntax.self) == true
+    if isGlobal,
+      node.bindings.contains(where: { binding in
+        let name = compact(binding.pattern)
+        return ["shared", "instance", "singleton"].contains(name)
+          || binding.typeAnnotation?.tokens(viewMode: .sourceAccurate).contains {
+            Self.reasoningOwners.contains($0.text)
+          } == true
+          || (binding.initializer?.value.is(MemberAccessExprSyntax.self) != true
+            && binding.tokens(viewMode: .sourceAccurate).contains {
+              Self.reasoningOwners.contains($0.text)
+            })
+      }),
+      path.hasPrefix("Sources/SilliesReasoning/") || path.hasPrefix("Sources/SilliesVault/")
+        || path.hasPrefix("Sources/SilliesWriting/")
+        || node.tokens(viewMode: .sourceAccurate).contains(where: {
+          Self.reasoningOwners.contains($0.text)
+        })
+    {
+      report(
+        node, "service-lifetime",
+        "Own services as instance dependencies at application startup; do not add global service instances."
+      )
+    }
+    return .visitChildren
+  }
+
+  override func visit(_ node: FunctionParameterSyntax) -> SyntaxVisitorContinueKind {
+    if node.defaultValue?.value.tokens(viewMode: .sourceAccurate).contains(where: {
+      Self.reasoningOwners.contains($0.text)
+    }) == true {
+      report(
+        node, "dependency-default",
+        "Require a supplied reasoning dependency; do not default to a live service.")
+    }
+    return .visitChildren
+  }
+
+  private static let reasoningOwners: Set<String> = [
+    "LocalReasoningService", "TextModelEnvironment", "ReasoningServices", "AppleReasoningBackend",
+    "DownloadedReasoningBackend",
+  ]
+
+  private func checkReasoningBoundary(_ node: some SyntaxProtocol, name: String) {
+    guard Self.reasoningOwners.contains(name),
+      !path.hasPrefix("Sources/SilliesReasoning/"),
+      !path.hasPrefix("Sources/SilliesApp/App/Composition/")
+    else { return }
+    // Presentation of model installation is a separate adapter, not a reasoning consumer.
+    if name == "TextModelEnvironment", path == "Sources/SilliesApp/App/TextModelsPresentation.swift"
+    {
+      return
+    }
+    if name == "ReasoningServices", path == "Sources/SilliesApp/App/SilliesMain.swift" { return }
+    report(
+      node, "reasoning-boundary",
+      "Inject LocalReasoning. Construct concrete reasoning owners only in App/Composition.")
+  }
+
   private func checkWritingBoundary(_ node: some SyntaxProtocol, name: String) {
+    if path.hasPrefix("Sources/SilliesWriting/"),
+      ["UserDefaults", "FileManager", "URLSession", "Process"].contains(name)
+    {
+      report(
+        node, "writing-boundary",
+        "Inject preferences, history, and runtime capabilities; native infrastructure belongs in app adapters."
+      )
+    }
+
     if path == "Sources/SilliesApp/App/WritingTools.swift",
       ["CompanionController", "WorkspaceTracker", "SkillCoordinator"].contains(name)
     {
@@ -128,6 +212,7 @@ final class ArchitectureVisitor: SyntaxVisitor {
       node.calledExpression.as(MemberAccessExprSyntax.self)?.declName.baseName.text
       ?? node.calledExpression.as(DeclReferenceExprSyntax.self)?.baseName.text ?? expression
     checkWritingBoundary(node, name: name)
+    checkReasoningBoundary(node, name: name)
     if path.hasPrefix("Sources/SilliesCore/"),
       ["Task", "Timer", "DispatchQueue", "FileManager", "URLSession"].contains(where: {
         expression == $0 || expression.hasPrefix($0 + ".")
@@ -167,8 +252,10 @@ final class ArchitectureVisitor: SyntaxVisitor {
     {
       report(node, "ui-io", "Load files and decode images on a worker.")
     }
-    if expression == "SessionSummarizer.summarize", path.hasPrefix("Sources/SilliesApp/") {
-      if path != "Sources/SilliesApp/Skills/SessionSummaryWorker.swift"
+    if expression == "SessionSummarizer.summarize",
+      path.hasPrefix("Sources/SilliesApp/") || path.hasPrefix("Sources/SilliesReasoning/")
+    {
+      if path != "Sources/SilliesReasoning/SessionSummaryWorker.swift"
         || !isInsideDetachedWork(node)
       {
         report(node, "ui-io", "Use SessionSummaryWorker.summarize.")

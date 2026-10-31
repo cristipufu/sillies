@@ -1,12 +1,9 @@
 import AppKit
 import SilliesCore
+import SilliesWriting
 
 /// An explicit command takes one fresh metadata snapshot, independently of mascot tracking.
-struct FrontmostApplication: Sendable, Equatable {
-  let processID: Int32
-  let name: String
-  let bundleIdentifier: String?
-
+extension FrontmostApplication {
   @MainActor static var current: Self? {
     guard let app = NSWorkspace.shared.frontmostApplication,
       app.processIdentifier != ProcessInfo.processInfo.processIdentifier,

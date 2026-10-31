@@ -344,3 +344,29 @@ Final source validation after highlight staging: architecture/lint, Core (131), 
 
 
 The final Developer ID-signed release passed native smoke, presentation, cross-process writing insertion, focused-window lifecycle, and live drag/resize checks with Accessibility disabled for window tracking. Across 3,336 display-linked attachment samples, live move/resize attachment error was 0 points. Window-move handling measured p95 1.08 ms / max 1.26 ms; resize measured p95 0.28 ms / max 0.62 ms. Observed display-frame gaps were p95 16.37 ms / max 32.44 ms, so these results do not claim uninterrupted 120 Hz compositor presentation. Deep/strict signature verification passed.
+
+## Paged Vault and explicit reasoning ownership
+
+The Vault uses SQLite as its initial storage format. Its versioned database commits each changed
+record body, bounded header, and FTS5 document together. Listing and search read at most 200 headers
+per page. Bodies are loaded explicitly by ID; the detail cache keeps at most 16 entries and 8 MiB of
+encoded body content. Oversized records are returned without entering the cache. Exports process one
+record at a time, and background summaries queue IDs before loading the current record when admitted.
+
+The short 1,000-record regression verifies zero decoded bodies for listing/search, one body write for
+one edit, no reindexing on reopen, bounded cache retention, and no resurrection from an update after
+deletion. A 2,000-job fixture verifies a single active notes producer and cancellation without starting
+the remaining jobs. Coalesced-write tests submit 2,000 edits before a commit and another 1,000 while
+one is in flight. These are deterministic resource and operation counts, not process RSS or a promise
+about every Mac's filesystem latency.
+
+`SilliesReasoning` and `SilliesVault` are separate package targets. Reasoning capabilities are supplied
+by the app's composition root, with isolated fake backends in tests. Source and package-policy checks
+include 64 source fixtures and 6 dependency fixtures, covering forbidden imports, concrete-owner
+references, shared services, live default dependencies, and attempts to widen package dependencies.
+
+Validation: `make check BUILD_DIR=/tmp/sillies-paged-vault-verification`, `make stress`, and
+`make race-check` passed. The packaged native window check covered Settings/Vault activation,
+close/reopen, own-window exclusion, and foreground/background stacking. Thread Sanitizer reported
+no races in the selected concurrency cases. Both accelerated test commands retain their 90-second
+execution watchdogs; builds are outside that limit. Interaction budgets were not changed.

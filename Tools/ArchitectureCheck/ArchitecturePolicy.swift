@@ -5,6 +5,15 @@ struct ArchitecturePolicy {
 
   static let imports: [String: Set<String>] = [
     "SilliesCore": ["Foundation", "CoreGraphics"],
+    "SilliesReasoning": [
+      "Foundation", "FoundationModels", "NaturalLanguage", "SilliesCore", "SilliesTextModels",
+      "SilliesModelStore",
+    ],
+    "SilliesWriting": [
+      "Foundation", "Observation", "SilliesCore", "SilliesReasoning", "SilliesAudio",
+      "SilliesSpeech",
+    ],
+    "SilliesVault": ["Foundation", "SilliesCore", "SilliesPersistence", "SilliesReasoning"],
     "SilliesSpeech": [
       "Foundation", "Dispatch", "Accelerate", "AVFoundation", "Synchronization", "SilliesCore",
       "SilliesInference",
@@ -44,7 +53,7 @@ struct ArchitecturePolicy {
     "AccessibilityWindowSource.swift": ["readWindow", "roleSnapshot"],
     "AccessibilityTextAccess.swift": ["capture", "insert", "validate"],
     "ClipboardPasteTransaction.swift": ["prepare"],
-    "VaultSearchService.swift": ["search"],
+    "VaultLibrary.swift": ["storage"],
     "WindowTextRecognition.swift": ["recognize"],
     "WindowMetadataReader.swift": ["snapshot"],
     "WindowMetadataClient.swift": ["read"],

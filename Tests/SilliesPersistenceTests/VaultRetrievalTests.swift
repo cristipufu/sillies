@@ -19,20 +19,34 @@ private func cleanRetrievalFixture(_ directory: URL) {
 @Test func fullTextIndexFindsLateRomanianWordsAndRemovesDeletedRecords() throws {
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
   defer { cleanRetrievalFixture(directory) }
-  let index = try VaultSearchIndex(directory: directory)
+  let index = try VaultDatabase(directory: directory)
   let record = retrievalRecord(
     text: String(repeating: "early words ", count: 8_000) + " Ștefănescu discută îmbunătățirile.")
-  try index.synchronize([record])
-  #expect(try index.search("stefan imbunatat", kind: .record) == [record.id])
-  #expect(try index.search("stefan", kind: .stash).isEmpty)
-  #expect(try index.search("\" OR 1=1 --", kind: nil).isEmpty)
+  try index.commit(.init(records: [.insert(record)]))
+  #expect(
+    try index.page(.init(search: .init(kind: .record, query: "stefan imbunatat"))).records.map(\.id)
+      == [record.id])
+  #expect(
+    try index.page(.init(search: .init(kind: .stash, query: "stefan"))).records.map(\.id).isEmpty)
+  #expect(
+    try index.page(.init(search: .init(kind: nil, query: "\" OR 1=1 --"))).records.map(\.id).isEmpty
+  )
   var updated = record
   updated.transcript = "replacement text"
-  try index.synchronize([updated])
-  #expect(try index.search("stefan", kind: nil).isEmpty)
-  #expect(try index.search("replacement", kind: nil) == [record.id])
-  try index.synchronize([])
-  #expect(try index.search("replacement", kind: nil).isEmpty)
+  try index.commit(.init(records: [.update(updated)]))
+  #expect(
+    try index.page(.init(search: .init(kind: nil, query: "stefan"))).records.map(\.id).isEmpty)
+  #expect(
+    try index.page(.init(search: .init(kind: nil, query: "replacement"))).records.map(\.id) == [
+      record.id
+    ])
+  try index.commit(.init(deletion: .all))
+  #expect(
+    try index.page(.init(search: .init(kind: nil, query: "replacement"))).records.map(\.id).isEmpty)
+  let withNUL = retrievalRecord(text: "before\0 searchableafter")
+  try index.commit(.init(records: [.insert(withNUL)]))
+  #expect(try index.page(.init(search: .init(kind: nil, query: "searchableafter"))).total == 1)
+  #expect(try index.record(id: withNUL.id)?.transcript == withNUL.transcript)
 }
 
 @Test func markdownExportIncludesValidatedAttachmentsAndSpeakerNames() throws {

@@ -2,15 +2,107 @@ import Foundation
 
 /// Positive and negative fixtures prevent accidental file-wide exemptions or comment matches.
 enum ArchitectureFixtures {
+  private static func verifyPackageBoundaries() -> Bool {
+    let valid = [
+      "let t = [.target(name: \"SilliesWriting\", dependencies: [\"SilliesCore\", \"SilliesAudio\", \"SilliesReasoning\"]) ]",
+
+      "let t = [.target(name: \"SilliesReasoning\", dependencies: [\"SilliesCore\", \"SilliesTextModels\"])]",
+      "let t = [.target(name: \"SilliesVault\", dependencies: [\"SilliesCore\", \"SilliesPersistence\"])]",
+    ]
+    let invalid = [
+      "let t = [.target(name: \"SilliesWriting\", dependencies: [\"SilliesApp\"])]",
+      "let t = [.target(name: \"SilliesWriting\", dependencies: [\"SilliesPersistence\"])]",
+      "let t = [.target(name: \"SilliesWriting\", dependencies: [\"SilliesSpeechApple\"])]",
+
+      "let t = [.target(name: \"SilliesReasoning\", dependencies: [\"SilliesApp\"])]",
+      "let t = [.target(name: \"SilliesVault\", dependencies: [\"SilliesAudio\"])]",
+      "let t = [.target(name: \"SilliesCore\", dependencies: injectedDependencies)]",
+      "let t = [.target(name: \"UnreviewedFeature\", dependencies: [])]",
+    ]
+    let success =
+      valid.allSatisfy { PackageBoundaryCheck.check($0).isEmpty }
+      && invalid.allSatisfy { !PackageBoundaryCheck.check($0).isEmpty }
+    if !success {
+      fputs("Package boundary fixtures failed.\n", stderr)
+    } else {
+      print("Package boundaries: \(valid.count + invalid.count) regression fixtures passed.")
+    }
+    return success
+  }
   struct Fixture {
     let source: String
     let path: String
     let rules: Set<String>
   }
   static func verify() -> Bool {
+    guard verifyPackageBoundaries() else { return false }
     let permission = "Sources/SilliesApp/Skills/WindowSnapshotService.swift"
     let rendering = "Sources/SilliesApp/Rendering/CompanionPanel.swift"
     let fixtures: [Fixture] = [
+      .init(
+        source: "let defaults = UserDefaults.standard",
+        path: "Sources/SilliesWriting/NewWorkflow.swift", rules: ["writing-boundary"]),
+      .init(
+        source: "let files = FileManager.default", path: "Sources/SilliesWriting/NewWorkflow.swift",
+        rules: ["writing-boundary"]),
+      .init(
+        source: "let worker = Process()", path: "Sources/SilliesWriting/NewWorkflow.swift",
+        rules: ["writing-boundary"]),
+
+      .init(
+        source: "import AppKit", path: "Sources/SilliesWriting/NewWorkflow.swift",
+        rules: ["module-boundary"]),
+      .init(
+        source: "import SilliesApp", path: "Sources/SilliesWriting/NewWorkflow.swift",
+        rules: ["module-boundary"]),
+      .init(
+        source: "import SilliesPersistence", path: "Sources/SilliesWriting/NewWorkflow.swift",
+        rules: ["module-boundary"]),
+      .init(
+        source: "import SilliesSpeechApple", path: "Sources/SilliesWriting/NewWorkflow.swift",
+        rules: ["module-boundary"]),
+      .init(
+        source: "class Workflow { static let shared = Workflow() }",
+        path: "Sources/SilliesWriting/NewWorkflow.swift", rules: ["service-lifetime"]),
+      .init(
+        source: "let history: any WritingHistoryRecording",
+        path: "Sources/SilliesWriting/NewWorkflow.swift", rules: []),
+
+      .init(
+        source: "import AppKit", path: "Sources/SilliesReasoning/NewFeature.swift",
+        rules: ["module-boundary"]),
+      .init(
+        source: "import SilliesApp", path: "Sources/SilliesVault/NewFeature.swift",
+        rules: ["module-boundary"]),
+      .init(
+        source: "func build() { let engine = LocalReasoningService(backend: backend) }",
+        path: "Sources/SilliesApp/UI/NewView.swift", rules: ["reasoning-boundary"]),
+      .init(
+        source: "typealias Engine = SilliesReasoning.LocalReasoningService",
+        path: "Sources/SilliesApp/Skills/NewFeature.swift", rules: ["reasoning-boundary"]),
+      .init(
+        source: "func build() { let factory = LocalReasoningService.init }",
+        path: "Sources/SilliesApp/Skills/NewFeature.swift", rules: ["reasoning-boundary"]),
+      .init(
+        source: "let engine: any LocalReasoning",
+        path: "Sources/SilliesApp/Skills/NewFeature.swift", rules: []),
+      .init(
+        source: "class Services { let engine = LocalReasoningService(backend: backend) }",
+        path: "Sources/SilliesApp/App/Composition/NewComposition.swift", rules: []),
+      .init(
+        source: "actor Engine { static let shared = Engine() }",
+        path: "Sources/SilliesReasoning/NewFeature.swift", rules: ["service-lifetime"]),
+      .init(
+        source: "enum Services { static let engine = LocalReasoningService(backend: backend) }",
+        path: "Sources/SilliesApp/App/Composition/NewComposition.swift", rules: ["service-lifetime"]
+      ),
+      .init(
+        source: "let engine = LocalReasoningService(backend: backend)",
+        path: "Sources/SilliesApp/App/Composition/NewComposition.swift", rules: ["service-lifetime"]
+      ),
+      .init(
+        source: "init(backend: any ReasoningBackend = AppleReasoningBackend()) {}",
+        path: "Sources/SilliesReasoning/NewFeature.swift", rules: ["dependency-default"]),
       .init(
         source: "let controller: CompanionController",
         path: "Sources/SilliesApp/App/WritingTools.swift", rules: ["writing-boundary"]),
@@ -63,11 +155,11 @@ enum ArchitectureFixtures {
       .init(
         source:
           "Task.detached { SessionSummarizer.summarize(text: text, fallbackContext: fallback) }",
-        path: "Sources/SilliesApp/Skills/SessionSummaryWorker.swift", rules: []),
+        path: "Sources/SilliesReasoning/SessionSummaryWorker.swift", rules: []),
       .init(
         source:
           "Task.detached { work() }; SessionSummarizer.summarize(text: text, fallbackContext: fallback)",
-        path: "Sources/SilliesApp/Skills/SessionSummaryWorker.swift", rules: ["ui-io"]),
+        path: "Sources/SilliesReasoning/SessionSummaryWorker.swift", rules: ["ui-io"]),
       .init(
         source: "// try! fatalError()\nlet text = \"process.waitUntilExit()\"", path: rendering,
         rules: []),

@@ -25,7 +25,7 @@ race-check:
 
 lint:
 	swift format lint --strict --recursive Package.swift Sources Tests Tools/ArchitectureCheck Tools/SpeechBenchmark Tools/TextModelBenchmark scripts/make-icon.swift
-	bash -n scripts/build-app.sh scripts/test.sh scripts/toolchain.sh scripts/check-main-thread.sh scripts/test-stress.sh scripts/test-races.sh scripts/test-downloaded-speech.sh
+	bash -n scripts/build-app.sh scripts/embed-sparkle.sh scripts/test.sh scripts/toolchain.sh scripts/check-main-thread.sh scripts/test-stress.sh scripts/test-races.sh scripts/test-downloaded-speech.sh
 	python3 -B -m unittest discover -s Tests -p 'test_*.py'
 	bash scripts/check-main-thread.sh
 

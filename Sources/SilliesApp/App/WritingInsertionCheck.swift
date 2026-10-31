@@ -1,4 +1,5 @@
 import AppKit
+import SilliesWriting
 
 /// Opt-in native check, confined to an editor owned by this process. Never records audio.
 @MainActor enum WritingInsertionCheck {

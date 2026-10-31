@@ -1,5 +1,6 @@
 import AppKit
 import Observation
+import SilliesWriting
 
 /// A user-invoked picker may take focus; paste explicitly restores and revalidates its saved field.
 @MainActor @Observable final class PasteBackCoordinator {

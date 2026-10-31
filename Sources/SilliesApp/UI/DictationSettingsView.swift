@@ -13,7 +13,7 @@ struct DictationSettingsView: View {
   @State private var languageControl = SpeechModelDescriptor.Capabilities.LanguageControl.selectable
 
   var body: some View {
-    @Bindable var preferences = tools.dictation.preferences
+    @Bindable var preferences = tools.preferences
     VStack(alignment: .leading, spacing: 22) {
       SettingsCard(
         title: "Speak. Finish. It’s there.",
@@ -112,9 +112,9 @@ struct DictationSettingsView: View {
       let catalog = try await tools.languages.load()
       languages = catalog.installed
       languageControl = catalog.model.capabilities.languageControl
-      let selected = tools.dictation.preferences.languageIdentifier
+      let selected = tools.preferences.languageIdentifier
       if selected != "auto", let language = catalog.installedLanguage(matching: selected) {
-        tools.dictation.preferences.languageIdentifier = language.id
+        tools.preferences.languageIdentifier = language.id
       }
       languageError = nil
     } catch { languageError = error.localizedDescription }

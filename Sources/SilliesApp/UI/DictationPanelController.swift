@@ -1,4 +1,5 @@
 import AppKit
+import SilliesWriting
 import SwiftUI
 
 struct DictationFeedbackView: View {
@@ -28,6 +29,9 @@ struct DictationFeedbackView: View {
         }
       }
       if let failure = model.recoveryFailure { SessionFailureNotice(failure: failure) }
+      if let failure = model.historyFailure {
+        WritingHistoryNotice(failure: failure, retry: model.retryHistory)
+      }
     }
     .padding(.horizontal, 11).padding(.vertical, 8)
     .frame(width: WritingFeedbackLayout.width)
@@ -59,7 +63,7 @@ struct DictationFeedbackView: View {
     }
     panel.show(
       content(model, copy: copy, history: history),
-      sizing: model.recoveryFailure.map { .notice($0.message) } ?? .compact)
+      sizing: .init(notices: [model.recoveryFailure?.message, model.historyFailure?.message]))
   }
   private func content(
     _ model: DictationCoordinator, copy: @escaping (String) -> Void, history: @escaping () -> Void

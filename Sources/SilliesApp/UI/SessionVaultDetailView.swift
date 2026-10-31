@@ -56,7 +56,7 @@ struct SessionVaultDetailView: View {
           if record.screenshotTextState == .pending {
             ProgressView("Recognizing screenshot text in the background…").font(.callout)
           } else if record.screenshotTextState == .failed {
-            Button("Retry screenshot text recognition") { vault.retryScreenshotText(record) }
+            Button("Retry screenshot text recognition") { model.retryScreenshotText(record.id) }
           }
 
           if !record.processingNote.isEmpty {
@@ -177,19 +177,24 @@ struct SessionVaultDetailView: View {
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
       .task(id: PreviewIdentity(recordID: record.id, hasImage: previewImage != nil)) {
-        vault.setPinnedRecord(record.id)
-        if previewImage == nil {
-          vault.prepareImage(for: record)
-        }
+        vault.pin(record)
       }
     } else {
       VStack(spacing: 12) {
         Image(systemName: "archivebox")
           .font(.system(size: 32, weight: .light))
           .foregroundStyle(SilliesTheme.secondary.opacity(0.5))
-        Text("Select a session to inspect")
-          .font(.system(size: 15, weight: .semibold, design: .rounded))
-          .foregroundStyle(SilliesTheme.secondary)
+        if let error = model.detailError {
+          Text(error).textSelection(.enabled).multilineTextAlignment(.center)
+          Button("Try again") { Task { await model.loadSelection() } }.buttonStyle(
+            SoftButtonStyle())
+        } else if model.isLoadingDetail || vault.isLoading {
+          ProgressView("Opening session…").controlSize(.small)
+        } else {
+          Text("Select a session to inspect")
+            .font(.system(size: 15, weight: .semibold, design: .rounded))
+            .foregroundStyle(SilliesTheme.secondary)
+        }
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

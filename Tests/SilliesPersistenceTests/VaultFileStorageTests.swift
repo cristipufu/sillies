@@ -11,7 +11,7 @@ import Testing
     #expect(throws: (any Error).self) { try files.removeAttachment(named: filename) }
     #expect(throws: (any Error).self) { try files.write(Data(), named: filename) }
   }
-  for filename in ["sessions.json", "SESSIONS.JSON", "folder"] {
+  for filename in ["sessions.json", "SESSIONS.JSON", "vault.sqlite", "VAULT.SQLITE-WAL", "folder"] {
     #expect(throws: (any Error).self) { try files.removeAttachment(named: filename) }
   }
   try fixture.expectSentinelsPreserved()
@@ -39,15 +39,10 @@ import Testing
     kind: .record,
     origin: .init(characterID: "mochi", characterName: "Mochi", source: .init(appName: "Test")))
   record.audioFilename = "/"
-  let encoder = JSONEncoder()
-  encoder.dateEncodingStrategy = .iso8601
-  let malformed = try encoder.encode([record])
-  let files = VaultFileStorage(directory: fixture.vault)
-  try files.write(malformed, named: "sessions.json")
-  let repository = SessionRecordRepository(directory: fixture.vault)
-  #expect(throws: (any Error).self) { try repository.load() }
-  #expect(throws: (any Error).self) { try repository.save([record]) }
-  #expect(try Data(contentsOf: files.url(for: "sessions.json")) == malformed)
+  let repository = try VaultDatabase(directory: fixture.vault)
+  #expect(throws: (any Error).self) { try repository.commit(.init(records: [.insert(record)])) }
+  #expect(try repository.page(.init()).total == 0)
+  try fixture.expectSentinelsPreserved()
 }
 
 private struct VaultStorageFixture {

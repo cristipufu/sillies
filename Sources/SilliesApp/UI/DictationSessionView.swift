@@ -1,4 +1,5 @@
 import SilliesCore
+import SilliesWriting
 import SwiftUI
 
 struct DictationSessionView: View {
@@ -17,10 +18,11 @@ struct DictationSessionView: View {
           .font(.system(size: 28, weight: .medium, design: .rounded)).monospacedDigit()
       }
       controls
-      if let failure = model.recoveryFailure { SessionFailureNotice(failure: failure) }
-      if let result = model.result, !result.notice.isEmpty {
-        Text(result.notice).font(.callout).foregroundStyle(SilliesTheme.secondary)
-          .fixedSize(horizontal: false, vertical: true)
+      if hasNotices {
+        ViewThatFits(in: .vertical) {
+          notices
+          ScrollView { notices }.scrollBounceBehavior(.basedOnSize)
+        }
       }
       SessionTranscriptCard(
         text: model.preview, isFinished: !model.isActive,
@@ -46,6 +48,23 @@ struct DictationSessionView: View {
     )
     .background(SilliesTheme.paper).foregroundStyle(SilliesTheme.ink).tint(SilliesTheme.accent)
     .environment(\.controlActiveState, .active)
+  }
+
+  private var hasNotices: Bool {
+    model.recoveryFailure != nil || model.historyFailure != nil
+      || model.result?.notice.isEmpty == false
+  }
+  private var notices: some View {
+    VStack(alignment: .leading, spacing: SessionWindowLayout.spacing) {
+      if let failure = model.recoveryFailure { SessionFailureNotice(failure: failure) }
+      if let failure = model.historyFailure {
+        WritingHistoryNotice(failure: failure, retry: model.retryHistory)
+      }
+      if let result = model.result, !result.notice.isEmpty {
+        Text(result.notice).font(.callout).foregroundStyle(SilliesTheme.secondary)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+    }
   }
 
   private var controls: some View {

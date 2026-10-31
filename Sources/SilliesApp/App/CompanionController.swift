@@ -90,7 +90,7 @@ final class CompanionController {
   @ObservationIgnored private(set) var interactionCounts: [EventKind: Int] = [:]
 
   init(
-    settings: AppSettings, assets: CompanionAssets = .init(), services: CompanionServices = .init()
+    settings: AppSettings, assets: CompanionAssets = .init(), services: CompanionServices
   ) throws {
     let traceEnabled =
       ProcessInfo.processInfo.arguments.contains("--trace-drag")

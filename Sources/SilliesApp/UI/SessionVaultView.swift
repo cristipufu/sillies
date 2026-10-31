@@ -3,7 +3,6 @@ import SilliesCore
 import SwiftUI
 
 struct SessionVaultView: View {
-  private static let maxSidebarPreviewCharacters = 240
   let vault: SessionVaultStore
   @State private var model: SessionVaultModel
   @State private var showsStashComposer = false
@@ -20,24 +19,26 @@ struct SessionVaultView: View {
 
   var body: some View {
     let records = model.filteredRecords
-    let current = model.selectedRecord(in: records)
+    let current = model.selectedHeader(in: records)
     HStack(spacing: 0) {
       sidebar(records: records, selected: current)
       Divider().overlay(SilliesTheme.border)
-      SessionVaultDetailView(vault: vault, model: model, record: current)
+      SessionVaultDetailView(vault: vault, model: model, record: model.visibleDetail)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(SilliesTheme.paper)
     .foregroundStyle(SilliesTheme.ink)
     .onDisappear { model.stop() }
     .task(id: model.searchIdentity) { await model.refreshSearch() }
+    .task(id: model.detailIdentity) { await model.loadSelection() }
     .sheet(isPresented: $showsStashComposer) {
       StashComposerView { model.saveStash([$0]) }
     }
     .sheet(isPresented: $showsRetention) { VaultRetentionView(vault: vault) }
   }
 
-  private func sidebar(records: [SessionRecord], selected: SessionRecord?) -> some View {
+  private func sidebar(records: [SessionRecordHeader], selected: SessionRecordHeader?) -> some View
+  {
     VStack(alignment: .leading, spacing: 14) {
       HStack(spacing: 10) {
         ZStack {
@@ -124,7 +125,7 @@ struct SessionVaultView: View {
       HStack {
         Button("Retention…") { showsRetention = true }
         Spacer()
-        Button("Export all…") { model.exportAll() }.disabled(vault.records.isEmpty)
+        Button("Export all…") { model.exportAll() }.disabled(vault.recordCount == 0)
       }.font(.caption)
 
       if let error = vault.persistenceError {
@@ -132,7 +133,9 @@ struct SessionVaultView: View {
         Button("Retry saving") { vault.retrySaving() }
       }
 
-      if model.isSearching { ProgressView("Searching…").font(.caption) }
+      if model.isSearching {
+        ProgressView(model.searchQuery.isEmpty ? "Loading sessions…" : "Searching…").font(.caption)
+      }
       if let error = model.searchError { Text(error).font(.caption).foregroundStyle(.red) }
       if records.isEmpty {
         emptySidebarState
@@ -183,7 +186,7 @@ struct SessionVaultView: View {
     .frame(maxWidth: .infinity)
   }
 
-  private func recordRow(_ record: SessionRecord, isSelected: Bool) -> some View {
+  private func recordRow(_ record: SessionRecordHeader, isSelected: Bool) -> some View {
     Button {
       model.selectedRecordID = record.id
     } label: {
@@ -237,9 +240,9 @@ struct SessionVaultView: View {
                 .monospacedDigit()
                 .foregroundStyle(SilliesTheme.secondary)
             }
-            if record.kind == .stash && !record.stashedItems.isEmpty {
+            if record.kind == .stash && record.stashItemCount > 0 {
               Text(
-                "· \(record.stashedItems.count) item\(record.stashedItems.count == 1 ? "" : "s")"
+                "· \(record.stashItemCount) item\(record.stashItemCount == 1 ? "" : "s")"
               )
               .font(.system(size: 9.5, weight: .medium))
               .foregroundStyle(SilliesTheme.secondary)
@@ -268,24 +271,7 @@ struct SessionVaultView: View {
     .buttonStyle(.plain)
   }
 
-  private func cleanPreviewText(for record: SessionRecord) -> String {
-    if record.kind == .stash, let first = record.stashedItems.first {
-      return String(first.prefix(Self.maxSidebarPreviewCharacters))
-        .replacingOccurrences(of: "\n", with: " ")
-        .trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-    if !record.extractedText.isEmpty {
-      return String(record.extractedText.prefix(Self.maxSidebarPreviewCharacters))
-        .replacingOccurrences(of: "\n", with: " ")
-        .trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-    if !record.transcript.isEmpty {
-      return String(record.transcript.prefix(Self.maxSidebarPreviewCharacters))
-        .replacingOccurrences(of: "\n", with: " ")
-        .trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-    return String(record.summary.prefix(Self.maxSidebarPreviewCharacters))
-      .replacingOccurrences(of: "• ", with: "")
+  private func cleanPreviewText(for record: SessionRecordHeader) -> String {
+    record.preview.replacingOccurrences(of: "\n", with: " ")
   }
-
 }

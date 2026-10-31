@@ -28,7 +28,7 @@ final class CompanionHUDModel {
   }
   var state: CompanionBindingState = .followingFocusedWindow
   var persistenceError: String?
-  var completedRecord: SessionRecord?
+  var completedRecord: SessionRecordHeader?
   var audioSession: AudioSessionPresentation?
   var onOpenSession: (() -> Void)?
   var onUndoStash: ((UUID) -> Void)?

@@ -11,7 +11,11 @@ enum WritingFeedbackLayout {
 @MainActor final class AnchoredWritingPanel<Content: View> {
   enum Sizing: Equatable {
     case compact
-    case notice(String)
+    case notices([String])
+    init(notices: [String?]) {
+      let messages = notices.compactMap { $0 }
+      self = messages.isEmpty ? .compact : .notices(messages)
+    }
   }
   private var panel: SkillFloatingPanel?
   private var host: NSHostingController<Content>?

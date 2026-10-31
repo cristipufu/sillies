@@ -1,28 +1,6 @@
 import ApplicationServices
 import Foundation
-
-struct TextDestination: Sendable {
-  let id: UUID
-  let processID: Int32
-  let applicationName: String
-  let bundleIdentifier: String?
-  let selection: String
-}
-
-enum TextAccessError: LocalizedError {
-  case permission, unsupported, protectedField, changed, failed, clipboardRestore
-  var errorDescription: String? {
-    switch self {
-    case .permission: "Enable Accessibility to insert text. Your result can still be copied."
-    case .unsupported: "This field does not support safe insertion. Copy the result instead."
-    case .protectedField: "Dictation is unavailable in a protected field."
-    case .changed: "The destination changed. Your text is ready to copy or paste."
-    case .failed: "Insertion could not be confirmed. Check the field before pasting again."
-    case .clipboardRestore:
-      "Text may already be inserted, but the previous clipboard could not be restored. Check the field before pasting again."
-    }
-  }
-}
+import SilliesWriting
 
 /// Explicit selection and insertion only. AX objects remain on this isolated worker.
 actor AccessibilityTextAccess: TextDestinationAccess {
@@ -71,8 +49,7 @@ actor AccessibilityTextAccess: TextDestinationAccess {
       length: min(range.location, Limits.contextLength))
     let context = try substring(element, range: contextRange)
     let destination = TextDestination(
-      id: UUID(), processID: application.processID,
-      applicationName: application.name, bundleIdentifier: application.bundleIdentifier,
+      id: UUID(), application: application,
       selection: selected)
     focus = Focus(
       destination: destination, element: element, range: range,

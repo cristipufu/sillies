@@ -2,6 +2,10 @@
 
 Read `AGENTS.md` and the relevant ownership contract before changing a subsystem. Extend the existing owner when adding a state transition. Introduce a new owner when a responsibility needs a different lifetime, dependency set, or reason to change.
 
+For an extension, start with the dedicated guide: [companions](contributing/companions.md),
+[interactions](contributing/interactions.md), [skills](contributing/skills.md),
+[speech models](contributing/speech-models.md), or [text models](contributing/text-models.md).
+
 | Responsibility | Owner | Contract |
 | --- | --- | --- |
 | Behavior, geometry, attachment transitions | `SilliesCore` | Value models; explicit time inputs; no AppKit, I/O, or timers |
@@ -60,6 +64,23 @@ See [local text model extension contracts](local-text-models.md) and [speech pro
 - Scene changes run the `playful` tests: virtual-time completion of every scene, exterior native bounds, pickup return slots, fixed prop grips, busy-crew exclusion, restart cleanup, and short native travel budgets. The downloaded-speech integration check also samples scene travel while two speech channels, optional speaker channels, and AAC encoding run. Visual exports remain opt-in; never replace bounded verification with a multi-hour soak.
 
 Keep refactors reviewable by responsibility. Add tests for behavioral boundaries and failure modes, rather than tests that assert private method names or line counts. Update architecture and extension documentation whenever the associated contract changes.
+
+## README artwork
+
+The README uses production companion artwork, the skill wheel, the recording HUD, and the transcript
+view over sample document/meeting backgrounds. These are composed previews, not captures of other
+applications or real conversations. Regenerate candidates without replacing the running app:
+
+```sh
+SILLIES_README_PREVIEWS="$PWD/build/readme-previews" \
+  bash scripts/test.sh --filter exportReadmePreviewCandidates
+```
+
+The opt-in fixture exports light/dark skill scenes, a crew sheet, and a light listening scene at 2×
+resolution. It uses temporary hidden windows, sample text, and no live preferences or audio capture.
+Without the environment variable, the fixture returns immediately. Review candidates before replacing
+`docs/images/skills-light.png` and `docs/images/listening-light.png`; those two are the selected README
+images. The app icon comes from `scripts/make-icon.swift`.
 
 ## Local contracts and automated boundaries
 

@@ -1,89 +1,178 @@
-# Sillies
+<p align="center">
+  <img src="docs/images/icon.png" width="96" height="96" alt="Sillies app icon: a cat and ninja sharing a window edge">
+</p>
 
-Little companions. Big personalities.
+<h1 align="center">Sillies</h1>
 
-A native macOS menu-bar app. **Mochi** the sleepy ginger cat, **Kiko** the dramatic ninja, **Pogo** the curious frog, and **Bolt** the earnest robot roam your window edges and react to your workspace. Swift 6, AppKit, SwiftUI, Core Animation.
+<p align="center">
+  <strong>Little companions. Useful superpowers.</strong><br>
+  Twelve animated companions that live on your window edges.<br>
+  Dictate a thought, capture a meeting, save something for later. All on your Mac.
+</p>
 
-## Run
+<p align="center">
+  <a href="#meet-your-crew">The crew</a> ·
+  <a href="#give-them-something-to-do">Skills</a> ·
+  <a href="#choose-your-local-models">Local models</a> ·
+  <a href="#get-started">Get started</a> ·
+  <a href="#build-on-sillies">Contribute</a>
+</p>
 
-Requires macOS 26+, Swift 6+, and Xcode 26 or later for the test suite. Build scripts use an installed `/Applications/Xcode.app` when Command Line Tools are selected; they do not change your global developer settings.
+<p align="center"><sub>Native macOS app · Apple silicon · macOS 26+ · No account required</sub></p>
+
+<p align="center">
+  <img src="docs/images/skills-light.png" width="1000" alt="Sillies companions perched on a sample document, with Mochi inside the skill wheel and Participate selected">
+</p>
+
+## Meet your crew
+
+Mochi naps on the title bar. Kiko takes the dramatic route. Pogo climbs the side of your window.
+Bolt is doing his very best. Pick your favorites from twelve companions, each with its own artwork,
+personality, and reactions.
+
+They ride along as you move and resize windows. In **Playful** mode, they might dance together, sweep
+an edge, throw a paper plane, or gather around a tiny campfire. Choose **Calm**, reduce motion, exclude
+an app, or pause the whole crew when you want some quiet.
+
+Sillies lives in the menu bar. Your companions stay outside the window’s content, leaving your work to you.
+
+## Give them something to do
+
+Pick up a companion and hold it over a window. The skill wheel appears; move to an action and release.
+Right-click menus and configurable global shortcuts offer the same actions.
+
+| Skill | What happens |
+| --- | --- |
+| **Listen** | Record app audio and your microphone, follow a live transcript, and save the conversation with notes and action items. |
+| **Participate** | Everything in Listen, with suggested questions in your companion’s speech bubble, grounded in the conversation. |
+| **Snap** | Capture a window to the clipboard and Vault. Background text recognition makes the screenshot searchable. |
+| **Explain** | Read the text in a window screenshot and explain it with your chosen local text model. |
+| **Record** | Capture your microphone, with playable audio, a transcript, and notes. |
+
+<p align="center">
+  <img src="docs/images/listening-light.png" width="1000" alt="Mochi listening on a sample meeting window, with pause and finish controls and the live transcript open alongside it">
+</p>
+
+Open the transcript when you need it; close it and recording continues. Scroll back or select text without
+being pulled to the bottom. **Jump to latest** resumes following. Optional speaker detection helps tell
+voices apart, and you can name speakers in saved recordings.
+
+Meeting capture includes the selected app’s audio and your microphone. For browsers, that can include
+other tabs playing audio. [Capture details and permissions →](docs/skills.md)
+
+## Speak, write, find it later
+
+- **Dictate into your work.** Hold a shortcut to speak, or toggle listening for a longer thought. A companion
+  shows when it is listening. Choose verbatim or lightly cleaned text, and add names and technical terms
+  to your personal dictionary. If insertion fails or focus changes, the result stays in Writing recovery.
+- **Edit a selection.** Shorten, fix grammar, or translate with a local text model. Inserting text never
+  sends a message or runs a terminal command for you.
+- **Keep a Pocket Stash.** Drop text, links, or file references onto a companion, or explicitly save the
+  clipboard. Search your saved snippets and paste them back into your work.
+- **Find it in the Vault.** Search transcripts, notes, and text inside screenshots. Play recordings,
+  protect important captures, and export Markdown with attachments. Captures stay until you delete
+  them unless you choose a retention limit; writing recovery has its own short history.
+
+[Writing, shortcuts, and recovery →](docs/everyday-workflows.md)
+
+## Choose your local models
+
+Speech recognition and text generation are separate choices. Start with Apple’s on-device models,
+or download alternatives in Settings. Install only what you want, switch providers, and remove models
+you no longer use. Downloading a model does not select it automatically.
+
+### Speech → words
+
+Settings → **Speech & Meetings**
+
+| Engine | Download | Language controls |
+| --- | --- | --- |
+| **Apple Speech** | Managed by macOS | Installed languages supported on your Mac |
+| **Whisper Large v3 Turbo** | ~630 MB | Multilingual, including English and Romanian; automatic or explicit language |
+| **Parakeet Ultra** | ~632 MB | Multilingual, including English and Romanian; automatic detection with language hints |
+
+Optional **Nemotron speaker detection** adds a separate ~102 MB download and works alongside any speech
+engine. Speaker labels can be wrong; you can rename speakers per recording. Parakeet’s hints guide the writing
+script, so they do not strictly force Romanian over English.
+
+Installed speech models can be checked daily for updates. You choose when to download an update;
+validation happens before switching, and the previous version remains available for rollback.
+
+[Speech models, languages, and updates →](docs/local-speech-models.md)
+
+### Words → notes, explanations, and edits
+
+Settings → **Local AI**
+
+| Model | Download | Required memory |
+| --- | --- | --- |
+| **Apple Intelligence** | Managed by macOS | An eligible Mac with Apple Intelligence enabled |
+| **Qwen3.5 4B** | ~3.05 GB | 16 GB |
+| **Qwen3.5 9B** | ~5.97 GB | 24 GB |
+| **Gemma 4 E4B** | ~5.18 GB | 16 GB |
+| **Ministral 3 8B Instruct** | ~5.61 GB | 24 GB |
+
+The downloadable models use 4-bit weights and run natively through MLX. No Python environment or local
+server to set up. Memory requirements leave room for transcription and your other apps.
+
+These are multilingual alternatives to Apple’s model, whose available languages depend on your Mac.
+Quality and speed vary by model, language, and hardware; downloadable text models are still being
+evaluated. Generated notes can make mistakes. When generation fails, Sillies preserves the transcript
+and labels extracted highlights separately. Text-model revisions currently ship with app updates.
+
+[Text models, requirements, and evaluation status →](docs/local-text-models.md)
+
+## Your Mac does the work
+
+Audio, screenshots, transcripts, and text inference stay on your Mac. No cloud inference fallback,
+account, or telemetry. Internet access is used to download models and check for updates.
+
+Recording starts only when you ask. There is no automatic clipboard history or background collection
+of what you type. Basic window companions need no permissions; capture asks for the relevant macOS
+permissions, and inserting text requires Accessibility. Settings provides the controls to open those panes.
+
+## Get started
+
+Sillies is under active development. Build from source on an Apple silicon Mac with macOS 26+, Xcode 26+
+with Swift 6.2 or later, and Xcode’s Metal toolchain.
 
 ```sh
+git clone https://github.com/cristipufu/sillies.git
+cd sillies
 make run
 ```
 
-The app is built at `build/Sillies.app`. Its paw icon appears in the menu bar. Mochi and Kiko start enabled, in Playful mode, following window edges. Choose any combination of the twelve characters in the crew picker; saved selections are preserved across updates. The popover stays compact (at most 640 points tall) and scrolls to the remaining controls. The app does not appear in the Dock.
+Look for the paw in your menu bar. Pick your crew, try a skill, or open **Give them a window to play on**.
+Settings organizes companions, writing, speech, local AI, shortcuts, and launch at login.
 
-Pogo waddles, hops, grips sides with sticky fingertips, and slips beneath fixed hands before pulling back up. Bolt takes measured steps, adjusts telescoping legs during resizing, climbs with magnetic mittens, and turns its face into a viewfinder for Snap. Each character has its own reaction pack and animation overrides, including reduced-motion expressions.
+If the Metal toolchain is missing, install it with `xcodebuild -downloadComponent MetalToolchain`.
+Use the built `.app` for permission testing. [Development setup and checks →](docs/development.md)
 
-The crew also includes **Boo** the bashful ghost, **Bloop** the affectionate octopus, **Sprout** the mushroom gardener, **Pip** the delighted axolotl, **Pebble** the dignified penguin, **Taro** the baby dragon, **Nib** the cautious hedgehog, and **Mallow** the floppy-eared bunny. Each has distinct vector artwork, signature actions, side-hanging clips, and all five radial skills. Your existing crew selection stays saved; new companions are available in the scrolling picker.
+## Build on Sillies
 
-Choose **Listen** to record and transcribe both sides of a meeting with local speaker echo cancellation, **Participate** for the same capture plus suggestions in your companion’s speech bubble, **Snap** for a screenshot copied to the clipboard, **Explain** for OCR with a local explanation, or **Record** for playable microphone audio with a transcript and notes. Right-click a companion for the same actions and **Save Clipboard**. Settings → Everyday Shortcuts offers configurable global shortcuts for every skill, Save Clipboard, the Vault, and pause/resume, plus optional launch at login. Window shortcuts resolve the foreground window when invoked and cancel if focus changes during lookup. The Vault also has **Add text / link** and audio playback. [Skill behavior and local processing requirements](docs/skills.md).
+Bring a new personality, interaction, skill, or local model. Each has a dedicated contributor guide:
 
-Dictate into a focused text field with **Control–Option–Space** (hold) or **Control–Option–D** (toggle). Both are configurable. Choose verbatim or lightly cleaned output and add names, Romanian spellings, and technical terms to the personal dictionary. Insertion requires Accessibility; copy-only dictation does not. Text that cannot be safely inserted stays in **Writing recovery**, independently of meeting retention. Selection commands offer shortening, grammar correction, and translation using the selected local writing model. Settings → **Local AI** offers optional Qwen3.5 4B, Qwen3.5 9B, Gemma 4 E4B, and Ministral 3 8B downloads alongside Apple Intelligence. [Local text models and contributor guide](docs/local-text-models.md).
+| I want to add… | Start here |
+| --- | --- |
+| **A companion** | [Character packs, artwork, and personality](docs/contributing/companions.md) |
+| **An interaction** | [Reactions, animations, and scenes between companions](docs/contributing/interactions.md) |
+| **A skill** | [Session lifecycle, commands, UI, and saved results](docs/contributing/skills.md) |
+| **A speech model or STT engine** | [Model manifests and speech-provider adapters](docs/contributing/speech-models.md) |
+| **A text / LLM model** | [Model manifests and text-provider adapters](docs/contributing/text-models.md) |
 
-Snap images become searchable through background OCR. The Vault has indexed full-text search, speaker renaming, protection from automatic trimming, Markdown export with attachments, and paste-back. **Search Pocket Stash** opens a keyboard picker for saved text. Captures are kept until explicitly deleted by default; Settings in the Vault lets you choose a retention limit. See [everyday writing and retrieval](docs/everyday-workflows.md) for behavior, privacy, and failure recovery.
+An existing animation can become a new reaction through JSON. A compatible model can join the catalog
+without new settings UI. New artwork, behavior, and runtimes have their own registration points;
+these are source contributions, not downloadable executable plugins.
 
-
-
-- **Window edges, by default:** companions walk above the focused window, ride its movement, brace/scramble during resizing, and squash/settle when it stops. Independent window movement confirms a drag before display-linked pointer attachment begins. Basic tracking works without Accessibility or Screen Recording permission.
-- **Room for everyone:** companions can pass each other while walking, but reserve separate stopping spots. They still wave when they meet; a crowded edge lets excess companions wait for room.
-- **Tall windows:** companions hang from exterior sides by their hands, with upright bodies, dangling feet, and occasional climbs up and down. Fully screen-filling windows have no exterior seat, so the crew waits.
-- **Desktop:** an explicit placement option in the menu-bar popover; it is never a silent permission fallback.
-- **Optional Accessibility:** adds faster focus/context notifications for applications that expose them.
-- **Play with the crew:** click a character to greet it or drag its body to pick it up. Enabling Play closes the popover. Transparent space and window manipulation controls keep passing input through; background document content does not disable the characters.
-- **Pause:** hides companions and stops their animation, motion clock, decision scheduler, and active-window observation.
-- **Settings:** window following, reduced motion, per-app exclusions, permission status, and a small diagnostics panel.
-
-Open **Give them a window to play on** from the menu-bar popover for a real native playground. Drag or resize it yourself, or try Squeeze, Nudge, and Make it tall. Window following needs no permission setup. Optional enhanced app reactions are available in Settings; development signing can require re-enabling that optional permission after a rebuild.
-
-## Develop
-
-```sh
-make debug       # Debug .app bundle
-make preview     # Open the control center in a regular preview window
-make test        # Pure behavior, geometry, and pack validation tests
-make check       # Formatting, tests, debug bundle, catalog, native Settings/Vault lifecycle
-make gui-check   # Also checks lifecycle, window tracking, and live drag attachment
-make build       # Optimized local build
-```
-
-Open `Package.swift` in Xcode to browse and debug. Use the bundled app for permission testing, rather than running the bare executable from SwiftPM.
+Keep changes focused: pure behavior and geometry in Core, character choices in packs, and capture,
+inference, storage, and presentation behind their own boundaries. Follow [the development contract](AGENTS.md),
+preserve cancellation and recovery, and keep work off the UI thread.
 
 ```sh
-build/Sillies.app/Contents/MacOS/Sillies --snapshot-dir build/previews
+make check BUILD_DIR=/tmp/sillies-check   # Validate without replacing your running app
 ```
 
-Exports the control center and all twelve character portraits as PNGs, then exits. This renders Sillies' own views; it does not capture other apps.
+[Architecture](docs/architecture.md) · [Performance](docs/performance.md) ·
+[Development guide](docs/development.md) · [Detailed character and scene contracts](docs/extending.md)
 
-## Structure
-
-```text
-Sources/
-  SilliesCore/                 Platform-independent decisions and geometry
-    BehaviorEngine.swift       Priority, cooldown, weighted personality, deadlines
-    CharacterDefinition.swift Validated, versioned character-pack schema
-    Identifiers.swift          Open event and animation identifiers
-    Motion.swift               Frame-independent movement and safe surfaces
-    AttachmentPose.swift       Standing feet and upright side handholds
-    PointerWindowGesture.swift Immediate pointer mapping and metadata validation
-    WindowDragSession.swift    Movement confirmation and bounded drag fallback
-    CharacterTransitions.swift Optional entry/exit/reattachment profiles
-  SilliesApp/
-    App/                       Lifecycle, catalog, settings, companion coordination
-    Platform/                  Workspace notifications and isolated AX observation
-    Rendering/                 Small panels, vector rigs, registered animation clips
-    UI/                        Menu-bar control center and settings
-    Resources/Characters/      Twelve independent character behavior definitions
-Tests/                         Deterministic logic and animation extension tests
-```
-
-See [architecture](docs/architecture.md), [adding characters and reactions](docs/extending.md), and [performance](docs/performance.md).
-
-## Current boundaries
-
-This is the first local implementation, not a notarized release. Tab/context reactions depend on the notifications an application exposes; Sillies does not claim to detect every tab switch or understand document contents. The live-window check opens a native window, validates its actual WindowServer ID, resizes and moves it, checks the exterior sides, and closes it. This is a GUI test and requires a logged-in macOS desktop. It exports Sillies-owned view composites to `build/previews/window-top.png` and `window-sides.png`; other apps are not captured.
-
-Terminal build completion, typing reactions, browser extensions, imported sprite packs, and automatic updates are not implemented yet.
-
-Display geometry supports screens above/left of the primary display. Fullscreen, Stage Manager, Mission Control, and Accessibility behavior should be exercised on the intended OS versions and display setups before shipping. Core tests cover coordinate conversion; they do not substitute for that interactive matrix.
+<p align="center"><sub>A little company. A little mischief. Everything local.</sub></p>

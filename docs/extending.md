@@ -1,5 +1,9 @@
 # Extending Sillies
 
+For a step-by-step contribution, start with [a companion](contributing/companions.md),
+[an interaction](contributing/interactions.md), or [a skill](contributing/skills.md).
+This document contains the detailed pack, renderer, and choreography contracts.
+
 ## Add a reaction
 
 Edit a character's JSON in `Sources/SilliesApp/Resources/Characters`. Reuse an existing event and animation without changing Swift code:
@@ -108,7 +112,7 @@ Run the opt-in `--external-drag-test --without-accessibility` check for a custom
 1. Define a namespaced `EventKind`, such as `terminal.buildFinished`.
 2. Implement a `@MainActor` type conforming to `WorkspaceEventProducer` in `Platform/`, or an optional integration module.
 3. Convert raw signals to `WorkspaceEvent` values using monotonic timestamps.
-4. Throttle noisy sources before routing them to the controller, and pass the producer to `CompanionController(settings:eventProducers:)`.
+4. Throttle noisy sources before routing them to the controller, and pass the producer through `CompanionServices.eventProducers` when constructing `CompanionController`.
 5. Add independent character reactions in JSON.
 
 For semantic events like successful terminal commands, prefer an explicit local integration over repeatedly reading the screen. Producers must have start/stop lifetimes and must stop active work when companions are paused or excluded.

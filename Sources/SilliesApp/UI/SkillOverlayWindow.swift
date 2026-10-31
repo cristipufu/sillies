@@ -24,7 +24,9 @@ final class SkillFloatingPanel: NSPanel {
     isReleasedWhenClosed = false
     self.ignoresMouseEvents = ignoresMouseEvents
     collectionBehavior = CompanionPanel.overlayCollectionBehavior
-    occlusionExclusion = WindowTrackingExclusions.transparentOverlays.register(UInt32(windowNumber))
+    if let id = windowServerID {
+      occlusionExclusion = WindowTrackingExclusions.transparentOverlays.register(id)
+    }
     if CompanionPanel.isRunningUnderUnitTests { alphaValue = 0 }
   }
 }

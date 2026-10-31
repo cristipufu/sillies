@@ -2,12 +2,16 @@ import SilliesCore
 import SwiftUI
 
 struct ControlCenterView: View {
+  struct Actions {
+    let openSettings: () -> Void
+    var openVault: () -> Void = {}
+    var openWriting: () -> Void = {}
+    let quit: () -> Void
+  }
   let controller: CompanionController
-  let openSettings: () -> Void
-  let openPlayground: () -> Void
-  var openVault: () -> Void = {}
-  let quit: () -> Void
+  let actions: Actions
   var speechModels: SpeechModelsPresentation? = nil
+  var dictation: DictationCoordinator? = nil
 
   var body: some View {
     @Bindable var settings = controller.settings
@@ -49,13 +53,21 @@ struct ControlCenterView: View {
           }
           Spacer()
           Button("Finish", action: { session.onFinish?() })
+        } else if let dictation, dictation.phase != .idle {
+          Button("Open Dictate", systemImage: "waveform") { actions.openWriting() }
+          Spacer()
+          if dictation.canFinish {
+            Button("Finish") { dictation.finish() }
+          } else {
+            Button(dictation.isActive ? "Cancel" : "Dismiss") { dictation.dismiss() }
+          }
         } else {
           Button("Record microphone", systemImage: "mic.fill") {
             controller.startMicrophoneRecording()
           }
           .disabled(!controller.shouldRun || controller.liveCount == 0)
           Spacer()
-          Button("Pocket Stash", systemImage: "tray") { openVault() }
+          Button("Pocket Stash", systemImage: "tray") { actions.openVault() }
         }
       }.font(.system(size: 12, weight: .medium))
 
@@ -71,7 +83,10 @@ struct ControlCenterView: View {
         spacing: 12
       ) {
         ForEach(controller.catalog.characters) { character in
-          characterCard(character, enabled: settings.enabledCharacters.contains(character.id)) {
+          CompanionCharacterCard(
+            character: character, enabled: settings.enabledCharacters.contains(character.id),
+            registry: controller.renderers
+          ) {
             settings.toggleCharacter(character.id)
           }
         }
@@ -129,7 +144,7 @@ struct ControlCenterView: View {
           RoundedRectangle(cornerRadius: 15).strokeBorder(
             SilliesTheme.border.opacity(0.7), lineWidth: 0.7))
 
-      Button(action: openVault) {
+      Button(action: actions.openVault) {
         HStack(spacing: 9) {
           Image(systemName: "archivebox.fill")
             .foregroundStyle(SilliesTheme.accent)
@@ -154,23 +169,11 @@ struct ControlCenterView: View {
             SilliesTheme.border.opacity(0.7), lineWidth: 0.7))
       }.buttonStyle(.plain)
 
-      Button(action: openPlayground) {
-        HStack(spacing: 9) {
-          Image(systemName: "rectangle.dashed.badge.record")
-          VStack(alignment: .leading, spacing: 3) {
-            Text("Give them a window to play on").font(.system(size: 11, weight: .semibold))
-            Text("Drag it. Squeeze it. Watch them hang on.").font(.system(size: 10))
-              .foregroundStyle(SilliesTheme.secondary)
-          }
-          Spacer()
-          Image(systemName: "arrow.up.right").font(.system(size: 11))
-        }.padding(12).background(
-          SilliesTheme.accent.opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
-      }.buttonStyle(.plain)
-
       if let speechModels, speechModels.availableUpdateCount > 0 {
-        Button("Model updates available", systemImage: "arrow.down.circle") { openSettings() }
-          .font(.caption.weight(.medium)).buttonStyle(.plain).foregroundStyle(SilliesTheme.accent)
+        Button("Model updates available", systemImage: "arrow.down.circle") {
+          actions.openSettings()
+        }
+        .font(.caption.weight(.medium)).buttonStyle(.plain).foregroundStyle(SilliesTheme.accent)
       }
 
       HStack {
@@ -178,11 +181,11 @@ struct ControlCenterView: View {
         Text("A little company. All on your Mac.").font(.system(size: 9)).foregroundStyle(
           SilliesTheme.secondary)
         Spacer()
-        Button(action: openSettings) {
+        Button(action: actions.openSettings) {
           Image(systemName: "slider.horizontal.3").font(.system(size: 12))
         }
         .buttonStyle(.plain).help("Settings").accessibilityLabel("Settings")
-        Button(action: quit) { Image(systemName: "power").font(.system(size: 11)) }
+        Button(action: actions.quit) { Image(systemName: "power").font(.system(size: 11)) }
           .buttonStyle(.plain).padding(.leading, 7).help("Quit Sillies").accessibilityLabel(
             "Quit Sillies")
       }
@@ -195,39 +198,6 @@ struct ControlCenterView: View {
     controller.settings.size < AppSettings.defaultSize
       ? "Tiny"
       : controller.settings.size > AppSettings.largeSizeThreshold ? "Big" : "Little"
-  }
-
-  private func characterCard(
-    _ character: CharacterDefinition, enabled: Bool, action: @escaping () -> Void
-  ) -> some View {
-    Button(action: action) {
-      VStack(alignment: .leading, spacing: 5) {
-        ZStack(alignment: .topTrailing) {
-          RoundedRectangle(cornerRadius: 12).fill(
-            Color(hex: character.accent).opacity(enabled ? 0.13 : 0.05))
-          CharacterPortrait(renderer: character.renderer, size: 72, registry: controller.renderers)
-            .frame(width: 100, height: 96).frame(maxWidth: .infinity, maxHeight: .infinity)
-            .opacity(enabled ? 1 : 0.4)
-          Image(systemName: enabled ? "checkmark.circle.fill" : "circle")
-            .font(.system(size: 15)).foregroundStyle(
-              enabled ? SilliesTheme.accent : SilliesTheme.secondary.opacity(0.4)
-            )
-            .padding(9)
-        }.frame(height: 111)
-        Text(character.name).font(.system(size: 14, weight: .bold, design: .rounded)).padding(
-          .top, 5)
-        Text(character.subtitle).font(.system(size: 9)).foregroundStyle(SilliesTheme.secondary)
-          .lineLimit(1).minimumScaleFactor(0.85)
-      }.padding(10).frame(maxWidth: .infinity, alignment: .leading)
-        .background(SilliesTheme.card, in: RoundedRectangle(cornerRadius: 17))
-        .overlay(
-          RoundedRectangle(cornerRadius: 17).strokeBorder(
-            enabled ? SilliesTheme.accent.opacity(0.45) : SilliesTheme.border,
-            lineWidth: enabled ? 1.3 : 0.7))
-    }.buttonStyle(.plain)
-      .accessibilityLabel("\(character.name), \(character.subtitle)")
-      .accessibilityValue(enabled ? "Enabled" : "Disabled")
-      .help(character.bio)
   }
 
 }

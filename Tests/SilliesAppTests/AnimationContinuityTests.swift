@@ -116,6 +116,8 @@ func nativeMinimizeSuppressesLateGeometryAndTracksRestoreWhilePaused() {
   window.isReleasedWhenClosed = false
   window.alphaValue = 0
   window.orderFrontRegardless()
+  let registration = WindowTrackingExclusions.nativeFixtures.register(UInt32(window.windowNumber))
+  defer { withExtendedLifetime(registration) {} }
   defer { window.close() }
   let tracker = WorkspaceTracker(accessibility: .disabled)
   tracker.start()

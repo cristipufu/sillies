@@ -15,6 +15,9 @@ import SilliesCore
   private(set) var isWorking = false
   private(set) var status = ""
   private(set) var result: WritingResult?
+  private(set) var title = "Edit selection"
+  private(set) var insertionFailure: SessionFailure?
+  var isPresented: Bool { !status.isEmpty }
   var activityChanged: (Bool) -> Void = { _ in }
   var changed: () -> Void = {}
   private let insertion: any TextInserting
@@ -33,7 +36,14 @@ import SilliesCore
   }
 
   func start(_ operation: LocalTextOperation) {
-    guard !isWorking, let application = services.currentApplication() else { return }
+    guard !isWorking else { return }
+    guard let application = services.currentApplication() else {
+      status = "Select text in the app you want to edit first."
+      changed()
+      return
+    }
+    title = operation.title
+    insertionFailure = nil
     generation = UUID()
     let token = generation
     isWorking = true
@@ -87,7 +97,12 @@ import SilliesCore
       status = message
       self.result = result
     } catch {
-      if generation == token, !Task.isCancelled { status = error.localizedDescription }
+      if generation == token, !Task.isCancelled {
+        status = error.localizedDescription
+        if case TextAccessError.permission = error {
+          insertionFailure = .permissionDenied(.openAccessibilitySettings)
+        }
+      }
     }
     guard generation == token else { return }
     finish()
@@ -113,6 +128,15 @@ import SilliesCore
     work?.cancel()
     work = nil
     status = "Writing canceled"
+    finish()
+  }
+  func dismiss() {
+    generation = UUID()
+    work?.cancel()
+    work = nil
+    status = ""
+    result = nil
+    insertionFailure = nil
     finish()
   }
   private func finish() {

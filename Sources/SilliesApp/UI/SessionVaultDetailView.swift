@@ -44,6 +44,15 @@ struct SessionVaultDetailView: View {
               Text("Preparing local notes…").font(.callout)
             }
           }
+          if !record.summaryPending, !record.transcript.isEmpty || !record.extractedText.isEmpty {
+            Button {
+              model.regenerateNotes(record)
+            } label: {
+              Label("Regenerate notes", systemImage: "arrow.clockwise")
+            }.buttonStyle(SoftButtonStyle())
+              .help(
+                "Use the model selected in Settings → Local AI. Your transcript stays unchanged.")
+          }
           if record.screenshotTextState == .pending {
             ProgressView("Recognizing screenshot text in the background…").font(.callout)
           } else if record.screenshotTextState == .failed {
@@ -52,6 +61,10 @@ struct SessionVaultDetailView: View {
 
           if !record.processingNote.isEmpty {
             Text(record.processingNote).font(.callout).foregroundStyle(SilliesTheme.secondary)
+              .textSelection(.enabled)
+          }
+          if !record.notesNotice.isEmpty {
+            Text(record.notesNotice).font(.callout).foregroundStyle(SilliesTheme.secondary)
               .textSelection(.enabled)
           }
           if !record.explanation.isEmpty {
@@ -83,9 +96,16 @@ struct SessionVaultDetailView: View {
               record.summary.contains("•") || !record.transcript.isEmpty
               || !record.extractedText.isEmpty
             sectionCard(
-              title: hasStructuredHighlights ? "SUMMARY & HIGHLIGHTS" : "SESSION NOTE",
+              title: hasStructuredHighlights
+                ? record.notesSource.title.uppercased() : "SESSION NOTE",
               symbol: hasStructuredHighlights ? "sparkles" : "note.text"
             ) {
+              if record.notesSource == .extracted {
+                Text(
+                  "Selected excerpts from the transcript, not an AI summary. Open the full transcript for context."
+                )
+                .font(.caption).foregroundStyle(SilliesTheme.secondary).textSelection(.enabled)
+              }
               Text(record.summary)
                 .font(.system(size: 13))
                 .lineSpacing(3.5)

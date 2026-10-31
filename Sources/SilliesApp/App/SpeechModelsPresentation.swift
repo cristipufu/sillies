@@ -5,26 +5,7 @@ import SilliesModelStore
 
 @MainActor @Observable
 final class SpeechModelsPresentation {
-  enum State: Equatable {
-    case absent, downloaded, ready, paused, verifying, preparing, validating, cancelling
-    case downloading(Double)
-    case failed(String)
-    case preparationFailed(String)
-    var label: String {
-      switch self {
-      case .absent: "Not downloaded"
-      case .downloaded: "Downloaded"
-      case .ready: "Ready on this Mac"
-      case .paused: "Download paused"
-      case .verifying: "Verifying download…"
-      case .preparing: "Preparing for this Mac…"
-      case .validating: "Checking compatibility on this Mac…"
-      case .cancelling: "Cancelling…"
-      case .downloading(let fraction): "Downloading · \(Int(fraction * 100))%"
-      case .failed(let message), .preparationFailed(let message): message
-      }
-    }
-  }
+  typealias State = ModelInstallationState
   private static let preferenceKey = "transcriptionModel"
   private static let diarizationPreferenceKey = "speakerDetectionModel"
   private(set) var selectedModelID: String
@@ -139,10 +120,12 @@ final class SpeechModelsPresentation {
       let delivery = Task { [weak self] in
         for await progress in updates {
           guard !Task.isCancelled else { return }
+          let fraction = min(
+            1, max(0, Double(progress.completedBytes) / Double(max(1, progress.totalBytes))))
           self?.states[id] =
             progress.phase == .verifying
-            ? .verifying
-            : .downloading(Double(progress.completedBytes) / Double(max(1, progress.totalBytes)))
+            ? .verifying(fraction)
+            : .downloading(fraction)
         }
       }
       defer {
@@ -202,7 +185,7 @@ final class SpeechModelsPresentation {
   func rollBack(_ manifest: SpeechModelManifest) {
     let id = manifest.model.id
     guard tasks[id] == nil else { return }
-    states[id] = .verifying
+    states[id] = .validating
     tasks[id] = Task(priority: .utility) { [weak self, registry] in
       do {
         try await registry.rollBack(id)

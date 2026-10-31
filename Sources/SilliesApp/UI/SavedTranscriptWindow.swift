@@ -19,6 +19,7 @@ private struct SavedTranscriptView: View {
         styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered,
         defer: false)
       created.isReleasedWhenClosed = false
+      AppContentWindowStacking.shared.register(created)
       created.center()
       window = created
     }

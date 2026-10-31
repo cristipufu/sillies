@@ -7,6 +7,7 @@ struct ArchitecturePolicy {
     "SilliesCore": ["Foundation", "CoreGraphics"],
     "SilliesSpeech": [
       "Foundation", "Dispatch", "Accelerate", "AVFoundation", "Synchronization", "SilliesCore",
+      "SilliesInference",
     ],
     "SilliesSpeechApple": [
       "Foundation", "AVFoundation", "Speech", "Synchronization", "SilliesSpeech",
@@ -17,6 +18,13 @@ struct ArchitecturePolicy {
     "SilliesSpeechParakeet": ["Foundation", "FluidAudio", "SilliesSpeech"],
     "SilliesDiarizationNemotron": ["Foundation", "FluidAudio", "SilliesSpeech"],
     "SilliesModelStore": ["Foundation", "CryptoKit", "Synchronization", "SilliesCore"],
+    "SilliesInference": ["Foundation"],
+    "SilliesTextModels": [
+      "Foundation", "Darwin", "SilliesCore", "SilliesModelStore", "SilliesInference",
+    ],
+    "SilliesTextInference": [
+      "Foundation", "Darwin", "MLX", "MLXLLM", "MLXLMCommon", "Tokenizers", "SilliesTextModels",
+    ],
     "SilliesModelValidation": ["Foundation", "CoreML"],
     "SilliesPersistence": ["Foundation", "Darwin", "SQLite3", "SilliesCore"],
     "SilliesAudio": [
@@ -41,6 +49,7 @@ struct ArchitecturePolicy {
     "WindowMetadataReader.swift": ["snapshot"],
     "WindowMetadataClient.swift": ["read"],
     "WindowMetadataConnection.swift": ["read"],
+    "TextWorkerConnection.swift": ["generate"],
     "ApplicationIconCache.swift": ["load"],
   ]
 }

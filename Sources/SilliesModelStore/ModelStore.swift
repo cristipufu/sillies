@@ -57,13 +57,13 @@ package actor ModelStore {
     try ModelVersionSelection(current: candidate, previous: previous).write(root: root)
   }
 
-  package func isInstalled(_ manifest: SpeechModelManifest) throws -> Bool {
+  package func isInstalled(_ manifest: any ModelArtifactManifest) throws -> Bool {
     try manifest.validate()
     let directory = try location(manifest)
     let receipt = try ModelFiles.child(Self.receiptName, in: directory)
     guard FileManager.default.fileExists(atPath: receipt.path) else { return false }
     let installed = try JSONDecoder().decode(Receipt.self, from: Data(contentsOf: receipt))
-    guard installed.revision == manifest.model.revision else { return false }
+    guard installed.revision == manifest.revision else { return false }
     return try manifest.artifacts.allSatisfy { artifact in
       let file = try ModelFiles.child(artifact.path, in: directory)
       guard FileManager.default.fileExists(atPath: file.path) else { return false }
@@ -91,11 +91,11 @@ package actor ModelStore {
   }
 
   package func install(
-    _ manifest: SpeechModelManifest,
+    _ manifest: any ModelArtifactManifest,
     progress: @escaping @Sendable (ModelInstallationProgress) -> Void
   ) async throws {
     try manifest.validate()
-    let id = manifest.model.id
+    let id = manifest.modelID
     guard installing.insert(id).inserted else { throw ModelStoreError.busy }
     defer { installing.remove(id) }
     guard leases[id, default: []].isEmpty else { throw ModelStoreError.inUse }
@@ -109,19 +109,17 @@ package actor ModelStore {
       try Task.checkCancellation()
       let file = try ModelFiles.child(artifact.path, in: staging)
       let previous = completed
-      try await installArtifact(artifact, at: file, staging: staging) { bytes in
+      try await installArtifact(artifact, at: file, staging: staging) { phase, bytes in
         progress(
           .init(
-            phase: .downloading, completedBytes: previous + bytes,
+            phase: phase, completedBytes: previous + bytes,
             totalBytes: manifest.downloadBytes))
       }
       completed += artifact.byteCount
-      progress(
-        .init(phase: .verifying, completedBytes: completed, totalBytes: manifest.downloadBytes))
     }
     try Task.checkCancellation()
     try ModelFiles.write(
-      Receipt(revision: manifest.model.revision),
+      Receipt(revision: manifest.revision),
       to: staging.appendingPathComponent(Self.receiptName))
     try ModelFiles.createDirectory(destination.deletingLastPathComponent())
     if FileManager.default.fileExists(atPath: destination.path) {
@@ -131,18 +129,18 @@ package actor ModelStore {
     }
   }
 
-  package func acquire(_ manifest: SpeechModelManifest) throws -> InstalledModelLease {
-    guard !installing.contains(manifest.model.id) else { throw ModelStoreError.busy }
+  package func acquire(_ manifest: any ModelArtifactManifest) throws -> InstalledModelLease {
+    guard !installing.contains(manifest.modelID) else { throw ModelStoreError.busy }
     guard try isInstalled(manifest) else { throw ModelStoreError.notInstalled }
     let directory = try location(manifest)
     for artifact in manifest.artifacts {
       try ModelFiles.verify(artifact, at: ModelFiles.child(artifact.path, in: directory))
     }
     let token = UUID()
-    let id = manifest.model.id
+    let id = manifest.modelID
     leases[id, default: []].insert(token)
     return InstalledModelLease(directory: directory, token: token) { [weak self] in
-      Task { await self?.release(id, token: token) }
+      await self?.release(id, token: token)
     }
   }
 
@@ -159,9 +157,9 @@ package actor ModelStore {
     try ModelVersionSelection(current: previous, previous: nil).write(root: root)
   }
 
-  package func remove(_ manifest: SpeechModelManifest) throws {
+  package func remove(_ manifest: any ModelArtifactManifest) throws {
     try manifest.validate()
-    let id = manifest.model.id
+    let id = manifest.modelID
     guard !installing.contains(id) else { throw ModelStoreError.busy }
     guard leases[id, default: []].isEmpty else { throw ModelStoreError.inUse }
     for path in [id, id + ".partial"] {
@@ -187,7 +185,7 @@ package actor ModelStore {
     }
   }
 
-  private func additionalDownloadBytes(_ manifest: SpeechModelManifest, staging: URL) throws
+  private func additionalDownloadBytes(_ manifest: any ModelArtifactManifest, staging: URL) throws
     -> Int64
   {
     try manifest.artifacts.reduce(0) { remaining, artifact in
@@ -202,16 +200,17 @@ package actor ModelStore {
     }
   }
 
-  private func location(_ manifest: SpeechModelManifest) throws -> URL {
-    try ModelFiles.child(manifest.model.id + "/" + manifest.model.revision, in: root)
+  private func location(_ manifest: any ModelArtifactManifest) throws -> URL {
+    try ModelFiles.child(manifest.modelID + "/" + manifest.revision, in: root)
   }
 
   private func installArtifact(
     _ artifact: ModelArtifact, at destination: URL, staging: URL,
-    progress: @escaping @Sendable (Int64) -> Void
+    progress: @escaping @Sendable (ModelInstallationProgress.Phase, Int64) -> Void
   ) async throws {
     if FileManager.default.fileExists(atPath: destination.path) {
       do {
+        progress(.verifying, artifact.byteCount)
         try ModelFiles.verify(artifact, at: destination)
         return
       } catch is CancellationError { throw CancellationError() } catch {
@@ -221,13 +220,15 @@ package actor ModelStore {
     }
     try ModelFiles.createDirectory(destination.deletingLastPathComponent())
     let resumeFile = staging.appendingPathComponent(artifact.sha256 + ".resume")
+    progress(.downloading, 0)
     let temporary = try await downloader.download(
-      .init(artifact: artifact, resumeFile: resumeFile, progress: progress))
+      .init(artifact: artifact, resumeFile: resumeFile, progress: { progress(.downloading, $0) }))
     defer {
       if FileManager.default.fileExists(atPath: temporary.path) {
         do { try FileManager.default.removeItem(at: temporary) } catch { ModelFiles.log(error) }
       }
     }
+    progress(.verifying, artifact.byteCount)
     try ModelFiles.verify(artifact, at: temporary)
     try FileManager.default.moveItem(at: temporary, to: destination)
   }

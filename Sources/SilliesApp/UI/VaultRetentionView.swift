@@ -10,7 +10,11 @@ struct VaultRetentionView: View {
   private var count: Int { selection.expired(in: vault.records).count }
   var body: some View {
     VStack(alignment: .leading, spacing: 18) {
-      Text("Keep what matters").font(.title2.bold())
+      SessionIdentityHeader(title: "Keep what matters", symbol: "archivebox") {
+        Text("Session Vault · Retention")
+      } accessory: {
+        EmptyView()
+      }
       Text(
         "Vault records stay until you delete them by default. Writing has its own 20-result recovery history."
       )
@@ -20,12 +24,12 @@ struct VaultRetentionView: View {
       Text(
         "Protected records and Pocket Stash items are never automatically trimmed. Choosing a limit deletes older unprotected captures and their saved attachments, now and as new captures arrive."
       )
-      .font(.callout).foregroundStyle(.secondary)
+      .font(.callout).foregroundStyle(SilliesTheme.secondary)
       if count > 0 {
         Text("This change will delete \(count) existing capture(s).").foregroundStyle(.orange)
       }
       HStack {
-        Button("Cancel") { dismiss() }
+        Button("Cancel") { dismiss() }.buttonStyle(SoftButtonStyle())
         Spacer()
         Button(count > 0 ? "Review deletion…" : "Save") {
           if count > 0 { confirmsDeletion = true } else { apply() }
@@ -36,6 +40,7 @@ struct VaultRetentionView: View {
       Button("Delete all Vault records…", role: .destructive) { confirmsClear = true }
         .disabled(!vault.isReadyForRetention || vault.records.isEmpty)
     }.padding(24).frame(width: 470)
+      .background(SilliesTheme.paper).foregroundStyle(SilliesTheme.ink).tint(SilliesTheme.accent)
       .onAppear { selection = vault.retentionPolicy }
       .confirmationDialog(
         "Delete \(count) captures and their attachments?", isPresented: $confirmsDeletion

@@ -13,7 +13,7 @@ struct SessionFailureNotice: View {
         Text(failure.message).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
         if let recovery = failure.recovery {
           Button(settingsTitle(recovery)) { SessionRecovery.open(recovery) }
-            .buttonStyle(.link)
+            .buttonStyle(SoftButtonStyle())
           if recovery == .openScreenRecordingSettings, let refreshScreenRecordingPermission {
             Button("Refresh screen recording permission", action: refreshScreenRecordingPermission)
               .buttonStyle(.link)
@@ -32,6 +32,7 @@ struct SessionFailureNotice: View {
     switch action {
     case .openMicrophoneSettings: "Open microphone settings"
     case .openScreenRecordingSettings: "Open screen recording settings"
+    case .openAccessibilitySettings: "Enable text insertion…"
     }
   }
 }

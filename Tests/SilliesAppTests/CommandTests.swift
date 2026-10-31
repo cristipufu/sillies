@@ -1,8 +1,41 @@
 import AppKit
+import Carbon
 import SilliesCore
 import Testing
 
 @testable import SilliesApp
+
+@Test @MainActor func suspendedShortcutsStayRegisteredAndStopReleasesThem() throws {
+  let domain = "sillies-shortcut-lifecycle-\(UUID())"
+  let defaults = try #require(UserDefaults(suiteName: domain))
+  defer { defaults.removePersistentDomain(forName: domain) }
+  let hotkeys = GlobalHotkeys()
+  let shortcuts = CommandShortcuts(defaults: defaults, hotkeys: hotkeys)
+  shortcuts.assign(nil, to: .holdDictation)
+  shortcuts.assign(nil, to: .toggleDictation)
+  shortcuts.assign(
+    .init(keyCode: UInt32(kVK_F18), modifiers: [.control, .option, .command], keyLabel: "F18"),
+    to: .toggleDictation)
+  shortcuts.start()
+  defer { shortcuts.stop() }
+  #expect(shortcuts.errors.isEmpty)
+  #expect(hotkeys.registeredCommands == [.toggleDictation])
+  for _ in 0..<100 {
+    shortcuts.configure(.suspended)
+    #expect(hotkeys.registeredCommands == [.toggleDictation])
+    shortcuts.configure(.active)
+    #expect(hotkeys.registeredCommands == [.toggleDictation])
+  }
+  shortcuts.stop()
+  #expect(hotkeys.registeredCommands.isEmpty)
+}
+
+@Test func everyShortcutHasOneDiscoverableGroupAndAnExplanation() {
+  let commands = CommandShortcutGroup.allCases.flatMap(\.commands)
+  #expect(Set(commands) == Set(AppCommand.allCases))
+  #expect(commands.count == AppCommand.allCases.count)
+  #expect(commands.allSatisfy { !$0.shortcutExplanation.isEmpty })
+}
 
 @Test @MainActor func commandShortcutsRejectCollisionsAndPreserveSavedBindings() throws {
   let domain = "sillies-shortcuts-\(UUID())"

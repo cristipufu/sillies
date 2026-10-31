@@ -1,16 +1,18 @@
+BUILD_DIR ?= build
+
 .PHONY: build debug run preview test check gui-check playful-gui-check lint stress race-check clean
 
 build:
-	bash scripts/build-app.sh release
+	SILLIES_BUILD_DIRECTORY="$(abspath $(BUILD_DIR))" bash scripts/build-app.sh release
 
 debug:
-	bash scripts/build-app.sh debug
+	SILLIES_BUILD_DIRECTORY="$(abspath $(BUILD_DIR))" bash scripts/build-app.sh debug
 
 run: build
-	open build/Sillies.app
+	open $(BUILD_DIR)/Sillies.app
 
 preview: debug
-	open build/Sillies.app --args --preview
+	open $(BUILD_DIR)/Sillies.app --args --preview
 
 test:
 	bash scripts/test.sh
@@ -22,18 +24,20 @@ race-check:
 	bash scripts/test-races.sh
 
 lint:
-	swift format lint --strict --recursive Package.swift Sources Tests Tools/ArchitectureCheck Tools/SpeechBenchmark scripts/make-icon.swift
+	swift format lint --strict --recursive Package.swift Sources Tests Tools/ArchitectureCheck Tools/SpeechBenchmark Tools/TextModelBenchmark scripts/make-icon.swift
 	bash -n scripts/build-app.sh scripts/test.sh scripts/toolchain.sh scripts/check-main-thread.sh scripts/test-stress.sh scripts/test-races.sh scripts/test-downloaded-speech.sh
 	bash scripts/check-main-thread.sh
 
 check: lint test debug
-	build/Sillies.app/Contents/MacOS/Sillies --validate-catalog
+	$(BUILD_DIR)/Sillies.app/Contents/Helpers/SilliesTextInference.app/Contents/MacOS/SilliesTextInference --self-test
+	$(BUILD_DIR)/Sillies.app/Contents/MacOS/Sillies --validate-catalog
+	$(BUILD_DIR)/Sillies.app/Contents/MacOS/Sillies --app-window-test --without-accessibility
 
 gui-check: check
-	build/Sillies.app/Contents/MacOS/Sillies --smoke-test
-	build/Sillies.app/Contents/MacOS/Sillies --presentation-test
-	build/Sillies.app/Contents/MacOS/Sillies --window-test --without-accessibility
-	build/Sillies.app/Contents/MacOS/Sillies --drag-latency-test --without-accessibility
+	$(BUILD_DIR)/Sillies.app/Contents/MacOS/Sillies --smoke-test
+	$(BUILD_DIR)/Sillies.app/Contents/MacOS/Sillies --presentation-test
+	$(BUILD_DIR)/Sillies.app/Contents/MacOS/Sillies --window-test --without-accessibility
+	$(BUILD_DIR)/Sillies.app/Contents/MacOS/Sillies --drag-latency-test --without-accessibility
 
 playful-gui-check: debug
 	python3 scripts/test-playful-scenes.py

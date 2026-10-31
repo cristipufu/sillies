@@ -28,6 +28,16 @@ final class CompanionInstance {
   private(set) var isPerformingScene = false
   private(set) var isWritingIndicator = false
 
+  var isAvailableForWriting: Bool {
+    !isPickedUp && !bindingState.isBound && !isWritingIndicator && !isReturningFromDrop
+      && !isWaitingForSpace && isAttachmentVisible && panel.isVisible
+  }
+  var writingAnchor: WritingCompanionAnchor {
+    .init(
+      name: definition.name, position: position, characterSize: view.characterSize,
+      windowLayer: attachedWindowLayer, windowNumber: panel.windowNumber)
+  }
+
   func beginWritingIndicator(at time: TimeInterval) -> BehaviorState? {
     isWritingIndicator = true
     clearMotion()
@@ -37,6 +47,10 @@ final class CompanionInstance {
   func endWritingIndicator() {
     isWritingIndicator = false
     behavior.endSustainedReaction()
+  }
+  func finishWritingIndicator() -> BehaviorState {
+    behavior.endSustainedReaction()
+    return behavior.state
   }
   private(set) var needsPlacementAfterScene = false
   private var facingBeforeScene = true

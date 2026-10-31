@@ -2,17 +2,14 @@ import SilliesCore
 import SwiftUI
 
 struct AudioSessionView: View {
-  private enum Layout {
-    static let padding: CGFloat = 24
-    static let spacing: CGFloat = 18
-    static let minimumWidth: CGFloat = 560
-    static let minimumHeight: CGFloat = 640
-  }
   let model: AudioSessionPresentation
 
   var body: some View {
     content
-      .frame(minWidth: Layout.minimumWidth, minHeight: Layout.minimumHeight)
+      .frame(
+        minWidth: SessionWindowLayout.minimumSize.width,
+        minHeight: SessionWindowLayout.minimumSize.height
+      )
       .background(SilliesTheme.paper).foregroundStyle(SilliesTheme.ink)
       .tint(SilliesTheme.accent)
       .onAppear { model.hasUnreadSuggestion = false }
@@ -20,7 +17,7 @@ struct AudioSessionView: View {
   }
 
   private var content: some View {
-    VStack(alignment: .leading, spacing: Layout.spacing) {
+    VStack(alignment: .leading, spacing: SessionWindowLayout.spacing) {
       AudioSessionHeader(model: model)
         .fixedSize(horizontal: false, vertical: true)
       // Only the controls participate in fitting. The native transcript keeps a stable viewport.
@@ -33,12 +30,12 @@ struct AudioSessionView: View {
       footer
         .fixedSize(horizontal: false, vertical: true)
     }
-    .padding(Layout.padding)
+    .padding(SessionWindowLayout.padding)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
   }
 
   private var options: some View {
-    VStack(alignment: .leading, spacing: Layout.spacing) {
+    VStack(alignment: .leading, spacing: SessionWindowLayout.spacing) {
       AudioLanguagePicker(model: model)
       if model.diarizationModel != nil {
         Label(

@@ -8,8 +8,11 @@ struct AudioLanguagePicker: View {
     VStack(alignment: .leading, spacing: 10) {
       HStack(alignment: .center, spacing: 16) {
         VStack(alignment: .leading, spacing: 4) {
-          Label("Spoken language", systemImage: "globe")
-            .font(.callout.weight(.semibold))
+          Label(
+            SpeechLanguageGuidance.title(for: model.model.capabilities.languageControl),
+            systemImage: "globe"
+          )
+          .font(.callout.weight(.semibold))
           Text(model.model.name)
             .font(.caption).foregroundStyle(SilliesTheme.secondary)
         }
@@ -38,15 +41,12 @@ struct AudioLanguagePicker: View {
         .font(.caption).foregroundStyle(SilliesTheme.secondary)
         .fixedSize(horizontal: false, vertical: true)
       } else {
-        Text(
-          model.model.capabilities.languageControl == .automatic
-            ? "Detects the spoken language automatically, including English and Romanian."
-            : "Language changes apply to new speech. Model changes in Settings apply to the next session."
-        )
-        .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        Text(SpeechLanguageGuidance.detail(for: model.model.capabilities.languageControl))
+          .font(.caption).foregroundStyle(SilliesTheme.secondary)
       }
       if let notice = model.reasoningNotice {
         Text(notice).font(.caption).foregroundStyle(SilliesTheme.secondary)
+          .textSelection(.enabled)
           .fixedSize(horizontal: false, vertical: true)
       }
     }

@@ -16,6 +16,12 @@ final class WindowPlayground: NSObject {
   private var animationLink: CADisplayLink?
   private var animationStart = CGRect.zero
   private var animationStartedAt: Double = 0
+  private var trackingFixture: WindowTrackingExclusions.Registration?
+
+  func enableNativeTrackingFixture() {
+    guard trackingFixture == nil, let id = window.windowServerID else { return }
+    trackingFixture = WindowTrackingExclusions.nativeFixtures.register(id)
+  }
 
   init(controller: CompanionController) {
     self.controller = controller

@@ -17,13 +17,14 @@ final class SpeechServices {
   private let preferences: SpeechLanguagePreferences
   private var startup: Task<Void, Never>?
 
-  init(defaults: UserDefaults = .standard) {
+  init(defaults: UserDefaults = .standard, modelDirectory: URL? = nil) {
     vocabulary = VocabularyPreferences(defaults: defaults)
     let support =
       FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
       ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(
         "Library/Application Support")
-    let root = support.appendingPathComponent("Sillies/SpeechModels", isDirectory: true)
+    let root =
+      modelDirectory ?? support.appendingPathComponent("Sillies/SpeechModels", isDirectory: true)
     let store = ModelStore(root: root)
     let registry = SpeechRuntimeRegistry(
       store: store,
@@ -75,7 +76,10 @@ final class SpeechServices {
           if recognitionContext.priority == .interactive {
             var request = SpeechChannelRequest(language: language, output: output, failure: failure)
             request.context = recognitionContext
-            return try await dictationRuntime.makeChannel(model: model, request: request)
+            let channelRequest = request
+            return try await InteractiveSpeechChannel.make {
+              try await dictationRuntime.makeChannel(model: model, request: channelRequest)
+            }
           }
           return try await preparation.makeChannel(
             language: language, output: output, failure: failure)

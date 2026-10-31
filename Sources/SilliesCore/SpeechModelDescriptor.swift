@@ -4,7 +4,7 @@ import Foundation
 public struct SpeechModelDescriptor: Codable, Identifiable, Equatable, Sendable {
   public enum Purpose: String, Codable, Sendable { case transcription, speakerDiarization }
   public struct Capabilities: Codable, Equatable, Sendable {
-    public enum LanguageControl: String, Codable, Sendable { case automatic, selectable }
+    public enum LanguageControl: String, Codable, Sendable { case automatic, selectable, hinted }
     public let languageControl: LanguageControl
     public let languages: [String]
     public let supportsAutomaticDetection: Bool

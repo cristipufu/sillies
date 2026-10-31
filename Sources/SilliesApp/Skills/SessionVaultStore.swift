@@ -151,6 +151,13 @@ final class SessionVaultStore {
     scheduleSummaryRefinement(for: updated)
   }
 
+  func regenerateNotes(id: UUID) {
+    guard let record = records.first(where: { $0.id == id }), !record.summaryPending,
+      !record.transcript.isEmpty || !record.extractedText.isEmpty
+    else { return }
+    updateTranscript(record)
+  }
+
   func completePendingSummary(id: UUID, summary: String, actionItems: [String]) {
     summaries.cancel(id: id)
     guard let index = records.firstIndex(where: { $0.id == id }) else { return }
@@ -341,10 +348,10 @@ final class SessionVaultStore {
       else { return }
       var updated = self.records[index]
       updated.summary = notes.summary
+      updated.notesSource = notes.source
       updated.actionItems = notes.actions
       updated.explanation = notes.explanation
-      updated.processingNote = [updated.processingNote, notes.notice].filter { !$0.isEmpty }.joined(
-        separator: "\n")
+      updated.notesNotice = notes.notice
       updated.summaryPending = false
       self.update(updated)
     }

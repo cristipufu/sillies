@@ -20,7 +20,7 @@ The crew also includes **Boo** the bashful ghost, **Bloop** the affectionate oct
 
 Choose **Listen** to record and transcribe both sides of a meeting with local speaker echo cancellation, **Participate** for the same capture plus suggestions in your companion’s speech bubble, **Snap** for a screenshot copied to the clipboard, **Explain** for OCR with a local explanation, or **Record** for playable microphone audio with a transcript and notes. Right-click a companion for the same actions and **Save Clipboard**. Settings → Everyday Shortcuts offers configurable global shortcuts for every skill, Save Clipboard, the Vault, and pause/resume, plus optional launch at login. Window shortcuts resolve the foreground window when invoked and cancel if focus changes during lookup. The Vault also has **Add text / link** and audio playback. [Skill behavior and local processing requirements](docs/skills.md).
 
-Dictate into a focused text field with **Control–Option–Space** (hold) or **Control–Option–D** (toggle). Both are configurable. Choose verbatim or lightly cleaned output and add names, Romanian spellings, and technical terms to the personal dictionary. Insertion requires Accessibility; copy-only dictation does not. Text that cannot be safely inserted stays in **Writing recovery**, independently of meeting retention. Selection commands offer shortening, grammar correction, and translation when Apple’s local writing model supports the language.
+Dictate into a focused text field with **Control–Option–Space** (hold) or **Control–Option–D** (toggle). Both are configurable. Choose verbatim or lightly cleaned output and add names, Romanian spellings, and technical terms to the personal dictionary. Insertion requires Accessibility; copy-only dictation does not. Text that cannot be safely inserted stays in **Writing recovery**, independently of meeting retention. Selection commands offer shortening, grammar correction, and translation using the selected local writing model. Settings → **Local AI** offers optional Qwen3.5 4B, Qwen3.5 9B, Gemma 4 E4B, and Ministral 3 8B downloads alongside Apple Intelligence. [Local text models and contributor guide](docs/local-text-models.md).
 
 Snap images become searchable through background OCR. The Vault has indexed full-text search, speaker renaming, protection from automatic trimming, Markdown export with attachments, and paste-back. **Search Pocket Stash** opens a keyboard picker for saved text. Captures are kept until explicitly deleted by default; Settings in the Vault lets you choose a retention limit. See [everyday writing and retrieval](docs/everyday-workflows.md) for behavior, privacy, and failure recovery.
 
@@ -43,7 +43,7 @@ Open **Give them a window to play on** from the menu-bar popover for a real nati
 make debug       # Debug .app bundle
 make preview     # Open the control center in a regular preview window
 make test        # Pure behavior, geometry, and pack validation tests
-make check       # Formatting, tests, debug bundle, catalog validation
+make check       # Formatting, tests, debug bundle, catalog, native Settings/Vault lifecycle
 make gui-check   # Also checks lifecycle, window tracking, and live drag attachment
 make build       # Optimized local build
 ```

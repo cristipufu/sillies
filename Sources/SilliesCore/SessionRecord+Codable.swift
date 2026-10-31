@@ -15,6 +15,7 @@ extension SessionRecord {
     case transcript
     case extractedText
     case summary
+    case notesSource, notesNotice
     case actionItems
     case imageFilename
     case stashedItems
@@ -41,6 +42,9 @@ extension SessionRecord {
     transcript = try container.decode(String.self, forKey: .transcript)
     extractedText = try container.decode(String.self, forKey: .extractedText)
     summary = try container.decode(String.self, forKey: .summary)
+    notesNotice = try container.decodeIfPresent(String.self, forKey: .notesNotice) ?? ""
+    notesSource =
+      try container.decodeIfPresent(SessionNotesSource.self, forKey: .notesSource) ?? .unspecified
     actionItems = try container.decode([String].self, forKey: .actionItems)
     imageFilename = try container.decodeIfPresent(String.self, forKey: .imageFilename)
     stashedItems = try container.decode([String].self, forKey: .stashedItems)
@@ -84,6 +88,8 @@ extension SessionRecord {
     try container.encode(transcript, forKey: .transcript)
     try container.encode(extractedText, forKey: .extractedText)
     try container.encode(summary, forKey: .summary)
+    try container.encode(notesSource, forKey: .notesSource)
+    try container.encode(notesNotice, forKey: .notesNotice)
     try container.encode(actionItems, forKey: .actionItems)
     try container.encodeIfPresent(imageFilename, forKey: .imageFilename)
     try container.encode(stashedItems, forKey: .stashedItems)

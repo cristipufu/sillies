@@ -49,7 +49,7 @@ final class WindowIntegrationCheck: NSObject {
       // AppKit can return from miniaturize before it starts the native transition.
       guard minimizationBegan else { return }
       require(
-        controller.tracker.windowID != UInt32(playground.window.windowNumber),
+        controller.tracker.windowID != playground.window.windowServerID,
         "A minimizing window must never be reattached during its Dock animation")
     }
     if stage == .close || stage == .minimize {
@@ -57,7 +57,7 @@ final class WindowIntegrationCheck: NSObject {
     } else if let frame = controller.tracker.windowFrame {
       let target = playground.targetFrame
       ready =
-        controller.tracker.windowID == UInt32(playground.window.windowNumber)
+        controller.tracker.windowID == playground.window.windowServerID
         && abs(frame.minX - target.minX) < 2 && abs(frame.minY - target.minY) < 2
         && abs(frame.width - target.width) < 2 && abs(frame.height - target.height) < 2
     } else {

@@ -42,9 +42,11 @@ public enum SessionMarkdownFormatter {
   }
 
   private static func notes(_ record: SessionRecord) -> [String] {
-    var lines = section("Summary", text: record.summary)
+    var lines = section(
+      record.notesSource == .extracted ? "Extracted Highlights" : "Summary", text: record.summary)
     if let failure = record.failureMessage { lines.append("\nSession issue: \(failure)") }
     if let filename = record.audioFilename { lines.append("\nAudio: \(filename)") }
+    if !record.notesNotice.isEmpty { lines.append("\n\(record.notesNotice)") }
     if !record.processingNote.isEmpty { lines.append("\n\(record.processingNote)") }
     return lines + section("Explanation", text: record.explanation)
   }

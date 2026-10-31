@@ -147,6 +147,11 @@ final class SessionVaultModel {
   func openTranscript(_ record: SessionRecord) {
     transcriptWindow.show(record.transcript, title: record.displayTitle)
   }
+  func regenerateNotes(_ record: SessionRecord) {
+    vault.regenerateNotes(id: record.id)
+    showFeedback("Refreshing notes with your selected local model")
+  }
+
   func rename(_ speaker: SessionSpeakerIdentity, to name: String, in record: SessionRecord) {
     speakerTask = Task { [weak self, speakerWorker, preceding = speakerTask] in
       await preceding?.value

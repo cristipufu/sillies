@@ -8,6 +8,14 @@ public enum AppCommand: String, CaseIterable, Codable, Sendable, Identifiable {
   case shortenSelection, fixSelectionGrammar, translateSelection
 
   public var id: String { rawValue }
+  public var startsWriting: Bool {
+    switch self {
+    case .holdDictation, .toggleDictation, .shortenSelection, .fixSelectionGrammar,
+      .translateSelection:
+      true
+    default: false
+    }
+  }
   public var skill: CompanionSkillKind? {
     switch self {
     case .listen: .listen
@@ -27,7 +35,7 @@ public enum AppCommand: String, CaseIterable, Codable, Sendable, Identifiable {
     case .holdDictation: "Hold to dictate"
     case .toggleDictation: "Start / finish dictation"
     case .cancelDictation: "Cancel dictation"
-    case .dictationHistory: "Dictation recovery history"
+    case .dictationHistory: "Recent writing"
     case .searchStash: "Search and paste Pocket Stash"
     case .shortenSelection: "Shorten selected text"
     case .fixSelectionGrammar: "Fix selected text’s grammar"

@@ -25,12 +25,19 @@ fi
 
 swift build --configuration "$configuration"
 binary_dir="$(swift build --configuration "$configuration" --show-bin-path)"
-app="$PWD/build/Sillies.app"
+output="${SILLIES_BUILD_DIRECTORY:-$PWD/build}"
+app="$output/Sillies.app"
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 install -m 755 "$binary_dir/Sillies" "$app/Contents/MacOS/Sillies"
 mkdir -p "$app/Contents/Helpers"
 install -m 755 "$binary_dir/SilliesWindowMetadata" "$app/Contents/Helpers/SilliesWindowMetadata"
+text_helper="$app/Contents/Helpers/SilliesTextInference.app"
+mkdir -p "$text_helper/Contents/MacOS" "$text_helper/Contents/Resources"
+install -m 755 "$binary_dir/SilliesTextInference" "$text_helper/Contents/MacOS/SilliesTextInference"
+cp Resources/TextInference-Info.plist "$text_helper/Contents/Info.plist"
+cp "$binary_dir/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib" "$text_helper/Contents/Resources/mlx.metallib"
+ditto "$binary_dir/swift-transformers_Hub.bundle" "$text_helper/Contents/Resources/swift-transformers_Hub.bundle"
 
 sparkle=$(find .build/artifacts -path "*Sparkle.xcframework/macos-*/Sparkle.framework" -maxdepth 6 -type d 2>/dev/null | head -1)
 if [[ -n "$sparkle" ]]; then
@@ -57,6 +64,12 @@ ditto "$binary_dir/Sillies_SilliesModelStore.bundle" "$app/Contents/Resources/Si
 mkdir -p "$app/Contents/Resources/ThirdPartyNotices"
 cp .build/checkouts/argmax-oss-swift/LICENSE "$app/Contents/Resources/ThirdPartyNotices/ARGMAX-LICENSE"
 cp .build/checkouts/argmax-oss-swift/NOTICES "$app/Contents/Resources/ThirdPartyNotices/ARGMAX-NOTICES"
+for dependency in mlx-swift mlx-swift-lm swift-transformers swift-jinja swift-huggingface swift-collections swift-crypto swift-asn1 swift-numerics yyjson EventSource; do
+  license=".build/checkouts/$dependency/LICENSE"
+  if [[ -f "$license.txt" ]]; then license="$license.txt"; fi
+  if [[ -f "$license.md" ]]; then license="$license.md"; fi
+  cp "$license" "$app/Contents/Resources/ThirdPartyNotices/$dependency-LICENSE"
+done
 cp .build/checkouts/FluidAudio/LICENSE "$app/Contents/Resources/ThirdPartyNotices/FLUIDAUDIO-LICENSE"
 cp Vendor/AudioProcessing/WEBRTC-LICENSE Vendor/AudioProcessing/WEBRTC-PATENTS Vendor/AudioProcessing/ABSEIL-LICENSE "$app/Contents/Resources/ThirdPartyNotices/"
 cp Vendor/AudioProcessing/webrtc/LICENSE "$app/Contents/Resources/ThirdPartyNotices/WEBRTC-AUTHORS-LICENSE"
@@ -65,8 +78,8 @@ cp Vendor/AudioProcessing/webrtc/third_party/rnnoise/COPYING "$app/Contents/Reso
 cp Vendor/AudioProcessing/webrtc/common_audio/third_party/ooura/LICENSE "$app/Contents/Resources/ThirdPartyNotices/OOURA-LICENSE"
 cp Vendor/AudioProcessing/webrtc/common_audio/third_party/spl_sqrt_floor/LICENSE "$app/Contents/Resources/ThirdPartyNotices/SPL-SQRT-LICENSE"
 cp Vendor/AudioProcessing/webrtc/modules/third_party/fft/LICENSE "$app/Contents/Resources/ThirdPartyNotices/FFT-LICENSE"
-swift scripts/make-icon.swift "$PWD/build"
-cp build/Sillies.icns "$app/Contents/Resources/Sillies.icns"
+swift scripts/make-icon.swift "$output"
+cp "$output/Sillies.icns" "$app/Contents/Resources/Sillies.icns"
 
 identity="${SILLIES_SIGNING_IDENTITY:-}"
 if [[ -z "$identity" ]]; then
@@ -86,6 +99,7 @@ if [[ -d "$framework" ]]; then
   codesign "${sign[@]}" "$framework/Versions/B/Updater.app" >/dev/null
   codesign "${sign[@]}" "$framework" >/dev/null
 fi
+codesign "${sign[@]}" --identifier app.sillies.text-inference "$text_helper" >/dev/null
 codesign "${sign[@]}" --identifier app.sillies.window-metadata "$app/Contents/Helpers/SilliesWindowMetadata" >/dev/null
 codesign "${sign[@]}" --entitlements Sillies.entitlements --identifier app.sillies.macos "$app" >/dev/null
 

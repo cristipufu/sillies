@@ -4,6 +4,39 @@ import Testing
 
 @testable import SilliesApp
 
+@Test @MainActor func ordinarySilliesWindowsNeverReplaceExternalFocusOrBecomeSkillTargets()
+  async throws
+{
+  _ = NSApplication.shared
+  let focus = WorkspaceFocusSession()
+  let external = WorkspaceFocusSession.Application(
+    processID: 999_999, name: "Editor", bundleIdentifier: "test.editor")
+  focus.follow(external, continuity: .noPreviousWindow)
+  let window = NSWindow(
+    contentRect: CGRect(x: 150, y: 150, width: 700, height: 500),
+    styleMask: [.titled, .resizable], backing: .buffered, defer: false)
+  window.isReleasedWhenClosed = false
+  window.orderFrontRegardless()
+  defer { window.close() }
+  let id = UInt32(window.windowNumber)
+  let pid = ProcessInfo.processInfo.processIdentifier
+  #expect(!WindowTrackingExclusions.shared.contains(id))
+  #expect(WindowTrackingExclusions.excludesSurface(id, ownerPID: pid))
+  #expect(focus.frontmostReplacement(for: .reconcileCurrent, application: .current) == nil)
+  #expect(focus.application == external)
+  let target = await WindowTargetMetadata.shared.candidate(
+    for: id, primaryScreenTop: Double(NSScreen.screens.first?.frame.maxY ?? 0))
+  #expect(target == nil)
+  let entry: [String: Any] = [
+    kCGWindowNumber as String: id, kCGWindowOwnerPID as String: pid,
+    kCGWindowLayer as String: 0, kCGWindowIsOnscreen as String: true,
+    kCGWindowBounds as String: window.frame.dictionaryRepresentation,
+  ]
+  #expect(
+    WindowServerSource.extractCandidates(from: [entry], for: pid, currentWindowID: id).isEmpty)
+  #expect(WindowServerSource.extractInputWindowFrames(from: [entry])[Int(id)] != nil)
+}
+
 @Test @MainActor func transcriptionWindowNeverBecomesAPerchOrDropTarget() async throws {
   _ = NSApplication.shared
   let document = NSWindow(
@@ -36,7 +69,7 @@ import Testing
   }
   let candidates = WindowServerSource.extractCandidates(
     from: entries, for: ProcessInfo.processInfo.processIdentifier, currentWindowID: id)
-  #expect(candidates.map(\.id) == [UInt32(document.windowNumber)])
+  #expect(candidates.isEmpty)
   #expect(WindowServerSource.extractInputWindowFrames(from: entries)[Int(id)] != nil)
   utility.close()
   #expect(WindowTrackingExclusions.shared.contains(id))

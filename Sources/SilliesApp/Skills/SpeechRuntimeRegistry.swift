@@ -91,7 +91,7 @@ actor SpeechRuntimeRegistry {
           id: SpeechLanguage.automatic.id, name: SpeechLanguage.automatic.name,
           isInstalled: installed))
     }
-    if capabilities.languageControl == .selectable {
+    if capabilities.languageControl != .automatic {
       languages += capabilities.languages.map {
         SpeechLanguage(
           id: $0, name: Locale.current.localizedString(forLanguageCode: $0) ?? $0,

@@ -102,7 +102,7 @@ import Testing
       question: "Who owns this?", evidence: "Unassigned.", elapsed: 180),
     placement: .init(anchor: anchor, windowLayer: NSWindow.Level.floating.rawValue))
   #expect(panel.level.rawValue > CompanionPanel.floatingOverlayLevel.rawValue)
-  #expect(panel.level.rawValue < CompanionPanel.transcriptionLevel.rawValue)
+  #expect(panel.level.rawValue < CompanionPanel.contentWindowLevel.rawValue)
 }
 
 @Test(.enabled(if: ProcessInfo.processInfo.environment["SILLIES_UI_PREVIEW"] == "1"))

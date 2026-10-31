@@ -3,15 +3,9 @@ import SilliesCore
 import SwiftUI
 
 struct CompanionHUDView: View {
-  private static let minAudioBarHeight: CGFloat = 4.0
-  private static let maxAudioBarHeight: CGFloat = 14.0
-  private static let audioBarGain: Double = 11.0
-  private static let sideAudioBarFactor: Double = 0.65
-
   let model: CompanionHUDModel
   let state: CompanionBindingState
   @State private var hoveredPrimaryAction = false
-  @State private var hoveredDismiss = false
 
   var body: some View {
     Group {
@@ -39,48 +33,24 @@ struct CompanionHUDView: View {
     HStack(spacing: 9) {
       statusIndicator(for: skill, audioLevel: audioLevel)
 
-      VStack(alignment: .leading, spacing: 1.5) {
-        Text("\(skill.title) · \((target?.appName ?? "Microphone"))")
-          .font(.system(size: 11, weight: .bold, design: .rounded))
-          .foregroundStyle(SilliesTheme.ink)
-          .lineLimit(1)
-        Text(statusDetail)
-          .font(.system(size: 10, weight: .medium))
-          .monospacedDigit()
-          .foregroundStyle(SilliesTheme.secondary)
-          .lineLimit(1)
-          .frame(width: 210, alignment: .leading)
-      }
+      SessionHUDLabel(
+        title: "\(skill.title) · \(target?.appName ?? "Microphone")", status: statusDetail)
 
       if let session = model.audioSession, skill.isAudioSession {
         AudioHUDControls(session: session, open: { model.onOpenSession?() })
       }
 
       if let stopTitle = skill.stopActionTitle {
-        Button {
-          model.onStopSkill?()
-        } label: {
-          Text(stopTitle)
-            .font(.system(size: 10, weight: .bold, design: .rounded))
-            .foregroundStyle(.white)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(
-              Capsule().fill(
-                hoveredPrimaryAction ? SilliesTheme.accent.opacity(0.85) : SilliesTheme.accent)
-            )
-        }
-        .buttonStyle(.plain)
-        .onHover { hoveredPrimaryAction = $0 }
+        SessionHUDAction(title: stopTitle) { model.onStopSkill?() }
       }
 
-      dismissButton(helpText: "Cancel skill") {
+      SessionHUDDismiss(title: "Cancel skill") {
         model.onUnbind?()
       }
     }
     .padding(.horizontal, 11)
     .padding(.vertical, 8)
-    .background(hudCardBackground(accentBorder: true))
+    .background(SessionHUDBackground(emphasis: .active))
   }
 
   private func completedCard(
@@ -155,13 +125,13 @@ struct CompanionHUDView: View {
         Button("Undo") { model.onUndoStash?(recordID) }.buttonStyle(.plain).font(.caption)
       }
 
-      dismissButton(helpText: "Dismiss") {
+      SessionHUDDismiss(title: "Dismiss") {
         model.onUnbind?()
       }
     }
     .padding(.horizontal, 11)
     .padding(.vertical, 8)
-    .background(hudCardBackground(accentBorder: false))
+    .background(SessionHUDBackground(emphasis: .completed))
   }
 
   private var completionNeedsAttention: Bool {
@@ -172,55 +142,11 @@ struct CompanionHUDView: View {
     completionNeedsAttention ? "\(skill.title) Needs Attention" : skill.completionHeadline
   }
 
-  private func dismissButton(helpText: String, action: @escaping () -> Void) -> some View {
-    Button(action: action) {
-      Image(systemName: "xmark")
-        .font(.system(size: 8.5, weight: .bold))
-        .foregroundStyle(hoveredDismiss ? SilliesTheme.ink : SilliesTheme.secondary)
-        .frame(width: 20, height: 20)
-        .background(
-          Circle().fill(hoveredDismiss ? SilliesTheme.border : SilliesTheme.soft)
-        )
-    }
-    .buttonStyle(.plain)
-    .onHover { hoveredDismiss = $0 }
-    .help(helpText)
-  }
-
-  private func hudCardBackground(accentBorder: Bool) -> some View {
-    RoundedRectangle(cornerRadius: 15, style: .continuous)
-      .fill(SilliesTheme.card.opacity(0.98))
-      .shadow(color: .black.opacity(0.16), radius: 10, y: 3)
-      .overlay(
-        RoundedRectangle(cornerRadius: 15, style: .continuous)
-          .strokeBorder(
-            accentBorder ? SilliesTheme.accent.opacity(0.5) : SilliesTheme.border,
-            lineWidth: accentBorder ? 1.1 : 0.8)
-      )
-  }
-
   @ViewBuilder
   private func statusIndicator(for skill: CompanionSkillKind, audioLevel: Double) -> some View {
     if skill.isAudioSession {
-      let color: Color = model.audioSession?.phase == .capturing ? .red : .secondary
-      ZStack {
-        Circle()
-          .fill(color.opacity(0.14))
-          .frame(width: 28, height: 28)
-        HStack(spacing: 2) {
-          ForEach(0..<3, id: \.self) { index in
-            let factor = index == 1 ? 1.0 : Self.sideAudioBarFactor
-            let barHeight = max(
-              Self.minAudioBarHeight,
-              min(
-                Self.maxAudioBarHeight,
-                Self.minAudioBarHeight + CGFloat(audioLevel * Self.audioBarGain * factor)))
-            RoundedRectangle(cornerRadius: 1.5)
-              .fill(color.opacity(0.88))
-              .frame(width: 2.5, height: barHeight)
-          }
-        }
-      }
+      SessionAudioIndicator(
+        level: audioLevel, isCapturing: model.audioSession?.phase == .capturing)
     } else {
       ZStack {
         Circle()

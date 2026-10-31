@@ -16,7 +16,7 @@ import Testing
       accessibility: .disabled,
       skills: SkillCoordinator(vault: SessionVaultStore(directory: directory))))
   let content = ControlCenterView(
-    controller: controller, openSettings: {}, openPlayground: {}, quit: {})
+    controller: controller, actions: .init(openSettings: {}, quit: {}))
   let host = ControlCenterHostingController(
     content: content, visibleFrame: CGRect(x: 0, y: 81, width: 1512, height: 868))
   #expect(host.sizingOptions.isEmpty)

@@ -1,0 +1,236 @@
+{
+  "manifests": [
+    {
+      "model": {
+        "id": "qwen-3.5-4b",
+        "providerID": "mlx",
+        "name": "Qwen3.5 4B",
+        "detail": "Compact multilingual notes and writing.",
+        "revision": "32f3e8ecf65426fc3306969496342d504bfa13f3",
+        "license": "Apache 2.0",
+        "sourceURL": "https://huggingface.co/mlx-community/Qwen3.5-4B-MLX-4bit",
+        "minimumMemoryGB": 16,
+        "contextTokens": 4096,
+        "languagesDescription": "201 languages and dialects; includes English and Romanian."
+      },
+      "artifacts": [
+        {
+          "path": "chat_template.jinja",
+          "url": "https://huggingface.co/mlx-community/Qwen3.5-4B-MLX-4bit/resolve/32f3e8ecf65426fc3306969496342d504bfa13f3/chat_template.jinja",
+          "byteCount": 7756,
+          "sha256": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715"
+        },
+        {
+          "path": "config.json",
+          "url": "https://huggingface.co/mlx-community/Qwen3.5-4B-MLX-4bit/resolve/32f3e8ecf65426fc3306969496342d504bfa13f3/config.json",
+          "byteCount": 3366,
+          "sha256": "f3efc81b2ea8d96a45301037d3ccccbcccdef44a961845c87f286aaddbc6eaaa"
+        },
+        {
+          "path": "model.safetensors",
+          "url": "https://huggingface.co/mlx-community/Qwen3.5-4B-MLX-4bit/resolve/32f3e8ecf65426fc3306969496342d504bfa13f3/model.safetensors",
+          "byteCount": 3034300695,
+          "sha256": "5fb9acd0246866381cf8c5c354c6db1019f6498eec4ccb4f5edcc71ffeacb2db"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "url": "https://huggingface.co/mlx-community/Qwen3.5-4B-MLX-4bit/resolve/32f3e8ecf65426fc3306969496342d504bfa13f3/model.safetensors.index.json",
+          "byteCount": 101944,
+          "sha256": "52e534c41f7b97708329c85f762e5882bf48bd5955a422c6ae74eba321e6048a"
+        },
+        {
+          "path": "tokenizer.json",
+          "url": "https://huggingface.co/mlx-community/Qwen3.5-4B-MLX-4bit/resolve/32f3e8ecf65426fc3306969496342d504bfa13f3/tokenizer.json",
+          "byteCount": 19989343,
+          "sha256": "87a7830d63fcf43bf241c3c5242e96e62dd3fdc29224ca26fed8ea333db72de4"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "url": "https://huggingface.co/mlx-community/Qwen3.5-4B-MLX-4bit/resolve/32f3e8ecf65426fc3306969496342d504bfa13f3/tokenizer_config.json",
+          "byteCount": 1139,
+          "sha256": "e98f1901ac6f0adff67b1d540bfa0c36ac1a0cf59eb72ed78146ef89aafa1182"
+        }
+      ]
+    },
+    {
+      "model": {
+        "id": "qwen-3.5-9b",
+        "providerID": "mlx",
+        "name": "Qwen3.5 9B",
+        "detail": "Larger multilingual model for more demanding summaries.",
+        "revision": "938d8919941c6e7efd3c7150eff7fe9d12afa631",
+        "license": "Apache 2.0",
+        "sourceURL": "https://huggingface.co/mlx-community/Qwen3.5-9B-MLX-4bit",
+        "minimumMemoryGB": 24,
+        "contextTokens": 4096,
+        "languagesDescription": "201 languages and dialects; includes English and Romanian."
+      },
+      "artifacts": [
+        {
+          "path": "chat_template.jinja",
+          "url": "https://huggingface.co/mlx-community/Qwen3.5-9B-MLX-4bit/resolve/938d8919941c6e7efd3c7150eff7fe9d12afa631/chat_template.jinja",
+          "byteCount": 7756,
+          "sha256": "a4aee8afcf2e0711942cf848899be66016f8d14a889ff9ede07bca099c28f715"
+        },
+        {
+          "path": "config.json",
+          "url": "https://huggingface.co/mlx-community/Qwen3.5-9B-MLX-4bit/resolve/938d8919941c6e7efd3c7150eff7fe9d12afa631/config.json",
+          "byteCount": 3331,
+          "sha256": "a96942cb6a8a1d3f1d17514d81a1925d04362a6a3233b389d13012211baaa9f8"
+        },
+        {
+          "path": "model-00001-of-00002.safetensors",
+          "url": "https://huggingface.co/mlx-community/Qwen3.5-9B-MLX-4bit/resolve/938d8919941c6e7efd3c7150eff7fe9d12afa631/model-00001-of-00002.safetensors",
+          "byteCount": 5349771222,
+          "sha256": "a68b87558c6ef43f74c2bd63ce7e9092ceddc3101f3def0030774bae5f42aadd"
+        },
+        {
+          "path": "model-00002-of-00002.safetensors",
+          "url": "https://huggingface.co/mlx-community/Qwen3.5-9B-MLX-4bit/resolve/938d8919941c6e7efd3c7150eff7fe9d12afa631/model-00002-of-00002.safetensors",
+          "byteCount": 600449850,
+          "sha256": "b0a770bf8469c7f3f18756a0e0283f1c1174344a83e059a4e483f6af4907352d"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "url": "https://huggingface.co/mlx-community/Qwen3.5-9B-MLX-4bit/resolve/938d8919941c6e7efd3c7150eff7fe9d12afa631/model.safetensors.index.json",
+          "byteCount": 123592,
+          "sha256": "dd023913fb87cfdae27fb11dcf695117c925833796ccac3c64117d6652d8ff1e"
+        },
+        {
+          "path": "tokenizer.json",
+          "url": "https://huggingface.co/mlx-community/Qwen3.5-9B-MLX-4bit/resolve/938d8919941c6e7efd3c7150eff7fe9d12afa631/tokenizer.json",
+          "byteCount": 19989343,
+          "sha256": "87a7830d63fcf43bf241c3c5242e96e62dd3fdc29224ca26fed8ea333db72de4"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "url": "https://huggingface.co/mlx-community/Qwen3.5-9B-MLX-4bit/resolve/938d8919941c6e7efd3c7150eff7fe9d12afa631/tokenizer_config.json",
+          "byteCount": 1139,
+          "sha256": "e98f1901ac6f0adff67b1d540bfa0c36ac1a0cf59eb72ed78146ef89aafa1182"
+        }
+      ]
+    },
+    {
+      "model": {
+        "id": "gemma-4-e4b",
+        "providerID": "mlx",
+        "name": "Gemma 4 E4B",
+        "detail": "Google’s compact model for local notes and writing.",
+        "revision": "475b9088d29754a3379866cf5aeb6b41acd313c2",
+        "license": "Apache 2.0",
+        "sourceURL": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit",
+        "minimumMemoryGB": 16,
+        "contextTokens": 4096,
+        "languagesDescription": "Over 140 languages. Quality varies by language."
+      },
+      "artifacts": [
+        {
+          "path": "chat_template.jinja",
+          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/chat_template.jinja",
+          "byteCount": 17336,
+          "sha256": "2f1b4d75d067bae3fe44e676721c7f077d243bc007156cb9c2f8b5836613d082"
+        },
+        {
+          "path": "config.json",
+          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/config.json",
+          "byteCount": 6628,
+          "sha256": "780ccb3a514a5f1ced161d383f948fc22eca9b84b752ca19494f625bd9bad7a6"
+        },
+        {
+          "path": "generation_config.json",
+          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/generation_config.json",
+          "byteCount": 208,
+          "sha256": "d4226bbe3117d2d253ba4609720ba82c6c4ce4627a9a6ae05387c78983ac03de"
+        },
+        {
+          "path": "model.safetensors",
+          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/model.safetensors",
+          "byteCount": 5146800534,
+          "sha256": "932b8271fc3fe65adcc78b96c10c6268bbfb13e8f67d1358727c0d6ee97e1eff"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/model.safetensors.index.json",
+          "byteCount": 240961,
+          "sha256": "f8accac59ee7efe87e0c298c854610b262c3cadd477407503147c71209ff0093"
+        },
+        {
+          "path": "tokenizer.json",
+          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/tokenizer.json",
+          "byteCount": 32169626,
+          "sha256": "cc8d3a0ce36466ccc1278bf987df5f71db1719b9ca6b4118264f45cb627bfe0f"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/tokenizer_config.json",
+          "byteCount": 2740,
+          "sha256": "080d9e1aff284e2f6043889cd05367966f7c7b80e025fbc0b06745e218158656"
+        }
+      ]
+    },
+    {
+      "model": {
+        "id": "ministral-3-8b",
+        "providerID": "mlx",
+        "name": "Ministral 3 8B",
+        "detail": "Mistral’s multilingual model for local notes and writing.",
+        "revision": "182f003f01daa75f9de0f2c4d379722fd0bc1c61",
+        "license": "Apache 2.0",
+        "sourceURL": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit",
+        "minimumMemoryGB": 24,
+        "contextTokens": 4096,
+        "languagesDescription": "Dozens of languages. Romanian quality requires evaluation."
+      },
+      "artifacts": [
+        {
+          "path": "chat_template.jinja",
+          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/chat_template.jinja",
+          "byteCount": 7759,
+          "sha256": "215fb003a8e13d40e26587f89951f26eac71bb32ddeac209bcbb8161df9e315f"
+        },
+        {
+          "path": "config.json",
+          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/config.json",
+          "byteCount": 1986,
+          "sha256": "390032313a9203fb1dfadfadd75bdceb46ea5409878c88cf34b96cd3739d6f28"
+        },
+        {
+          "path": "generation_config.json",
+          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/generation_config.json",
+          "byteCount": 131,
+          "sha256": "e0923390059f84a9180b00e5501778acc45ea9856cd7f2fd68208b360927c677"
+        },
+        {
+          "path": "model-00001-of-00002.safetensors",
+          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/model-00001-of-00002.safetensors",
+          "byteCount": 5294694324,
+          "sha256": "0b7c0de8f4da647f054095add6d93c1cfdd7f7f38128ecb666ebace634169aa6"
+        },
+        {
+          "path": "model-00002-of-00002.safetensors",
+          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/model-00002-of-00002.safetensors",
+          "byteCount": 301990235,
+          "sha256": "aa49bdcf4394ab16f0cbd45b750313978073f514da8b56e802ee3c7568b3a865"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/model.safetensors.index.json",
+          "byteCount": 103195,
+          "sha256": "91360719f4ce9383f46bb5750cd0b8cb4aec070dd8804c11ed94585a9924409b"
+        },
+        {
+          "path": "tokenizer.json",
+          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/tokenizer.json",
+          "byteCount": 17077402,
+          "sha256": "286acad9b0e27fce778ac429763536accf618ccb6ed72963b6f94685e531c5c7"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/tokenizer_config.json",
+          "byteCount": 21188,
+          "sha256": "54b6ee53caf87c338527472386b6adcc4253bf48b93cc9c27fe1d25db4ff36fc"
+        }
+      ]
+    }
+  ]
+}

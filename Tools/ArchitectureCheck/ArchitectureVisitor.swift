@@ -40,6 +40,12 @@ final class ArchitectureVisitor: SyntaxVisitor {
     if let allowed = ArchitecturePolicy.imports[owner], !allowed.contains(module) {
       report(node, "module-boundary", "\(owner) cannot import \(module).")
     }
+    if ["MLX", "MLXLLM", "MLXLMCommon", "Tokenizers"].contains(module),
+      owner != "SilliesTextInference"
+    {
+      report(
+        node, "inference-isolation", "Downloaded text inference SDKs belong in the helper process.")
+    }
     return .skipChildren
   }
 
@@ -47,6 +53,11 @@ final class ArchitectureVisitor: SyntaxVisitor {
     if node.questionOrExclamationMark?.text == "!" {
       report(node, "runtime-trap", "Handle errors instead of forcing try.")
     }
+    return .visitChildren
+  }
+
+  override func visit(_ node: ForceUnwrapExprSyntax) -> SyntaxVisitorContinueKind {
+    report(node, "runtime-trap", "Handle missing values instead of force-unwrapping them.")
     return .visitChildren
   }
 
@@ -126,7 +137,7 @@ final class ArchitectureVisitor: SyntaxVisitor {
       {
         report(
           node, "blocking-wait",
-          "Process waits require the audited detached permission-reset closure.")
+          "Process waits require an audited detached worker closure.")
       }
     } else if [
       "wait", "sync", "usleep", "DispatchSemaphore", "DispatchGroup", "NSCondition",
@@ -151,6 +162,16 @@ final class ArchitectureVisitor: SyntaxVisitor {
 
   private func checkPlatformAccess(_ node: FunctionCallExprSyntax, expression: String, name: String)
   {
+    if ["UInt32", "CGWindowID"].contains(name),
+      node.arguments.contains(where: { argument in
+        argument.expression.tokens(viewMode: .sourceAccurate).contains { $0.text == "windowNumber" }
+      }),
+      path != "Sources/SilliesApp/Platform/NativeWindowIdentity.swift"
+        || node.arguments.first?.label?.text != "exactly"
+    {
+      report(
+        node, "window-identity", "Use NSWindow.windowServerID to validate AppKit window numbers.")
+    }
     if [
       "CGWindowListCopyWindowInfo", "CGWindowListCreate", "CGWindowListCreateDescriptionFromArray",
     ].contains(name), path != "Sources/SilliesWindowMetadata/WindowMetadataService.swift" {

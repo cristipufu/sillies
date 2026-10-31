@@ -8,6 +8,7 @@ struct SilliesMain {
   static func main() {
     let app = NSApplication.shared
     app.setActivationPolicy(.accessory)
+    app.mainMenu = ApplicationMenu.make()
     let delegate = AppDelegate()
     app.delegate = delegate
     withExtendedLifetime(delegate) { app.run() }
@@ -18,15 +19,16 @@ struct SilliesMain {
 final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private static let initialVaultWindowSize = NSSize(width: 980, height: 660)
   private static let minVaultWindowSize = NSSize(width: 880, height: 560)
-  private static let settingsWindowSize = NSSize(width: 560, height: 690)
   private static let exportedCharacterPreviewPixels = 512
   private static let exportedCharacterPreviewScale: CGFloat = 4
 
   private var controller: CompanionController?
   private var statusItem: NSStatusItem?
   private let popover = NSPopover()
+  private let controlCenterDismissal = ControlCenterDismissal()
   private var settingsWindow: NSWindow?
   private var speechServices: SpeechServices?
+  private let textModels = TextModelsPresentation()
   private var shortcuts: CommandShortcuts?
   private var writingTools: WritingTools?
   private let loginItems = LoginItemSettings()
@@ -81,6 +83,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       }
       controller.start()
       speechServices?.start()
+      if !launch.isAutomatedRun { textModels.start() }
       observeModelUpdateActivity()
       if !launch.isAutomatedRun {
         if let speechServices {
@@ -101,6 +104,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         installStatusItem()
       }
       if launch.showsPreview { showPreview() }
+      automatedRunner.appWindowActions = .init(
+        prepareControlCenter: { [unowned self] in
+          if self.statusItem == nil { self.installStatusItem() }
+          return .init(button: self.statusItem?.button, popover: self.popover)
+        },
+        openSettings: { [unowned self] in
+          self.showSettings()
+          return self.settingsWindow
+        },
+        openVault: { [unowned self] in
+          self.showVault()
+          return self.vaultWindow
+        })
       automatedRunner.run(
         launch,
         controller: controller,
@@ -134,7 +150,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       return
     }
     withObservationTracking {
-      updates.setActivity(controller.shouldRun && controller.liveCount > 0 ? .active : .suspended)
+      let active = controller.shouldRun && controller.liveCount > 0
+      updates.setActivity(active ? .active : .suspended)
+      Task { await TextModelEnvironment.shared.setActivity(active ? .active : .suspended) }
     } onChange: { [weak self] in
       Task { @MainActor in self?.observeModelUpdateActivity() }
     }
@@ -167,9 +185,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       return .terminateNow
     }
     isTerminating = true
+    controlCenterDismissal.stop()
     shortcuts?.stop()
     automatedRunner.stopPreview()
     speechServices?.stop()
+    textModels.stop()
     cleanupTemporaryPreferences()
     let approveTermination = onTerminationApproved
     let (stream, continuation) = AsyncStream<Void>.makeStream()
@@ -195,14 +215,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   }
 
   func applicationWillTerminate(_ notification: Notification) {
+    controlCenterDismissal.stop()
     automatedRunner.stopPreview()
     shortcuts?.stop()
     speechServices?.stop()
+    textModels.stop()
     controller?.stop()
     cleanupTemporaryPreferences()
   }
 
   func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+  func applicationDidBecomeActive(_ notification: Notification) {
+    AppContentWindowStacking.shared.update(.foreground)
+  }
+
+  func applicationDidResignActive(_ notification: Notification) {
+    AppContentWindowStacking.shared.update(.background)
+  }
 
   private func cleanupTemporaryPreferences() {
     if let domain = temporaryPreferencesDomain {
@@ -228,10 +258,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
   private func controlCenter(_ controller: CompanionController) -> ControlCenterView {
     ControlCenterView(
-      controller: controller, openSettings: { [weak self] in self?.showSettings() },
-      openPlayground: { [weak self] in self?.showPlayground() },
-      openVault: { [weak self] in self?.showVault() },
-      quit: { NSApp.terminate(nil) }, speechModels: speechServices?.models)
+      controller: controller,
+      actions: .init(
+        openSettings: { [weak self] in self?.showSettings() },
+        openVault: { [weak self] in self?.showVault() },
+        openWriting: { [weak self] in
+          self?.popover.performClose(nil)
+          self?.controller?.onOpenWritingSession?()
+        },
+        quit: { NSApp.terminate(nil) }),
+      speechModels: speechServices?.models, dictation: writingTools?.dictation)
   }
 
   private func controlCenterHost(
@@ -260,8 +296,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       host.updateViewport(visibleFrame: CompanionPanel.visibleFrame(for: screen))
       popover.contentSize = host.viewportSize
       popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+      popover.contentViewController?.view.window?.makeKey()
+      controlCenterDismissal.start(popover: popover, statusButton: button)
     }
   }
+
+  func popoverDidClose(_ notification: Notification) { controlCenterDismissal.stop() }
 
   private func showContextMenu() {
     let menu = NSMenu()
@@ -283,7 +323,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     stash.target = self
     menu.addItem(stash)
     let recovery = NSMenuItem(
-      title: "Writing recovery…", action: #selector(openWritingHistory), keyEquivalent: "")
+      title: "Recent writing…", action: #selector(openWritingHistory), keyEquivalent: "")
     recovery.target = self
     menu.addItem(recovery)
     let settings = NSMenuItem(
@@ -312,15 +352,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   @objc private func checkForUpdates() { Updates.shared.checkNow() }
   @objc private func quit() { NSApp.terminate(nil) }
 
-  private func showPlayground() {
-    guard let controller else { return }
-    _ = openOrCreatePlayground(for: controller)
-  }
-
   private func openOrCreatePlayground(for controller: CompanionController) -> WindowPlayground {
     popover.performClose(nil)
     let existing = playground ?? WindowPlayground(controller: controller)
     playground = existing
+    existing.enableNativeTrackingFixture()
     existing.show()
     return existing
   }
@@ -355,6 +391,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         styleMask: [.titled, .closable, .miniaturizable, .resizable],
         backing: .buffered, defer: false)
       window.title = "Sillies · Session Vault"
+      AppContentWindowStacking.shared.register(window)
       window.titlebarAppearsTransparent = true
       window.isReleasedWhenClosed = false
       window.minSize = Self.minVaultWindowSize
@@ -371,14 +408,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     popover.performClose(nil)
     if settingsWindow == nil, let controller {
       let window = NSWindow(
-        contentRect: CGRect(origin: .zero, size: Self.settingsWindowSize),
-        styleMask: [.titled, .closable, .miniaturizable], backing: .buffered, defer: false)
-      window.title = "Sillies Settings"
+        contentRect: CGRect(origin: .zero, size: SettingsWindowLayout.initialSize),
+        styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered,
+        defer: false)
+      window.title = "Sillies · Settings"
+      AppContentWindowStacking.shared.register(window)
+      window.contentMinSize = SettingsWindowLayout.minimumSize
       window.titlebarAppearsTransparent = true
       window.isReleasedWhenClosed = false
       window.contentViewController = NSHostingController(
         rootView: SettingsView(
-          controller: controller, speechModels: speechServices?.models,
+          controller: controller, speechModels: speechServices?.models, textModels: textModels,
           shortcuts: shortcuts, loginItems: loginItems, writingTools: writingTools))
       window.center()
       settingsWindow = window
@@ -395,6 +435,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       contentRect: CGRect(origin: .zero, size: size), styleMask: [.titled, .closable],
       backing: .buffered, defer: false)
     window.title = "Sillies · Control Center"
+    AppContentWindowStacking.shared.register(window)
     window.contentViewController = host
     window.isReleasedWhenClosed = false
     window.center()

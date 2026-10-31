@@ -72,6 +72,11 @@ private enum WindowTargetResolver {
     guard !WindowTrackingExclusions.shared.contains(windowID) else { return nil }
     let now = ProcessInfo.processInfo.systemUptime
     if case .cached(let candidate) = cache.candidate(for: windowID, at: now) {
+      if let candidate,
+        WindowTrackingExclusions.excludesSurface(windowID, ownerPID: candidate.processID)
+      {
+        return nil
+      }
       return candidate
     }
     guard let parsed = parsedWindowEntry(for: windowID),
@@ -83,6 +88,10 @@ private enum WindowTargetResolver {
       return nil
     }
     let pid = parsed.ownerPID
+    guard !WindowTrackingExclusions.excludesSurface(windowID, ownerPID: pid) else {
+      cacheCandidate(nil, for: windowID, at: now)
+      return nil
+    }
     let currentPID = ProcessInfo.processInfo.processIdentifier
     let app = NSRunningApplication(processIdentifier: pid)
     if let app, pid != currentPID {
@@ -231,7 +240,7 @@ final class WindowTargetMetadata: Sendable {
         }
 
         let regions = preliminaryEntries.compactMap { parsed -> DragWindowRegion? in
-          if WindowTrackingExclusions.shared.contains(parsed.id) {
+          if WindowTrackingExclusions.excludesSurface(parsed.id, ownerPID: parsed.ownerPID) {
             WindowTargetResolver.cacheCandidate(nil, for: parsed.id, at: now)
             return DragWindowRegion(
               windowID: parsed.id,

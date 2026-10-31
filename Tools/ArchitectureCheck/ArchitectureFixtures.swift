@@ -12,6 +12,19 @@ enum ArchitectureFixtures {
     let rendering = "Sources/SilliesApp/Rendering/CompanionPanel.swift"
     let fixtures: [Fixture] = [
       .init(
+        source: "import MLX", path: "Sources/SilliesApp/Skills/Text.swift",
+        rules: ["inference-isolation"]),
+      .init(source: "import MLX", path: "Sources/SilliesTextInference/Runtime.swift", rules: []),
+      .init(
+        source: "import AppKit", path: "Sources/SilliesTextModels/Provider.swift",
+        rules: ["module-boundary"]),
+      .init(
+        source: "Task.detached { process.waitUntilExit() }",
+        path: "Sources/SilliesTextModels/TextWorkerConnection.swift", rules: ["blocking-wait"]),
+      .init(
+        source: "process.waitUntilExit()",
+        path: "Sources/SilliesTextModels/TextWorkerConnection.swift", rules: ["blocking-wait"]),
+      .init(
         source: "import WhisperKit", path: "Sources/SilliesAudio/Capture.swift",
         rules: ["module-boundary"]),
       .init(
@@ -47,6 +60,19 @@ enum ArchitectureFixtures {
         source: "// try! fatalError()\nlet text = \"process.waitUntilExit()\"", path: rendering,
         rules: []),
       .init(source: "try! read()", path: rendering, rules: ["runtime-trap"]),
+      .init(source: "let value = result!", path: rendering, rules: ["runtime-trap"]),
+      .init(source: "if let value = result { use(value) }", path: rendering, rules: []),
+      .init(source: "UInt32(window.windowNumber)", path: rendering, rules: ["window-identity"]),
+      .init(source: "CGWindowID(windowNumber)", path: rendering, rules: ["window-identity"]),
+      .init(
+        source: "Swift.UInt32(window.windowNumber)", path: rendering, rules: ["window-identity"]),
+      .init(source: "window.windowServerID", path: rendering, rules: []),
+      .init(
+        source: "CGWindowID(exactly: windowNumber)",
+        path: "Sources/SilliesApp/Platform/NativeWindowIdentity.swift", rules: []),
+      .init(
+        source: "CGWindowID(windowNumber)",
+        path: "Sources/SilliesApp/Platform/NativeWindowIdentity.swift", rules: ["window-identity"]),
       .init(source: "let value = something as! String", path: rendering, rules: ["runtime-trap"]),
       .init(
         source: "panel.setFrame(\n rect,\n display: /* deferred? */ true\n)", path: rendering,

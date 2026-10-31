@@ -72,11 +72,17 @@ final class MeetingAudioProcessor {
   }
 
   private func buffer(_ samples: [Float], count: Int) throws -> AVAudioPCMBuffer {
-    guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(count)),
+    guard count > 0, count <= samples.count, let capacity = AVAudioFrameCount(exactly: count),
+      let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: capacity),
       let data = buffer.floatChannelData?[0]
     else { throw AudioCaptureFailure.unavailable("Could not prepare processed meeting audio.") }
-    buffer.frameLength = AVAudioFrameCount(count)
-    samples.withUnsafeBufferPointer { data.update(from: $0.baseAddress!, count: count) }
+    buffer.frameLength = capacity
+    try samples.withUnsafeBufferPointer { samples in
+      guard let source = samples.baseAddress else {
+        throw AudioCaptureFailure.unavailable("Processed meeting audio is empty.")
+      }
+      data.update(from: source, count: count)
+    }
     return buffer
   }
 }

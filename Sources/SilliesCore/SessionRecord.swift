@@ -14,6 +14,8 @@ public struct SessionRecord: Codable, Identifiable, Equatable, Sendable {
   public var transcript: String
   public var extractedText: String
   public var summary: String
+  public var notesNotice = ""
+  public var notesSource = SessionNotesSource.unspecified
   public var actionItems: [String]
   public var imageFilename: String?
   public var stashedItems: [String]

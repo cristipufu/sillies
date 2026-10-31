@@ -3,31 +3,44 @@ import SilliesModelStore
 import SwiftUI
 
 struct SpeechModelSettingsView: View {
+  enum Scope { case all, transcription, speakers }
   let model: SpeechModelsPresentation
   let activeModelID: String?
   var activeDiarizationModelID: String? = nil
+  var scope = Scope.all
+  private var manifests: [SpeechModelManifest] {
+    model.manifests.filter { manifest in
+      switch scope {
+      case .all: true
+      case .transcription: !manifest.model.isDiarizationModel
+      case .speakers: manifest.model.isDiarizationModel
+      }
+    }
+  }
 
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
-      HStack {
-        VStack(alignment: .leading, spacing: 4) {
-          Text("Apple Speech").fontWeight(.semibold)
-          Text("Uses languages installed by macOS.").font(.caption).foregroundStyle(
-            SilliesTheme.secondary)
-        }
-        Spacer()
-        if model.selectedModelID == SpeechModelDescriptor.apple.id {
-          selectedLabel
-        } else {
-          Button("Use") { model.useApple() }.buttonStyle(SoftButtonStyle())
+      if scope != .speakers {
+        HStack {
+          VStack(alignment: .leading, spacing: 4) {
+            Text("Apple Speech").fontWeight(.semibold)
+            Text("Uses languages installed by macOS.").font(.caption).foregroundStyle(
+              SilliesTheme.secondary)
+          }
+          Spacer()
+          if model.selectedModelID == SpeechModelDescriptor.apple.id {
+            selectedLabel
+          } else {
+            Button("Use") { model.useApple() }.buttonStyle(SoftButtonStyle())
+          }
         }
       }
-      ForEach(model.manifests, id: \.model.id) { manifest in
+      ForEach(manifests, id: \.model.id) { manifest in
         Divider()
         modelRow(manifest)
       }
       if model.isLoading { ProgressView("Checking models…").controlSize(.small) }
-      if let updates = model.updates {
+      if scope == .all, let updates = model.updates {
         Divider()
         ModelUpdateSettingsView(model: updates)
       }
@@ -68,11 +81,11 @@ struct SpeechModelSettingsView: View {
       }
       Text(manifest.model.detail).font(.caption).foregroundStyle(SilliesTheme.secondary)
         .fixedSize(horizontal: false, vertical: true)
-      if case .downloading(let fraction) = state {
+      if let fraction = state.downloadFraction {
         ProgressView(value: fraction).accessibilityLabel("Model download")
       }
       HStack(spacing: 10) {
-        if state == .preparing || state == .verifying || state == .validating {
+        if state.isProcessing {
           ProgressView().controlSize(.small)
         }
         Text(state.label).font(.caption).foregroundStyle(SilliesTheme.secondary)

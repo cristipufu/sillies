@@ -14,7 +14,7 @@ final class CompanionUtilityWindow: NSWindow {
     backing: NSWindow.BackingStoreType, defer flag: Bool
   ) {
     super.init(contentRect: contentRect, styleMask: styleMask, backing: backing, defer: flag)
-    level = CompanionPanel.transcriptionLevel
+    level = CompanionPanel.contentWindowLevel
     registerExclusion()
   }
 
@@ -25,8 +25,7 @@ final class CompanionUtilityWindow: NSWindow {
   }
 
   private func registerExclusion() {
-    guard windowNumber > 0 else { return }
-    let id = UInt32(windowNumber)
+    guard let id = windowServerID else { return }
     guard exclusion?.windowID != id else { return }
     exclusion = nil
     exclusion = WindowTrackingExclusions.shared.register(id)

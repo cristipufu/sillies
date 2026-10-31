@@ -34,22 +34,26 @@ final class CompanionController {
         self.skillControls.saveClipboard(with: pet)
       }))
   @ObservationIgnored var onOpenVault: ((UUID?) -> Void)?
-  @ObservationIgnored var onWritingAnchorChanged: ((CGPoint) -> Void)?
+  @ObservationIgnored var onWritingAnchorChanged: ((WritingCompanionAnchor?) -> Void)?
+  @ObservationIgnored var onOpenWritingSession: (() -> Void)?
   private var writingCompanionID: String?
 
-  @discardableResult func beginWritingIndicator() -> CGPoint {
+  var hasAvailableWritingCompanion: Bool {
+    companions.contains { $0.isAvailableForWriting || $0.isWritingIndicator }
+  }
+
+  @discardableResult func beginWritingIndicator() -> WritingCompanionAnchor? {
     playfulScenes.cancel(.restorePerches)
-    guard let selected = commandCompanion(),
-      let pet = companions.first(where: { $0.definition.id == selected.id })
-    else {
-      return NSEvent.mouseLocation
+    if let existing = companions.first(where: { $0.isWritingIndicator }) {
+      return existing.writingAnchor
     }
-    writingCompanionID = selected.id
+    guard let pet = companions.filter(\.isAvailableForWriting).randomElement() else { return nil }
+    writingCompanionID = pet.definition.id
     if let state = pet.beginWritingIndicator(at: now) { apply(state, to: pet) }
     refreshPlayfulAvailability()
     scheduleDeadline()
     updateMotionClock()
-    return pet.position
+    return pet.writingAnchor
   }
 
   func endWritingIndicator() {
@@ -58,6 +62,12 @@ final class CompanionController {
     refreshPlayfulAvailability()
     scheduleDeadline()
   }
+  func finishWritingIndicator() {
+    for pet in companions where pet.isWritingIndicator {
+      pet.displayBehavior(
+        pet.finishWritingIndicator(), using: animations, reducedMotion: reducedMotion)
+    }
+  }
   @ObservationIgnored private let additionalEventProducers: [any WorkspaceEventProducer]
   @ObservationIgnored private lazy var skillControls = CompanionSkillControls(
     skills: skills,
@@ -65,6 +75,7 @@ final class CompanionController {
       isRunning: { [weak self] in self?.shouldRun == true },
       focusedTarget: { [weak self] in self?.currentFocusedWindowCandidate() },
       openVault: { [weak self] in self?.onOpenVault?($0) },
+      openWritingSession: { [weak self] in self?.onOpenWritingSession?() },
       performSkill: { [weak self] skill, pet, target in
         self?.performSkillCommand(skill, for: pet, target: target)
       },
@@ -512,6 +523,7 @@ final class CompanionController {
   }
 
   private func pickUp(_ pet: CompanionInstance) {
+    if pet.isWritingIndicator { commands.onStopWriting?() }
     playfulScenes.cancel(.pickup(pet.definition.id))
     let target = currentFocusedWindowCandidate()
     pet.beginPickup(fallbackTarget: settings.followsWindows ? target : nil)
@@ -539,7 +551,9 @@ final class CompanionController {
 
   private func commandCompanion() -> CommandDispatcher.Companion? {
     guard
-      let pet = companions.filter({ !$0.isPickedUp && !$0.bindingState.isBound }).min(by: {
+      let pet = companions.filter({
+        !$0.isPickedUp && !$0.bindingState.isBound && !$0.isWritingIndicator
+      }).min(by: {
         hypot($0.position.x - NSEvent.mouseLocation.x, $0.position.y - NSEvent.mouseLocation.y)
           < hypot($1.position.x - NSEvent.mouseLocation.x, $1.position.y - NSEvent.mouseLocation.y)
       })
@@ -550,6 +564,7 @@ final class CompanionController {
   private func performSkillCommand(
     _ skill: CompanionSkillKind, for pet: CompanionInstance, target: WindowTargetCandidate?
   ) {
+    guard !pet.isWritingIndicator else { return }
     guard let command = AppCommand.allCases.first(where: { $0.skill == skill }) else { return }
     commands.perform(
       command,
@@ -649,6 +664,7 @@ final class CompanionController {
     switch placement.update(mode: mode) {
     case .awaitingWindow: return
     case .unavailable:
+      if writingCompanionID != nil { onWritingAnchorChanged?(nil) }
       deadlineClock.cancel()
       return
     case .positioned(let location):
@@ -657,7 +673,7 @@ final class CompanionController {
     if let writingCompanionID,
       let pet = companions.first(where: { $0.definition.id == writingCompanionID })
     {
-      onWritingAnchorChanged?(pet.position)
+      onWritingAnchorChanged?(pet.isAttachmentVisible ? pet.writingAnchor : nil)
     }
     if interaction.isEnabled { interaction.refresh() }
   }

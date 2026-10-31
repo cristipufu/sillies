@@ -494,7 +494,7 @@ final class WindowServerSource: Sendable {
     entries.compactMap { raw in
       guard let parsed = ParsedWindowEntry(dictionary: raw),
         parsed.ownerPID == processID,
-        !WindowTrackingExclusions.shared.contains(parsed.id),
+        !WindowTrackingExclusions.excludesSurface(parsed.id, ownerPID: parsed.ownerPID),
         parsed.isTrackableLayer,
         parsed.isVisible,
         parsed.id == currentWindowID || parsed.isTrackableSize

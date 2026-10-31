@@ -2,21 +2,22 @@ import SilliesCore
 import SwiftUI
 
 struct WritingHistoryView: View {
+  private static let previewCharacters = 400
   let model: WritingHistory
   let copy: (String) -> Void
+  let openText: (WritingResult) -> Void
   @State private var confirmsDeletion = false
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
-      HStack {
-        Text("Writing recovery").font(.title2.bold())
-        Spacer()
+      SessionIdentityHeader(title: "Recent writing", symbol: "text.bubble") {
+        Text("Dictations & selection edits · On this Mac")
+      } accessory: {
         Button("Delete all…", role: .destructive) { confirmsDeletion = true }
-          .disabled(model.results.isEmpty)
+          .buttonStyle(SoftButtonStyle()).disabled(model.results.isEmpty)
       }
       Text(
-        "The latest 20 dictations and selection edits stay on this Mac, separately from meetings. Audio is not saved."
-      )
-      .font(.callout).foregroundStyle(.secondary)
+        "Your latest 20 results stay here, separately from meetings. Audio isn’t saved."
+      ).font(.callout).foregroundStyle(SilliesTheme.secondary)
       if let error = model.error {
         Text(error).foregroundStyle(.red)
         Button("Retry loading history") { Task { await model.load() } }
@@ -27,29 +28,38 @@ struct WritingHistoryView: View {
           description: Text(
             "Your next result will appear here, including text that could not be inserted."))
       } else {
-        List(model.results) { result in
-          VStack(alignment: .leading, spacing: 8) {
-            HStack {
-              Text(result.applicationName).fontWeight(.semibold)
-              Spacer()
-              Text(result.createdAt, style: .time).foregroundStyle(.secondary)
+        ScrollView {
+          LazyVStack(spacing: 12) {
+            ForEach(model.results) { result in
+              VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                  Text(result.applicationName).fontWeight(.semibold)
+                  Spacer()
+                  Text(result.createdAt, style: .time).foregroundStyle(SilliesTheme.secondary)
+                }
+                Text(String(result.text.prefix(Self.previewCharacters))).lineLimit(4)
+                if !result.notice.isEmpty {
+                  Text(result.notice).font(.caption).foregroundStyle(SilliesTheme.secondary)
+                }
+                HStack {
+                  Button("Open text") { openText(result) }
+                  Button("Copy", systemImage: "doc.on.doc") { copy(result.text) }.buttonStyle(
+                    SoftButtonStyle())
+                  if result.text != result.originalText {
+                    Button("Copy original") { copy(result.originalText) }
+                  }
+                  Spacer()
+                  Button("Delete", role: .destructive) { model.remove(result.id) }
+                }
+              }.padding(16)
+                .background(SilliesTheme.card, in: RoundedRectangle(cornerRadius: 14))
+                .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(SilliesTheme.border))
             }
-            Text(result.text).textSelection(.enabled)
-            if !result.notice.isEmpty {
-              Text(result.notice).font(.caption).foregroundStyle(.secondary)
-            }
-            HStack {
-              Button("Copy") { copy(result.text) }
-              if result.text != result.originalText {
-                Button("Copy original") { copy(result.originalText) }
-              }
-              Spacer()
-              Button("Delete", role: .destructive) { model.remove(result.id) }
-            }
-          }.padding(.vertical, 8)
+          }.padding(1)
         }
       }
-    }.padding(22).frame(minWidth: 520, minHeight: 380)
+    }.padding(24).frame(minWidth: 560, minHeight: 400)
+      .background(SilliesTheme.paper).foregroundStyle(SilliesTheme.ink).tint(SilliesTheme.accent)
       .confirmationDialog("Delete all recent writing?", isPresented: $confirmsDeletion) {
         Button("Delete all", role: .destructive) { model.clear() }
       }

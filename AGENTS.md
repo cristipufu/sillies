@@ -25,3 +25,4 @@
 - Keep character IDs and saved preference keys stable.
 - Do not add telemetry, screen capture, keyboard-content collection, or network services without a product requirement. The user-authorized everyday-writing requirement permits explicit hotkey dictation, bounded selection editing, and destination validation/insertion. It does not authorize automatic keyboard-content or clipboard-history collection.
 - Run `make check` for behavior/platform changes. Use `swift format` for Swift source. Update extension docs when the pack schema or renderer contract changes.
+- Treat native identifiers, external counts, and saved values as untrusted boundaries: use checked conversions and recoverable failure paths. Native window numbers must use `NSWindow.windowServerID`. Every crash fix needs a regression exercising its failure input; window activation, popover, or menu changes also require `--app-window-test` (included in `make check`), not just rendered-view tests.

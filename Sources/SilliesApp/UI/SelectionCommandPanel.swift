@@ -4,50 +4,58 @@ import SwiftUI
 private struct SelectionCommandView: View {
   let model: SelectionCommandCoordinator
   let copy: (String) -> Void
-  let close: () -> Void
+  let history: () -> Void
+
   var body: some View {
-    VStack(alignment: .leading, spacing: 12) {
-      HStack {
-        if model.isWorking { ProgressView().controlSize(.small) }
-        Text(model.status).font(.system(size: 13, weight: .semibold, design: .rounded))
-        Spacer(minLength: 4)
-        Button {
-          model.cancel()
-          close()
-        } label: {
-          Image(systemName: "xmark")
+    VStack(alignment: .leading, spacing: 10) {
+      HStack(spacing: 9) {
+        Image(systemName: "text.badge.star")
+          .foregroundStyle(SilliesTheme.accent).frame(width: 28, height: 28)
+          .background(SilliesTheme.accent.opacity(0.14), in: Circle())
+        SessionHUDLabel(title: model.title, status: model.status)
+        if model.isWorking {
+          ProgressView().controlSize(.mini)
+        } else {
+          Button(action: history) {
+            Image(systemName: "text.bubble").frame(width: 24, height: 24)
+          }.buttonStyle(.plain).help("Review recent writing").accessibilityLabel(
+            "Review recent writing")
         }
-        .accessibilityLabel(model.isWorking ? "Cancel writing" : "Dismiss")
+        if let result = model.result {
+          SessionHUDAction(title: "Copy") { copy(result.text) }
+        }
+        SessionHUDDismiss(title: model.isWorking ? "Cancel writing" : "Dismiss") { model.dismiss() }
       }
-      if let result = model.result {
-        Text(result.text).font(.callout).lineLimit(5)
-        if !result.notice.isEmpty { Text(result.notice).font(.caption).foregroundStyle(.secondary) }
-        Button("Copy edited text") { copy(result.text) }
-      }
-    }.padding(16).frame(width: WritingFeedbackLayout.width).fixedSize(
-      horizontal: false, vertical: true
-    )
-    .background(
-      SilliesTheme.card, in: RoundedRectangle(cornerRadius: WritingFeedbackLayout.cornerRadius)
-    )
-    .overlay(
-      RoundedRectangle(cornerRadius: WritingFeedbackLayout.cornerRadius).strokeBorder(
-        SilliesTheme.border)
-    )
-    .foregroundStyle(SilliesTheme.ink).padding(WritingFeedbackLayout.shadowInset)
+      if let failure = model.insertionFailure { SessionFailureNotice(failure: failure) }
+    }
+    .padding(.horizontal, 11).padding(.vertical, 8)
+    .frame(width: WritingFeedbackLayout.width)
+    .background(SessionHUDBackground(emphasis: model.isWorking ? .active : .completed))
+    .foregroundStyle(SilliesTheme.ink).tint(SilliesTheme.accent)
+    .fixedSize(horizontal: false, vertical: true).padding(WritingFeedbackLayout.shadowInset)
   }
 }
 
 @MainActor final class SelectionCommandPanel {
   private let panel = AnchoredWritingPanel<SelectionCommandView>()
-  func move(to point: CGPoint) { panel.move(to: point) }
-  func prepare(_ model: SelectionCommandCoordinator, copy: @escaping (String) -> Void) {
-    panel.prepare(
-      SelectionCommandView(model: model, copy: copy, close: { [weak self] in self?.close() }))
+  func attach(to companion: WritingCompanionAnchor) { panel.attach(to: companion) }
+  func prepare(
+    _ model: SelectionCommandCoordinator, copy: @escaping (String) -> Void,
+    history: @escaping () -> Void
+  ) {
+    panel.prepare(SelectionCommandView(model: model, copy: copy, history: history))
   }
-  func show(_ model: SelectionCommandCoordinator, copy: @escaping (String) -> Void) {
+  func show(
+    _ model: SelectionCommandCoordinator, copy: @escaping (String) -> Void,
+    history: @escaping () -> Void
+  ) {
+    guard model.isPresented else {
+      panel.hide()
+      return
+    }
     panel.show(
-      SelectionCommandView(model: model, copy: copy, close: { [weak self] in self?.close() }))
+      SelectionCommandView(model: model, copy: copy, history: history),
+      sizing: model.insertionFailure.map { .notice($0.message) } ?? .compact)
   }
   func close() { panel.close() }
 }

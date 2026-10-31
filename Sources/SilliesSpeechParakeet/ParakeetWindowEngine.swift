@@ -19,8 +19,11 @@ actor ParakeetWindowEngine: SpeechWindowEngine {
 
   func transcribe(_ request: SpeechWindowRequest) async throws -> SpeechWindowResult {
     dispatchPrecondition(condition: .notOnQueue(.main))
+    guard !request.samples.isEmpty else { return SpeechWindowResult(words: []) }
+    let input = try ParakeetTranscriptionInput(request)
     var decoder = TdtDecoderState.make(decoderLayers: await manager.decoderLayerCount)
-    let result = try await manager.transcribe(request.samples, decoderState: &decoder)
+    let result = try await manager.transcribe(
+      input.samples, decoderState: &decoder, language: input.language)
     return SpeechWindowResult(
       words: buildWordTimings(from: result.tokenTimings ?? []).map {
         SpeechWord(text: $0.word, start: $0.startTime, end: $0.endTime)

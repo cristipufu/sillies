@@ -9,3 +9,5 @@ Example: a new transcript status is a presentation-model property, not view-leve
 Run `LiveTranscriptTests`, `SkillInterfaceTests`, `MeetingSpeechBubbleTests`, `SessionVaultModelTests`, `make stress`, and `make check` as relevant. Use the opt-in UI snapshots for visual changes and inspect minimum-size, reading/selection, failure, and long-text states.
 
 Live and saved session errors use `SessionFailureNotice`. Recovery actions come from `SessionFailure`, and `SessionRecovery` opens the corresponding permission pane. Keep partial transcripts and summaries visible alongside failures; never choose recovery by searching their text.
+
+Register ordinary app content windows with `AppContentWindowStacking`: Settings, Vault, and writing tools must cover companion/HUD overlays while Sillies is active and return to their native level on deactivation. Activation callbacks own this transition; never fix layering with per-frame ordering or by making Settings permanently float above other apps. Nonactivating session panels retain their explicit content level.

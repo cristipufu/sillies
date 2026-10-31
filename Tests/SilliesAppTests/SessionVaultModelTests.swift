@@ -4,6 +4,36 @@ import Testing
 
 @testable import SilliesApp
 
+@Test @MainActor func vaultSavesExtractedHighlightsAlongsidePartialTranscriptFailures() async throws
+{
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { removeTestFile(at: directory) }
+  let vault = SessionVaultStore(
+    directory: directory,
+    notesGenerator: { _ in
+      LocalNotes(
+        summary: "• Ședința începe mâine.", actions: [], notice: "Generated notes unavailable.",
+        source: .extracted)
+    })
+  await vault.waitUntilLoaded()
+  let record = SessionRecord(
+    kind: .record,
+    origin: .init(characterID: "mochi", characterName: "Mochi", source: .init(appName: "Meeting")),
+    content: .init(
+      text: .init(transcript: "Ședința începe mâine."),
+      processing: .init(
+        summaryPending: true,
+        failure: SessionFailure(category: .finalization, message: "Partial audio failure"))))
+  vault.add(record)
+  await vault.flushPendingSummaries()
+  let saved = try #require(vault.records.first)
+  #expect(saved.notesSource == .extracted)
+  #expect(!saved.summaryPending)
+  #expect(saved.transcript == record.transcript)
+  #expect(saved.failure == record.failure)
+  await vault.flush()
+}
+
 @Test @MainActor func vaultSelectionStaysAdjacentWhenDeletingFilteredRecords() async throws {
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
   defer { removeTestFile(at: directory) }

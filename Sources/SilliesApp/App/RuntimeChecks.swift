@@ -40,6 +40,7 @@ struct LaunchConfiguration {
       || arguments.contains("--companion-drag-test")
       || arguments.contains("--playful-scene")
       || arguments.contains("--writing-test")
+      || arguments.contains("--app-window-test")
   }
 
   var watchdogTimeoutSeconds: Double {
@@ -84,6 +85,7 @@ struct LaunchConfiguration {
 /// `AppDelegate` stays focused on application lifecycle and user-facing windows.
 @MainActor
 final class AutomatedLaunchRunner {
+  var appWindowActions: AppWindowLifecycleCheck.Actions?
   private var inputFixture: InputWindowFixture?
   private var writingFixture: WritingEditorFixture?
   private var externalDragCheck: ExternalDragCheck?
@@ -102,10 +104,14 @@ final class AutomatedLaunchRunner {
   func validateCatalog(characterCount: Int) {
     Task {
       do {
-        let models = try await Task.detached { try SpeechModelCatalog.bundled().manifests.count }
-          .value
+        let models = try await Task.detached {
+          (
+            speech: try SpeechModelCatalog.bundled().manifests.count,
+            text: try TextModelCatalog.bundled().manifests.count
+          )
+        }.value
         print(
-          "Validated \(characterCount) character packs, all animation references, and \(models) downloadable speech models."
+          "Validated \(characterCount) character packs, all animation references, \(models.speech) downloadable speech models, and \(models.text) downloadable text models."
         )
         NSApp.terminate(nil)
       } catch {
@@ -171,6 +177,8 @@ final class AutomatedLaunchRunner {
     } else if args.contains("--writing-test") {
       controller.stop()
       Task { await WritingInsertionCheck.run() }
+    } else if args.contains("--app-window-test"), let appWindowActions {
+      Task { await AppWindowLifecycleCheck.run(controller: controller, actions: appWindowActions) }
     } else if args.contains("--interaction-test") || args.contains("--drop-return-test") {
       let previous = NSWorkspace.shared.frontmostApplication
       let playground = openPlayground()

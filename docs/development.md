@@ -20,6 +20,8 @@ Read `AGENTS.md` and the relevant ownership contract before changing a subsystem
 | Speaker detection | `SilliesSpeech` / `SessionDiarization` / SDK adapter | Independent source identity, bounded history/pending phrases; failure preserves text |
 | Model updates | `SilliesModelStore` / `SilliesModelValidation` | Artifact discovery, daily persistence, worker schema/inference validation, atomic version selection and rollback |
 | Speech providers | `SilliesSpeech` + SDK adapter targets | Channels own independent decoding state; weights are shared; bounded queues and explicit finish/cancel |
+| Text inference | `SilliesTextModels` / `SilliesTextInference` | Provider-neutral contracts; one isolated MLX helper, bounded context/IPC, explicit cancellation and idle release |
+| Inference priority | `SilliesInference` | Speech preempts downloaded text; no overlapping text generations; dictation reserves resources until finalization |
 | Model installation | `SilliesModelStore` | Pinned HTTPS artifacts, hashes, atomic publication, active-use leases; all I/O off main |
 | Audio engine | `SilliesAudio` | Core + provider-neutral speech contracts + echo cancellation; capture/language contracts use package access; no app/UI imports |
 | Tracking schedule | `WindowTrackingSchedule` | One owner for workspace timer slots and discovery retries; replacement invalidates old callbacks; explicit stop |
@@ -34,15 +36,21 @@ Read `AGENTS.md` and the relevant ownership contract before changing a subsystem
 
 ## Changing a boundary
 
+Crash prevention has three layers: checked values at system/data boundaries, regression tests for malformed and transient inputs, and native lifecycle checks for user journeys. Swift integer conversion traps and forced unwraps are not recoverable with `do/catch`; validate before conversion. Use `NSWindow.windowServerID` for AppKit window numbers, including positive values wider than WindowServer's 32-bit identifier. The architecture checker rejects direct conversions and forced unwraps as well as forced tries/casts. It is a syntax check, not proof of runtime safety.
+
+Every crash fix must include a regression for the reported failure input and a check of the real triggering workflow. `make check` includes `build/Sillies.app/Contents/MacOS/Sillies --app-window-test --without-accessibility` after building. This short, watchdog-bounded native check opens Settings and the Vault through the menu-bar actions, closes and reopens them, and checks that companions remain running and visible and never attach to app windows. Rendering a SwiftUI view alone does not exercise native activation or transient AppKit windows. Keep app preferences and Vault fixtures isolated in automated launches.
+
 State the user-visible behavior, owning type, inputs/outputs, and cancellation/error behavior before introducing a cross-subsystem dependency. Keep domain decisions in Core and native effects in the app. A protocol's payload types belong to its contract rather than a concrete implementation. Additional package targets should enforce an actual dependency boundary; the persistence target is an example.
 
 For changes to saved data, preserve backward decoding and existing identifiers. Attachment names must be single nonempty path components and cannot refer to the metadata index. Use `VaultFileStorage.removeAttachment` for cleanup: it unlinks files or symlinks and refuses directories. Never use recursive directory removal for a filename read from metadata. Test missing, unreadable, and malformed storage separately. A failed load must remain a failure until a successful reload; a retry must preserve edits made while loading was unavailable. Atomic writes protect replacement, not the correctness of the snapshot being written.
 
 For concurrency changes, document the actor, serial queue, or lock owning each mutable field. Assert queue confinement at worker entry points. Keep unchecked Sendable implementations small and audit callbacks, cancellation, and shutdown together. Main-actor completions needed during termination must use `MainRunLoopDelivery`.
 
+See [local text model extension contracts](local-text-models.md) and [speech provider contracts](local-speech-models.md) before adding a runtime or model.
+
 ## Verification
 
-- Run `swift format` on changed Swift files and `make check` for behavior/platform changes.
+- Run `swift format` on changed Swift files and `make check` for behavior/platform changes. Use `make check BUILD_DIR=/tmp/sillies-verification` to avoid replacing a running app bundle. Native MLX builds require Xcode’s Metal toolchain; the packaged helper receives a real GPU-kernel check.
 - Pure model tests live in `SilliesCoreTests`; audio-only tests in `SilliesAudioTests`; file-format and storage tests live in `SilliesPersistenceTests`; native integration belongs in `SilliesAppTests`.
 - Use `bash scripts/test.sh --filter <test-name>` for targeted checks. The script serializes native tests because they share AppKit and WindowServer state.
 - Use the standard smoothness budget by default; only the 12-mascot stress fixtures select the explicitly approved `fullCrew` budget. Preserve both profiles' p95/frame-stall limits and the single-pass-placement assertions. Report measured budget failures explicitly; a structural refactor is not proof of a performance improvement.

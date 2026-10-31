@@ -27,7 +27,6 @@ final class DictationCoordinator {
   private enum Limits {
     static let cleanupDeadline: Duration = .milliseconds(750)
     static let maximumCapture: Duration = .seconds(300)
-    static let previewCharacters = 200
   }
   let preferences: DictationPreferences
   let history: WritingHistory
@@ -35,6 +34,12 @@ final class DictationCoordinator {
   private(set) var status = "Ready to dictate"
   private(set) var preview = ""
   private(set) var level = 0.0
+  private(set) var elapsed: TimeInterval = 0
+  private(set) var insertionFailure: SessionFailure?
+  private(set) var captureFailure: SessionFailure?
+  var recoveryFailure: SessionFailure? { captureFailure ?? insertionFailure }
+  var canInsert: Bool { destination != nil && insertionNotice.isEmpty }
+  var followsLiveTranscript = true
   private(set) var result: WritingResult?
   private(set) var releaseToInsertion: TimeInterval?
   var isActive: Bool {
@@ -42,6 +47,11 @@ final class DictationCoordinator {
   }
   var isBusy: Bool { isActive || pendingStops > 0 }
   var canFinish: Bool { phase == .listening }
+  var hudStatus: String {
+    guard phase == .listening else { return status }
+    let instruction = mode == .hold ? "Release to finish" : "Press again to finish"
+    return "\(SessionRecord.formatDuration(elapsed)) · \(instruction)"
+  }
   var environment = Environment()
   private let factory: SessionAudioCaptureFactory
   private let languages: AudioLanguageEnvironment
@@ -56,7 +66,7 @@ final class DictationCoordinator {
   private var operation: Task<Void, Never>?
   private var captureDeadline: Task<Void, Never>?
   private var destination: TextDestination?
-  private var applicationName = "the original app"
+  private(set) var applicationName = "the original app"
   private var insertionNotice = ""
   private var pendingStops = 0
   private var releasedAt: TimeInterval?
@@ -113,8 +123,12 @@ final class DictationCoordinator {
     let token = generation
     applicationName = application.name
     insertionNotice = ""
+    insertionFailure = nil
+    captureFailure = nil
     result = nil
     preview = ""
+    elapsed = 0
+    followsLiveTranscript = true
     releaseToInsertion = nil
     releasedAt = nil
     phase = .preparing
@@ -135,6 +149,10 @@ final class DictationCoordinator {
         destination = captured
       } catch TextAccessError.protectedField { throw TextAccessError.protectedField } catch {
         insertionNotice = error.localizedDescription
+        if case TextAccessError.permission = error {
+          insertionFailure = .permissionDenied(.openAccessibilitySettings)
+          environment.changed()
+        }
       }
       try Task.checkCancellation()
       let catalog = try await languages.load()
@@ -185,10 +203,12 @@ final class DictationCoordinator {
       phase = .listening
       status = mode == .hold ? "Listening · release to insert" : "Listening · press again to finish"
       if destination == nil { status += " · copy only" }
-    case .transcript(let text, let level, _):
-      preview = String(text.suffix(Limits.previewCharacters))
+    case .transcript(let text, let level, let elapsed):
+      preview = text
       self.level = level
+      self.elapsed = elapsed
     case .failed(let failure), .transcriptionStopped(let failure):
+      captureFailure = failure
       insertionNotice = failure.message
       finish()
     default: break

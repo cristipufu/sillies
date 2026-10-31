@@ -31,8 +31,8 @@ final class PlayfulPropPanel: NSPanel {
   }
 
   func prepare() {
-    if registration == nil {
-      registration = WindowTrackingExclusions.transparentOverlays.register(UInt32(windowNumber))
+    if registration == nil, let id = windowServerID {
+      registration = WindowTrackingExclusions.transparentOverlays.register(id)
     }
   }
 

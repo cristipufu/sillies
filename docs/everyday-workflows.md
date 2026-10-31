@@ -1,14 +1,24 @@
 # Everyday writing and retrieval
 
+## Settings navigation
+
+Settings has five destinations: General (startup and app updates), Companions (crew, energy, size, motion, and app exclusions), Dictation & Writing (setup, output, language, dictionary, selection edits, and recovery), Speech & Meetings (transcription models, speaker labels, and model updates), and Shortcuts. It is resizable, with persistent navigation and independently scrolling content. The menu-bar control center dismisses on outside clicks and Escape; document and session windows stay open.
+
 ## Shortcuts and startup
 
-Settings → Everyday Shortcuts configures skills, dictation, selection commands, the Vault, Stash search, recovery, and crew pause. Control–Option–Space holds to dictate; Control–Option–D starts/finishes toggle dictation. Existing customizations and cleared bindings are preserved. Conflicts and failed registrations are shown. The focused shortcut recorder is the only place that collects a shortcut key; Carbon registrations need no Input Monitoring. Launch at login is opt-in and reflects macOS approval status.
+Settings → Shortcuts configures skills, dictation, selection commands, the Vault, Stash search, recovery, and crew pause. Control–Option–Space holds to dictate; Control–Option–D starts/finishes toggle dictation. Existing customizations and cleared bindings are preserved. Conflicts and failed registrations are shown. The focused shortcut recorder is the only place that collects a shortcut key; Carbon registrations need no Input Monitoring. Launch at login is opt-in and reflects macOS approval status.
 
 Window commands resolve the frontmost application's current window on a worker and revalidate focus before starting. Moving to another application during lookup cancels the command.
+
+Assigned shortcuts remain registered while companions are paused or excluded, so their keys cannot fall through into the foreground application merely because Sillies is suspended. Unavailable commands explain how to resume the crew. Sillies must be running and the shortcut must have registered successfully.
+
+Sillies’ own product windows never become mascot perches or skill targets. Opening Settings, the Vault, a transcript, or Recent writing preserves the external application being followed. Automated native-window checks explicitly register their fixture window; this does not enable tracking of product windows.
 
 ## Dictation
 
 Focus a text field, press the shortcut, and wait for **Listening** before speaking. The indicator appears immediately while permissions/models prepare, without taking keyboard focus. Release the hold shortcut or press the toggle shortcut again to finish. Finish and Cancel also appear in the indicator. Dictation ends after five minutes. A quick release while still preparing cancels; it does not begin recording later.
+
+The shortcut selects a random available, visible mascot and holds its recording reaction. Its compact controls reuse Record’s microphone indicator, status label, Finish, and Cancel controls. The transcript button (or the mascot’s Open session menu action) opens the familiar session window without activating Sillies. The full transcript shares Record’s selectable native viewport, Follow live, and Jump to latest controls. The mascot remains with the result until dismissal. If every mascot is busy, Sillies explains this instead of starting an unattached recording.
 
 The microphone and selected local speech model produce the transcript. Dictation does not save an audio recording. Automatic language detection on a multilingual model is appropriate for English/Romanian mixing; an explicit language choice is honored or reported unavailable. Recognition quality depends on the model, microphone, and speech. “Verbatim” skips cleanup but cannot undo normalization performed by the recognizer itself.
 
@@ -16,7 +26,7 @@ Light cleanup has 750 ms after recognition finalization. Unavailable, unsafe, or
 
 The personal dictionary passes hints to engines that support them. Optional “heard as” substitutions work across all providers, match whole words, and do not cascade. Entries apply to new meeting and dictation captures.
 
-Accessibility enables insertion into compatible fields. Without it, text is ready to copy. Before inserting, Sillies rechecks the original application, field, window/document, selection, and surrounding context. If any changed, the result stays in recovery. Native replacement is preferred; a clipboard fallback snapshots all available representations up to 16 MB and restores only its own clipboard transaction. A newer user copy wins. Unsafe multiline fallback is copy-only; no Return or submit action is generated. If insertion cannot be confirmed, check the field before manually pasting to avoid duplication.
+Accessibility enables insertion into compatible fields. The inline **Enable text insertion…** action opens System Settings → Privacy & Security → Accessibility. Enable Sillies, then start a new dictation. Without access, the current result remains ready to copy. Before inserting, Sillies rechecks the original application, field, window/document, selection, and surrounding context. If any changed, the result stays in recovery. Native replacement is preferred; a clipboard fallback snapshots all available representations up to 16 MB and restores only its own clipboard transaction. A newer user copy wins. Unsafe multiline fallback is copy-only; no Return or submit action is generated. If insertion cannot be confirmed, check the field before manually pasting to avoid duplication.
 
 Writing recovery keeps the latest 20 dictations and selection edits separately from meeting retention. It stores original and final text, supports individual/all deletion, and reports storage failures. Pause/exit preserves completed speech as copy-only text. Explicit Cancel discards the active capture.
 
@@ -32,7 +42,7 @@ Captures default to **Keep everything until I delete it**. Optional limits retai
 
 Saved recordings expose source-scoped speaker names. Naming Speaker 2 in one source does not identify Speaker 2 in another. Renaming changes headers and regenerates notes; it never edits spoken sentences. Resetting a name restores the original label.
 
-Shorten, Fix grammar, and Translate operate only on an explicit selection of up to 3,000 characters. They require Apple Intelligence and language support from its local model, independently of speech recognition support. English and Romanian are selectable translation targets; unavailable language support leaves the selection intact with an explanation. Edits have an eight-second deadline and share dictation's destination validation, one-insertion rule, and recovery history.
+Shorten, Fix grammar, and Translate operate only on an explicit selection of up to 3,000 characters. They use the model selected in Settings → Local AI, independently of speech recognition. Apple’s built-in option requires Apple Intelligence and a supported language; optional downloaded models use the isolated local inference helper. See [local text models](local-text-models.md) for requirements and quality checks. English and Romanian are selectable translation targets; unavailable language support leaves the selection intact with an explanation. Edits have an eight-second deadline and share dictation's destination validation, one-insertion rule, and recovery history.
 
 Custom commands, Vault question answering, and calendar assistance remain later work.
 

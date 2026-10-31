@@ -250,10 +250,10 @@
       "id": "parakeet-ultra",
       "providerID": "fluidaudio",
       "name": "Parakeet Ultra",
-      "detail": "Automatic recognition in 25 European languages, including English and Romanian.",
+      "detail": "Recognition in 25 European languages, including English and Romanian. An optional language hint guides the writing script.",
       "revision": "95eaa59a39d4394f047a4dc5cce480388a60d1b6",
       "capabilities": {
-        "languageControl": "automatic",
+        "languageControl": "hinted",
         "languages": [
           "bg",
           "hr",

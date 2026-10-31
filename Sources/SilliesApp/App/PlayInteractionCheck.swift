@@ -219,7 +219,7 @@ final class PlayInteractionCheck: NSObject {
         default: fail("Selected Snap skill did not activate")
         }
         require(
-          target?.windowID == UInt32(playground.window.windowNumber), "Skill binds its target")
+          target?.windowID == playground.window.windowServerID, "Skill binds its target")
       } else {
         require(!binding.isBound, "An unselected drop keeps following the focused window")
         require(
@@ -265,7 +265,7 @@ final class PlayInteractionCheck: NSObject {
   }
 
   private var ready: Bool {
-    controller.tracker.windowID == UInt32(playground.window.windowNumber)
+    controller.tracker.windowID == playground.window.windowServerID
       && controller.attachmentDiagnostics.first?.edge == .top
       && controller.attachmentDiagnostics.first?.visible == true
       && background.map { controller.tracker.inputWindowFrames[$0.windowNumber] != nil } == true

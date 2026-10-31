@@ -9,6 +9,9 @@ let package = Package(
     .executable(name: "Sillies", targets: ["SilliesApp"]),
   ],
   dependencies: [
+    .package(url: "https://github.com/ml-explore/mlx-swift-lm", exact: "3.32.3", traits: []),
+    .package(url: "https://github.com/ml-explore/mlx-swift", exact: "0.32.3"),
+    .package(url: "https://github.com/huggingface/swift-transformers", exact: "1.3.0"),
     .package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.10.0"),
     .package(path: "Vendor/AudioProcessing"),
     .package(url: "https://github.com/argmaxinc/argmax-oss-swift.git", exact: "1.1.1"),
@@ -18,7 +21,20 @@ let package = Package(
   ],
   targets: [
     .target(name: "SilliesCore", exclude: ["AGENTS.md"]),
-    .target(name: "SilliesSpeech", dependencies: ["SilliesCore"]),
+    .target(name: "SilliesInference"),
+    .target(
+      name: "SilliesTextModels",
+      dependencies: ["SilliesCore", "SilliesModelStore", "SilliesInference"]),
+    .executableTarget(
+      name: "SilliesTextInference",
+      dependencies: [
+        "SilliesTextModels",
+        .product(name: "MLX", package: "mlx-swift"),
+        .product(name: "MLXLLM", package: "mlx-swift-lm"),
+        .product(name: "MLXLMCommon", package: "mlx-swift-lm"),
+        .product(name: "Tokenizers", package: "swift-transformers"),
+      ]),
+    .target(name: "SilliesSpeech", dependencies: ["SilliesCore", "SilliesInference"]),
     .target(name: "SilliesModelValidation"),
     .target(name: "SilliesSpeechApple", dependencies: ["SilliesSpeech"]),
     .target(
@@ -53,6 +69,7 @@ let package = Package(
         "SilliesSpeech", "SilliesSpeechApple", "SilliesSpeechWhisper", "SilliesSpeechParakeet",
         "SilliesModelStore", "SilliesModelValidation", "SilliesDiarizationNemotron",
         "WindowMetadataProtocol",
+        "SilliesTextModels", "SilliesInference",
       ],
       exclude: ["Platform/AGENTS.md", "UI/AGENTS.md"],
       resources: [.copy("Resources/Characters"), .copy("Resources/Scenes")]
@@ -63,7 +80,13 @@ let package = Package(
         "SilliesCore", "SilliesModelStore", "SilliesSpeech", "SilliesSpeechWhisper",
         "SilliesSpeechParakeet", "SilliesDiarizationNemotron",
       ], path: "Tools/SpeechBenchmark"),
+    .executableTarget(
+      name: "TextModelBenchmark", dependencies: ["SilliesModelStore", "SilliesTextModels"],
+      path: "Tools/TextModelBenchmark"),
     .testTarget(name: "SilliesCoreTests", dependencies: ["SilliesCore"]),
+    .testTarget(
+      name: "SilliesTextModelsTests",
+      dependencies: ["SilliesTextModels", "SilliesModelStore", "SilliesInference"]),
     .testTarget(name: "SilliesSpeechTests", dependencies: ["SilliesSpeech", "SilliesSpeechApple"]),
     .testTarget(
       name: "SilliesModelStoreTests", dependencies: ["SilliesModelStore", "SilliesCore"]),

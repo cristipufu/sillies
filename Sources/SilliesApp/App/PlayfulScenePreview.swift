@@ -48,7 +48,7 @@ final class PlayfulScenePreview {
         try await Task.sleep(for: .seconds(Self.setupDelay))
         guard let self else { return }
         self.controller.tracker.simulateTrackedWindow(
-          self.window.frame, windowID: UInt32(self.window.windowNumber))
+          self.window.frame, windowID: self.window.windowServerID)
         self.controller.tracker.stop()
         let completedBefore = self.controller.playfulScenes.completedSceneCount
         guard self.controller.previewPlayfulScene(sceneID) else {

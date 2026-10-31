@@ -7,7 +7,7 @@ public struct SessionFailure: Error, LocalizedError, Codable, Equatable, Sendabl
     case transcription, recordingSave, finalization, unknown
   }
   public enum RecoveryAction: String, Codable, Sendable {
-    case openMicrophoneSettings, openScreenRecordingSettings
+    case openMicrophoneSettings, openScreenRecordingSettings, openAccessibilitySettings
   }
 
   public let message: String
@@ -56,6 +56,9 @@ public struct SessionFailure: Error, LocalizedError, Codable, Equatable, Sendabl
     case .openScreenRecordingSettings:
       message =
         "Screen and system audio access is required. Enable Sillies in recording settings, then start a new session."
+    case .openAccessibilitySettings:
+      message =
+        "Enable Sillies in Accessibility to insert text. You can still dictate and copy your words."
     }
     return Self(category: .permissionDenied, message: message, recovery: recovery)
   }

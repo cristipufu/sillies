@@ -15,8 +15,11 @@ final class WorkspaceFocusSession {
     processID: 0, name: "Your desktop", bundleIdentifier: nil)
   private(set) var isAwaitingWindow = false
 
-  func frontmostReplacement(for refresh: Refresh) -> Application? {
-    guard let app = NSWorkspace.shared.frontmostApplication else { return nil }
+  func frontmostReplacement(
+    for refresh: Refresh,
+    application frontmost: NSRunningApplication? = NSWorkspace.shared.frontmostApplication
+  ) -> Application? {
+    guard let app = frontmost else { return nil }
     let candidate = Application(
       processID: app.processIdentifier, name: app.localizedName ?? "Your app",
       bundleIdentifier: app.bundleIdentifier)
@@ -39,9 +42,11 @@ final class WorkspaceFocusSession {
     guard app.processIdentifier == ProcessInfo.processInfo.processIdentifier else {
       return TrackableApplicationPolicy.isTrackable(app)
     }
-    if NSApp.keyWindow is CompanionUtilityWindow { return false }
-    return NSApp.windows.contains {
-      $0.isVisible && !$0.isMiniaturized && $0.canBecomeMain && $0.styleMask.contains(.titled)
+    return NSApp.windows.contains { window in
+      guard window.isVisible, !window.isMiniaturized, let id = window.windowServerID else {
+        return false
+      }
+      return !WindowTrackingExclusions.excludesSurface(id, ownerPID: app.processIdentifier)
     }
   }
 }

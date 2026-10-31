@@ -2,6 +2,12 @@
 
 The first catalog contains Whisper Large v3 Turbo compressed (WhisperKit, approximately 629.5 MB including tokenizer) and Parakeet Ultra (FluidAudio, approximately 632.3 MB). Apple Speech remains the default. Downloadable engines require Apple Silicon. Package versions and every model artifact revision/hash are pinned; downloading weights does not download executable plugins.
 
+Parakeet offers automatic detection and optional language hints. FluidAudio 0.18.0 uses hints to filter decoder tokens by script; Romanian and English share the Latin script, so a hint does not strictly force one over the other. Keep this distinction in the capability metadata and language controls. The provider pads final windows shorter than the runtime's 300 ms minimum with silence; transcript timing and retirement still use the original audio length.
+
+Model transfers use explicit URLSession download tasks: the async convenience download API does not reliably deliver intermediate delegate byte callbacks on macOS. Progress measures aggregate artifact bytes, switches to verification before hashing each file, and returns to downloading before the next file starts. Core ML preparation is a separate indeterminate phase. Loopback HTTP tests cover actual progress, cancellation/resumption, and oversized responses without downloading weights.
+
+Speech recognition and text summarization have separate language coverage. Apple Foundation Models supplies generated notes only for locales supported on the current Mac. Optional [downloadable text models](local-text-models.md) provide an independent multilingual choice in Settings → Local AI. Otherwise the Vault saves source excerpts with explicit extracted-highlight provenance; these are not AI summaries. Saved older records without provenance retain a neutral notes label.
+
 ## Extending providers and models
 
 1. For another compatible model, add an exact artifact manifest to `Sources/SilliesModelStore/Resources/speech-models.json`. Record all required files, including tokenizers, exact byte lengths, SHA-256 hashes, licenses, languages, and hardware requirements. `scripts/update-speech-catalog.py` regenerates the built-in catalog from pinned upstream revisions and reads only metadata/small tokenizer files.

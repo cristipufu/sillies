@@ -13,26 +13,18 @@ struct AudioSessionHeader: View {
   }
 
   private var identityRow: some View {
-    HStack(spacing: 12) {
-      Image(systemName: model.kind.symbolName)
-        .font(.system(size: 22, weight: .medium)).foregroundStyle(SilliesTheme.accent)
-        .frame(width: 48, height: 48)
-        .background(SilliesTheme.accent.opacity(0.10), in: RoundedRectangle(cornerRadius: 14))
-      VStack(alignment: .leading, spacing: 4) {
-        Text(model.kind.title).font(.system(size: 24, weight: .bold, design: .rounded))
-        HStack(spacing: 6) {
-          Text(model.sourceLabel).lineLimit(1).truncationMode(.middle)
-          Button {
-            showsSourceDetails.toggle()
-          } label: {
-            Image(systemName: "info.circle")
-          }
-          .buttonStyle(.plain).accessibilityLabel("About these audio sources")
-          .popover(isPresented: $showsSourceDetails) { sourceDetails }
+    SessionIdentityHeader(title: model.kind.title, symbol: model.kind.symbolName) {
+      HStack(spacing: 6) {
+        Text(model.sourceLabel).lineLimit(1).truncationMode(.middle)
+        Button {
+          showsSourceDetails.toggle()
+        } label: {
+          Image(systemName: "info.circle")
         }
-        .font(.callout).foregroundStyle(SilliesTheme.secondary)
+        .buttonStyle(.plain).accessibilityLabel("About these audio sources")
+        .popover(isPresented: $showsSourceDetails) { sourceDetails }
       }
-      Spacer(minLength: 12)
+    } accessory: {
       Text(SessionRecord.formatDuration(model.elapsed))
         .font(.system(size: 28, weight: .medium, design: .rounded)).monospacedDigit()
         .accessibilityLabel("Session duration: \(SessionRecord.formatDuration(model.elapsed))")

@@ -1,10 +1,34 @@
 import CryptoKit
 import Foundation
+import Synchronization
 import XCTest
 
 @testable import SilliesModelStore
 
 final class ModelStoreTests: XCTestCase, @unchecked Sendable {
+  func testEachArtifactStartsDownloadingBeforeVerificationAndKeepsAggregateProgress() async throws {
+    let fixture = try Fixture()
+    defer { fixture.cleanup() }
+    let artifact = try XCTUnwrap(fixture.manifest.artifacts.first)
+    let manifest = SpeechModelManifest(
+      model: fixture.manifest.model,
+      artifacts: [
+        artifact,
+        .init(
+          path: "second.bin", url: artifact.url, byteCount: artifact.byteCount,
+          sha256: artifact.sha256),
+      ])
+    let events = Mutex<[ModelInstallationProgress]>([])
+    let store = ModelStore(root: fixture.root, downloader: fixture.downloader)
+    try await store.install(manifest) { value in events.withLock { $0.append(value) } }
+    let updates = events.withLock { $0 }
+    XCTAssertEqual(
+      updates.map(\.phase),
+      [.downloading, .downloading, .verifying, .downloading, .downloading, .verifying])
+    XCTAssertEqual(updates.map(\.completedBytes), [0, 5, 5, 5, 10, 10])
+    XCTAssertTrue(updates.allSatisfy { $0.totalBytes == 10 })
+  }
+
   func testReplacementAndRemovalPublishOnlyCompleteInstallations() async throws {
     let fixture = try Fixture()
     defer { fixture.cleanup() }

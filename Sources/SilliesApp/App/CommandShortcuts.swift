@@ -12,7 +12,7 @@ final class CommandShortcuts {
   private let defaults: UserDefaults
   @ObservationIgnored private let hotkeys: GlobalHotkeys
   @ObservationIgnored private var running = false
-  @ObservationIgnored private var availability = Availability.active
+  private(set) var availability = Availability.active
   @ObservationIgnored var onEvent: ((AppCommand, GlobalHotkeys.Edge) -> Void)?
 
   init(defaults: UserDefaults = .standard, hotkeys: GlobalHotkeys = GlobalHotkeys()) {
@@ -37,7 +37,7 @@ final class CommandShortcuts {
     running = true
     hotkeys.onEvent = { [weak self] command, edge in self?.onEvent?(command, edge) }
     for command in AppCommand.allCases {
-      if isAvailable(command), let shortcut = bindings[command.rawValue] {
+      if let shortcut = bindings[command.rawValue] {
         install(shortcut, for: command)
       }
     }
@@ -46,14 +46,8 @@ final class CommandShortcuts {
   func configure(_ availability: Availability) {
     guard self.availability != availability else { return }
     self.availability = availability
-    guard running else { return }
-    stop()
-    start()
-  }
-
-  private func isAvailable(_ command: AppCommand) -> Bool {
-    availability == .active || command == .togglePause || command == .openVault
-      || command == .dictationHistory
+    // Assigned shortcuts remain reserved while paused or excluded. The dispatcher declines
+    // unavailable actions; unregistering here would send the same keys to the foreground app.
   }
 
   func stop() {
@@ -75,7 +69,7 @@ final class CommandShortcuts {
         return
       }
       if bindings[command.rawValue] == shortcut { return }
-      if running, isAvailable(command), !install(shortcut, for: command) { return }
+      if running, !install(shortcut, for: command) { return }
     } else {
       hotkeys.unregister(command)
     }

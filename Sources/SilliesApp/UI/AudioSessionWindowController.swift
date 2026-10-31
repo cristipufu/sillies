@@ -3,19 +3,17 @@ import SwiftUI
 
 @MainActor
 final class AudioSessionWindowController {
-  private static let initialSize = CGSize(width: 640, height: 760)
-  private static let minimumSize = CGSize(width: 560, height: 640)
   private(set) var window: CompanionUtilityWindow?
   private weak var displayedSession: AudioSessionPresentation?
 
   func show(_ model: AudioSessionPresentation) {
     if window == nil {
       let window = CompanionUtilityWindow(
-        contentRect: CGRect(origin: .zero, size: Self.initialSize),
+        contentRect: CGRect(origin: .zero, size: SessionWindowLayout.initialSize),
         styleMask: [.titled, .closable, .resizable, .miniaturizable], backing: .buffered,
         defer: false)
       window.isReleasedWhenClosed = false
-      window.contentMinSize = Self.minimumSize
+      window.contentMinSize = SessionWindowLayout.minimumSize
       window.center()
       self.window = window
     }

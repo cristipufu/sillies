@@ -2,7 +2,7 @@ import AppKit
 import SilliesCore
 import SwiftUI
 
-private struct StashPickerView: View {
+struct StashPickerView: View {
   let vault: SessionVaultStore
   let paste: PasteBackCoordinator
   let choose: (SessionRecord) -> Void
@@ -25,7 +25,12 @@ private struct StashPickerView: View {
   }
   var body: some View {
     @Bindable var model = model
-    VStack(alignment: .leading, spacing: 12) {
+    VStack(alignment: .leading, spacing: 14) {
+      SessionIdentityHeader(title: "Pocket Stash", symbol: "tray.full.fill") {
+        Text(paste.actionTitle).lineLimit(1)
+      } accessory: {
+        EmptyView()
+      }
       TextField("Search Pocket Stash…", text: $model.searchQuery).textFieldStyle(.roundedBorder)
         .focused($searchFocused).onSubmit { activateSelection() }
         .onKeyPress(.downArrow) {
@@ -36,25 +41,41 @@ private struct StashPickerView: View {
           moveSelection(by: -1)
           return .handled
         }
-      if let notice = paste.notice { Text(notice).font(.caption).foregroundStyle(.secondary) }
+      if let notice = paste.notice {
+        Text(notice).font(.caption).foregroundStyle(SilliesTheme.secondary)
+      }
       if model.isSearching { ProgressView().controlSize(.small) }
       if let error = model.searchError { Text(error).foregroundStyle(.red) }
       List(model.filteredRecords, selection: $selected) { record in
         VStack(alignment: .leading, spacing: 4) {
           Text(record.primaryText).lineLimit(3)
-          Text(record.createdAt, style: .date).font(.caption).foregroundStyle(.secondary)
+          Text(record.createdAt, style: .date).font(.caption).foregroundStyle(
+            SilliesTheme.secondary)
         }.padding(.vertical, 4).tag(record.id)
+          .listRowBackground(SilliesTheme.card)
           .onTapGesture(count: 2) { choose(record) }
-      }
+      }.scrollContentBackground(.hidden)
+        .background(SilliesTheme.card, in: RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(SilliesTheme.border))
+        .overlay {
+          if model.filteredRecords.isEmpty, !model.isSearching {
+            ContentUnavailableView(
+              model.searchQuery.isEmpty ? "Your stash is empty" : "No matching stashes",
+              systemImage: "tray",
+              description: Text("Save text or a link from the clipboard to find it here."))
+          }
+        }
       if model.hasMoreResults { Button("Show more") { model.showMore() } }
       HStack {
-        Text("Return to choose · Escape to close").font(.caption).foregroundStyle(.secondary)
+        Text("Return to choose · Escape to close").font(.caption).foregroundStyle(
+          SilliesTheme.secondary)
         Spacer()
         Button(paste.actionTitle) { activateSelection() }
-          .keyboardShortcut(.defaultAction).disabled(
+          .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction).disabled(
             model.filteredRecords.isEmpty || paste.isPasting)
       }
-    }.padding(18).frame(minWidth: 480, minHeight: 340)
+    }.padding(24).frame(minWidth: 560, minHeight: 440)
+      .background(SilliesTheme.paper).foregroundStyle(SilliesTheme.ink).tint(SilliesTheme.accent)
       .task(id: model.searchIdentity) { await model.refreshSearch() }
       .onAppear { searchFocused = true }
       .onExitCommand(perform: close)
@@ -93,10 +114,12 @@ private struct StashPickerView: View {
   private func present() {
     if window == nil {
       let window = NSPanel(
-        contentRect: CGRect(x: 0, y: 0, width: 550, height: 400),
+        contentRect: CGRect(x: 0, y: 0, width: 600, height: 500),
         styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
       window.title = "Sillies · Pocket Stash"
+      AppContentWindowStacking.shared.register(window)
       window.isReleasedWhenClosed = false
+      window.contentMinSize = CGSize(width: 560, height: 440)
       window.contentViewController = NSHostingController(
         rootView: StashPickerView(
           vault: vault, paste: paste,

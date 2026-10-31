@@ -8,6 +8,7 @@ final class CompanionSkillControls {
     let isRunning: () -> Bool
     let focusedTarget: () -> WindowTargetCandidate?
     let openVault: (UUID?) -> Void
+    var openWritingSession: () -> Void = {}
     let performSkill: (CompanionSkillKind, CompanionInstance, WindowTargetCandidate?) -> Void
     let motionChanged: () -> Void
   }
@@ -73,7 +74,8 @@ final class CompanionSkillControls {
   private func menu(for pet: CompanionInstance) -> NSMenu {
     let target = pet.attachmentTarget ?? environment.focusedTarget()
     return CompanionActionMenu.make(
-      windowName: target?.appName, hasAudioSession: skills.activeAudioSession != nil
+      windowName: target?.appName,
+      hasAudioSession: skills.activeAudioSession != nil || pet.isWritingIndicator
     ) {
       [weak self, weak pet] action in
       guard let self, self.isActive, let pet, self.environment.isRunning() else { return }
@@ -89,7 +91,12 @@ final class CompanionSkillControls {
       environment.performSkill(skill, pet, target)
     case .saveClipboard: stash(StashPasteboard.items(from: .general), with: pet, target: target)
     case .openStash: environment.openVault(nil)
-    case .openSession: skills.openActiveAudioSession()
+    case .openSession:
+      if pet.isWritingIndicator {
+        environment.openWritingSession()
+      } else {
+        skills.openActiveAudioSession()
+      }
     }
   }
 
@@ -101,7 +108,7 @@ final class CompanionSkillControls {
 
   private func stash(_ items: [String], with pet: CompanionInstance, target: WindowTargetCandidate?)
   {
-    guard isActive, environment.isRunning() else { return }
+    guard isActive, environment.isRunning(), !pet.isWritingIndicator else { return }
     guard
       let id = skills.recordStash(
         items: items, for: pet.definition.id,

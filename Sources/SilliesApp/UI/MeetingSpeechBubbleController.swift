@@ -90,7 +90,9 @@ final class MeetingSpeechBubbleController {
     self.background = background
     self.host = host
     self.panel = panel
-    trackingExclusion = WindowTrackingExclusions.shared.register(UInt32(panel.windowNumber))
+    if let id = panel.windowServerID {
+      trackingExclusion = WindowTrackingExclusions.shared.register(id)
+    }
   }
 
   private func animateAppearance() {

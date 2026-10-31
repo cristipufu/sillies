@@ -51,7 +51,12 @@ final class CommandDispatcher {
       return
     }
     if command == .dictationHistory, onWritingCommand?(command) == true { return }
-    guard environment.isAvailable() else { return }
+    guard environment.isAvailable() else {
+      feedback.showMessage(
+        "Companions are paused or unavailable in this app. Resume them in the Sillies menu.",
+        at: NSEvent.mouseLocation)
+      return
+    }
     if onWritingCommand?(command) == true { return }
     if command.skill?.isAudioSession == true, skills.activeAudioSession != nil {
       skills.openActiveAudioSession()

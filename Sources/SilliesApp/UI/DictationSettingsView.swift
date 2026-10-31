@@ -4,87 +4,119 @@ import SwiftUI
 
 struct DictationSettingsView: View {
   let tools: WritingTools
-  @State private var phrase = ""
-  @State private var heardAs = ""
+  var hasInsertionAccess = false
+  var shortcuts: CommandShortcuts? = nil
+  var openShortcuts: () -> Void = {}
+  var openSpeech: () -> Void = {}
   @State private var languages: [SpeechLanguage] = []
   @State private var languageError: String?
+  @State private var languageControl = SpeechModelDescriptor.Capabilities.LanguageControl.selectable
+
   var body: some View {
     @Bindable var preferences = tools.dictation.preferences
-    VStack(alignment: .leading, spacing: 12) {
-      Text(
-        "Assign Hold to dictate or Start / finish dictation above. Focus a text field, then use your shortcut. Escape is never intercepted from other apps; use Cancel in the indicator or assign its own shortcut."
-      )
-      .font(.caption).foregroundStyle(SilliesTheme.secondary)
-      Picker("Output", selection: $preferences.style) {
-        ForEach(DictationOutputStyle.allCases, id: \.self) { Text($0.title).tag($0) }
-      }
-      Picker("Language", selection: $preferences.languageIdentifier) {
-        Text("Automatic / device language").tag("auto")
-        ForEach(languages.filter { !$0.isAutomatic }) { Text($0.name).tag($0.id) }
-      }
-      if let languageError { Text(languageError).foregroundStyle(.red).font(.caption) }
-      Text(
-        "Uses the transcription model selected below. English/Romanian mixing works best with automatic detection on a multilingual model. If local cleanup is unavailable or late, the transcript is used. Each dictation finishes after five minutes."
-      )
-      .font(.caption).foregroundStyle(SilliesTheme.secondary)
-      Button("Open recovery history") { tools.openHistory() }
-      Button("Enable text insertion access…") { tools.enableInsertionAccess() }
-      Text(
-        "Accessibility is required only for inserting text. Dictation can still produce text to copy without it."
-      )
-      .font(.caption).foregroundStyle(SilliesTheme.secondary)
-      if let latency = tools.dictation.releaseToInsertion {
-        Text("Last release to insertion: \(latency, specifier: "%.2f") seconds")
-          .font(.caption).foregroundStyle(SilliesTheme.secondary)
-      }
-      Picker("Translate selections into", selection: $preferences.translationLanguage) {
-        Text("English").tag("en")
-        Text("Romanian").tag("ro")
-      }
-      Text(
-        "Selection commands require a language supported by Apple’s on-device writing model. Unsupported languages keep their original text."
-      )
-      .font(.caption).foregroundStyle(SilliesTheme.secondary)
-      Divider()
-      Text("Personal dictionary").fontWeight(.semibold)
-      Text(
-        "Names and technical terms guide supported engines. Optional “heard as” phrases are replaced as whole words for every engine."
-      )
-      .font(.caption).foregroundStyle(SilliesTheme.secondary)
-      TextField("Preferred spelling, e.g. Ștefănescu", text: $phrase)
-      TextField("Heard as (optional)", text: $heardAs)
-      Button("Add word or phrase") {
-        tools.vocabulary.add(phrase: phrase, heardAs: heardAs)
-        if tools.vocabulary.error == nil {
-          phrase = ""
-          heardAs = ""
+    VStack(alignment: .leading, spacing: 22) {
+      SettingsCard(
+        title: "Speak. Finish. It’s there.",
+        detail:
+          "Focus a text field, then use a shortcut. An available mascot listens and inserts your words when you finish."
+      ) {
+        shortcut(.holdDictation, title: "Hold to speak")
+        shortcut(.toggleDictation, title: "Press to start / finish")
+        Button("Change shortcuts…", action: openShortcuts).buttonStyle(SoftButtonStyle())
+        if hasInsertionAccess {
+          Label("Text insertion is enabled", systemImage: "checkmark.circle.fill")
+            .font(.caption).foregroundStyle(SilliesTheme.accent)
+        } else {
+          SessionFailureNotice(failure: .permissionDenied(.openAccessibilitySettings))
         }
-      }.disabled(phrase.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-      if let error = tools.vocabulary.error { Text(error).font(.caption).foregroundStyle(.red) }
-      ForEach(tools.vocabulary.entries) { entry in
-        HStack {
-          Text(entry.heardAs.isEmpty ? entry.phrase : "\(entry.heardAs) → \(entry.phrase)")
-          Spacer()
-          Button {
-            tools.vocabulary.remove(entry.id)
-          } label: {
-            Image(systemName: "minus.circle")
+      }
+      SettingsCard(title: "Your words, your way") {
+        Picker("Output", selection: $preferences.style) {
+          ForEach(DictationOutputStyle.allCases, id: \.self) { Text($0.title).tag($0) }
+        }
+        Text(
+          preferences.style == .verbatim
+            ? "Keep the recognized words as they are."
+            : "Lightly tidy punctuation and filler words. Names, numbers, and meaning stay yours."
+        )
+        .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        Divider()
+        Picker(
+          SpeechLanguageGuidance.title(for: languageControl),
+          selection: $preferences.languageIdentifier
+        ) {
+          Text("Automatic / device language").tag("auto")
+          ForEach(languages.filter { !$0.isAutomatic }) { Text($0.name).tag($0.id) }
+        }
+        if let languageError { Text(languageError).foregroundStyle(.red).font(.caption) }
+        Text(
+          languageControl == .hinted
+            ? SpeechLanguageGuidance.detail(for: languageControl)
+            : "Mixing English and Romanian? Use automatic detection with a multilingual model."
+        )
+        .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        Button("Choose a speech model…", action: openSpeech).buttonStyle(.link)
+        Divider()
+        PersonalDictionarySettings(model: tools.vocabulary)
+      }
+      SettingsCard(
+        title: "Edit a selection",
+        detail:
+          "Select text in another app, then use Shorten, Fix grammar, or Translate from a shortcut."
+      ) {
+        Picker("Translate into", selection: $preferences.translationLanguage) {
+          Text("English").tag("en")
+          Text("Romanian").tag("ro")
+        }
+        Text(
+          "Uses Apple’s on-device writing model. If the language isn’t supported, your original text stays intact."
+        )
+        .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        Button("Set up selection shortcuts…", action: openShortcuts).buttonStyle(.link)
+      }
+      SettingsCard(
+        title: "Your words won’t get lost",
+        detail:
+          "The last 20 dictations and edits stay in Recent writing. Copy a result or delete it whenever you like. Audio isn’t saved."
+      ) {
+        Button("Open Recent writing", systemImage: "text.bubble") { tools.openHistory() }
+          .buttonStyle(SoftButtonStyle())
+        DisclosureGroup("How dictation finishes") {
+          Text(
+            "Each dictation finishes after five minutes. If cleanup is unavailable or takes too long, Sillies uses the transcript. If the destination changes, the result stays ready to copy."
+          )
+          .font(.caption).foregroundStyle(SilliesTheme.secondary).padding(.top, 8)
+          if let latency = tools.dictation.releaseToInsertion {
+            Text("Last finish to insertion: \(latency, specifier: "%.2f") seconds")
+              .font(.caption).foregroundStyle(SilliesTheme.secondary)
           }
-          .accessibilityLabel("Remove \(entry.phrase)")
-        }
-      }
-    }.task(id: tools.modelID) {
-      do {
-        let catalog = try await tools.languages.load()
-        languages = catalog.installed
-        let selected = tools.dictation.preferences.languageIdentifier
-        if selected != "auto", let language = catalog.installedLanguage(matching: selected) {
-          tools.dictation.preferences.languageIdentifier = language.id
-        }
-        languageError = nil
-      } catch {
-        languageError = error.localizedDescription
+        }.font(.caption)
       }
     }
+    .task(id: tools.modelID) { await loadLanguages() }
+  }
+
+  private func shortcut(_ command: AppCommand, title: String) -> some View {
+    HStack {
+      Text(title)
+      Spacer()
+      Text(shortcuts?.bindings[command.rawValue]?.display ?? "Not assigned")
+        .font(.system(.callout, design: .rounded).weight(.semibold))
+        .padding(.horizontal, 10).padding(.vertical, 5)
+        .background(SilliesTheme.soft, in: RoundedRectangle(cornerRadius: 6))
+    }
+  }
+
+  private func loadLanguages() async {
+    do {
+      let catalog = try await tools.languages.load()
+      languages = catalog.installed
+      languageControl = catalog.model.capabilities.languageControl
+      let selected = tools.dictation.preferences.languageIdentifier
+      if selected != "auto", let language = catalog.installedLanguage(matching: selected) {
+        tools.dictation.preferences.languageIdentifier = language.id
+      }
+      languageError = nil
+    } catch { languageError = error.localizedDescription }
   }
 }

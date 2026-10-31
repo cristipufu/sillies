@@ -11,6 +11,7 @@ final class GlobalHotkeys {
   private var registrations: [AppCommand: EventHotKeyRef] = [:]
   private var pressed: Set<AppCommand> = []
   var onEvent: ((AppCommand, Edge) -> Void)?
+  var registeredCommands: Set<AppCommand> { Set(registrations.keys) }
 
   func register(_ command: AppCommand, shortcut: CommandShortcut) throws {
     try installHandler()

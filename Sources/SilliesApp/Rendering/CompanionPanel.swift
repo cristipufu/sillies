@@ -13,14 +13,16 @@ final class CompanionPanel: NSPanel {
   private var occlusionExclusion: WindowTrackingExclusions.Registration?
   private static let windowLevelOffsetAboveTarget = 1
   private static let hudLevelOffsetAboveCompanion = 1
+  private static let contentLevelOffsetAboveHUD = 1
   private static let defaultScreenVisibleFrame = CGRect(x: 0, y: 0, width: 1440, height: 900)
   static let normalOverlayLevel = NSWindow.Level(
     rawValue: NSWindow.Level.normal.rawValue + windowLevelOffsetAboveTarget)
   static let floatingOverlayLevel = NSWindow.Level(
     rawValue: NSWindow.Level.floating.rawValue + windowLevelOffsetAboveTarget)
   static let overlayLevel = floatingOverlayLevel
-  static let transcriptionLevel = NSWindow.Level(
-    rawValue: floatingOverlayLevel.rawValue + hudLevelOffsetAboveCompanion + 1)
+  static let contentWindowLevel = NSWindow.Level(
+    rawValue:
+      floatingOverlayLevel.rawValue + hudLevelOffsetAboveCompanion + contentLevelOffsetAboveHUD)
   static let overlayCollectionBehavior: NSWindow.CollectionBehavior = [
     .canJoinAllSpaces, .canJoinAllApplications, .fullScreenAuxiliary, .ignoresCycle, .transient,
   ]
@@ -80,7 +82,9 @@ final class CompanionPanel: NSPanel {
     acceptsMouseMovedEvents = true
     collectionBehavior = Self.overlayCollectionBehavior
     animationBehavior = .none
-    occlusionExclusion = WindowTrackingExclusions.transparentOverlays.register(UInt32(windowNumber))
+    if let id = windowServerID {
+      occlusionExclusion = WindowTrackingExclusions.transparentOverlays.register(id)
+    }
     if Self.isRunningUnderUnitTests { alphaValue = 0 }
   }
 

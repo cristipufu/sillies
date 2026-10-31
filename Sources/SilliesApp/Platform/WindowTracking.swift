@@ -362,7 +362,11 @@ final class WorkspaceTracker: WorkspaceEventProducer {
 
   private func accept(_ observation: WindowServerObservation) {
     guard started, observation.processID == processID, isEnabled, !isSuspended else { return }
-    if let id = observation.windowID, WindowTrackingExclusions.shared.contains(id) { return }
+    if let id = observation.windowID,
+      WindowTrackingExclusions.excludesSurface(id, ownerPID: observation.processID)
+    {
+      return
+    }
     let primaryScreenTop = NSScreen.screens.first?.frame.maxY ?? 0
     let priorInputFrames = inputWindowFrames
     updateBackgroundAndInputFrames(from: observation, primaryScreenTop: primaryScreenTop)
@@ -846,15 +850,17 @@ final class WorkspaceTracker: WorkspaceEventProducer {
   }
   private func localWindowChanged(_ notification: Notification) {
     guard let window = notification.object as? NSWindow, window.canBecomeMain,
-      window.styleMask.contains(.titled), window.windowNumber > 0
+      window.styleMask.contains(.titled), let id = window.windowServerID,
+      !WindowTrackingExclusions.excludesSurface(
+        id, ownerPID: ProcessInfo.processInfo.processIdentifier)
     else { return }
     if notification.name == NSWindow.willMiniaturizeNotification {
-      minimizingNativeWindowIDs.insert(window.windowNumber)
+      minimizingNativeWindowIDs.insert(Int(id))
     } else if notification.name == NSWindow.didMiniaturizeNotification
       || notification.name == NSWindow.didDeminiaturizeNotification
       || notification.name == NSWindow.willCloseNotification
     {
-      minimizingNativeWindowIDs.remove(window.windowNumber)
+      minimizingNativeWindowIDs.remove(Int(id))
     }
     guard started, isEnabled, tracksWindows, !isSuspended,
       processID == ProcessInfo.processInfo.processIdentifier
@@ -863,7 +869,7 @@ final class WorkspaceTracker: WorkspaceEventProducer {
       || notification.name == NSWindow.willMiniaturizeNotification
       || notification.name == NSWindow.didMiniaturizeNotification
     {
-      if UInt32(window.windowNumber) == windowID {
+      if id == windowID {
         publishGeometry(nil, windowID: nil)
       }
       refreshGeometry(scope: .applicationWindows)
@@ -871,16 +877,16 @@ final class WorkspaceTracker: WorkspaceEventProducer {
       return
     }
     guard window.isVisible, !window.isMiniaturized,
-      !minimizingNativeWindowIDs.contains(window.windowNumber)
+      !minimizingNativeWindowIDs.contains(Int(id))
     else { return }
-    guard window.isMainWindow || window.isKeyWindow || UInt32(window.windowNumber) == windowID
+    guard window.isMainWindow || window.isKeyWindow || id == windowID
     else { return }
     if notification.name == NSWindow.didMoveNotification
       || notification.name == NSWindow.didResizeNotification
     {
       roleSnapshot?.hasExactStandardWindowFrames = false
     }
-    publishGeometry(window.frame, windowID: UInt32(window.windowNumber))
+    publishGeometry(window.frame, windowID: id)
   }
   private func displaysChanged() {
     refreshGeometry(scope: .applicationWindows)

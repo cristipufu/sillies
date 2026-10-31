@@ -20,6 +20,19 @@ final class CompanionController {
   let transitions: TransitionLibrary
   let skills: SkillCoordinator
   let playfulScenes: PlayfulSceneCoordinator
+  @ObservationIgnored private(set) lazy var commands = CommandDispatcher(
+    skills: skills,
+    environment: .init(
+      isAvailable: { [weak self] in self?.shouldRun == true },
+      companion: { [weak self] in self?.commandCompanion() },
+      openVault: { [weak self] in self?.onOpenVault?(nil) },
+      togglePause: { [weak self] in self?.settings.paused.toggle() },
+      saveClipboard: { [weak self] id in
+        guard let self, let pet = self.companions.first(where: { $0.definition.id == id }) else {
+          return
+        }
+        self.skillControls.saveClipboard(with: pet)
+      }))
   @ObservationIgnored var onOpenVault: ((UUID?) -> Void)?
   @ObservationIgnored private let additionalEventProducers: [any WorkspaceEventProducer]
   @ObservationIgnored private lazy var skillControls = CompanionSkillControls(
@@ -28,6 +41,9 @@ final class CompanionController {
       isRunning: { [weak self] in self?.shouldRun == true },
       focusedTarget: { [weak self] in self?.currentFocusedWindowCandidate() },
       openVault: { [weak self] in self?.onOpenVault?($0) },
+      performSkill: { [weak self] skill, pet, target in
+        self?.performSkillCommand(skill, for: pet, target: target)
+      },
       motionChanged: { [weak self] in self?.updateMotionClock() }))
   @ObservationIgnored private let interaction = CompanionInteraction()
   @ObservationIgnored let dragTargeting: CompanionDragTargetingController
@@ -143,6 +159,7 @@ final class CompanionController {
   }
 
   private func applicationChanged() {
+    commands.cancelPending()
     dragTargeting.refreshWindowSnapshot()
     skills.refreshBoundWindows()
     reconcile()
@@ -185,6 +202,7 @@ final class CompanionController {
   }
 
   func stop() {
+    commands.stop()
     playfulScenes.stop()
     dragTargeting.stop()
     dragTargeting.companionLookup = nil
@@ -363,6 +381,7 @@ final class CompanionController {
     reconcileEnabledCharacters()
     refreshPlayfulAvailability()
     if !shouldRun || companions.isEmpty {
+      commands.stop()
       dragTargeting.resetAndHideOverlays()
       ApplicationIconCache.shared.cancelPending()
       skillControls.stop()
@@ -487,8 +506,28 @@ final class CompanionController {
   }
 
   func startMicrophoneRecording() {
-    guard shouldRun, let pet = companions.first else { return }
-    skills.startSkill(.record, for: pet.definition.id, companionName: pet.definition.name)
+    commands.perform(.record)
+  }
+
+  private func commandCompanion() -> CommandDispatcher.Companion? {
+    guard
+      let pet = companions.filter({ !$0.isPickedUp && !$0.bindingState.isBound }).min(by: {
+        hypot($0.position.x - NSEvent.mouseLocation.x, $0.position.y - NSEvent.mouseLocation.y)
+          < hypot($1.position.x - NSEvent.mouseLocation.x, $1.position.y - NSEvent.mouseLocation.y)
+      })
+    else { return nil }
+    return .init(id: pet.definition.id, name: pet.definition.name, position: pet.position)
+  }
+
+  private func performSkillCommand(
+    _ skill: CompanionSkillKind, for pet: CompanionInstance, target: WindowTargetCandidate?
+  ) {
+    guard let command = AppCommand.allCases.first(where: { $0.skill == skill }) else { return }
+    commands.perform(
+      command,
+      context: .init(
+        companion: .init(id: pet.definition.id, name: pet.definition.name, position: pet.position),
+        target: target))
   }
 
   private func handleDrop(_ pet: CompanionInstance, gesture: CompanionInstance.ReleaseGesture) {
@@ -519,9 +558,7 @@ final class CompanionController {
       self.react(pet, to: WorkspaceEvent(.dropped, at: self.now))
       self.considerPlayfulScene(trigger: .landing)
       if let selection {
-        self.skills.startSkill(
-          selection.skill, for: pet.definition.id, companionName: pet.definition.name,
-          target: selection.target)
+        self.performSkillCommand(selection.skill, for: pet, target: selection.target)
       }
       self.scheduleDeadline()
       self.updateMotionClock()

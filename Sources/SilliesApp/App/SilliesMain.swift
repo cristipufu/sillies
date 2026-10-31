@@ -27,6 +27,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private let popover = NSPopover()
   private var settingsWindow: NSWindow?
   private var speechServices: SpeechServices?
+  private var shortcuts: CommandShortcuts?
+  private let loginItems = LoginItemSettings()
   private let audioSessionWindow = AudioSessionWindowController()
   private var vaultWindow: NSWindow?
   private var previewWindow: NSWindow?
@@ -76,6 +78,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       speechServices?.start()
       observeModelUpdateActivity()
       if !launch.isAutomatedRun {
+        let shortcuts = CommandShortcuts()
+        shortcuts.onEvent = { [weak controller] command, edge in
+          if edge == .pressed { controller?.commands.perform(command) }
+        }
+        self.shortcuts = shortcuts
+        shortcuts.start()
+        observeCommandAvailability()
         _ = Updates.shared
         installStatusItem()
       }
@@ -119,6 +128,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     }
   }
 
+  private func observeCommandAvailability() {
+    guard !isTerminating, let controller, let shortcuts else { return }
+    withObservationTracking {
+      shortcuts.configure(controller.shouldRun && controller.liveCount > 0 ? .active : .suspended)
+    } onChange: { [weak self] in
+      Task { @MainActor in self?.observeCommandAvailability() }
+    }
+  }
+
   private func makeSkillCoordinator(for launch: LaunchConfiguration) -> SkillCoordinator {
     guard launch.isAutomatedRun else {
       let speech = SpeechServices()
@@ -137,6 +155,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       return .terminateNow
     }
     isTerminating = true
+    shortcuts?.stop()
     automatedRunner.stopPreview()
     speechServices?.stop()
     cleanupTemporaryPreferences()
@@ -157,6 +176,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   }
 
   func applicationWillTerminate(_ notification: Notification) {
+    shortcuts?.stop()
     speechServices?.stop()
     controller?.stop()
     cleanupTemporaryPreferences()
@@ -253,7 +273,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     menu.popUp(positioning: nil, at: CGPoint(x: 0, y: button.bounds.minY), in: button)
   }
 
-  @objc private func togglePause() { controller?.settings.paused.toggle() }
+  @objc private func togglePause() { controller?.commands.perform(.togglePause) }
   @objc private func checkForUpdates() { Updates.shared.checkNow() }
   @objc private func quit() { NSApp.terminate(nil) }
 
@@ -270,7 +290,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     return existing
   }
 
-  @objc private func openVaultFromMenu() { showVault() }
+  @objc private func openVaultFromMenu() { controller?.commands.perform(.openVault) }
 
   private func showVault(recordID: UUID? = nil) {
     popover.performClose(nil)
@@ -311,7 +331,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       window.titlebarAppearsTransparent = true
       window.isReleasedWhenClosed = false
       window.contentViewController = NSHostingController(
-        rootView: SettingsView(controller: controller, speechModels: speechServices?.models))
+        rootView: SettingsView(
+          controller: controller, speechModels: speechServices?.models,
+          shortcuts: shortcuts, loginItems: loginItems))
       window.center()
       settingsWindow = window
     }

@@ -3,6 +3,8 @@ import SwiftUI
 struct SettingsView: View {
   let controller: CompanionController
   var speechModels: SpeechModelsPresentation? = nil
+  var shortcuts: CommandShortcuts? = nil
+  var loginItems: LoginItemSettings? = nil
   private var appVersion: String {
     Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
       ?? "Development"
@@ -21,6 +23,11 @@ struct SettingsView: View {
             Text("Make yourself at home.").font(.system(size: 24, weight: .bold, design: .rounded))
             Text("A few small things, just the way you like them.").font(.system(size: 12))
               .foregroundStyle(SilliesTheme.secondary)
+          }
+        }
+        if let shortcuts, let loginItems {
+          settingsSection("EVERYDAY SHORTCUTS") {
+            CommandSettingsView(shortcuts: shortcuts, login: loginItems)
           }
         }
         settingsSection("THEIR LITTLE WORLD") {

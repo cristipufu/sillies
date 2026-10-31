@@ -8,6 +8,7 @@ final class CompanionSkillControls {
     let isRunning: () -> Bool
     let focusedTarget: () -> WindowTargetCandidate?
     let openVault: (UUID?) -> Void
+    let performSkill: (CompanionSkillKind, CompanionInstance, WindowTargetCandidate?) -> Void
     let motionChanged: () -> Void
   }
   private let skills: SkillCoordinator
@@ -85,12 +86,17 @@ final class CompanionSkillControls {
   ) {
     switch action {
     case .skill(let skill):
-      skills.startSkill(
-        skill, for: pet.definition.id, companionName: pet.definition.name, target: target)
+      environment.performSkill(skill, pet, target)
     case .saveClipboard: stash(StashPasteboard.items(from: .general), with: pet, target: target)
     case .openStash: environment.openVault(nil)
     case .openSession: skills.openActiveAudioSession()
     }
+  }
+
+  func saveClipboard(with pet: CompanionInstance) {
+    stash(
+      StashPasteboard.items(from: .general), with: pet,
+      target: pet.attachmentTarget ?? environment.focusedTarget())
   }
 
   private func stash(_ items: [String], with pet: CompanionInstance, target: WindowTargetCandidate?)

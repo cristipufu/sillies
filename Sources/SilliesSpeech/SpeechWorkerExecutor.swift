@@ -9,7 +9,11 @@ package final class SpeechWorkerExecutor: SerialExecutor {
 
   package func enqueue(_ job: consuming ExecutorJob) {
     let job = UnownedJob(job)
-    queue.async { job.runSynchronously(on: self.asUnownedSerialExecutor()) }
+    let qos: DispatchQoS =
+      job.priority.rawValue >= TaskPriority.userInitiated.rawValue ? .userInitiated : .utility
+    queue.async(qos: qos, flags: .enforceQoS) {
+      job.runSynchronously(on: self.asUnownedSerialExecutor())
+    }
   }
 
   package func checkIsolated() { dispatchPrecondition(condition: .onQueue(queue)) }

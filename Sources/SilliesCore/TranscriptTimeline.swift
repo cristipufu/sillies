@@ -29,6 +29,11 @@ public struct TranscriptTimeline: Sendable {
 
   public init() {}
 
+  public var segments: [TranscriptSegment] {
+    sources.values.flatMap(\.entries).sorted(by: TranscriptSourceTimeline.Entry.chronologicalOrder)
+      .compactMap(\.segment)
+  }
+
   public var text: String {
     render(sources.values.flatMap(\.entries) + markers.entries)
   }

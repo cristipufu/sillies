@@ -156,12 +156,21 @@ final class ArchitectureVisitor: SyntaxVisitor {
     ].contains(name), path != "Sources/SilliesWindowMetadata/WindowMetadataService.swift" {
       report(node, "window-ipc", "Window-list access belongs to the metadata helper process.")
     }
-    if name.hasPrefix("AXUIElementCopy"),
-      path != "Sources/SilliesApp/Platform/AccessibilityWindowSource.swift"
+    if name.hasPrefix("AXUIElementCopy") || name == "AXUIElementSetAttributeValue"
+      || name == "AXUIElementIsAttributeSettable",
+      ![
+        "Sources/SilliesApp/Platform/AccessibilityWindowSource.swift",
+        "Sources/SilliesApp/Platform/AccessibilityTextAccess.swift",
+      ].contains(path)
     {
-      report(node, "ax-ipc", "Accessibility reads belong to AccessibilityWindowSource.")
+      report(node, "ax-ipc", "Accessibility access belongs to the isolated window or text worker.")
     }
-    if name == "writeObjects" {
+    if name == "postToPid", path != "Sources/SilliesApp/Platform/ClipboardPasteTransaction.swift" {
+      report(
+        node, "text-insertion", "Targeted paste events belong to the clipboard transaction worker.")
+    }
+    if name == "writeObjects", path != "Sources/SilliesApp/Platform/ClipboardPasteTransaction.swift"
+    {
       report(node, "clipboard-encoding", "Write pre-encoded image data.")
     }
   }

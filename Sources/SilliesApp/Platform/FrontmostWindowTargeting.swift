@@ -36,7 +36,7 @@ struct FrontmostWindowTargeting: Sendable {
         let candidates = WindowServerSource.extractCandidates(
           from: snapshot.entries, for: app.processID, currentWindowID: nil)
         let chosen = WindowServerSource.chooseCandidate(
-          from: candidates, preferredFrame: roles?.standardWindowFrames.first,
+          from: candidates, preferredFrame: roles?.focusedStandardWindowFrame,
           preferredPoint: nil, currentWindowID: nil, roleSnapshot: roles,
           requiresVerifiedFloatingRole: true)
         continuation.resume(

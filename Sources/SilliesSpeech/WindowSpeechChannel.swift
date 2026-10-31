@@ -33,7 +33,9 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
     self.request = request
     let (events, signal) = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingNewest(1))
     self.signal = signal
-    let task = Task.detached(priority: .utility) { [weak self] in
+    let priority: TaskPriority =
+      request.context.priority == .interactive ? .userInitiated : .utility
+    let task = Task.detached(priority: priority) { [weak self] in
       var transcript = SpeechWindowTranscript()
       for await _ in events {
         guard let self else { return }
@@ -41,7 +43,7 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
           while let window = self.nextWindow() {
             try Task.checkCancellation()
             let result = try await engine.transcribe(
-              .init(samples: window.samples, language: request.language))
+              .init(samples: window.samples, language: request.language, context: request.context))
             try Task.checkCancellation()
             let update = transcript.receive(result, window: window)
             guard self.retire(window, through: update.retiredThrough) else { return }

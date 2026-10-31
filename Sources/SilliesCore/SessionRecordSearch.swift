@@ -1,7 +1,6 @@
 import Foundation
 
 public struct SessionRecordSearch: Sendable {
-  private static let maximumScannedCharacters = 65_536
   public let kind: CompanionSkillKind?
   public let query: String
 
@@ -20,7 +19,6 @@ public struct SessionRecordSearch: Sendable {
 
   private func matchesText(_ text: String) -> Bool {
     !text.isEmpty
-      && text.prefix(Self.maximumScannedCharacters)
-        .range(of: query, options: [.caseInsensitive, .diacriticInsensitive]) != nil
+      && text.range(of: query, options: [.caseInsensitive, .diacriticInsensitive]) != nil
   }
 }

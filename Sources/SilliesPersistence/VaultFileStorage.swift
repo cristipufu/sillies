@@ -16,7 +16,11 @@ public struct VaultFileStorage: Sendable {
   }
 
   public func attachmentURL(for filename: String) throws -> URL {
-    guard filename.caseInsensitiveCompare(SessionRecordRepository.filename) != .orderedSame else {
+    let reserved = [
+      SessionRecordRepository.filename, "search.sqlite", "search.sqlite-journal",
+      "search.sqlite-wal", "search.sqlite-shm",
+    ]
+    guard !reserved.contains(where: { filename.caseInsensitiveCompare($0) == .orderedSame }) else {
       throw CocoaError(.fileWriteInvalidFileName)
     }
     return try url(for: filename)
@@ -24,10 +28,22 @@ public struct VaultFileStorage: Sendable {
 
   public func write(_ data: Data, named filename: String) throws {
     let destination = try url(for: filename)
+    try prepareDirectory()
+    try data.write(to: destination, options: .atomic)
+  }
+
+  public func copyAttachment(named filename: String, to destination: VaultFileStorage) throws {
+    let source = try attachmentURL(for: filename)
+    let target = try destination.attachmentURL(for: filename)
+    try destination.prepareDirectory()
+    // Export folders have unique IDs, so an existing file is an error rather than an overwrite.
+    try FileManager.default.copyItem(at: source, to: target)
+  }
+
+  private func prepareDirectory() throws {
     try FileManager.default.createDirectory(
       at: directory, withIntermediateDirectories: true,
       attributes: [.posixPermissions: Self.directoryPermissions])
-    try data.write(to: destination, options: .atomic)
   }
 
   public func removeAttachment(named filename: String) throws {

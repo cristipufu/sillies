@@ -165,8 +165,10 @@ final class WindowDropHighlightController {
   private var appliedFrame: CGRect = .zero
   private var appliedProcessID: Int32 = -1
   private var appliedAppName: String = ""
+  private var isPresented = false
+  private var visibleAlpha: CGFloat = 1
   var windowNumber: Int? { panel?.windowNumber }
-  var isVisible: Bool { panel?.isVisible == true }
+  var isVisible: Bool { isPresented && panel?.isVisible == true }
   var usesHardwareBorderOutline: Bool {
     outlineView?.hasHardwareBorderOutline == true
   }
@@ -184,28 +186,44 @@ final class WindowDropHighlightController {
     let view = WindowDropOutlineView(model: model)
     created.contentView = view
     panel = created
+    visibleAlpha = created.alphaValue
     outlineView = view
     view.layoutSubtreeIfNeeded()
     SkillOverlayPreparation.render(view.badge)
   }
 
   func prestage(target: WindowTargetCandidate?) {
-    guard let target else { return }
-    applyTarget(target, hoveredSkill: nil)
+    prepare()
+    if let target { applyTarget(target, hoveredSkill: nil) }
     // Resolve the target-specific badge before the first moving drag frame reveals it.
     if let badge = outlineView?.badge { SkillOverlayPreparation.render(badge) }
+    // Allocate the native backing before movement. Transparent, click-through staging
+    // must survive the initial drag-distance gate and temporary gaps between targets.
+    conceal()
+    panel?.orderFrontRegardless()
   }
 
   func show(target: WindowTargetCandidate, hoveredSkill: CompanionSkillKind?) {
     applyTarget(target, hoveredSkill: hoveredSkill)
     if panel?.isVisible != true { panel?.orderFrontRegardless() }
+    if !isPresented {
+      panel?.alphaValue = visibleAlpha
+      isPresented = true
+    }
+  }
+
+  func conceal() {
+    isPresented = false
+    if panel?.alphaValue != 0 { panel?.alphaValue = 0 }
   }
 
   func hide() {
+    conceal()
     if panel?.isVisible == true { panel?.orderOut(nil) }
   }
 
   func close() {
+    isPresented = false
     panel?.orderOut(nil)
     panel?.close()
     panel = nil

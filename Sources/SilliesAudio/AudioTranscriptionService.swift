@@ -125,7 +125,8 @@ package final class AudioTranscriptionService: SessionAudioCapture {
           }
           let pipeline = SessionSpeechPipeline(
             configuration: .init(
-              sources: configuration.sources, queue: queue, makeChannel: dependencies.speech),
+              sources: configuration.sources, queue: queue, makeChannel: dependencies.speech,
+              dictionary: configuration.dictionary),
             speakerChannels: speakerChannels
           ) { [weak self] in self?.speechChanged($0) }
           state.speech = pipeline
@@ -382,6 +383,7 @@ package final class AudioTranscriptionService: SessionAudioCapture {
         duration: state.lifecycle.elapsed(at: dependencies.now()),
         failure: state.lifecycle.failure ?? state.transcriptionFailure)
       result.speakerDetectionNotice = state.speakerDetectionNotice
+      result.segments = state.speech?.segments ?? []
       state.lifecycle.completeFinishing()
       state.result = result
       state.deadline?.cancel()

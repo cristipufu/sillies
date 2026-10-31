@@ -31,6 +31,9 @@ final class CommandDispatcher {
   private let feedback = StashFeedbackController()
   private var pending: Task<Void, Never>?
   private var generation = UUID()
+  var onWritingCommand: ((AppCommand) -> Bool)?
+  var onStopWriting: (() -> Void)?
+  var onReleaseDictation: (() -> Void)?
 
   init(skills: SkillCoordinator, environment: Environment, targeting: Targeting = .init()) {
     self.skills = skills
@@ -47,9 +50,16 @@ final class CommandDispatcher {
       environment.togglePause()
       return
     }
+    if command == .dictationHistory, onWritingCommand?(command) == true { return }
     guard environment.isAvailable() else { return }
+    if onWritingCommand?(command) == true { return }
     if command.skill?.isAudioSession == true, skills.activeAudioSession != nil {
       skills.openActiveAudioSession()
+      return
+    }
+    if command.skill?.isAudioSession == true, !skills.canStartAudio() {
+      feedback.showMessage(
+        "Finish dictation or writing before starting a recording.", at: NSEvent.mouseLocation)
       return
     }
     guard let companion = context?.companion ?? environment.companion() else {
@@ -107,6 +117,11 @@ final class CommandDispatcher {
 
   func stop() {
     cancelPending()
+    onStopWriting?()
     feedback.close()
+  }
+
+  func release(_ command: AppCommand) {
+    if command == .holdDictation { onReleaseDictation?() }
   }
 }

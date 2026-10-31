@@ -5,6 +5,7 @@ struct SettingsView: View {
   var speechModels: SpeechModelsPresentation? = nil
   var shortcuts: CommandShortcuts? = nil
   var loginItems: LoginItemSettings? = nil
+  var writingTools: WritingTools? = nil
   private var appVersion: String {
     Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
       ?? "Development"
@@ -29,6 +30,9 @@ struct SettingsView: View {
           settingsSection("EVERYDAY SHORTCUTS") {
             CommandSettingsView(shortcuts: shortcuts, login: loginItems)
           }
+        }
+        if let writingTools {
+          settingsSection("DICTATION & WRITING") { DictationSettingsView(tools: writingTools) }
         }
         settingsSection("THEIR LITTLE WORLD") {
           Toggle("Follow the active window", isOn: $settings.followsWindows)

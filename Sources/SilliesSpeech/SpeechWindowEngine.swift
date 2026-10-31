@@ -26,9 +26,13 @@ package struct SpeechWord: Sendable, Equatable {
 package struct SpeechWindowRequest: Sendable {
   package let samples: [Float]
   package let language: SpeechLanguage
-  package init(samples: [Float], language: SpeechLanguage) {
+  package let context: SpeechRecognitionContext
+  package init(
+    samples: [Float], language: SpeechLanguage, context: SpeechRecognitionContext = .init()
+  ) {
     self.samples = samples
     self.language = language
+    self.context = context
   }
 }
 

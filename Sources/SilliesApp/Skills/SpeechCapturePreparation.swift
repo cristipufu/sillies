@@ -6,10 +6,15 @@ import SilliesSpeech
 actor SpeechCapturePreparation {
   private let registry: SpeechRuntimeRegistry
   private let model: SpeechModelDescriptor
+  private let context: SpeechRecognitionContext
   private var runtime: SpeechRuntimeRegistry.Runtime?
-  init(registry: SpeechRuntimeRegistry, model: SpeechModelDescriptor) {
+  init(
+    registry: SpeechRuntimeRegistry, model: SpeechModelDescriptor,
+    context: SpeechRecognitionContext = .init()
+  ) {
     self.registry = registry
     self.model = model
+    self.context = context
   }
   func makeChannel(
     language: SpeechLanguage, output: @escaping LocalSpeechFactory.Output,
@@ -20,7 +25,8 @@ actor SpeechCapturePreparation {
     guard let runtime else {
       throw SpeechError.unavailable("The transcription model could not be prepared.")
     }
-    return try await runtime.makeChannel(
-      .init(language: language, output: output, failure: failure))
+    var request = SpeechChannelRequest(language: language, output: output, failure: failure)
+    request.context = context
+    return try await runtime.makeChannel(request)
   }
 }

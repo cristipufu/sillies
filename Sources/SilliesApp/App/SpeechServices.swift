@@ -11,11 +11,14 @@ import SilliesSpeechWhisper
 @MainActor
 final class SpeechServices {
   let models: SpeechModelsPresentation
+  let vocabulary: VocabularyPreferences
+  private let dictationRuntime: DictationRuntimeCache
   private let registry: SpeechRuntimeRegistry
   private let preferences: SpeechLanguagePreferences
   private var startup: Task<Void, Never>?
 
   init(defaults: UserDefaults = .standard) {
+    vocabulary = VocabularyPreferences(defaults: defaults)
     let support =
       FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
       ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(
@@ -27,6 +30,7 @@ final class SpeechServices {
       providers: [AppleSpeechProvider(), WhisperSpeechProvider(), ParakeetSpeechProvider()],
       diarizationProviders: [NemotronDiarizationProvider()])
     self.registry = registry
+    dictationRuntime = DictationRuntimeCache(registry: registry)
     preferences = SpeechLanguagePreferences(defaults: defaults)
     let checker = ModelUpdateChecker(
       store: store, location: root.appendingPathComponent("model-updates.json"))
@@ -53,15 +57,28 @@ final class SpeechServices {
   }
 
   var captureFactory: SessionAudioCaptureFactory {
-    { [registry] configuration, update in
+    { [registry, vocabulary, dictationRuntime] configuration, update in
+      var configuration = configuration
+      let dictionary = vocabulary.snapshot()
+      configuration.dictionary = dictionary
+      var context = configuration.recognitionContext
+      context.vocabulary = dictionary.hints
       let preparation = SpeechCapturePreparation(
-        registry: registry, model: configuration.model)
+        registry: registry, model: configuration.model, context: context)
+      let recognitionContext = context
+      let model = configuration.model
       let diarization = Self.diarizationFactory(
         model: configuration.diarizationModel, registry: registry)
       return AudioTranscriptionService(
         configuration: configuration,
         speech: { language, output, failure in
-          try await preparation.makeChannel(language: language, output: output, failure: failure)
+          if recognitionContext.priority == .interactive {
+            var request = SpeechChannelRequest(language: language, output: output, failure: failure)
+            request.context = recognitionContext
+            return try await dictationRuntime.makeChannel(model: model, request: request)
+          }
+          return try await preparation.makeChannel(
+            language: language, output: output, failure: failure)
         }, diarization: diarization, onUpdate: update)
     }
   }
@@ -81,5 +98,7 @@ final class SpeechServices {
     startup = nil
     models.stop()
     Task { await registry.cancelPreparation() }
+    Task { await dictationRuntime.stop() }
   }
+  func releaseInteractiveResources() { Task { await dictationRuntime.stop() } }
 }

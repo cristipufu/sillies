@@ -10,8 +10,13 @@ package struct AppleSpeechProvider: SpeechProvider, PreparedSpeechModel {
   }
 
   package func makeChannel(_ request: SpeechChannelRequest) async throws -> any LocalSpeechChannel {
-    try await Self.makeChannel(
-      language: request.language, output: request.output, failure: request.failure)
+    guard request.language.isInstalled else {
+      throw SpeechError.unavailable(
+        "Install the Apple speech model for \(request.language.name) first.")
+    }
+    return try await AnalyzerSpeechChannel.make(
+      locale: request.language.locale, output: request.output, failure: request.failure,
+      context: request.context)
   }
 
   package static func makeChannel(

@@ -4,6 +4,13 @@ import XCTest
 @testable import SilliesSpeech
 
 final class SpeechWorkerExecutorTests: XCTestCase, @unchecked Sendable {
+  func testInteractiveModelJobsKeepTheirPriorityOnTheIsolatedWorker() async {
+    let model = OwnedModel(released: {})
+    let quality = await Task.detached(priority: .userInitiated) {
+      await model.qualityOfService()
+    }.value
+    XCTAssertGreaterThanOrEqual(quality, QOS_CLASS_USER_INITIATED.rawValue)
+  }
   @MainActor func testReleasingTheLastUIReferenceDestroysModelOnWorker() async {
     let released = expectation(description: "Released model off the UI queue")
     var model: OwnedModel? = OwnedModel {
@@ -23,5 +30,6 @@ private actor OwnedModel {
   private let released: @Sendable () -> Void
   init(released: @escaping @Sendable () -> Void) { self.released = released }
   func isMainThread() -> Bool { Thread.isMainThread }
+  func qualityOfService() -> UInt32 { qos_class_self().rawValue }
   isolated deinit { released() }
 }

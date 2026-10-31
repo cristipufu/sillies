@@ -26,6 +26,18 @@ final class CompanionInstance {
   private(set) var isPickedUp = false
   private(set) var isWaitingForSpace = false
   private(set) var isPerformingScene = false
+  private(set) var isWritingIndicator = false
+
+  func beginWritingIndicator(at time: TimeInterval) -> BehaviorState? {
+    isWritingIndicator = true
+    clearMotion()
+    return behavior.beginSustainedReaction(WorkspaceEvent(.skillRecord, at: time))
+  }
+
+  func endWritingIndicator() {
+    isWritingIndicator = false
+    behavior.endSustainedReaction()
+  }
   private(set) var needsPlacementAfterScene = false
   private var facingBeforeScene = true
   private var scenePickupFraction: Double?

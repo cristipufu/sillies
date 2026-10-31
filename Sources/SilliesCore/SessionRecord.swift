@@ -27,6 +27,11 @@ public struct SessionRecord: Codable, Identifiable, Equatable, Sendable {
   public var languageIdentifier: String?
   public let speechProvenance: SpeechProvenance?
   public let diarizationProvenance: SpeechProvenance?
+  public var isProtected = false
+  public var screenshotTextState = ScreenshotTextState.none
+  public var transcriptSegments: [TranscriptSegment] = []
+  public var speakerNames: [String: String] = [:]
+  public var originalSpeakerTranscript: String?
 
   public init(
     kind: CompanionSkillKind, origin: SessionOrigin, content: SessionContent = .init(),
@@ -45,6 +50,7 @@ public struct SessionRecord: Codable, Identifiable, Equatable, Sendable {
     self.speechProvenance = metadata.transcription.provenance
     self.diarizationProvenance = metadata.transcription.diarizationProvenance
     self.transcript = content.text.transcript
+    self.transcriptSegments = content.text.segments
     self.extractedText = content.text.extractedText
     self.stashedItems = content.text.stashedItems
     self.summary = content.notes.summary

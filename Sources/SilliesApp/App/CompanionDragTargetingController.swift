@@ -178,7 +178,7 @@ final class CompanionDragTargetingController {
       dragDwellTask?.cancel()
       dragDwellTask = nil
       wheelRequested = false
-      windowHighlight.hide()
+      windowHighlight.conceal()
       return
     }
     if hypot(pointer.x - dwellAnchor.x, pointer.y - dwellAnchor.y) > Self.radialDwellTolerance {
@@ -258,7 +258,7 @@ final class CompanionDragTargetingController {
           characterSize: size)
     else {
       resetDragDwell()
-      windowHighlight.hide()
+      windowHighlight.conceal()
       return
     }
     if dwellTargetID != target.windowID {

@@ -6,11 +6,11 @@ The wheel and the mascot's context menu expose the same five actions. Hover over
 | --- | --- | --- |
 | Listen | Selected application’s output and microphone | Playable recording, local transcript, summary and explicit action items |
 | Participate | The same audio as Listen | The same recording and notes, plus one live suggestion in a mascot speech bubble |
-| Snap | One selected window image | PNG on clipboard and in the Vault; no OCR/model delay |
+| Snap | One selected window image | PNG on clipboard and in the Vault immediately; background OCR adds searchable text |
 | Explain | One selected window image | PNG, Vision OCR, summary and plain-language explanation of the recognized text |
 | Record | Built-in microphone where available; otherwise default microphone | Playable `.m4a` AAC file, local transcript, summary and action items |
 
-ScreenCaptureKit's audio filter is application-wide. Selecting a Google Meet browser window includes audio playing in other tabs of that browser. Sillies does not claim per-tab isolation. Microphone speech is labeled separately from app speech. Optional downloaded speaker detection adds anonymous, source-scoped speaker numbers; source labels alone do not identify individual people. Both meeting skills apply local acoustic echo cancellation to support laptop speakers. Explain reasons over OCR text, not invisible content or the visual meaning of images alone.
+ScreenCaptureKit's audio filter is application-wide. Selecting a Google Meet browser window includes audio playing in other tabs of that browser. Sillies does not claim per-tab isolation. Microphone speech is labeled separately from app speech. Optional downloaded speaker detection adds source-scoped speaker numbers. Users can name speakers per saved recording; names update transcript headers and regenerated notes without changing spoken words. Source labels alone do not identify individual people. Both meeting skills apply local acoustic echo cancellation to support laptop speakers. Explain reasons over OCR text, not invisible content or the visual meaning of images alone.
 
 ## Capture and meeting apps
 
@@ -52,7 +52,7 @@ Pause and finish drain the remaining samples, including a partial final frame. P
 
 Right-click a mascot → Save Clipboard, use Add text / link or Save Clipboard in the Vault, or drop text, URLs or file references onto visible mascot artwork. A hovered mascot stops ambient travel and displays Drop to save. Saving provides View and Undo; a persistence failure is shown rather than acknowledged as saved.
 
-File entries reference original paths; Sillies does not copy those files. Stashes persist until explicit deletion. The 200-record history limit applies to other skill records and removes their owned image/audio files. Old Watch and Focus records still decode. New optional record fields preserve backward compatibility.
+File entries reference original paths; Sillies does not copy those files. Stashes persist until explicit deletion. Captures default to keeping everything. An explicit retention policy can keep the latest 200, 500, or 1,000 unprotected captures; Stashes and protected meetings are exempt. Trimming deletes owned image/audio files and invalidates the search index. Writing recovery is a separate, bounded 20-result journal. Old Watch and Focus records still decode. New optional record fields preserve backward compatibility.
 
 Storage is `~/Library/Application Support/Sillies/Vault`. AAC encoding, file finalization, PNG encoding, image decoding, OCR, speech recognition and reasoning run off the UI thread. Capture admission budgets 12 seconds per source, with a separate 4,096-callback memory cap, replacing the previous 128-callback limit. Admitted buffers drain before finalization. Apple speech callbacks are combined into 100 ms chunks with a bounded 12-second input stream. Downloadable engines use bounded rolling windows, shared weights, and serialized inference; see [local speech models](local-speech-models.md). Recognition overload stops transcription with a visible notice and keeps recording audio. Capture/DSP overload still stops capture to avoid silently losing the recording. HUD text has a fixed width and publishes at most twice per second; animation never follows per-word recognition updates.
 
@@ -92,3 +92,5 @@ Settings → Transcription models offers Apple Speech, Whisper Turbo, and Parake
 Audio and transcripts remain on the Mac. Model files are fetched from pinned Hugging Face revisions. Downloaded-model inference uses local assets; no tokenizer fallback download is allowed. Session JSON records the provider, model, and revision while older records continue to load. Model metadata is included in Markdown export.
 
 Settings also offers optional on-device speaker detection (up to eight speakers per source, with delayed and potentially incorrect labels), daily metadata-only model update checks, explicit update downloads with native compatibility validation, and rollback. Recording continues if speaker detection fails. See [local speech models](local-speech-models.md) for limits and short validation commands.
+
+Everyday dictation, selection editing, paste-back, retention, and exports are described in [everyday workflows](everyday-workflows.md).

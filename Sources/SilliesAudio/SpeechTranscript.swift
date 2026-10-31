@@ -11,6 +11,7 @@ struct SpeechTranscript {
   private var cachedPreview = ""
 
   var text: String { timeline.text }
+  var segments: [TranscriptSegment] { timeline.segments }
 
   var preview: String {
     mutating get {

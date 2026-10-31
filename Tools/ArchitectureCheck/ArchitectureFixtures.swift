@@ -88,6 +88,23 @@ enum ArchitectureFixtures {
       .init(
         source: "AXUIElementCopyMultipleAttributeValues(window, attrs, 0, &value)", path: rendering,
         rules: ["ax-ipc"]),
+      .init(
+        source: "AXUIElementSetAttributeValue(field, attribute, text)", path: rendering,
+        rules: ["ax-ipc"]),
+      .init(
+        source: "AXUIElementIsAttributeSettable(field, attribute, &result)", path: rendering,
+        rules: ["ax-ipc"]),
+      .init(
+        source: "AXUIElementCopyAttributeValue(field, attribute, &result)",
+        path: "Sources/SilliesApp/Platform/AccessibilityTextAccess.swift", rules: []),
+      .init(source: "board.writeObjects(items)", path: rendering, rules: ["clipboard-encoding"]),
+      .init(
+        source: "board.writeObjects(items)",
+        path: "Sources/SilliesApp/Platform/ClipboardPasteTransaction.swift", rules: []),
+      .init(source: "event.postToPid(pid)", path: rendering, rules: ["text-insertion"]),
+      .init(
+        source: "event.postToPid(pid)",
+        path: "Sources/SilliesApp/Platform/ClipboardPasteTransaction.swift", rules: []),
       .init(source: "let data = try Data(\n contentsOf: url)", path: rendering, rules: ["ui-io"]),
       .init(source: "func broken(", path: rendering, rules: ["syntax"]),
     ]

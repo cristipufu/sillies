@@ -28,6 +28,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private var settingsWindow: NSWindow?
   private var speechServices: SpeechServices?
   private var shortcuts: CommandShortcuts?
+  private var writingTools: WritingTools?
   private let loginItems = LoginItemSettings()
   private let audioSessionWindow = AudioSessionWindowController()
   private var vaultWindow: NSWindow?
@@ -51,6 +52,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     do {
       let launch = LaunchConfiguration()
       automatedRunner.armWatchdogIfNeeded(for: launch)
+      if launch.runsWritingFixture {
+        automatedRunner.startWritingFixture()
+        return
+      }
       if launch.runsInputFixture {
         automatedRunner.startInputFixture()
         return
@@ -78,9 +83,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       speechServices?.start()
       observeModelUpdateActivity()
       if !launch.isAutomatedRun {
+        if let speechServices {
+          writingTools = WritingTools(speech: speechServices, controller: controller)
+        }
         let shortcuts = CommandShortcuts()
         shortcuts.onEvent = { [weak controller] command, edge in
-          if edge == .pressed { controller?.commands.perform(command) }
+          if edge == .pressed {
+            controller?.commands.perform(command)
+          } else {
+            controller?.commands.release(command)
+          }
         }
         self.shortcuts = shortcuts
         shortcuts.start()
@@ -167,15 +179,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     controller.flushForTermination { [weak self, weak controller] in
       MainActor.assumeIsolated {
         controller?.drainPreviewsForTermination()
-        self?.terminationFlushTask = nil
-        approveTermination(sender)
-        continuation.finish()
+        let complete: @MainActor @Sendable () -> Void = { [weak self] in
+          self?.terminationFlushTask = nil
+          approveTermination(sender)
+          continuation.finish()
+        }
+        if let writing = self?.writingTools {
+          writing.dictation.flushForTermination(complete)
+        } else {
+          complete()
+        }
       }
     }
     return .terminateLater
   }
 
   func applicationWillTerminate(_ notification: Notification) {
+    automatedRunner.stopPreview()
     shortcuts?.stop()
     speechServices?.stop()
     controller?.stop()
@@ -254,6 +274,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       title: "Session Vault…", action: #selector(openVaultFromMenu), keyEquivalent: "v")
     vault.target = self
     menu.addItem(vault)
+    let dictate = NSMenuItem(
+      title: "Start / finish dictation", action: #selector(toggleDictation), keyEquivalent: "")
+    dictate.target = self
+    menu.addItem(dictate)
+    let stash = NSMenuItem(
+      title: "Search Pocket Stash…", action: #selector(openStashPicker), keyEquivalent: "")
+    stash.target = self
+    menu.addItem(stash)
+    let recovery = NSMenuItem(
+      title: "Writing recovery…", action: #selector(openWritingHistory), keyEquivalent: "")
+    recovery.target = self
+    menu.addItem(recovery)
     let settings = NSMenuItem(
       title: speechServices?.models.availableUpdateCount ?? 0 > 0
         ? "Settings… · Model updates available" : "Settings…",
@@ -274,6 +306,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   }
 
   @objc private func togglePause() { controller?.commands.perform(.togglePause) }
+  @objc private func toggleDictation() { controller?.commands.perform(.toggleDictation) }
+  @objc private func openStashPicker() { controller?.commands.perform(.searchStash) }
+  @objc private func openWritingHistory() { controller?.commands.perform(.dictationHistory) }
   @objc private func checkForUpdates() { Updates.shared.checkNow() }
   @objc private func quit() { NSApp.terminate(nil) }
 
@@ -293,10 +328,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   @objc private func openVaultFromMenu() { controller?.commands.perform(.openVault) }
 
   private func showVault(recordID: UUID? = nil) {
+    if let writingTools {
+      Task { [weak self] in
+        await writingTools.pasteBack.captureDestination()
+        self?.presentVault(recordID: recordID)
+      }
+    } else {
+      presentVault(recordID: recordID)
+    }
+  }
+
+  private func presentVault(recordID: UUID?) {
     popover.performClose(nil)
     guard let controller else { return }
     let rootView = SessionVaultView(
-      vault: controller.skills.vault, initialRecordID: recordID)
+      vault: controller.skills.vault, initialRecordID: recordID, pasteBack: writingTools?.pasteBack)
     let host = NSHostingController(rootView: rootView)
     host.sizingOptions = []
     if let vaultWindow {
@@ -333,7 +379,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       window.contentViewController = NSHostingController(
         rootView: SettingsView(
           controller: controller, speechModels: speechServices?.models,
-          shortcuts: shortcuts, loginItems: loginItems))
+          shortcuts: shortcuts, loginItems: loginItems, writingTools: writingTools))
       window.center()
       settingsWindow = window
     }

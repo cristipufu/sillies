@@ -114,7 +114,18 @@ struct SessionVaultDetailHeader: View {
         ) {
           model.copyText(SessionMarkdownFormatter.format(record), feedback: "Markdown copied")
         }
-        Spacer()
+        Menu {
+          if let pasteBack = model.pasteBack, pasteBack.destination != nil {
+            Button(pasteBack.actionTitle) { model.paste(record) }.disabled(pasteBack.isPasting)
+          }
+          Button("Export Markdown & attachments…") { model.export([record]) }
+          Button(record.isProtected ? "Remove protection" : "Protect from automatic deletion") {
+            model.toggleProtection(record)
+          }
+        } label: {
+          Image(systemName: record.isProtected ? "pin.fill" : "ellipsis.circle")
+        }
+        .help(record.isProtected ? "Protected from automatic deletion" : "More actions")
       }
       .padding(.top, 2)
     }

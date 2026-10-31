@@ -19,10 +19,12 @@ struct SpeechBenchmark {
 }
 
 private actor BenchmarkRunner {
+  private enum Mode { case meeting, dictation }
   func run(_ arguments: [String]) async throws {
     guard arguments.count >= 3 else {
       throw SpeechError.unavailable(
-        "Usage: SpeechBenchmark install|prepare|run MODEL_ID STORE_DIRECTORY [AUDIO_FILE ...]")
+        "Usage: SpeechBenchmark install|prepare|run|dictate MODEL_ID STORE_DIRECTORY [AUDIO_FILE ...]"
+      )
     }
     let command = arguments[0]
     let manifest = try SpeechModelCatalog.bundled().manifest(for: arguments[1])
@@ -45,7 +47,7 @@ private actor BenchmarkRunner {
       print("Installed \(manifest.model.id) @ \(manifest.model.revision)")
       return
     }
-    guard command == "prepare" || command == "run" else {
+    guard command == "prepare" || command == "run" || command == "dictate" else {
       throw SpeechError.unavailable("Unknown benchmark command.")
     }
     if manifest.model.isDiarizationModel {
@@ -65,35 +67,40 @@ private actor BenchmarkRunner {
     print(
       "Prepared \(manifest.model.id) in \(started.duration(to: .now)); process footprint \(ProcessFootprint.description())"
     )
-    if command == "run" {
+    if command == "run" || command == "dictate" {
       guard arguments.count > 3 else {
         throw SpeechError.unavailable("Supply at least one prerecorded audio file.")
       }
       for path in arguments.dropFirst(3) {
-        try await exercise(model, file: URL(fileURLWithPath: path))
+        try await exercise(
+          model, file: URL(fileURLWithPath: path),
+          mode: command == "dictate" ? .dictation : .meeting)
       }
     }
     withExtendedLifetime(lease) {}
   }
 
-  private func exercise(_ model: any PreparedSpeechModel, file url: URL) async throws {
-    let outputs = [BenchmarkOutput(), BenchmarkOutput()]
+  private func exercise(_ model: any PreparedSpeechModel, file url: URL, mode: Mode) async throws {
+    let outputs = (0..<(mode == .dictation ? 1 : 2)).map { _ in BenchmarkOutput() }
     var channels: [any LocalSpeechChannel] = []
     for output in outputs {
-      channels.append(
-        try await model.makeChannel(
-          .init(language: .automatic, output: output.receive, failure: output.fail)))
+      var request = SpeechChannelRequest(
+        language: .automatic, output: output.receive, failure: output.fail)
+      if mode == .dictation {
+        request.context = .init(vocabulary: ["Alex", "Ștefan", "API_v2"], priority: .interactive)
+      }
+      channels.append(try await model.makeChannel(request))
     }
     defer { for channel in channels { channel.cancel() } }
     let probe = MainActorProbe()
     let probeTask = Task { await probe.measure() }
     defer { probeTask.cancel() }
     let started = ContinuousClock.now
-    let duration = try await BenchmarkAudio.feed(url, to: channels)
+    let timing = try await BenchmarkAudio.feed(url, to: channels)
     let latency = await probe.percentile95
     print("Process footprint after fixture: \(ProcessFootprint.description())")
     print(
-      "Fixture \(url.lastPathComponent), two sources, audio \(duration)s, elapsed \(started.duration(to: .now)), main actor p95 scheduling delay \(latency * 1_000) ms"
+      "Fixture \(url.lastPathComponent), \(outputs.count) source(s), audio \(timing.duration)s, release-to-final-text \(timing.finalization), elapsed \(started.duration(to: .now)), main actor p95 scheduling delay \(latency * 1_000) ms"
     )
     for (index, output) in outputs.enumerated() {
       let snapshot = output.snapshot

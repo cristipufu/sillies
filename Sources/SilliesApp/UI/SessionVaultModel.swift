@@ -5,6 +5,7 @@ import SilliesCore
 /// Owns vault browsing and commands. Views render state and forward user intentions.
 @MainActor @Observable
 final class SessionVaultModel {
+  private static let pageSize = 200
   private static let feedbackDuration: Duration = .milliseconds(1800)
   private let vault: SessionVaultStore
   var selectedFilter: CompanionSkillKind?
@@ -14,15 +15,63 @@ final class SessionVaultModel {
   private(set) var feedback: String?
   @ObservationIgnored private var feedbackTask: Task<Void, Never>?
   @ObservationIgnored private var feedbackGeneration = UUID()
+  @ObservationIgnored private let exporter = VaultExportController()
+  @ObservationIgnored private let speakerWorker = SessionSpeakerWorker()
+  @ObservationIgnored private var speakerTask: Task<Void, Never>?
+  @ObservationIgnored private let transcriptWindow = SavedTranscriptWindow()
+  let pasteBack: PasteBackCoordinator?
+  private(set) var matchingIDs: Set<UUID> = []
+  private(set) var isSearching = false
+  private(set) var searchError: String?
+  private var searchGeneration = UUID()
+  var visibleLimit = SessionVaultModel.pageSize
+  var searchIdentity: String {
+    "\(vault.searchRevision):\(selectedFilter?.rawValue ?? "all"):\(searchQuery)"
+  }
 
-  init(vault: SessionVaultStore, initialRecordID: UUID? = nil) {
+  init(
+    vault: SessionVaultStore, initialRecordID: UUID? = nil, pasteBack: PasteBackCoordinator? = nil
+  ) {
     self.vault = vault
+    self.pasteBack = pasteBack
     selectedRecordID = initialRecordID ?? vault.records.first?.id
   }
 
   var filteredRecords: [SessionRecord] {
-    let search = SessionRecordSearch(kind: selectedFilter, query: searchQuery)
-    return vault.records.filter(search.matches)
+    Array(matchingRecords.prefix(visibleLimit))
+  }
+  private var matchingRecords: [SessionRecord] {
+    let isQueryEmpty = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    return vault.records.filter {
+      (selectedFilter == nil || $0.kind == selectedFilter)
+        && (isQueryEmpty || matchingIDs.contains($0.id))
+    }
+  }
+  var hasMoreResults: Bool { matchingRecords.count > visibleLimit }
+  func showMore() { visibleLimit += Self.pageSize }
+
+  func refreshSearch() async {
+    let token = UUID()
+    searchGeneration = token
+    guard !searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+      isSearching = false
+      matchingIDs = []
+      searchError = nil
+      return
+    }
+    isSearching = true
+    do {
+      try await Task.sleep(for: .milliseconds(120))
+      let ids = try await vault.search(.init(kind: selectedFilter, query: searchQuery))
+      guard !Task.isCancelled, searchGeneration == token else { return }
+      matchingIDs = ids
+      searchError = nil
+    } catch {
+      guard !Task.isCancelled, searchGeneration == token else { return }
+      searchError = "Search is unavailable: \(error.localizedDescription)"
+      fputs("Vault search failed: \(error)\n", stderr)
+    }
+    isSearching = false
   }
 
   func selectedRecord(in records: [SessionRecord]) -> SessionRecord? {
@@ -82,6 +131,47 @@ final class SessionVaultModel {
   func copyImage(for record: SessionRecord) {
     vault.copyImage(for: record)
     showFeedback("Image copied")
+  }
+
+  func toggleProtection(_ record: SessionRecord) {
+    var updated = record
+    updated.isProtected.toggle()
+    vault.update(updated)
+  }
+  func export(_ records: [SessionRecord]) {
+    exporter.chooseFolder(records: records, source: vault.storageDirectory) { [weak self] in
+      self?.showFeedback($0)
+    }
+  }
+  func exportAll() { export(vault.records) }
+  func openTranscript(_ record: SessionRecord) {
+    transcriptWindow.show(record.transcript, title: record.displayTitle)
+  }
+  func rename(_ speaker: SessionSpeakerIdentity, to name: String, in record: SessionRecord) {
+    speakerTask = Task { [weak self, speakerWorker, preceding = speakerTask] in
+      await preceding?.value
+      guard let self, let latest = self.vault.records.first(where: { $0.id == record.id }) else {
+        return
+      }
+      let updated = await speakerWorker.rename(speaker, to: name, in: latest)
+      guard var current = self.vault.records.first(where: { $0.id == record.id }),
+        current.transcript == latest.transcript, current.speakerNames == latest.speakerNames
+      else { return }
+      current.transcript = updated.transcript
+      current.speakerNames = updated.speakerNames
+      current.originalSpeakerTranscript = updated.originalSpeakerTranscript
+      self.vault.updateTranscript(current)
+      self.showFeedback("Speaker updated · Refreshing notes")
+    }
+  }
+  func paste(_ record: SessionRecord) {
+    guard let pasteBack else { return }
+    Task { [weak self] in
+      do {
+        try await pasteBack.paste(record.primaryText)
+        self?.showFeedback("Text pasted")
+      } catch { self?.showFeedback(error.localizedDescription) }
+    }
   }
 
   func stop() {

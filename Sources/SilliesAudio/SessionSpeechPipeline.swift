@@ -16,6 +16,7 @@ final class SessionSpeechPipeline: Sendable {
     let sources: [SessionAudioSource]
     let queue: DispatchQueue
     let makeChannel: LocalSpeechFactory.Make
+    var dictionary = PersonalDictionary(entries: [])
   }
   private struct BufferedAudio {
     let buffer: AVAudioPCMBuffer
@@ -70,6 +71,8 @@ final class SessionSpeechPipeline: Sendable {
       return state.transcript.text
     }
   }
+
+  var segments: [TranscriptSegment] { storage.withValue { $0.transcript.segments } }
   var preview: String {
     return storage.withValue { state in
       return state.transcript.preview
@@ -339,6 +342,8 @@ final class SessionSpeechPipeline: Sendable {
 
   private func receiveAttributed(_ phrase: SpeechPhrase, source: SessionAudioSource) {
     storage.withValue { state in
+      var phrase = phrase
+      phrase.text = configuration.dictionary.replacing(in: phrase.text)
       state.transcript.receive(
         phrase, source: source, elapsed: state.sourceTimes[source, default: 0])
       onEvent(.textChanged)

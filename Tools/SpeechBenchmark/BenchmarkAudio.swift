@@ -3,11 +3,15 @@ import Foundation
 import SilliesSpeech
 
 enum BenchmarkAudio {
+  struct Timing {
+    let duration: TimeInterval
+    let finalization: Duration
+  }
   private static let packetDuration = 0.1
   private static let maximumDuration = 30.0
 
   @concurrent static func feed(_ url: URL, to channels: [any LocalSpeechChannel]) async throws
-    -> TimeInterval
+    -> Timing
   {
     let file = try AVAudioFile(forReading: url)
     let duration = Double(file.length) / file.processingFormat.sampleRate
@@ -27,9 +31,10 @@ enum BenchmarkAudio {
       for channel in channels { channel.append(buffer) }
       try await Task.sleep(for: .seconds(Double(buffer.frameLength) / buffer.format.sampleRate))
     }
+    let releasedAt = ContinuousClock.now
     for channel in channels {
       await withCheckedContinuation { continuation in channel.finish { continuation.resume() } }
     }
-    return duration
+    return Timing(duration: duration, finalization: releasedAt.duration(to: .now))
   }
 }

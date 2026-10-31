@@ -139,6 +139,55 @@ actor LocalReasoningService {
     }
   }
 
+  func transform(_ text: String, operation: LocalTextOperation) async throws -> String {
+    let language = resolvedLanguage("auto", source: text)
+    guard availabilityNotice(localeIdentifier: language) == nil else {
+      throw LocalTextTransformError.unavailable
+    }
+    if case .translate(let target) = operation, availabilityNotice(localeIdentifier: target) != nil
+    {
+      throw LocalTextTransformError.unavailable
+    }
+    await acquireInteractive()
+    defer { release() }
+    try Task.checkCancellation()
+    let result = try await LocalTextTransform.run(text, operation: operation)
+    let protection: TextCleanupGuard.Operation
+    switch operation {
+    case .cleanup: protection = .editing
+    case .translate: protection = .translation
+    case .shorten, .grammar: protection = .rewriting
+    }
+    let names = Self.namedEntities(in: text)
+    guard TextCleanupGuard.accepts(result, source: text, vocabulary: names, operation: protection)
+    else {
+      throw LocalTextTransformError.changedProtectedContent
+    }
+    return result
+  }
+
+  private static func namedEntities(in text: String) -> [String] {
+    let tagger = NLTagger(tagSchemes: [.nameType])
+    tagger.string = text
+    var names: [String] = []
+    tagger.enumerateTags(
+      in: text.startIndex..<text.endIndex, unit: .word, scheme: .nameType,
+      options: [.omitWhitespace, .omitPunctuation, .joinNames]
+    ) { tag, range in
+      if tag == .personalName || tag == .organizationName { names.append(String(text[range])) }
+      return true
+    }
+    return names
+  }
+
+  private func acquireInteractive() async {
+    if !occupied {
+      occupied = true
+      return
+    }
+    await withCheckedContinuation { waiters.insert($0, at: 0) }
+  }
+
   private func acquire() async {
     if !occupied {
       occupied = true

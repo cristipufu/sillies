@@ -7,10 +7,15 @@ struct SessionVaultView: View {
   let vault: SessionVaultStore
   @State private var model: SessionVaultModel
   @State private var showsStashComposer = false
+  @State private var showsRetention = false
 
-  init(vault: SessionVaultStore, initialRecordID: UUID? = nil) {
+  init(
+    vault: SessionVaultStore, initialRecordID: UUID? = nil, pasteBack: PasteBackCoordinator? = nil
+  ) {
     self.vault = vault
-    _model = State(initialValue: SessionVaultModel(vault: vault, initialRecordID: initialRecordID))
+    _model = State(
+      initialValue: SessionVaultModel(
+        vault: vault, initialRecordID: initialRecordID, pasteBack: pasteBack))
   }
 
   var body: some View {
@@ -25,9 +30,11 @@ struct SessionVaultView: View {
     .background(SilliesTheme.paper)
     .foregroundStyle(SilliesTheme.ink)
     .onDisappear { model.stop() }
+    .task(id: model.searchIdentity) { await model.refreshSearch() }
     .sheet(isPresented: $showsStashComposer) {
       StashComposerView { model.saveStash([$0]) }
     }
+    .sheet(isPresented: $showsRetention) { VaultRetentionView(vault: vault) }
   }
 
   private func sidebar(records: [SessionRecord], selected: SessionRecord?) -> some View {
@@ -114,11 +121,19 @@ struct SessionVaultView: View {
         }
       }.font(.caption)
 
+      HStack {
+        Button("Retention…") { showsRetention = true }
+        Spacer()
+        Button("Export all…") { model.exportAll() }.disabled(vault.records.isEmpty)
+      }.font(.caption)
+
       if let error = vault.persistenceError {
         Text(error).font(.caption).foregroundStyle(.orange)
         Button("Retry saving") { vault.retrySaving() }
       }
 
+      if model.isSearching { ProgressView("Searching…").font(.caption) }
+      if let error = model.searchError { Text(error).font(.caption).foregroundStyle(.red) }
       if records.isEmpty {
         emptySidebarState
       } else {
@@ -127,6 +142,7 @@ struct SessionVaultView: View {
             ForEach(records) { record in
               recordRow(record, isSelected: selected?.id == record.id)
             }
+            if model.hasMoreResults { Button("Show more") { model.showMore() } }
           }
           .padding(.vertical, 3)
           .padding(.horizontal, 1)

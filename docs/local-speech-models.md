@@ -29,9 +29,10 @@ For optional real-model checks, build the standalone runner and keep download/pr
 ```sh
 source scripts/toolchain.sh
 swift build --product SpeechBenchmark
-.build/debug/SpeechBenchmark install parakeet-ultra /tmp/sillies-stt-models
-python3 scripts/run-bounded-test.py 300 .build/debug/SpeechBenchmark prepare parakeet-ultra /tmp/sillies-stt-models
-python3 scripts/run-bounded-test.py 90 .build/debug/SpeechBenchmark run parakeet-ultra /tmp/sillies-stt-models /path/to/short-english.wav /path/to/short-romanian.wav
+speech_benchmark="$(swift build --show-bin-path)/SpeechBenchmark"
+"$speech_benchmark" install parakeet-ultra /tmp/sillies-stt-models
+python3 scripts/run-bounded-test.py 300 "$speech_benchmark" prepare parakeet-ultra /tmp/sillies-stt-models
+python3 scripts/run-bounded-test.py 90 "$speech_benchmark" run parakeet-ultra /tmp/sillies-stt-models /path/to/short-english.wav /path/to/short-romanian.wav
 ```
 
 Substitute `whisper-turbo` for Whisper. The runner feeds each file to two simultaneous channels at capture speed, prints finalized transcripts, process footprint, and main-actor scheduling delay, and refuses fixtures over 30 seconds. Repeat the same fixture within one invocation to compare retained memory between channel lifecycles. The footprint belongs to the runner process; it does not include separate Core ML services or establish peak memory use. Scheduling delay is a proxy, not a rendered-frame latency measurement. Use real, consented meeting clips to assess recognition quality; synthesized fixtures are smoke tests, not a WER leaderboard.
@@ -46,7 +47,7 @@ Build before applying the external 90-second execution watchdog. Cold specializa
 
 ## Optional speaker detection
 
-Settings offers a separate 102.1 MB Nemotron 3 speaker-detection download. The FluidAudio adapter uses the `fast32-split-w8a8` Core ML variant, supporting up to eight anonymous speaker slots per audio source with approximately 2.9 seconds of input context. It works alongside Apple Speech, Whisper, or Parakeet. Numbers belong to a source and session: microphone Speaker 1 is not necessarily Meeting Speaker 1. Speaker naming/voice enrollment is not implemented.
+Settings offers a separate 102.1 MB Nemotron 3 speaker-detection download. The FluidAudio adapter uses the `fast32-split-w8a8` Core ML variant, supporting up to eight anonymous speaker slots per audio source with approximately 2.9 seconds of input context. It works alongside Apple Speech, Whisper, or Parakeet. Numbers belong to a source and session: microphone Speaker 1 is not necessarily Meeting Speaker 1. Speakers can be named per saved recording; voice enrollment and cross-recording identity are not implemented.
 
 `SilliesSpeech` defines `DiarizationProvider`, `PreparedDiarizationModel`, and `SpeakerDiarizationEngine`; `SilliesDiarizationNemotron` owns the SDK. The actor shares weights and serializes native access, while each source owns independent bounded speaker-cache state. `StreamingDiarizationChannel` admits at most 16 seconds of pending mono PCM. `SessionDiarization` retains at most 64 final phrases / 16,384 characters awaiting activity. `SpeakerActivityTimeline` keeps only 6,000 recent frames, not a meeting-length history. Labeling errors/overload leave recording and transcription running. Finish and cancel share the existing asynchronous channel-group drain and timeout.
 
@@ -80,3 +81,14 @@ SILLIES_VALIDATE_MODEL_UPDATE=1 SILLIES_STT_MODEL=parakeet-ultra SILLIES_STT_STO
 ```
 
 The standalone `SpeechBenchmark check MODEL_ID STORE_DIRECTORY` command queries live metadata without installing anything. Default tests use injected metadata/discovery/download clients, virtual dates, and temporary stores.
+
+
+## Interactive speech and vocabulary
+
+`SpeechRecognitionContext` carries vocabulary and an interactive priority independently of provider selection. Providers accept hints only through their native supported mechanism: Apple uses `AnalysisContext.contextualStrings`, and Whisper uses a bounded prompt. A common whole-word replacement pass applies the dictionary after speaker attribution for every provider. Preserve the raw acoustic words/timestamps until attribution completes.
+
+`SpeechInferenceScheduler` prioritizes queued interactive work and raises its task priority. `SpeechWorkerExecutor` preserves that priority on its isolated queue; ordinary background work stays at utility priority. Neither priority nor cancellation guarantees preemption of a native prediction already in progress. Dictation has its own lifecycle, microphone-only channels, warm-runtime lease, cleanup deadline, and recovery history.
+
+The pinned WhisperKit 1.1.1 runtime misaligns word timestamps when prompt tokens are present ([upstream issue 542](https://github.com/argmaxinc/argmax-oss-swift/issues/542)). `PromptAlignedSegmentSeeker` adapts the alignment matrix inside this provider, respecting Core ML row padding. Remove the adapter only after updating the pinned runtime and rerunning prompted English/Romanian/mixed-language fixtures. Zero-duration opening words remain valid and are covered independently by the rolling-transcript tests.
+
+Use the runner's `dictate` command instead of `run` for one interactive channel with vocabulary hints. It reports **release-to-final-text**, separately from total duration. This excludes cleanup/insertion; the live dictation coordinator records release-to-insertion. First Core ML specialization can take about a minute on the development machine, and remains off the UI thread. Subsequent captures retain a recently used runtime for 120 seconds; idle expiry, pause, exclusions, and termination release it.

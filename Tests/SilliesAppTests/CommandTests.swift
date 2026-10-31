@@ -19,7 +19,7 @@ import Testing
   let restored = CommandShortcuts(defaults: defaults)
   #expect(restored.bindings[AppCommand.openVault.rawValue] == shortcut)
   restored.assign(nil, to: .openVault)
-  #expect(CommandShortcuts(defaults: defaults).bindings.isEmpty)
+  #expect(CommandShortcuts(defaults: defaults).bindings[AppCommand.openVault.rawValue] == nil)
 }
 
 private actor FixtureLoginService: LoginItemServicing {

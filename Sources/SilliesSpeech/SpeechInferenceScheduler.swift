@@ -24,7 +24,13 @@ package actor SpeechInferenceScheduler: SpeechWindowEngine {
           continuation.resume(throwing: SpeechError.overloaded)
           return
         }
-        pending.append(Job(id: id, request: request, continuation: continuation))
+        let job = Job(id: id, request: request, continuation: continuation)
+        let index =
+          pending.firstIndex {
+            $0.request.context.priority.rawValue < request.context.priority.rawValue
+          }
+          ?? pending.endIndex
+        pending.insert(job, at: index)
         startNext()
       }
     } onCancel: {
@@ -35,7 +41,9 @@ package actor SpeechInferenceScheduler: SpeechWindowEngine {
   private func startNext() {
     guard active == nil, !pending.isEmpty else { return }
     let job = pending.removeFirst()
-    let task = Task {
+    let priority: TaskPriority =
+      job.request.context.priority == .interactive ? .userInitiated : .utility
+    let task = Task(priority: priority) {
       do {
         try Task.checkCancellation()
         let result = try await engine.transcribe(job.request)

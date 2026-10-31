@@ -18,7 +18,25 @@ final class SessionVaultStore {
   private enum LoadState { case loading, ready, failed }
   private enum PreviewPreparation { case cached, worker }
 
-  private(set) var records: [SessionRecord] = []
+  private(set) var records: [SessionRecord] = [] { didSet { searchRevision &+= 1 } }
+  private(set) var searchRevision = 0
+  @ObservationIgnored private lazy var searchIndex = VaultSearchService(directory: storageDirectory)
+  @ObservationIgnored private var searchCleanup: Task<Void, Never>?
+  @ObservationIgnored private let screenshotText = VaultOCRScheduler()
+  private let defaults: UserDefaults
+  private(set) var retentionPolicy: VaultRetentionPolicy
+
+  func search(_ request: SessionRecordSearch) async throws -> Set<UUID> {
+    try await searchIndex.search(request, records: records, revision: searchRevision)
+  }
+  private func discardSearchCache() {
+    searchCleanup = Task.detached { [searchIndex, preceding = searchCleanup] in
+      await preceding?.value
+      do { try await searchIndex.discard() } catch {
+        fputs("Could not clear the search cache: \(error)\n", stderr)
+      }
+    }
+  }
   private var loadError: String?
   private var writeError: String?
   var persistenceError: String? { loadError ?? writeError }
@@ -31,6 +49,7 @@ final class SessionVaultStore {
   @ObservationIgnored private var loadState = LoadState.loading
   private var isLoading: Bool { loadState == .loading }
   private var needsSuccessfulLoad: Bool { loadState != .ready }
+  var isReadyForRetention: Bool { loadState == .ready }
   @ObservationIgnored private var loadCompletions: [() -> Void] = []
   @ObservationIgnored private var persistencePending = false
   @ObservationIgnored private var removedWhileLoading: Set<UUID> = []
@@ -52,6 +71,7 @@ final class SessionVaultStore {
 
   init(
     directory: URL? = nil, pasteboard: NSPasteboard = .general,
+    defaults: UserDefaults = .standard,
     notesGenerator: @escaping NotesGenerator = { record in
       if record.kind == .stash {
         let (summary, actions) = await SessionSummaryWorker.summarize(
@@ -63,6 +83,9 @@ final class SessionVaultStore {
         localeIdentifier: record.languageIdentifier)
     }
   ) {
+    self.defaults = defaults
+    retentionPolicy =
+      VaultRetentionPolicy(rawValue: defaults.string(forKey: "vault.retention") ?? "") ?? .keepAll
     summaries = VaultSummaryScheduler(generate: notesGenerator)
     clipboard = VaultClipboard(pasteboard: pasteboard, queue: Self.ioQueue)
     if let directory {
@@ -80,6 +103,14 @@ final class SessionVaultStore {
       previousStore.cancelPendingSummaries()
     }
     Self.activeStoresByDirectory[directoryKey] = WeakVaultBox(store: self)
+    screenshotText.next = { [weak self] in
+      guard let self,
+        let record = self.records.first(where: { $0.screenshotTextState == .pending }),
+        let url = self.imageURL(for: record)
+      else { return nil }
+      return .init(id: record.id, url: url)
+    }
+    screenshotText.complete = { [weak self] in self?.completeScreenshotText(id: $0, result: $1) }
     loadAsync()
   }
 
@@ -103,12 +134,21 @@ final class SessionVaultStore {
     trimHistory()
     persistAsync()
     scheduleSummaryRefinement(for: updated)
+    whenPersisted { [weak self] error in if error == nil { self?.screenshotText.pump() } }
   }
 
   func update(_ record: SessionRecord) {
     guard let index = records.firstIndex(where: { $0.id == record.id }) else { return }
     records[index] = record
     persistAsync()
+  }
+
+  func updateTranscript(_ record: SessionRecord) {
+    summaries.cancel(id: record.id)
+    var updated = record
+    updated.summaryPending = true
+    update(updated)
+    scheduleSummaryRefinement(for: updated)
   }
 
   func completePendingSummary(id: UUID, summary: String, actionItems: [String]) {
@@ -138,6 +178,46 @@ final class SessionVaultStore {
 
   func cancelPendingSummaries() { summaries.stop() }
 
+  func suspendBackgroundProcessing() {
+    summaries.stop()
+    screenshotText.stop()
+  }
+  func resumeBackgroundProcessing() {
+    resumePendingSummaries()
+    screenshotText.resume()
+  }
+
+  func retryScreenshotText(_ record: SessionRecord) {
+    var record = record
+    record.screenshotTextState = .pending
+    update(record)
+    screenshotText.pump()
+  }
+
+  private func completeScreenshotText(id: UUID, result: Result<String, Error>) {
+    guard var record = records.first(where: { $0.id == id }), record.screenshotTextState == .pending
+    else { return }
+    switch result {
+    case .success(let text):
+      record.extractedText = text
+      record.screenshotTextState = .complete
+      record.processingNote = text.isEmpty ? "No readable text was found in this screenshot." : ""
+    case .failure(let error):
+      record.screenshotTextState = .failed
+      record.processingNote = "Screenshot text recognition failed: \(error.localizedDescription)"
+      fputs("\(record.processingNote)\n", stderr)
+    }
+    update(record)
+  }
+
+  func applyRetention(_ policy: VaultRetentionPolicy) {
+    guard isReadyForRetention else { return }
+    retentionPolicy = policy
+    defaults.set(policy.rawValue, forKey: "vault.retention")
+    trimHistory()
+    persistAsync()
+  }
+
   func setPinnedRecord(_ id: UUID?) {
     pinnedRecordID = id
     imageCache.pinnedFilename = id.flatMap { selected in
@@ -162,6 +242,7 @@ final class SessionVaultStore {
       deleteAttachmentAsync(filename: file)
     }
     if let file = removed.audioFilename { deleteAttachmentAsync(filename: file) }
+    discardSearchCache()
     persistAsync()
   }
 
@@ -175,6 +256,7 @@ final class SessionVaultStore {
     pendingImageLoads.removeAll()
     stagedPreviews.removeAll()
     for file in files { deleteAttachmentAsync(filename: file) }
+    discardSearchCache()
     persistAsync()
   }
 
@@ -192,9 +274,12 @@ final class SessionVaultStore {
       loadCompletions.append { self.flushOnIOQueue(completion: completion) }
       return
     }
-    Self.ioQueue.async {
+    Self.ioQueue.async { [searchCleanup] in
       dispatchPrecondition(condition: .notOnQueue(.main))
-      MainRunLoopDelivery.perform { completion() }
+      Task.detached {
+        await searchCleanup?.value
+        MainRunLoopDelivery.perform { completion() }
+      }
     }
   }
 
@@ -281,12 +366,8 @@ final class SessionVaultStore {
   }
 
   private func trimHistory() {
-    var historyCount = 0
-    let expired = records.filter { record in
-      guard record.kind != .stash else { return false }
-      historyCount += 1
-      return historyCount > Self.maxStoredRecords
-    }
+    let expired = retentionPolicy.expired(in: records)
+    guard !expired.isEmpty else { return }
     for record in expired {
       summaries.cancel(id: record.id)
       if let filename = record.imageFilename {
@@ -297,6 +378,7 @@ final class SessionVaultStore {
     }
     let expiredIDs = Set(expired.map(\.id))
     records.removeAll { expiredIDs.contains($0.id) }
+    if !expired.isEmpty { discardSearchCache() }
   }
 
   func retrySaving() {
@@ -380,6 +462,7 @@ final class SessionVaultStore {
     }
     records = merged
     trimHistory()
+    if records.count != merged.count { persistencePending = true }
     loadState = .ready
     loadError = nil
     removedWhileLoading.removeAll()
@@ -389,6 +472,7 @@ final class SessionVaultStore {
       persistAsync()
     }
     for record in records { scheduleSummaryRefinement(for: record) }
+    screenshotText.pump()
     finishLoadCompletions()
   }
 

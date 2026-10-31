@@ -5,6 +5,7 @@ public struct SessionContent: Sendable {
     public let transcript: String
     public let extractedText: String
     public let stashedItems: [String]
+    public var segments: [TranscriptSegment] = []
 
     public init(transcript: String = "", extractedText: String = "", stashedItems: [String] = []) {
       self.transcript = transcript

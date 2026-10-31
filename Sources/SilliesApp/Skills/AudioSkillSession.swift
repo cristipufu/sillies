@@ -281,6 +281,8 @@ final class AudioSkillSession: ActiveSkillSession {
     _ result: AudioCaptureResult, context: CompletionContext
   ) -> SkillCompletionOutcome {
     let hasText = !result.transcript.isEmpty
+    var sourceText = SessionContent.Text(transcript: result.transcript)
+    sourceText.segments = result.segments
     let record = SessionRecord(
       kind: context.kind,
       origin: .init(
@@ -290,7 +292,7 @@ final class AudioSkillSession: ActiveSkillSession {
           bundleIdentifier: context.finalize.target?.bundleIdentifier,
           windowTitle: context.finalize.target?.windowTitle)),
       content: .init(
-        text: .init(transcript: result.transcript),
+        text: sourceText,
         notes: .init(
           summary: hasText ? "Preparing local notes…" : "No speech was transcribed.",
           suggestions: context.suggestions),

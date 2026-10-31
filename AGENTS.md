@@ -23,5 +23,5 @@
 - Every new long-lived producer must have an explicit stop path for pause, exclusions, and termination. When `applicationShouldTerminate` returns `.terminateLater`, deliver flush completions via `CFRunLoopPerformBlock` across `modalPanel` and `commonModes` (never rely solely on `@MainActor` `Task` / `DispatchQueue.main`, which AppKit's `NSModalPanelRunLoopMode` termination loop does not drain), and keep automated CLI/GUI check modes guarded by an off-main-thread watchdog timer.
 - Use monotonic time for behavior, motion, and cooldowns.
 - Keep character IDs and saved preference keys stable.
-- Do not add telemetry, screen capture, keyboard-content collection, or network services without a product requirement.
+- Do not add telemetry, screen capture, keyboard-content collection, or network services without a product requirement. The user-authorized everyday-writing requirement permits explicit hotkey dictation, bounded selection editing, and destination validation/insertion. It does not authorize automatic keyboard-content or clipboard-history collection.
 - Run `make check` for behavior/platform changes. Use `swift format` for Swift source. Update extension docs when the pack schema or renderer contract changes.

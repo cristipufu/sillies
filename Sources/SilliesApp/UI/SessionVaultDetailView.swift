@@ -44,6 +44,11 @@ struct SessionVaultDetailView: View {
               Text("Preparing local notes…").font(.callout)
             }
           }
+          if record.screenshotTextState == .pending {
+            ProgressView("Recognizing screenshot text in the background…").font(.callout)
+          } else if record.screenshotTextState == .failed {
+            Button("Retry screenshot text recognition") { vault.retryScreenshotText(record) }
+          }
 
           if !record.processingNote.isEmpty {
             Text(record.processingNote).font(.callout).foregroundStyle(SilliesTheme.secondary)
@@ -110,6 +115,7 @@ struct SessionVaultDetailView: View {
           }
 
           if !record.transcript.isEmpty {
+            SpeakerNamingView(record: record) { model.rename($0, to: $1, in: record) }.id(record.id)
             sectionCard(
               title: "TRANSCRIPT", symbol: "waveform",
               action: SectionAction(
@@ -119,10 +125,9 @@ struct SessionVaultDetailView: View {
                 })
             ) {
               Text(Self.boundedDisplayText(record.transcript))
-                .font(.system(size: 12.5))
-                .lineSpacing(4)
-                .textSelection(.enabled)
+                .font(.system(size: 12.5)).lineSpacing(4).textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
+              Button("Open full transcript") { model.openTranscript(record) }
             }
           }
 

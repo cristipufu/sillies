@@ -14,7 +14,8 @@ struct SpeechWindowTranscript {
       let start = window.start + word.start
       let end = min(window.end, window.start + word.end)
       guard start.isFinite, end.isFinite, end >= start,
-        end > committedThrough + (lastCommittedWord == nil ? 0 : Self.timestampTolerance)
+        lastCommittedWord == nil
+          ? end >= committedThrough : end > committedThrough + Self.timestampTolerance
       else { return nil }
       return SpeechWord(
         text: word.text, start: max(window.start, start), end: end, boundary: word.boundary)

@@ -34,6 +34,7 @@ final class SkillCoordinator {
   var onEmitEvent: ((String, WorkspaceEvent) -> Void)?
   var onOpenVaultRecord: ((UUID) -> Void)?
   var onOpenAudioSession: ((AudioSessionPresentation) -> Void)?
+  var canStartAudio: () -> Bool = { true }
   private var sessions: [String: any ActiveSkillSession] = [:]
   private var bindings: [String: CompanionBindingState] = [:]
   private var bindingTokens: [String: UInt64] = [:]
@@ -108,7 +109,7 @@ final class SkillCoordinator {
   ) {
     guard !skill.requiresWindow || target != nil else { return }
     // One audio session prevents duplicate system/microphone taps across the whole crew.
-    if skill.isAudioSession, activeAudioSession != nil { return }
+    if skill.isAudioSession, activeAudioSession != nil || !canStartAudio() { return }
     finishOrCancelSession(for: id)
     companionNames[id] = companionName
     let request = SessionRequest(
@@ -185,9 +186,9 @@ final class SkillCoordinator {
 
   func flushForTermination(completion: @escaping @Sendable () -> Void) {
     stopAll()
-    vault.cancelPendingSummaries()
+    vault.suspendBackgroundProcessing()
     whenFinished { [self] in
-      vault.cancelPendingSummaries()
+      vault.suspendBackgroundProcessing()
       vault.flushOnIOQueue(completion: completion)
     }
   }
@@ -199,7 +200,7 @@ final class SkillCoordinator {
   func drainPreviewsForTermination() { vault.drainStagedPreviewsForTermination() }
   func pollBoundWindows() { tick() }
   func refreshBoundWindows() { if !bindings.isEmpty { tick() } }
-  func resumePendingSummaries() { vault.resumePendingSummaries() }
+  func resumePendingSummaries() { vault.resumeBackgroundProcessing() }
   func flushPendingSummaries() async { await vault.flushPendingSummaries() }
 
   @discardableResult

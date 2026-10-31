@@ -14,6 +14,7 @@ package struct SpeechChannelRequest: Sendable {
   package let language: SpeechLanguage
   package let output: LocalSpeechFactory.Output
   package let failure: LocalSpeechFactory.Failure
+  package var context = SpeechRecognitionContext()
   package init(
     language: SpeechLanguage, output: @escaping LocalSpeechFactory.Output,
     failure: @escaping LocalSpeechFactory.Failure

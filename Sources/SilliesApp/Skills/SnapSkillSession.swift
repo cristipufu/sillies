@@ -45,7 +45,7 @@ final class SnapSkillSession: ActiveSkillSession {
       }
       guard !Task.isCancelled else { return }
       let pending = request.kind == .explain && !text.isEmpty
-      let record = SessionRecord(
+      var record = SessionRecord(
         kind: request.kind,
         origin: .init(
           characterID: request.companionID, characterName: request.companionName,
@@ -56,6 +56,7 @@ final class SnapSkillSession: ActiveSkillSession {
           text: .init(extractedText: text),
           notes: .init(summary: pending ? "Preparing a local explanation…" : result.summary),
           processing: .init(summaryPending: pending, failure: result.failure, note: notice)))
+      if request.kind == .snap, result.image != nil { record.screenshotTextState = .pending }
       let banner =
         result.pngData == nil
         ? "Capture unavailable · View details"

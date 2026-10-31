@@ -21,6 +21,7 @@ struct LaunchConfiguration {
     self.arguments = arguments
   }
 
+  var runsWritingFixture: Bool { arguments.contains("--writing-fixture") }
   var runsInputFixture: Bool { arguments.contains("--input-fixture") }
   var usesDarkAppearance: Bool { arguments.contains("--dark") }
   var usesAccessibility: Bool { !arguments.contains("--without-accessibility") }
@@ -38,6 +39,7 @@ struct LaunchConfiguration {
       || arguments.contains("--drop-return-test")
       || arguments.contains("--companion-drag-test")
       || arguments.contains("--playful-scene")
+      || arguments.contains("--writing-test")
   }
 
   var watchdogTimeoutSeconds: Double {
@@ -83,6 +85,7 @@ struct LaunchConfiguration {
 @MainActor
 final class AutomatedLaunchRunner {
   private var inputFixture: InputWindowFixture?
+  private var writingFixture: WritingEditorFixture?
   private var externalDragCheck: ExternalDragCheck?
   private var playInteractionCheck: PlayInteractionCheck?
   private var companionDragCheck: CompanionDragResponseCheck?
@@ -90,6 +93,8 @@ final class AutomatedLaunchRunner {
   private var watchdogTimer: DispatchSourceTimer?
 
   func stopPreview() {
+    writingFixture?.stop()
+    writingFixture = nil
     playfulPreview?.stop()
     playfulPreview = nil
   }
@@ -111,7 +116,10 @@ final class AutomatedLaunchRunner {
   }
 
   func armWatchdogIfNeeded(for launch: LaunchConfiguration) {
-    guard launch.isAutomatedRun || launch.validatesCatalogOnly || launch.runsInputFixture else {
+    guard
+      launch.isAutomatedRun || launch.validatesCatalogOnly || launch.runsInputFixture
+        || launch.runsWritingFixture
+    else {
       return
     }
     let timeoutSeconds = launch.watchdogTimeoutSeconds
@@ -125,6 +133,12 @@ final class AutomatedLaunchRunner {
     }
     timer.resume()
     watchdogTimer = timer
+  }
+
+  func startWritingFixture() {
+    let fixture = WritingEditorFixture()
+    writingFixture = fixture
+    fixture.start()
   }
 
   func startInputFixture() {
@@ -154,6 +168,9 @@ final class AutomatedLaunchRunner {
       RuntimeChecks.smokeTest(controller)
     } else if args.contains("--presentation-test") {
       RuntimeChecks.presentationTest()
+    } else if args.contains("--writing-test") {
+      controller.stop()
+      Task { await WritingInsertionCheck.run() }
     } else if args.contains("--interaction-test") || args.contains("--drop-return-test") {
       let previous = NSWorkspace.shared.frontmostApplication
       let playground = openPlayground()

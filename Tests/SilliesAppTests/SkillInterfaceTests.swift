@@ -24,7 +24,7 @@ import Testing
   await model.load()
   #expect(model.manifests.count == 3)
   #expect(model.error == nil)
-  try render(
+  try renderSkillInterface(
     ScrollView { SpeechModelSettingsView(model: model, activeModelID: nil).padding(20) }.background(
       SilliesTheme.card),
     size: CGSize(width: 520, height: 600), name: "sillies-speech-model-settings")
@@ -49,7 +49,7 @@ import Testing
     elapsed: 100)
   model.suggestions = [suggestion]
   let sessionView = AudioSessionView(model: model)
-  try render(
+  try renderSkillInterface(
     sessionView, size: CGSize(width: 640, height: 760), name: "sillies-participate-preview")
   model.phase = .failed(
     .init(
@@ -61,13 +61,13 @@ import Testing
     "Apple’s on-device AI does not support this language. Your transcript is saved."
   model.speakerDetectionNotice =
     "Speaker detection stopped. Transcription continued without speaker labels."
-  try render(
+  try renderSkillInterface(
     sessionView, size: CGSize(width: 560, height: 640), name: "sillies-session-minimum-preview")
   for recovery in [
     SessionFailure.RecoveryAction.openMicrophoneSettings, .openScreenRecordingSettings,
   ] {
     model.phase = .failed(.permissionDenied(recovery))
-    try render(
+    try renderSkillInterface(
       sessionView, size: CGSize(width: 560, height: 640),
       name: "sillies-session-\(recovery.rawValue)-preview")
   }
@@ -76,7 +76,7 @@ import Testing
   recording.isLoadingLanguages = false
   recording.selectedLanguageID = fixtureEnglish.id
   recording.phase = .capturing
-  try render(
+  try renderSkillInterface(
     AudioSessionView(model: recording), size: CGSize(width: 640, height: 760),
     name: "sillies-record-language-preview")
   let vault = SessionVaultStore(directory: directory)
@@ -92,7 +92,8 @@ import Testing
     metadata: .init(durationSeconds: 125))
   vault.add(record)
   let vaultView = SessionVaultView(vault: vault, initialRecordID: record.id)
-  try render(vaultView, size: CGSize(width: 980, height: 660), name: "sillies-vault-preview")
+  try renderSkillInterface(
+    vaultView, size: CGSize(width: 980, height: 660), name: "sillies-vault-preview")
   let interrupted = SessionRecord(
     kind: .listen,
     origin: .init(characterID: "mochi", characterName: "Mochi", source: .init(appName: "Meeting")),
@@ -101,13 +102,13 @@ import Testing
       notes: .init(summary: "Discuss system settings tomorrow. Keep these notes."),
       processing: .init(failure: .permissionDenied(.openScreenRecordingSettings))))
   vault.add(interrupted)
-  try render(
+  try renderSkillInterface(
     SessionVaultView(vault: vault, initialRecordID: interrupted.id),
     size: CGSize(width: 980, height: 660), name: "sillies-vault-permission-preview")
   await vault.flush()
 }
 
-@MainActor private func render(_ rootView: some View, size: CGSize, name: String) throws {
+@MainActor func renderSkillInterface(_ rootView: some View, size: CGSize, name: String) throws {
   let window = NSWindow(
     contentRect: CGRect(origin: .zero, size: size), styleMask: [.borderless], backing: .buffered,
     defer: false)

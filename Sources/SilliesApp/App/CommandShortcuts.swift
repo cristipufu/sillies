@@ -1,3 +1,4 @@
+import Carbon
 import Foundation
 import Observation
 import SilliesCore
@@ -21,6 +22,13 @@ final class CommandShortcuts {
       do { bindings = try JSONDecoder().decode([String: CommandShortcut].self, from: data) } catch {
         fputs("Could not load keyboard shortcuts: \(error)\n", stderr)
       }
+    } else {
+      bindings = [
+        AppCommand.holdDictation.rawValue: .init(
+          keyCode: UInt32(kVK_Space), modifiers: [.control, .option], keyLabel: "Space"),
+        AppCommand.toggleDictation.rawValue: .init(
+          keyCode: UInt32(kVK_ANSI_D), modifiers: [.control, .option], keyLabel: "D"),
+      ]
     }
   }
 
@@ -45,6 +53,7 @@ final class CommandShortcuts {
 
   private func isAvailable(_ command: AppCommand) -> Bool {
     availability == .active || command == .togglePause || command == .openVault
+      || command == .dictationHistory
   }
 
   func stop() {

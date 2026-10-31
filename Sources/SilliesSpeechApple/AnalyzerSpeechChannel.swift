@@ -34,7 +34,8 @@ final class AnalyzerSpeechChannel: LocalSpeechChannel {
 
   static func make(
     locale: Locale, output: @escaping LocalSpeechFactory.Output,
-    failure: @escaping LocalSpeechFactory.Failure
+    failure: @escaping LocalSpeechFactory.Failure,
+    context: SpeechRecognitionContext = .init()
   ) async throws -> AnalyzerSpeechChannel {
     let transcriber = SpeechTranscriber(
       locale: locale, preset: .timeIndexedProgressiveTranscription)
@@ -50,6 +51,11 @@ final class AnalyzerSpeechChannel: LocalSpeechChannel {
     }
     let analyzer = SpeechAnalyzer(
       modules: [transcriber], options: .init(priority: .utility, modelRetention: .whileInUse))
+    if !context.vocabulary.isEmpty {
+      let analysisContext = AnalysisContext()
+      analysisContext.contextualStrings[.general] = context.vocabulary
+      try await analyzer.setContext(analysisContext)
+    }
     let (stream, continuation) = AsyncStream<AnalyzerInput>.makeStream(
       bufferingPolicy: .bufferingOldest(SpeechAudioChunker.streamCapacity))
     let resultsTask = Task.detached(priority: .utility) {

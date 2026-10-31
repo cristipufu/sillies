@@ -108,7 +108,10 @@ func vaultPreservesCorruptMetadataAndMergesPendingChangesAfterRecovery() async t
 @Test @MainActor func deliberateStashesSurviveHistoryLimitAndRelaunch() async throws {
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
   defer { removeTestFile(at: directory) }
-  let vault = SessionVaultStore(directory: directory)
+  let domain = "sillies-retention-tests-\(UUID())"
+  let defaults = try #require(UserDefaults(suiteName: domain))
+  defer { defaults.removePersistentDomain(forName: domain) }
+  let vault = SessionVaultStore(directory: directory, defaults: defaults)
   let stash = SessionRecord(
     kind: .stash,
     origin: .init(
@@ -124,8 +127,11 @@ func vaultPreservesCorruptMetadataAndMergesPendingChangesAfterRecovery() async t
     )
   }
   await vault.flush()
+  #expect(vault.records.count == SessionVaultStore.maxStoredRecords + 3)
+  vault.applyRetention(.recent200)
+  await vault.flush()
   #expect(vault.records.count == SessionVaultStore.maxStoredRecords + 1)
-  let loaded = SessionVaultStore(directory: directory)
+  let loaded = SessionVaultStore(directory: directory, defaults: defaults)
   await loaded.waitUntilLoaded()
   #expect(loaded.records.contains { $0.id == stash.id })
   loaded.remove(id: stash.id)

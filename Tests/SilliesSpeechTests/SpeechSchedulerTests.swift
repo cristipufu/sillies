@@ -16,6 +16,17 @@ final class SpeechSchedulerTests: XCTestCase, @unchecked Sendable {
     XCTAssertFalse(onMainThread)
   }
 
+  func testInteractiveInferenceRunsWithUserInitiatedPriority() async throws {
+    let engine = ObservedEngine()
+    let scheduler = SpeechInferenceScheduler(engine: engine)
+    _ = try await scheduler.transcribe(
+      .init(
+        samples: [1], language: .automatic,
+        context: .init(priority: .interactive)))
+    let priority = await engine.observedPriority
+    XCTAssertGreaterThanOrEqual(priority, .userInitiated)
+  }
+
   func testCancelledQueuedWorkDoesNotReachEngine() async throws {
     let engine = ObservedEngine()
     let scheduler = SpeechInferenceScheduler(engine: engine)
@@ -39,10 +50,12 @@ private actor ObservedEngine: SpeechWindowEngine {
   private(set) var maximumConcurrent = 0
   private(set) var observedMainThread = false
   private(set) var calls = 0
+  private(set) var observedPriority = TaskPriority.background
   private var active = 0
 
   func transcribe(_ request: SpeechWindowRequest) async throws -> SpeechWindowResult {
     observedMainThread = observedMainThread || Thread.isMainThread
+    observedPriority = Task.currentPriority
     calls += 1
     active += 1
     maximumConcurrent = max(maximumConcurrent, active)

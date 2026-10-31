@@ -7,6 +7,7 @@ struct AccessibilityWindowRoleSnapshot: Sendable, Equatable {
   var nonStandardWindowFrames: [CGRect] = []
   var hasVerifiedWindowList = false
   var hasExactStandardWindowFrames = false
+  var focusedStandardWindowFrame: CGRect?
 
   init(
     standardWindowFrames: [CGRect] = [],
@@ -352,7 +353,8 @@ final class AccessibilityWindowSource: @unchecked Sendable {
     var snapshot = AccessibilityWindowRoleSnapshot()
     let windowList = copyWindows(from: application)
     var orderedElements = windowList.elements
-    if let focusedWindow, !orderedElements.contains(where: { CFEqual($0, focusedWindow) }) {
+    if let focusedWindow {
+      orderedElements.removeAll { CFEqual($0, focusedWindow) }
       orderedElements.insert(focusedWindow, at: 0)
     }
 
@@ -364,6 +366,9 @@ final class AccessibilityWindowSource: @unchecked Sendable {
       inspectedWindows.append(inspected)
       if inspected.isStandardWindow {
         snapshot.standardWindowFrames.append(inspected.frame)
+        if let focusedWindow, CFEqual(element, focusedWindow) {
+          snapshot.focusedStandardWindowFrame = inspected.frame
+        }
       } else if !inspected.frame.isEmpty {
         snapshot.nonStandardWindowFrames.append(inspected.frame)
       }

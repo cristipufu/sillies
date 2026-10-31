@@ -6,11 +6,16 @@ struct TranscriptSourceTimeline: Sendable {
     let sequence: Int
     let range: Range<TimeInterval>
     let renderedText: String
+    let segment: TranscriptSegment?
     let characterCount: Int
     var isFinal: Bool
 
     init(passage: TranscriptTimeline.Passage, sequence: Int) {
       self.sequence = sequence
+      segment = TranscriptSegment(
+        sequence: sequence, source: passage.source,
+        start: passage.range.lowerBound, end: passage.range.upperBound,
+        text: passage.text, speaker: passage.speaker)
       range = passage.range
       let time = SessionRecord.formatDuration(range.lowerBound)
       let label = passage.speaker.map { passage.source + " · " + $0.label } ?? passage.source
@@ -20,6 +25,7 @@ struct TranscriptSourceTimeline: Sendable {
     }
 
     init(language: String, time: TimeInterval, sequence: Int) {
+      segment = nil
       self.sequence = sequence
       range = time..<time
       renderedText = "[\(SessionRecord.formatDuration(time))] Language: \(language)"

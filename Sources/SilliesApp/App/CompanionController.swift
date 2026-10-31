@@ -34,6 +34,30 @@ final class CompanionController {
         self.skillControls.saveClipboard(with: pet)
       }))
   @ObservationIgnored var onOpenVault: ((UUID?) -> Void)?
+  @ObservationIgnored var onWritingAnchorChanged: ((CGPoint) -> Void)?
+  private var writingCompanionID: String?
+
+  @discardableResult func beginWritingIndicator() -> CGPoint {
+    playfulScenes.cancel(.restorePerches)
+    guard let selected = commandCompanion(),
+      let pet = companions.first(where: { $0.definition.id == selected.id })
+    else {
+      return NSEvent.mouseLocation
+    }
+    writingCompanionID = selected.id
+    if let state = pet.beginWritingIndicator(at: now) { apply(state, to: pet) }
+    refreshPlayfulAvailability()
+    scheduleDeadline()
+    updateMotionClock()
+    return pet.position
+  }
+
+  func endWritingIndicator() {
+    for pet in companions where pet.isWritingIndicator { pet.endWritingIndicator() }
+    writingCompanionID = nil
+    refreshPlayfulAvailability()
+    scheduleDeadline()
+  }
   @ObservationIgnored private let additionalEventProducers: [any WorkspaceEventProducer]
   @ObservationIgnored private lazy var skillControls = CompanionSkillControls(
     skills: skills,
@@ -330,7 +354,8 @@ final class CompanionController {
   private func refreshPlayfulAvailability() {
     let available =
       shouldRun && settings.activity == .playful && !companions.isEmpty
-      && skills.activeAudioSession == nil && !tracker.isManipulatingWindow
+      && skills.activeAudioSession == nil && writingCompanionID == nil
+      && !tracker.isManipulatingWindow
     playfulScenes.configure(
       available ? (reducedMotion || tracker.isLowPower ? .reducedMotion : .animated) : .suspended,
       at: now)
@@ -438,6 +463,9 @@ final class CompanionController {
   }
 
   private func reconcileEnabledCharacters() {
+    if let writingCompanionID, !settings.enabledCharacters.contains(writingCompanionID) {
+      commands.stop()
+    }
     for pet in companions where !settings.enabledCharacters.contains(pet.definition.id) {
       if dragTargeting.draggedCompanionID == pet.definition.id {
         dragTargeting.resetAndHideOverlays()
@@ -626,6 +654,11 @@ final class CompanionController {
     case .positioned(let location):
       if perchLocation != location { perchLocation = location }
     }
+    if let writingCompanionID,
+      let pet = companions.first(where: { $0.definition.id == writingCompanionID })
+    {
+      onWritingAnchorChanged?(pet.position)
+    }
     if interaction.isEnabled { interaction.refresh() }
   }
 
@@ -655,7 +688,7 @@ final class CompanionController {
   }
 
   private func react(_ pet: CompanionInstance, to event: WorkspaceEvent) {
-    guard !pet.isPerformingScene else { return }
+    guard !pet.isPerformingScene, !pet.isWritingIndicator else { return }
     guard let state = pet.receive(event, activity: settings.activity.multiplier) else {
       return
     }
@@ -738,7 +771,8 @@ final class CompanionController {
     playfulScenes.advance(at: time)
     considerPlayfulScene(trigger: tracker.isIdle ? .idle : .ambient)
     for pet in companions
-    where !pet.isPerformingScene && !pet.isPickedUp && !pet.isReturningFromDrop
+    where !pet.isPerformingScene && !pet.isWritingIndicator && !pet.isPickedUp
+      && !pet.isReturningFromDrop
       && pet.isAttachmentVisible
       && (!settings.followsWindows || pet.surface?.isAvailable == true)
     {
@@ -757,7 +791,8 @@ final class CompanionController {
     guard shouldRun,
       let deadline =
         (companions.filter({
-          !$0.isPerformingScene && !$0.isPickedUp && !$0.isReturningFromDrop
+          !$0.isPerformingScene && !$0.isWritingIndicator && !$0.isPickedUp
+            && !$0.isReturningFromDrop
             && $0.isAttachmentVisible
             && (!settings.followsWindows || $0.surface?.isAvailable == true)
         }).map(\.behaviorState.expiresAt) + [playfulScenes.nextDeadline].compactMap { $0 }).filter(

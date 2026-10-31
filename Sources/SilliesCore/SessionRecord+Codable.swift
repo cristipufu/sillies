@@ -22,6 +22,8 @@ extension SessionRecord {
     case failure
     case speechProvenance
     case diarizationProvenance
+    case isProtected, screenshotTextState
+    case transcriptSegments, speakerNames, originalSpeakerTranscript
     case audioFilename, explanation, processingNote, suggestions, failureMessage, languageIdentifier
   }
 
@@ -57,6 +59,15 @@ extension SessionRecord {
       SpeechProvenance.self, forKey: .speechProvenance)
     diarizationProvenance = try container.decodeIfPresent(
       SpeechProvenance.self, forKey: .diarizationProvenance)
+    isProtected = try container.decodeIfPresent(Bool.self, forKey: .isProtected) ?? false
+    screenshotTextState =
+      try container.decodeIfPresent(ScreenshotTextState.self, forKey: .screenshotTextState) ?? .none
+    transcriptSegments =
+      try container.decodeIfPresent([TranscriptSegment].self, forKey: .transcriptSegments) ?? []
+    speakerNames =
+      try container.decodeIfPresent([String: String].self, forKey: .speakerNames) ?? [:]
+    originalSpeakerTranscript = try container.decodeIfPresent(
+      String.self, forKey: .originalSpeakerTranscript)
   }
 
   public func encode(to encoder: Encoder) throws {
@@ -86,6 +97,11 @@ extension SessionRecord {
     try container.encodeIfPresent(languageIdentifier, forKey: .languageIdentifier)
     try container.encodeIfPresent(speechProvenance, forKey: .speechProvenance)
     try container.encodeIfPresent(diarizationProvenance, forKey: .diarizationProvenance)
+    try container.encode(isProtected, forKey: .isProtected)
+    try container.encode(screenshotTextState, forKey: .screenshotTextState)
+    try container.encode(transcriptSegments, forKey: .transcriptSegments)
+    try container.encode(speakerNames, forKey: .speakerNames)
+    try container.encodeIfPresent(originalSpeakerTranscript, forKey: .originalSpeakerTranscript)
   }
 
   /// Recognize only historical machine-generated errors, never words from a summary.

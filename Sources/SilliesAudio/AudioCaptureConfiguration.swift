@@ -9,6 +9,8 @@ package struct AudioCaptureConfiguration: Sendable {
   package var language: SpeechLanguage?
   package var model: SpeechModelDescriptor = .apple
   package var diarizationModel: SpeechModelDescriptor?
+  package var recognitionContext = SpeechRecognitionContext()
+  package var dictionary = PersonalDictionary(entries: [])
   package init(
     kind: CompanionSkillKind, target: WindowTargetCandidate?, recordingURL: URL?,
     language: SpeechLanguage? = nil

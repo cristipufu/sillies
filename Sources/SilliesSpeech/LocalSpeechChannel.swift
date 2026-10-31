@@ -3,7 +3,7 @@ import Foundation
 import SilliesCore
 
 package struct SpeechPhrase: Sendable {
-  package let text: String
+  package var text: String
   package let isFinal: Bool
   package var startTime: TimeInterval?
   package var duration: TimeInterval?

@@ -19,6 +19,7 @@ import Testing
   let model = SessionVaultModel(vault: vault, initialRecordID: records[1].id)
   model.searchQuery = "Meeting"
   model.selectedFilter = .record
+  await model.refreshSearch()
   model.delete(records[1])
   #expect(model.selectedRecordID == records[2].id)
   model.delete(records[2])

@@ -3,6 +3,7 @@ import SilliesSpeech
 @preconcurrency import WhisperKit
 
 actor WhisperWindowEngine: SpeechWindowEngine {
+  private static let maximumPromptTokens = 160
   nonisolated private let executor = SpeechWorkerExecutor()
   nonisolated var unownedExecutor: UnownedSerialExecutor { executor.asUnownedSerialExecutor() }
   private var pipeline: WhisperKit?
@@ -16,6 +17,7 @@ actor WhisperWindowEngine: SpeechWindowEngine {
     let config = WhisperKitConfig(
       modelFolder: directory.path, tokenizerFolder: directory,
       computeOptions: ModelComputeOptions(melCompute: .cpuOnly),
+      segmentSeeker: PromptAlignedSegmentSeeker(),
       verbose: false, logLevel: .error, prewarm: true, load: true, download: false)
     pipeline = try await OfflineWhisperKit(config)
     try Task.checkCancellation()
@@ -33,6 +35,13 @@ actor WhisperWindowEngine: SpeechWindowEngine {
     options.skipSpecialTokens = true
     options.temperatureFallbackCount = 1
     options.concurrentWorkerCount = 1
+    if !request.context.vocabulary.isEmpty {
+      options.promptTokens = pipeline.tokenizer.map {
+        Array(
+          $0.encode(text: request.context.vocabulary.joined(separator: ", ")).prefix(
+            Self.maximumPromptTokens))
+      }
+    }
     let results = try await pipeline.transcribe(audioArray: request.samples, decodeOptions: options)
     return SpeechWindowResult(
       words: results.flatMap(\.segments).flatMap { segment in

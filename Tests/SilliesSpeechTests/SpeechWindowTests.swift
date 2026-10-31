@@ -87,6 +87,26 @@ final class SpeechWindowTests: XCTestCase {
     XCTAssertEqual(result.phrases.first?.text, "a")
   }
 
+  func testZeroDurationOpeningWordSurvivesDraftAndFinalWithoutRepeatingOverlap() {
+    var transcript = SpeechWindowTranscript()
+    let words: [SpeechWord] = [
+      .init(text: "Am", start: 0, end: 0),
+      .init(text: "stabilit", start: 0, end: 0.5),
+    ]
+    let draft = transcript.receive(
+      .init(words: words),
+      window: window(start: 0, duration: 1, completion: .draft))
+    XCTAssertEqual(draft.phrases.first?.text, "Am stabilit")
+    let final = transcript.receive(
+      .init(words: words),
+      window: window(start: 0, duration: 1, completion: .utterance))
+    XCTAssertEqual(final.phrases.first?.text, "Am stabilit")
+    let overlap = transcript.receive(
+      .init(words: words),
+      window: window(start: 0, duration: 1, completion: .session))
+    XCTAssertEqual(overlap.phrases.first?.text, "")
+  }
+
   private func window(start: Double, duration: Double, completion: SpeechWindowBuffer.Completion)
     -> SpeechWindowBuffer.Window
   {

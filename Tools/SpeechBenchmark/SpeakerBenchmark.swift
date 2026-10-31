@@ -21,6 +21,7 @@ enum SpeakerBenchmark {
       defer { channel.cancel() }
       let started = ContinuousClock.now
       let duration = try await BenchmarkAudio.feed(URL(fileURLWithPath: path), to: [channel])
+        .duration
       try output.report(duration: duration)
       print(
         "Diarization elapsed \(started.duration(to: .now)); footprint \(ProcessFootprint.description())"

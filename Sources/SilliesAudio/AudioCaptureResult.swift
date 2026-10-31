@@ -8,6 +8,8 @@ package struct AudioCaptureResult: Sendable {
   package let duration: TimeInterval
   package let failure: SessionFailure?
   package var speakerDetectionNotice: String? = nil
+  package var segments: [TranscriptSegment] = []
+  package var plainText: String { segments.map(\.text).joined(separator: " ") }
   package init(
     transcript: String, recordingURL: URL?, duration: TimeInterval, failure: SessionFailure?
   ) {

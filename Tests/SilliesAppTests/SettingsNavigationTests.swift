@@ -43,7 +43,8 @@ import Testing
       let view = SettingsView(
         controller: controller, speechModels: speech.models, textModels: textModels,
         shortcuts: shortcuts,
-        loginItems: LoginItemSettings(), writingTools: writing, destination: destination)
+        loginItems: LoginItemSettings(), writingTools: writing,
+        navigation: SettingsNavigation(destination: destination))
       try renderSkillInterface(
         view, size: SettingsWindowLayout.minimumSize,
         name: "sillies-settings-\(destination.rawValue)-\(appearance.rawValue)")

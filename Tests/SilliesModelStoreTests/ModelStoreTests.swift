@@ -60,7 +60,7 @@ final class ModelStoreTests: XCTestCase, @unchecked Sendable {
   }
   func testBundledCatalogIsPinnedAndIncludesRomanian() throws {
     let catalog = try SpeechModelCatalog.bundled()
-    XCTAssertEqual(catalog.manifests.count, 3)
+    XCTAssertEqual(catalog.manifests.count, 4)
     for manifest in catalog.manifests {
       if !manifest.model.isDiarizationModel {
         XCTAssertTrue(manifest.model.capabilities.languages.contains("ro"))

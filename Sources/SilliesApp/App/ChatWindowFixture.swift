@@ -13,6 +13,13 @@ import SilliesTTS
   }
 
   static func makeSession(conversation: any ConversationResponding) -> ChatSession {
+    let session = makeReadySession(conversation: conversation)
+    session.draft = "Can you keep me company while I finish my work?"
+    session.send()
+    return session
+  }
+
+  static func makeReadySession(conversation: any ConversationResponding) -> ChatSession {
     let session = ChatSession(
       companionName: "Mochi", profile: .init(personality: "Warm and playful"),
       services: .init(
@@ -21,8 +28,6 @@ import SilliesTTS
         conversation: conversation, speech: SilentVoice(),
         deliver: { MainRunLoopDelivery.perform($0) }))
     session.spokenReplies = false
-    session.draft = "Can you keep me company while I finish my work?"
-    session.send()
     return session
   }
 

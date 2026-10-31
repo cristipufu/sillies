@@ -23,6 +23,12 @@ class ModelEntry:
 
 MODELS = [
     ModelEntry(
+        identifier="qwen-3.5-2b", name="Qwen3.5 2B",
+        repository="mlx-community/Qwen3.5-2B-4bit",
+        revision="674aaa7240b91e8012fcad5d791b7dfe5ba90207", memory_gb=8,
+        detail="Lightweight multilingual chat and short writing tasks.",
+        languages="201 languages and dialects."),
+    ModelEntry(
         identifier="qwen-3.5-4b", name="Qwen3.5 4B",
         repository="mlx-community/Qwen3.5-4B-MLX-4bit",
         revision="32f3e8ecf65426fc3306969496342d504bfa13f3", memory_gb=16,
@@ -39,6 +45,12 @@ MODELS = [
         repository="mlx-community/gemma-4-E4B-it-4bit",
         revision="475b9088d29754a3379866cf5aeb6b41acd313c2", memory_gb=16,
         detail="Google’s compact model for local notes and writing.",
+        languages="Over 140 languages. Quality varies by language."),
+    ModelEntry(
+        identifier="gemma-4-26b-a4b", name="Gemma 4 26B A4B",
+        repository="mlx-community/gemma-4-26B-A4B-it-4bit",
+        revision="0d77464eeb233a2da68ebf9d7dc4edaac7db956d", memory_gb=32,
+        detail="Larger model for conversations and summaries. Requires more available memory.",
         languages="Over 140 languages. Quality varies by language."),
     ModelEntry(
         identifier="ministral-3-8b", name="Ministral 3 8B",

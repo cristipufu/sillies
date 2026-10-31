@@ -27,12 +27,34 @@ package struct SpeechWindowRequest: Sendable {
   package let samples: [Float]
   package let language: SpeechLanguage
   package let context: SpeechRecognitionContext
+  package var window: SpeechWindowPosition?
   package init(
     samples: [Float], language: SpeechLanguage, context: SpeechRecognitionContext = .init()
   ) {
     self.samples = samples
     self.language = language
     self.context = context
+  }
+}
+
+/// Identifies a bounded utterance so streaming engines can decode only newly appended audio.
+package struct SpeechWindowPosition: Sendable {
+  package enum Phase: Sendable { case partial, complete }
+  package let start: TimeInterval
+  package let phase: Phase
+  package init(start: TimeInterval, phase: Phase) {
+    self.start = start
+    self.phase = phase
+  }
+}
+
+package enum SpeechDecodeCadence: Sendable {
+  case windowed, streaming
+  var interval: TimeInterval {
+    switch self {
+    case .windowed: 2
+    case .streaming: 0.56
+    }
   }
 }
 

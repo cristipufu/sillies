@@ -28,7 +28,12 @@ private actor ReplyProbe: ConversationResponding {
 private actor VoiceProbe: ChatSpeechOutput {
   var requests: [ChatSpeechRequest] = []
   let fails: Bool
-  init(fails: Bool = false) { self.fails = fails }
+  let unavailableMessage: String?
+  init(fails: Bool = false, unavailableMessage: String? = nil) {
+    self.fails = fails
+    self.unavailableMessage = unavailableMessage
+  }
+  func availabilityNotice(language: String) async -> String? { unavailableMessage }
   func speak(
     _ request: ChatSpeechRequest, receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void
   ) async throws -> String? {
@@ -132,6 +137,19 @@ private func chatFinishPreservesFinalWordsBeforeSaving(_ timing: FinishTiming) a
     try await Task.sleep(for: .milliseconds(5))
   }
   Issue.record("Chat did not reach the expected state within one second")
+}
+
+@Test @MainActor func chatVoiceSetupIsOptionalAndDoesNotStartPlayback() async {
+  let voice = VoiceProbe(unavailableMessage: "Choose a downloaded voice for spoken replies.")
+  let chat = session(reply: ReplyProbe(), voice: voice)
+  await chat.refreshAvailability()
+  #expect(chat.notice?.settingsDestination == .voices)
+  #expect(chat.canCompose)
+  #expect(await voice.requests.isEmpty)
+  chat.spokenReplies = false
+  await chat.refreshAvailability()
+  #expect(chat.notice == nil)
+  chat.finish {}
 }
 
 @Test @MainActor func chatPreservesRomanianAndReplyWhenVoiceFails() async throws {

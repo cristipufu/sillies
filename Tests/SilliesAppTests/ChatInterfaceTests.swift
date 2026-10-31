@@ -8,6 +8,27 @@ import Testing
 
 @testable import SilliesApp
 
+@Test @MainActor func chatExplainsMissingTextModelsBeforeTheFirstMessage() async throws {
+  let session = ChatWindowFixture.makeReadySession(conversation: MissingChatModel())
+  await session.refreshAvailability()
+  #expect(session.notice?.settingsDestination == .textModels)
+  #expect(session.canCompose)
+  #expect(session.messages.isEmpty)
+  try renderSkillInterface(
+    ChatSessionView(model: session, openSettings: { _ in }), size: SessionWindowLayout.minimumSize,
+    name: "sillies-chat-model-setup")
+  session.finish {}
+}
+
+private struct MissingChatModel: ConversationResponding {
+  func availabilityNotice(localeIdentifier: String?) async -> String? {
+    "Choose Apple Intelligence or download a text model in Local AI to start chatting."
+  }
+  func reply(to context: ChatContext) async throws -> String {
+    throw SessionFailure(category: .unknown, message: "A text model is needed for replies.")
+  }
+}
+
 @Test @MainActor func chatFailureKeepsTheConversationAndComposerVisible() async throws {
   let session = ChatWindowFixture.makeSession(conversation: FailedChatReply())
   for _ in 0..<100 {
@@ -18,7 +39,7 @@ import Testing
   #expect(session.messages.count == 1)
   session.draft = "My next thought is still editable."
   try renderSkillInterface(
-    ChatSessionView(model: session, openSettings: {}), size: SessionWindowLayout.minimumSize,
+    ChatSessionView(model: session, openSettings: { _ in }), size: SessionWindowLayout.minimumSize,
     name: "sillies-chat-failure")
   session.finish {}
 }
@@ -37,6 +58,7 @@ private struct FailedChatReply: ConversationResponding {
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
   defer { removeTestFile(at: directory) }
   let services = try VoiceServices(defaults: defaults, directory: directory)
+  #expect(await services.speech.availabilityNotice(language: "en") != nil)
   await services.models.load()
   #expect(services.models.manifests.count == 5)
   #expect(services.models.error == nil)
@@ -55,7 +77,7 @@ private struct FailedChatReply: ConversationResponding {
   }
   #expect(session.messages.count == 2)
   let controller = ChatSessionWindowController()
-  controller.show(session, openSettings: {})
+  controller.show(session, openSettings: { _ in })
   let window = try #require(controller.window)
   defer { controller.close() }
   window.setContentSize(SessionWindowLayout.minimumSize)
@@ -70,11 +92,11 @@ private struct FailedChatReply: ConversationResponding {
   #expect(text.string == session.transcript)
   #expect(text.bounds.height >= layout.usedRect(for: container).maxY)
   try renderSkillInterface(
-    ChatSessionView(model: session, openSettings: {}), size: SessionWindowLayout.minimumSize,
+    ChatSessionView(model: session, openSettings: { _ in }), size: SessionWindowLayout.minimumSize,
     name: "sillies-chat-minimum")
   session.draft = String(repeating: "A longer thought with punctuation. ", count: 80)
   try renderSkillInterface(
-    ChatSessionView(model: session, openSettings: {}), size: SessionWindowLayout.minimumSize,
+    ChatSessionView(model: session, openSettings: { _ in }), size: SessionWindowLayout.minimumSize,
     name: "sillies-chat-long-draft")
   session.finish {}
 }

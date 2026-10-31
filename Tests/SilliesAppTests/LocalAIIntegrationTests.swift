@@ -8,6 +8,7 @@ import SilliesModelStore
 import SilliesReasoning
 import SilliesSpeech
 import SilliesSpeechApple
+import SilliesSpeechNemotron
 import SilliesSpeechParakeet
 import SilliesSpeechWhisper
 import Synchronization
@@ -88,7 +89,7 @@ private func downloadedRuntime(id: String?) async throws -> SpeechRuntimeRegistr
   {
     let registry = try SpeechRuntimeRegistry(
       store: ModelStore(root: URL(fileURLWithPath: root)),
-      providers: [WhisperSpeechProvider(), ParakeetSpeechProvider()],
+      providers: [WhisperSpeechProvider(), ParakeetSpeechProvider(), NemotronSpeechProvider()],
       diarizationProviders: [NemotronDiarizationProvider()])
     runtime = try await registry.prepare(id)
   } else {

@@ -19,7 +19,7 @@ class PackageNotices:
 PACKAGES = {
     "argmax-oss-swift": PackageNotices("argmax-oss-swift", "WhisperKit recognition and TTSKit speech synthesis", ("LICENSE", "NOTICES")),
     "eventsource": PackageNotices("EventSource", "Transitive Hugging Face dependency; no cloud inference is enabled", ("LICENSE.md",)),
-    "fluidaudio": PackageNotices("FluidAudio", "Parakeet recognition, speaker detection, and Core ML speech synthesis", ("LICENSE", "ThirdPartyLicenses/fastcluster-LICENSE.md", "ThirdPartyLicenses/vbx-LICENSE.md", "ThirdPartyLicenses/JapaneseG2P-LICENSE.md", "ThirdPartyLicenses/LuxTtsEnglishG2P-LICENSE.md", "ThirdPartyLicenses/KokoroAneSpanishFrenchG2P-LICENSE.md", "ThirdPartyLicenses/KokoroANE-v3/conversion-LICENSE", "ThirdPartyLicenses/KokoroANE-v3/NOTICE", "ThirdPartyLicenses/KokoroANE-v3/mattmireles-LICENSE")),
+    "fluidaudio": PackageNotices("FluidAudio", "Parakeet/Nemotron recognition, speaker detection, and Core ML speech synthesis", ("LICENSE", "ThirdPartyLicenses/fastcluster-LICENSE.md", "ThirdPartyLicenses/vbx-LICENSE.md", "ThirdPartyLicenses/JapaneseG2P-LICENSE.md", "ThirdPartyLicenses/LuxTtsEnglishG2P-LICENSE.md", "ThirdPartyLicenses/KokoroAneSpanishFrenchG2P-LICENSE.md", "ThirdPartyLicenses/KokoroANE-v3/conversion-LICENSE", "ThirdPartyLicenses/KokoroANE-v3/NOTICE", "ThirdPartyLicenses/KokoroANE-v3/mattmireles-LICENSE")),
     "mlx-swift": PackageNotices("mlx-swift", "Native text and Fish speech inference with Metal kernels", (
         "LICENSE", "ACKNOWLEDGMENTS.md", "Source/Cmlx/mlx/LICENSE", "Source/Cmlx/mlx/ACKNOWLEDGMENTS.md",
         "Source/Cmlx/mlx-c/LICENSE", "Source/Cmlx/mlx-c/ACKNOWLEDGMENTS.md", "Source/Cmlx/metal-cpp/LICENSE.txt",
@@ -78,8 +78,10 @@ weights and does not claim authorship of them.
   Inference. These are upstream modifications, not work by Sillies. [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/legalcode.en).
 - **Nemotron 3 speaker detection:** NVIDIA, with Core ML conversion/quantization by Fluid Inference.
   [Upstream attribution and OpenMDW 1.1 license](https://huggingface.co/FluidInference/nemotron-3-diarization-coreml#attribution--license).
+- **Nemotron Unified ASR:** NVIDIA, with Core ML conversion by Fluid Inference.
+  [OpenMDW 1.1 license](https://huggingface.co/nvidia/nemotron-labs-unified-asr-0.6b).
 - **Qwen3.5:** Qwen/Alibaba, with MLX quantization by MLX Community; Apache 2.0.
-- **Gemma 4 E4B:** Google DeepMind, with MLX quantization by MLX Community. Google's
+- **Gemma 4 E4B / 26B A4B:** Google DeepMind, with MLX quantization by MLX Community. Google's
   [Gemma 4 license is Apache 2.0](https://ai.google.dev/gemma/docs/gemma_4_license).
   The pinned community conversion's model-card metadata says `gemma`; the base model's official
   license is linked here to make that metadata discrepancy explicit.

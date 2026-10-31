@@ -418,6 +418,153 @@
   },
   {
     "model": {
+      "id": "nemotron-unified",
+      "providerID": "nemotron-unified",
+      "name": "Nemotron Unified ASR",
+      "detail": "Streaming recognition in 25 European languages. Choose the spoken language for best accuracy.",
+      "revision": "bd13ddde81d3134719c520845346b3252daf3175",
+      "capabilities": {
+        "languageControl": "selectable",
+        "languages": [
+          "bg",
+          "cs",
+          "da",
+          "de",
+          "el",
+          "en",
+          "es",
+          "et",
+          "fi",
+          "fr",
+          "hr",
+          "hu",
+          "it",
+          "lt",
+          "lv",
+          "mt",
+          "nl",
+          "pl",
+          "pt",
+          "ro",
+          "ru",
+          "sk",
+          "sl",
+          "sv",
+          "uk"
+        ],
+        "supportsAutomaticDetection": true,
+        "requiresAppleSilicon": true
+      },
+      "license": "OpenMDW 1.1 · NVIDIA / Fluid Inference",
+      "sourceURL": "https://huggingface.co/nvidia/nemotron-labs-unified-asr-0.6b"
+    },
+    "artifacts": [
+      {
+        "path": "metadata.json",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/metadata.json",
+        "byteCount": 4139,
+        "sha256": "e9cf68aa3283f3f5e9a94d4e587ee85eef1c921d8fba5d0587fbdf5e2f5ea08e"
+      },
+      {
+        "path": "nemotron_unified_decoder.mlmodelc/analytics/coremldata.bin",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_decoder.mlmodelc/analytics/coremldata.bin",
+        "byteCount": 243,
+        "sha256": "93b62b4a28bf99a52f496dff2b25022d907ded1918936490ed83f0493edbd01b"
+      },
+      {
+        "path": "nemotron_unified_decoder.mlmodelc/coremldata.bin",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_decoder.mlmodelc/coremldata.bin",
+        "byteCount": 564,
+        "sha256": "9f5ae02afe1022a82c0cddbf3a48ceca947e9e34c33b28b3ce216dbe0b8297ad"
+      },
+      {
+        "path": "nemotron_unified_decoder.mlmodelc/metadata.json",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_decoder.mlmodelc/metadata.json",
+        "byteCount": 3445,
+        "sha256": "70664a31626b36eda11becaa4b3b378efb7d368405b3eedb075cc4b5fa46f11e"
+      },
+      {
+        "path": "nemotron_unified_decoder.mlmodelc/model.mil",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_decoder.mlmodelc/model.mil",
+        "byteCount": 13106,
+        "sha256": "9c89bbd4cc33f55e3a04526e8f17e1dd6952fe2720c65bd61692dd4dec8a0349"
+      },
+      {
+        "path": "nemotron_unified_decoder.mlmodelc/weights/weight.bin",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_decoder.mlmodelc/weights/weight.bin",
+        "byteCount": 18360832,
+        "sha256": "ba1e400896aa4ba2e6fa989322401c38948a0c82cbc94d54bc7d2324d4a1acab"
+      },
+      {
+        "path": "nemotron_unified_encoder_streaming_70_7_7.mlmodelc/analytics/coremldata.bin",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_encoder_streaming_70_7_7.mlmodelc/analytics/coremldata.bin",
+        "byteCount": 243,
+        "sha256": "06985efdd2acec668cd0feb4fec027dda34e4cb8f7ed226c125a2b74ff35d103"
+      },
+      {
+        "path": "nemotron_unified_encoder_streaming_70_7_7.mlmodelc/coremldata.bin",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_encoder_streaming_70_7_7.mlmodelc/coremldata.bin",
+        "byteCount": 559,
+        "sha256": "2c357cd2bed9820d51f078b134e9187c9ccadda57a2774fbca458bdc275718df"
+      },
+      {
+        "path": "nemotron_unified_encoder_streaming_70_7_7.mlmodelc/metadata.json",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_encoder_streaming_70_7_7.mlmodelc/metadata.json",
+        "byteCount": 3328,
+        "sha256": "7e10476ab62a8547e991a0c548f5bead524606b39fd7b8998fff52479d90cc19"
+      },
+      {
+        "path": "nemotron_unified_encoder_streaming_70_7_7.mlmodelc/model.mil",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_encoder_streaming_70_7_7.mlmodelc/model.mil",
+        "byteCount": 801144,
+        "sha256": "4ee40edc31023ee7421ef7b9695622a7150a47f7ff9d9e2b8f27d4df149dd34e"
+      },
+      {
+        "path": "nemotron_unified_encoder_streaming_70_7_7.mlmodelc/weights/weight.bin",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_encoder_streaming_70_7_7.mlmodelc/weights/weight.bin",
+        "byteCount": 1185527424,
+        "sha256": "ad298b392cbef7e2a386699f516012e96c606ca940ef9074447f14fd633443d2"
+      },
+      {
+        "path": "nemotron_unified_joint_decision_single_step.mlmodelc/analytics/coremldata.bin",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_joint_decision_single_step.mlmodelc/analytics/coremldata.bin",
+        "byteCount": 243,
+        "sha256": "07dc3bb72c56aa7aa0e43173a4f89bf8474f28b110395a4123b266ace6526794"
+      },
+      {
+        "path": "nemotron_unified_joint_decision_single_step.mlmodelc/coremldata.bin",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_joint_decision_single_step.mlmodelc/coremldata.bin",
+        "byteCount": 560,
+        "sha256": "8148c3f4980957565f5bbe05cff27f20c38f9e79b23c3bac19c0c218901c92ec"
+      },
+      {
+        "path": "nemotron_unified_joint_decision_single_step.mlmodelc/metadata.json",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_joint_decision_single_step.mlmodelc/metadata.json",
+        "byteCount": 3262,
+        "sha256": "7cfe900ed38b8e564809b0972801741af1e93a267d491cf8a6b0e246b28c38c2"
+      },
+      {
+        "path": "nemotron_unified_joint_decision_single_step.mlmodelc/model.mil",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_joint_decision_single_step.mlmodelc/model.mil",
+        "byteCount": 9613,
+        "sha256": "6885efe2bffe960ac1220d89d6dca61e4eb5c09e454fcc8250d8cace3ab13fa5"
+      },
+      {
+        "path": "nemotron_unified_joint_decision_single_step.mlmodelc/weights/weight.bin",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_joint_decision_single_step.mlmodelc/weights/weight.bin",
+        "byteCount": 7384000,
+        "sha256": "2b69d8d77dbd0b57f949a2ca705ff49c179a65c241241a98bb16fa5a4e6e6acc"
+      },
+      {
+        "path": "vocab.json",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/vocab.json",
+        "byteCount": 67489,
+        "sha256": "09ae4e49089dd601216ec052dd8bbd474a3709db6e332478ce6a54e47da2ad22"
+      }
+    ]
+  },
+  {
+    "model": {
       "id": "nemotron-speakers",
       "providerID": "nemotron-diarization",
       "name": "Speaker detection",

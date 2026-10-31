@@ -6,7 +6,8 @@ import SwiftUI
   private(set) var window: CompanionUtilityWindow?
   private weak var displayedSession: ChatSession?
 
-  func show(_ model: ChatSession, openSettings: @escaping () -> Void) {
+  func show(_ model: ChatSession, openSettings: @escaping (ChatNotice.SettingsDestination) -> Void)
+  {
     if window == nil {
       let window = CompanionUtilityWindow(
         contentRect: CGRect(origin: .zero, size: SessionWindowLayout.initialSize),

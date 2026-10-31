@@ -1,14 +1,21 @@
 package enum ChatNotice {
+  package enum SettingsDestination { case textModels, voices }
+  case textUnavailable(String)
   case voiceUnavailable(String)
   case reviewMessage(String)
 
   package var message: String {
     switch self {
-    case .voiceUnavailable(let message), .reviewMessage(let message): message
+    case .textUnavailable(let message), .voiceUnavailable(let message), .reviewMessage(let message):
+      message
     }
   }
 
-  package var offersVoiceSettings: Bool {
-    if case .voiceUnavailable = self { true } else { false }
+  package var settingsDestination: SettingsDestination? {
+    switch self {
+    case .textUnavailable: .textModels
+    case .voiceUnavailable: .voices
+    case .reviewMessage: nil
+    }
   }
 }

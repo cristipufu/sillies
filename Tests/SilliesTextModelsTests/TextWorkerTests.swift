@@ -6,7 +6,9 @@ import Testing
 @Test func workerExitIsRecoverableAndRequestsRemainBounded() async throws {
   let provider = MLXTextModelProvider(executable: URL(fileURLWithPath: "/usr/bin/false"))
   let runtime = try await provider.prepare(
-    .init(directory: URL(fileURLWithPath: "/tmp/absent-text-model"), contextTokens: 4096))
+    .init(
+      directory: URL(fileURLWithPath: "/tmp/absent-text-model"), contextTokens: 4096,
+      memoryLimitBytes: TextModelMemoryBudget.gibibyte))
   for _ in 0..<2 {
     await #expect(throws: (any Error).self) {
       try await runtime.generate(
@@ -48,7 +50,9 @@ import Testing
     }
   }
   let runtime = try await MLXTextModelProvider(executable: script).prepare(
-    .init(directory: URL(fileURLWithPath: "/tmp/unused-model"), contextTokens: 4096))
+    .init(
+      directory: URL(fileURLWithPath: "/tmp/unused-model"), contextTokens: 4096,
+      memoryLimitBytes: TextModelMemoryBudget.gibibyte))
   let generation = Task {
     try await runtime.generate(
       .init(instructions: "Summarize", prompt: "Salut!", maximumTokens: 50))

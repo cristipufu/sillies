@@ -5,6 +5,7 @@ import SilliesDiarizationNemotron
 import SilliesModelStore
 import SilliesSpeech
 import SilliesSpeechApple
+import SilliesSpeechNemotron
 import SilliesSpeechParakeet
 import SilliesSpeechWhisper
 
@@ -28,7 +29,10 @@ final class SpeechServices {
     let store = ModelStore(root: root)
     let registry = try SpeechRuntimeRegistry(
       store: store,
-      providers: [AppleSpeechProvider(), WhisperSpeechProvider(), ParakeetSpeechProvider()],
+      providers: [
+        AppleSpeechProvider(), WhisperSpeechProvider(), ParakeetSpeechProvider(),
+        NemotronSpeechProvider(),
+      ],
       diarizationProviders: [NemotronDiarizationProvider()])
     self.registry = registry
     dictationRuntime = DictationRuntimeCache(registry: registry)

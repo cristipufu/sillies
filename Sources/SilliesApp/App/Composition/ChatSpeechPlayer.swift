@@ -14,6 +14,23 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
     self.playback = playback
   }
 
+  func availabilityNotice(language: String) async -> String? {
+    do {
+      guard let manifest = try await models.selectedModel() else {
+        return
+          "You can chat by typing. Download and choose a voice in Settings → Voices for spoken replies."
+      }
+      guard try await models.store.isInstalled(manifest) else {
+        return "Download \(manifest.model.name) in Settings → Voices for spoken replies."
+      }
+      guard manifest.model.supports(language: language) else {
+        return
+          "The selected voice does not support this language. You can continue chatting in text."
+      }
+      return nil
+    } catch { return error.localizedDescription }
+  }
+
   func speak(
     _ request: ChatSpeechRequest,
     receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void

@@ -2,7 +2,7 @@ import Foundation
 
 /// Stable command identities shared by keyboard, menus, and companion gestures.
 public enum AppCommand: String, CaseIterable, Codable, Sendable, Identifiable {
-  case listen, participate, snap, explain, record, saveClipboard, openVault, togglePause
+  case listen, participate, snap, explain, record, chat, saveClipboard, openVault, togglePause
   case holdDictation, toggleDictation, cancelDictation, dictationHistory
   case searchStash
   case shortenSelection, fixSelectionGrammar, translateSelection
@@ -23,6 +23,7 @@ public enum AppCommand: String, CaseIterable, Codable, Sendable, Identifiable {
     case .snap: .snap
     case .explain: .explain
     case .record: .record
+    case .chat: .chat
     default: nil
     }
   }

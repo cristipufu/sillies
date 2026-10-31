@@ -2,6 +2,7 @@ import Foundation
 import SilliesCore
 import SilliesDiarizationNemotron
 import SilliesModelStore
+import SilliesSpeechNemotron
 import SilliesSpeechParakeet
 import SilliesSpeechWhisper
 import Testing
@@ -31,7 +32,8 @@ func nativeModelUpdateValidatesBeforeActivationAndCanRollBack() async throws {
   try await store.stageUpdate(candidate, replacing: original) { _ in }
   #expect(try await store.currentManifest(original) == original)
   let registry = try SpeechRuntimeRegistry(
-    store: store, providers: [WhisperSpeechProvider(), ParakeetSpeechProvider()],
+    store: store,
+    providers: [WhisperSpeechProvider(), ParakeetSpeechProvider(), NemotronSpeechProvider()],
     diarizationProviders: [NemotronDiarizationProvider()])
   try await registry.validateAndActivate(candidate)
   #expect(try await store.currentManifest(original) == candidate)

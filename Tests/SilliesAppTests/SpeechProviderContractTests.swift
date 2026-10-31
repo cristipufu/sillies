@@ -2,6 +2,7 @@ import Foundation
 import SilliesCore
 import SilliesModelStore
 import SilliesSpeech
+import SilliesSpeechNemotron
 import SilliesSpeechParakeet
 import SilliesSpeechWhisper
 import Testing
@@ -13,6 +14,7 @@ import Testing
   let catalog = try SpeechModelCatalog.bundled()
   for (provider, identifier): (any SpeechProvider, String) in [
     (WhisperSpeechProvider(), "whisper-turbo"), (ParakeetSpeechProvider(), "parakeet-ultra"),
+    (NemotronSpeechProvider(), "nemotron-unified"),
   ] {
     try await verifySpeechProviderContract(
       provider, model: catalog.manifest(for: identifier).model, expectedLanguages: ["en", "ro"])

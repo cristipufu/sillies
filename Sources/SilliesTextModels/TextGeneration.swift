@@ -25,9 +25,11 @@ package protocol TextModelProvider: Sendable {
 package struct TextModelPreparation: Codable, Sendable {
   package let directory: URL
   package let contextTokens: Int
-  package init(directory: URL, contextTokens: Int) {
+  package let memoryLimitBytes: Int
+  package init(directory: URL, contextTokens: Int, memoryLimitBytes: Int) {
     self.directory = directory
     self.contextTokens = contextTokens
+    self.memoryLimitBytes = memoryLimitBytes
   }
 }
 

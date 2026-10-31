@@ -22,14 +22,19 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
     state.withLock { $0.worker?.cancel() }
   }
 
-  package init(engine: any SpeechWindowEngine, request: SpeechChannelRequest) throws {
+  package init(
+    engine: any SpeechWindowEngine, request: SpeechChannelRequest,
+    cadence: SpeechDecodeCadence = .windowed
+  ) throws {
     guard
       let format = AVAudioFormat(
         standardFormatWithSampleRate: SpeechWindowBuffer.sampleRate, channels: 1)
     else {
       throw SpeechError.unavailable("Could not prepare transcription audio.")
     }
-    state = Mutex(State(converter: SpeechBufferConverter(format: format)))
+    var initial = State(converter: SpeechBufferConverter(format: format))
+    initial.buffer.cadence = cadence
+    state = Mutex(initial)
     self.request = request
     let (events, signal) = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingNewest(1))
     self.signal = signal
@@ -42,8 +47,11 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
         do {
           while let window = self.nextWindow() {
             try Task.checkCancellation()
-            let result = try await engine.transcribe(
-              .init(samples: window.samples, language: request.language, context: request.context))
+            var input = SpeechWindowRequest(
+              samples: window.samples, language: request.language, context: request.context)
+            input.window = .init(
+              start: window.start, phase: window.completion == .draft ? .partial : .complete)
+            let result = try await engine.transcribe(input)
             try Task.checkCancellation()
             let update = transcript.receive(result, window: window)
             guard self.retire(window, through: update.retiredThrough) else { return }

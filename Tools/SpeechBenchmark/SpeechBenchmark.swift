@@ -3,6 +3,7 @@ import Foundation
 import SilliesCore
 import SilliesModelStore
 import SilliesSpeech
+import SilliesSpeechNemotron
 import SilliesSpeechParakeet
 import SilliesSpeechWhisper
 import Synchronization
@@ -57,7 +58,9 @@ private actor BenchmarkRunner {
       withExtendedLifetime(lease) {}
       return
     }
-    let providers: [any SpeechProvider] = [WhisperSpeechProvider(), ParakeetSpeechProvider()]
+    let providers: [any SpeechProvider] = [
+      WhisperSpeechProvider(), ParakeetSpeechProvider(), NemotronSpeechProvider(),
+    ]
     guard let provider = providers.first(where: { $0.id == manifest.model.providerID }) else {
       throw SpeechError.unavailable("No provider registered.")
     }

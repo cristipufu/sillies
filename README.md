@@ -95,6 +95,7 @@ Settings → **Speech & Meetings**
 | **Apple Speech** | Managed by macOS | Installed languages supported on your Mac |
 | **Whisper Large v3 Turbo** | ~630 MB | Multilingual; automatic detection or explicit language selection |
 | **Parakeet Ultra** | ~632 MB | 25 languages; automatic detection with language hints |
+| **Nemotron Unified ASR** | ~1.21 GB | Streaming in 25 languages; automatic detection or explicit language selection |
 
 Optional **Nemotron speaker detection** adds a separate ~102 MB download and works alongside any speech
 engine. Speaker labels can be wrong; you can rename speakers per recording. Parakeet’s hints guide the writing
@@ -129,9 +130,11 @@ Settings → **Local AI**
 | Model | Download | Required memory |
 | --- | --- | --- |
 | **Apple Intelligence** | Managed by macOS | An eligible Mac with Apple Intelligence enabled |
+| **Qwen3.5 2B** | ~1.74 GB | 8 GB |
 | **Qwen3.5 4B** | ~3.05 GB | 16 GB |
 | **Qwen3.5 9B** | ~5.97 GB | 24 GB |
 | **Gemma 4 E4B** | ~5.18 GB | 16 GB |
+| **Gemma 4 26B A4B** | ~15.37 GB | 32 GB |
 | **Ministral 3 8B Instruct** | ~5.61 GB | 24 GB |
 
 The downloadable models use 4-bit weights and run natively through MLX. No Python environment or local

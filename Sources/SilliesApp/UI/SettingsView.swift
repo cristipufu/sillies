@@ -8,11 +8,12 @@ struct SettingsView: View {
   var shortcuts: CommandShortcuts? = nil
   var loginItems: LoginItemSettings? = nil
   var writingTools: WritingTools? = nil
-  @State var destination: SettingsDestination = .general
+  @Bindable var navigation = SettingsNavigation()
+  private var destination: SettingsDestination { navigation.destination }
 
   var body: some View {
     HStack(spacing: 0) {
-      navigation
+      sidebar
       Divider().overlay(SilliesTheme.border)
       ScrollView {
         VStack(alignment: .leading, spacing: 22) {
@@ -31,7 +32,7 @@ struct SettingsView: View {
     .background(SilliesTheme.paper).foregroundStyle(SilliesTheme.ink).tint(SilliesTheme.accent)
   }
 
-  private var navigation: some View {
+  private var sidebar: some View {
     VStack(alignment: .leading, spacing: 24) {
       HStack(spacing: 10) {
         CharacterPortrait(
@@ -47,7 +48,7 @@ struct SettingsView: View {
       VStack(spacing: 6) {
         ForEach(SettingsDestination.allCases) { item in
           Button {
-            destination = item
+            navigation.destination = item
           } label: {
             HStack(spacing: 10) {
               Image(systemName: item.symbol).frame(width: 18)
@@ -83,7 +84,8 @@ struct SettingsView: View {
         DictationSettingsView(
           tools: writingTools, hasInsertionAccess: controller.tracker.hasAccessibility,
           shortcuts: shortcuts,
-          openShortcuts: { destination = .shortcuts }, openSpeech: { destination = .speech })
+          openShortcuts: { navigation.destination = .shortcuts },
+          openSpeech: { navigation.destination = .speech })
       }
     case .speech:
       if let speechModels {

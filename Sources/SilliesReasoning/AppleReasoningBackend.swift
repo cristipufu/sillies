@@ -10,17 +10,18 @@ package struct AppleReasoningBackend: ReasoningBackend {
     {
       let name = Locale.current.localizedString(forIdentifier: localeIdentifier) ?? localeIdentifier
       return
-        "Apple’s on-device AI does not support \(name). Your transcript is saved; generated notes and suggestions are unavailable in this language."
+        "Apple’s on-device AI does not support \(name). Choose a downloaded text model in Settings → Local AI."
     }
     switch SystemLanguageModel.default.availability {
     case .available: return nil
     case .unavailable(.appleIntelligenceNotEnabled):
-      return "Enable Apple Intelligence in System Settings for local summaries and suggestions."
+      return
+        "Enable Apple Intelligence in System Settings, or choose a downloaded text model in Settings → Local AI."
     case .unavailable(.modelNotReady):
       return "Apple Intelligence is still preparing its on-device model."
     case .unavailable:
       return
-        "On-device reasoning is unavailable on this Mac. Your captured material is still saved."
+        "Apple’s on-device AI is unavailable on this Mac. Choose a downloaded text model in Settings → Local AI."
     }
   }
   package func generate(_ request: TextGenerationRequest, format: ReasoningFormat) async throws

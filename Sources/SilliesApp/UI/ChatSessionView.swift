@@ -1,10 +1,12 @@
+import AppKit
 import SilliesChat
 import SilliesCore
 import SwiftUI
 
 struct ChatSessionView: View {
   @Bindable var model: ChatSession
-  let openSettings: () -> Void
+  let openSettings: (ChatNotice.SettingsDestination) -> Void
+  @State private var availabilityRevision = UUID()
   @State private var followsLive = true
   @FocusState private var composerFocused: Bool
   private static let maximumNoticeHeight: CGFloat = 100
@@ -68,6 +70,12 @@ struct ChatSessionView: View {
       SilliesTheme.accent
     )
     .onAppear { composerFocused = true }
+    .task(id: availabilityRevision) { await model.refreshAvailability() }
+    .onChange(of: model.language) { availabilityRevision = UUID() }
+    .onChange(of: model.spokenReplies) { availabilityRevision = UUID() }
+    .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in
+      availabilityRevision = UUID()
+    }
   }
 
   private var notices: some View {
@@ -78,8 +86,10 @@ struct ChatSessionView: View {
           Text(notice.message).font(.caption).foregroundStyle(SilliesTheme.secondary)
             .textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
           Spacer(minLength: 8)
-          if notice.offersVoiceSettings {
-            Button("Settings…", action: openSettings).buttonStyle(SoftButtonStyle())
+          if let destination = notice.settingsDestination {
+            Button(destination == .textModels ? "Choose a text model…" : "Choose a voice…") {
+              openSettings(destination)
+            }.buttonStyle(SoftButtonStyle())
           }
         }
       }

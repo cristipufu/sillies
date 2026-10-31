@@ -31,8 +31,10 @@ weights and does not claim authorship of them.
   Inference. These are upstream modifications, not work by Sillies. [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/legalcode.en).
 - **Nemotron 3 speaker detection:** NVIDIA, with Core ML conversion/quantization by Fluid Inference.
   [Upstream attribution and OpenMDW 1.1 license](https://huggingface.co/FluidInference/nemotron-3-diarization-coreml#attribution--license).
+- **Nemotron Unified ASR:** NVIDIA, with Core ML conversion by Fluid Inference.
+  [OpenMDW 1.1 license](https://huggingface.co/nvidia/nemotron-labs-unified-asr-0.6b).
 - **Qwen3.5:** Qwen/Alibaba, with MLX quantization by MLX Community; Apache 2.0.
-- **Gemma 4 E4B:** Google DeepMind, with MLX quantization by MLX Community. Google's
+- **Gemma 4 E4B / 26B A4B:** Google DeepMind, with MLX quantization by MLX Community. Google's
   [Gemma 4 license is Apache 2.0](https://ai.google.dev/gemma/docs/gemma_4_license).
   The pinned community conversion's model-card metadata says `gemma`; the base model's official
   license is linked here to make that metadata discrepancy explicit.
@@ -59,10 +61,13 @@ Review the upstream model cards and applicable license before redistributing wei
 | --- | --- | --- | --- |
 | Whisper Turbo | MIT · OpenAI / Argmax | [Model card](https://huggingface.co/argmaxinc/whisperkit-coreml) | [0f63a7800b00](https://huggingface.co/argmaxinc/whisperkit-coreml/tree/0f63a7800b00dd0226abd051b906c246e1907482) |
 | Parakeet Ultra | CC BY 4.0 · NVIDIA / Moondream / Fluid Inference | [Model card](https://huggingface.co/moondream/parakeet-ultra) | [95eaa59a39d4](https://huggingface.co/FluidInference/parakeet-ultra-coreml/tree/95eaa59a39d4394f047a4dc5cce480388a60d1b6) |
+| Nemotron Unified ASR | OpenMDW 1.1 · NVIDIA / Fluid Inference | [Model card](https://huggingface.co/nvidia/nemotron-labs-unified-asr-0.6b) | [bd13ddde81d3](https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/tree/bd13ddde81d3134719c520845346b3252daf3175) |
 | Speaker detection | OpenMDW 1.1 · NVIDIA / Fluid Inference | [Model card](https://huggingface.co/FluidInference/nemotron-3-diarization-coreml) | [25a90f97f254](https://huggingface.co/FluidInference/nemotron-3-diarization-coreml/tree/25a90f97f254428d4b30374b76af9c74fdee8327) |
+| Qwen3.5 2B | Apache 2.0 | [Model card](https://huggingface.co/mlx-community/Qwen3.5-2B-4bit) | [674aaa7240b9](https://huggingface.co/mlx-community/Qwen3.5-2B-4bit/tree/674aaa7240b91e8012fcad5d791b7dfe5ba90207) |
 | Qwen3.5 4B | Apache 2.0 | [Model card](https://huggingface.co/mlx-community/Qwen3.5-4B-MLX-4bit) | [32f3e8ecf654](https://huggingface.co/mlx-community/Qwen3.5-4B-MLX-4bit/tree/32f3e8ecf65426fc3306969496342d504bfa13f3) |
 | Qwen3.5 9B | Apache 2.0 | [Model card](https://huggingface.co/mlx-community/Qwen3.5-9B-MLX-4bit) | [938d8919941c](https://huggingface.co/mlx-community/Qwen3.5-9B-MLX-4bit/tree/938d8919941c6e7efd3c7150eff7fe9d12afa631) |
 | Gemma 4 E4B | Apache 2.0 | [Model card](https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit) | [475b9088d297](https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/tree/475b9088d29754a3379866cf5aeb6b41acd313c2) |
+| Gemma 4 26B A4B | Apache 2.0 | [Model card](https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit) | [0d77464eeb23](https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/tree/0d77464eeb233a2da68ebf9d7dc4edaac7db956d) |
 | Ministral 3 8B | Apache 2.0 | [Model card](https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit) | [182f003f01da](https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/tree/182f003f01daa75f9de0f2c4d379722fd0bc1c61) |
 | Kokoro | Apache 2.0 | [Model card](https://huggingface.co/FluidInference/kokoro-82m-coreml) | [6c0750dd02ef](https://huggingface.co/FluidInference/kokoro-82m-coreml/tree/6c0750dd02ef9d981fb82f147d784a3f171755ee) |
 | Pocket TTS | CC BY 4.0 (weights); voice terms apply | [Model card](https://huggingface.co/FluidInference/pocket-tts-coreml) | [b51c48543055](https://huggingface.co/FluidInference/pocket-tts-coreml/tree/b51c4854305532b182026259092cc53e4b600f49) |
@@ -76,7 +81,7 @@ Review the upstream model cards and applicable license before redistributing wei
 | --- | --- | --- |
 | [argmax-oss-swift](https://github.com/argmaxinc/argmax-oss-swift/tree/1bbc57cb7fe6410248a685b1c5a3c6d56adc2ed4) | 1.1.1 | WhisperKit recognition and TTSKit speech synthesis |
 | [EventSource](https://github.com/mattt/EventSource/tree/86b5096ac59ab46e66bd1f6377c604bc1dab0bc2) | 1.5.1 | Transitive Hugging Face dependency; no cloud inference is enabled |
-| [FluidAudio](https://github.com/FluidInference/FluidAudio/tree/e15287985625dbf544a343df679436789ffb03fb) | 0.18.0 | Parakeet recognition, speaker detection, and Core ML speech synthesis |
+| [FluidAudio](https://github.com/FluidInference/FluidAudio/tree/e15287985625dbf544a343df679436789ffb03fb) | 0.18.0 | Parakeet/Nemotron recognition, speaker detection, and Core ML speech synthesis |
 | [mlx-swift](https://github.com/ml-explore/mlx-swift/tree/19601207e9a0de51e03ee6ec0c3c5f3784275075) | 0.32.3 | Native text and Fish speech inference with Metal kernels |
 | [mlx-swift-lm](https://github.com/ml-explore/mlx-swift-lm/tree/3b339ad6e3b3f44c8121ecff5131c7fd55e075e6) | 3.32.3 | Text model loading and generation |
 | [Sparkle](https://github.com/sparkle-project/Sparkle/tree/eef1a539a373c1f1a320624b1130fc5de7b2e100) | 2.10.0 | App updates; includes Sparkle's embedded third-party notices |

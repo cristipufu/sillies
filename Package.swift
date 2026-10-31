@@ -81,6 +81,9 @@ let package = Package(
       name: "SilliesSpeechParakeet",
       dependencies: ["SilliesSpeech", .product(name: "FluidAudio", package: "FluidAudio")]),
     .target(
+      name: "SilliesSpeechNemotron",
+      dependencies: ["SilliesSpeech", .product(name: "FluidAudio", package: "FluidAudio")]),
+    .target(
       name: "SilliesDiarizationNemotron",
       dependencies: ["SilliesSpeech", .product(name: "FluidAudio", package: "FluidAudio")]),
     .target(name: "SilliesPersistence", dependencies: ["SilliesCore"], exclude: ["AGENTS.md"]),
@@ -102,6 +105,7 @@ let package = Package(
         "SilliesCore",
         "SilliesPersistence",
         "SilliesSpeech", "SilliesSpeechApple", "SilliesSpeechWhisper", "SilliesSpeechParakeet",
+        "SilliesSpeechNemotron",
         "SilliesModelStore", "SilliesModelValidation", "SilliesDiarizationNemotron",
         "WindowMetadataProtocol",
         "SilliesTextModels", "SilliesInference",
@@ -116,10 +120,11 @@ let package = Package(
       name: "SpeechBenchmark",
       dependencies: [
         "SilliesCore", "SilliesModelStore", "SilliesSpeech", "SilliesSpeechWhisper",
-        "SilliesSpeechParakeet", "SilliesDiarizationNemotron",
+        "SilliesSpeechParakeet", "SilliesSpeechNemotron", "SilliesDiarizationNemotron",
       ], path: "Tools/SpeechBenchmark"),
     .executableTarget(
-      name: "TextModelBenchmark", dependencies: ["SilliesModelStore", "SilliesTextModels"],
+      name: "TextModelBenchmark",
+      dependencies: ["SilliesModelStore", "SilliesTextModels", "SilliesReasoning"],
       path: "Tools/TextModelBenchmark"),
     .executableTarget(
       name: "TTSBenchmark", dependencies: ["SilliesModelStore", "SilliesTTS", "SilliesInference"],
@@ -174,6 +179,7 @@ let package = Package(
         "SilliesReasoning",
         "SilliesVault", "SilliesWriting",
         "SilliesSpeech", "SilliesSpeechApple", "SilliesSpeechWhisper", "SilliesSpeechParakeet",
+        "SilliesSpeechNemotron",
         "SilliesModelStore", "SilliesDiarizationNemotron",
         "WindowMetadataProtocol",
       ]),

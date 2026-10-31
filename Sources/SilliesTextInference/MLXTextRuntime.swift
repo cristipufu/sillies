@@ -9,7 +9,6 @@ actor MLXTextRuntime {
   private static let maximumOutputTokens = 1_400
   private static let maximumPromptCharacters = 24_000
   private static let cacheBytes = 128 * 1024 * 1024
-  private static let maximumMemoryBytes = 12 * 1024 * 1024 * 1024
   private var model: ModelContainer?
   private var directory: URL?
 
@@ -20,9 +19,13 @@ actor MLXTextRuntime {
       (1...Self.maximumOutputTokens).contains(generation.maximumTokens),
       generation.instructions.count + generation.prompt.count <= Self.maximumPromptCharacters
     else { throw TextModelError.invalidResponse }
+    guard configuration.memoryLimitBytes > 0,
+      configuration.memoryLimitBytes
+        <= TextModelMemoryBudget.maximumAllocation(
+          physicalMemory: ProcessInfo.processInfo.physicalMemory)
+    else { throw TextModelError.unavailable("The text model exceeds this Mac’s memory budget.") }
     Memory.cacheLimit = Self.cacheBytes
-    Memory.memoryLimit = min(
-      Self.maximumMemoryBytes, Int(ProcessInfo.processInfo.physicalMemory / 2))
+    Memory.memoryLimit = configuration.memoryLimitBytes
     let container = try await load(configuration.directory)
     let input = try await container.prepare(
       input: UserInput(

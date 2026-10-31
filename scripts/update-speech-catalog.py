@@ -46,6 +46,18 @@ def artifacts(repository, revision, folder="", names=None):
 def main():
     whisper_revision = "0f63a7800b00dd0226abd051b906c246e1907482"
     parakeet_revision = "95eaa59a39d4394f047a4dc5cce480388a60d1b6"
+    nemotron_revision = "bd13ddde81d3134719c520845346b3252daf3175"
+    nemotron_repository = "FluidInference/nemotron-labs-unified-asr-0.6b-coreml"
+    nemotron_bundles = {
+        "nemotron_unified_encoder_streaming_70_7_7.mlmodelc",
+        "nemotron_unified_decoder.mlmodelc",
+        "nemotron_unified_joint_decision_single_step.mlmodelc",
+    }
+    nemotron_files = [
+        item for item in artifacts(nemotron_repository, nemotron_revision, "coreml")
+        if item["path"].split("/")[0] in nemotron_bundles
+        or item["path"] in {"vocab.json", "metadata.json"}
+    ]
     diarization_revision = "25a90f97f254428d4b30374b76af9c74fdee8327"
     diarization_repository = "FluidInference/nemotron-3-diarization-coreml"
     diarization_bundle = "Nemotron3Diarizer_s32_split_w8a8.mlmodelc"
@@ -63,6 +75,15 @@ def main():
         dict(model=dict(id="parakeet-ultra", providerID="fluidaudio", name="Parakeet Ultra", detail="Recognition in 25 European languages. An optional language hint guides the writing script.", revision=parakeet_revision, capabilities=dict(languageControl="hinted", languages="bg hr cs da nl en et fi fr de el hu it lv lt mt pl pt ro sk sl es sv ru uk".split(), supportsAutomaticDetection=True, requiresAppleSilicon=True), license="CC BY 4.0 · NVIDIA / Moondream / Fluid Inference", sourceURL="https://huggingface.co/moondream/parakeet-ultra"), artifacts=artifacts("FluidInference/parakeet-ultra-coreml", parakeet_revision)),
         dict(model=dict(id="nemotron-speakers", providerID="nemotron-diarization", name="Speaker detection", detail="Labels up to eight speakers per audio source. Labels appear after a short delay and may need correction. Works alongside any transcription model.", revision=diarization_revision, purpose="speakerDiarization", capabilities=dict(languageControl="automatic", languages=[], supportsAutomaticDetection=False, requiresAppleSilicon=True, maximumSpeakers=8), license="OpenMDW 1.1 · NVIDIA / Fluid Inference", sourceURL="https://huggingface.co/FluidInference/nemotron-3-diarization-coreml"), artifacts=diarization_files),
     ]
+    manifests.insert(2, dict(
+        model=dict(
+            id="nemotron-unified", providerID="nemotron-unified", name="Nemotron Unified ASR",
+            detail="Streaming recognition in 25 European languages. Choose the spoken language for best accuracy.",
+            revision=nemotron_revision,
+            capabilities=dict(languageControl="selectable", languages="bg cs da de el en es et fi fr hr hu it lt lv mt nl pl pt ro ru sk sl sv uk".split(), supportsAutomaticDetection=True, requiresAppleSilicon=True),
+            license="OpenMDW 1.1 · NVIDIA / Fluid Inference",
+            sourceURL="https://huggingface.co/nvidia/nemotron-labs-unified-asr-0.6b"),
+        artifacts=nemotron_files))
     output = ROOT / "Sources/SilliesModelStore/Resources/speech-models.json"
     output.write_text(json.dumps(manifests, indent=2, ensure_ascii=False) + "\n")
     for manifest in manifests:

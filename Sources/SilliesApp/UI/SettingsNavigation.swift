@@ -1,4 +1,10 @@
+import Observation
 import SwiftUI
+
+@MainActor @Observable final class SettingsNavigation {
+  var destination: SettingsDestination
+  init(destination: SettingsDestination = .general) { self.destination = destination }
+}
 
 enum SettingsDestination: String, CaseIterable, Identifiable {
   case general, companions, writing, speech, intelligence, voices, shortcuts

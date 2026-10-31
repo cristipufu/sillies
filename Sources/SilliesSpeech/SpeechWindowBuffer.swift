@@ -14,7 +14,7 @@ struct SpeechWindowBuffer {
   static let sampleRate: Double = 16_000
   static let maximumWindowDuration: TimeInterval = 12
   static let maximumBufferedDuration: TimeInterval = 24
-  private static let draftInterval: TimeInterval = 2
+  var cadence: SpeechDecodeCadence = .windowed
   private static let silenceDuration: TimeInterval = 0.6
   private static let leadingContext: TimeInterval = 0.2
   private static let speechThreshold: Float = 0.002
@@ -62,7 +62,7 @@ struct SpeechWindowBuffer {
       completion = .boundary
     } else if mode == .draining {
       completion = .session
-    } else if samples.count - lastDecodedCount >= Int(Self.draftInterval * Self.sampleRate) {
+    } else if samples.count - lastDecodedCount >= Int(cadence.interval * Self.sampleRate) {
       completion = .draft
     } else {
       return nil

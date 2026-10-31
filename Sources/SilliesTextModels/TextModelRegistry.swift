@@ -94,9 +94,13 @@ package actor TextModelRegistry {
       throw TextModelError.unavailable(
         "This model requires at least \(manifest.model.minimumMemoryGB) GB of memory.")
     }
+    let memoryLimit = try TextModelMemoryBudget.allocation(
+      weightBytes: manifest.downloadBytes, physicalMemory: ProcessInfo.processInfo.physicalMemory)
     let lease = try await store.acquire(manifest)
     let model = try await provider.prepare(
-      .init(directory: lease.directory, contextTokens: manifest.model.contextTokens))
+      .init(
+        directory: lease.directory, contextTokens: manifest.model.contextTokens,
+        memoryLimitBytes: memoryLimit))
     loaded = Loaded(id: manifest.modelID, model: model, lease: lease)
     return model
   }

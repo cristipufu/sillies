@@ -6,6 +6,40 @@ import Testing
 
 @testable import SilliesApp
 
+@Test func everyWheelSkillHasExactlyOneCommandRoute() {
+  for skill in CompanionSkillKind.radialSkills {
+    #expect(AppCommand.allCases.filter { $0.skill == skill }.count == 1)
+  }
+}
+
+@Test @MainActor func chatCommandOpensAndReopensTheConversationWithoutAWindowTarget() async throws {
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { removeTestFile(at: directory) }
+  let skills = SkillCoordinator(vault: SessionVaultStore(directory: directory))
+  var created = 0
+  var opened = 0
+  skills.makeChatSession = { _, _ in
+    created += 1
+    return ChatWindowFixture.makeSession()
+  }
+  skills.onOpenChatSession = { _ in opened += 1 }
+  let dispatcher = CommandDispatcher(
+    skills: skills,
+    environment: .init(
+      isAvailable: { true }, companion: { .init(id: "mochi", name: "Mochi", position: .zero) },
+      openVault: {}, togglePause: {}, saveClipboard: { _ in }),
+    targeting: .init(current: {
+      Issue.record("Chat must not inspect a foreground window")
+      return nil
+    }))
+  dispatcher.perform(.chat)
+  dispatcher.perform(.chat)
+  #expect(created == 1 && opened == 2)
+  #expect(skills.activeChatSession != nil)
+  dispatcher.stop()
+  await skills.shutdown()
+}
+
 @Test @MainActor func suspendedShortcutsStayRegisteredAndStopReleasesThem() throws {
   let domain = "sillies-shortcut-lifecycle-\(UUID())"
   let defaults = try #require(UserDefaults(suiteName: domain))

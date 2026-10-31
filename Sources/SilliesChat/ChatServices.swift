@@ -18,11 +18,16 @@ package struct ChatSpeechRequest: Sendable {
 
 /// Returns a text-only explanation when no installed voice supports the conversation.
 package protocol ChatSpeechOutput: Sendable {
+  func availabilityNotice(language: String) async -> String?
   func speak(
     _ request: ChatSpeechRequest,
     receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void
   ) async throws -> String?
   func stop(id: UUID) async
+}
+
+extension ChatSpeechOutput {
+  package func availabilityNotice(language: String) async -> String? { nil }
 }
 
 package struct ChatServices: Sendable {

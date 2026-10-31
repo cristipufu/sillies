@@ -17,7 +17,7 @@ package struct DownloadedReasoningBackend: ReasoningBackend {
     do {
       guard try await store.isInstalled(manifest) else {
         return
-          "Download \(manifest.model.name) in Settings → Local AI to generate notes. Your transcript is saved."
+          "Download \(manifest.model.name) in Settings → Local AI to use this text model."
       }
       return nil
     } catch {

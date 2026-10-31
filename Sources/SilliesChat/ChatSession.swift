@@ -73,6 +73,23 @@ package final class ChatSession {
 
   package func retry() { if canRetry { requestReply() } }
 
+  package func refreshAvailability() async {
+    guard phase == .ready else { return }
+    let requestedLanguage = language
+    let requestedSpokenReplies = spokenReplies
+    let requestedTurn = turnID
+    let textNotice = await services.conversation.availabilityNotice(
+      localeIdentifier: requestedLanguage)
+    let voiceNotice =
+      requestedSpokenReplies
+      ? await services.speech.availabilityNotice(language: requestedLanguage) : nil
+    guard !Task.isCancelled, phase == .ready, language == requestedLanguage,
+      spokenReplies == requestedSpokenReplies, turnID == requestedTurn
+    else { return }
+    notice =
+      textNotice.map(ChatNotice.textUnavailable) ?? voiceNotice.map(ChatNotice.voiceUnavailable)
+  }
+
   package func startListening() {
     guard canCompose, draft.isEmpty else { return }
     failure = nil
@@ -144,6 +161,7 @@ package final class ChatSession {
         self.failure = SessionFailure(error, category: .unknown)
         self.operation = nil
         self.setPhase(.ready)
+        await self.refreshAvailability()
       }
     }
   }

@@ -39,7 +39,7 @@ adapter even when the files install correctly.
    Do not import it into Core, views, capture, or model storage.
 3. Give each audio source independent bounded recognition state while sharing immutable weights.
    Serialize native inference correctly across suspension points. Window-based engines can reuse
-   `WindowSpeechModel`.
+   `WindowSpeechModel`. For incremental decoding, `WindowSpeechChannel` also supports `.streaming` cadence and supplies `SpeechWindowPosition` with every request. `SpeechIncrementalWindow` identifies new samples and mandatory resets. See `SilliesSpeechNemotron`: each source gets a separate decoder, while shared buffering bounds even SDK-owned transcript history. Preserve the final drain and the overlapping boundary timestamps.
 4. Implement drain and cancellation, incremental timestamps, language controls, and supported vocabulary
    hints honestly. If the runtime requires a minimum audio duration, handle short final windows without
    inventing transcript time. Do not retain the full recording or use an SDK helper that owns capture.

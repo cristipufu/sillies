@@ -29,6 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private let popover = NSPopover()
   private let controlCenterDismissal = ControlCenterDismissal()
   private var settingsWindow: NSWindow?
+  private let settingsNavigation = SettingsNavigation()
   private var speechServices: SpeechServices?
   private var voiceServices: VoiceServices?
   private let chatWindow = ChatSessionWindowController()
@@ -135,7 +136,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         },
         openChat: { [unowned self] in
           self.popover.close()
-          self.chatWindow.show(ChatWindowFixture.makeSession(), openSettings: {})
+          skills.makeChatSession = { _, _ in ChatWindowFixture.makeSession() }
+          skills.onOpenChatSession = { [unowned self] in
+            self.chatWindow.show($0, openSettings: { _ in })
+          }
+          controller.commands.perform(
+            .chat,
+            context: .init(
+              companion: .init(id: "mochi", name: "Mochi", position: .zero), target: nil))
           return self.chatWindow.window
         })
       automatedRunner.run(
@@ -209,7 +217,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       return ChatSession(companionName: name, profile: profile, services: services)
     }
     skills.onOpenChatSession = { [weak self] session in
-      self?.chatWindow.show(session, openSettings: { [weak self] in self?.showSettings() })
+      self?.chatWindow.show(
+        session,
+        openSettings: { [weak self] destination in
+          self?.settingsNavigation.destination =
+            destination == .textModels ? .intelligence : .voices
+          self?.showSettings()
+        })
     }
   }
 
@@ -477,7 +491,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         rootView: SettingsView(
           controller: controller, speechModels: speechServices?.models,
           voiceModels: voiceServices?.models, textModels: textModels,
-          shortcuts: shortcuts, loginItems: loginItems, writingTools: writingTools))
+          shortcuts: shortcuts, loginItems: loginItems, writingTools: writingTools,
+          navigation: settingsNavigation))
       window.center()
       settingsWindow = window
     }

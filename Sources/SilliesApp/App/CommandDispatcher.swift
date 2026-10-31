@@ -59,13 +59,13 @@ final class CommandDispatcher {
       return
     }
     if onWritingCommand?(command) == true { return }
-    if command.skill?.isAudioSession == true, skills.activeAudioSession != nil {
+    if command.skill?.keepsCompanionStill == true, skills.hasActiveCaptureSkill {
       skills.openActiveSession()
       return
     }
-    if command.skill?.isAudioSession == true, !skills.canStartAudio() {
+    if command.skill?.keepsCompanionStill == true, !skills.canStartAudio() {
       feedback.showMessage(
-        "Finish dictation or writing before starting a recording.", at: NSEvent.mouseLocation)
+        "Finish dictation or writing before starting another session.", at: NSEvent.mouseLocation)
       return
     }
     guard let companion = context?.companion ?? environment.companion() else {
@@ -106,7 +106,7 @@ final class CommandDispatcher {
   }
 
   private func start(_ skill: CompanionSkillKind, context: Context) {
-    if skill.isAudioSession, skills.activeAudioSession != nil {
+    if skill.keepsCompanionStill, skills.hasActiveCaptureSkill {
       skills.openActiveSession()
       return
     }

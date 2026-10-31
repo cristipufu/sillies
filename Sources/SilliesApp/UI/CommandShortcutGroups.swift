@@ -26,7 +26,7 @@ enum CommandShortcutGroup: String, CaseIterable, Identifiable {
   var commands: [AppCommand] {
     switch self {
     case .dictation: [.holdDictation, .toggleDictation, .cancelDictation]
-    case .skills: [.record, .listen, .participate, .snap, .explain]
+    case .skills: [.record, .listen, .participate, .snap, .explain, .chat]
     case .selection: [.shortenSelection, .fixSelectionGrammar, .translateSelection]
     case .library: [.saveClipboard, .searchStash, .openVault, .dictationHistory, .togglePause]
     }
@@ -40,6 +40,7 @@ extension AppCommand {
     case .toggleDictation: "Press to start. Once listening, press again to finish and insert."
     case .cancelDictation: "Stop dictation or selection editing without inserting."
     case .record: "Save microphone audio, a transcript, and notes in the Vault."
+    case .chat: "Open a conversation with a companion. Type or use the microphone."
     case .listen: "Transcribe a meeting from the foreground app and your microphone."
     case .participate: "Listen to the meeting and offer suggestions through your mascot."
     case .snap: "Save an image of the foreground window."

@@ -25,6 +25,9 @@ struct ArchitecturePolicy {
       "Foundation", "NaturalLanguage", "CoreML", "WhisperKit", "SilliesSpeech",
     ],
     "SilliesSpeechParakeet": ["Foundation", "FluidAudio", "SilliesSpeech"],
+    "SilliesSpeechNemotron": [
+      "Foundation", "AVFoundation", "CoreML", "FluidAudio", "SilliesSpeech",
+    ],
     "SilliesDiarizationNemotron": ["Foundation", "FluidAudio", "SilliesSpeech"],
     "SilliesModelStore": ["Foundation", "CryptoKit", "Synchronization", "SilliesCore"],
     "SilliesInference": ["Foundation", "Darwin"],
@@ -55,6 +58,7 @@ struct ArchitecturePolicy {
   static let workerEntries: [String: Set<String>] = [
     "WhisperWindowEngine.swift": ["load", "transcribe"],
     "ParakeetWindowEngine.swift": ["load", "transcribe"],
+    "NemotronStreamingEngine.swift": ["load", "transcribe"],
     "NemotronDiarizationRuntime.swift": ["load", "process"],
     "ModelFiles.swift": ["child", "verify", "write"],
     "ModelInterfaceValidator.swift": ["validate"],

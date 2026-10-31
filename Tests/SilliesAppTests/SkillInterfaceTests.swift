@@ -22,7 +22,7 @@ import Testing
   let model = SpeechModelsPresentation(
     store: store, registry: registry, defaults: defaults, updates: updates)
   await model.load()
-  #expect(model.manifests.count == 3)
+  #expect(model.manifests.count == 4)
   #expect(model.error == nil)
   try renderSkillInterface(
     ScrollView { SpeechModelSettingsView(model: model, activeModelID: nil).padding(20) }.background(

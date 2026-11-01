@@ -1,0 +1,5 @@
+module CEchoCancellation {
+  header "EchoCancellation.h"
+  header "VoiceActivity.h"
+  export *
+}

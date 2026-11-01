@@ -6,8 +6,14 @@ package enum WritingHistoryFailure: LocalizedError, Equatable, Sendable {
 
   package var message: String {
     switch self {
-    case .load: "Recent writing could not be opened. Keep a copy of your text until retry succeeds."
-    case .save: "Recent writing could not be saved. Keep a copy of your text until retry succeeds."
+    case .load:
+      String(
+        localized:
+          "Recent writing could not be opened. Keep a copy of your text until retry succeeds.")
+    case .save:
+      String(
+        localized:
+          "Recent writing could not be saved. Keep a copy of your text until retry succeeds.")
     }
   }
   package var errorDescription: String? { "\(message) \(detail)" }

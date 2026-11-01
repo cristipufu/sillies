@@ -11,7 +11,7 @@ struct DictationSessionView: View {
   var body: some View {
     @Bindable var session = model
     VStack(alignment: .leading, spacing: SessionWindowLayout.spacing) {
-      SessionIdentityHeader(title: "Dictate", symbol: "mic.fill") {
+      SessionIdentityHeader(title: String(localized: "Dictate"), symbol: "mic.fill") {
         Text("\(companionName) · Into \(model.applicationName)").lineLimit(1)
       } accessory: {
         Text(SessionRecord.formatDuration(model.elapsed))
@@ -30,8 +30,12 @@ struct DictationSessionView: View {
       ) {
         VStack(spacing: 10) {
           Image(systemName: "waveform").font(.system(size: 28)).foregroundStyle(SilliesTheme.accent)
-          Text(model.phase == .listening ? "Ready for your words" : "Getting ready to listen")
-            .font(.callout.weight(.medium))
+          Text(
+            model.phase == .listening
+              ? String(localized: "Ready for your words")
+              : String(localized: "Getting ready to listen")
+          )
+          .font(.callout.weight(.medium))
           Text("Your words will appear here as you speak.")
             .font(.caption).foregroundStyle(SilliesTheme.secondary)
         }.frame(maxWidth: .infinity).padding(.vertical, 32)
@@ -69,7 +73,7 @@ struct DictationSessionView: View {
 
   private var controls: some View {
     HStack(spacing: 10) {
-      Circle().fill(model.phase == .listening ? Color.red : SilliesTheme.secondary)
+      Circle().fill(model.phase == .listening ? SilliesTheme.danger : SilliesTheme.secondary)
         .frame(width: 7, height: 7)
       Text(model.status).font(.callout.weight(.medium)).fixedSize(horizontal: false, vertical: true)
       Spacer(minLength: 8)
@@ -77,16 +81,17 @@ struct DictationSessionView: View {
         Button("Cancel") { model.cancel() }.buttonStyle(SoftButtonStyle())
         if model.canFinish {
           Button(
-            model.canInsert ? "Finish & Insert" : "Finish", systemImage: "stop.fill"
+            model.canInsert ? String(localized: "Finish & Insert") : String(localized: "Finish"),
+            systemImage: "stop.fill"
           ) {
             model.finish()
-          }.buttonStyle(.borderedProminent).controlSize(.large)
+          }.buttonStyle(AccentButtonStyle()).controlSize(.large)
         }
       } else {
         Button("Recent writing", action: history).buttonStyle(SoftButtonStyle())
         if let result = model.result {
           Button("Copy text", systemImage: "doc.on.doc") { copy(result.text) }
-            .buttonStyle(.borderedProminent).controlSize(.large)
+            .buttonStyle(AccentButtonStyle()).controlSize(.large)
         }
       }
     }

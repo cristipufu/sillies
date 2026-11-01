@@ -13,7 +13,7 @@ struct SpeakerNamingView: View {
           Text(
             "Names apply to this recording only. Review anonymous labels first; nearby speakers and overlapping speech may be misidentified."
           )
-          .font(.caption).foregroundStyle(.secondary)
+          .font(.caption).foregroundStyle(SilliesTheme.secondary)
           ForEach(speakers) { speaker in
             HStack {
               Text(speaker.label).font(.caption).frame(width: 150, alignment: .leading)

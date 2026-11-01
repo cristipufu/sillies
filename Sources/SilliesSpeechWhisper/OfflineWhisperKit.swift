@@ -8,7 +8,8 @@ final class OfflineWhisperKit: WhisperKit {
   override func loadTokenizerIfNeeded() async throws {
     guard tokenizer == nil else { return }
     guard let modelFolder, let vocabularySize = textDecoder.logitsSize else {
-      throw SpeechError.unavailable("Whisper's local model files are incomplete.")
+      throw SpeechError.unavailable(
+        String(localized: "Whisper's local model files are incomplete."))
     }
     let local = try await AutoTokenizerWrapper.from(modelFolder: modelFolder)
     tokenizer = try LocalWhisperTokenizer(tokenizer: local)

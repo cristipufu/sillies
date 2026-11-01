@@ -61,7 +61,8 @@ package enum VaultRecordEdit: Sendable {
       guard acceptsScreenshot(record, revision: revision) else { return false }
       record.extractedText = text
       record.screenshotTextState = .complete
-      record.processingNote = text.isEmpty ? "No readable text was found in this screenshot." : ""
+      record.processingNote =
+        text.isEmpty ? String(localized: "No readable text was found in this screenshot.") : ""
     case .failScreenshot(let message, let revision):
       guard acceptsScreenshot(record, revision: revision) else { return false }
       record.screenshotTextState = .failed

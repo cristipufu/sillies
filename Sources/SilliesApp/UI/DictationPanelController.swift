@@ -11,20 +11,24 @@ struct DictationFeedbackView: View {
     VStack(alignment: .leading, spacing: 10) {
       HStack(spacing: 9) {
         SessionAudioIndicator(level: model.level, isCapturing: model.phase == .listening)
-        SessionHUDLabel(title: "Dictate · \(model.applicationName)", status: model.hudStatus)
+        SessionHUDLabel(
+          title: String(localized: "Dictate · \(model.applicationName)"), status: model.hudStatus)
         Button(action: openSession) {
           Image(systemName: "text.bubble").foregroundStyle(SilliesTheme.accent)
             .frame(width: 24, height: 24)
         }.buttonStyle(.plain).help("Open dictation and transcript")
           .accessibilityLabel("Open dictation session")
         if model.canFinish {
-          SessionHUDAction(title: "Finish") { model.finish() }
+          SessionHUDAction(title: String(localized: "Finish")) { model.finish() }
         } else if let result = model.result {
-          SessionHUDAction(title: "Copy") { copy(result.text) }
+          SessionHUDAction(title: String(localized: "Copy")) { copy(result.text) }
         } else if model.isActive {
           ProgressView().controlSize(.mini)
         }
-        SessionHUDDismiss(title: model.isActive ? "Cancel dictation" : "Dismiss") {
+        SessionHUDDismiss(
+          title: model.isActive
+            ? String(localized: "Cancel dictation") : String(localized: "Dismiss")
+        ) {
           model.dismiss()
         }
       }
@@ -44,7 +48,7 @@ struct DictationFeedbackView: View {
 @MainActor final class DictationPanelController {
   private let panel = AnchoredWritingPanel<DictationFeedbackView>()
   private let session = DictationSessionWindowController()
-  private var companionName = "Your companion"
+  private var companionName = String(localized: "Your companion")
   var frame: CGRect? { panel.frame }
   var layoutMeasurements: Int { panel.layoutMeasurements }
 

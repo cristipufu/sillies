@@ -2,6 +2,14 @@
 
 ## Data flow
 
+`SilliesDesign` owns bounded, validated JSON palettes and interface-language metadata without AppKit.
+Composition owns `AppearancePreferences` and `LanguagePreferences`; presentation reads semantic roles
+through `SilliesTheme`. Native editors preserve text, selection, and scrolling during palette changes.
+Interface language applies at the next launch and never changes recognition or generation preferences.
+Build tooling discovers `Localization/*.json`, validates native argument types and plural forms, and
+packages native `.lproj` resources for the app and inference helpers. Swift syntax checks protect
+display-copy localization and semantic UI colors. Neither extension requires a Swift registration list.
+
 ```mermaid
 flowchart LR
     OS[Workspace / mouse / Accessibility] --> Tracker[WorkspaceTracker]
@@ -48,11 +56,13 @@ Vault pagination uses a stable `(createdAt, id)` cursor. Show more reads one fol
 
 `SilliesReasoning` owns the `LocalReasoning` capability, task prompts, validation, and inference admission. It has no dependency on the app, UI, audio, or persistence. `App/Composition/ReasoningServices` owns one `TextModelEnvironment` and supplies a backend resolver to `LocalReasoningService`. Skills and writing receive the capability explicitly; there are no shared reasoning/model-environment instances or default live services. Test-only composition supplies isolated fake backends.
 
-`SilliesChat` owns explicit microphone turns and conversation state. It receives capture, language discovery, `ConversationResponding`, and `ChatSpeechOutput` capabilities; it imports no UI or inference SDK. `ChatSkillSession` adapts it to the existing skill lifecycle and Vault. Character JSON supplies personality and preferred voices. Transcript rendering, selection, and follow controls reuse the session UI.
+`SilliesChat` owns conversation state and joins utterance finalization with microphone teardown. It receives `ConversationCapture`, language discovery, `ConversationResponding`, and `ChatSpeechOutput` capabilities; it imports no UI or inference SDK. `ChatSkillSession` adapts it to the existing skill lifecycle and Vault. Character JSON supplies personality and preferred voices. The messenger UI uses native selectable text, preserves reading/selection during replies, and shares application theme and typed failure notices. Return-to-send respects input-method composition.
+
+`VoiceConversationCapture` keeps the microphone, WebRTC AEC3, and WebRTC VAD on the serial audio worker. `VoicePlaybackReference` bounds the render callback handoff; host-clock PCM passes through the existing meeting alignment and echo processor. `VoiceTurnEndpoint` in Core detects utterance boundaries from sample duration without timers. Only per-utterance `ConversationSpeechTurn` instances own recognizers and speech priority. Bounded pre-roll preserves onset while the warm recognizer is acquired. Stop closes device admission immediately, flushes held PCM, joins detached and active turn callbacks exactly once, and retains available words on failure or deadline.
 
 `SilliesTTS` owns provider contracts, model leases, exclusive admission, and bounded process messages. `SilliesTTSInference` hosts Core ML runtimes and the app-owned `SilliesFishSpeech` MLX implementation. Package/import checks forbid the app and feature targets from depending on Fish or its tensor SDK. Only pinned local artifacts enter inference; downloading belongs to `SilliesModelStore`. Cancellation kills and reaps a stalled helper. An idle model is released after 60 seconds.
 
-`SilliesVoicePlayback` owns the audio device and at most 0.75 seconds of queued PCM, applying backpressure to synthesis. Native playback callbacks report amplitude to the mascot's existing artwork. No companion owns an audio engine, model, or timer. `InferenceActivity` arbitrates speech recognition, voice synthesis, and text work; microphone capture preempts synthesis, and synthesis preempts background text work. Stop, pause, exclusion, and termination cancel active work and release resources.
+`SilliesVoicePlayback` owns the audio device and at most 0.75 seconds of queued PCM, applying backpressure to synthesis. Native playback callbacks report amplitude to the mascot's existing artwork; a mixer tap supplies rendered audio for echo cancellation. No companion owns an audio engine, model, or timer. `InferenceActivity` arbitrates speech recognition, voice synthesis, and text work; active recognition preempts synthesis, and synthesis preempts background text work. Continuous AEC/VAD monitoring does not reserve inference. Stop, pause, exclusion, and termination cancel active work and release resources.
 
 ```mermaid
 flowchart TD

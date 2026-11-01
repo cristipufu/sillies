@@ -47,7 +47,7 @@ public struct SpeechModelDescriptor: Codable, Identifiable, Equatable, Sendable 
 
   public static let apple = SpeechModelDescriptor(
     id: "apple-speech", providerID: "apple", name: "Apple Speech",
-    detail: "Uses speech languages installed by macOS.",
+    detail: String(localized: "Uses speech languages installed by macOS."),
     revision: "system",
     capabilities: .init(
       languageControl: .selectable, languages: [], supportsAutomaticDetection: false,

@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "id": "tokyo-night",
+  "name": "Tokyo Night",
+  "comment": "Tokyo Night Day in light appearance and Night in dark appearance; a proper name.",
+  "order": 20,
+  "light": {
+    "paper": "#E1E2E7",
+    "card": "#EFF0F5",
+    "soft": "#D0D5E3",
+    "ink": "#343B58",
+    "secondary": "#4A5274",
+    "border": "#9099B2",
+    "accent": "#1D5095",
+    "accentFill": "#1D5095",
+    "onAccent": "#FFFFFF",
+    "selection": "#B7C1E3",
+    "onSelection": "#343B58",
+    "success": "#365B27",
+    "warning": "#76520F",
+    "danger": "#9E374B"
+  },
+  "dark": {
+    "paper": "#1A1B26",
+    "card": "#24283B",
+    "soft": "#16161E",
+    "ink": "#C0CAF5",
+    "secondary": "#A9B1D6",
+    "border": "#565F89",
+    "accent": "#7AA2F7",
+    "accentFill": "#7AA2F7",
+    "onAccent": "#1A1B26",
+    "selection": "#283457",
+    "onSelection": "#C0CAF5",
+    "success": "#9ECE6A",
+    "warning": "#E0AF68",
+    "danger": "#F7768E"
+  }
+}

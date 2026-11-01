@@ -7,22 +7,24 @@ import SwiftUI
 }
 
 enum SettingsDestination: String, CaseIterable, Identifiable {
-  case general, companions, writing, speech, intelligence, voices, shortcuts
+  case general, appearance, companions, writing, speech, intelligence, voices, shortcuts
   var id: Self { self }
   var title: String {
     switch self {
-    case .general: "General"
-    case .companions: "Companions"
-    case .writing: "Dictation & Writing"
-    case .speech: "Speech & Meetings"
-    case .intelligence: "Local AI"
-    case .voices: "Voices"
-    case .shortcuts: "Shortcuts"
+    case .general: String(localized: "General")
+    case .appearance: String(localized: "Appearance")
+    case .companions: String(localized: "Companions")
+    case .writing: String(localized: "Dictation & Writing")
+    case .speech: String(localized: "Speech & Meetings")
+    case .intelligence: String(localized: "Local AI")
+    case .voices: String(localized: "Voices")
+    case .shortcuts: String(localized: "Shortcuts")
     }
   }
   var symbol: String {
     switch self {
     case .general: "slider.horizontal.3"
+    case .appearance: "paintpalette"
     case .companions: "pawprint.fill"
     case .writing: "mic.fill"
     case .speech: "waveform"
@@ -33,13 +35,15 @@ enum SettingsDestination: String, CaseIterable, Identifiable {
   }
   var explanation: String {
     switch self {
-    case .general: "Make Sillies part of your day."
-    case .companions: "Choose your crew and how they spend their time."
-    case .writing: "Your voice, your words, in the app you’re using."
-    case .speech: "Local speech models for dictation and meetings."
-    case .intelligence: "Optional local models for multilingual notes and writing."
-    case .voices: "Give your companions a voice, entirely on your Mac."
-    case .shortcuts: "A keyboard path to your companions’ skills."
+    case .general: String(localized: "Make Sillies part of your day.")
+    case .appearance: String(localized: "A familiar little world, in your colors.")
+    case .companions: String(localized: "Choose your crew and how they spend their time.")
+    case .writing: String(localized: "Your voice, your words, in the app you’re using.")
+    case .speech: String(localized: "Local speech models for dictation and meetings.")
+    case .intelligence:
+      String(localized: "Optional local models for multilingual notes and writing.")
+    case .voices: String(localized: "Give your companions a voice, entirely on your Mac.")
+    case .shortcuts: String(localized: "A keyboard path to your companions’ skills.")
     }
   }
 }

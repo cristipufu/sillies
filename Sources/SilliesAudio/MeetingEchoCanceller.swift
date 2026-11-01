@@ -9,7 +9,8 @@ final class MeetingEchoCanceller {
   init() throws {
     dispatchPrecondition(condition: .notOnQueue(.main))
     guard let state = sillies_echo_create() else {
-      throw AudioCaptureFailure.unavailable("Could not prepare speaker echo cancellation.")
+      throw AudioCaptureFailure.unavailable(
+        String(localized: "Could not prepare speaker echo cancellation."))
     }
     self.state = state
   }
@@ -25,7 +26,8 @@ final class MeetingEchoCanceller {
     guard reference.count == MeetingAudioTimeline.frameSamples,
       microphone.count == MeetingAudioTimeline.frameSamples
     else {
-      throw AudioCaptureFailure.unavailable("Unexpected echo-cancellation audio frame size.")
+      throw AudioCaptureFailure.unavailable(
+        String(localized: "Unexpected echo-cancellation audio frame size."))
     }
     var output = [Float](repeating: 0, count: MeetingAudioTimeline.frameSamples)
     let status = reference.withUnsafeBufferPointer { reference in
@@ -43,7 +45,8 @@ final class MeetingEchoCanceller {
   private func check(_ status: Int32) throws {
     guard status == 0 else {
       throw AudioCaptureFailure.unavailable(
-        "Speaker echo processing stopped (\(status)). Finish to save this session.")
+        String(
+          localized: "Speaker echo processing stopped (\(status)). Finish to save this session."))
     }
   }
 }

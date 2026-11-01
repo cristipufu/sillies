@@ -31,7 +31,10 @@ actor VoiceModelEnvironment {
   func selectedModel() throws -> TTSModelManifest? {
     guard selected != Self.disabledID else { return nil }
     guard let manifest = try modelCatalog().manifests.first(where: { $0.modelID == selected })
-    else { throw TTSError.unavailable("Choose an installed voice model in Settings → Voices.") }
+    else {
+      throw TTSError.unavailable(
+        String(localized: "Choose an installed voice model in Settings → Voices."))
+    }
     return manifest
   }
   func select(_ id: String) async throws {

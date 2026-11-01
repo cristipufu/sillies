@@ -35,16 +35,9 @@ final class MascotBubbleArtwork {
     shadow.shadowPath = path
     border.path = path
     appearance.performAsCurrentDrawingAppearance {
-      let dark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-      fill.colors =
-        dark
-        ? [NSColor(hex: "393444").cgColor, NSColor(hex: "302B3B").cgColor]
-        : [NSColor(hex: "FFFEFC").cgColor, NSColor(hex: "F8F4FC").cgColor]
-      shadow.fillColor = dark ? NSColor(hex: "302B3B").cgColor : NSColor(hex: "FFFEFC").cgColor
-      border.strokeColor =
-        dark
-        ? NSColor.white.withAlphaComponent(0.13).cgColor
-        : NSColor(hex: "8D789E", alpha: 0.25).cgColor
+      fill.colors = [SilliesTheme.native(.card).cgColor, SilliesTheme.native(.paper).cgColor]
+      shadow.fillColor = SilliesTheme.native(.card).cgColor
+      border.strokeColor = SilliesTheme.native(.border).cgColor
     }
     CATransaction.commit()
   }

@@ -50,6 +50,15 @@ public struct MeetingAudioTimeline {
     return takeFrame(validSamples: Self.frameSamples)
   }
 
+  /// Render timestamps can be ahead of capture (for example Bluetooth output latency).
+  /// Do not consume microphone positions before their samples have arrived.
+  public mutating func nextReadyFrame(through time: TimeInterval) -> Frame? {
+    guard time.isFinite, let origin,
+      origin + Double(cursor + Self.frameSamples) / Double(Self.sampleRate) <= time
+    else { return nil }
+    return nextReadyFrame()
+  }
+
   public mutating func nextFinalFrame() -> Frame? {
     guard cursor < end else { return nil }
     return takeFrame(validSamples: min(Self.frameSamples, end - cursor))
@@ -61,7 +70,7 @@ public struct MeetingAudioTimeline {
       startTime: origin + Double(cursor) / Double(Self.sampleRate),
       meeting: meeting.read(at: cursor, count: Self.frameSamples),
       microphone: microphone.read(at: cursor, count: Self.frameSamples), validSamples: validSamples)
-    cursor += Self.frameSamples
+    cursor += validSamples
     hasEmitted = true
     return frame
   }

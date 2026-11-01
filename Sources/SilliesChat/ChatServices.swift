@@ -31,14 +31,14 @@ extension ChatSpeechOutput {
 }
 
 package struct ChatServices: Sendable {
-  package let captureFactory: SessionAudioCaptureFactory
+  package let captureFactory: ConversationCaptureFactory
   package let loadLanguages: @Sendable () async throws -> SpeechLanguageCatalog
   package let conversation: any ConversationResponding
   package let speech: any ChatSpeechOutput
   package let deliver: AudioSessionUpdateDelivery.Schedule
 
   package init(
-    captureFactory: @escaping SessionAudioCaptureFactory,
+    captureFactory: @escaping ConversationCaptureFactory,
     loadLanguages: @escaping @Sendable () async throws -> SpeechLanguageCatalog,
     conversation: any ConversationResponding, speech: any ChatSpeechOutput,
     deliver: @escaping AudioSessionUpdateDelivery.Schedule

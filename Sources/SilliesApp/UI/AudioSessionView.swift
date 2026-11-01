@@ -39,7 +39,8 @@ struct AudioSessionView: View {
       AudioLanguagePicker(model: model)
       if model.diarizationModel != nil {
         Label(
-          model.speakerDetectionNotice ?? "Speaker labels enabled · Labels may take a few seconds",
+          model.speakerDetectionNotice
+            ?? String(localized: "Speaker labels enabled · Labels may take a few seconds"),
           systemImage: "person.2.wave.2"
         )
         .font(.caption).foregroundStyle(SilliesTheme.secondary)
@@ -66,11 +67,17 @@ struct AudioSessionView: View {
 
   private var footerMessage: String {
     switch model.phase {
-    case .finished: "Saved on this Mac. Open the Vault for your transcript and notes."
-    case .paused: "Paused audio isn’t saved or transcribed. Resume whenever you’re ready."
-    case .failed: "Choose Finish & Save to keep the available transcript and recording."
+    case .finished:
+      String(localized: "Saved on this Mac. Open the Vault for your transcript and notes.")
+    case .paused:
+      String(localized: "Paused audio isn’t saved or transcribed. Resume whenever you’re ready.")
+    case .failed:
+      String(localized: "Choose Finish & Save to keep the available transcript and recording.")
     default:
-      "Processed on this Mac. Closing this window keeps the session running; Finish & Save stops it."
+      String(
+        localized:
+          "Processed on this Mac. Closing this window keeps the session running; Finish & Save stops it."
+      )
     }
   }
 }

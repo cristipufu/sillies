@@ -24,9 +24,9 @@ struct SessionFailureNotice: View {
 
   private func settingsTitle(_ action: SessionFailure.RecoveryAction) -> String {
     switch action {
-    case .openMicrophoneSettings: "Open microphone settings"
-    case .openScreenRecordingSettings: "Open screen recording settings"
-    case .openAccessibilitySettings: "Enable text insertion…"
+    case .openMicrophoneSettings: String(localized: "Open microphone settings")
+    case .openScreenRecordingSettings: String(localized: "Open screen recording settings")
+    case .openAccessibilitySettings: String(localized: "Enable text insertion…")
     }
   }
 }

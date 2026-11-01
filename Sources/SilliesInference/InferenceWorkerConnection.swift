@@ -16,6 +16,12 @@ package final class InferenceWorkerConnection: @unchecked Sendable {
     let request = Pipe()
     let response = Pipe()
     process.executableURL = executable
+    if let language = Bundle.main.preferredLocalizations.first,
+      language.allSatisfy({ $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" })
+    {
+      // Native helper diagnostics follow the app's language rather than its separate defaults domain.
+      process.arguments = ["-AppleLanguages", "(\(language))"]
+    }
     process.standardInput = request
     process.standardOutput = response
     process.standardError = FileHandle.standardError

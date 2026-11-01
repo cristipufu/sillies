@@ -10,7 +10,10 @@ import SilliesWriting
   private let insertion: any TextInserting
   private var generation = UUID()
   init(insertion: any TextInserting = TextInsertionService()) { self.insertion = insertion }
-  var actionTitle: String { destination.map { "Paste into \($0.applicationName)" } ?? "Copy text" }
+  var actionTitle: String {
+    destination.map { String(localized: "Paste into \($0.applicationName)") }
+      ?? String(localized: "Copy text")
+  }
 
   func captureDestination() async {
     guard let application = FrontmostApplication.current else { return }

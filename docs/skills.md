@@ -9,10 +9,12 @@ The wheel and the mascot's context menu expose the same six actions. Hover over 
 | Snap | One selected window image | PNG on clipboard and in the Vault immediately; background OCR adds searchable text |
 | Explain | One selected window image | PNG, Vision OCR, summary and plain-language explanation of the recognized text |
 | Record | Built-in microphone where available; otherwise default microphone | Playable `.m4a` AAC file, local transcript, summary and action items |
-| Chat | Typed messages or explicit microphone turns | A conversation with the companion, optional spoken replies, and a saved transcript |
+| Chat | Typed messages or an explicit voice conversation | A conversation with the companion, optional spoken replies, and a saved transcript |
 
-Chat reuses the session window's selectable transcript, follow controls, and typed failures. Speak starts
-an explicit microphone turn; Done speaking finalizes it for review before Send. Stop reply interrupts
+Chat uses a compact messenger window with selectable message bubbles, a Latest control, and shared
+typed failures. Return sends; Shift–Return adds a new line. Voice starts continuous conversation with
+automatic utterance submission, WebRTC echo cancellation, and interruption during replies. End voice
+or closing the window stops the microphone and preserves unfinished words. Stop reply interrupts
 generation and playback. Finish & Save keeps the conversation and any unsent draft. Chat does not save
 microphone audio, read screen contents, or perform actions in other apps. Personality and preferred
 voices belong to character JSON. See [local voices and Chat](local-voice-models.md).

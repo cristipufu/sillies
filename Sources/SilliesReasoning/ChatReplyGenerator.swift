@@ -22,10 +22,12 @@ enum ChatReplyGenerator {
         \(LocalReasoningService.languageInstructions(context.profile.languageIdentifier))
         Reply to the last user message in the supplied conversation.
         """,
-      prompt: String(decoding: encoded, as: UTF8.self), maximumTokens: maximumOutputTokens)
+      prompt: String(decoding: encoded, as: UTF8.self), maximumTokens: maximumOutputTokens,
+      style: .conversation)
     let text = try await backend.generate(request, format: .text)
       .trimmingCharacters(in: .whitespacesAndNewlines)
     guard !text.isEmpty else { throw TextModelError.invalidResponse }
+    guard !TextRepetitionGuard.containsLoop(text) else { throw TextModelError.repetitiveResponse }
     return String(text.prefix(ChatContext.maximumMessageCharacters))
   }
 }

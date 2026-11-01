@@ -3,16 +3,17 @@ import SilliesAudio
 import SilliesCore
 import SilliesSpeech
 
-/// An explicit microphone turn. Capture teardown completes through the injected run-loop delivery.
+/// Joins utterance callbacks and device teardown through the injected run-loop delivery.
 @MainActor final class ChatMicrophone {
-  private static let maximumTurnDuration: Duration = .seconds(120)
   private let services: ChatServices
-  private var capture: (any SessionAudioCapture)?
+  private var capture: (any ConversationCapture)?
   private var delivery: AudioSessionUpdateDelivery?
   private var preparation: Task<Void, Never>?
-  private var deadline: Task<Void, Never>?
   private var generation = UUID()
   private var isFinalizing = false
+  private var pendingTurns: Set<UUID> = []
+  private var deviceFinished = false
+  private var finalResult: AudioCaptureResult?
   private var finishWaiters: [@MainActor (AudioCaptureResult?) -> Void] = []
 
   init(services: ChatServices) { self.services = services }
@@ -33,7 +34,10 @@ import SilliesSpeech
           throw SessionFailure(
             category: .transcription,
             message:
-              "This speech model cannot recognize the selected language. Choose another in Settings → Speech & Meetings."
+              String(
+                localized:
+                  "This speech model cannot recognize the selected language. Choose another in Settings → Speech & Meetings."
+              )
           )
         }
         var configuration = AudioCaptureConfiguration(
@@ -50,17 +54,6 @@ import SilliesSpeech
         self.capture = capture
         self.preparation = nil
         capture.start()
-        self.deadline = Task { [weak self] in
-          do { try await Task.sleep(for: Self.maximumTurnDuration) } catch { return }
-          guard self?.generation == token else { return }
-          receive(
-            .failed(
-              .init(
-                category: .captureInterrupted,
-                message:
-                  "Microphone turn reached two minutes. Your words are kept; send them or start another turn."
-              )))
-        }
       } catch {
         guard let self, self.generation == token, !Task.isCancelled else { return }
         self.preparation = nil
@@ -69,34 +62,62 @@ import SilliesSpeech
     }
   }
 
-  func finish(_ completion: @escaping @MainActor (AudioCaptureResult?) -> Void) {
-    finishWaiters.append(completion)
-    guard !isFinalizing else { return }
-    generation = UUID()
-    preparation?.cancel()
-    preparation = nil
-    deadline?.cancel()
-    deadline = nil
-    delivery?.stop()
-    delivery = nil
+  func finishTurn(_ completion: @escaping @MainActor (AudioCaptureResult?) -> Void) {
     guard let capture else {
-      completeFinish(nil)
+      completion(nil)
       return
     }
-    self.capture = nil
-    isFinalizing = true
     let token = generation
+    let turn = UUID()
+    pendingTurns.insert(turn)
     let deliver = services.deliver
-    capture.finish { [weak self] result in
+    capture.finishTurn { [weak self] result in
       deliver { [weak self] in
-        guard let self, self.isFinalizing, self.generation == token else { return }
-        self.isFinalizing = false
-        self.completeFinish(result)
+        guard let self, self.generation == token, self.pendingTurns.remove(turn) != nil else {
+          return
+        }
+        completion(result)
+        self.completeFinishIfReady()
       }
     }
   }
 
-  private func completeFinish(_ result: AudioCaptureResult?) {
+  func finish(_ completion: @escaping @MainActor (AudioCaptureResult?) -> Void) {
+    finishWaiters.append(completion)
+    guard !isFinalizing else { return }
+    isFinalizing = true
+    deviceFinished = false
+    finalResult = nil
+    preparation?.cancel()
+    preparation = nil
+    delivery?.stop()
+    delivery = nil
+    guard let capture else {
+      deviceFinished = true
+      completeFinishIfReady()
+      return
+    }
+    self.capture = nil
+    let token = generation
+    let deliver = services.deliver
+    capture.finish { [weak self] result in
+      deliver { [weak self] in
+        guard let self, self.isFinalizing, !self.deviceFinished, self.generation == token else {
+          return
+        }
+        self.finalResult = result
+        self.deviceFinished = true
+        self.completeFinishIfReady()
+      }
+    }
+  }
+
+  private func completeFinishIfReady() {
+    guard isFinalizing, deviceFinished, pendingTurns.isEmpty else { return }
+    isFinalizing = false
+    generation = UUID()
+    let result = finalResult
+    finalResult = nil
     let waiters = finishWaiters
     finishWaiters.removeAll()
     for waiter in waiters { waiter(result) }

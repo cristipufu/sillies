@@ -26,12 +26,20 @@ final class ControlCenterHostingController: NSHostingController<AnyView> {
     guard viewportSize != size else { return }
     viewportSize = size
     rootView = AnyView(
-      ScrollView(.vertical) { content }
-        .scrollBounceBehavior(.basedOnSize)
-        .frame(width: size.width, height: size.height)
-        .background(SilliesTheme.paper))
+      ControlCenterViewport(content: content, size: size))
     preferredContentSize = size
     view.setFrameSize(size)
     view.layoutSubtreeIfNeeded()
+  }
+}
+
+private struct ControlCenterViewport: View {
+  let content: ControlCenterView
+  let size: CGSize
+  var body: some View {
+    ScrollView(.vertical) { content }
+      .scrollBounceBehavior(.basedOnSize)
+      .frame(width: size.width, height: size.height)
+      .background(SilliesTheme.paper)
   }
 }

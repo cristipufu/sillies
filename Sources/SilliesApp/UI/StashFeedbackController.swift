@@ -3,7 +3,7 @@ import SwiftUI
 
 @MainActor @Observable
 private final class StashFeedbackModel {
-  var message = "Drop to save"
+  var message = String(localized: "Drop to save")
   var recordID: UUID?
   var open: ((UUID) -> Void)?
   var undo: ((UUID) -> Void)?
@@ -44,7 +44,7 @@ final class StashFeedbackController {
 
   func showDropTarget(at point: CGPoint) {
     model.recordID = nil
-    show("Drop to save", at: point, presentation: .hint)
+    show(String(localized: "Drop to save"), at: point, presentation: .hint)
   }
 
   func showSaved(
@@ -56,7 +56,7 @@ final class StashFeedbackController {
       undo($0)
       self?.hide()
     }
-    show("Saved", at: point, presentation: .actionable)
+    show(String(localized: "Saved"), at: point, presentation: .actionable)
   }
 
   func showMessage(_ message: String, at point: CGPoint) {

@@ -93,7 +93,7 @@ final class SessionVaultModel {
       apply(updated, for: request)
     } catch {
       guard !Task.isCancelled, searchGeneration == token, isPresented else { return }
-      searchError = "Could not load the Vault: \(error.localizedDescription)"
+      searchError = String(localized: "Could not load the Vault: \(error.localizedDescription)")
       fputs("Vault query failed: \(error)\n", stderr)
     }
   }
@@ -163,7 +163,7 @@ final class SessionVaultModel {
       if record == nil { selectedRecordID = filteredRecords.first(where: { $0.id != id })?.id }
     } catch {
       guard !Task.isCancelled, detailGeneration == token, isPresented else { return }
-      detailError = "Could not open this session: \(error.localizedDescription)"
+      detailError = String(localized: "Could not open this session: \(error.localizedDescription)")
       fputs("Vault detail failed: \(error)\n", stderr)
     }
     isLoadingDetail = false
@@ -175,7 +175,7 @@ final class SessionVaultModel {
 
   func saveStash(_ items: [String]) {
     guard let contents = StashContents(items) else {
-      showFeedback("Copy text or a link first")
+      showFeedback(String(localized: "Copy text or a link first"))
       return
     }
     let record = SessionRecord(
@@ -189,11 +189,14 @@ final class SessionVaultModel {
     searchQuery = ""
     selectedRecordID = record.id
     lastStashID = record.id
-    showFeedback("Saving…")
+    showFeedback(String(localized: "Saving…"))
     let generation = feedbackGeneration
     vault.whenPersisted { [weak self] error in
       guard let self, self.feedbackGeneration == generation else { return }
-      self.showFeedback(error == nil ? "Saved to Pocket Stash" : "Could not save — see details")
+      self.showFeedback(
+        error == nil
+          ? String(localized: "Saved to Pocket Stash")
+          : String(localized: "Could not save — see details"))
     }
   }
 
@@ -225,7 +228,7 @@ final class SessionVaultModel {
 
   func copyImage(for record: SessionRecord) {
     vault.copyImage(for: record)
-    showFeedback("Image copied")
+    showFeedback(String(localized: "Image copied"))
   }
 
   func toggleProtection(_ record: SessionRecord) {
@@ -250,7 +253,8 @@ final class SessionVaultModel {
   }
   func regenerateNotes(_ record: SessionRecord) {
     performEdit(
-      record.id, .requestNotes, feedback: "Refreshing notes with your selected local model")
+      record.id, .requestNotes,
+      feedback: String(localized: "Refreshing notes with your selected local model"))
   }
 
   func rename(_ speaker: SessionSpeakerIdentity, to name: String, in record: SessionRecord) {
@@ -266,13 +270,15 @@ final class SessionVaultModel {
           try await self.vault.edit(
             id: id, .renameSpeaker(.init(original: latest, renamed: updated)))
         else {
-          self.showFeedback("This session changed. Try renaming the speaker again.")
+          self.showFeedback(
+            String(localized: "This session changed. Try renaming the speaker again."))
           return
         }
-        self.showFeedback("Speaker updated · Refreshing notes")
+        self.showFeedback(String(localized: "Speaker updated · Refreshing notes"))
       } catch {
         fputs("Could not rename the speaker: \(error)\n", stderr)
-        self?.showFeedback("Could not update the speaker: \(error.localizedDescription)")
+        self?.showFeedback(
+          String(localized: "Could not update the speaker: \(error.localizedDescription)"))
       }
     }
   }
@@ -284,7 +290,8 @@ final class SessionVaultModel {
       case .success(false): break
       case .failure(let error):
         fputs("Vault edit failed: \(error)\n", stderr)
-        self?.showFeedback("Could not update this session: \(error.localizedDescription)")
+        self?.showFeedback(
+          String(localized: "Could not update this session: \(error.localizedDescription)"))
       }
     }
   }
@@ -293,7 +300,7 @@ final class SessionVaultModel {
     Task { [weak self] in
       do {
         try await pasteBack.paste(record.primaryText)
-        self?.showFeedback("Text pasted")
+        self?.showFeedback(String(localized: "Text pasted"))
       } catch { self?.showFeedback(error.localizedDescription) }
     }
   }

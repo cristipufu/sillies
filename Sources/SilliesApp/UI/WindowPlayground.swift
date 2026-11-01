@@ -30,7 +30,7 @@ final class WindowPlayground: NSObject {
       styleMask: [.titled, .closable, .miniaturizable, .resizable],
       backing: .buffered, defer: false)
     super.init()
-    window.title = "Sillies · Window Playground"
+    window.title = String(localized: "Sillies · Window Playground")
     window.titlebarAppearsTransparent = true
     window.isReleasedWhenClosed = false
     window.minSize = CGSize(width: 520, height: 330)
@@ -157,8 +157,9 @@ private struct PlaygroundView: View {
       VStack(alignment: .leading, spacing: 12) {
         Text(
           [
-            "Small crew.\nBig window energy.", "You do your thing.\nThey’ll keep you company.",
-            "Go on.\nShake things up a little.",
+            String(localized: "Small crew.\nBig window energy."),
+            String(localized: "You do your thing.\nThey’ll keep you company."),
+            String(localized: "Go on.\nShake things up a little."),
           ][tab]
         )
         .font(.system(size: 35, weight: .bold, design: .rounded)).tracking(-1.2)
@@ -179,7 +180,7 @@ private struct PlaygroundView: View {
       }.font(.system(size: 11, weight: .medium)).buttonStyle(SoftButtonStyle())
       Spacer(minLength: 0)
       HStack {
-        Circle().fill(Color(hex: "7DA78B")).frame(width: 6, height: 6)
+        Circle().fill(SilliesTheme.success).frame(width: 6, height: 6)
         Text(controller.restingDescription).font(.system(size: 10)).foregroundStyle(
           SilliesTheme.secondary)
         Spacer()

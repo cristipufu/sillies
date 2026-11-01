@@ -17,11 +17,15 @@ package struct DownloadedReasoningBackend: ReasoningBackend {
     do {
       guard try await store.isInstalled(manifest) else {
         return
-          "Download \(manifest.model.name) in Settings → Local AI to use this text model."
+          String(
+            localized:
+              "Download \(manifest.model.name) in Settings → Local AI to use this text model.")
       }
       return nil
     } catch {
-      return "The selected local text model could not be opened: \(error.localizedDescription)"
+      return String(
+        localized:
+          "The selected local text model could not be opened: \(error.localizedDescription)")
     }
   }
 
@@ -30,7 +34,7 @@ package struct DownloadedReasoningBackend: ReasoningBackend {
   {
     let shaped = TextGenerationRequest(
       instructions: request.instructions + "\n" + format.instruction,
-      prompt: request.prompt, maximumTokens: request.maximumTokens)
+      prompt: request.prompt, maximumTokens: request.maximumTokens, style: request.style)
     let text = try await registry.generate(shaped, using: manifest)
     return try ReasoningOutput.clean(text, format: format)
   }

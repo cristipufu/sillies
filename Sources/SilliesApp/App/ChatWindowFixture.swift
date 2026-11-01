@@ -44,11 +44,14 @@ import SilliesTTS
     func stop(id: UUID) async {}
   }
 
-  private final class UnavailableMicrophone: SessionAudioCapture, Sendable {
+  private final class UnavailableMicrophone: ConversationCapture, Sendable {
     func start() {}
     func pause() {}
     func resume() {}
     func changeLanguage(_ language: SpeechLanguage) {}
+    func finishTurn(completion: @escaping @Sendable (AudioCaptureResult) -> Void) {
+      finish(completion: completion)
+    }
     func finish(completion: @escaping @Sendable (AudioCaptureResult) -> Void) {
       completion(.init(transcript: "", recordingURL: nil, duration: 0, failure: nil))
     }

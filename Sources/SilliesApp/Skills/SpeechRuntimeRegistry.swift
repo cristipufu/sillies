@@ -65,7 +65,8 @@ actor SpeechRuntimeRegistry {
     guard Set(providers.map(\.id)).count == providers.count,
       Set(diarizationProviders.map(\.id)).count == diarizationProviders.count
     else {
-      throw SpeechError.unavailable("Duplicate speech or speaker provider registration.")
+      throw SpeechError.unavailable(
+        String(localized: "Duplicate speech or speaker provider registration."))
     }
     self.store = store
     self.providers = Dictionary(uniqueKeysWithValues: providers.map { ($0.id, $0) })
@@ -245,7 +246,8 @@ actor SpeechRuntimeRegistry {
   private func checkHardware(_ model: SpeechModelDescriptor) throws {
     #if !arch(arm64)
       if model.capabilities.requiresAppleSilicon {
-        throw SpeechError.unavailable("This model requires an Apple Silicon Mac.")
+        throw SpeechError.unavailable(
+          String(localized: "This model requires an Apple Silicon Mac."))
       }
     #endif
   }

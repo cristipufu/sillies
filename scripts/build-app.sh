@@ -51,6 +51,10 @@ ditto "$binary_dir/FluidAudio_LuxTtsG2pResources.bundle" "$app/Contents/Resource
 bash scripts/embed-sparkle.sh .build/artifacts "$app"
 
 cp Info.plist "$app/Contents/Info.plist"
+python3 -B scripts/localize.py build "$app/Contents/Resources" --plist "$app/Contents/Info.plist"
+for helper in "$text_helper" "$voice_helper"; do
+  python3 -B scripts/localize.py build "$helper/Contents/Resources" --plist "$helper/Contents/Info.plist"
+done
 if [[ -n "${SILLIES_VERSION:-}" ]]; then
   /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $SILLIES_VERSION" "$app/Contents/Info.plist"
 fi
@@ -64,6 +68,7 @@ fi
 rsync -a --delete Sources/SilliesApp/Resources/Characters/ "$app/Contents/Resources/Characters/"
 rsync -a --delete Sources/SilliesApp/Resources/Scenes/ "$app/Contents/Resources/Scenes/"
 ditto "$binary_dir/Sillies_SilliesModelStore.bundle" "$app/Contents/Resources/Sillies_SilliesModelStore.bundle"
+ditto "$binary_dir/Sillies_SilliesDesign.bundle" "$app/Contents/Resources/Sillies_SilliesDesign.bundle"
 cp LICENSE PRIVACY.md THIRD_PARTY_NOTICES.md "$app/Contents/Resources/"
 swift scripts/make-icon.swift "$output"
 cp "$output/Sillies.icns" "$app/Contents/Resources/Sillies.icns"

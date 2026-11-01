@@ -43,7 +43,7 @@ package final class AudioTranscriptionService: SessionAudioCapture {
       preparation.launch { [weak self, configuration] in
         do {
           try Task.checkCancellation()
-          self?.onUpdate(.preparing("Preparing on-device speech…"))
+          self?.onUpdate(.preparing(String(localized: "Preparing on-device speech…")))
           guard let sources = try await self?.prepareSources() else { return }
           try await self?.prepareSpeech()
           let label = try await Self.startSources(sources, appName: configuration.target?.appName)
@@ -96,7 +96,8 @@ package final class AudioTranscriptionService: SessionAudioCapture {
             }
             if configuration.sources.contains(.application) {
               guard let target = configuration.target else {
-                throw AudioCaptureFailure.unavailable("Choose a meeting window first.")
+                throw AudioCaptureFailure.unavailable(
+                  String(localized: "Choose a meeting window first."))
               }
               state.application = dependencies.application(
                 target, { [weak self] in self?.enqueue($0) },
@@ -112,7 +113,8 @@ package final class AudioTranscriptionService: SessionAudioCapture {
 
   private func prepareSpeech() async throws {
     guard let language = configuration.language else {
-      throw AudioCaptureFailure.unavailable("Choose a transcription language before starting.")
+      throw AudioCaptureFailure.unavailable(
+        String(localized: "Choose a transcription language before starting."))
     }
     let speakerChannels = try await prepareSpeakerChannels()
     try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
@@ -165,7 +167,9 @@ package final class AudioTranscriptionService: SessionAudioCapture {
       if Task.isCancelled { throw CancellationError() }
       fputs("Speaker detection preparation failed: \(error.localizedDescription)\n", stderr)
       let message =
-        "Speaker detection unavailable. Transcription continues. \(error.localizedDescription)"
+        String(
+          localized:
+            "Speaker detection unavailable. Transcription continues. \(error.localizedDescription)")
       queue.async { [weak self] in self?.speakerDetectionStopped(message) }
       return [:]
     }
@@ -240,7 +244,10 @@ package final class AudioTranscriptionService: SessionAudioCapture {
           SessionFailure(
             category: .audioProcessing,
             message:
-              "Audio capture fell behind. Finish to save the available transcript and recording."))
+              String(
+                localized:
+                  "Audio capture fell behind. Finish to save the available transcript and recording."
+              )))
       })
   }
 
@@ -363,7 +370,8 @@ package final class AudioTranscriptionService: SessionAudioCapture {
       state.lifecycle.recordFinalizationNotice(
         SessionFailure(
           category: .finalization,
-          message: "Saved the available transcript; audio finalization timed out."))
+          message: String(
+            localized: "Saved the available transcript; audio finalization timed out.")))
       deliverFinish()
     }
   }
@@ -373,7 +381,7 @@ package final class AudioTranscriptionService: SessionAudioCapture {
       guard state.lifecycle.phase == .finishing else { return }
       var audioURL: URL?
       do { audioURL = try state.writer?.finish() } catch {
-        let message = "Audio could not be saved: \(error.localizedDescription)"
+        let message = String(localized: "Audio could not be saved: \(error.localizedDescription)")
         state.lifecycle.recordRecordingFailure(
           SessionFailure(category: .recordingSave, message: message))
         fputs("\(message)\n", stderr)

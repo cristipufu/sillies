@@ -6,10 +6,10 @@ package enum LocalTextOperation: Sendable {
   case translate(String)
   package var title: String {
     switch self {
-    case .cleanup: "Clean up writing"
-    case .shorten: "Shorten selection"
-    case .grammar: "Fix grammar"
-    case .translate: "Translate selection"
+    case .cleanup: String(localized: "Clean up writing")
+    case .shorten: String(localized: "Shorten selection")
+    case .grammar: String(localized: "Fix grammar")
+    case .translate: String(localized: "Translate selection")
     }
   }
   var instructions: String {
@@ -30,10 +30,13 @@ package enum LocalTextTransformError: LocalizedError {
   case unavailable, tooLong, changedProtectedContent
   package var errorDescription: String? {
     switch self {
-    case .unavailable: "The on-device writing model is unavailable for this language."
-    case .tooLong: "Select a shorter passage (up to 3,000 characters)."
+    case .unavailable:
+      String(localized: "The on-device writing model is unavailable for this language.")
+    case .tooLong: String(localized: "Select a shorter passage (up to 3,000 characters).")
     case .changedProtectedContent:
-      "The edit changed protected names, numbers, or identifiers. Your original text was kept."
+      String(
+        localized:
+          "The edit changed protected names, numbers, or identifiers. Your original text was kept.")
     }
   }
 }

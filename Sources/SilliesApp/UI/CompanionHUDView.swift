@@ -35,7 +35,7 @@ struct CompanionHUDView: View {
 
       SessionHUDLabel(
         title:
-          "\(skill.title) · \(target?.appName ?? (skill == .chat ? "Your companion" : "Microphone"))",
+          "\(skill.title) · \(sourceName(target: target, skill: skill))",
         status: statusDetail)
 
       if let session = model.audioSession, skill.isAudioSession {
@@ -43,14 +43,14 @@ struct CompanionHUDView: View {
       }
 
       if skill == .chat {
-        SessionHUDAction(title: "Open Chat") { model.onOpenSession?() }
+        SessionHUDAction(title: String(localized: "Open Chat")) { model.onOpenSession?() }
       }
 
       if let stopTitle = skill.stopActionTitle {
         SessionHUDAction(title: stopTitle) { model.onStopSkill?() }
       }
 
-      SessionHUDDismiss(title: "Cancel skill") {
+      SessionHUDDismiss(title: String(localized: "Cancel skill")) {
         model.onUnbind?()
       }
     }
@@ -67,8 +67,8 @@ struct CompanionHUDView: View {
         Circle()
           .fill(
             completionNeedsAttention
-              ? Color.orange.opacity(0.15)
-              : Color(red: 0.28, green: 0.64, blue: 0.43).opacity(0.15)
+              ? SilliesTheme.warning.opacity(0.15)
+              : SilliesTheme.success.opacity(0.15)
           )
           .frame(width: 28, height: 28)
         Image(
@@ -77,7 +77,7 @@ struct CompanionHUDView: View {
         )
         .font(.system(size: 14, weight: .semibold))
         .foregroundStyle(
-          completionNeedsAttention ? Color.orange : Color(red: 0.28, green: 0.64, blue: 0.43))
+          completionNeedsAttention ? SilliesTheme.warning : SilliesTheme.success)
       }
 
       VStack(alignment: .leading, spacing: 1.5) {
@@ -86,7 +86,7 @@ struct CompanionHUDView: View {
           .foregroundStyle(SilliesTheme.ink)
           .lineLimit(1)
         Text(
-          "\((target?.appName ?? (skill == .chat ? "Your companion" : "Microphone"))) · \(summary)"
+          "\((sourceName(target: target, skill: skill))) · \(summary)"
         )
         .font(.system(size: 10, weight: .medium))
         .foregroundStyle(SilliesTheme.secondary)
@@ -100,10 +100,10 @@ struct CompanionHUDView: View {
         } label: {
           Text("Focus App")
             .font(.system(size: 10, weight: .bold, design: .rounded))
-            .foregroundStyle(.white)
+            .foregroundStyle(SilliesTheme.onAccent)
             .padding(.horizontal, 9)
             .padding(.vertical, 5)
-            .background(SilliesTheme.accent, in: Capsule())
+            .background(SilliesTheme.accentFill, in: Capsule())
         }
         .buttonStyle(.plain)
       }
@@ -117,12 +117,12 @@ struct CompanionHUDView: View {
             .font(.system(size: 8.5, weight: .bold))
         }
         .font(.system(size: 10, weight: .bold, design: .rounded))
-        .foregroundStyle(hoveredPrimaryAction ? Color.white : SilliesTheme.accent)
+        .foregroundStyle(hoveredPrimaryAction ? SilliesTheme.onAccent : SilliesTheme.accent)
         .padding(.horizontal, 9)
         .padding(.vertical, 5)
         .background(
           Capsule().fill(
-            hoveredPrimaryAction ? SilliesTheme.accent : SilliesTheme.accent.opacity(0.14))
+            hoveredPrimaryAction ? SilliesTheme.accentFill : SilliesTheme.accent.opacity(0.14))
         )
       }
       .buttonStyle(.plain)
@@ -133,7 +133,7 @@ struct CompanionHUDView: View {
         Button("Undo") { model.onUndoStash?(recordID) }.buttonStyle(.plain).font(.caption)
       }
 
-      SessionHUDDismiss(title: "Dismiss") {
+      SessionHUDDismiss(title: String(localized: "Dismiss")) {
         model.onUnbind?()
       }
     }
@@ -146,8 +146,14 @@ struct CompanionHUDView: View {
     model.persistenceError != nil || model.completedRecord?.failure != nil
   }
 
+  private func sourceName(target: WindowTargetCandidate?, skill: CompanionSkillKind) -> String {
+    target?.appName
+      ?? (skill == .chat ? String(localized: "Your companion") : String(localized: "Microphone"))
+  }
+
   private func completionHeadline(for skill: CompanionSkillKind) -> String {
-    completionNeedsAttention ? "\(skill.title) Needs Attention" : skill.completionHeadline
+    completionNeedsAttention
+      ? String(localized: "\(skill.title) Needs Attention") : skill.completionHeadline
   }
 
   @ViewBuilder

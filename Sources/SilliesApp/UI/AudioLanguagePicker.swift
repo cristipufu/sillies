@@ -27,16 +27,20 @@ struct AudioLanguagePicker: View {
       if model.pendingLanguageID != nil {
         Label(
           model.isPaused
-            ? "Changing language. Your session stays paused."
-            : "Changing language. Audio capture continues.",
+            ? String(localized: "Changing language. Your session stays paused.")
+            : String(localized: "Changing language. Audio capture continues."),
           systemImage: "arrow.triangle.2.circlepath"
         )
         .font(.caption).foregroundStyle(SilliesTheme.accent)
       } else if !model.isLoadingLanguages, !model.languages.contains(where: \.isInstalled) {
         Text(
           model.model.isSystemManaged
-            ? "No Apple speech languages are installed. Choose a downloadable model in Settings."
-            : "This model is not installed. Open Settings → Transcription models to download it."
+            ? String(
+              localized:
+                "No Apple speech languages are installed. Choose a downloadable model in Settings.")
+            : String(
+              localized:
+                "This model is not installed. Open Settings → Transcription models to download it.")
         )
         .font(.caption).foregroundStyle(SilliesTheme.secondary)
         .fixedSize(horizontal: false, vertical: true)
@@ -72,7 +76,8 @@ struct AudioLanguagePicker: View {
       if !unavailable.isEmpty {
         Section(
           model.model.isSystemManaged
-            ? "Apple speech model not installed" : "Model download required"
+            ? String(localized: "Apple speech model not installed")
+            : String(localized: "Model download required")
         ) {
           ForEach(unavailable) { language in
             Text(language.name).tag(language.id).disabled(true)

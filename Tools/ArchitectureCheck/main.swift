@@ -2,6 +2,8 @@ import Foundation
 
 func run() throws -> Bool {
   guard ArchitectureFixtures.verify() else { return false }
+  guard LocalizationFixtures.verify() else { return false }
+  guard ThemeFixtures.verify() else { return false }
   let package = try String(contentsOfFile: "Package.swift", encoding: .utf8)
   let dependencyFailures = PackageBoundaryCheck.check(package)
   for failure in dependencyFailures {
@@ -19,6 +21,8 @@ func run() throws -> Bool {
     let path = "Sources/" + relative
     let source = try String(contentsOfFile: path, encoding: .utf8)
     diagnostics += ArchitectureVisitor.check(source: source, path: path, policy: policy)
+    diagnostics += LocalizationVisitor.check(source: source, path: path)
+    diagnostics += ThemeVisitor.check(source: source, path: path)
   }
   for diagnostic in diagnostics.sorted(by: { $0.description < $1.description }) {
     fputs("\(diagnostic)\n", stderr)

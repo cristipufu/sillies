@@ -4,18 +4,21 @@ import SwiftUI
 struct GeneralSettingsPage: View {
   let controller: CompanionController
   let login: LoginItemSettings?
+  var language: LanguagePreferences? = nil
   var body: some View {
+    if let language { LanguageSettingsView(model: language) }
     if let login {
       SettingsCard(
-        title: "Start the day together", detail: "Have your companions ready when you sign in."
+        title: String(localized: "Start the day together"),
+        detail: String(localized: "Have your companions ready when you sign in.")
       ) {
         LoginSettingsView(model: login)
       }
     }
-    SettingsCard(title: "App updates") { UpdatesSettingsView() }
+    SettingsCard(title: String(localized: "App updates")) { UpdatesSettingsView() }
     SettingsCard(
-      title: "Made for your Mac",
-      detail: "Speech, writing, and saved captures are processed locally."
+      title: String(localized: "Made for your Mac"),
+      detail: String(localized: "Speech, writing, and saved captures are processed locally.")
     ) {
       Text(
         "Recording starts only when you ask. Your Vault and recent writing stay on this Mac; model downloads and update checks use the internet."
@@ -26,12 +29,16 @@ struct GeneralSettingsPage: View {
     }
     DisclosureGroup("Diagnostics") {
       VStack(spacing: 10) {
-        diagnostic("Companions", value: "\(controller.liveCount)")
+        diagnostic(String(localized: "Companions"), value: "\(controller.liveCount)")
         diagnostic(
-          "Movement",
-          value: controller.movingCount == 0 ? "Stopped" : "\(controller.movingCount) moving")
-        diagnostic("Power mode", value: controller.tracker.isLowPower ? "Low Power" : "Normal")
-        diagnostic("Recent reaction", value: controller.lastReaction)
+          String(localized: "Movement"),
+          value: controller.movingCount == 0
+            ? String(localized: "Stopped") : String(localized: "\(controller.movingCount) moving"))
+        diagnostic(
+          String(localized: "Power mode"),
+          value: controller.tracker.isLowPower
+            ? String(localized: "Low Power") : String(localized: "Normal"))
+        diagnostic(String(localized: "Recent reaction"), value: controller.lastReaction)
       }.padding(.top, 12)
     }.font(.caption).foregroundStyle(SilliesTheme.secondary)
   }
@@ -60,7 +67,7 @@ private struct LoginSettingsView: View {
         Button("Allow Sillies in Login Items…") { SMAppService.openSystemSettingsLoginItems() }
           .buttonStyle(SoftButtonStyle())
       }
-      if let error = model.error { Text(error).font(.caption).foregroundStyle(.red) }
+      if let error = model.error { Text(error).font(.caption).foregroundStyle(SilliesTheme.danger) }
     }.task { await model.refresh() }
       .onChange(of: scenePhase) { _, phase in
         if phase == .active { Task { await model.refresh() } }

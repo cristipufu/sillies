@@ -1,4 +1,5 @@
 import FluidAudio
+import Foundation
 import SilliesSpeech
 
 /// Adapts the streaming pipeline's final partial window to Parakeet's input contract.
@@ -14,7 +15,8 @@ struct ParakeetTranscriptionInput {
     } else {
       let code = request.language.locale.language.languageCode?.identifier ?? request.language.id
       guard let hint = Language(rawValue: code) else {
-        throw SpeechError.unavailable("Parakeet does not support this language hint.")
+        throw SpeechError.unavailable(
+          String(localized: "Parakeet does not support this language hint."))
       }
       language = hint
     }

@@ -31,7 +31,7 @@ struct StashPickerView: View {
   var body: some View {
     @Bindable var model = model
     VStack(alignment: .leading, spacing: 14) {
-      SessionIdentityHeader(title: "Pocket Stash", symbol: "tray.full.fill") {
+      SessionIdentityHeader(title: String(localized: "Pocket Stash"), symbol: "tray.full.fill") {
         Text(paste.actionTitle).lineLimit(1)
       } accessory: {
         EmptyView()
@@ -50,9 +50,9 @@ struct StashPickerView: View {
         Text(notice).font(.caption).foregroundStyle(SilliesTheme.secondary)
       }
       if model.isSearching { ProgressView().controlSize(.small) }
-      if let error = model.searchError { Text(error).foregroundStyle(.red) }
+      if let error = model.searchError { Text(error).foregroundStyle(SilliesTheme.danger) }
       if let error = readError() {
-        Text(error).font(.caption).foregroundStyle(.red).textSelection(.enabled)
+        Text(error).font(.caption).foregroundStyle(SilliesTheme.danger).textSelection(.enabled)
       }
       List(model.filteredRecords, selection: $selected) { record in
         VStack(alignment: .leading, spacing: 4) {
@@ -68,7 +68,9 @@ struct StashPickerView: View {
         .overlay {
           if model.filteredRecords.isEmpty, !model.isSearching {
             ContentUnavailableView(
-              model.searchQuery.isEmpty ? "Your stash is empty" : "No matching stashes",
+              model.searchQuery.isEmpty
+                ? String(localized: "Your stash is empty")
+                : String(localized: "No matching stashes"),
               systemImage: "tray",
               description: Text("Save text or a link from the clipboard to find it here."))
           }
@@ -79,7 +81,7 @@ struct StashPickerView: View {
           SilliesTheme.secondary)
         Spacer()
         Button(paste.actionTitle) { activateSelection() }
-          .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction).disabled(
+          .buttonStyle(AccentButtonStyle()).keyboardShortcut(.defaultAction).disabled(
             model.filteredRecords.isEmpty || paste.isPasting)
       }
     }.padding(24).frame(minWidth: 560, minHeight: 440)
@@ -127,8 +129,9 @@ struct StashPickerView: View {
       let window = NSPanel(
         contentRect: CGRect(x: 0, y: 0, width: 600, height: 500),
         styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
-      window.title = "Sillies · Pocket Stash"
+      window.title = String(localized: "Sillies · Pocket Stash")
       AppContentWindowStacking.shared.register(window)
+      AppWindowAppearance.shared.register(window)
       window.isReleasedWhenClosed = false
       window.contentMinSize = CGSize(width: 560, height: 440)
       window.contentViewController = NSHostingController(
@@ -153,7 +156,7 @@ struct StashPickerView: View {
         try Task.checkCancellation()
         guard let record else {
           throw VaultStorageError(
-            message: "This stash is no longer available. Choose another item.")
+            message: String(localized: "This stash is no longer available. Choose another item."))
         }
         window?.orderOut(nil)
         if paste.destination == nil {

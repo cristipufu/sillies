@@ -7,13 +7,13 @@ struct SessionWarningNotice<Actions: View>: View {
 
   var body: some View {
     HStack(alignment: .top, spacing: 10) {
-      Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+      Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(SilliesTheme.warning)
       VStack(alignment: .leading, spacing: 8) {
         Text(message).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
         actions()
       }
       Spacer(minLength: 0)
     }.font(.callout).padding(12)
-      .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+      .background(SilliesTheme.warning.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
   }
 }

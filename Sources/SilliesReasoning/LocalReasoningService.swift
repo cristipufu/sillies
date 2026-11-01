@@ -61,7 +61,10 @@ package actor LocalReasoningService: LocalReasoning, ConversationResponding {
       return await extractedNotes(
         text: text, fallback: fallback,
         notice:
-          "AI notes could not be generated. These are extracted highlights; review the source.")
+          String(
+            localized:
+              "AI notes could not be generated. These are extracted highlights; review the source.")
+      )
     }
   }
 
@@ -183,7 +186,8 @@ package actor LocalReasoningService: LocalReasoning, ConversationResponding {
       explanation: explanations.joined(separator: "\n\n"),
       provenance: .init(
         source: .generated,
-        notice: "Generated on this Mac. Check the source before acting on these notes."))
+        notice: String(
+          localized: "Generated on this Mac. Check the source before acting on these notes.")))
   }
 
   private func generatePart(

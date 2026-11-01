@@ -6,9 +6,12 @@ struct TextModelSettingsView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 20) {
       SettingsCard(
-        title: "Notes that speak your language",
+        title: String(localized: "Notes that speak your language"),
         detail:
-          "Choose the model for summaries, meeting suggestions and writing tools. Speech recognition is configured separately in Speech & Meetings."
+          String(
+            localized:
+              "Choose the model for summaries, meeting suggestions and writing tools. Speech recognition is configured separately in Speech & Meetings."
+          )
       ) {
         Label("Your recordings and text stay on this Mac.", systemImage: "lock.shield")
           .foregroundStyle(SilliesTheme.secondary)
@@ -18,9 +21,12 @@ struct TextModelSettingsView: View {
         .foregroundStyle(SilliesTheme.secondary)
       }
       SettingsCard(
-        title: "Apple Intelligence",
+        title: String(localized: "Apple Intelligence"),
         detail:
-          "Built into macOS. No Sillies model download. Available languages depend on Apple Intelligence on this Mac."
+          String(
+            localized:
+              "Built into macOS. No Sillies model download. Available languages depend on Apple Intelligence on this Mac."
+          )
       ) {
         selectionButton(model.fallbackModelID)
       }
@@ -39,8 +45,11 @@ struct TextModelSettingsView: View {
 
   private func modelCard(_ manifest: TextModelManifest) -> some View {
     let state = model.state(for: manifest.modelID)
-    return SettingsCard(title: manifest.model.name, detail: manifest.model.detail) {
-      Text(manifest.model.languagesDescription).foregroundStyle(SilliesTheme.secondary)
+    return SettingsCard(
+      title: manifest.model.name, detail: LocalizedCatalogText.value(manifest.model.detail)
+    ) {
+      Text(LocalizedCatalogText.value(manifest.model.languagesDescription)).foregroundStyle(
+        SilliesTheme.secondary)
       Text(
         "\(ByteCountFormatter.string(fromByteCount: manifest.downloadBytes, countStyle: .file)) download · \(manifest.model.minimumMemoryGB) GB memory required"
       )
@@ -75,8 +84,10 @@ struct TextModelSettingsView: View {
     case .cancelling:
       ProgressView().controlSize(.small)
     default:
-      Button(state == .paused ? "Resume download" : "Download") { model.download(manifest) }
-        .buttonStyle(SoftButtonStyle()).disabled(model.activeID != nil || !model.supports(manifest))
+      Button(
+        state == .paused ? String(localized: "Resume download") : String(localized: "Download")
+      ) { model.download(manifest) }
+      .buttonStyle(SoftButtonStyle()).disabled(model.activeID != nil || !model.supports(manifest))
     }
   }
 

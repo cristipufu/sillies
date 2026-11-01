@@ -62,3 +62,35 @@ private final class OutputProbe: VoiceOutputDevice, Sendable {
   try await finishing.value
   #expect(finished.withLock { $0 })
 }
+
+@Test(.enabled(if: ProcessInfo.processInfo.environment["SILLIES_NATIVE_PLAYBACK_CHECK"] == "1"))
+func playbackRenderReferenceUsesTheDeviceClockAndStopsWithOutput() async throws {
+  struct RenderProbe {
+    var frames = 0
+    var samples = 0
+    var valid = true
+  }
+  let probe = Mutex(RenderProbe())
+  let started = ProcessInfo.processInfo.systemUptime
+  let playback = VoicePlayback(reference: { frame in
+    probe.withLock {
+      $0.frames += 1
+      $0.samples += frame.samples.count
+      $0.valid =
+        $0.valid && frame.startTime.isFinite && frame.startTime >= started - 1
+        && frame.startTime <= ProcessInfo.processInfo.systemUptime + 2
+        && frame.sampleRate > 0 && frame.samples.allSatisfy(\.isFinite)
+    }
+  })
+  let id = UUID()
+  await playback.start(id: id) { _ in }
+  // Exercise the hardware renderer without an audible sound or microphone access.
+  let audio = try SynthesizedAudio(samples: Array(repeating: 0, count: 4_096), sampleRate: 16_000)
+  try await playback.enqueue(audio, id: id)
+  try await playback.finish(id: id)
+  #expect(probe.withLock { $0.valid && $0.frames > 0 && $0.samples > 0 })
+  try await Task.sleep(for: .milliseconds(20))
+  let framesAfterStop = probe.withLock { $0.frames }
+  try await Task.sleep(for: .milliseconds(50))
+  #expect(probe.withLock { $0.frames } == framesAfterStop)
+}

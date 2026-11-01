@@ -34,7 +34,9 @@ final class RecordingPlaybackModel {
       ) { [weak self] _ in
         MainActor.assumeIsolated { self?.isPlaying = false }
       }
-    } catch { self.error = "Could not open recording: \(error.localizedDescription)" }
+    } catch {
+      self.error = String(localized: "Could not open recording: \(error.localizedDescription)")
+    }
   }
 
   func togglePlayback() {
@@ -75,12 +77,16 @@ struct RecordingPlaybackView: View {
         Spacer()
         Button("Show audio file") { NSWorkspace.shared.activateFileViewerSelecting([url]) }
       }
-      if let error = model.error { Text(error).font(.caption).foregroundStyle(.orange) }
+      if let error = model.error {
+        Text(error).font(.caption).foregroundStyle(SilliesTheme.warning)
+      }
       HStack(spacing: 12) {
         Button(action: model.togglePlayback) {
           Image(systemName: model.isPlaying ? "pause.circle.fill" : "play.circle.fill").font(.title)
         }.buttonStyle(.plain).disabled(model.duration <= 0)
-          .accessibilityLabel(model.isPlaying ? "Pause recording" : "Play recording")
+          .accessibilityLabel(
+            model.isPlaying
+              ? String(localized: "Pause recording") : String(localized: "Play recording"))
         Slider(
           value: Binding(get: { model.position }, set: { model.seek(to: $0) }),
           in: 0...max(1, model.duration)

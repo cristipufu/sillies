@@ -91,6 +91,25 @@ final class SpeechServices {
     }
   }
 
+  func conversationCaptureFactory(reference: VoicePlaybackReference) -> ConversationCaptureFactory {
+    { [dictationRuntime, vocabulary] configuration, update in
+      let dictionary = vocabulary.snapshot()
+      var configuration = configuration
+      configuration.dictionary = dictionary
+      let model = configuration.model
+      return VoiceConversationCapture(
+        configuration: configuration, reference: reference,
+        speech: { language, output, failure in
+          var request = SpeechChannelRequest(language: language, output: output, failure: failure)
+          request.context = .init(vocabulary: dictionary.hints, priority: .interactive)
+          let channelRequest = request
+          return try await InteractiveSpeechChannel.make {
+            try await dictationRuntime.makeChannel(model: model, request: channelRequest)
+          }
+        }, update: update)
+    }
+  }
+
   nonisolated private static func diarizationFactory(
     model: SpeechModelDescriptor?, registry: SpeechRuntimeRegistry
   ) -> SpeakerDiarizationFactory.Make? {

@@ -26,8 +26,10 @@ struct AudioMeetingSuggestionsView: View {
       } else {
         Text(
           model.reasoningNotice == nil
-            ? "Your companion will quietly flag useful questions as the conversation develops."
-            : "Suggestions are unavailable. You can still keep the transcript."
+            ? String(
+              localized:
+                "Your companion will quietly flag useful questions as the conversation develops.")
+            : String(localized: "Suggestions are unavailable. You can still keep the transcript.")
         )
         .font(.caption).foregroundStyle(SilliesTheme.secondary)
       }

@@ -15,7 +15,7 @@ import Testing
   #expect(session.canCompose)
   #expect(session.messages.isEmpty)
   try renderSkillInterface(
-    ChatSessionView(model: session, openSettings: { _ in }), size: SessionWindowLayout.minimumSize,
+    ChatSessionView(model: session, openSettings: { _ in }), size: ChatWindowLayout.minimumSize,
     name: "sillies-chat-model-setup")
   session.finish {}
 }
@@ -39,7 +39,7 @@ private struct MissingChatModel: ConversationResponding {
   #expect(session.messages.count == 1)
   session.draft = "My next thought is still editable."
   try renderSkillInterface(
-    ChatSessionView(model: session, openSettings: { _ in }), size: SessionWindowLayout.minimumSize,
+    ChatSessionView(model: session, openSettings: { _ in }), size: ChatWindowLayout.minimumSize,
     name: "sillies-chat-failure")
   session.finish {}
 }
@@ -77,26 +77,30 @@ private struct FailedChatReply: ConversationResponding {
   }
   #expect(session.messages.count == 2)
   let controller = ChatSessionWindowController()
-  controller.show(session, openSettings: { _ in })
+  controller.show(session, openSettings: { _ in }, renderer: "cat")
   let window = try #require(controller.window)
   defer { controller.close() }
-  window.setContentSize(SessionWindowLayout.minimumSize)
+  window.setContentSize(ChatWindowLayout.minimumSize)
   try DisplayFrameSequence.presentCreatedWindows()
   let content = try #require(window.contentView)
   content.layoutSubtreeIfNeeded()
-  let transcript = try #require(findTranscriptScrollView(in: content))
-  let text = transcript.textView
-  let container = try #require(text.textContainer)
-  let layout = try #require(text.layoutManager)
-  layout.ensureLayout(for: container)
-  #expect(text.string == session.transcript)
-  #expect(text.bounds.height >= layout.usedRect(for: container).maxY)
+  func messageTexts(in view: NSView) -> [String] {
+    if let text = view as? NSTextView { return [text.string] }
+    return view.subviews.flatMap { messageTexts(in: $0) }
+  }
+  let rendered = messageTexts(in: content)
+  for message in session.messages { #expect(rendered.contains(message.text)) }
   try renderSkillInterface(
-    ChatSessionView(model: session, openSettings: { _ in }), size: SessionWindowLayout.minimumSize,
+    ChatSessionView(model: session, openSettings: { _ in }, renderer: "cat"),
+    size: ChatWindowLayout.minimumSize,
     name: "sillies-chat-minimum")
+  try renderSkillInterface(
+    ChatSessionView(model: session, openSettings: { _ in }, renderer: "cat").environment(
+      \.colorScheme, .light),
+    size: ChatWindowLayout.initialSize, name: "sillies-chat-light")
   session.draft = String(repeating: "A longer thought with punctuation. ", count: 80)
   try renderSkillInterface(
-    ChatSessionView(model: session, openSettings: { _ in }), size: SessionWindowLayout.minimumSize,
+    ChatSessionView(model: session, openSettings: { _ in }), size: ChatWindowLayout.minimumSize,
     name: "sillies-chat-long-draft")
   session.finish {}
 }
@@ -115,4 +119,28 @@ private struct FailedChatReply: ConversationResponding {
   animation.update(level: .nan)
   #expect(mouth.opacity == 1)
   #expect((head.animation(forKey: "speech.nod") as? CABasicAnimation)?.toValue as? Double == 0)
+}
+
+@Test @MainActor func chatRapidCloseAndReopenDoesNotLeaveAnInvisibleWindow() async throws {
+  let session = ChatWindowFixture.makeSession()
+  let controller = ChatSessionWindowController()
+  controller.show(session, openSettings: { _ in }, renderer: "cat")
+  let window = try #require(controller.window)
+  defer {
+    controller.close()
+    session.finish {}
+  }
+  window.performClose(nil)
+  controller.show(session, openSettings: { _ in }, renderer: "cat")
+  try DisplayFrameSequence.run(count: 30) { _ in }
+  #expect(window.isVisible)
+  #expect(window.alphaValue == 1)
+  window.performClose(nil)
+  let deadline = ContinuousClock.now.advanced(by: .seconds(2))
+  while window.isVisible, ContinuousClock.now < deadline {
+    try DisplayFrameSequence.presentCreatedWindows()
+    await Task.yield()
+  }
+  #expect(!window.isVisible)
+  #expect(session.phase != .finished)
 }

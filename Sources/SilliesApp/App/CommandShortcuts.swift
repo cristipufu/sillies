@@ -25,9 +25,11 @@ final class CommandShortcuts {
     } else {
       bindings = [
         AppCommand.holdDictation.rawValue: .init(
-          keyCode: UInt32(kVK_Space), modifiers: [.control, .option], keyLabel: "Space"),
+          keyCode: UInt32(kVK_Space), modifiers: [.control, .option],
+          keyLabel: String(localized: "Space")),
         AppCommand.toggleDictation.rawValue: .init(
-          keyCode: UInt32(kVK_ANSI_D), modifiers: [.control, .option], keyLabel: "D"),
+          keyCode: UInt32(kVK_ANSI_D), modifiers: [.control, .option],
+          keyLabel: String(localized: "D")),
       ]
     }
   }
@@ -59,13 +61,13 @@ final class CommandShortcuts {
   func assign(_ shortcut: CommandShortcut?, to command: AppCommand) {
     if let shortcut {
       guard shortcut.isValid else {
-        errors[command.rawValue] = "Include Command, Option, or Control."
+        errors[command.rawValue] = String(localized: "Include Command, Option, or Control.")
         return
       }
       if let conflict = AppCommand.allCases.first(where: {
         $0 != command && bindings[$0.rawValue]?.conflicts(with: shortcut) == true
       }) {
-        errors[command.rawValue] = "Already used by \(conflict.title)."
+        errors[command.rawValue] = String(localized: "Already used by \(conflict.title).")
         return
       }
       if bindings[command.rawValue] == shortcut { return }
@@ -76,7 +78,7 @@ final class CommandShortcuts {
     bindings[command.rawValue] = shortcut
     errors[command.rawValue] = nil
     do { defaults.set(try JSONEncoder().encode(bindings), forKey: Self.preferenceKey) } catch {
-      errors[command.rawValue] = "Could not save this shortcut."
+      errors[command.rawValue] = String(localized: "Could not save this shortcut.")
       fputs("Could not save keyboard shortcuts: \(error)\n", stderr)
     }
   }
@@ -85,7 +87,7 @@ final class CommandShortcuts {
     -> Bool
   {
     guard shortcut.isValid else {
-      errors[command.rawValue] = "Choose a valid keyboard shortcut."
+      errors[command.rawValue] = String(localized: "Choose a valid keyboard shortcut.")
       return false
     }
     do {

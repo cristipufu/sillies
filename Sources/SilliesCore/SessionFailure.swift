@@ -52,13 +52,22 @@ public struct SessionFailure: Error, LocalizedError, Codable, Equatable, Sendabl
     switch recovery {
     case .openMicrophoneSettings:
       message =
-        "Microphone access is required. Enable Sillies in microphone settings, then start a new session."
+        String(
+          localized:
+            "Microphone access is required. Enable Sillies in microphone settings, then start a new session."
+        )
     case .openScreenRecordingSettings:
       message =
-        "Screen and system audio access is required. Enable Sillies in recording settings, then start a new session."
+        String(
+          localized:
+            "Screen and system audio access is required. Enable Sillies in recording settings, then start a new session."
+        )
     case .openAccessibilitySettings:
       message =
-        "Enable Sillies in Accessibility to insert text. You can still dictate and copy your words."
+        String(
+          localized:
+            "Enable Sillies in Accessibility to insert text. You can still dictate and copy your words."
+        )
     }
     return Self(category: .permissionDenied, message: message, recovery: recovery)
   }

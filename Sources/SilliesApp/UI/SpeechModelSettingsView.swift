@@ -45,7 +45,7 @@ struct SpeechModelSettingsView: View {
         ModelUpdateSettingsView(model: updates)
       }
       if let error = model.error {
-        Text(error).font(.caption).foregroundStyle(.red).fixedSize(
+        Text(error).font(.caption).foregroundStyle(SilliesTheme.danger).fixedSize(
           horizontal: false, vertical: true)
       }
       Text(
@@ -62,25 +62,32 @@ struct SpeechModelSettingsView: View {
       .font(.caption.weight(.medium)).foregroundStyle(SilliesTheme.accent)
   }
 
+  private func downloadDescription(_ manifest: SpeechModelManifest) -> String {
+    let size = ByteCountFormatter.string(fromByteCount: manifest.downloadBytes, countStyle: .file)
+    if manifest.model.isDiarizationModel {
+      return String(localized: "\(size) download · Speaker detection")
+    }
+    return String(
+      localized: "\(size) download · \(manifest.model.capabilities.languages.count) languages",
+      comment: "plural")
+  }
+
   private func modelRow(_ manifest: SpeechModelManifest) -> some View {
     let state = model.state(for: manifest.model.id)
     return VStack(alignment: .leading, spacing: 8) {
       HStack(alignment: .top) {
         VStack(alignment: .leading, spacing: 4) {
           Text(manifest.model.name).fontWeight(.semibold)
-          Text(
-            ByteCountFormatter.string(fromByteCount: manifest.downloadBytes, countStyle: .file)
-              + (manifest.model.isDiarizationModel
-                ? " download · Speaker detection"
-                : " download · \(manifest.model.capabilities.languages.count) languages")
-          )
-          .font(.caption).foregroundStyle(SilliesTheme.secondary)
+          Text(downloadDescription(manifest))
+            .font(.caption).foregroundStyle(SilliesTheme.secondary)
         }
         Spacer(minLength: 8)
         if model.isSelected(manifest) { selectedLabel }
       }
-      Text(manifest.model.detail).font(.caption).foregroundStyle(SilliesTheme.secondary)
-        .fixedSize(horizontal: false, vertical: true)
+      Text(LocalizedCatalogText.value(manifest.model.detail)).font(.caption).foregroundStyle(
+        SilliesTheme.secondary
+      )
+      .fixedSize(horizontal: false, vertical: true)
       if let fraction = state.downloadFraction {
         ProgressView(value: fraction).accessibilityLabel("Model download")
       }
@@ -104,7 +111,8 @@ struct SpeechModelSettingsView: View {
         updateActions(manifest)
       }
       DisclosureGroup(
-        manifest.model.isDiarizationModel ? "About speaker labels" : "Languages & license"
+        manifest.model.isDiarizationModel
+          ? String(localized: "About speaker labels") : String(localized: "Languages & license")
       ) {
         VStack(alignment: .leading, spacing: 6) {
           if manifest.model.isDiarizationModel {
@@ -139,8 +147,11 @@ struct SpeechModelSettingsView: View {
         Button("Cancel") { model.pause(manifest.model.id) }.buttonStyle(SoftButtonStyle())
       case .downloaded, .ready:
         if !model.isSelected(manifest) {
-          Button(manifest.model.isDiarizationModel ? "Enable" : "Use") { model.use(manifest) }
-            .buttonStyle(SoftButtonStyle())
+          Button(
+            manifest.model.isDiarizationModel
+              ? String(localized: "Enable") : String(localized: "Use")
+          ) { model.use(manifest) }
+          .buttonStyle(SoftButtonStyle())
         } else if manifest.model.isDiarizationModel {
           Button("Disable") { model.disableSpeakerDetection() }.buttonStyle(SoftButtonStyle())
         }
@@ -150,8 +161,10 @@ struct SpeechModelSettingsView: View {
           SoftButtonStyle())
         removeButton(manifest)
       case .absent, .paused, .failed:
-        Button(state == .absent ? "Download" : "Retry download") { model.download(manifest) }
-          .buttonStyle(SoftButtonStyle())
+        Button(
+          state == .absent ? String(localized: "Download") : String(localized: "Retry download")
+        ) { model.download(manifest) }
+        .buttonStyle(SoftButtonStyle())
       case .cancelling:
         ProgressView().controlSize(.small)
       }
@@ -187,7 +200,10 @@ struct SpeechModelSettingsView: View {
   }
 
   private func removeButton(_ manifest: SpeechModelManifest) -> some View {
-    Button(model.selectedModelID == manifest.model.id ? "Remove & use Apple" : "Remove") {
+    Button(
+      model.selectedModelID == manifest.model.id
+        ? String(localized: "Remove & use Apple") : String(localized: "Remove")
+    ) {
       model.remove(manifest)
     }
     .buttonStyle(.borderless).disabled(isInUse(manifest))

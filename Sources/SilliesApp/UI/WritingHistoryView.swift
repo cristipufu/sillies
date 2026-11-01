@@ -9,7 +9,7 @@ struct WritingHistoryView: View {
   @State private var confirmsDeletion = false
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
-      SessionIdentityHeader(title: "Recent writing", symbol: "text.bubble") {
+      SessionIdentityHeader(title: String(localized: "Recent writing"), symbol: "text.bubble") {
         Text("Dictations & selection edits · On this Mac")
       } accessory: {
         Button("Delete all…", role: .destructive) { confirmsDeletion = true }

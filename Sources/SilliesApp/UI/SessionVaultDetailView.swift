@@ -68,13 +68,13 @@ struct SessionVaultDetailView: View {
               .textSelection(.enabled)
           }
           if !record.explanation.isEmpty {
-            sectionCard(title: "EXPLANATION", symbol: "text.bubble") {
+            sectionCard(title: String(localized: "EXPLANATION"), symbol: "text.bubble") {
               Text(Self.boundedDisplayText(record.explanation)).lineSpacing(4).textSelection(
                 .enabled)
             }
           }
           if !record.suggestions.isEmpty {
-            sectionCard(title: "MEETING SUGGESTIONS", symbol: "pawprint.fill") {
+            sectionCard(title: String(localized: "MEETING SUGGESTIONS"), symbol: "pawprint.fill") {
               VStack(spacing: 10) {
                 ForEach(record.suggestions) { MeetingSuggestionView(suggestion: $0) }
               }
@@ -97,7 +97,7 @@ struct SessionVaultDetailView: View {
               || !record.extractedText.isEmpty
             sectionCard(
               title: hasStructuredHighlights
-                ? record.notesSource.title.uppercased() : "SESSION NOTE",
+                ? record.notesSource.title.uppercased() : String(localized: "SESSION NOTE"),
               symbol: hasStructuredHighlights ? "sparkles" : "note.text"
             ) {
               if record.notesSource == .extracted {
@@ -115,7 +115,7 @@ struct SessionVaultDetailView: View {
           }
 
           if !record.actionItems.isEmpty {
-            sectionCard(title: "ACTION ITEMS", symbol: "checklist") {
+            sectionCard(title: String(localized: "ACTION ITEMS"), symbol: "checklist") {
               VStack(alignment: .leading, spacing: 8) {
                 ForEach(record.actionItems, id: \.self) { item in
                   HStack(alignment: .top, spacing: 9) {
@@ -137,11 +137,12 @@ struct SessionVaultDetailView: View {
           if !record.transcript.isEmpty {
             SpeakerNamingView(record: record) { model.rename($0, to: $1, in: record) }.id(record.id)
             sectionCard(
-              title: "TRANSCRIPT", symbol: "waveform",
+              title: String(localized: "TRANSCRIPT"), symbol: "waveform",
               action: SectionAction(
-                title: "Copy Transcript",
+                title: String(localized: "Copy Transcript"),
                 perform: {
-                  model.copyText(record.transcript, feedback: "Transcript copied")
+                  model.copyText(
+                    record.transcript, feedback: String(localized: "Transcript copied"))
                 })
             ) {
               Text(Self.boundedDisplayText(record.transcript))
@@ -153,11 +154,12 @@ struct SessionVaultDetailView: View {
 
           if !record.extractedText.isEmpty {
             sectionCard(
-              title: "EXTRACTED WINDOW TEXT (OCR)", symbol: "text.viewfinder",
+              title: String(localized: "EXTRACTED WINDOW TEXT (OCR)"), symbol: "text.viewfinder",
               action: SectionAction(
-                title: "Copy OCR Text",
+                title: String(localized: "Copy OCR Text"),
                 perform: {
-                  model.copyText(record.extractedText, feedback: "OCR text copied")
+                  model.copyText(
+                    record.extractedText, feedback: String(localized: "OCR text copied"))
                 })
             ) {
               Text(Self.boundedDisplayText(record.extractedText))
@@ -202,14 +204,15 @@ struct SessionVaultDetailView: View {
 
   private func stashedItemsCard(for record: SessionRecord) -> some View {
     sectionCard(
-      title: "STASHED ITEMS (\(record.stashedItems.count))",
+      title: String(localized: "STASHED ITEMS (\(record.stashedItems.count))"),
       symbol: "tray.full.fill",
       action: record.stashedItems.count > 1
         ? SectionAction(
-          title: "Copy All",
+          title: String(localized: "Copy All"),
           perform: {
             model.copyText(
-              record.stashedItems.joined(separator: "\n"), feedback: "All items copied")
+              record.stashedItems.joined(separator: "\n"),
+              feedback: String(localized: "All items copied"))
           }) : nil
     ) {
       VStack(alignment: .leading, spacing: 8) {
@@ -259,7 +262,7 @@ struct SessionVaultDetailView: View {
               }
 
               Button {
-                model.copyText(item, feedback: "Item copied")
+                model.copyText(item, feedback: String(localized: "Item copied"))
               } label: {
                 HStack(spacing: 4) {
                   Image(systemName: "doc.on.doc")
@@ -333,7 +336,10 @@ struct SessionVaultDetailView: View {
   private static func boundedDisplayText(_ text: String) -> String {
     guard text.count > maxDetailDisplayCharacters else { return text }
     return
-      "\(text.prefix(maxDetailDisplayCharacters))\n\n… [Showing first \(maxDetailDisplayCharacters) of \(text.count) characters — use Copy to copy full text]"
+      String(
+        localized:
+          "\(text.prefix(maxDetailDisplayCharacters))\n\n… [Showing first \(maxDetailDisplayCharacters) of \(text.count) characters — use Copy to copy full text]"
+      )
   }
 
   private func sectionCard<Content: View>(

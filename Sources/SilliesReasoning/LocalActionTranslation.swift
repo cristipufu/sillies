@@ -62,7 +62,7 @@ enum LocalActionTranslation {
   private enum TranslationFailure: LocalizedError {
     case incomplete
     var errorDescription: String? {
-      "On-device action translation did not preserve every commitment."
+      String(localized: "On-device action translation did not preserve every commitment.")
     }
   }
 }

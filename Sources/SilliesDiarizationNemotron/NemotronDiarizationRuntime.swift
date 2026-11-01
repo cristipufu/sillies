@@ -17,7 +17,9 @@ actor NemotronDiarizationRuntime: PreparedDiarizationModel {
   isolated deinit { dispatchPrecondition(condition: .notOnQueue(.main)) }
 
   func validate() async throws {
-    guard let models else { throw SpeechError.unavailable("Speaker detection is not ready.") }
+    guard let models else {
+      throw SpeechError.unavailable(String(localized: "Speaker detection is not ready."))
+    }
     try Task.checkCancellation()
     let stream = Nemotron3Diarizer(config: Self.configuration, models: models)
     stream.appendAudio([Float](repeating: 0, count: Self.validationSamples))
@@ -25,7 +27,8 @@ actor NemotronDiarizationRuntime: PreparedDiarizationModel {
     guard !results.isEmpty,
       results.allSatisfy({ $0.probabilities.allSatisfy { $0.isFinite && (0...1).contains($0) } })
     else {
-      throw SpeechError.unavailable("The updated speaker model returned invalid predictions.")
+      throw SpeechError.unavailable(
+        String(localized: "The updated speaker model returned invalid predictions."))
     }
   }
 
@@ -38,7 +41,9 @@ actor NemotronDiarizationRuntime: PreparedDiarizationModel {
   }
 
   func makeChannel(_ request: SpeakerDiarizationRequest) async throws -> any LocalSpeechChannel {
-    guard let models else { throw SpeechError.unavailable("Speaker detection is not ready.") }
+    guard let models else {
+      throw SpeechError.unavailable(String(localized: "Speaker detection is not ready."))
+    }
     let id = UUID()
     streams[id] = Nemotron3Diarizer(config: Self.configuration, models: models)
     do {

@@ -69,9 +69,9 @@ final class PlayfulMessageArtwork {
     let paragraph = NSMutableParagraphStyle()
     paragraph.alignment = .center
     paragraph.lineSpacing = 3
-    var ink = NSColor.labelColor
+    var ink = SilliesTheme.native(.ink)
     appearance.performAsCurrentDrawingAppearance {
-      ink = NSColor(cgColor: NSColor.labelColor.cgColor) ?? .labelColor
+      ink = NSColor(cgColor: ink.cgColor) ?? ink
     }
     let content = NSMutableAttributedString(
       string: message,

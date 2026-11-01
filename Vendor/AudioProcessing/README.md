@@ -1,6 +1,6 @@
 # Local echo cancellation
 
-This package statically builds WebRTC AudioProcessing (AEC3). It contains no device capture, playback, networking, model downloads, or runtime build tools. Only the C bridge is public. The explicit source list follows upstream production Meson/CMake manifests; architecture-specific assembly/AVX/SSE/NEON implementations are excluded in favor of portable scalar code. Upstream source files are unmodified. DSP is optimized in debug builds too, so audio deadlines remain realistic.
+This package statically builds WebRTC AudioProcessing (AEC3) and its voice activity detector. It contains no device capture, playback, networking, model downloads, or runtime build tools. Only the C bridges are public. `VoiceActivity` wraps the already compiled WebRTC VAD with 16 kHz mono Float32 input in 10 ms frames; Chat feeds it echo-cleaned microphone audio. The explicit source list follows upstream production Meson/CMake manifests; architecture-specific assembly/AVX/SSE/NEON implementations are excluded in favor of portable scalar code. Upstream source files are unmodified. DSP is optimized in debug builds too, so audio deadlines remain realistic.
 
 Sources:
 - webrtc-audio-processing 2.1: https://freedesktop.org/software/pulseaudio/webrtc-audio-processing/webrtc-audio-processing-2.1.tar.xz

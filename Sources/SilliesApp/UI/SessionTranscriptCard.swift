@@ -12,7 +12,10 @@ struct SessionTranscriptCard<EmptyContent: View>: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
       HStack {
-        Text(title ?? (isFinished ? "Transcript" : "Live transcript")).font(.headline)
+        Text(
+          title
+            ?? (isFinished ? String(localized: "Transcript") : String(localized: "Live transcript"))
+        ).font(.headline)
         Spacer()
         if !isFinished, !text.isEmpty {
           Toggle("Follow live", isOn: $followsLive).toggleStyle(.checkbox)
@@ -20,7 +23,7 @@ struct SessionTranscriptCard<EmptyContent: View>: View {
         }
         if !followsLive, !text.isEmpty {
           Button("Jump to latest", systemImage: "arrow.down") { followsLive = true }
-            .buttonStyle(.borderedProminent).controlSize(.small)
+            .buttonStyle(AccentButtonStyle()).controlSize(.small)
             .help("Show the newest speech and resume following the transcript")
         }
       }

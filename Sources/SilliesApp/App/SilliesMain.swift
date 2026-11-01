@@ -1,5 +1,6 @@
 import AppKit
 import Observation
+import SilliesAudio
 import SilliesChat
 import SilliesCore
 import SwiftUI
@@ -32,6 +33,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private let settingsNavigation = SettingsNavigation()
   private var speechServices: SpeechServices?
   private var voiceServices: VoiceServices?
+  private var appearancePreferences: AppearancePreferences?
+  private var languagePreferences: LanguagePreferences?
   private let chatWindow = ChatSessionWindowController()
   private let reasoningServices = ReasoningServices()
   private lazy var textModels = TextModelsPresentation(environment: reasoningServices.models)
@@ -70,6 +73,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       }
       if launch.usesDarkAppearance { NSApp.appearance = NSAppearance(named: .darkAqua) }
       let settings = makeSettings(for: launch)
+      chatWindow.prefersReducedMotion = { settings.reduceMotion }
       let skills = try makeSkillCoordinator(for: launch)
       let controller = try CompanionController(
         settings: settings,
@@ -153,7 +157,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         exportPreviews: { [weak self] directory in self?.exportPreviews(to: directory) })
     } catch {
       let alert = NSAlert()
-      alert.messageText = "Sillies couldn’t get settled."
+      alert.messageText = String(localized: "Sillies couldn’t get settled.")
       alert.informativeText = error.localizedDescription
       alert.runModal()
       NSApp.terminate(nil)
@@ -170,6 +174,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       defaults = .standard
     }
     let settings = AppSettings(defaults: defaults)
+    let appearance = AppearancePreferences(defaults: defaults)
+    appearancePreferences = appearance
+    let language = LanguagePreferences(defaults: defaults)
+    languagePreferences = language
+    language.start()
+    SilliesTheme.configure(appearance)
+    appearance.onChange = { [weak appearance] in
+      NSApp.appearance =
+        launch.usesDarkAppearance ? NSAppearance(named: .darkAqua) : appearance?.appearance.native
+      AppWindowAppearance.shared.refresh()
+    }
+    appearance.start()
     launch.apply(to: settings)
     return settings
   }
@@ -202,19 +218,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private func configureChat(
     skills: SkillCoordinator, speech: SpeechServices, characters: [CharacterDefinition]
   ) throws {
-    let voices = try VoiceServices()
+    let reference = VoicePlaybackReference()
+    let voices = try VoiceServices(renderReference: reference.append)
     voiceServices = voices
     let profiles = Dictionary(
       uniqueKeysWithValues: characters.compactMap { character in
         character.chat.map { (character.id, $0) }
       })
     let services = ChatServices(
-      captureFactory: speech.captureFactory, loadLanguages: speech.languages.load,
+      captureFactory: speech.conversationCaptureFactory(reference: reference),
+      loadLanguages: speech.languages.load,
       conversation: reasoningServices.conversation, speech: voices.speech,
       deliver: { MainRunLoopDelivery.perform($0) })
     skills.makeChatSession = { id, name in
       guard let profile = profiles[id] else { return nil }
-      return ChatSession(companionName: name, profile: profile, services: services)
+      return ChatSession(companionName: name, profile: profile, services: services, companionID: id)
     }
     skills.onOpenChatSession = { [weak self] session in
       self?.chatWindow.show(
@@ -223,7 +241,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
           self?.settingsNavigation.destination =
             destination == .textModels ? .intelligence : .voices
           self?.showSettings()
-        })
+        }, renderer: characters.first(where: { $0.id == session.companionID })?.renderer)
     }
   }
 
@@ -260,6 +278,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     speechServices?.stop()
     textModels.stop()
     voiceServices?.models.stop()
+    appearancePreferences?.stop()
+    languagePreferences?.stop()
     cleanupTemporaryPreferences()
     let approveTermination = onTerminationApproved
     let (stream, continuation) = AsyncStream<Void>.makeStream()
@@ -317,7 +337,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     item.button?.image = NSImage(
       systemSymbolName: "pawprint.fill", accessibilityDescription: "Sillies")
     item.button?.image?.isTemplate = true
-    item.button?.toolTip = "Sillies · a little company"
+    item.button?.toolTip = String(localized: "Sillies · a little company")
     item.button?.target = self
     item.button?.action = #selector(togglePopover)
     item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -377,39 +397,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private func showContextMenu() {
     let menu = NSMenu()
     let pause = NSMenuItem(
-      title: controller?.settings.paused == true ? "Resume companions" : "Pause companions",
+      title: controller?.settings.paused == true
+        ? String(localized: "Resume companions") : String(localized: "Pause companions"),
       action: #selector(togglePause), keyEquivalent: "p")
     pause.target = self
     menu.addItem(pause)
     let vault = NSMenuItem(
-      title: "Session Vault…", action: #selector(openVaultFromMenu), keyEquivalent: "v")
+      title: String(localized: "Session Vault…"), action: #selector(openVaultFromMenu),
+      keyEquivalent: "v")
     vault.target = self
     menu.addItem(vault)
     let dictate = NSMenuItem(
-      title: "Start / finish dictation", action: #selector(toggleDictation), keyEquivalent: "")
+      title: String(localized: "Start / finish dictation"), action: #selector(toggleDictation),
+      keyEquivalent: "")
     dictate.target = self
     menu.addItem(dictate)
     let stash = NSMenuItem(
-      title: "Search Pocket Stash…", action: #selector(openStashPicker), keyEquivalent: "")
+      title: String(localized: "Search Pocket Stash…"), action: #selector(openStashPicker),
+      keyEquivalent: "")
     stash.target = self
     menu.addItem(stash)
     let recovery = NSMenuItem(
-      title: "Recent writing…", action: #selector(openWritingHistory), keyEquivalent: "")
+      title: String(localized: "Recent writing…"), action: #selector(openWritingHistory),
+      keyEquivalent: "")
     recovery.target = self
     menu.addItem(recovery)
     let settings = NSMenuItem(
       title: speechServices?.models.availableUpdateCount ?? 0 > 0
-        ? "Settings… · Model updates available" : "Settings…",
+        ? String(localized: "Settings… · Model updates available") : String(localized: "Settings…"),
       action: #selector(showSettings), keyEquivalent: ",")
     settings.target = self
     menu.addItem(settings)
     let checkUpdates = NSMenuItem(
-      title: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "")
+      title: String(localized: "Check for Updates…"), action: #selector(checkForUpdates),
+      keyEquivalent: "")
     checkUpdates.target = self
     checkUpdates.isEnabled = Updates.shared.canCheck
     menu.addItem(checkUpdates)
     menu.addItem(.separator())
-    let quit = NSMenuItem(title: "Quit Sillies", action: #selector(quit), keyEquivalent: "q")
+    let quit = NSMenuItem(
+      title: String(localized: "Quit Sillies"), action: #selector(quit), keyEquivalent: "q")
     quit.target = self
     menu.addItem(quit)
     guard let button = statusItem?.button else { return }
@@ -461,8 +488,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         contentRect: CGRect(origin: .zero, size: Self.initialVaultWindowSize),
         styleMask: [.titled, .closable, .miniaturizable, .resizable],
         backing: .buffered, defer: false)
-      window.title = "Sillies · Session Vault"
+      window.title = String(localized: "Sillies · Session Vault")
       AppContentWindowStacking.shared.register(window)
+      AppWindowAppearance.shared.register(window)
       window.titlebarAppearsTransparent = true
       window.isReleasedWhenClosed = false
       window.minSize = Self.minVaultWindowSize
@@ -482,14 +510,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         contentRect: CGRect(origin: .zero, size: SettingsWindowLayout.initialSize),
         styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered,
         defer: false)
-      window.title = "Sillies · Settings"
+      window.title = String(localized: "Sillies · Settings")
       AppContentWindowStacking.shared.register(window)
+      AppWindowAppearance.shared.register(window)
       window.contentMinSize = SettingsWindowLayout.minimumSize
       window.titlebarAppearsTransparent = true
       window.isReleasedWhenClosed = false
       window.contentViewController = NSHostingController(
         rootView: SettingsView(
-          controller: controller, speechModels: speechServices?.models,
+          controller: controller, appearance: appearancePreferences, language: languagePreferences,
+          speechModels: speechServices?.models,
           voiceModels: voiceServices?.models, textModels: textModels,
           shortcuts: shortcuts, loginItems: loginItems, writingTools: writingTools,
           navigation: settingsNavigation))
@@ -507,8 +537,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     let window = NSWindow(
       contentRect: CGRect(origin: .zero, size: size), styleMask: [.titled, .closable],
       backing: .buffered, defer: false)
-    window.title = "Sillies · Control Center"
+    window.title = String(localized: "Sillies · Control Center")
     AppContentWindowStacking.shared.register(window)
+    AppWindowAppearance.shared.register(window)
     window.contentViewController = host
     window.isReleasedWhenClosed = false
     window.center()

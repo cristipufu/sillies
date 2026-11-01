@@ -23,7 +23,8 @@ actor SpeechCapturePreparation {
     if runtime == nil { runtime = try await registry.prepare(model) }
     try Task.checkCancellation()
     guard let runtime else {
-      throw SpeechError.unavailable("The transcription model could not be prepared.")
+      throw SpeechError.unavailable(
+        String(localized: "The transcription model could not be prepared."))
     }
     var request = SpeechChannelRequest(language: language, output: output, failure: failure)
     request.context = context

@@ -9,7 +9,7 @@ package struct WhisperSpeechProvider: SpeechProvider {
   package func prepare(_ request: SpeechPreparation) async throws -> any PreparedSpeechModel {
     try Task.checkCancellation()
     guard let directory = request.directory else {
-      throw SpeechError.unavailable("Whisper has not been downloaded.")
+      throw SpeechError.unavailable(String(localized: "Whisper has not been downloaded."))
     }
     let engine = WhisperWindowEngine()
     try await engine.load(directory)

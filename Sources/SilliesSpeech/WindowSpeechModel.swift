@@ -1,3 +1,5 @@
+import Foundation
+
 package struct WindowSpeechModel: PreparedSpeechModel {
   private static let validationSamples = 16_000
   private let engine: any SpeechWindowEngine
@@ -8,7 +10,8 @@ package struct WindowSpeechModel: PreparedSpeechModel {
       .init(samples: [Float](repeating: 0, count: Self.validationSamples), language: .automatic))
     guard result.words.allSatisfy({ $0.start.isFinite && $0.end.isFinite && $0.end >= $0.start })
     else {
-      throw SpeechError.unavailable("The updated speech model returned invalid timestamps.")
+      throw SpeechError.unavailable(
+        String(localized: "The updated speech model returned invalid timestamps."))
     }
   }
   package func makeChannel(_ request: SpeechChannelRequest) async throws -> any LocalSpeechChannel {

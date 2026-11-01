@@ -34,14 +34,14 @@ struct AudioSessionHeader: View {
   private var controlsRow: some View {
     HStack(spacing: 10) {
       HStack(spacing: 7) {
-        Circle().fill(model.phase == .capturing ? Color.red : SilliesTheme.secondary)
+        Circle().fill(model.phase == .capturing ? SilliesTheme.danger : SilliesTheme.secondary)
           .frame(width: 7, height: 7)
         Text(statusTitle).font(.callout.weight(.medium))
       }
       Spacer(minLength: 8)
       if model.canPause {
         Button(
-          model.isPaused ? "Resume" : "Pause",
+          model.isPaused ? String(localized: "Resume") : String(localized: "Pause"),
           systemImage: model.isPaused ? "play.fill" : "pause.fill"
         ) {
           if model.isPaused { model.onResume?() } else { model.onPause?() }
@@ -49,10 +49,10 @@ struct AudioSessionHeader: View {
       }
       if model.canFinish {
         Button("Finish & Save", systemImage: "stop.fill") { model.onFinish?() }
-          .buttonStyle(.borderedProminent).controlSize(.large)
+          .buttonStyle(AccentButtonStyle()).controlSize(.large)
       } else if let id = model.savedRecordID {
         Button("Open in Vault", systemImage: "tray") { model.onOpenRecord?(id) }
-          .buttonStyle(.borderedProminent).controlSize(.large)
+          .buttonStyle(AccentButtonStyle()).controlSize(.large)
       } else {
         ProgressView().controlSize(.small)
         Text("Saving…").font(.callout).foregroundStyle(SilliesTheme.secondary)
@@ -62,18 +62,20 @@ struct AudioSessionHeader: View {
 
   private var statusTitle: String {
     if model.transcriptionFailure != nil, model.phase == .capturing {
-      return "Recording · Transcription stopped"
+      return String(localized: "Recording · Transcription stopped")
     }
-    if model.pendingLanguageID != nil { return "Changing language…" }
+    if model.pendingLanguageID != nil { return String(localized: "Changing language…") }
     switch model.phase {
     case .preparing:
-      if model.isLoadingLanguages { return "Getting ready" }
-      return model.selectedLanguageID == nil ? "Choose a language" : "Preparing speech…"
-    case .capturing: return model.kind == .record ? "Recording" : "Listening"
-    case .paused: return "Paused"
-    case .finishing: return "Finishing session"
-    case .finished: return "Saved to Vault"
-    case .failed: return "Session stopped"
+      if model.isLoadingLanguages { return String(localized: "Getting ready") }
+      return model.selectedLanguageID == nil
+        ? String(localized: "Choose a language") : String(localized: "Preparing speech…")
+    case .capturing:
+      return model.kind == .record ? String(localized: "Recording") : String(localized: "Listening")
+    case .paused: return String(localized: "Paused")
+    case .finishing: return String(localized: "Finishing session")
+    case .finished: return String(localized: "Saved to Vault")
+    case .failed: return String(localized: "Session stopped")
     }
   }
 
@@ -82,8 +84,12 @@ struct AudioSessionHeader: View {
       Text("Audio sources").font(.headline)
       Text(
         model.kind == .record
-          ? "Records your laptop microphone when available and saves a playable audio file."
-          : "Captures audio from the selected app, including other tabs in the same browser.")
+          ? String(
+            localized:
+              "Records your laptop microphone when available and saves a playable audio file.")
+          : String(
+            localized:
+              "Captures audio from the selected app, including other tabs in the same browser."))
       if model.kind.isMeetingSession {
         Text(
           "Includes your microphone and saves both sides of the conversation. Speaker echo is reduced locally. Muting Meet or Zoom does not mute Sillies."

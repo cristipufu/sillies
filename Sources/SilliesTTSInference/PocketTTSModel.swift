@@ -18,7 +18,9 @@ actor PocketTTSModel: NativeTTSModel {
       guard FileManager.default.fileExists(atPath: languageRoot.appendingPathComponent(path).path)
       else {
         throw TTSError.unavailable(
-          "The Pocket TTS installation is incomplete. Reinstall it in Settings → Voices.")
+          String(
+            localized:
+              "The Pocket TTS installation is incomplete. Reinstall it in Settings → Voices."))
       }
     }
     guard
@@ -26,7 +28,10 @@ actor PocketTTSModel: NativeTTSModel {
         atPath: languageRoot.appendingPathComponent("constants_bin/bos_before_voice.bin").path)
     else {
       throw TTSError.unavailable(
-        "The Pocket TTS installation is missing a required resource. Reinstall it in Settings → Voices."
+        String(
+          localized:
+            "The Pocket TTS installation is missing a required resource. Reinstall it in Settings → Voices."
+        )
       )
     }
     manager = PocketTtsManager(language: language, directory: configuration.directory)

@@ -36,9 +36,9 @@ struct SessionHUDAction: View {
   var body: some View {
     Button(action: action) {
       Text(title).font(.system(size: 10, weight: .bold, design: .rounded))
-        .foregroundStyle(.white).padding(.horizontal, 10).padding(.vertical, 5)
+        .foregroundStyle(SilliesTheme.onAccent).padding(.horizontal, 10).padding(.vertical, 5)
         .background(
-          Capsule().fill(hovered ? SilliesTheme.accent.opacity(0.85) : SilliesTheme.accent))
+          Capsule().fill(hovered ? SilliesTheme.accentFill.opacity(0.85) : SilliesTheme.accentFill))
     }.buttonStyle(.plain).onHover { hovered = $0 }
   }
 }
@@ -64,7 +64,7 @@ struct SessionAudioIndicator: View {
   private static let sideFactor: Double = 0.65
   let level: Double
   let isCapturing: Bool
-  private var color: Color { isCapturing ? .red : SilliesTheme.secondary }
+  private var color: Color { isCapturing ? SilliesTheme.danger : SilliesTheme.secondary }
   var body: some View {
     ZStack {
       Circle().fill(color.opacity(0.14)).frame(width: 28, height: 28)
@@ -79,6 +79,8 @@ struct SessionAudioIndicator: View {
                 min(Self.maximumHeight, Self.minimumHeight + CGFloat(level * Self.gain * factor))))
         }
       }
-    }.accessibilityLabel(isCapturing ? "Microphone listening" : "Microphone inactive")
+    }.accessibilityLabel(
+      isCapturing
+        ? String(localized: "Microphone listening") : String(localized: "Microphone inactive"))
   }
 }

@@ -1,3 +1,4 @@
+import Foundation
 import SilliesSpeech
 
 package struct AppleSpeechProvider: SpeechProvider, PreparedSpeechModel {
@@ -19,7 +20,7 @@ package struct AppleSpeechProvider: SpeechProvider, PreparedSpeechModel {
   package func makeChannel(_ request: SpeechChannelRequest) async throws -> any LocalSpeechChannel {
     guard request.language.isInstalled else {
       throw SpeechError.unavailable(
-        "Install the Apple speech model for \(request.language.name) first.")
+        String(localized: "Install the Apple speech model for \(request.language.name) first."))
     }
     return try await AnalyzerSpeechChannel.make(
       locale: request.language.locale, output: request.output, failure: request.failure,
@@ -32,7 +33,10 @@ package struct AppleSpeechProvider: SpeechProvider, PreparedSpeechModel {
   ) async throws -> any LocalSpeechChannel {
     guard language.isInstalled else {
       throw SpeechError.unavailable(
-        "The Apple speech model for \(language.name) is not installed. Choose a language marked Ready on this Mac."
+        String(
+          localized:
+            "The Apple speech model for \(language.name) is not installed. Choose a language marked Ready on this Mac."
+        )
       )
     }
     return try await AnalyzerSpeechChannel.make(

@@ -27,7 +27,7 @@ struct ModelUpdateSettingsView: View {
       )
       .font(.caption).foregroundStyle(SilliesTheme.secondary)
       .fixedSize(horizontal: false, vertical: true)
-      if let error = model.error { Text(error).font(.caption).foregroundStyle(.red) }
+      if let error = model.error { Text(error).font(.caption).foregroundStyle(SilliesTheme.danger) }
     }
   }
 }

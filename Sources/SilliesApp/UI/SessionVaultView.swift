@@ -129,14 +129,19 @@ struct SessionVaultView: View {
       }.font(.caption)
 
       if let error = vault.persistenceError {
-        Text(error).font(.caption).foregroundStyle(.orange)
+        Text(error).font(.caption).foregroundStyle(SilliesTheme.warning)
         Button("Retry saving") { vault.retrySaving() }
       }
 
       if model.isSearching {
-        ProgressView(model.searchQuery.isEmpty ? "Loading sessions…" : "Searching…").font(.caption)
+        ProgressView(
+          model.searchQuery.isEmpty
+            ? String(localized: "Loading sessions…") : String(localized: "Searching…")
+        ).font(.caption)
       }
-      if let error = model.searchError { Text(error).font(.caption).foregroundStyle(.red) }
+      if let error = model.searchError {
+        Text(error).font(.caption).foregroundStyle(SilliesTheme.danger)
+      }
       if records.isEmpty {
         emptySidebarState
       } else {
@@ -170,7 +175,7 @@ struct SessionVaultView: View {
       }
       Text(
         model.searchQuery.isEmpty && model.selectedFilter == nil
-          ? "No sessions saved yet" : "No matching sessions"
+          ? String(localized: "No sessions saved yet") : String(localized: "No matching sessions")
       )
       .font(.system(size: 14, weight: .bold, design: .rounded))
       Text(
@@ -197,7 +202,7 @@ struct SessionVaultView: View {
             .frame(width: 32, height: 32)
           Image(systemName: record.kind.symbolName)
             .font(.system(size: 13, weight: .semibold))
-            .foregroundStyle(isSelected ? Color.white : SilliesTheme.accent)
+            .foregroundStyle(isSelected ? SilliesTheme.onAccent : SilliesTheme.accent)
         }
 
         VStack(alignment: .leading, spacing: 5) {
@@ -242,7 +247,7 @@ struct SessionVaultView: View {
             }
             if record.kind == .stash && record.stashItemCount > 0 {
               Text(
-                "· \(record.stashItemCount) item\(record.stashItemCount == 1 ? "" : "s")"
+                String(localized: "· \(record.stashItemCount) items", comment: "plural")
               )
               .font(.system(size: 9.5, weight: .medium))
               .foregroundStyle(SilliesTheme.secondary)

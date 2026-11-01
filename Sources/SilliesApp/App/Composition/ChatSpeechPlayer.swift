@@ -18,14 +18,21 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
     do {
       guard let manifest = try await models.selectedModel() else {
         return
-          "You can chat by typing. Download and choose a voice in Settings → Voices for spoken replies."
+          String(
+            localized:
+              "You can chat by typing. Download and choose a voice in Settings → Voices for spoken replies."
+          )
       }
       guard try await models.store.isInstalled(manifest) else {
-        return "Download \(manifest.model.name) in Settings → Voices for spoken replies."
+        return String(
+          localized: "Download \(manifest.model.name) in Settings → Voices for spoken replies.")
       }
       guard manifest.model.supports(language: language) else {
         return
-          "The selected voice does not support this language. You can continue chatting in text."
+          String(
+            localized:
+              "The selected voice does not support this language. You can continue chatting in text."
+          )
       }
       return nil
     } catch { return error.localizedDescription }
@@ -57,12 +64,17 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
     _ request: ChatSpeechRequest, receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void
   ) async throws -> String? {
     guard let manifest = try await models.selectedModel() else {
-      return "Text replies are ready. Add a voice in Settings → Voices to hear your companion."
+      return String(
+        localized:
+          "Text replies are ready. Add a voice in Settings → Voices to hear your companion.")
     }
     let language = request.profile.languageIdentifier
     guard manifest.model.supports(language: language) else {
       return
-        "This voice model does not speak the selected language. Your conversation continues in text."
+        String(
+          localized:
+            "This voice model does not speak the selected language. Your conversation continues in text."
+        )
     }
     let preferred = request.profile.preferredVoices[manifest.model.providerID]
     let voices = manifest.model.voices.filter { $0.supports(language: language) }

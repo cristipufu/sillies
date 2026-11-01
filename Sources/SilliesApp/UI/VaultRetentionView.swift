@@ -10,7 +10,7 @@ struct VaultRetentionView: View {
   private var count: Int { selection.limit.map { max(0, vault.eligibleRetentionCount - $0) } ?? 0 }
   var body: some View {
     VStack(alignment: .leading, spacing: 18) {
-      SessionIdentityHeader(title: "Keep what matters", symbol: "archivebox") {
+      SessionIdentityHeader(title: String(localized: "Keep what matters"), symbol: "archivebox") {
         Text("Session Vault · Retention")
       } accessory: {
         EmptyView()
@@ -26,14 +26,15 @@ struct VaultRetentionView: View {
       )
       .font(.callout).foregroundStyle(SilliesTheme.secondary)
       if count > 0 {
-        Text("This change will delete \(count) existing capture(s).").foregroundStyle(.orange)
+        Text("This change will delete \(count) existing capture(s).").foregroundStyle(
+          SilliesTheme.warning)
       }
       HStack {
         Button("Cancel") { dismiss() }.buttonStyle(SoftButtonStyle())
         Spacer()
-        Button(count > 0 ? "Review deletion…" : "Save") {
+        Button(count > 0 ? String(localized: "Review deletion…") : String(localized: "Save")) {
           if count > 0 { confirmsDeletion = true } else { apply() }
-        }.buttonStyle(.borderedProminent)
+        }.buttonStyle(AccentButtonStyle())
           .disabled(!vault.isReadyForRetention)
       }
       Divider()

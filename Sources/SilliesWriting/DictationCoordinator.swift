@@ -50,7 +50,9 @@ package final class DictationCoordinator {
   @ObservationIgnored private var stopCompletions: [@MainActor @Sendable () -> Void] = []
   package var environment = Environment()
   package var phase: Phase { startFailure == nil ? (run?.phase ?? .idle) : .result }
-  package var status: String { startFailure ?? run?.status ?? "Ready to dictate" }
+  package var status: String {
+    startFailure ?? run?.status ?? String(localized: "Ready to dictate")
+  }
   package var preview: String { run?.preview ?? "" }
   package var level: Double { run?.level ?? 0 }
   package var elapsed: TimeInterval { run?.elapsed ?? 0 }
@@ -71,7 +73,9 @@ package final class DictationCoordinator {
   package var canFinish: Bool { phase == .listening }
   package var hudStatus: String {
     guard phase == .listening else { return status }
-    let instruction = run?.mode == .hold ? "Release to finish" : "Press again to finish"
+    let instruction =
+      run?.mode == .hold
+      ? String(localized: "Release to finish") : String(localized: "Press again to finish")
     return "\(SessionRecord.formatDuration(elapsed)) · \(instruction)"
   }
 
@@ -99,7 +103,8 @@ package final class DictationCoordinator {
     guard run?.mode == .hold else { return }
     if phase == .preparing {
       cancel()
-      run?.show("Released before the microphone was ready. Try toggle dictation.")
+      run?.show(
+        String(localized: "Released before the microphone was ready. Try toggle dictation."))
       environment.changed()
     } else if phase == .listening {
       finish()
@@ -109,11 +114,11 @@ package final class DictationCoordinator {
     guard !isBusy else { return }
     startFailure = nil
     guard environment.canStart() else {
-      showStartFailure("Finish the current recording before dictating.")
+      showStartFailure(String(localized: "Finish the current recording before dictating."))
       return
     }
     guard let application = context.currentApplication() else {
-      showStartFailure("Focus the text field you want to write in first.")
+      showStartFailure(String(localized: "Focus the text field you want to write in first."))
       return
     }
     let next = DictationRun(
@@ -147,7 +152,9 @@ package final class DictationCoordinator {
         : catalog.installedLanguage(matching: identifier)
       guard let language else {
         run.show(
-          "Choose an installed dictation language in Settings. English and Romanian require a model that supports them."
+          String(
+            localized:
+              "Choose an installed dictation language supported by your selected speech model.")
         )
         endActivity(run)
         environment.changed()
@@ -230,7 +237,7 @@ package final class DictationCoordinator {
     guard accepts(run), let captured = run.takeFinalized() else { return }
     let raw = captured.plainText.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !raw.isEmpty else {
-      run.show(captured.failure?.message ?? "No speech was recognized.")
+      run.show(captured.failure?.message ?? String(localized: "No speech was recognized."))
       endActivity(run)
       environment.changed()
       return
@@ -261,7 +268,8 @@ package final class DictationCoordinator {
     var result = result
     result.text = text ?? result.originalText
     if text == nil {
-      result.notice = "Used the transcript: cleanup was unavailable or missed its deadline."
+      result.notice = String(
+        localized: "Used the transcript: cleanup was unavailable or missed its deadline.")
     }
     return result
   }
@@ -342,7 +350,8 @@ package final class DictationCoordinator {
     guard !text.isEmpty else { return }
     var result = WritingResult(
       originalText: text, text: text, applicationName: run.application.name,
-      notice: "Dictation stopped before insertion. Your transcript is ready to copy.")
+      notice: String(
+        localized: "Dictation stopped before insertion. Your transcript is ready to copy."))
     result.delivery = .needsPaste
     history.save(result)
     run.preserve(result)

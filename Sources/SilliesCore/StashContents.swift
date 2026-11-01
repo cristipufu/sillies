@@ -2,7 +2,7 @@ import Foundation
 
 public struct StashContents: Sendable {
   public let items: [String]
-  public var summary: String { "Saved \(items.count) item(s)." }
+  public var summary: String { String(localized: "Saved \(items.count) item(s).") }
 
   public init?(_ items: [String]) {
     let cleaned = items.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter {

@@ -11,7 +11,7 @@ struct PersonalDictionarySettings: View {
           "Help recognition with names, jargon, and technical terms. Add a “heard as” spelling to correct a repeated mistake."
         )
         .font(.caption).foregroundStyle(SilliesTheme.secondary)
-        TextField("Preferred spelling, e.g. Ștefănescu", text: $phrase).textFieldStyle(
+        TextField("Preferred spelling", text: $phrase).textFieldStyle(
           .roundedBorder)
         TextField("Often heard as (optional)", text: $heardAs).textFieldStyle(.roundedBorder)
         Button("Add word or phrase", systemImage: "plus") {
@@ -20,12 +20,15 @@ struct PersonalDictionarySettings: View {
             phrase = ""
             heardAs = ""
           }
-        }.buttonStyle(.borderedProminent)
+        }.buttonStyle(AccentButtonStyle())
           .disabled(phrase.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-        if let error = model.error { Text(error).font(.caption).foregroundStyle(.red) }
+        if let error = model.error {
+          Text(error).font(.caption).foregroundStyle(SilliesTheme.danger)
+        }
         ForEach(model.entries) { entry in
           HStack {
-            Text(entry.heardAs.isEmpty ? entry.phrase : "\(entry.heardAs) → \(entry.phrase)")
+            Text(
+              verbatim: entry.heardAs.isEmpty ? entry.phrase : "\(entry.heardAs) → \(entry.phrase)")
             Spacer()
             Button {
               model.remove(entry.id)

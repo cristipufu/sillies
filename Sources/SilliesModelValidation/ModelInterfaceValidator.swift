@@ -25,7 +25,10 @@ package enum ModelInterfaceValidator {
     package var errorDescription: String? {
       switch self {
       case .changedSchema(let bundle):
-        "The updated \(bundle) has a different runtime interface. The installed model remains selected."
+        String(
+          localized:
+            "The updated \(bundle) has a different runtime interface. The installed model remains selected."
+        )
       }
     }
   }

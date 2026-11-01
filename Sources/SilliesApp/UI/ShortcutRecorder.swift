@@ -39,7 +39,10 @@ final class ShortcutRecorderButton: NSButton {
   required init?(coder: NSCoder) { return nil }
 
   func refreshTitle() {
-    title = recording ? "Press shortcut…" : shortcut?.display ?? "Set shortcut…"
+    title =
+      recording
+      ? String(localized: "Press shortcut…")
+      : shortcut?.display ?? String(localized: "Set shortcut…")
   }
 
   @objc private func beginRecording() {
@@ -67,7 +70,7 @@ final class ShortcutRecorderButton: NSButton {
       ] where event.modifierFlags.contains(native) { modifiers.insert(flag) }
       let label =
         event.keyCode == UInt16(kVK_Space)
-        ? "Space" : (event.charactersIgnoringModifiers ?? "").uppercased()
+        ? String(localized: "Space") : (event.charactersIgnoringModifiers ?? "").uppercased()
       onAssign?(
         CommandShortcut(keyCode: UInt32(event.keyCode), modifiers: modifiers, keyLabel: label))
       cancel()

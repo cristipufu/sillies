@@ -4,7 +4,7 @@ struct CompanionSettingsPage: View {
   let controller: CompanionController
   var body: some View {
     @Bindable var settings = controller.settings
-    SettingsCard(title: "Where they hang out") {
+    SettingsCard(title: String(localized: "Where they hang out")) {
       Toggle("Follow the active window", isOn: $settings.followsWindows)
       Text(
         "Companions stay outside your document, along window edges. Turn this off to keep them on the desktop."
@@ -16,8 +16,9 @@ struct CompanionSettingsPage: View {
       }.pickerStyle(.segmented)
       Text(
         settings.activity == .playful
-          ? "Little dances, shared adventures, and the occasional bit of mischief."
-          : "A quieter crew, with fewer interruptions."
+          ? String(
+            localized: "Little dances, shared adventures, and the occasional bit of mischief.")
+          : String(localized: "A quieter crew, with fewer interruptions.")
       )
       .font(.caption).foregroundStyle(SilliesTheme.secondary)
       HStack {
@@ -65,13 +66,15 @@ struct CompanionSettingsPage: View {
       }
     }
     SettingsCard(
-      title: "Apps where they take a break",
-      detail: "Hide the crew in apps where you want a little more space."
+      title: String(localized: "Apps where they take a break"),
+      detail: String(localized: "Hide the crew in apps where you want a little more space.")
     ) {
       HStack {
         Text(controller.tracker.applicationName).fontWeight(.medium)
         Spacer()
-        Button(controller.isExcluded ? "Show here" : "Hide here") {
+        Button(
+          controller.isExcluded ? String(localized: "Show here") : String(localized: "Hide here")
+        ) {
           controller.toggleCurrentApplicationExclusion()
         }.buttonStyle(SoftButtonStyle()).disabled(controller.tracker.bundleIdentifier == nil)
       }

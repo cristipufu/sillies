@@ -13,6 +13,7 @@ final class PlayfulPropPresentation {
   private var owner: PlayfulSceneDefinition.Role = .lead
   private var cardSize = CGSize.zero
   private var artworkSize = CGSize.zero
+  private var appliedThemeRevision = -1
   var isVisible: Bool { panel.isVisible }
   var windowNumber: Int { panel.windowNumber }
   var previews: [(NSView, CGRect)] { [panel.preview].compactMap { $0 } }
@@ -44,10 +45,12 @@ final class PlayfulPropPresentation {
   func prepare(_ request: Preparation) {
     let prop = request.prop
     let owner = request.owner
-    guard prop != current || self.owner != owner else { return }
+    guard prop != current || self.owner != owner || appliedThemeRevision != SilliesTheme.revision
+    else { return }
     hide()
     current = prop
     self.owner = owner
+    appliedThemeRevision = SilliesTheme.revision
     guard prop != .none else { return }
     panel.prepare()
     artwork.prepare(prop, reducedMotion: request.reducedMotion)
@@ -58,7 +61,8 @@ final class PlayfulPropPresentation {
       PlayfulClipTiming.synchronize(artwork.root, startingAt: request.startedAt)
     }
     cardSize = messageBubble.prepare(
-      prop, message: request.message, appearance: panel.effectiveAppearance,
+      prop, message: LocalizedCatalogText.value(request.message),
+      appearance: panel.effectiveAppearance,
       scale: panel.backingScaleFactor
     )
   }

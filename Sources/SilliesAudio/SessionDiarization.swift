@@ -64,7 +64,9 @@ final class SessionDiarization: Sendable {
         stream.pendingCharacters + phrase.text.count <= Self.maximumPendingCharacters
       else {
         fail(
-          "Speaker detection fell behind. Transcription continues without speaker labels.",
+          String(
+            localized:
+              "Speaker detection fell behind. Transcription continues without speaker labels."),
           source: source)
         output(phrase, source)
         return
@@ -93,7 +95,8 @@ final class SessionDiarization: Sendable {
       } catch {
         fputs("Speaker activity rejected: \(error)\n", stderr)
         fail(
-          "Speaker detection stopped. Transcription continues without speaker labels.",
+          String(
+            localized: "Speaker detection stopped. Transcription continues without speaker labels."),
           source: source)
       }
     }
@@ -125,7 +128,10 @@ final class SessionDiarization: Sendable {
     channels.finish(reason: .sessionEnd) { [weak self] notice in
       if notice != nil {
         self?.notice(
-          "Speaker detection took too long to finish. The available labels and transcript were preserved."
+          String(
+            localized:
+              "Speaker detection took too long to finish. The available labels and transcript were preserved."
+          )
         )
       }
       self?.flushPending()

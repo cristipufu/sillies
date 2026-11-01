@@ -15,7 +15,7 @@ import SwiftUI
         contentRect: CGRect(origin: .zero, size: SessionWindowLayout.initialSize),
         styleMask: [.titled, .closable, .resizable, .nonactivatingPanel],
         backing: .buffered, defer: false)
-      panel.title = "Sillies · Dictate"
+      panel.title = String(localized: "Sillies · Dictate")
       panel.isReleasedWhenClosed = false
       panel.hidesOnDeactivate = false
       panel.becomesKeyOnlyIfNeeded = true

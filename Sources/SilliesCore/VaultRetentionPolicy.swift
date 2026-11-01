@@ -11,7 +11,8 @@ public enum VaultRetentionPolicy: String, Codable, CaseIterable, Sendable {
     }
   }
   public var title: String {
-    limit.map { "Keep latest \($0) unprotected captures" } ?? "Keep everything until I delete it"
+    limit.map { String(localized: "Keep latest \($0) unprotected captures") }
+      ?? String(localized: "Keep everything until I delete it")
   }
   public func expired(in records: [SessionRecord]) -> [SessionRecord] {
     guard let limit else { return [] }

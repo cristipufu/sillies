@@ -54,7 +54,9 @@ final class CommandDispatcher {
     if command == .dictationHistory, onWritingCommand?(command) == true { return }
     guard environment.isAvailable() else {
       feedback.showMessage(
-        "Companions are paused or unavailable in this app. Resume them in the Sillies menu.",
+        String(
+          localized:
+            "Companions are paused or unavailable in this app. Resume them in the Sillies menu."),
         at: NSEvent.mouseLocation)
       return
     }
@@ -65,11 +67,13 @@ final class CommandDispatcher {
     }
     if command.skill?.keepsCompanionStill == true, !skills.canStartAudio() {
       feedback.showMessage(
-        "Finish dictation or writing before starting another session.", at: NSEvent.mouseLocation)
+        String(localized: "Finish dictation or writing before starting another session."),
+        at: NSEvent.mouseLocation)
       return
     }
     guard let companion = context?.companion ?? environment.companion() else {
-      feedback.showMessage("Choose an available companion first.", at: NSEvent.mouseLocation)
+      feedback.showMessage(
+        String(localized: "Choose an available companion first."), at: NSEvent.mouseLocation)
       return
     }
     if command == .saveClipboard {
@@ -86,7 +90,8 @@ final class CommandDispatcher {
       return
     }
     guard let app = targeting.current() else {
-      feedback.showMessage("Focus the window you want to use first.", at: companion.position)
+      feedback.showMessage(
+        String(localized: "Focus the window you want to use first."), at: companion.position)
       return
     }
     cancelPending()
@@ -98,7 +103,8 @@ final class CommandDispatcher {
         targeting.current() == app, self.environment.isAvailable()
       else { return }
       guard let target else {
-        self.feedback.showMessage("No usable foreground window was found.", at: companion.position)
+        self.feedback.showMessage(
+          String(localized: "No usable foreground window was found."), at: companion.position)
         return
       }
       self.start(skill, context: .init(companion: companion, target: target))

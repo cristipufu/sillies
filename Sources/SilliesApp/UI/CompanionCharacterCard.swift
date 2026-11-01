@@ -23,8 +23,11 @@ struct CompanionCharacterCard: View {
         }.frame(height: 111)
         Text(character.name).font(.system(size: 14, weight: .bold, design: .rounded)).padding(
           .top, 5)
-        Text(character.subtitle).font(.system(size: 9)).foregroundStyle(SilliesTheme.secondary)
-          .lineLimit(1).minimumScaleFactor(0.85)
+        Text(LocalizedCatalogText.value(character.subtitle)).font(.system(size: 10))
+          .foregroundStyle(
+            SilliesTheme.secondary
+          )
+          .lineLimit(2).frame(minHeight: 26, alignment: .topLeading)
       }.padding(10).frame(maxWidth: .infinity, alignment: .leading)
         .background(SilliesTheme.card, in: RoundedRectangle(cornerRadius: 17))
         .overlay(
@@ -32,8 +35,8 @@ struct CompanionCharacterCard: View {
             enabled ? SilliesTheme.accent.opacity(0.45) : SilliesTheme.border,
             lineWidth: enabled ? 1.3 : 0.7))
     }.buttonStyle(.plain)
-      .accessibilityLabel("\(character.name), \(character.subtitle)")
-      .accessibilityValue(enabled ? "Enabled" : "Disabled")
-      .help(character.bio)
+      .accessibilityLabel("\(character.name), \(LocalizedCatalogText.value(character.subtitle))")
+      .accessibilityValue(enabled ? String(localized: "Enabled") : String(localized: "Disabled"))
+      .help(LocalizedCatalogText.value(character.bio))
   }
 }

@@ -23,7 +23,7 @@ package actor TTSModelRegistry {
   package init(store: ModelStore, providers: [any TTSProvider], activity: InferenceActivity) throws
   {
     guard Set(providers.map(\.id)).count == providers.count else {
-      throw TTSError.unavailable("Duplicate voice provider registration.")
+      throw TTSError.unavailable(String(localized: "Duplicate voice provider registration."))
     }
     self.store = store
     self.providers = Dictionary(uniqueKeysWithValues: providers.map { ($0.id, $0) })
@@ -89,13 +89,16 @@ package actor TTSModelRegistry {
     }
     await releaseModel()
     guard let provider = providers[manifest.model.providerID] else {
-      throw TTSError.unavailable("This voice model needs a newer version of Sillies.")
+      throw TTSError.unavailable(
+        String(localized: "This voice model needs a newer version of Sillies."))
     }
     guard
       ProcessInfo.processInfo.physicalMemory / Self.bytesPerGiB >= manifest.model.minimumMemoryGB
     else {
       throw TTSError.unavailable(
-        "This voice model needs at least \(manifest.model.minimumMemoryGB) GB of memory.")
+        String(
+          localized:
+            "This voice model needs at least \(manifest.model.minimumMemoryGB) GB of memory."))
     }
     let lease = try await store.acquire(manifest)
     do {

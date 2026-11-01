@@ -25,7 +25,9 @@ actor WhisperWindowEngine: SpeechWindowEngine {
 
   func transcribe(_ request: SpeechWindowRequest) async throws -> SpeechWindowResult {
     dispatchPrecondition(condition: .notOnQueue(.main))
-    guard let pipeline else { throw SpeechError.unavailable("Whisper is not ready.") }
+    guard let pipeline else {
+      throw SpeechError.unavailable(String(localized: "Whisper is not ready."))
+    }
     var options = DecodingOptions()
     options.task = .transcribe
     options.language =

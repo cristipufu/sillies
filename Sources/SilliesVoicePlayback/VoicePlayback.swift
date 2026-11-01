@@ -1,4 +1,5 @@
 import Foundation
+import SilliesCore
 import SilliesTTS
 
 /// Owns the output device. Native buffers and hardware setup never escape this actor.
@@ -19,7 +20,9 @@ package actor VoicePlayback: SpeechPlayback {
   private var capacityWaiter: CheckedContinuation<Void, Error>?
   private var finishWaiter: CheckedContinuation<Void, Error>?
 
-  package init() { makeDevice = { NativeVoiceOutput() } }
+  package init(reference: (@Sendable (AudioRenderFrame) -> Void)? = nil) {
+    makeDevice = { NativeVoiceOutput(reference: reference) }
+  }
   package init(makeDevice: @escaping @Sendable () -> any VoiceOutputDevice) {
     self.makeDevice = makeDevice
   }

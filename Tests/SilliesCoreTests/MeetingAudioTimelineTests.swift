@@ -38,3 +38,14 @@ import Testing
     try timeline.append([0.1], source: .meeting, at: .nan)
   }
 }
+
+@Test func meetingTimelinePreservesSamplesAfterAnUtteranceFlush() throws {
+  var timeline = MeetingAudioTimeline()
+  try timeline.append([Float](repeating: 0.2, count: 80), source: .microphone, at: 100)
+  #expect(timeline.nextFinalFrame()?.validSamples == 80)
+  try timeline.append([Float](repeating: 0.4, count: 160), source: .microphone, at: 100.005)
+  let pending = timeline.nextFinalFrame()
+  let next = try #require(pending)
+  #expect(next.validSamples == 160)
+  #expect(next.microphone.allSatisfy { $0 == 0.4 })
+}

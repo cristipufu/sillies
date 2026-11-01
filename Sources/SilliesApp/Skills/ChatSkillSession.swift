@@ -17,8 +17,10 @@ import SilliesCore
   ) {
     presentation.finish { [presentation] in
       let draft = presentation.draft.trimmingCharacters(in: .whitespacesAndNewlines)
-      let transcript = [presentation.transcript, draft.isEmpty ? "" : "You (unsent)\n\(draft)"]
-        .filter { !$0.isEmpty }.joined(separator: "\n\n")
+      let transcript = [
+        presentation.transcript, draft.isEmpty ? "" : String(localized: "You (unsent)\n\(draft)"),
+      ]
+      .filter { !$0.isEmpty }.joined(separator: "\n\n")
       guard !transcript.isEmpty else {
         completion(nil)
         return
@@ -30,11 +32,13 @@ import SilliesCore
           source: .init(appName: context.companionName)),
         content: .init(
           text: .init(transcript: transcript),
-          notes: .init(summary: "A conversation with \(context.companionName).")),
+          notes: .init(summary: String(localized: "A conversation with \(context.companionName)."))),
         metadata: .init(
           durationSeconds: max(0, context.now - context.startedAt),
           transcription: .init(languageIdentifier: presentation.language)))
-      completion(.init(record: record, image: nil, bannerSummary: "Chat saved · Open Vault"))
+      completion(
+        .init(
+          record: record, image: nil, bannerSummary: String(localized: "Chat saved · Open Vault")))
     }
   }
   func cancel() { presentation.finish {} }

@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "id": "catppuccin",
+  "name": "Catppuccin",
+  "comment": "Catppuccin Latte in light appearance and Mocha in dark appearance; a proper name.",
+  "order": 10,
+  "light": {
+    "paper": "#EFF1F5",
+    "card": "#FFFFFF",
+    "soft": "#E6E9EF",
+    "ink": "#4C4F69",
+    "secondary": "#5C5F77",
+    "border": "#ACB0BE",
+    "accent": "#702FC5",
+    "accentFill": "#702FC5",
+    "onAccent": "#FFFFFF",
+    "selection": "#D8C9F4",
+    "onSelection": "#4C4F69",
+    "success": "#356F29",
+    "warning": "#885400",
+    "danger": "#BA1F37"
+  },
+  "dark": {
+    "paper": "#1E1E2E",
+    "card": "#313244",
+    "soft": "#181825",
+    "ink": "#CDD6F4",
+    "secondary": "#BAC2DE",
+    "border": "#6C7086",
+    "accent": "#CBA6F7",
+    "accentFill": "#CBA6F7",
+    "onAccent": "#1E1E2E",
+    "selection": "#45475A",
+    "onSelection": "#CDD6F4",
+    "success": "#A6E3A1",
+    "warning": "#F9E2AF",
+    "danger": "#F38BA8"
+  }
+}

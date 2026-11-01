@@ -4,10 +4,15 @@ package struct TextGenerationRequest: Codable, Sendable {
   package let instructions: String
   package let prompt: String
   package let maximumTokens: Int
-  package init(instructions: String, prompt: String, maximumTokens: Int) {
+  package let style: TextGenerationStyle
+  package init(
+    instructions: String, prompt: String, maximumTokens: Int,
+    style: TextGenerationStyle = .precise
+  ) {
     self.instructions = instructions
     self.prompt = prompt
     self.maximumTokens = maximumTokens
+    self.style = style
   }
 }
 
@@ -35,14 +40,19 @@ package struct TextModelPreparation: Codable, Sendable {
 
 package enum TextModelError: LocalizedError {
   case unavailable(String)
-  case busy, invalidResponse, interrupted
+  case busy, invalidResponse, interrupted, repetitiveResponse
   package var errorDescription: String? {
     switch self {
     case .unavailable(let message): message
-    case .busy: "The text model is busy. Please try again."
+    case .busy: String(localized: "The text model is busy. Please try again.")
     case .invalidResponse:
-      "The local text model returned an incomplete response. Your source is unchanged."
-    case .interrupted: "Local text generation was interrupted. Your source is unchanged."
+      String(
+        localized: "The local text model returned an incomplete response. Your source is unchanged."
+      )
+    case .interrupted:
+      String(localized: "Local text generation was interrupted. Your source is unchanged.")
+    case .repetitiveResponse:
+      String(localized: "The reply got stuck repeating itself. Please try again.")
     }
   }
 }

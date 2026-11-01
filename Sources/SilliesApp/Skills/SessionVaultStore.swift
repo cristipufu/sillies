@@ -218,7 +218,10 @@ import SilliesVault
     case .failure(let error):
       loadState = .failed
       persistenceError =
-        "Could not open the Vault. Existing files were preserved. \(error.localizedDescription)"
+        String(
+          localized:
+            "Could not open the Vault. Existing files were preserved. \(error.localizedDescription)"
+        )
       fputs("Vault open failed: \(error)\n", stderr)
     }
     let completions = loadCompletions
@@ -310,7 +313,8 @@ import SilliesVault
     switch result {
     case .success(let text): command = .completeScreenshot(text: text, revision: request.revision)
     case .failure(let error):
-      let message = "Screenshot text recognition failed: \(error.localizedDescription)"
+      let message = String(
+        localized: "Screenshot text recognition failed: \(error.localizedDescription)")
       fputs("\(message)\n", stderr)
       command = .failScreenshot(message: message, revision: request.revision)
     }

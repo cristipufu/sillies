@@ -20,6 +20,7 @@ private struct SavedTranscriptView: View {
         defer: false)
       created.isReleasedWhenClosed = false
       AppContentWindowStacking.shared.register(created)
+      AppWindowAppearance.shared.register(created)
       created.center()
       window = created
     }

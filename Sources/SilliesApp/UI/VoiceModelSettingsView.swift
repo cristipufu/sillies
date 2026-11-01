@@ -7,9 +7,12 @@ struct VoiceModelSettingsView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 20) {
       SettingsCard(
-        title: "A little voice. A lot of personality.",
+        title: String(localized: "A little voice. A lot of personality."),
         detail:
-          "Choose a local voice model for Chat. Each companion has its own preferred voice and personality."
+          String(
+            localized:
+              "Choose a local voice model for Chat. Each companion has its own preferred voice and personality."
+          )
       ) {
         Label("Your conversations stay on this Mac.", systemImage: "lock.shield")
         Text(
@@ -36,7 +39,9 @@ struct VoiceModelSettingsView: View {
 
   private func card(_ manifest: TTSModelManifest) -> some View {
     let state = model.state(for: manifest.modelID)
-    return SettingsCard(title: manifest.model.name, detail: manifest.model.detail) {
+    return SettingsCard(
+      title: manifest.model.name, detail: LocalizedCatalogText.value(manifest.model.detail)
+    ) {
       DisclosureGroup("Supported languages (\(manifest.model.languages.count))") {
         Text(
           manifest.model.languages.map { Locale.current.localizedString(forLanguageCode: $0) ?? $0 }
@@ -84,8 +89,10 @@ struct VoiceModelSettingsView: View {
       Button("Pause download") { model.pauseDownload() }.buttonStyle(SoftButtonStyle())
     case .cancelling: ProgressView().controlSize(.small)
     default:
-      Button(state == .paused ? "Resume download" : "Download") { model.download(manifest) }
-        .buttonStyle(SoftButtonStyle()).disabled(model.activeID != nil || !model.supports(manifest))
+      Button(
+        state == .paused ? String(localized: "Resume download") : String(localized: "Download")
+      ) { model.download(manifest) }
+      .buttonStyle(SoftButtonStyle()).disabled(model.activeID != nil || !model.supports(manifest))
     }
   }
 }

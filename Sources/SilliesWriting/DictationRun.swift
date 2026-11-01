@@ -15,7 +15,7 @@ import SilliesCore
   let mode: DictationCoordinator.Mode
   let options: Options
   private(set) var phase = DictationCoordinator.Phase.preparing
-  private(set) var status = "Preparing microphone…"
+  private(set) var status = String(localized: "Preparing microphone…")
   private(set) var preview = ""
   private(set) var level = 0.0
   private(set) var elapsed: TimeInterval = 0
@@ -70,7 +70,10 @@ import SilliesCore
   func preparing(_ message: String) { status = message }
   func listening() {
     phase = .listening
-    status = mode == .hold ? "Listening · release to insert" : "Listening · press again to finish"
+    status =
+      mode == .hold
+      ? String(localized: "Listening · release to insert")
+      : String(localized: "Listening · press again to finish")
     if destination == nil { status += " · copy only" }
   }
   func progress(text: String, level: Double, elapsed: TimeInterval) {
@@ -85,13 +88,13 @@ import SilliesCore
   func finalize(at time: TimeInterval) {
     releasedAt = time
     phase = .finalizing
-    status = "Finishing speech…"
+    status = String(localized: "Finishing speech…")
     level = 0
     stopUpdates()
   }
   func delivering() {
     phase = .delivering
-    status = "Preparing your text…"
+    status = String(localized: "Preparing your text…")
   }
   func complete(_ result: WritingResult, insertedAt: TimeInterval?) {
     self.result = result
@@ -99,7 +102,8 @@ import SilliesCore
     if let insertedAt, let releasedAt { releaseToInsertion = insertedAt - releasedAt }
     show(
       result.delivery == .inserted
-        ? "Inserted into \(application.name)" : "Your text is ready to copy")
+        ? String(localized: "Inserted into \(application.name)")
+        : String(localized: "Your text is ready to copy"))
   }
   func show(_ message: String) {
     status = message
@@ -110,7 +114,7 @@ import SilliesCore
     finalized = nil
     disposition = .discard
     invalidate()
-    status = "Dictation canceled"
+    status = String(localized: "Dictation canceled")
   }
   func suspend() {
     if disposition != .discard { disposition = .recover }

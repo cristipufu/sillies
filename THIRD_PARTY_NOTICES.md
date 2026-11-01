@@ -5638,7 +5638,7 @@ Archive hashes, scope, licenses, and patent grant follow. Embedded DSP notices a
 ````text
 # Local echo cancellation
 
-This package statically builds WebRTC AudioProcessing (AEC3). It contains no device capture, playback, networking, model downloads, or runtime build tools. Only the C bridge is public. The explicit source list follows upstream production Meson/CMake manifests; architecture-specific assembly/AVX/SSE/NEON implementations are excluded in favor of portable scalar code. Upstream source files are unmodified. DSP is optimized in debug builds too, so audio deadlines remain realistic.
+This package statically builds WebRTC AudioProcessing (AEC3) and its voice activity detector. It contains no device capture, playback, networking, model downloads, or runtime build tools. Only the C bridges are public. `VoiceActivity` wraps the already compiled WebRTC VAD with 16 kHz mono Float32 input in 10 ms frames; Chat feeds it echo-cleaned microphone audio. The explicit source list follows upstream production Meson/CMake manifests; architecture-specific assembly/AVX/SSE/NEON implementations are excluded in favor of portable scalar code. Upstream source files are unmodified. DSP is optimized in debug builds too, so audio deadlines remain realistic.
 
 Sources:
 - webrtc-audio-processing 2.1: https://freedesktop.org/software/pulseaudio/webrtc-audio-processing/webrtc-audio-processing-2.1.tar.xz
@@ -6276,6 +6276,39 @@ This Agreement will be governed by and construed in accordance with the laws of 
 **"Fish Audio Materials"** means, collectively, Fish Audio's proprietary Models, Software and Documentation (and any portion or combination thereof) made available under this Agreement.
 
 **"Trade Control Laws"** means any applicable U.S. and non-U.S. export control and trade sanctions laws and regulations.
+````
+
+</details>
+
+## Localization tooling and palette references
+
+The JSON catalog workflow, shared interface translations, and palette conventions were adapted from [Strata Files](https://github.com/cristipufu/strata), under the MIT license. Sillies supplies its own product copy, validation, semantic roles, and native integration.
+
+<details>
+<summary>Strata Files — MIT attribution</summary>
+
+````text
+MIT License
+
+Copyright (c) 2026 Cristian Pufu
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 ````
 
 </details>

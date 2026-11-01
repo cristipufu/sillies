@@ -1,5 +1,6 @@
 import Foundation
 import SilliesChat
+import SilliesCore
 import SilliesInference
 import SilliesModelStore
 import SilliesTTS
@@ -11,7 +12,10 @@ import SilliesVoicePlayback
   let speech: any ChatSpeechOutput
   let models: VoiceModelsPresentation
 
-  init(defaults: UserDefaults = .standard, directory: URL? = nil) throws {
+  init(
+    defaults: UserDefaults = .standard, directory: URL? = nil,
+    renderReference: (@Sendable (AudioRenderFrame) -> Void)? = nil
+  ) throws {
     let root =
       directory
       ?? FileManager.default.homeDirectoryForCurrentUser
@@ -29,7 +33,8 @@ import SilliesVoicePlayback
       selectedID: defaults.string(forKey: Self.preferenceKey) ?? VoiceModelEnvironment.disabledID,
       savePreference: { defaults.set($0, forKey: Self.preferenceKey) })
     self.environment = environment
-    speech = ChatSpeechPlayer(models: environment, playback: VoicePlayback())
+    speech = ChatSpeechPlayer(
+      models: environment, playback: VoicePlayback(reference: renderReference))
     models = VoiceModelsPresentation(environment: environment)
   }
 }

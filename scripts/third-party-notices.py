@@ -193,7 +193,9 @@ def render(root):
     fish = "## Fish runtime references and model license\n\nThe Sillies Fish implementation was informed by Fish Audio's S2 Pro architecture and the MIT-licensed Swift reference at Blaizzy/mlx-audio-swift, revision d4fa7be1c2fef65ed13a4f73bd58e0a23a0ba307. Runtime code, bounds, ownership, and validation live in SilliesFishSpeech. The reference package is not a dependency.\n\n"
     fish += notice_section("Swift reference — MIT attribution", root / "Resources/Licenses/FishSwiftReference-MIT.txt")
     fish += notice_section("Fish S2 Pro — model license", root / "Resources/Licenses/FishS2Pro-Research.txt")
-    return INTRODUCTION + model_inventory(root) + package_inventory(pins) + MAINTENANCE + package_licenses(root, pins) + audio_licenses(root) + fish
+    localization = "## Localization tooling and palette references\n\nThe JSON catalog workflow, shared interface translations, and palette conventions were adapted from [Strata Files](https://github.com/cristipufu/strata), under the MIT license. Sillies supplies its own product copy, validation, semantic roles, and native integration.\n\n"
+    localization += notice_section("Strata Files — MIT attribution", root / "Resources/Licenses/Strata-Localization-MIT.txt")
+    return INTRODUCTION + model_inventory(root) + package_inventory(pins) + MAINTENANCE + package_licenses(root, pins) + audio_licenses(root) + fish + localization
 
 
 def write_atomic(destination, content):

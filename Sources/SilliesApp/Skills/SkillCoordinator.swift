@@ -153,7 +153,8 @@ final class SkillCoordinator {
       origin: .init(
         characterID: id, characterName: companionName,
         source: .init(
-          appName: target?.appName ?? "Pocket Stash", bundleIdentifier: target?.bundleIdentifier,
+          appName: target?.appName ?? String(localized: "Pocket Stash"),
+          bundleIdentifier: target?.bundleIdentifier,
           windowTitle: target?.windowTitle)),
       content: .init(
         text: .init(stashedItems: contents.items), notes: .init(summary: contents.summary),
@@ -168,7 +169,9 @@ final class SkillCoordinator {
       self.setBinding(
         .completed(
           target: target, skill: .stash,
-          summary: error == nil ? "Saved · View or Undo" : "Could not save · Open Vault",
+          summary: error == nil
+            ? String(localized: "Saved · View or Undo")
+            : String(localized: "Could not save · Open Vault"),
           recordID: record.id,
           expiresAt: ProcessInfo.processInfo.systemUptime + Self.completionBannerDuration), for: id)
     }
@@ -306,7 +309,9 @@ final class SkillCoordinator {
       now: ProcessInfo.processInfo.systemUptime, startedAt: startedAt,
       companionID: id, companionName: request.companionName, target: target)
     setBinding(
-      .active(target: target, skill: skill, startedAt: startedAt, statusDetail: "Finishing…"),
+      .active(
+        target: target, skill: skill, startedAt: startedAt,
+        statusDetail: String(localized: "Finishing…")),
       for: id)
     session.finish(context) { [weak self] outcome in
       guard let self else { return }
@@ -334,7 +339,8 @@ final class SkillCoordinator {
       self.setBinding(
         .completed(
           target: request.target, skill: request.skill,
-          summary: error == nil ? outcome.bannerSummary : "Could not save · Open Vault",
+          summary: error == nil
+            ? outcome.bannerSummary : String(localized: "Could not save · Open Vault"),
           recordID: outcome.record.id, expiresAt: now + Self.completionBannerDuration),
         for: request.companionID)
     }

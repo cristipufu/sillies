@@ -17,7 +17,7 @@ final class FocusSkillSession: ActiveSkillSession {
   }
 
   var initialStatusDetail: String {
-    "Focus · 25:00 remaining"
+    String(localized: "Focus · 25:00 remaining")
   }
 
   func start() {}
@@ -39,8 +39,8 @@ final class FocusSkillSession: ActiveSkillSession {
     let awayDuration = awaySince.map { context.now - $0 } ?? 0
     let status =
       awayDuration >= Self.distractionThresholdSeconds
-      ? "Come back to \(target.appName) 👀 · \(countdown)"
-      : "Focus · \(countdown) left"
+      ? String(localized: "Come back to \(target.appName) 👀 · \(countdown)")
+      : String(localized: "Focus · \(countdown) left")
     return .keepRunning(statusDetail: status)
   }
 
@@ -55,7 +55,10 @@ final class FocusSkillSession: ActiveSkillSession {
     let duration = max(0, context.now - context.startedAt)
     let ratio = duration > 0 ? Int((focusedSeconds / duration * 100).rounded()) : 100
     let summary =
-      "Focused on \(target.appName) for \(SessionRecord.formatDuration(focusedSeconds)) (\(ratio)% on-target)."
+      String(
+        localized:
+          "Focused on \(target.appName) for \(SessionRecord.formatDuration(focusedSeconds)) (\(ratio)% on-target)."
+      )
     let record = SessionRecord(
       kind: .focus,
       origin: .init(
@@ -67,7 +70,8 @@ final class FocusSkillSession: ActiveSkillSession {
       metadata: .init(durationSeconds: duration))
     return SkillCompletionOutcome(
       record: record, image: nil,
-      bannerSummary: "Focus logged (\(SessionRecord.formatDuration(focusedSeconds)))")
+      bannerSummary: String(
+        localized: "Focus logged (\(SessionRecord.formatDuration(focusedSeconds)))"))
   }
 
   func cancel() {}

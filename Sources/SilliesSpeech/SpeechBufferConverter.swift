@@ -1,4 +1,5 @@
 import AVFoundation
+import Foundation
 
 /// Reuses its converter until a source format changes (for example, a microphone reconnect).
 package final class SpeechBufferConverter {
@@ -17,14 +18,14 @@ package final class SpeechBufferConverter {
       converter?.primeMethod = .none
     }
     guard let converter else {
-      throw SpeechError.unavailable("Unsupported microphone format.")
+      throw SpeechError.unavailable(String(localized: "Unsupported microphone format."))
     }
     let capacity = AVAudioFrameCount(
       ceil(
         Double(input.frameLength) * format.sampleRate / input.format.sampleRate
           + Self.capacityPadding))
     guard let output = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: capacity) else {
-      throw SpeechError.unavailable("Could not prepare speech audio.")
+      throw SpeechError.unavailable(String(localized: "Could not prepare speech audio."))
     }
     var supplied = false
     var error: NSError?

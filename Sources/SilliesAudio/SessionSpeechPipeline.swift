@@ -121,7 +121,10 @@ final class SessionSpeechPipeline: Sendable {
             SessionFailure(
               category: .transcription,
               message:
-                "Changing language took too long. Finish to save the available transcript and audio."
+                String(
+                  localized:
+                    "Changing language took too long. Finish to save the available transcript and audio."
+                )
             ))
           return
         }
@@ -186,7 +189,10 @@ final class SessionSpeechPipeline: Sendable {
       state.preparation = nil
       if !state.buffered.isEmpty {
         state.finalizationNotice =
-          "The session ended while language was changing. Earlier text was preserved; speech during the change may be missing from the transcript."
+          String(
+            localized:
+              "The session ended while language was changing. Earlier text was preserved; speech during the change may be missing from the transcript."
+          )
       }
       state.buffered.removeAll()
       state.bufferedDurations.removeAll()

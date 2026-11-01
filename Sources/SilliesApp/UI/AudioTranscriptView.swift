@@ -14,14 +14,15 @@ struct AudioTranscriptView: View {
           SilliesTheme.accent)
         Text(
           model.phase == .capturing
-            ? "Ready for your words" : "Your transcript will appear here"
+            ? String(localized: "Ready for your words")
+            : String(localized: "Your transcript will appear here")
         )
         .font(.callout.weight(.medium))
         Text(
           model.displayedLanguage.map {
             "Speak in \($0.name). Speech may take a moment to appear."
           }
-            ?? "Choose a ready language to begin."
+            ?? String(localized: "Choose a ready language to begin.")
         )
         .font(.caption).foregroundStyle(SilliesTheme.secondary)
       }.frame(maxWidth: .infinity).padding(.vertical, 32)

@@ -1,4 +1,5 @@
 import AVFoundation
+import Foundation
 import SilliesCore
 import SilliesSpeech
 
@@ -23,7 +24,9 @@ final class MeetingAudioProcessor {
       let format = AVAudioFormat(
         standardFormatWithSampleRate: Double(MeetingAudioTimeline.sampleRate),
         channels: Self.channelCount)
-    else { throw AudioCaptureFailure.unavailable("Could not prepare meeting audio.") }
+    else {
+      throw AudioCaptureFailure.unavailable(String(localized: "Could not prepare meeting audio."))
+    }
     self.format = format
     meetingConverter = SpeechBufferConverter(format: format)
     microphoneConverter = SpeechBufferConverter(format: format)
@@ -41,13 +44,20 @@ final class MeetingAudioProcessor {
         samples, source: source == .application ? .meeting : .microphone, at: time)
     } catch {
       throw AudioCaptureFailure.unavailable(
-        "Meeting audio timing changed unexpectedly. Finish to save the available recording and transcript."
+        String(
+          localized:
+            "Meeting audio timing changed unexpectedly. Finish to save the available recording and transcript."
+        )
       )
     }
   }
 
   func nextReadyOutput() throws -> Output? {
     try timeline.nextReadyFrame().map(process)
+  }
+
+  func nextReadyOutput(through time: TimeInterval) throws -> Output? {
+    try timeline.nextReadyFrame(through: time).map(process)
   }
 
   func nextFinalOutput() throws -> Output? {
@@ -75,11 +85,15 @@ final class MeetingAudioProcessor {
     guard count > 0, count <= samples.count, let capacity = AVAudioFrameCount(exactly: count),
       let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: capacity),
       let data = buffer.floatChannelData?[0]
-    else { throw AudioCaptureFailure.unavailable("Could not prepare processed meeting audio.") }
+    else {
+      throw AudioCaptureFailure.unavailable(
+        String(localized: "Could not prepare processed meeting audio."))
+    }
     buffer.frameLength = capacity
     try samples.withUnsafeBufferPointer { samples in
       guard let source = samples.baseAddress else {
-        throw AudioCaptureFailure.unavailable("Processed meeting audio is empty.")
+        throw AudioCaptureFailure.unavailable(
+          String(localized: "Processed meeting audio is empty."))
       }
       data.update(from: source, count: count)
     }

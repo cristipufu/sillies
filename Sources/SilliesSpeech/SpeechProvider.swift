@@ -38,7 +38,8 @@ package protocol PreparedSpeechModel: Sendable {
 
 extension PreparedSpeechModel {
   package func validate() async throws {
-    throw SpeechError.unavailable("This speech provider does not support model update validation.")
+    throw SpeechError.unavailable(
+      String(localized: "This speech provider does not support model update validation."))
   }
 }
 

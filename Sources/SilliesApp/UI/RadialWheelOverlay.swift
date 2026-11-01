@@ -54,7 +54,7 @@ struct RadialWheelView: View {
         VStack(spacing: 5) {
           ZStack {
             Circle()
-              .fill(isSelected ? SilliesTheme.accent : SilliesTheme.card.opacity(0.98))
+              .fill(isSelected ? SilliesTheme.accentFill : SilliesTheme.card.opacity(0.98))
               .frame(width: 48, height: 48)
               .shadow(
                 color: isSelected
@@ -64,11 +64,11 @@ struct RadialWheelView: View {
               )
               .overlay(
                 Circle().strokeBorder(
-                  isSelected ? Color.white.opacity(0.9) : SilliesTheme.border,
+                  isSelected ? SilliesTheme.onAccent.opacity(0.9) : SilliesTheme.border,
                   lineWidth: isSelected ? 2 : 1))
             Image(systemName: item.skill.symbolName)
               .font(.system(size: 17, weight: .semibold))
-              .foregroundStyle(isSelected ? Color.white : SilliesTheme.ink)
+              .foregroundStyle(isSelected ? SilliesTheme.onAccent : SilliesTheme.ink)
           }
           Text(item.skill.shortTitle)
             .font(.system(size: 10.5, weight: .bold, design: .rounded))
@@ -76,14 +76,14 @@ struct RadialWheelView: View {
             .padding(.vertical, 2.5)
             .background(
               Capsule().fill(
-                isSelected ? SilliesTheme.accent : SilliesTheme.card.opacity(0.97))
+                isSelected ? SilliesTheme.accentFill : SilliesTheme.card.opacity(0.97))
             )
             .overlay(
               Capsule().strokeBorder(
-                isSelected ? Color.white.opacity(0.5) : SilliesTheme.border.opacity(0.8),
+                isSelected ? SilliesTheme.onAccent.opacity(0.5) : SilliesTheme.border.opacity(0.8),
                 lineWidth: 0.7)
             )
-            .foregroundStyle(isSelected ? Color.white : SilliesTheme.ink)
+            .foregroundStyle(isSelected ? SilliesTheme.onAccent : SilliesTheme.ink)
             .shadow(color: .black.opacity(0.12), radius: 3, y: 1)
         }
         .scaleEffect(isSelected ? Self.selectedBubbleScale : Self.unselectedBubbleScale)

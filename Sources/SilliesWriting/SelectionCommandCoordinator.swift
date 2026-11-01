@@ -18,7 +18,7 @@ import SilliesReasoning
   package private(set) var isWorking = false
   package private(set) var status = ""
   package private(set) var result: WritingResult?
-  package private(set) var title = "Edit selection"
+  package private(set) var title = String(localized: "Edit selection")
   package private(set) var insertionFailure: SessionFailure?
   package var historyFailure: WritingHistoryFailure? { history.persistence.failure }
   package func retryHistory() { history.retry() }
@@ -43,7 +43,7 @@ import SilliesReasoning
   package func start(_ operation: LocalTextOperation) {
     guard !isWorking else { return }
     guard let application = services.currentApplication() else {
-      status = "Select text in the app you want to edit first."
+      status = String(localized: "Select text in the app you want to edit first.")
       changed()
       return
     }
@@ -53,7 +53,7 @@ import SilliesReasoning
     let token = generation
     isWorking = true
     result = nil
-    status = "Reading your selection…"
+    status = String(localized: "Reading your selection…")
     activityChanged(true)
     changed()
     work = Task { [weak self] in
@@ -75,7 +75,7 @@ import SilliesReasoning
       guard destination.selection.count <= LocalTextTransform.maximumCharacters else {
         throw LocalTextTransformError.tooLong
       }
-      status = "Writing on this Mac…"
+      status = String(localized: "Writing on this Mac…")
       changed()
       let output = await cleanup.perform(destination.selection, deadline: Self.deadline) {
         [services] in
@@ -91,11 +91,11 @@ import SilliesReasoning
       do {
         try await insertion.insert(text, into: destination)
         result.delivery = .inserted
-        message = "Selection updated in \(application.name)"
+        message = String(localized: "Selection updated in \(application.name)")
       } catch {
         result.delivery = .needsPaste
         result.notice = error.localizedDescription
-        message = "Your edited text is ready to copy"
+        message = String(localized: "Your edited text is ready to copy")
       }
       history.save(result)
       guard generation == token else { return }
@@ -121,10 +121,10 @@ import SilliesReasoning
     case .failed(let message): throw SelectionCommandError.failed(message)
     case .timedOut:
       throw SelectionCommandError.failed(
-        "Local writing took too long. Your selection was left intact.")
+        String(localized: "Local writing took too long. Your selection was left intact."))
     case .busy:
       throw SelectionCommandError.failed(
-        "The local model is still finishing another request. Please try again.")
+        String(localized: "The local model is still finishing another request. Please try again."))
     case .canceled: throw CancellationError()
     }
   }
@@ -132,7 +132,7 @@ import SilliesReasoning
     generation = UUID()
     work?.cancel()
     work = nil
-    status = "Writing canceled"
+    status = String(localized: "Writing canceled")
     finish()
   }
   package func dismiss() {
@@ -158,8 +158,9 @@ private enum SelectionCommandError: LocalizedError {
   case failed(String)
   var errorDescription: String? {
     switch self {
-    case .noSelection: "Select the text you want to edit first."
-    case .empty: "The local model returned no text. Your selection was left intact."
+    case .noSelection: String(localized: "Select the text you want to edit first.")
+    case .empty:
+      String(localized: "The local model returned no text. Your selection was left intact.")
     case .failed(let message): message
     }
   }

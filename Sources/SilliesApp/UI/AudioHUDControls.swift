@@ -8,19 +8,23 @@ struct AudioHUDControls: View {
     HStack(spacing: 6) {
       Button(action: open) {
         Image(systemName: session.hasUnreadSuggestion ? "pawprint.fill" : "text.bubble")
-          .foregroundStyle(session.hasUnreadSuggestion ? Color.orange : SilliesTheme.accent)
+          .foregroundStyle(session.hasUnreadSuggestion ? SilliesTheme.warning : SilliesTheme.accent)
           .frame(width: 24, height: 24)
       }.help(
         session.hasUnreadSuggestion
-          ? "A meeting suggestion is ready" : "Open session and transcript"
+          ? String(localized: "A meeting suggestion is ready")
+          : String(localized: "Open session and transcript")
       )
-      .accessibilityLabel(session.hasUnreadSuggestion ? "Read meeting suggestion" : "Open session")
+      .accessibilityLabel(
+        session.hasUnreadSuggestion
+          ? String(localized: "Read meeting suggestion") : String(localized: "Open session"))
       Button {
         if session.isPaused { session.onResume?() } else { session.onPause?() }
       } label: {
         Image(systemName: session.isPaused ? "play.fill" : "pause.fill").frame(
           width: 24, height: 24)
-      }.disabled(!session.canPause).help(session.isPaused ? "Resume" : "Pause")
+      }.disabled(!session.canPause).help(
+        session.isPaused ? String(localized: "Resume") : String(localized: "Pause"))
     }.buttonStyle(.plain)
   }
 }

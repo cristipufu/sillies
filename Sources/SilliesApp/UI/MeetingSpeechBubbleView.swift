@@ -2,7 +2,6 @@ import SilliesCore
 import SwiftUI
 
 struct MeetingSpeechBubbleView: View {
-  @Environment(\.colorScheme) private var colorScheme
   private static let textInset: CGFloat = 12
   private static let rowSpacing: CGFloat = 8
   private static let headerSpacing: CGFloat = 6
@@ -11,9 +10,7 @@ struct MeetingSpeechBubbleView: View {
   private static let questionSize: CGFloat = 14
   private static let lineSpacing: CGFloat = 3
   let suggestion: MeetingSuggestion
-  private var accent: Color {
-    colorScheme == .dark ? Color(red: 0.78, green: 0.72, blue: 0.94) : SilliesTheme.accent
-  }
+  private var accent: Color { SilliesTheme.accent }
 
   var body: some View {
     VStack(alignment: .leading, spacing: Self.rowSpacing) {

@@ -21,7 +21,7 @@ enum CompanionActionMenu {
     windowName: String?, hasAudioSession: Bool,
     perform: @escaping (CompanionMenuAction) -> Void
   ) -> NSMenu {
-    let menu = NSMenu(title: "Companion skills")
+    let menu = NSMenu(title: String(localized: "Companion skills"))
     menu.autoenablesItems = false
     for skill in CompanionSkillKind.radialSkills {
       let item = add(skill.title, symbol: skill.symbolName, to: menu) { perform(.skill(skill)) }
@@ -29,17 +29,27 @@ enum CompanionActionMenu {
         (!skill.requiresWindow || windowName != nil)
         && !(hasAudioSession && skill.keepsCompanionStill)
       switch skill {
-      case .record: item.toolTip = "Record the microphone and save playable audio with notes."
-      case .chat: item.toolTip = "Chat with your companion by typing or speaking."
+      case .record:
+        item.toolTip = String(
+          localized: "Record the microphone and save playable audio with notes.")
+      case .chat:
+        item.toolTip = String(localized: "Chat with your companion by typing or speaking.")
       default: item.toolTip = "\(skill.title) · \(windowName ?? "Choose a window first")"
       }
     }
     if hasAudioSession {
-      add("Open current session", symbol: "waveform", to: menu) { perform(.openSession) }
+      add(
+        String(localized: "Open current session"), symbol: String(localized: "waveform"), to: menu
+      ) { perform(.openSession) }
     }
     menu.addItem(.separator())
-    add("Save Clipboard to Pocket Stash", symbol: "clipboard", to: menu) { perform(.saveClipboard) }
-    add("Open Pocket Stash…", symbol: "tray", to: menu) { perform(.openStash) }
+    add(
+      String(localized: "Save Clipboard to Pocket Stash"), symbol: String(localized: "clipboard"),
+      to: menu
+    ) { perform(.saveClipboard) }
+    add(String(localized: "Open Pocket Stash…"), symbol: String(localized: "tray"), to: menu) {
+      perform(.openStash)
+    }
     return menu
   }
 

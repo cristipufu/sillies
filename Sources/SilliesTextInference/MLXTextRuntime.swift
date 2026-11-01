@@ -23,7 +23,10 @@ actor MLXTextRuntime {
       configuration.memoryLimitBytes
         <= TextModelMemoryBudget.maximumAllocation(
           physicalMemory: ProcessInfo.processInfo.physicalMemory)
-    else { throw TextModelError.unavailable("The text model exceeds this Mac’s memory budget.") }
+    else {
+      throw TextModelError.unavailable(
+        String(localized: "The text model exceeds this Mac’s memory budget."))
+    }
     Memory.cacheLimit = Self.cacheBytes
     Memory.memoryLimit = configuration.memoryLimitBytes
     let container = try await load(configuration.directory)
@@ -33,10 +36,14 @@ actor MLXTextRuntime {
         additionalContext: ["enable_thinking": false]))
     guard input.text.tokens.size + generation.maximumTokens <= configuration.contextTokens else {
       throw TextModelError.unavailable(
-        "This passage exceeds the local model’s context. Try a shorter passage.")
+        String(localized: "This passage exceeds the local model’s context. Try a shorter passage."))
     }
     var parameters = GenerateParameters(
-      maxTokens: generation.maximumTokens, maxKVSize: configuration.contextTokens, temperature: 0)
+      maxTokens: generation.maximumTokens, maxKVSize: configuration.contextTokens,
+      temperature: Float(generation.style.temperature),
+      topP: Float(generation.style.probabilityThreshold),
+      repetitionPenalty: generation.style.repetitionPenalty,
+      repetitionContextSize: generation.style.repetitionContextSize)
     parameters.prefill = PrefillParameters(stepSize: 64)
     let stream = try await container.generate(input: input, parameters: parameters)
     var output = ""
@@ -44,7 +51,11 @@ actor MLXTextRuntime {
     for await event in stream {
       try Task.checkCancellation()
       switch event {
-      case .chunk(let text): output += text
+      case .chunk(let text):
+        output += text
+        if generation.style == .conversation, TextRepetitionGuard.containsLoop(output) {
+          throw TextModelError.repetitiveResponse
+        }
       case .info(let info):
         guard case .stop = info.stopReason else { throw TextModelError.invalidResponse }
         completed = true

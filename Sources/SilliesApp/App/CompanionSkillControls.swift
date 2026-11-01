@@ -114,10 +114,10 @@ final class CompanionSkillControls {
         items: items, for: pet.definition.id,
         companionName: pet.definition.name, currentTarget: target)
     else {
-      feedback.showMessage("Copy text or a link first", at: pet.position)
+      feedback.showMessage(String(localized: "Copy text or a link first"), at: pet.position)
       return
     }
-    feedback.showMessage("Saving…", at: pet.position)
+    feedback.showMessage(String(localized: "Saving…"), at: pet.position)
     let requestGeneration = generation
     skills.whenPersisted { [weak self, weak pet] error in
       guard let self, self.isActive, self.generation == requestGeneration,

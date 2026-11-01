@@ -16,7 +16,7 @@ final class VocabularyPreferences {
     entries = []
     if let data = defaults.data(forKey: Self.key) {
       do { entries = try JSONDecoder().decode([VocabularyEntry].self, from: data) } catch {
-        self.error = "Could not load your dictionary."
+        self.error = String(localized: "Could not load your dictionary.")
         fputs("Dictionary load failed: \(error)\n", stderr)
       }
     }
@@ -31,7 +31,7 @@ final class VocabularyPreferences {
       entry.phrase.count <= PersonalDictionary.maximumPhraseLength,
       entry.heardAs.count <= PersonalDictionary.maximumPhraseLength
     else {
-      error = "Use up to 100 entries, with at most 100 characters per phrase."
+      error = String(localized: "Use up to 100 entries, with at most 100 characters per phrase.")
       return
     }
     guard !entries.contains(where: { $0.phrase == entry.phrase && $0.heardAs == entry.heardAs })
@@ -51,7 +51,7 @@ final class VocabularyPreferences {
       defaults.set(try JSONEncoder().encode(entries), forKey: Self.key)
       error = nil
     } catch {
-      self.error = "Could not save your dictionary."
+      self.error = String(localized: "Could not save your dictionary.")
       fputs("Dictionary save failed: \(error)\n", stderr)
     }
   }

@@ -21,7 +21,7 @@ final class WatchSkillSession: ActiveSkillSession {
   }
 
   var initialStatusDetail: String {
-    "Watching \(target.appName)…"
+    String(localized: "Watching \(target.appName)…")
   }
 
   func start() {}
@@ -46,7 +46,7 @@ final class WatchSkillSession: ActiveSkillSession {
       return .completeNow
     }
     let elapsed = SessionRecord.formatDuration(context.now - context.startedAt)
-    return .keepRunning(statusDetail: "Watching \(target.appName) · \(elapsed)")
+    return .keepRunning(statusDetail: String(localized: "Watching \(target.appName) · \(elapsed)"))
   }
 
   func finish(
@@ -59,8 +59,9 @@ final class WatchSkillSession: ActiveSkillSession {
   private func makeOutcome(_ context: SkillFinalizeContext) -> SkillCompletionOutcome {
     let duration = max(0, context.now - context.startedAt)
     let note =
-      latestTitle.map { "Window updated to “\($0)”" }
-      ?? "Watched \(target.displayTitle) for \(SessionRecord.formatDuration(duration))."
+      latestTitle.map { String(localized: "Window updated to “\($0)”") }
+      ?? String(
+        localized: "Watched \(target.displayTitle) for \(SessionRecord.formatDuration(duration)).")
     let record = SessionRecord(
       kind: .watch,
       origin: .init(
@@ -71,7 +72,8 @@ final class WatchSkillSession: ActiveSkillSession {
       content: .init(notes: .init(summary: note)),
       metadata: .init(durationSeconds: duration))
     return SkillCompletionOutcome(
-      record: record, image: nil, bannerSummary: "Watch complete · Focus \(target.appName)")
+      record: record, image: nil,
+      bannerSummary: String(localized: "Watch complete · Focus \(target.appName)"))
   }
 
   func cancel() {}

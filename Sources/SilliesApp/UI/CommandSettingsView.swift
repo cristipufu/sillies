@@ -46,7 +46,7 @@ struct CommandSettingsView: View {
       }
       Text(command.shortcutExplanation).font(.caption).foregroundStyle(SilliesTheme.secondary)
       if let error = shortcuts.errors[command.rawValue] {
-        Text(error).font(.caption).foregroundStyle(.red)
+        Text(error).font(.caption).foregroundStyle(SilliesTheme.danger)
       }
     }
   }

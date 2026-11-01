@@ -79,7 +79,7 @@ final class CompanionController {
   @ObservationIgnored let smoothnessMetrics: InteractionSmoothnessMetrics
   private(set) var liveCount = 0
   private(set) var movingCount = 0
-  private(set) var lastReaction = "Settling in"
+  private(set) var lastReaction = String(localized: "Settling in")
   private(set) var perchLocation = PerchSurface.Edge.unavailable
   @ObservationIgnored private var companions: [CompanionInstance] = []
   @ObservationIgnored private let motionClock = CompanionMotionClock()
@@ -122,20 +122,20 @@ final class CompanionController {
     settings.reduceMotion || NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
   }
   var restingDescription: String {
-    if settings.paused { return "Taking a little break" }
-    if isExcluded { return "Hidden in \(tracker.applicationName)" }
-    if liveCount == 0 { return "Choose a little companion" }
+    if settings.paused { return String(localized: "Taking a little break") }
+    if isExcluded { return String(localized: "Hidden in \(tracker.applicationName)") }
+    if liveCount == 0 { return String(localized: "Choose a little companion") }
     for pet in companions {
       if case .active(let target, let skill, _, _, _) = pet.bindingState {
         return "\(pet.definition.name) · \(skill.activeVerb) \(target?.appName ?? "Microphone")"
       }
     }
     if !settings.followsWindows {
-      return "Making your desktop a little happier"
+      return String(localized: "Making your desktop a little happier")
     }
-    if tracker.windowID == nil { return "Waiting for your next window" }
+    if tracker.windowID == nil { return String(localized: "Waiting for your next window") }
     if perchLocation == .unavailable {
-      return "A little room around this window, please"
+      return String(localized: "A little room around this window, please")
     }
     let onTop = perchLocation == .top
     return "\(onTop ? "Perched on" : "Clinging to") \(tracker.applicationName)"

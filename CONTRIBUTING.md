@@ -32,6 +32,9 @@ For an idea, describe the user's task and the expected interaction. A small sket
 | A new activity | [Skills](docs/contributing/skills.md) |
 | Speech recognition model or runtime | [STT providers](docs/contributing/speech-models.md) |
 | Text generation model or runtime | [Text / LLM providers](docs/contributing/text-models.md) |
+| Voice synthesis model or runtime | [TTS providers](docs/contributing/voice-models.md) |
+| Interface language | [Localization catalogs](docs/contributing/localization.md) |
+| Color theme | [Theme palettes](docs/contributing/themes.md) |
 
 These are source contributions. JSON can reuse existing renderers and clips; executable plugins are not
 loaded from downloads. If a change adds a permission, data collection, or a network service, discuss the

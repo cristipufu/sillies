@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "id": "sillies",
+  "name": "Sillies",
+  "comment": "The original warm paper and lavender Sillies palette.",
+  "order": 0,
+  "light": {
+    "paper": "#FAF8F4",
+    "card": "#FFFFFF",
+    "soft": "#F1EEE8",
+    "ink": "#37303F",
+    "secondary": "#6C6473",
+    "border": "#D8D0DA",
+    "accent": "#705AA8",
+    "accentFill": "#705AA8",
+    "onAccent": "#FFFFFF",
+    "selection": "#E3DCF4",
+    "onSelection": "#37303F",
+    "success": "#2D6C43",
+    "warning": "#896014",
+    "danger": "#B33D50"
+  },
+  "dark": {
+    "paper": "#24222A",
+    "card": "#302D37",
+    "soft": "#39353F",
+    "ink": "#F3EEF6",
+    "secondary": "#C0B7C9",
+    "border": "#625A6C",
+    "accent": "#BBA7F0",
+    "accentFill": "#BBA7F0",
+    "onAccent": "#24222A",
+    "selection": "#594D72",
+    "onSelection": "#F3EEF6",
+    "success": "#94D5A4",
+    "warning": "#EBC56D",
+    "danger": "#F69AA8"
+  }
+}

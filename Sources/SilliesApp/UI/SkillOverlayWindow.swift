@@ -70,15 +70,16 @@ struct WindowDropHighlightView: View {
         }
       }
     }
-    .foregroundStyle(model.hoveredSkill != nil ? Color.white : SilliesTheme.ink)
+    .foregroundStyle(model.hoveredSkill != nil ? SilliesTheme.onAccent : SilliesTheme.ink)
     .padding(.horizontal, 11).padding(.vertical, 5)
     .background(
       Capsule().fill(
-        model.hoveredSkill != nil ? SilliesTheme.accent : SilliesTheme.card.opacity(0.97))
+        model.hoveredSkill != nil ? SilliesTheme.accentFill : SilliesTheme.card.opacity(0.97))
     )
     .overlay(
       Capsule().strokeBorder(
-        model.hoveredSkill != nil ? Color.white.opacity(0.4) : SilliesTheme.border, lineWidth: 0.8)
+        model.hoveredSkill != nil ? SilliesTheme.onAccent.opacity(0.4) : SilliesTheme.border,
+        lineWidth: 0.8)
     )
     .shadow(color: .black.opacity(0.16), radius: 6, y: 2)
     .padding(12)
@@ -97,12 +98,7 @@ private final class WindowDropOutlineView: NSView {
   private static let badgeTopOffset: CGFloat = 66
   private static let selectedBorderWidth: CGFloat = 3
   private static let unselectedBorderWidth: CGFloat = 2.2
-  private static let selectedBorderColor = NSColor(
-    srgbRed: 0.52, green: 0.47, blue: 0.77, alpha: 0.95
-  ).cgColor
-  private static let unselectedBorderColor = NSColor(
-    srgbRed: 0.52, green: 0.47, blue: 0.77, alpha: 0.72
-  ).cgColor
+  private var selected = false
 
   private let outline = CALayer()
   let badge: NSHostingView<WindowDropHighlightView>
@@ -148,9 +144,22 @@ private final class WindowDropOutlineView: NSView {
   }
 
   func updateSelection(_ selected: Bool) {
+    self.selected = selected
+    refreshAppearance()
+  }
+
+  override func viewDidChangeEffectiveAppearance() {
+    super.viewDidChangeEffectiveAppearance()
+    refreshAppearance()
+  }
+
+  func refreshAppearance() {
     CATransaction.begin()
     CATransaction.setDisableActions(true)
-    outline.borderColor = selected ? Self.selectedBorderColor : Self.unselectedBorderColor
+    effectiveAppearance.performAsCurrentDrawingAppearance {
+      outline.borderColor =
+        SilliesTheme.native(.accent).withAlphaComponent(selected ? 0.95 : 0.72).cgColor
+    }
     outline.borderWidth = selected ? Self.selectedBorderWidth : Self.unselectedBorderWidth
     CATransaction.commit()
   }
@@ -196,6 +205,7 @@ final class WindowDropHighlightController {
 
   func prestage(target: WindowTargetCandidate?) {
     prepare()
+    outlineView?.refreshAppearance()
     if let target { applyTarget(target, hoveredSkill: nil) }
     // Resolve the target-specific badge before the first moving drag frame reveals it.
     if let badge = outlineView?.badge { SkillOverlayPreparation.render(badge) }

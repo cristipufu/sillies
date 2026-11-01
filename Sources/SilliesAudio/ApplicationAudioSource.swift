@@ -53,7 +53,8 @@ final class ApplicationAudioSource: NSObject, SCStreamOutput, SCStreamDelegate, 
     guard let display = content.displays.first,
       let application = content.applications.first(where: { $0.processID == target.processID })
     else {
-      throw AudioCaptureFailure.unavailable("The selected application is no longer available.")
+      throw AudioCaptureFailure.unavailable(
+        String(localized: "The selected application is no longer available."))
     }
     guard !state.withLock({ $0.stopped }) else { throw CancellationError() }
     let filter = SCContentFilter(display: display, including: [application], exceptingWindows: [])
@@ -117,6 +118,6 @@ final class ApplicationAudioSource: NSObject, SCStreamOutput, SCStreamDelegate, 
         ? mapped
         : SessionFailure(
           category: .captureInterrupted,
-          message: "Application audio stopped: \(error.localizedDescription)"))
+          message: String(localized: "Application audio stopped: \(error.localizedDescription)")))
   }
 }

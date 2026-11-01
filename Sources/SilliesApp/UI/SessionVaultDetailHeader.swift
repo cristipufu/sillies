@@ -45,11 +45,11 @@ struct SessionVaultDetailHeader: View {
             Text(copiedFeedback)
               .font(.system(size: 11, weight: .bold, design: .rounded))
           }
-          .foregroundStyle(Color(red: 0.28, green: 0.64, blue: 0.43))
+          .foregroundStyle(SilliesTheme.success)
           .padding(.horizontal, 10)
           .padding(.vertical, 4.5)
           .background(
-            Color(red: 0.28, green: 0.64, blue: 0.43).opacity(0.12), in: Capsule())
+            SilliesTheme.success.opacity(0.12), in: Capsule())
         }
 
         Button {
@@ -95,37 +95,47 @@ struct SessionVaultDetailHeader: View {
       HStack(spacing: 9) {
         if record.imageFilename != nil {
           toolbarButton(
-            "Copy Image", symbol: "photo.on.rectangle.angled", emphasis: .prominent
+            String(localized: "Copy Image"), symbol: "photo.on.rectangle.angled",
+            emphasis: .prominent
           ) {
             model.copyImage(for: record)
           }
         }
         if !record.primaryText.isEmpty {
           toolbarButton(
-            record.kind == .snap ? "Copy OCR Text" : "Copy Text",
+            record.kind == .snap
+              ? String(localized: "Copy OCR Text") : String(localized: "Copy Text"),
             symbol: "doc.on.doc",
             emphasis: record.imageFilename == nil ? .prominent : .standard
           ) {
-            model.copyText(record.primaryText, feedback: "Text copied")
+            model.copyText(record.primaryText, feedback: String(localized: "Text copied"))
           }
         }
         toolbarButton(
-          "Copy Markdown", symbol: "square.and.arrow.up", emphasis: .standard
+          String(localized: "Copy Markdown"), symbol: "square.and.arrow.up", emphasis: .standard
         ) {
-          model.copyText(SessionMarkdownFormatter.format(record), feedback: "Markdown copied")
+          model.copyText(
+            SessionMarkdownFormatter.format(record), feedback: String(localized: "Markdown copied"))
         }
         Menu {
           if let pasteBack = model.pasteBack, pasteBack.destination != nil {
             Button(pasteBack.actionTitle) { model.paste(record) }.disabled(pasteBack.isPasting)
           }
           Button("Export Markdown & attachments…") { model.export([record]) }
-          Button(record.isProtected ? "Remove protection" : "Protect from automatic deletion") {
+          Button(
+            record.isProtected
+              ? String(localized: "Remove protection")
+              : String(localized: "Protect from automatic deletion")
+          ) {
             model.toggleProtection(record)
           }
         } label: {
           Image(systemName: record.isProtected ? "pin.fill" : "ellipsis.circle")
         }
-        .help(record.isProtected ? "Protected from automatic deletion" : "More actions")
+        .help(
+          record.isProtected
+            ? String(localized: "Protected from automatic deletion")
+            : String(localized: "More actions"))
       }
       .padding(.top, 2)
     }
@@ -145,9 +155,9 @@ struct SessionVaultDetailHeader: View {
       .fixedSize(horizontal: true, vertical: false)
       .padding(.horizontal, 13)
       .frame(height: 31)
-      .foregroundStyle(emphasis == .prominent ? Color.white : SilliesTheme.ink)
+      .foregroundStyle(emphasis == .prominent ? SilliesTheme.onAccent : SilliesTheme.ink)
       .background(
-        emphasis == .prominent ? SilliesTheme.accent : SilliesTheme.card,
+        emphasis == .prominent ? SilliesTheme.accentFill : SilliesTheme.card,
         in: RoundedRectangle(cornerRadius: 9, style: .continuous)
       )
       .overlay(

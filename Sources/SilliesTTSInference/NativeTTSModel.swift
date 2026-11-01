@@ -21,7 +21,8 @@ actor NativeTTSRuntime {
     if loaded?.configuration != request.configuration {
       loaded = nil
       guard let factory = factories[request.configuration.providerID] else {
-        throw TTSError.unavailable("This voice needs a newer version of Sillies.")
+        throw TTSError.unavailable(
+          String(localized: "This voice needs a newer version of Sillies."))
       }
       loaded = (request.configuration, try await factory(request.configuration))
     }

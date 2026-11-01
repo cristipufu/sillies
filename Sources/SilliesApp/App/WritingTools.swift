@@ -162,12 +162,14 @@ import SwiftUI
     guard let companions else { return false }
     guard !services.recording.hasActiveRecording else {
       feedback.showMessage(
-        "Finish the current recording before writing.", at: NSEvent.mouseLocation)
+        String(localized: "Finish the current recording before writing."), at: NSEvent.mouseLocation
+      )
       return false
     }
     guard companions.hasAvailableWritingCompanion else {
       feedback.showMessage(
-        "All companions are busy. Free one to start writing.", at: NSEvent.mouseLocation)
+        String(localized: "All companions are busy. Free one to start writing."),
+        at: NSEvent.mouseLocation)
       return false
     }
     dictation.dismiss()
@@ -211,8 +213,9 @@ import SwiftUI
       let window = NSWindow(
         contentRect: CGRect(x: 0, y: 0, width: 640, height: 560),
         styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
-      window.title = "Sillies · Recent writing"
+      window.title = String(localized: "Sillies · Recent writing")
       AppContentWindowStacking.shared.register(window)
+      AppWindowAppearance.shared.register(window)
       window.isReleasedWhenClosed = false
       window.contentMinSize = CGSize(width: 560, height: 400)
       window.contentViewController = NSHostingController(
@@ -221,7 +224,8 @@ import SwiftUI
           copy: { [weak self] in self?.clipboard.copyText($0) },
           openText: { [weak self] result in
             self?.recoveredText.show(
-              result.text, title: "Sillies · \(result.applicationName) · Recent writing")
+              result.text,
+              title: String(localized: "Sillies · \(result.applicationName) · Recent writing"))
           }))
       window.center()
       historyWindow = window

@@ -15,7 +15,7 @@ package struct SpeechLanguage: Identifiable, Equatable, Sendable {
   package var locale: Locale { Locale(identifier: id) }
   package var isAutomatic: Bool { id == Self.automatic.id }
   package static let automatic = SpeechLanguage(
-    id: "auto", name: "Detect automatically", isInstalled: true)
+    id: "auto", name: String(localized: "Detect automatically"), isInstalled: true)
 }
 
 package struct SpeechLanguageCatalog: Sendable {

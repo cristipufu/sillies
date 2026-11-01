@@ -7,14 +7,19 @@ package enum TTSError: LocalizedError {
   package var errorDescription: String? {
     switch self {
     case .unavailable(let message): message
-    case .busy: "A voice is already speaking. Stop it before trying another."
-    case .interrupted: "Speaking was interrupted. Your reply is still available to read."
-    case .invalidRequest: "This passage cannot be spoken. Try a shorter message."
+    case .busy: String(localized: "A voice is already speaking. Stop it before trying another.")
+    case .interrupted:
+      String(localized: "Speaking was interrupted. Your reply is still available to read.")
+    case .invalidRequest: String(localized: "This passage cannot be spoken. Try a shorter message.")
     case .invalidAudio:
-      "The voice model returned invalid audio. Your reply is still available to read."
+      String(
+        localized: "The voice model returned invalid audio. Your reply is still available to read.")
     case .unsupportedLanguage:
-      "This voice model doesn’t support that language. Choose another in Settings → Voices."
-    case .unsupportedVoice: "That voice is unavailable for this language. Choose another voice."
+      String(
+        localized:
+          "This voice model doesn’t support that language. Choose another in Settings → Voices.")
+    case .unsupportedVoice:
+      String(localized: "That voice is unavailable for this language. Choose another voice.")
     }
   }
 }

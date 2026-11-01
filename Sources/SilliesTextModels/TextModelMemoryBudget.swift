@@ -14,11 +14,13 @@ package enum TextModelMemoryBudget {
   package static func allocation(weightBytes: Int64, physicalMemory: UInt64) throws -> Int {
     let limit = maximumAllocation(physicalMemory: physicalMemory)
     guard weightBytes > 0, let weights = Int(exactly: weightBytes), weights <= limit else {
-      throw TextModelError.unavailable("This text model is too large for this Mac’s memory budget.")
+      throw TextModelError.unavailable(
+        String(localized: "This text model is too large for this Mac’s memory budget."))
     }
     let workspace = max(minimumWorkspace, weights / 4)
     guard weights <= limit - workspace else {
-      throw TextModelError.unavailable("There is not enough memory headroom for this text model.")
+      throw TextModelError.unavailable(
+        String(localized: "There is not enough memory headroom for this text model."))
     }
     return weights + workspace
   }

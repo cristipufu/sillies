@@ -5,21 +5,29 @@ import AppKit
 enum ApplicationMenu {
   static func make() -> NSMenu {
     let menu = NSMenu()
-    let application = NSMenu(title: "Sillies")
+    let application = NSMenu(title: String(localized: "Sillies"))
     application.addItem(
-      withTitle: "Quit Sillies", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+      withTitle: String(localized: "Quit Sillies"), action: #selector(NSApplication.terminate(_:)),
+      keyEquivalent: "q")
     append(application, to: menu)
 
-    let edit = NSMenu(title: "Edit")
-    edit.addItem(withTitle: "Undo", action: Selector(("undo:")), keyEquivalent: "z")
-    let redo = edit.addItem(withTitle: "Redo", action: Selector(("redo:")), keyEquivalent: "z")
+    let edit = NSMenu(title: String(localized: "Edit"))
+    edit.addItem(
+      withTitle: String(localized: "Undo"), action: Selector(("undo:")), keyEquivalent: "z")
+    let redo = edit.addItem(
+      withTitle: String(localized: "Redo"), action: Selector(("redo:")), keyEquivalent: "z")
     redo.keyEquivalentModifierMask = [.command, .shift]
     edit.addItem(.separator())
-    edit.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
-    edit.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
-    edit.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
     edit.addItem(
-      withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+      withTitle: String(localized: "Cut"), action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+    edit.addItem(
+      withTitle: String(localized: "Copy"), action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+    edit.addItem(
+      withTitle: String(localized: "Paste"), action: #selector(NSText.paste(_:)), keyEquivalent: "v"
+    )
+    edit.addItem(
+      withTitle: String(localized: "Select All"), action: #selector(NSText.selectAll(_:)),
+      keyEquivalent: "a")
     append(edit, to: menu)
     return menu
   }

@@ -13,6 +13,7 @@ final class TranscriptScrollView: NSScrollView {
   private var latestText = ""
   private var followMode = FollowMode.reading
   private var isUpdatingText = false
+  private var appearanceRevision = -1
   var onFollowModeChange: ((FollowMode) -> Void)?
   var textView: NSTextView { transcriptView }
 
@@ -61,6 +62,7 @@ final class TranscriptScrollView: NSScrollView {
   }
 
   func update(text: String, followMode: FollowMode) {
+    updateAppearance()
     latestText = text
     let changed = displayedText != text
     let resumedFollowing = followMode == .live && self.followMode == .reading
@@ -80,6 +82,20 @@ final class TranscriptScrollView: NSScrollView {
         contentView.scroll(to: origin)
         reflectScrolledClipView(contentView)
       }
+    }
+  }
+
+  private func updateAppearance() {
+    guard appearanceRevision != SilliesTheme.revision else { return }
+    appearanceRevision = SilliesTheme.revision
+    updateViewport {
+      let origin = contentView.bounds.origin
+      let selection = transcriptView.selectedRange()
+      TextEditorAppearance.apply(to: transcriptView)
+      textAttributes = makeTextAttributes()
+      transcriptView.setSelectedRange(selection)
+      contentView.scroll(to: origin)
+      reflectScrolledClipView(contentView)
     }
   }
 

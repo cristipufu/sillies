@@ -1,6 +1,7 @@
 import AVFoundation
 import CoreAudio
 import CoreMedia
+import Foundation
 import SilliesCore
 import Synchronization
 
@@ -43,7 +44,7 @@ final class MicrophoneAudioSource: NSObject, AVCaptureAudioDataOutputSampleBuffe
             state.session.startRunning()
             guard state.session.isRunning else {
               throw AudioCaptureFailure.unavailable(
-                "The microphone could not start. Check that it is connected.")
+                String(localized: "The microphone could not start. Check that it is connected."))
             }
             sourceClock.withLock { $0 = state.session.synchronizationClock }
             return name
@@ -62,7 +63,7 @@ final class MicrophoneAudioSource: NSObject, AVCaptureAudioDataOutputSampleBuffe
       UInt32(bitPattern: $0.transportType) == kAudioDeviceTransportTypeBuiltIn
     }
     guard let device = builtIn ?? AVCaptureDevice.default(for: .audio) else {
-      throw AudioCaptureFailure.unavailable("No microphone is available.")
+      throw AudioCaptureFailure.unavailable(String(localized: "No microphone is available."))
     }
     let input = try AVCaptureDeviceInput(device: device)
     let output = AVCaptureAudioDataOutput()
@@ -71,7 +72,9 @@ final class MicrophoneAudioSource: NSObject, AVCaptureAudioDataOutputSampleBuffe
     defer { session.commitConfiguration() }
     guard session.canAddInput(input), session.canAddOutput(output) else {
       throw AudioCaptureFailure.unavailable(
-        "The microphone cannot be shared right now. Your meeting settings were not changed.")
+        String(
+          localized:
+            "The microphone cannot be shared right now. Your meeting settings were not changed."))
     }
     session.addInput(input)
     session.addOutput(output)
@@ -89,7 +92,10 @@ final class MicrophoneAudioSource: NSObject, AVCaptureAudioDataOutputSampleBuffe
             SessionFailure(
               category: .captureInterrupted,
               message:
-                "Microphone capture was interrupted. Check the input and start a new session."))
+                String(
+                  localized:
+                    "Microphone capture was interrupted. Check the input and start a new session."))
+          )
         })
     }
   }

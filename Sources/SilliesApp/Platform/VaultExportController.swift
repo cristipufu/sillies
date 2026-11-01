@@ -9,18 +9,22 @@ import SilliesVault
     chooser.canChooseFiles = false
     chooser.canChooseDirectories = true
     chooser.canCreateDirectories = true
-    chooser.prompt = "Export here"
-    chooser.message = "Each session gets a folder with Markdown and its saved attachments."
+    chooser.prompt = String(localized: "Export here")
+    chooser.message = String(
+      localized: "Each session gets a folder with Markdown and its saved attachments.")
     chooser.begin { [library] response in
       guard response == .OK, let destination = chooser.url else { return }
       Task {
         do {
           let count = try await library.export(selection, to: destination)
-          completion("Exported \(count) session(s)")
+          completion(String(localized: "Exported \(count) session(s)", comment: "plural"))
         } catch {
           fputs("Vault export failed: \(error)\n", stderr)
           completion(
-            "Export stopped: \(error.localizedDescription). Completed folders remain available.")
+            String(
+              localized:
+                "Export stopped: \(error.localizedDescription). Completed folders remain available."
+            ))
         }
       }
     }

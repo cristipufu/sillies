@@ -30,7 +30,7 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
       let format = AVAudioFormat(
         standardFormatWithSampleRate: SpeechWindowBuffer.sampleRate, channels: 1)
     else {
-      throw SpeechError.unavailable("Could not prepare transcription audio.")
+      throw SpeechError.unavailable(String(localized: "Could not prepare transcription audio."))
     }
     var initial = State(converter: SpeechBufferConverter(format: format))
     initial.buffer.cadence = cadence

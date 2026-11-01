@@ -8,7 +8,9 @@ package final class StreamingDiarizationChannel: LocalSpeechChannel {
   private static let maximumBufferedSeconds: Double = 16
   private static let processingSeconds: Double = 1
   private static let overloadMessage =
-    "Speaker detection could not keep pace. Transcription continues without speaker labels."
+    String(
+      localized:
+        "Speaker detection could not keep pace. Transcription continues without speaker labels.")
   private enum Phase { case receiving, draining, failing, stopped }
   // Converter access is confined to the input lock. No native buffers escape it.
   private struct State: @unchecked Sendable {
@@ -25,7 +27,7 @@ package final class StreamingDiarizationChannel: LocalSpeechChannel {
   package init(engine: any SpeakerDiarizationEngine, request: SpeakerDiarizationRequest) throws {
     guard let format = AVAudioFormat(standardFormatWithSampleRate: Self.sampleRate, channels: 1)
     else {
-      throw SpeechError.unavailable("Could not prepare speaker detection audio.")
+      throw SpeechError.unavailable(String(localized: "Could not prepare speaker detection audio."))
     }
     self.request = request
     input = Mutex(State(converter: SpeechBufferConverter(format: format)))

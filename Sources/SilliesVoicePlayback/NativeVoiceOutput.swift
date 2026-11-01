@@ -1,11 +1,17 @@
 import AVFoundation
 import Foundation
+import SilliesCore
 import SilliesTTS
 
 final class NativeVoiceOutput: VoiceOutputDevice {
+  private static let referenceBufferSize: AVAudioFrameCount = 512
+  private static let maximumReferenceSamples = 32_768
+  private let reference: (@Sendable (AudioRenderFrame) -> Void)?
   private var engine: AVAudioEngine?
   private var player: AVAudioPlayerNode?
   private var sampleRate: Int?
+
+  init(reference: (@Sendable (AudioRenderFrame) -> Void)? = nil) { self.reference = reference }
 
   func schedule(_ audio: SynthesizedAudio, completed: @escaping @Sendable () -> Void) throws {
     dispatchPrecondition(condition: .notOnQueue(.main))
@@ -22,6 +28,7 @@ final class NativeVoiceOutput: VoiceOutputDevice {
 
   func stop() {
     player?.stop()
+    if reference != nil { engine?.mainMixerNode.removeTap(onBus: 0) }
     engine?.stop()
     player = nil
     engine = nil
@@ -40,16 +47,35 @@ final class NativeVoiceOutput: VoiceOutputDevice {
     let output = engine.outputNode.outputFormat(forBus: 0)
     guard output.sampleRate > 0, output.channelCount > 0 else {
       throw TTSError.unavailable(
-        "No audio output is available. Your reply is still available as text.")
+        String(localized: "No audio output is available. Your reply is still available as text."))
     }
     let player = AVAudioPlayerNode()
     engine.attach(player)
     engine.connect(player, to: engine.mainMixerNode, format: format)
+    installReferenceTap(on: engine)
     engine.prepare()
     try engine.start()
     self.engine = engine
     self.player = player
     sampleRate = requestedRate
     return format
+  }
+
+  private func installReferenceTap(on engine: AVAudioEngine) {
+    guard let reference else { return }
+    let latency = engine.outputNode.presentationLatency
+    engine.mainMixerNode.installTap(
+      onBus: 0, bufferSize: Self.referenceBufferSize, format: nil
+    ) { buffer, time in
+      guard time.isHostTimeValid, buffer.frameLength > 0,
+        buffer.frameLength <= Self.maximumReferenceSamples,
+        let samples = buffer.floatChannelData?[0]
+      else { return }
+      reference(
+        .init(
+          samples: Array(UnsafeBufferPointer(start: samples, count: Int(buffer.frameLength))),
+          sampleRate: buffer.format.sampleRate,
+          startTime: AVAudioTime.seconds(forHostTime: time.hostTime) + latency))
+    }
   }
 }

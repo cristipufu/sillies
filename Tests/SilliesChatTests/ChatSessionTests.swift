@@ -46,7 +46,8 @@ private actor VoiceProbe: ChatSpeechOutput {
   func stop(id: UUID) {}
 }
 
-private final class CaptureProbe: SessionAudioCapture, Sendable {
+private final class CaptureProbe: ConversationCapture, Sendable {
+  let words = Mutex("Salut, Ștefan!")
   let started = Mutex(0)
   let stopped = Mutex(0)
   let update: @Sendable (AudioCaptureUpdate) -> Void
@@ -55,23 +56,33 @@ private final class CaptureProbe: SessionAudioCapture, Sendable {
     started.withLock { $0 += 1 }
     update(.capturing("Listening"))
   }
-  func pause() {}
-  func resume() {}
-  func changeLanguage(_ language: SpeechLanguage) {}
+  func finishTurn(completion: @escaping @Sendable (AudioCaptureResult) -> Void) {
+    completion(takeResult())
+  }
   func finish(completion: @escaping @Sendable (AudioCaptureResult) -> Void) {
     stopped.withLock { $0 += 1 }
-    var result = AudioCaptureResult(
-      transcript: "Salut, Ștefan!", recordingURL: nil, duration: 1, failure: nil)
-    result.segments = []
-    completion(result)
+    completion(takeResult())
   }
+  private func takeResult() -> AudioCaptureResult {
+    let text = words.withLock { value in
+      let result = value
+      value = ""
+      return result
+    }
+    return AudioCaptureResult(transcript: text, recordingURL: nil, duration: 1, failure: nil)
+  }
+
 }
 
-private final class FinalizingCaptureProbe: SessionAudioCapture, Sendable {
+private final class FinalizingCaptureProbe: ConversationCapture, Sendable {
   let completion = Mutex<(@Sendable (AudioCaptureResult) -> Void)?>(nil)
+  let turnCompletion = Mutex<(@Sendable (AudioCaptureResult) -> Void)?>(nil)
   let update: @Sendable (AudioCaptureUpdate) -> Void
   init(update: @escaping @Sendable (AudioCaptureUpdate) -> Void) { self.update = update }
   func start() { update(.capturing("Listening")) }
+  func finishTurn(completion: @escaping @Sendable (AudioCaptureResult) -> Void) {
+    turnCompletion.withLock { $0 = completion }
+  }
   func pause() {}
   func resume() {}
   func changeLanguage(_ language: SpeechLanguage) {}
@@ -82,8 +93,15 @@ private final class FinalizingCaptureProbe: SessionAudioCapture, Sendable {
     let callback = completion.withLock { $0 }
     let result = AudioCaptureResult(
       transcript: "The final words survive.", recordingURL: nil, duration: 1, failure: nil)
-    callback?(result)
-    callback?(result)  // A duplicate device callback must not save twice.
+    let turn = turnCompletion.withLock { $0 }
+    let remainder =
+      turn == nil
+      ? result : AudioCaptureResult(transcript: "", recordingURL: nil, duration: 0, failure: nil)
+    callback?(remainder)
+    callback?(remainder)  // A duplicate device callback must not save twice.
+    // Deliberately deliver the detached turn after device teardown.
+    turn?(result)
+    turn?(result)
   }
 }
 
@@ -113,10 +131,10 @@ private func chatFinishPreservesFinalWordsBeforeSaving(_ timing: FinishTiming) a
 }
 
 @MainActor private func session(
-  reply: ReplyProbe, voice: VoiceProbe,
+  reply: any ConversationResponding, voice: any ChatSpeechOutput,
   capture: (
     @Sendable (AudioCaptureConfiguration, @escaping @Sendable (AudioCaptureUpdate) -> Void) ->
-      any SessionAudioCapture
+      any ConversationCapture
   )? = nil
 ) -> ChatSession {
   ChatSession(
@@ -182,7 +200,9 @@ private func chatFinishPreservesFinalWordsBeforeSaving(_ timing: FinishTiming) a
   #expect(await voice.requests.isEmpty)
 }
 
-@Test @MainActor func chatMicrophoneIsExplicitAndFinalizesBeforeReview() async throws {
+@Test @MainActor func chatVoiceConversationAutomaticallySendsFinalizedWordsAndKeepsListening()
+  async throws
+{
   let captures = Mutex<[CaptureProbe]>([])
   let chat = session(
     reply: ReplyProbe(), voice: VoiceProbe(),
@@ -197,11 +217,22 @@ private func chatFinishPreservesFinalWordsBeforeSaving(_ timing: FinishTiming) a
   #expect(captures.withLock { $0.isEmpty })
   chat.startListening()
   try await waitFor { chat.phase == .listening }
-  chat.finishListening()
+  let capture = try #require(captures.withLock { $0.first })
+  capture.update(.speechStarted)
+  capture.update(.speechEnded)
+  try await waitFor { chat.messages.count == 2 && chat.phase == .listening }
+  #expect(chat.messages.first?.text == "Salut, Ștefan!")
+  #expect(chat.draft.isEmpty)
+  #expect(capture.stopped.withLock { $0 } == 0)
+  capture.words.withLock { $0 = "And another thought." }
+  capture.update(.speechStarted)
+  capture.update(.speechEnded)
+  try await waitFor { chat.messages.count == 4 && chat.phase == .listening }
+  #expect(chat.messages[2].text == "And another thought.")
+  chat.stopVoiceConversation()
   try await waitFor { chat.phase == .ready }
-  #expect(chat.draft == "Salut, Ștefan!")
-  #expect(chat.messages.isEmpty)
-  #expect(captures.withLock { $0.first?.stopped.withLock { $0 } } == 1)
+  #expect(capture.stopped.withLock { $0 } == 1)
+  #expect(!chat.isVoiceConversationActive)
   chat.finish {}
 }
 
@@ -216,4 +247,50 @@ private func chatFinishPreservesFinalWordsBeforeSaving(_ timing: FinishTiming) a
   let chunks = SpokenTextChunks.split(text, maximumCharacters: 100)
   #expect(chunks.allSatisfy { $0.count <= 100 })
   #expect(chunks.joined(separator: " ") == text.trimmingCharacters(in: .whitespacesAndNewlines))
+}
+
+private actor ConversationalVoiceProbe: ChatSpeechOutput {
+  var requests: [ChatSpeechRequest] = []
+  var stopped: [UUID] = []
+  private var pending: [UUID: CheckedContinuation<String?, Never>] = [:]
+  func speak(
+    _ request: ChatSpeechRequest, receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void
+  ) async throws -> String? {
+    requests.append(request)
+    receive(.speaking(level: 0.5))
+    return await withCheckedContinuation { pending[request.id] = $0 }
+  }
+  func stop(id: UUID) {
+    stopped.append(id)
+    pending.removeValue(forKey: id)?.resume(returning: nil)
+  }
+}
+
+@Test @MainActor func chatSpeechInterruptsPlaybackWithoutRestartingMicrophone() async throws {
+  let captures = Mutex<[CaptureProbe]>([])
+  let voice = ConversationalVoiceProbe()
+  let chat = session(
+    reply: ReplyProbe(), voice: voice,
+    capture: { _, update in
+      let capture = CaptureProbe(update: update)
+      captures.withLock { $0.append(capture) }
+      return capture
+    })
+  chat.startListening()
+  try await waitFor { chat.phase == .listening }
+  let capture = try #require(captures.withLock { $0.first })
+  capture.update(.speechStarted)
+  capture.update(.speechEnded)
+  try await waitFor { chat.phase == .speaking }
+  let first = try #require(await voice.requests.first?.id)
+  capture.update(.speechStarted)
+  try await waitFor { await voice.stopped.contains(first) && chat.phase == .listening }
+  #expect(chat.isVoiceConversationActive)
+  #expect(capture.stopped.withLock { $0 } == 0)
+  capture.words.withLock { $0 = "Wait, I meant something else." }
+  capture.update(.speechEnded)
+  try await waitFor { await voice.requests.count == 2 && chat.phase == .speaking }
+  #expect(captures.withLock { $0.count } == 1)
+  #expect(chat.messages[2].text == "Wait, I meant something else.")
+  chat.finish {}
 }

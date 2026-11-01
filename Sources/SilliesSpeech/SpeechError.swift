@@ -8,7 +8,10 @@ package enum SpeechError: LocalizedError {
     switch self {
     case .unavailable(let message): message
     case .overloaded:
-      "Transcription could not keep up. Your recording continues; choose Finish & Save to preserve it."
+      String(
+        localized:
+          "Transcription could not keep up. Your recording continues; choose Finish & Save to preserve it."
+      )
     }
   }
 }

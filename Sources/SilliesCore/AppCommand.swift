@@ -30,17 +30,17 @@ public enum AppCommand: String, CaseIterable, Codable, Sendable, Identifiable {
   public var title: String {
     if let skill { return skill.title }
     return switch self {
-    case .saveClipboard: "Save Clipboard"
-    case .openVault: "Open Vault"
-    case .togglePause: "Pause / resume companions"
-    case .holdDictation: "Hold to dictate"
-    case .toggleDictation: "Start / finish dictation"
-    case .cancelDictation: "Cancel dictation"
-    case .dictationHistory: "Recent writing"
-    case .searchStash: "Search and paste Pocket Stash"
-    case .shortenSelection: "Shorten selected text"
-    case .fixSelectionGrammar: "Fix selected text’s grammar"
-    case .translateSelection: "Translate selected text"
+    case .saveClipboard: String(localized: "Save Clipboard")
+    case .openVault: String(localized: "Open Vault")
+    case .togglePause: String(localized: "Pause / resume companions")
+    case .holdDictation: String(localized: "Hold to dictate")
+    case .toggleDictation: String(localized: "Start / finish dictation")
+    case .cancelDictation: String(localized: "Cancel dictation")
+    case .dictationHistory: String(localized: "Recent writing")
+    case .searchStash: String(localized: "Search and paste Pocket Stash")
+    case .shortenSelection: String(localized: "Shorten selected text")
+    case .fixSelectionGrammar: String(localized: "Fix selected text’s grammar")
+    case .translateSelection: String(localized: "Translate selected text")
     default: rawValue
     }
   }

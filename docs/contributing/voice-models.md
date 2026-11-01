@@ -33,6 +33,10 @@ inference SDK. Recognition, reasoning, synthesis, playback, and artwork have sep
   The helper's parent-exit monitor must remain active even during a stalled native call.
 - Reuse `VoicePlayback` for bounded buffering and playback-level notifications. Character artwork
   observes these levels; it must not own an audio device, inference task, or timer.
+- Preserve the device render tap used for Chat's echo reference. Queued synthesis output is not a
+  substitute for rendered samples: cancellation and device latency would misalign it. Chat keeps
+  AEC/VAD live during playback and acquires recognition priority per utterance; a provider must not
+  pause the microphone or bypass shared cancellation when the user interrupts.
 - Update package/import boundaries, their negative fixtures, packaged resources, and notices.
   Do not add a community runtime package as a shortcut: the current dependency policy is to use the
   existing runtimes or maintain a focused native implementation within this repository.

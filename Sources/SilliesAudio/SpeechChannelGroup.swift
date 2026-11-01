@@ -81,7 +81,8 @@ final class SpeechChannelGroup: Sendable {
   private func timedOut() {
     storage.withValue { state in
       guard !state.completed else { return }
-      state.notice = "Speech finalization took too long. The latest available text was preserved."
+      state.notice = String(
+        localized: "Speech finalization took too long. The latest available text was preserved.")
       cancelChannels()
       complete()
     }

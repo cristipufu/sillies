@@ -25,29 +25,29 @@ public enum CompanionSkillKind: String, Codable, CaseIterable, Sendable, Identif
 
   public var title: String {
     switch self {
-    case .chat: "Chat"
-    case .snap: "Snap"
-    case .participate: "Participate"
-    case .explain: "Explain"
-    case .record: "Record"
-    case .listen: "Listen"
-    case .watch: "Watch Window"
-    case .focus: "Focus Sprint"
-    case .stash: "Pocket Stash"
+    case .chat: String(localized: "Chat")
+    case .snap: String(localized: "Snap")
+    case .participate: String(localized: "Participate")
+    case .explain: String(localized: "Explain")
+    case .record: String(localized: "Record")
+    case .listen: String(localized: "Listen")
+    case .watch: String(localized: "Watch Window")
+    case .focus: String(localized: "Focus Sprint")
+    case .stash: String(localized: "Pocket Stash")
     }
   }
 
   public var shortTitle: String {
     switch self {
-    case .chat: "Chat"
-    case .snap: "Snap"
-    case .participate: "Participate"
-    case .explain: "Explain"
-    case .record: "Record"
-    case .listen: "Listen"
-    case .watch: "Watch"
-    case .focus: "Focus"
-    case .stash: "Stash"
+    case .chat: String(localized: "Chat")
+    case .snap: String(localized: "Snap")
+    case .participate: String(localized: "Participate")
+    case .explain: String(localized: "Explain")
+    case .record: String(localized: "Record")
+    case .listen: String(localized: "Listen")
+    case .watch: String(localized: "Watch")
+    case .focus: String(localized: "Focus")
+    case .stash: String(localized: "Stash")
     }
   }
 
@@ -95,23 +95,23 @@ public enum CompanionSkillKind: String, Codable, CaseIterable, Sendable, Identif
 
   public var completionHeadline: String {
     switch self {
-    case .chat: "Chat Saved"
-    case .snap: "Snapshot Saved"
-    case .participate: "Meeting Transcript Ready"
-    case .explain: "Explain"
-    case .record: "Recording Ready"
-    case .listen: "Transcript Ready"
-    case .watch: "Window Activity Detected"
-    case .focus: "Focus Sprint Logged"
-    case .stash: "Saved to Pocket Stash"
+    case .chat: String(localized: "Chat Saved")
+    case .snap: String(localized: "Snapshot Saved")
+    case .participate: String(localized: "Meeting Transcript Ready")
+    case .explain: String(localized: "Explain")
+    case .record: String(localized: "Recording Ready")
+    case .listen: String(localized: "Transcript Ready")
+    case .watch: String(localized: "Window Activity Detected")
+    case .focus: String(localized: "Focus Sprint Logged")
+    case .stash: String(localized: "Saved to Pocket Stash")
     }
   }
 
   public var stopActionTitle: String? {
     switch self {
-    case .chat: "Finish Chat"
-    case .listen, .participate, .record: "Finish"
-    case .watch, .focus: "Done"
+    case .chat: String(localized: "Finish Chat")
+    case .listen, .participate, .record: String(localized: "Finish")
+    case .watch, .focus: String(localized: "Done")
     case .snap, .explain, .stash: nil
     }
   }

@@ -5,6 +5,7 @@ struct ArchitecturePolicy {
 
   static let imports: [String: Set<String>] = [
     "SilliesCore": ["Foundation", "CoreGraphics"],
+    "SilliesDesign": ["Foundation"],
     "SilliesReasoning": [
       "Foundation", "FoundationModels", "NaturalLanguage", "SilliesCore", "SilliesTextModels",
       "SilliesModelStore",
@@ -37,7 +38,7 @@ struct ArchitecturePolicy {
     ],
     "SilliesTTS": ["Foundation", "SilliesCore", "SilliesModelStore", "SilliesInference"],
     "SilliesFishSpeech": ["Foundation", "MLX", "Tokenizers", "SilliesTTS"],
-    "SilliesVoicePlayback": ["Foundation", "AVFoundation", "SilliesTTS"],
+    "SilliesVoicePlayback": ["Foundation", "AVFoundation", "SilliesTTS", "SilliesCore"],
     "SilliesTTSInference": [
       "Foundation", "Darwin", "Synchronization", "FluidAudio", "TTSKit", "SilliesTTS",
       "SilliesInference", "SilliesModelStore", "SilliesFishSpeech",
@@ -77,6 +78,10 @@ struct ArchitecturePolicy {
     "InferenceWorkerConnection.swift": ["send", "receive"],
     "VoicePlayback.swift": ["schedule"],
     "NativeVoiceOutput.swift": ["schedule"],
+    "ConversationAudioProcessor.swift": ["appendMicrophone", "next", "nextFinalMicrophone"],
+    "VoiceActivityDetector.swift": ["consume"],
+    "ThemeCatalog.swift": ["load"],
+    "LanguageCatalog.swift": ["load"],
     "KokoroPackagePreparation.swift": ["prepare"],
     "FishSpeechEngine.swift": ["synthesize"],
     "ApplicationIconCache.swift": ["load"],

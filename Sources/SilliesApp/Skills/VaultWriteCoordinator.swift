@@ -163,7 +163,8 @@ import SilliesVault
     case .failure(let error):
       failed = true
       restore(request)
-      let message = "Could not save the complete capture: \(error.localizedDescription)"
+      let message = String(
+        localized: "Could not save the complete capture: \(error.localizedDescription)")
       fputs("\(message)\n", stderr)
       report(message)
     }

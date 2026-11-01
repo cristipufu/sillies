@@ -20,7 +20,8 @@ final class VaultSQLConnection {
       url.path, &opened, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX, nil)
     guard result == SQLITE_OK, let opened else {
       if let opened { sqlite3_close(opened) }
-      throw VaultStorageError(message: "Could not open the Vault database (\(result)).")
+      throw VaultStorageError(
+        message: String(localized: "Could not open the Vault database (\(result))."))
     }
     connection = opened
     sqlite3_busy_timeout(opened, Self.busyTimeoutMilliseconds)
@@ -47,7 +48,7 @@ final class VaultSQLConnection {
     var statement: OpaquePointer?
     try check(sqlite3_prepare_v2(connection, sql, -1, &statement, nil), expected: SQLITE_OK)
     guard let statement else {
-      throw VaultStorageError(message: "Could not prepare the Vault query.")
+      throw VaultStorageError(message: String(localized: "Could not prepare the Vault query."))
     }
     defer { sqlite3_finalize(statement) }
     for (offset, value) in values.enumerated() {

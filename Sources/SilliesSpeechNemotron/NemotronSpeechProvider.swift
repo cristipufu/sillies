@@ -9,7 +9,7 @@ package struct NemotronSpeechProvider: SpeechProvider {
     try Task.checkCancellation()
     guard let directory = request.directory else {
       throw SpeechError.unavailable(
-        "Download Nemotron Unified ASR in Settings → Speech & Meetings.")
+        String(localized: "Download Nemotron Unified ASR in Settings → Speech & Meetings."))
     }
     let engine = NemotronStreamingEngine()
     try await engine.load(directory, language: .automatic)

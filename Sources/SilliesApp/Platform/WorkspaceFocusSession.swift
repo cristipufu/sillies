@@ -12,7 +12,7 @@ final class WorkspaceFocusSession {
     let bundleIdentifier: String?
   }
   private(set) var application = Application(
-    processID: 0, name: "Your desktop", bundleIdentifier: nil)
+    processID: 0, name: String(localized: "Your desktop"), bundleIdentifier: nil)
   private(set) var isAwaitingWindow = false
 
   func frontmostReplacement(
@@ -21,7 +21,7 @@ final class WorkspaceFocusSession {
   ) -> Application? {
     guard let app = frontmost else { return nil }
     let candidate = Application(
-      processID: app.processIdentifier, name: app.localizedName ?? "Your app",
+      processID: app.processIdentifier, name: app.localizedName ?? String(localized: "Your app"),
       bundleIdentifier: app.bundleIdentifier)
     guard needsReplacement(candidate, for: refresh), isTrackable(app) else { return nil }
     return candidate

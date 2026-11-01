@@ -34,7 +34,9 @@ public final class VaultDatabase {
     let version = try sql.integer("PRAGMA user_version")
     guard version <= Self.schemaVersion else {
       throw VaultStorageError(
-        message: "This Vault was created by a newer Sillies version. Its files have been preserved."
+        message: String(
+          localized:
+            "This Vault was created by a newer Sillies version. Its files have been preserved.")
       )
     }
     guard version == 0 else { return }

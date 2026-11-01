@@ -27,7 +27,8 @@ package protocol PreparedDiarizationModel: Sendable {
 
 extension PreparedDiarizationModel {
   package func validate() async throws {
-    throw SpeechError.unavailable("This speaker provider does not support model update validation.")
+    throw SpeechError.unavailable(
+      String(localized: "This speaker provider does not support model update validation."))
   }
 }
 

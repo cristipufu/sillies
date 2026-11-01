@@ -16,12 +16,15 @@ struct DictationSettingsView: View {
     @Bindable var preferences = tools.preferences
     VStack(alignment: .leading, spacing: 22) {
       SettingsCard(
-        title: "Speak. Finish. It’s there.",
+        title: String(localized: "Speak. Finish. It’s there."),
         detail:
-          "Focus a text field, then use a shortcut. An available mascot listens and inserts your words when you finish."
+          String(
+            localized:
+              "Focus a text field, then use a shortcut. An available mascot listens and inserts your words when you finish."
+          )
       ) {
-        shortcut(.holdDictation, title: "Hold to speak")
-        shortcut(.toggleDictation, title: "Press to start / finish")
+        shortcut(.holdDictation, title: String(localized: "Hold to speak"))
+        shortcut(.toggleDictation, title: String(localized: "Press to start / finish"))
         Button("Change shortcuts…", action: openShortcuts).buttonStyle(SoftButtonStyle())
         if hasInsertionAccess {
           Label("Text insertion is enabled", systemImage: "checkmark.circle.fill")
@@ -30,14 +33,17 @@ struct DictationSettingsView: View {
           SessionFailureNotice(failure: .permissionDenied(.openAccessibilitySettings))
         }
       }
-      SettingsCard(title: "Your words, your way") {
+      SettingsCard(title: String(localized: "Your words, your way")) {
         Picker("Output", selection: $preferences.style) {
           ForEach(DictationOutputStyle.allCases, id: \.self) { Text($0.title).tag($0) }
         }
         Text(
           preferences.style == .verbatim
-            ? "Keep the recognized words as they are."
-            : "Lightly tidy punctuation and filler words. Names, numbers, and meaning stay yours."
+            ? String(localized: "Keep the recognized words as they are.")
+            : String(
+              localized:
+                "Lightly tidy punctuation and filler words. Names, numbers, and meaning stay yours."
+            )
         )
         .font(.caption).foregroundStyle(SilliesTheme.secondary)
         Divider()
@@ -48,11 +54,16 @@ struct DictationSettingsView: View {
           Text("Automatic / device language").tag("auto")
           ForEach(languages.filter { !$0.isAutomatic }) { Text($0.name).tag($0.id) }
         }
-        if let languageError { Text(languageError).foregroundStyle(.red).font(.caption) }
+        if let languageError {
+          Text(languageError).foregroundStyle(SilliesTheme.danger).font(.caption)
+        }
         Text(
           languageControl == .hinted
             ? SpeechLanguageGuidance.detail(for: languageControl)
-            : "For speech that mixes languages, use automatic detection with a multilingual model."
+            : String(
+              localized:
+                "For speech that mixes languages, use automatic detection with a multilingual model."
+            )
         )
         .font(.caption).foregroundStyle(SilliesTheme.secondary)
         Button("Choose a speech model…", action: openSpeech).buttonStyle(.link)
@@ -60,9 +71,12 @@ struct DictationSettingsView: View {
         PersonalDictionarySettings(model: tools.vocabulary)
       }
       SettingsCard(
-        title: "Edit a selection",
+        title: String(localized: "Edit a selection"),
         detail:
-          "Select text in another app, then use Shorten, Fix grammar, or Translate from a shortcut."
+          String(
+            localized:
+              "Select text in another app, then use Shorten, Fix grammar, or Translate from a shortcut."
+          )
       ) {
         Picker("Translate into", selection: $preferences.translationLanguage) {
           Text("English").tag("en")
@@ -75,9 +89,12 @@ struct DictationSettingsView: View {
         Button("Set up selection shortcuts…", action: openShortcuts).buttonStyle(.link)
       }
       SettingsCard(
-        title: "Your words won’t get lost",
+        title: String(localized: "Your words won’t get lost"),
         detail:
-          "The last 20 dictations and edits stay in Recent writing. Copy a result or delete it whenever you like. Audio isn’t saved."
+          String(
+            localized:
+              "The last 20 dictations and edits stay in Recent writing. Copy a result or delete it whenever you like. Audio isn’t saved."
+          )
       ) {
         Button("Open Recent writing", systemImage: "text.bubble") { tools.openHistory() }
           .buttonStyle(SoftButtonStyle())
@@ -100,7 +117,7 @@ struct DictationSettingsView: View {
     HStack {
       Text(title)
       Spacer()
-      Text(shortcuts?.bindings[command.rawValue]?.display ?? "Not assigned")
+      Text(shortcuts?.bindings[command.rawValue]?.display ?? String(localized: "Not assigned"))
         .font(.system(.callout, design: .rounded).weight(.semibold))
         .padding(.horizontal, 10).padding(.vertical, 5)
         .background(SilliesTheme.soft, in: RoundedRectangle(cornerRadius: 6))

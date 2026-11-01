@@ -17,7 +17,7 @@ final class AudioSessionWindowController {
       window.center()
       self.window = window
     }
-    window?.title = "Sillies · \(model.kind.title)"
+    window?.title = String(localized: "Sillies · \(model.kind.title)")
     if displayedSession !== model {
       let view = NSHostingView(rootView: AudioSessionView(model: model))
       view.sizingOptions = []

@@ -6,6 +6,8 @@ public enum TranscriptSpeaker: Equatable, Codable, Sendable {
   case overlapping([Int])
   case unknown
 
+  // Canonical archive headings are parsed by SessionSpeakerNaming across UI language changes.
+  // localization-exempt: persisted transcript format, not an interface label.
   public var label: String {
     switch self {
     case .identified(let number): "Speaker \(number)"

@@ -14,13 +14,16 @@ struct LocalWhisperTokenizer: WhisperTokenizer {
     func token(_ text: String) throws -> Int {
       guard let id = tokenizer.convertTokenToId(text) else {
         throw SpeechError.unavailable(
-          "The downloaded Whisper tokenizer is missing \(text). Download the model again.")
+          String(
+            localized:
+              "The downloaded Whisper tokenizer is missing \(text). Download the model again."))
       }
       return id
     }
     let whitespace = tokenizer.encode(text: " ", addSpecialTokens: false)
     guard whitespace.count == 1, let whitespaceToken = whitespace.first else {
-      throw SpeechError.unavailable("Whisper's tokenizer cannot encode a word separator.")
+      throw SpeechError.unavailable(
+        String(localized: "Whisper's tokenizer cannot encode a word separator."))
     }
     specialTokens = try SpecialTokens(
       endToken: token("<|endoftext|>"), englishToken: token("<|en|>"),

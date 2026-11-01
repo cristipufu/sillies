@@ -4,7 +4,7 @@ public struct SessionSpeakerIdentity: Identifiable, Equatable, Sendable {
   public let source: String
   public let number: Int
   public var id: String { "\(source):\(number)" }
-  public var label: String { "\(source) · Speaker \(number)" }
+  public var label: String { String(localized: "\(source) · Speaker \(number)") }
 }
 
 /// Changes only speaker headers. Names never rewrite words spoken by the participants.
@@ -47,7 +47,8 @@ public enum SessionSpeakerNaming {
         record.speakerNames[SessionSpeakerIdentity(source: header.source, number: number).id]
           ?? "Speaker \(number)"
       }
-      let label = names.joined(separator: " + ") + (names.count > 1 ? " · overlap" : "")
+      let label =
+        names.joined(separator: " + ") + (names.count > 1 ? " · overlap" : "")
       return "\(header.prefix)\(header.source) · \(label): \(header.text)"
     }.joined(separator: "\n")
     return record

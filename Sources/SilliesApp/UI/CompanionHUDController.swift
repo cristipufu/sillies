@@ -27,12 +27,13 @@ final class CompanionHUDController {
         self = .hidden
       case .active(let target, let skill, _, let statusDetail, _):
         self = .active(
-          skill: skill, appName: (target?.appName ?? "Microphone"),
+          skill: skill, appName: (target?.appName ?? String(localized: "Microphone")),
           normalizedDetail: skill.isAudioSession
             ? "audio" : Self.normalizeMonospacedDigits(statusDetail))
       case .completed(let target, let skill, let summary, _, _):
         self = .completed(
-          skill: skill, appName: (target?.appName ?? "Microphone"), summary: summary)
+          skill: skill, appName: (target?.appName ?? String(localized: "Microphone")),
+          summary: summary)
       }
     }
 

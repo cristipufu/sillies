@@ -23,7 +23,8 @@ struct ControlCenterView: View {
           .frame(width: 44, height: 44).background(
             SilliesTheme.accent.opacity(0.10), in: RoundedRectangle(cornerRadius: 15))
         VStack(alignment: .leading, spacing: 2) {
-          Text("sillies").font(.system(size: 28, weight: .bold, design: .rounded)).tracking(-0.9)
+          Text(verbatim: "sillies").font(.system(size: 28, weight: .bold, design: .rounded))
+            .tracking(-0.9)
           Text("Your workspace, with a little life.").font(.system(size: 11))
             .foregroundStyle(SilliesTheme.secondary)
         }
@@ -34,14 +35,19 @@ struct ControlCenterView: View {
           Image(systemName: settings.paused ? "play.fill" : "pause.fill")
             .font(.system(size: 12, weight: .semibold)).frame(width: 31, height: 31)
             .background(SilliesTheme.soft, in: Circle())
-        }.buttonStyle(.plain).help(settings.paused ? "Resume companions" : "Pause companions")
-          .accessibilityLabel(settings.paused ? "Resume companions" : "Pause companions")
+        }.buttonStyle(.plain).help(
+          settings.paused
+            ? String(localized: "Resume companions") : String(localized: "Pause companions")
+        )
+        .accessibilityLabel(
+          settings.paused
+            ? String(localized: "Resume companions") : String(localized: "Pause companions"))
       }
 
       HStack(spacing: 7) {
         Circle().fill(
           settings.paused || controller.isExcluded
-            ? Color.orange : Color(red: 0.40, green: 0.65, blue: 0.49)
+            ? SilliesTheme.warning : SilliesTheme.success
         ).frame(width: 6, height: 6)
         Text(controller.restingDescription).font(.system(size: 11, weight: .medium)).lineLimit(1)
           .foregroundStyle(SilliesTheme.secondary)
@@ -60,7 +66,8 @@ struct ControlCenterView: View {
           if dictation.canFinish {
             Button("Finish") { dictation.finish() }
           } else {
-            Button(dictation.isActive ? "Cancel" : "Dismiss") { dictation.dismiss() }
+            Button(dictation.isActive ? String(localized: "Cancel") : String(localized: "Dismiss"))
+            { dictation.dismiss() }
           }
         } else {
           Button("Record microphone", systemImage: "mic.fill") {
@@ -102,11 +109,8 @@ struct ControlCenterView: View {
           Spacer()
           Text("They’re happy you’re here.").font(.system(size: 10)).opacity(0.8)
         }.padding(.horizontal, 14).frame(height: 41)
-          .foregroundStyle(.white)
-          .background(
-            LinearGradient(
-              colors: [SilliesTheme.accent, Color(red: 0.63, green: 0.55, blue: 0.81)],
-              startPoint: .leading, endPoint: .trailing), in: RoundedRectangle(cornerRadius: 12))
+          .foregroundStyle(SilliesTheme.onAccent)
+          .background(SilliesTheme.accentFill, in: RoundedRectangle(cornerRadius: 12))
       }.buttonStyle(.plain).disabled(
         settings.paused || controller.liveCount == 0 || controller.isExcluded)
 
@@ -153,8 +157,10 @@ struct ControlCenterView: View {
             Text("Session Vault & Drop Skills").font(.system(size: 11, weight: .semibold))
             Text(
               controller.savedRecordCount == 0
-                ? "Drop a sillie on any window to snap, transcribe, or focus."
-                : "\(controller.savedRecordCount) saved capture\(controller.savedRecordCount == 1 ? "" : "s"), transcripts & stashes"
+                ? String(localized: "Drop a sillie on any window to snap, transcribe, or focus.")
+                : String(
+                  localized: "\(controller.savedRecordCount) saved captures, transcripts & stashes",
+                  comment: "plural")
             )
             .font(.system(size: 10))
             .foregroundStyle(SilliesTheme.secondary)
@@ -178,7 +184,7 @@ struct ControlCenterView: View {
       }
 
       HStack {
-        Image(systemName: "heart.fill").font(.system(size: 9)).foregroundStyle(Color(hex: "D79B91"))
+        Image(systemName: "heart.fill").font(.system(size: 9)).foregroundStyle(SilliesTheme.danger)
         Text("A little company. All on your Mac.").font(.system(size: 9)).foregroundStyle(
           SilliesTheme.secondary)
         Spacer()
@@ -197,8 +203,9 @@ struct ControlCenterView: View {
 
   private var sizeLabel: String {
     controller.settings.size < AppSettings.defaultSize
-      ? "Tiny"
-      : controller.settings.size > AppSettings.largeSizeThreshold ? "Big" : "Little"
+      ? String(localized: "Tiny")
+      : controller.settings.size > AppSettings.largeSizeThreshold
+        ? String(localized: "Big") : String(localized: "Little")
   }
 
 }

@@ -24,7 +24,8 @@ final class AudioRecordingWriter {
       let format = AVAudioFormat(
         standardFormatWithSampleRate: Self.sampleRate, channels: Self.channelCount)
     else {
-      throw AudioCaptureFailure.unavailable("The recording format is unavailable.")
+      throw AudioCaptureFailure.unavailable(
+        String(localized: "The recording format is unavailable."))
     }
     converter = SpeechBufferConverter(format: format)
     file = try AVAudioFile(

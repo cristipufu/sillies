@@ -9,6 +9,7 @@ final class MeetingSpeechBubbleBackground: NSView {
   private var tail: SuggestionBubbleLayout.Tail?
   private var tailOffset: CGFloat?
   private var appliedSize: CGSize?
+  private var appliedThemeRevision = -1
   override var isFlipped: Bool { true }
 
   override init(frame: NSRect) {
@@ -21,11 +22,14 @@ final class MeetingSpeechBubbleBackground: NSView {
   required init?(coder: NSCoder) { nil }
 
   func update(_ layout: SuggestionBubbleLayout) {
-    guard tail != layout.tail || tailOffset != layout.tailOffset || appliedSize != bounds.size
+    guard
+      tail != layout.tail || tailOffset != layout.tailOffset || appliedSize != bounds.size
+        || appliedThemeRevision != SilliesTheme.revision
     else { return }
     tail = layout.tail
     tailOffset = layout.tailOffset
     appliedSize = bounds.size
+    appliedThemeRevision = SilliesTheme.revision
     let inset = SuggestionBubbleLayout.shadowInset
     let rect = bounds.insetBy(dx: inset, dy: inset)
     let path = SpeechBubbleShape(tail: layout.tail, tailOffset: layout.tailOffset - inset)

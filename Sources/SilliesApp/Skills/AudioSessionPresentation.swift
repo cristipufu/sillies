@@ -17,7 +17,7 @@ final class AudioSessionPresentation {
   var transcriptionFailure: SessionFailure?
   var phase: Phase = .preparing
   var sourceLabel: String
-  var status = "Preparing on-device speech…"
+  var status = String(localized: "Preparing on-device speech…")
   var transcript = ""
   var followsLiveTranscript = true
   var elapsed: TimeInterval = 0

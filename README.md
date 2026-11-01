@@ -40,6 +40,9 @@ an app, or pause the whole crew when you want some quiet.
 
 Sillies lives in the menu bar. Your companions stay outside the window’s content, leaving your work to you.
 
+Make it feel at home: choose from 22 interface languages and the Sillies, Catppuccin, Tokyo Night, or
+Dracula palette. Every palette works in light and dark appearance, or follows your Mac.
+
 ## Give them something to do
 
 Pick up a companion and hold it over a window. The skill wheel appears; move to an action and release.
@@ -48,7 +51,7 @@ Right-click menus and configurable global shortcuts offer the same actions.
 | Skill | What happens |
 | --- | --- |
 | **Listen** | Record app audio and your microphone, follow a live transcript, and save the conversation with notes and action items. |
-| **Chat** | Type or speak with a companion. Optional local voice models read its replies aloud, with speaking animation. |
+| **Chat** | Type or have a voice conversation with a companion. Automatic turns, echo cancellation, and optional local spoken replies with speaking animation. |
 | **Participate** | Everything in Listen, with suggested questions in your companion’s speech bubble, grounded in the conversation. |
 | **Snap** | Capture a window to the clipboard and Vault. Background text recognition makes the screenshot searchable. |
 | **Explain** | Read the text in a window screenshot and explain it with your chosen local text model. |
@@ -187,6 +190,8 @@ Start with [Contributing to Sillies](CONTRIBUTING.md) for setup, bug reports, ch
 | **A speech model or STT engine** | [Model manifests and speech-provider adapters](docs/contributing/speech-models.md) |
 | **A text / LLM model** | [Model manifests and text-provider adapters](docs/contributing/text-models.md) |
 | **A voice / TTS model** | [Voice providers, native runtimes, and playback](docs/contributing/voice-models.md) |
+| **A language** | [JSON translations, plural forms, and native macOS localization](docs/contributing/localization.md) |
+| **A theme** | [JSON palettes, light/dark appearances, and readable colors](docs/contributing/themes.md) |
 
 An existing animation can become a new reaction through JSON. A compatible model can join the catalog
 without new settings UI. New artwork, behavior, and runtimes have their own registration points;

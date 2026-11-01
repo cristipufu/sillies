@@ -22,7 +22,8 @@ package actor TextModelRegistry {
     store: ModelStore, providers: [any TextModelProvider], activity: InferenceActivity = .shared
   ) throws {
     guard Set(providers.map(\.id)).count == providers.count else {
-      throw TextModelError.unavailable("Duplicate text model provider registration.")
+      throw TextModelError.unavailable(
+        String(localized: "Duplicate text model provider registration."))
     }
     self.store = store
     self.providers = Dictionary(uniqueKeysWithValues: providers.map { ($0.id, $0) })
@@ -87,12 +88,15 @@ package actor TextModelRegistry {
     if let loaded, loaded.id == manifest.modelID { return loaded.model }
     await releaseLoadedModel()
     guard let provider = providers[manifest.model.providerID] else {
-      throw TextModelError.unavailable("This text model needs a newer version of Sillies.")
+      throw TextModelError.unavailable(
+        String(localized: "This text model needs a newer version of Sillies."))
     }
     let gibibyte: UInt64 = 1024 * 1024 * 1024
     guard ProcessInfo.processInfo.physicalMemory / gibibyte >= manifest.model.minimumMemoryGB else {
       throw TextModelError.unavailable(
-        "This model requires at least \(manifest.model.minimumMemoryGB) GB of memory.")
+        String(
+          localized: "This model requires at least \(manifest.model.minimumMemoryGB) GB of memory.")
+      )
     }
     let memoryLimit = try TextModelMemoryBudget.allocation(
       weightBytes: manifest.downloadBytes, physicalMemory: ProcessInfo.processInfo.physicalMemory)

@@ -32,7 +32,9 @@ import AppKit
       NSApp.activate(ignoringOtherApps: true)
       try await waitUntil("application activation") { NSApp.isActive }
       for repetition in 0..<Limits.repetitions {
-        for openWindow in [actions.openSettings, actions.openVault, actions.openChat] {
+        for (index, openWindow) in [actions.openSettings, actions.openVault, actions.openChat]
+          .enumerated()
+        {
           controlCenter.button?.performClick(nil)
           let popover = controlCenter.popover
           try await waitUntil("control center opens") { popover.isShown }
@@ -56,6 +58,7 @@ import AppKit
               > CompanionPanel.hudLevel(forWindowLayer: NSWindow.Level.floating.rawValue).rawValue
           else { throw Failure("Companion overlays can cover the app window.") }
           if repetition == 0 {
+            try await AppWindowSnapshot.save(window, index: index)
             try await verifyApplicationSwitch(window: window, previous: previousApplication)
           }
           window.close()

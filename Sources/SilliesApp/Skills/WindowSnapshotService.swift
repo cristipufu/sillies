@@ -27,7 +27,7 @@ enum WindowSnapshotService {
       if let bundleID {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
-        process.arguments = ["reset", "ScreenCapture", bundleID]
+        process.arguments = ["reset", String(localized: "ScreenCapture"), bundleID]
         do {
           try process.run()
           process.waitUntilExit()
@@ -48,7 +48,7 @@ enum WindowSnapshotService {
   }
 
   static func capture(target: WindowTargetCandidate) async -> WindowSnapshotResult {
-    let fallback = "Captured window snapshot of \(target.displayTitle)."
+    let fallback = String(localized: "Captured window snapshot of \(target.displayTitle).")
     if target.processID == ProcessInfo.processInfo.processIdentifier,
       let localImage = await captureLocalApplicationWindow(windowID: target.windowID)
     {
@@ -78,10 +78,13 @@ enum WindowSnapshotService {
         pngData: nil,
         extractedText: "",
         summary:
-          "Could not capture \(target.displayTitle). Make sure the window is visible on screen and not minimized.",
+          String(
+            localized:
+              "Could not capture \(target.displayTitle). Make sure the window is visible on screen and not minimized."
+          ),
         actionItems: [],
         failure: SessionFailure(
-          category: .captureUnavailable, message: "Window capture unavailable"))
+          category: .captureUnavailable, message: String(localized: "Window capture unavailable")))
     }
     return await imageResult(cgImage, summary: fallback)
   }
@@ -94,7 +97,9 @@ enum WindowSnapshotService {
       image: image, pngData: pngData, extractedText: "",
       summary: summary, actionItems: [],
       failure: pngData == nil
-        ? SessionFailure(category: .recordingSave, message: "Could not encode the snapshot image.")
+        ? SessionFailure(
+          category: .recordingSave,
+          message: String(localized: "Could not encode the snapshot image."))
         : nil)
   }
 

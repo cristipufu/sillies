@@ -45,7 +45,10 @@ actor TextModelEnvironment {
       guard let manifest = try modelCatalog().manifests.first(where: { $0.modelID == selected })
       else {
         throw TextModelError.unavailable(
-          "The selected text model is no longer available. Choose another in Settings → Local AI.")
+          String(
+            localized:
+              "The selected text model is no longer available. Choose another in Settings → Local AI."
+          ))
       }
       return DownloadedReasoningBackend(
         manifest: manifest, store: store, registry: try registry.get())

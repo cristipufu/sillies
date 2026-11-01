@@ -10,18 +10,27 @@ package struct AppleReasoningBackend: ReasoningBackend {
     {
       let name = Locale.current.localizedString(forIdentifier: localeIdentifier) ?? localeIdentifier
       return
-        "Apple’s on-device AI does not support \(name). Choose a downloaded text model in Settings → Local AI."
+        String(
+          localized:
+            "Apple’s on-device AI does not support \(name). Choose a downloaded text model in Settings → Local AI."
+        )
     }
     switch SystemLanguageModel.default.availability {
     case .available: return nil
     case .unavailable(.appleIntelligenceNotEnabled):
       return
-        "Enable Apple Intelligence in System Settings, or choose a downloaded text model in Settings → Local AI."
+        String(
+          localized:
+            "Enable Apple Intelligence in System Settings, or choose a downloaded text model in Settings → Local AI."
+        )
     case .unavailable(.modelNotReady):
-      return "Apple Intelligence is still preparing its on-device model."
+      return String(localized: "Apple Intelligence is still preparing its on-device model.")
     case .unavailable:
       return
-        "Apple’s on-device AI is unavailable on this Mac. Choose a downloaded text model in Settings → Local AI."
+        String(
+          localized:
+            "Apple’s on-device AI is unavailable on this Mac. Choose a downloaded text model in Settings → Local AI."
+        )
     }
   }
   package func generate(_ request: TextGenerationRequest, format: ReasoningFormat) async throws
@@ -29,7 +38,9 @@ package struct AppleReasoningBackend: ReasoningBackend {
   {
     let session = LanguageModelSession(model: .default, instructions: request.instructions)
     let options = GenerationOptions(
-      samplingMode: .greedy, maximumResponseTokens: request.maximumTokens)
+      samplingMode: request.style == .conversation
+        ? .random(probabilityThreshold: request.style.probabilityThreshold) : .greedy,
+      temperature: request.style.temperature, maximumResponseTokens: request.maximumTokens)
     switch format {
     case .text: return try await session.respond(to: request.prompt, options: options).content
     case .notes:

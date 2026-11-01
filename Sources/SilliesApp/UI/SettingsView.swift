@@ -2,6 +2,8 @@ import SwiftUI
 
 struct SettingsView: View {
   let controller: CompanionController
+  var appearance: AppearancePreferences? = nil
+  var language: LanguagePreferences? = nil
   var speechModels: SpeechModelsPresentation? = nil
   var voiceModels: VoiceModelsPresentation? = nil
   var textModels: TextModelsPresentation? = nil
@@ -40,7 +42,7 @@ struct SettingsView: View {
           registry: controller.renderers
         ).frame(width: 42, height: 46)
         VStack(alignment: .leading, spacing: 2) {
-          Text("sillies").font(.system(size: 24, weight: .bold, design: .rounded))
+          Text(verbatim: "sillies").font(.system(size: 24, weight: .bold, design: .rounded))
           Text("Make yourself at home.").font(.system(size: 10)).foregroundStyle(
             SilliesTheme.secondary)
         }
@@ -53,7 +55,9 @@ struct SettingsView: View {
             HStack(spacing: 10) {
               Image(systemName: item.symbol).frame(width: 18)
               Text(item.title).font(
-                .system(size: 12, weight: destination == item ? .semibold : .medium))
+                .system(size: 12, weight: destination == item ? .semibold : .medium)
+              )
+              .fixedSize(horizontal: false, vertical: true)
               Spacer(minLength: 0)
               if item == .speech, let count = speechModels?.availableUpdateCount, count > 0 {
                 Text("\(count)").font(.caption.bold())
@@ -76,7 +80,9 @@ struct SettingsView: View {
   @ViewBuilder private var page: some View {
     switch destination {
     case .general:
-      GeneralSettingsPage(controller: controller, login: loginItems)
+      GeneralSettingsPage(controller: controller, login: loginItems, language: language)
+    case .appearance:
+      if let appearance { AppearanceSettingsPage(model: appearance) }
     case .companions:
       CompanionSettingsPage(controller: controller)
     case .writing:

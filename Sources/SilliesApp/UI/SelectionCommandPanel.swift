@@ -23,9 +23,12 @@ private struct SelectionCommandView: View {
             "Review recent writing")
         }
         if let result = model.result {
-          SessionHUDAction(title: "Copy") { copy(result.text) }
+          SessionHUDAction(title: String(localized: "Copy")) { copy(result.text) }
         }
-        SessionHUDDismiss(title: model.isWorking ? "Cancel writing" : "Dismiss") { model.dismiss() }
+        SessionHUDDismiss(
+          title: model.isWorking
+            ? String(localized: "Cancel writing") : String(localized: "Dismiss")
+        ) { model.dismiss() }
       }
       if let failure = model.insertionFailure { SessionFailureNotice(failure: failure) }
       if let failure = model.historyFailure {

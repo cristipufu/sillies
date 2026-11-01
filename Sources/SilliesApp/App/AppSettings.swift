@@ -4,7 +4,7 @@ import Observation
 enum ActivityLevel: String, CaseIterable, Codable, Identifiable {
   case calm, playful
   var id: Self { self }
-  var title: String { self == .calm ? "Calm" : "Playful" }
+  var title: String { self == .calm ? String(localized: "Calm") : String(localized: "Playful") }
   var multiplier: Double { self == .calm ? 0.55 : 1 }
 }
 

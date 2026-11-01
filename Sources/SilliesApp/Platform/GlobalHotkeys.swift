@@ -23,7 +23,9 @@ final class GlobalHotkeys {
       GetApplicationEventTarget(), 0, &reference)
     guard status == noErr, let reference else {
       throw HotkeyError(
-        "This shortcut could not be registered (\(status)). Choose another combination.")
+        String(
+          localized:
+            "This shortcut could not be registered (\(status)). Choose another combination."))
     }
     unregister(command)
     registrations[command] = reference
@@ -59,7 +61,7 @@ final class GlobalHotkeys {
         }
       }, events.count, &events, Unmanaged.passUnretained(self).toOpaque(), &handler)
     guard status == noErr else {
-      throw HotkeyError("Keyboard shortcuts are unavailable (\(status)).")
+      throw HotkeyError(String(localized: "Keyboard shortcuts are unavailable (\(status))."))
     }
   }
 

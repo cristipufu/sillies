@@ -12,6 +12,7 @@ let package = Package(
       exclude: ["README.md", "WEBRTC-LICENSE", "WEBRTC-PATENTS", "ABSEIL-LICENSE"],
       sources: [
         "EchoCancellation.cc",
+        "VoiceActivity.cc",
         "abseil/absl/base/internal/cycleclock.cc",
         "abseil/absl/base/internal/low_level_alloc.cc",
         "abseil/absl/base/internal/poison.cc",

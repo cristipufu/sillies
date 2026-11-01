@@ -20,7 +20,7 @@ final class SnapSkillSession: ActiveSkillSession {
     self.onComplete = onComplete
   }
 
-  var initialStatusDetail: String { "Capturing \(request.target.appName)…" }
+  var initialStatusDetail: String { String(localized: "Capturing \(request.target.appName)…") }
 
   func start() {
     let request = request
@@ -35,12 +35,15 @@ final class SnapSkillSession: ActiveSkillSession {
       var notice = ""
       if request.kind == .explain, let image = result.image {
         do { text = try await WindowTextRecognition.recognize(image) } catch {
-          notice = "Text recognition failed: \(error.localizedDescription)"
+          notice = String(localized: "Text recognition failed: \(error.localizedDescription)")
           fputs("\(notice)\n", stderr)
         }
         if text.isEmpty, notice.isEmpty {
           notice =
-            "No readable text was found. Explain works from visible text; it cannot infer hidden content or interpret images alone."
+            String(
+              localized:
+                "No readable text was found. Explain works from visible text; it cannot infer hidden content or interpret images alone."
+            )
         }
       }
       guard !Task.isCancelled else { return }
@@ -54,13 +57,16 @@ final class SnapSkillSession: ActiveSkillSession {
             windowTitle: request.target.windowTitle)),
         content: .init(
           text: .init(extractedText: text),
-          notes: .init(summary: pending ? "Preparing a local explanation…" : result.summary),
+          notes: .init(
+            summary: pending ? String(localized: "Preparing a local explanation…") : result.summary),
           processing: .init(summaryPending: pending, failure: result.failure, note: notice)))
       if request.kind == .snap, result.image != nil { record.screenshotTextState = .pending }
       let banner =
         result.pngData == nil
-        ? "Capture unavailable · View details"
-        : (request.kind == .snap ? "Snapshot copied to clipboard" : "Text ready · Open explanation")
+        ? String(localized: "Capture unavailable · View details")
+        : (request.kind == .snap
+          ? String(localized: "Snapshot copied to clipboard")
+          : String(localized: "Text ready · Open explanation"))
       self.onComplete(
         SkillCompletionOutcome(
           record: record, image: result.image,

@@ -24,7 +24,9 @@ actor DictationRuntimeCache {
       runtime = prepared
       identity = model
     }
-    guard let runtime else { throw SpeechError.unavailable("Dictation model is not ready.") }
+    guard let runtime else {
+      throw SpeechError.unavailable(String(localized: "Dictation model is not ready."))
+    }
     let channel = try await runtime.makeChannel(request)
     guard generation == token, !Task.isCancelled else {
       channel.cancel()

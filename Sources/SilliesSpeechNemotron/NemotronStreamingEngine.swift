@@ -25,7 +25,8 @@ actor NemotronStreamingEngine: SpeechWindowEngine {
       language.isAutomatic
       ? "auto" : language.locale.language.languageCode?.identifier ?? language.id
     guard let prompt = NemotronUnifiedLanguage(rawValue: code) else {
-      throw SpeechError.unavailable("Nemotron Unified ASR does not support this language.")
+      throw SpeechError.unavailable(
+        String(localized: "Nemotron Unified ASR does not support this language."))
     }
     let configuration = MLModelConfiguration()
     configuration.computeUnits = .cpuAndNeuralEngine
@@ -42,7 +43,9 @@ actor NemotronStreamingEngine: SpeechWindowEngine {
   func transcribe(_ request: SpeechWindowRequest) async throws -> SpeechWindowResult {
     dispatchPrecondition(condition: .notOnQueue(.main))
     try Task.checkCancellation()
-    guard let manager else { throw SpeechError.unavailable("The speech model is not ready.") }
+    guard let manager else {
+      throw SpeechError.unavailable(String(localized: "The speech model is not ready."))
+    }
     let update = progress.advance(request)
     if update.action == .restart {
       try await manager.reset()
@@ -68,7 +71,9 @@ actor NemotronStreamingEngine: SpeechWindowEngine {
       let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1),
       let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: count),
       let destination = buffer.floatChannelData?[0]
-    else { throw SpeechError.unavailable("Could not prepare streaming speech audio.") }
+    else {
+      throw SpeechError.unavailable(String(localized: "Could not prepare streaming speech audio."))
+    }
     buffer.frameLength = count
     samples.withUnsafeBufferPointer { source in
       if let base = source.baseAddress { destination.update(from: base, count: samples.count) }

@@ -41,13 +41,16 @@ final class AnalyzerSpeechChannel: LocalSpeechChannel {
       locale: locale, preset: .timeIndexedProgressiveTranscription)
     guard await AssetInventory.status(forModules: [transcriber]) == .installed else {
       throw SpeechError.unavailable(
-        "This Apple speech model is not installed. Choose a language marked Ready on this Mac.")
+        String(
+          localized:
+            "This Apple speech model is not installed. Choose a language marked Ready on this Mac.")
+      )
     }
     try Task.checkCancellation()
     guard let format = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [transcriber])
     else {
       throw SpeechError.unavailable(
-        "The on-device speech model is not ready for this language.")
+        String(localized: "The on-device speech model is not ready for this language."))
     }
     let analyzer = SpeechAnalyzer(
       modules: [transcriber], options: .init(priority: .utility, modelRetention: .whileInUse))
@@ -77,7 +80,7 @@ final class AnalyzerSpeechChannel: LocalSpeechChannel {
         }
       } catch {
         if !Task.isCancelled {
-          failure("Local transcription stopped: \(error.localizedDescription)")
+          failure(String(localized: "Local transcription stopped: \(error.localizedDescription)"))
         }
       }
     }
@@ -133,7 +136,10 @@ final class AnalyzerSpeechChannel: LocalSpeechChannel {
   private func yield(_ buffer: AVAudioPCMBuffer) -> String? {
     if case .dropped = continuation.yield(AnalyzerInput(buffer: buffer)) {
       return
-        "Speech processing couldn’t keep pace with the audio. Finish to save the available transcript."
+        String(
+          localized:
+            "Speech processing couldn’t keep pace with the audio. Finish to save the available transcript."
+        )
     }
     return nil
   }

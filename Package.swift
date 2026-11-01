@@ -22,6 +22,7 @@ let package = Package(
   ],
   targets: [
     .target(name: "SilliesCore", exclude: ["AGENTS.md"]),
+    .target(name: "SilliesDesign", resources: [.copy("Themes")]),
     .target(name: "SilliesInference"),
     .target(
       name: "SilliesTTS", dependencies: ["SilliesCore", "SilliesModelStore", "SilliesInference"]),
@@ -32,7 +33,7 @@ let package = Package(
         .product(name: "MLX", package: "mlx-swift"),
         .product(name: "Tokenizers", package: "swift-transformers"),
       ]),
-    .target(name: "SilliesVoicePlayback", dependencies: ["SilliesTTS"]),
+    .target(name: "SilliesVoicePlayback", dependencies: ["SilliesTTS", "SilliesCore"]),
     .target(
       name: "SilliesChat",
       dependencies: [
@@ -103,6 +104,7 @@ let package = Package(
         .product(name: "Sparkle", package: "Sparkle"),
         "SilliesAudio",
         "SilliesCore",
+        "SilliesDesign",
         "SilliesPersistence",
         "SilliesSpeech", "SilliesSpeechApple", "SilliesSpeechWhisper", "SilliesSpeechParakeet",
         "SilliesSpeechNemotron",
@@ -135,6 +137,7 @@ let package = Package(
         "SilliesWriting", "SilliesCore", "SilliesAudio", "SilliesSpeech", "SilliesReasoning",
       ]),
     .testTarget(name: "SilliesCoreTests", dependencies: ["SilliesCore"]),
+    .testTarget(name: "SilliesDesignTests", dependencies: ["SilliesDesign"]),
     .testTarget(
       name: "SilliesVoicePlaybackTests", dependencies: ["SilliesVoicePlayback", "SilliesTTS"]),
     .testTarget(

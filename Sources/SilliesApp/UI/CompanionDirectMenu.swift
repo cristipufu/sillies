@@ -2,73 +2,89 @@ import AppKit
 import SilliesCore
 import SwiftUI
 
-/// One transient menu owned by the shared interaction controller, never by a per-mascot timer.
-@MainActor final class CompanionDirectMenu: NSObject, NSPopoverDelegate {
+/// One shared, nonactivating action wheel; closing releases the mascot and event monitors.
+@MainActor final class CompanionDirectMenu {
+  private static let shadowPadding: CGFloat = 16
+  private static let entranceDuration: TimeInterval = 0.16
   private let appearance: ThemeEnvironment
-  var onClose: (() -> Void)?
-  private var popover: NSPopover?
+  private let interaction = RadialMenuInteraction()
+  private var panel: SkillFloatingPanel?
   private weak var companion: CompanionInstance?
-  init(appearance: ThemeEnvironment) {
-    self.appearance = appearance
-    super.init()
-  }
+  var windowNumber: Int? { panel?.windowNumber }
+  var onClose: (() -> Void)?
+  init(appearance: ThemeEnvironment) { self.appearance = appearance }
+
   func show(for pet: CompanionInstance, perform: @escaping (CompanionMenuAction) -> Void) {
     close()
     pet.beginDirectActionMenu()
     companion = pet
-    let popover = NSPopover()
-    popover.delegate = self
-    popover.behavior = .transient
-    popover.animates = !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
-    popover.contentViewController = ThemedHostingController(
-      rootView: DirectActionsView { [weak self] action in
-        self?.close()
-        perform(action)
-      }, appearance: appearance)
-    self.popover = popover
-    popover.show(relativeTo: pet.view.bounds, of: pet.view, preferredEdge: .minY)
+    let widths = CompanionDirectAction.allCases.map(\.titleWidth)
+    let layout = makeLayout(for: pet, titleWidths: widths)
+    let panel = makePanel(for: pet, layout: layout, perform: perform)
+    self.panel = panel
+    interaction.start(
+      panel: panel,
+      regions: zip(layout.centers, widths).map {
+        RadialMenuItemLayout(center: $0, titleWidth: $1)
+      }
+    ) { [weak self] in self?.close() }
+    reveal(panel, above: pet.panel.windowNumber)
   }
-  func popoverDidClose(_ notification: Notification) {
-    companion?.endDirectActionMenu()
-    companion = nil
-    onClose?()
+
+  private func makeLayout(for pet: CompanionInstance, titleWidths widths: [CGFloat])
+    -> CompanionActionMenuLayout
+  {
+    let size = CGSize(
+      width: max(RadialMenuItemLayout.iconDiameter, widths.max() ?? 0),
+      height: RadialMenuItemLayout.height)
+    return CompanionActionMenuLayout(
+      anchor: CGPoint(x: pet.panel.frame.midX, y: pet.panel.frame.midY), count: widths.count,
+      itemSize: CGSize(
+        width: size.width * RadialMenuItemLayout.selectedScale + Self.shadowPadding,
+        height: size.height * RadialMenuItemLayout.selectedScale + Self.shadowPadding),
+      visibleFrame: CompanionPanel.visibleFrame(for: pet.panel.screen))
+  }
+
+  private func makePanel(
+    for pet: CompanionInstance, layout: CompanionActionMenuLayout,
+    perform: @escaping (CompanionMenuAction) -> Void
+  ) -> SkillFloatingPanel {
+    let panel = SkillFloatingPanel(
+      contentRect: layout.frame, ignoresMouseEvents: true,
+      level: CompanionPanel.hudLevel(forWindowLayer: pet.attachedWindowLayer), focus: .keyboard)
+    let host = ThemedHostingView(
+      rootView: CompanionDirectMenuView(layout: layout) { [weak self] action in
+        self?.close()
+        perform(action.command)
+      }, appearance: appearance)
+    host.sizingOptions = []
+    panel.contentView = host
+    return panel
+  }
+
+  private func reveal(_ panel: SkillFloatingPanel, above companionWindow: Int) {
+    let targetAlpha = panel.alphaValue
+    panel.alphaValue = 0
+    panel.order(.above, relativeTo: companionWindow)
+    panel.makeKey()
+    NSAnimationContext.runAnimationGroup { context in
+      context.duration =
+        NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? 0 : Self.entranceDuration
+      panel.animator().alphaValue = targetAlpha
+    }
   }
   func close() {
-    popover?.close()
-    popover = nil
+    let wasOpen = panel != nil
+    interaction.stop()
+    panel?.orderOut(nil)
+    panel?.close()
+    panel = nil
     companion?.endDirectActionMenu()
     companion = nil
+    if wasOpen { onClose?() }
   }
-}
-
-private struct DirectActionsView: View {
-  @Environment(\.silliesTheme) private var theme
-  let perform: (CompanionMenuAction) -> Void
-  var body: some View {
-    VStack(spacing: 14) {
-      HStack(spacing: 28) {
-        action(
-          String(localized: "Chat"), symbol: "bubble.left.and.bubble.right.fill",
-          command: .skill(.chat))
-        action(String(localized: "Talk"), symbol: "waveform", command: .talk)
-      }
-      Divider()
-      HStack(spacing: 18) {
-        Button("Record", systemImage: "mic.fill") { perform(.skill(.record)) }
-        Button("Pocket Stash", systemImage: "tray") { perform(.openStash) }
-      }.font(.callout).buttonStyle(SoftButtonStyle())
-    }.padding(20).background(theme.paper).foregroundStyle(theme.ink).tint(theme.accent)
+  func close(for pet: CompanionInstance) {
+    if companion === pet { close() }
   }
-  private func action(_ title: String, symbol: String, command: CompanionMenuAction) -> some View {
-    Button {
-      perform(command)
-    } label: {
-      VStack(spacing: 7) {
-        Image(systemName: symbol).font(.system(size: 22, weight: .semibold))
-          .frame(width: 56, height: 56)
-          .background(theme.accentFill, in: Circle()).foregroundStyle(theme.onAccent)
-        Text(title).font(.system(.callout, design: .rounded).weight(.bold))
-      }
-    }.buttonStyle(.plain)
-  }
+  isolated deinit { close() }
 }

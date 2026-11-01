@@ -22,5 +22,13 @@ public enum CompanionBindingState: Equatable, Sendable {
 
   public var hasPresentation: Bool { self != .followingFocusedWindow }
 
+  /// Conversations own their controls inside the attached bubble.
+  public var showsTaskHUD: Bool {
+    switch self {
+    case .followingFocusedWindow, .active(_, .chat, _, _, _): false
+    default: true
+    }
+  }
+
   public var isBound: Bool { boundTarget != nil }
 }

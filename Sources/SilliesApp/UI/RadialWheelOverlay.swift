@@ -9,7 +9,6 @@ final class RadialWheelModel {
 }
 
 struct RadialWheelView: View {
-  @Environment(\.silliesTheme) private var theme
   private static let canvasCenter = CGPoint(
     x: RadialWheelController.canvasSize.width / 2,
     y: RadialWheelController.canvasSize.height / 2)
@@ -17,33 +16,15 @@ struct RadialWheelView: View {
     around: canvasCenter, direction: .upward)
   private static let downwardItems = RadialSkillMenuLayout.items(
     around: canvasCenter, direction: .downward)
-  private static let selectedBubbleScale: CGFloat = 1.12
-  private static let unselectedBubbleScale: CGFloat = 1.0
 
   let model: RadialWheelModel
 
   var body: some View {
     let anchor = Self.canvasCenter
     let items = model.flippedDownward ? Self.downwardItems : Self.upwardItems
-    let orbitDiameter = RadialSkillMenuLayout.orbitRadius * 2
 
     ZStack {
-      // Subtle orbital guide ring connecting the skill bubbles
-      Circle()
-        .strokeBorder(
-          theme.accent.opacity(0.28),
-          style: StrokeStyle(lineWidth: 1.2, dash: [4, 5])
-        )
-        .frame(width: orbitDiameter, height: orbitDiameter)
-        .position(anchor)
-
-      // Soft anchor halo around the dragged companion
-      Circle()
-        .fill(theme.accent.opacity(0.08))
-        .frame(width: 54, height: 54)
-        .overlay(
-          Circle().strokeBorder(theme.accent.opacity(0.35), lineWidth: 1.2)
-        )
+      RadialMenuOrbit(radius: RadialSkillMenuLayout.orbitRadius)
         .position(anchor)
 
       // Radial skill bubbles (no bottom text banner)
@@ -52,42 +33,10 @@ struct RadialWheelView: View {
         let localX = item.center.x
         let localY = RadialWheelController.canvasSize.height - item.center.y
 
-        VStack(spacing: 5) {
-          ZStack {
-            Circle()
-              .fill(isSelected ? theme.accentFill : theme.card.opacity(0.98))
-              .frame(width: 48, height: 48)
-              .shadow(
-                color: isSelected
-                  ? theme.accent.opacity(0.42)
-                  : Color.black.opacity(0.16),
-                radius: 6, y: 2
-              )
-              .overlay(
-                Circle().strokeBorder(
-                  isSelected ? theme.onAccent.opacity(0.9) : theme.border,
-                  lineWidth: isSelected ? 2 : 1))
-            Image(systemName: item.skill.symbolName)
-              .font(.system(size: 17, weight: .semibold))
-              .foregroundStyle(isSelected ? theme.onAccent : theme.ink)
-          }
-          Text(item.skill.shortTitle)
-            .font(.system(size: 10.5, weight: .bold, design: .rounded))
-            .padding(.horizontal, 8)
-            .padding(.vertical, 2.5)
-            .background(
-              Capsule().fill(
-                isSelected ? theme.accentFill : theme.card.opacity(0.97))
-            )
-            .overlay(
-              Capsule().strokeBorder(
-                isSelected ? theme.onAccent.opacity(0.5) : theme.border.opacity(0.8),
-                lineWidth: 0.7)
-            )
-            .foregroundStyle(isSelected ? theme.onAccent : theme.ink)
-            .shadow(color: .black.opacity(0.12), radius: 3, y: 1)
-        }
-        .scaleEffect(isSelected ? Self.selectedBubbleScale : Self.unselectedBubbleScale)
+        RadialActionBubble(
+          title: item.skill.shortTitle, symbol: item.skill.symbolName,
+          isSelected: isSelected
+        )
         .position(x: localX, y: localY)
       }
     }

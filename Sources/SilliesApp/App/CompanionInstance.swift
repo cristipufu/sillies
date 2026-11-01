@@ -440,7 +440,7 @@ final class CompanionInstance {
   }
 
   func refreshHUD() {
-    guard bindingState.hasPresentation, isAttachmentVisible, panel.isVisible, !isPickedUp,
+    guard bindingState.showsTaskHUD, isAttachmentVisible, panel.isVisible, !isPickedUp,
       !isReturningFromDrop,
       !isWaitingForSpace
     else {

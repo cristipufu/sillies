@@ -20,7 +20,9 @@ import Observation
     for observer in observers { observer.apply(palette) }
   }
 
-  func register(_ window: NSWindow) { windows.register(window, theme: palette) }
+  func register(_ window: NSWindow, background: AppWindowAppearance.Background = .paper) {
+    windows.register(window, theme: palette, background: background)
+  }
 
   func observe<Owner: AnyObject>(_ owner: Owner, apply: @escaping (Owner, SilliesTheme) -> Void) {
     observers.removeAll { $0.owner == nil || $0.owner === owner }

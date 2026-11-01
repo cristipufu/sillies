@@ -84,7 +84,7 @@ final class CompanionHUDController {
     visibleFrame: CGRect
   ) {
     updateModel(state)
-    guard state.hasPresentation else {
+    guard state.showsTaskHUD else {
       hide()
       return
     }

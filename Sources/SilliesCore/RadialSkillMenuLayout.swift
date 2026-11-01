@@ -16,10 +16,6 @@ public struct RadialSkillMenuLayout: Equatable, Sendable {
   public static let screenMargin = orbitRadius + bubbleHitRadius + screenEdgePadding
   private static let screenEdgePadding: Double = 2
   private static let topFlipClearanceMargin: Double = 12
-  private static let edgeAngleDegrees: Double = 14
-  private static let arcDegrees = 180 - edgeAngleDegrees * 2
-  private static let minimumOrbitRadius: Double = 118
-  private static let targetGap: Double = 8
 
   public let interactionRadius: Double
   public let anchor: CGPoint
@@ -51,24 +47,18 @@ public struct RadialSkillMenuLayout: Equatable, Sendable {
     around center: CGPoint, direction: Direction,
     skills: [CompanionSkillKind] = CompanionSkillKind.radialSkills
   ) -> [Item] {
-    let radius = radius(for: skills.count)
-    return skills.enumerated().map { index, skill in
-      let fraction = skills.count > 1 ? Double(index) / Double(skills.count - 1) : 0.5
-      let degrees = 180 - edgeAngleDegrees - fraction * arcDegrees
-      let radians = degrees * .pi / 180 * (direction == .downward ? -1 : 1)
-      return Item(
+    let centers = RadialMenuArc(count: skills.count).centers(around: center, facingDegrees: 90)
+    return zip(skills, centers).map { skill, point in
+      Item(
         skill: skill,
         center: CGPoint(
-          x: center.x + cos(radians) * radius,
-          y: center.y + sin(radians) * radius))
+          x: point.x,
+          y: direction == .downward ? center.y * 2 - point.y : point.y))
     }
   }
 
   private static func radius(for count: Int) -> Double {
-    guard count > 1 else { return minimumOrbitRadius }
-    let angularGap = arcDegrees * .pi / 180 / Double(count - 1)
-    let required = (bubbleHitRadius * 2 + targetGap) / (2 * sin(angularGap / 2))
-    return max(minimumOrbitRadius, required)
+    RadialMenuArc(count: count).radius
   }
 
   public func selectedSkill(at pointer: CGPoint) -> CompanionSkillKind? {

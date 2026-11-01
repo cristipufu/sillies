@@ -29,6 +29,8 @@ final class CompanionSkillControls {
 
   func start() { isActive = true }
 
+  func dismissMenu(for pet: CompanionInstance) { directMenu.close(for: pet) }
+
   func stop() {
     isActive = false
     generation = UUID()

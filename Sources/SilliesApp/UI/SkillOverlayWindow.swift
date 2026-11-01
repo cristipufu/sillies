@@ -7,11 +7,17 @@ import SwiftUI
 /// WindowServer shadow is disabled so SwiftUI renders crisp, unclipped shadows without rectangular backing halos.
 @MainActor
 final class SkillFloatingPanel: NSPanel {
+  enum Focus { case pointerOnly, keyboard }
+  private let focus: Focus
   private var occlusionExclusion: WindowTrackingExclusions.Registration?
-  override var canBecomeKey: Bool { false }
+  override var canBecomeKey: Bool { focus == .keyboard }
   override var canBecomeMain: Bool { false }
 
-  init(contentRect: CGRect, ignoresMouseEvents: Bool, level: NSWindow.Level = .statusBar) {
+  init(
+    contentRect: CGRect, ignoresMouseEvents: Bool, level: NSWindow.Level = .statusBar,
+    focus: Focus = .pointerOnly
+  ) {
+    self.focus = focus
     super.init(
       contentRect: contentRect, styleMask: [.borderless, .nonactivatingPanel],
       backing: .buffered, defer: false)

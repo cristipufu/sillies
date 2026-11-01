@@ -484,6 +484,7 @@ final class CompanionController {
       commands.stop()
     }
     for pet in companions where !settings.enabledCharacters.contains(pet.definition.id) {
+      skillControls.dismissMenu(for: pet)
       if dragTargeting.draggedCompanionID == pet.definition.id {
         dragTargeting.resetAndHideOverlays()
       }

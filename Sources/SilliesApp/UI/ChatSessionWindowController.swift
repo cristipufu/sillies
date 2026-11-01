@@ -33,6 +33,17 @@ enum ChatWindowLayout {
     renderer: String? = nil, vault: ChatVaultPresentation? = nil,
     anchor: WritingCompanionAnchor? = nil
   ) {
+    prepare(model, openSettings: openSettings, renderer: renderer, vault: vault, anchor: anchor)
+    reveal()
+    NSApp.activate(ignoringOtherApps: true)
+  }
+
+  /// Builds the native bubble without activation; presentation is owned by `show`.
+  func prepare(
+    _ model: ChatSession, openSettings: @escaping (ChatNotice.SettingsDestination) -> Void,
+    renderer: String? = nil, vault: ChatVaultPresentation? = nil,
+    anchor: WritingCompanionAnchor? = nil
+  ) {
     if window == nil {
       let window = CompanionUtilityWindow(
         contentRect: CGRect(origin: .zero, size: ChatWindowLayout.initialSize),
@@ -49,7 +60,7 @@ enum ChatWindowLayout {
       window.titlebarAppearsTransparent = true
       window.level = .normal
       AppContentWindowStacking.shared.register(window)
-      appearance.register(window)
+      appearance.register(window, background: .transparent)
       window.center()
       self.window = window
     }
@@ -67,8 +78,6 @@ enum ChatWindowLayout {
       displayedSession = model
       observeMode(model)
     }
-    reveal()
-    NSApp.activate(ignoringOtherApps: true)
   }
   func attach(to anchor: WritingCompanionAnchor) {
     self.anchor = anchor

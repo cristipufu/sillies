@@ -65,6 +65,12 @@
   "CommandTests.swift": {
     "default": "headless"
   },
+  "CompanionMenuPresentationTests.swift": {
+    "default": "headless",
+    "tests": {
+      "directMenuNativePresentationDismissesAndReleasesTheCompanion()": "gui"
+    }
+  },
   "ControlCenterDismissalTests.swift": {
     "default": "gui"
   },

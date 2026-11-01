@@ -30,6 +30,14 @@ def initialize(output: Path, configuration: dict) -> None:
         # The binary/corpus hashes define execution. A later documentation commit changes neither.
         identity = lambda value: {key: item for key, item in value.items() if key != "sourceCommit"}
         if identity(previous) != identity(configuration):
-            raise ValueError("This output belongs to a different corpus, binary or configuration; use a new output folder")
+            raise ValueError("This output belongs to a different corpus, binary, machine or configuration; use a new output folder")
     else:
         write_json(path, configuration)
+
+
+def record_model_metadata(path: Path, metadata: dict) -> None:
+    if path.exists():
+        if json.loads(path.read_text()) != metadata:
+            raise ValueError("Model revision or execution environment changed; use a new output folder")
+        return
+    write_json(path, metadata)

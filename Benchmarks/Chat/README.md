@@ -9,6 +9,9 @@ All records, people and saved memories are synthetic. Native Swift workers run t
 a Python 3.11+ standard-library supervisor manages deadlines, receipts and scoring.
 There is no Python inference runtime, cloud judge or additional dependency.
 
+Read the [first seven-model comparison](../../docs/reports/local-chat-models-2026-11-01.md),
+including raw evidence, measured limitations and the next integration work.
+
 `fixtures` validates every seeded database without loading a model and runs in `make check`.
 Screenshot fixtures include real tiny PNG attachments and synthetic OCR text, so the normal
 screenshot category can retrieve them. This measures text-based screenshot retrieval, not vision.
@@ -72,9 +75,14 @@ python3 Benchmarks/Chat/benchmark.py run \
 
 All catalog text models work through the same runner. Use `--tag smoke` for the short pilot,
 `--groups mixed-knowledge identity` for focused investigation, and `--repeats 3` for variability.
-Choose these **before** starting a run. Corpus, evaluator, binaries, model list and deadlines are
-hashed/frozen; changed inputs require a new output folder. A documentation-only commit does not
-invalidate identical binaries. The initial source commit remains in the run metadata.
+Choose these **before** starting a run. Corpus, evaluator, binaries, model list, deadlines and
+machine conditions are hashed/frozen; changed inputs require a new output folder. Machine metadata
+contains OS version/build, processor family, architecture, memory and logical processor count;
+it contains no hostname, serial number or user identifier. Each worker's model revision and
+environment must also match the first worker before another case is admitted. Apple's model assets
+remain system-managed; an unchanged OS build cannot prove that Apple has not updated those assets.
+A documentation-only commit does not invalidate identical binaries. The initial source commit
+remains in the run metadata.
 
 ## Read the results honestly
 

@@ -12,7 +12,7 @@ from pathlib import Path
 
 from .corpus import worker_job
 from .scoring import evaluate
-from .storage import write_json
+from .storage import record_model_metadata, write_json
 
 MAX_EVENT_BYTES = 8 * 1024 * 1024
 
@@ -123,7 +123,7 @@ class ModelBatch:
                     log.flush()
                     kind, payload = event["event"], event["payload"]
                     if kind == "model":
-                        write_json(self.directory / "model.json", payload)
+                        record_model_metadata(self.directory / "model.json", payload)
                         worker.admit()
                     elif kind == "caseStarted":
                         if self.current is not None or payload["id"] != self.jobs[0]["id"]:

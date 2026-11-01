@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "Benchmarks/Chat"))
 from evaluation import corpus, report, reviews, scoring
 from evaluation.runner import ModelBatch
-from evaluation.storage import initialize
+from evaluation.storage import initialize, record_model_metadata
 
 
 def scenario():
@@ -79,6 +79,47 @@ class ChatBenchmarkTests(unittest.TestCase):
             initialize(path, {"workerHash": "abc", "sourceCommit": "before"})
             initialize(path, {"workerHash": "abc", "sourceCommit": "after"})
             self.assertEqual(json.loads((path / "run.json").read_text())["sourceCommit"], "before")
+
+    def test_resume_rejects_changed_machine_conditions(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)
+            original = {"workerHash": "abc", "machine": {"osBuild": "first", "memoryBytes": 48}}
+            initialize(path, original)
+            for machine in ({"osBuild": "new", "memoryBytes": 48}, {"osBuild": "first", "memoryBytes": 24}):
+                with self.subTest(machine=machine), self.assertRaises(ValueError):
+                    initialize(path, {**original, "machine": machine})
+            self.assertEqual(json.loads((path / "run.json").read_text()), original)
+
+    def test_model_metadata_cannot_be_overwritten_on_resume(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "model.json"
+            original = {"revision": "first", "operatingSystem": "same"}
+            record_model_metadata(path, original)
+            record_model_metadata(path, original)
+            for changed in ({"revision": "new", "operatingSystem": "same"},
+                            {"revision": "first", "operatingSystem": "new"}):
+                with self.subTest(metadata=changed), self.assertRaises(ValueError):
+                    record_model_metadata(path, changed)
+            self.assertEqual(json.loads(path.read_text()), original)
+
+    def test_changed_worker_metadata_stops_before_admitting_a_case(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            marker = root / "admitted"
+            worker = root / "worker.py"
+            worker.write_text("#!/usr/bin/env python3\nimport json,sys,pathlib\n"
+                              "print(json.dumps({'event':'model','payload':{'revision':'new'}}),flush=True)\n"
+                              f"if sys.stdin.readline(): pathlib.Path({str(marker)!r}).touch()\n")
+            worker.chmod(0o755)
+            options = SimpleNamespace(output=root / "output", worker=worker, models_root=root,
+                                      helper=worker, startup_timeout=1, case_timeout=1, turn_timeout=1)
+            metadata = options.output / "apple/model.json"
+            record_model_metadata(metadata, {"revision": "first"})
+            ModelBatch(options, "apple", corpus.jobs([scenario()], 1), time.monotonic() + 5).run()
+            self.assertFalse(marker.exists())
+            self.assertEqual(json.loads(metadata.read_text()), {"revision": "first"})
+            failure = json.loads((options.output / "apple/startup-failure.json").read_text())
+            self.assertIn("environment changed", failure["error"])
 
     def test_semantic_reviews_reject_stale_responses_and_duplicate_votes(self):
         with tempfile.TemporaryDirectory() as directory:

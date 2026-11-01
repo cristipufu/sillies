@@ -10,7 +10,7 @@ import tempfile
 import time
 from pathlib import Path
 
-from evaluation import archive, corpus, report
+from evaluation import archive, corpus, environment, report
 from evaluation.runner import ModelBatch
 from evaluation.storage import file_hash, initialize
 
@@ -79,7 +79,7 @@ def main() -> None:
                      "workerHash": file_hash(options.worker), "helperHash": file_hash(options.helper),
                      "evaluatorHash": corpus.digest({str(path.relative_to(Path(__file__).parent)): file_hash(path)
                                                      for path in sorted(Path(__file__).parent.rglob("*.py"))}),
-                     "python": sys.version,
+                     "python": sys.version, "machine": environment.capture(),
                      "sourceCommit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
                      "models": options.models, "repeats": options.repeats,
                      "turnTimeout": options.turn_timeout, "caseTimeout": options.case_timeout,

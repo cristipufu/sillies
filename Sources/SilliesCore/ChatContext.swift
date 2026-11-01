@@ -1,6 +1,6 @@
 import Foundation
 
-/// The UI keeps the complete history. Reasoning alone chooses the model's working context.
+/// A bounded working set. Durable originals belong to the conversation repository.
 public struct ChatContext: Sendable {
   public static let maximumMessageCharacters = 2_000
   public static let maximumMessageBytes = 16_000
@@ -10,6 +10,7 @@ public struct ChatContext: Sendable {
   public let memory: ConversationMemory
   public private(set) var turnID = UUID()
   public private(set) var sessionID: UUID?
+  public private(set) var historyHandle: ConversationHandle?
 
   public init(
     companionName: String, profile: CharacterChatProfile, messages: [ChatMessage],
@@ -25,6 +26,11 @@ public struct ChatContext: Sendable {
     var copy = self
     copy.turnID = id
     copy.sessionID = session
+    return copy
+  }
+  public func inHistory(_ handle: ConversationHandle?) -> Self {
+    var copy = self
+    copy.historyHandle = handle
     return copy
   }
 }

@@ -17,7 +17,7 @@ GitHub, model-hosting services, or another app into which you insert or export c
 | Window companions | App/window identifiers, titles, geometry, focus and lifecycle events, pointer interactions, and time since input, used to place companions and select reactions. |
 | Listen and Participate | Audio from the selected application's output and your microphone, recordings, transcripts, timestamps, optional speaker labels, notes, and suggestions. |
 | Record | Microphone audio, a playable recording, transcript, and notes. |
-| Chat | Messages you type, microphone audio after choosing Speak, recognized words, local replies, and optional synthesized speech. Chat can search and read your saved Vault/Stash material locally when you ask. It keeps a bounded in-memory summary for long conversations, without removing the visible history. Tool results and summaries are processed by the selected on-device model. Chat saves conversation text when finished; it does not save microphone recordings or generated audio. |
+| Chat | Messages you type, microphone audio after choosing Talk, recognized words, local replies, and synthesized speech. Each companion has a continuous, locally saved conversation. Chat can search earlier messages and your Vault/Stash locally. Bounded context summaries and clear personal facts identified by the model are stored locally; saved facts show a memory chip with Undo and can be reviewed or forgotten. Closing the bubble saves the draft and does not delete history. Clear conversation deletes its messages, summaries, and memories. Chat does not save microphone recordings or generated audio. |
 | Snap and Explain | An explicitly selected window image, recognized text, and, for Explain, a local explanation. Snap's text recognition makes saved screenshots searchable. |
 | Dictation | Microphone audio during the session, recognized text, optional cleanup, destination information, and a short text recovery history. Dictation does not save an audio recording. |
 | Selection commands and insertion | The selected text and bounded focused-field/destination context needed to shorten, correct, translate, or insert text. |
@@ -54,7 +54,7 @@ The default application data lives under `~/Library/Application Support/Sillies/
 
 | Location | Contents |
 | --- | --- |
-| `Vault/` | Saved session metadata, recordings, screenshots, transcripts, recognized screenshot text, notes, speaker names, stash items, a local SQLite database containing record bodies, listing metadata, full-text search documents, and an attachment-cleanup journal. Records can include source app/window titles and model revisions. |
+| `Vault/` | Saved session metadata, recordings, screenshots, transcripts, recognized screenshot text, notes, speaker names, stash items, a separate `conversations.sqlite` containing per-companion messages, drafts, search indexes, context summaries and personal memories with source quotes and recent Undo payloads; a local SQLite database containing record bodies, listing metadata, full-text search documents, and an attachment-cleanup journal. Records can include source app/window titles and model revisions. |
 | `SpeechModels/` | Downloaded speech/speaker models, installation state, partial downloads/resume information, and model-update metadata. |
 | `TextModels/` | Downloaded text models and installation state, including partial downloads. |
 | `VoiceModels/` | Downloaded voice models, codecs, supplied voices, installation state, and partial downloads. |

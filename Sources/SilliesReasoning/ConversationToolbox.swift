@@ -42,6 +42,8 @@ package actor ConversationToolbox {
     calls += 1
     progress(.usingTool(tool.activity))
     let result = try await load(call, using: tool)
+    // A committed memory must remain visible even if cancellation arrives after its write.
+    if let receipt = result.memoryReceipt { progress(.remembered(receipt)) }
     try Task.checkCancellation()
     publish(result.sources)
     let text = recovering ? result.briefText : result.text

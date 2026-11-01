@@ -5,15 +5,18 @@ import SwiftUI
 struct SessionVaultView: View {
   @Environment(\.silliesTheme) private var theme
   let vault: SessionVaultStore
+  let conversations: VaultConversationPresentation?
+  @State private var showsConversations = false
   @State private var model: SessionVaultModel
   @State private var showsStashComposer = false
   @State private var showsRetention = false
 
   init(
     vault: SessionVaultStore, initialRecordID: UUID? = nil, pasteBack: PasteBackCoordinator? = nil,
-    appearance: ThemeEnvironment
+    appearance: ThemeEnvironment, conversations: VaultConversationPresentation? = nil
   ) {
     self.vault = vault
+    self.conversations = conversations
     _model = State(
       initialValue: SessionVaultModel(
         vault: vault,
@@ -26,10 +29,23 @@ struct SessionVaultView: View {
   var body: some View {
     let records = model.filteredRecords
     let current = model.selectedHeader(in: records)
-    HStack(spacing: 0) {
-      sidebar(records: records, selected: current)
-      Divider().overlay(theme.border)
-      SessionVaultDetailView(vault: vault, model: model, record: model.visibleDetail)
+    VStack(spacing: 0) {
+      if conversations != nil {
+        Picker("Library", selection: $showsConversations) {
+          Text("Vault").tag(false)
+          Text("Conversations").tag(true)
+        }.pickerStyle(.segmented).frame(maxWidth: 300).padding(12)
+        Divider().overlay(theme.border)
+      }
+      if showsConversations, let conversations {
+        VaultConversationsView(presentation: conversations)
+      } else {
+        HStack(spacing: 0) {
+          sidebar(records: records, selected: current)
+          Divider().overlay(theme.border)
+          SessionVaultDetailView(vault: vault, model: model, record: model.visibleDetail)
+        }
+      }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(theme.paper)

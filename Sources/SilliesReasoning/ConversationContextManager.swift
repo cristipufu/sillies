@@ -9,6 +9,8 @@ struct ConversationContextManager {
   private static let safetyTokens = 128
   private static let maximumMeasurementBytes = 20_000
   private static let maximumBatchTurns = 4
+  // Keep the persistent working set below the bounded history page, independently of model size.
+  private static let maximumRecentTurns = 24
   let backend: any ConversationBackend
   let tools: [ConversationToolDefinition]
   let progress: @Sendable (ChatProgress) -> Void
@@ -31,7 +33,7 @@ struct ConversationContextManager {
       let working = ChatContext(
         companionName: context.companionName, profile: context.profile,
         messages: Array(pending), memory: memory
-      ).inTurn(context.turnID, session: context.sessionID)
+      ).inTurn(context.turnID, session: context.sessionID).inHistory(context.historyHandle)
       let request = ChatReplyGenerator.request(for: working, tools: tools)
       let fits = try await fits(request, budget: budget)
       let starts = pending.indices.filter { pending[$0].role == .user }
@@ -52,7 +54,7 @@ struct ConversationContextManager {
         progress(.memory(memory))
         continue
       }
-      if fits, pressure == .normal { return working }
+      if fits, pressure == .normal, starts.count <= Self.maximumRecentTurns { return working }
       progress(.compacting)
       let next = starts[min(Self.maximumBatchTurns, starts.count - 1)]
       let batch = Array(pending[..<next])

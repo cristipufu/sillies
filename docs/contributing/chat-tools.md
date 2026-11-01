@@ -2,8 +2,9 @@
 
 Chat passes native user, assistant, tool-call, and tool-result messages to its selected local model.
 A tool is a capability supplied by app composition, not a function name parsed out of generated prose.
-The current tools search the Vault and read a bounded passage from a saved record. They cannot edit
-or delete records, run commands, or access the network.
+The tools search/read Vault records, search earlier conversation messages, look up personal memories,
+and save explicit user facts with provenance. They cannot edit/delete Vault records, run commands,
+or access the network. Memory removal and Undo are explicit user actions in the interface.
 
 ## Add a capability
 
@@ -21,7 +22,7 @@ or delete records, run commands, or access the network.
    large bodies, cancellation, and bounded results. Add an injected-backend test for the native
    call/result exchange and an opt-in short real-model evaluation for its natural-language use.
 
-`ConversationToolbox` owns each turn's allowed names, call budget, cached read results, progress, and
+`ConversationToolbox` owns each turn's allowed names, call budget, cached tool results (including writes), progress, and
 source references. Each attempt permits four calls and 12 KB of returned text; one context recovery
 attempt may reuse cached results in shorter form. Arguments are capped at 2 KB. Model-produced query
 syntax never becomes SQL. Vault search quotes literal keywords, ranks matching terms through FTS,
@@ -62,7 +63,11 @@ There is no intent-classification inference step before the normal reply.
 
 ## Context and continuity
 
-`ChatSession` owns the full visible history and per-conversation `ConversationMemory`.
+`ConversationLibrary` owns the durable SQLite history. `ChatSession` holds at most 128 recent messages
+and a persisted `ConversationMemory`; `ConversationBrowser` pages older originals independently.
+`ConversationHistoryTools` creates companion-scoped tools per turn from injected repository protocols.
+`save_memory` can quote only the current user message; stored receipts make successful changes visible
+and undoable. Clear/Forget/Undo rotate the storage generation so late work cannot restore deleted state.
 `LocalConversationService` shares the interactive inference gate with other reasoning work.
 `ConversationContextManager` measures instructions, history, and tool schemas, then reserves room
 for the reply and tool results. Apple uses its tokenizer on macOS 26.4 or later; earlier systems use
@@ -74,7 +79,7 @@ turns retain native roles and tool exchanges. The summarizer is a separate text 
 conversation to continue. The summary keeps attributed facts, preferences,
 corrections, decisions, and unresolved questions. Record references come from executed tools and
 remain separate from generated memory. The original history remains visible and is saved in full;
-there is no 100-message stop. Memory is scoped to this active chat, not shared across mascots.
+there is no 100-message stop. History, summaries and personal memories persist per companion and are never shared across mascots.
 
 Summaries are lossy. This is continuity, not perfect recall of every sentence. If summarization
 fails, a bounded attributed excerpt preserves some continuity and the full transcript remains

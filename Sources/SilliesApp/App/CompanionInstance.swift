@@ -28,8 +28,21 @@ final class CompanionInstance {
   private(set) var isPerformingScene = false
   private(set) var isWritingIndicator = false
 
+  private(set) var isChoosingDirectAction = false
+  var holdsConversationPerch: Bool { isConversing || isChoosingDirectAction }
+  func beginDirectActionMenu() {
+    isChoosingDirectAction = true
+    clearMotion()
+  }
+  func endDirectActionMenu() { isChoosingDirectAction = false }
+
+  var isConversing: Bool {
+    if case .active(_, .chat, _, _, _) = bindingState { return true }
+    return false
+  }
   var isAvailableForWriting: Bool {
-    !isPickedUp && !bindingState.isBound && !isWritingIndicator && !isReturningFromDrop
+    !isPickedUp && !bindingState.isBound && !isWritingIndicator && !isConversing
+      && !isReturningFromDrop
       && !isWaitingForSpace && isAttachmentVisible && panel.isVisible
   }
   var writingAnchor: WritingCompanionAnchor {
@@ -206,6 +219,7 @@ final class CompanionInstance {
 
   func updateBinding(_ state: CompanionBindingState) {
     bindingState = state
+    if isConversing { clearMotion() }
     updateOverlayLevel()
     panel.restoreAttachmentOrder()
     if !isAttachmentVisible, !isPickedUp { hideForUnavailableSurface() }

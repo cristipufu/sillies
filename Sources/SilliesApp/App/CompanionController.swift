@@ -74,7 +74,10 @@ final class CompanionController {
       performSkill: { [weak self] skill, pet, target in
         self?.performSkillCommand(skill, for: pet, target: target)
       },
-      motionChanged: { [weak self] in self?.updateMotionClock() }), appearance: appearance)
+      motionChanged: { [weak self] in
+        self?.scheduleDeadline()
+        self?.updateMotionClock()
+      }), appearance: appearance)
   @ObservationIgnored private let interaction = CompanionInteraction()
   @ObservationIgnored let dragTargeting: CompanionDragTargetingController
   @ObservationIgnored let smoothnessMetrics: InteractionSmoothnessMetrics
@@ -201,11 +204,12 @@ final class CompanionController {
   private func skillBindingChanged(for companionID: String, state: CompanionBindingState) {
     playfulScenes.cancel(.restorePerches)
     guard let pet = companions.first(where: { $0.definition.id == companionID }) else { return }
+    let wasConversing = pet.isConversing
     let previousTarget = pet.attachmentTarget
     let wasVisible = pet.isAttachmentVisible
     pet.updateBinding(state)
     pet.updateSkillPresentation(skills.presentation(for: companionID))
-    let targetChanged = previousTarget != pet.attachmentTarget
+    let targetChanged = previousTarget != pet.attachmentTarget || wasConversing != pet.isConversing
     if targetChanged {
       updateSurfaces(mode: .animated)
       if !wasVisible, pet.isAttachmentVisible {
@@ -377,7 +381,8 @@ final class CompanionController {
     let available = companions.compactMap { pet -> PlayfulSceneParticipant? in
       guard let profile = pet.definition.playful, let surface = pet.surface,
         pet.panel.isVisible, pet.isAttachmentVisible, !pet.isPickedUp, !pet.isReturningFromDrop,
-        !pet.isWaitingForSpace, !pet.isStashTargeted, !pet.bindingState.isBound
+        !pet.isWaitingForSpace, !pet.isStashTargeted, !pet.bindingState.isBound,
+        !pet.holdsConversationPerch
       else { return nil }
       return PlayfulSceneParticipant(
         id: pet.definition.id, profile: profile, surface: surface,
@@ -552,6 +557,10 @@ final class CompanionController {
     }
   }
 
+  func conversationAnchor(for id: String) -> WritingCompanionAnchor? {
+    companions.first { $0.definition.id == id }?.writingAnchor
+  }
+
   func startMicrophoneRecording() {
     commands.perform(.record)
   }
@@ -560,6 +569,7 @@ final class CompanionController {
     guard
       let pet = companions.filter({
         !$0.isPickedUp && !$0.bindingState.isBound && !$0.isWritingIndicator
+          && !$0.holdsConversationPerch
       }).min(by: {
         hypot($0.position.x - NSEvent.mouseLocation.x, $0.position.y - NSEvent.mouseLocation.y)
           < hypot($1.position.x - NSEvent.mouseLocation.x, $1.position.y - NSEvent.mouseLocation.y)
@@ -571,7 +581,7 @@ final class CompanionController {
   private func performSkillCommand(
     _ skill: CompanionSkillKind, for pet: CompanionInstance, target: WindowTargetCandidate?
   ) {
-    guard !pet.isWritingIndicator else { return }
+    guard !pet.isWritingIndicator, !pet.holdsConversationPerch else { return }
     guard let command = AppCommand.allCases.first(where: { $0.skill == skill }) else { return }
     commands.perform(
       command,
@@ -713,7 +723,9 @@ final class CompanionController {
   }
 
   private func react(_ pet: CompanionInstance, to event: WorkspaceEvent) {
-    guard !pet.isPerformingScene, !pet.isWritingIndicator else { return }
+    guard !pet.isPerformingScene, !pet.isWritingIndicator, !pet.holdsConversationPerch else {
+      return
+    }
     guard let state = pet.receive(event, activity: settings.activity.multiplier) else {
       return
     }
@@ -796,7 +808,8 @@ final class CompanionController {
     playfulScenes.advance(at: time)
     considerPlayfulScene(trigger: tracker.isIdle ? .idle : .ambient)
     for pet in companions
-    where !pet.isPerformingScene && !pet.isWritingIndicator && !pet.isPickedUp
+    where !pet.isPerformingScene && !pet.isWritingIndicator && !pet.holdsConversationPerch
+      && !pet.isPickedUp
       && !pet.isReturningFromDrop
       && pet.isAttachmentVisible
       && (!settings.followsWindows || pet.surface?.isAvailable == true)
@@ -816,7 +829,8 @@ final class CompanionController {
     guard shouldRun,
       let deadline =
         (companions.filter({
-          !$0.isPerformingScene && !$0.isWritingIndicator && !$0.isPickedUp
+          !$0.isPerformingScene && !$0.isWritingIndicator && !$0.holdsConversationPerch
+            && !$0.isPickedUp
             && !$0.isReturningFromDrop
             && $0.isAttachmentVisible
             && (!settings.followsWindows || $0.surface?.isAvailable == true)

@@ -3,6 +3,7 @@ import SilliesCore
 
 enum CompanionMenuAction {
   case skill(CompanionSkillKind)
+  case talk
   case saveClipboard
   case openStash
   case openSession
@@ -23,7 +24,7 @@ enum CompanionActionMenu {
   ) -> NSMenu {
     let menu = NSMenu(title: String(localized: "Companion skills"))
     menu.autoenablesItems = false
-    for skill in CompanionSkillKind.radialSkills {
+    for skill in [.chat, .record] + CompanionSkillKind.radialSkills {
       let item = add(skill.title, symbol: skill.symbolName, to: menu) { perform(.skill(skill)) }
       item.isEnabled =
         (!skill.requiresWindow || windowName != nil)
@@ -37,6 +38,7 @@ enum CompanionActionMenu {
       default: item.toolTip = "\(skill.title) · \(windowName ?? "Choose a window first")"
       }
     }
+    add(String(localized: "Talk"), symbol: "waveform", to: menu) { perform(.talk) }
     if hasAudioSession {
       add(
         String(localized: "Open current session"), symbol: String(localized: "waveform"), to: menu

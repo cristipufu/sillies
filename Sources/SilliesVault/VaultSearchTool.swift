@@ -15,7 +15,7 @@ package struct VaultSearchTool: ConversationTool {
     .init(
       name: "search_vault",
       description:
-        "Search only the user's saved screenshots, links, Stash items and meetings when they ask about their saved material. Never use this for general-knowledge questions or web searches. Returns up to five records and a separate totalVaultRecords count for the whole Vault. Use an empty query to list recent items. Cards are already displayed; read a result only if its excerpt is insufficient. Searches text and metadata, not image pixels.",
+        "Find the user's saved screenshots, links, Stash items and meetings. Returns excerpts and display cards, not web results.",
       parameters: [
         .init(
           "category", description: "The type of saved material to find.",

@@ -125,7 +125,7 @@ struct CompanionSurfacePlacement {
   private mutating func hideAllCompanionsWhenNoWindowTracked() {
     pendingPlacements.removeAll(keepingCapacity: true)
     let immediately = reducedMotion || environment.isLowPower
-    for pet in companions {
+    for pet in companions where !pet.holdsConversationPerch {
       pet.detachFromWindow(immediately: immediately)
     }
   }
@@ -150,6 +150,7 @@ struct CompanionSurfacePlacement {
     at index: Int,
     context: inout SurfaceUpdateContext
   ) -> Bool {
+    guard !pet.holdsConversationPerch else { return false }
     guard pet.isAttachmentVisible || pet.isPickedUp else {
       pet.hideForUnavailableSurface()
       return false
@@ -301,7 +302,7 @@ struct CompanionSurfacePlacement {
 
   mutating func settleAtFreePerch(_ pet: CompanionInstance, mode: Mode) {
     guard shouldRun, pet.isAttachmentVisible, !pet.isPickedUp, !pet.isReturningFromDrop,
-      !pet.isStashTargeted,
+      !pet.isStashTargeted, !pet.holdsConversationPerch,
       let surface = pet.surface, surface.isAvailable
     else { return }
     guard
@@ -319,7 +320,9 @@ struct CompanionSurfacePlacement {
     guard shouldRun, surface.isAvailable else { return false }
     let group = companions.filter { $0.surface == surface && $0.isAttachmentVisible }
     guard group.count > 1,
-      group.allSatisfy({ !$0.isPickedUp && !$0.isReturningFromDrop && $0.tween == nil })
+      group.allSatisfy({
+        !$0.holdsConversationPerch && !$0.isPickedUp && !$0.isReturningFromDrop && $0.tween == nil
+      })
     else { return false }
     let targets = PerchSpacing.restingPoints(near: group.map(\.position), on: surface)
     for (pet, target) in zip(group, targets) {

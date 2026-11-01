@@ -59,17 +59,19 @@ package struct ChatServices: Sendable {
   package let conversation: any ConversationResponding
   package let speech: any ChatSpeechOutput
   package let deliver: AudioSessionUpdateDelivery.Schedule
+  package let history: ChatHistoryConfiguration
 
   package init(
     captureFactory: @escaping ConversationCaptureFactory,
     loadLanguages: @escaping @Sendable () async throws -> SpeechLanguageCatalog,
     conversation: any ConversationResponding, speech: any ChatSpeechOutput,
-    deliver: @escaping AudioSessionUpdateDelivery.Schedule
+    deliver: @escaping AudioSessionUpdateDelivery.Schedule, history: ChatHistoryConfiguration
   ) {
     self.captureFactory = captureFactory
     self.loadLanguages = loadLanguages
     self.conversation = conversation
     self.speech = speech
     self.deliver = deliver
+    self.history = history
   }
 }

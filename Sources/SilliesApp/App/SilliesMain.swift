@@ -3,6 +3,7 @@ import Observation
 import SilliesAudio
 import SilliesChat
 import SilliesCore
+import SilliesReasoning
 import SilliesVault
 import SwiftUI
 
@@ -221,6 +222,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     }
   }
 
+  private var conversationSessions: ConversationSessions?
+  private var conversations: ConversationLibrary?
+
   private func configureChat(
     skills: SkillCoordinator, speech: SpeechServices, characters: [CharacterDefinition]
   ) throws {
@@ -231,20 +235,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       uniqueKeysWithValues: characters.compactMap { character in
         character.chat.map { (character.id, $0) }
       })
+    let conversations = ConversationLibrary(directory: skills.vault.storageDirectory)
+    self.conversations = conversations
     let services = ChatServices(
       captureFactory: speech.conversationCaptureFactory(reference: reference),
       loadLanguages: speech.languages.load,
-      conversation: reasoningServices.makeConversation(tools: [
-        VaultSearchTool(library: skills.vault.library),
-        VaultReadTool(library: skills.vault.library),
-      ]), speech: voices.speech,
-      deliver: { MainRunLoopDelivery.perform($0) })
-    skills.makeChatSession = { id, name in
-      guard let profile = profiles[id] else { return nil }
-      return ChatSession(companionName: name, profile: profile, services: services, companionID: id)
-    }
+      conversation: reasoningServices.makeConversation(
+        tools: [
+          VaultSearchTool(library: skills.vault.library),
+          VaultReadTool(library: skills.vault.library),
+        ],
+        historyTools: { context in
+          ConversationHistoryTools(conversations: conversations, memories: conversations).tools(
+            for: context)
+        }), speech: voices.speech,
+      deliver: { MainRunLoopDelivery.perform($0) },
+      history: .stored(conversations: conversations, memories: conversations))
+    let sessions = ConversationSessions(profiles: profiles, services: services)
+    conversationSessions = sessions
+    skills.makeChatSession = { id, name in sessions.session(for: .init(id: id, name: name)) }
+    skills.onCloseChatSession = { [weak self] session in self?.chatWindow.close(session) }
     skills.onOpenChatSession = { [weak self] session in
-      self?.chatWindow.show(
+      guard let self else { return }
+      self.chatWindow.show(
         session,
         openSettings: { [weak self] destination in
           self?.settingsNavigation.destination =
@@ -252,7 +265,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
           self?.showSettings()
         }, renderer: characters.first(where: { $0.id == session.companionID })?.renderer,
         vault: .init(
-          store: skills.vault, openRecord: { [weak self] in self?.showVault(recordID: $0) }))
+          store: skills.vault, openRecord: { [weak self] in self?.showVault(recordID: $0) }),
+        anchor: self.controller?.conversationAnchor(for: session.companionID))
     }
   }
 
@@ -302,7 +316,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         controller?.drainPreviewsForTermination()
         let complete: @MainActor @Sendable () -> Void = { [weak self] in
           self?.terminationFlushTask = nil
-          approveTermination(sender)
+          if let self, let failed = self.conversationSessions?.failedSave {
+            self.isTerminating = false
+            self.controller?.start()
+            self.observeModelUpdateActivity()
+            self.observeCommandAvailability()
+            sender.reply(toApplicationShouldTerminate: false)
+            self.controller?.skills.startConversation(
+              .chat, for: failed.companionID, name: failed.companionName)
+          } else {
+            approveTermination(sender)
+          }
           continuation.finish()
         }
         if let writing = self?.writingTools {
@@ -489,7 +513,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     guard let controller else { return }
     let rootView = SessionVaultView(
       vault: controller.skills.vault, initialRecordID: recordID, pasteBack: writingTools?.pasteBack,
-      appearance: appearance)
+      appearance: appearance,
+      conversations: conversations.map { library in
+        .init(
+          repository: library,
+          open: { [weak self] owner, messageID in
+            guard let self, let controller = self.controller else { return }
+            controller.skills.startConversation(.chat, for: owner.id, name: owner.name)
+            if let session = controller.skills.activeChatSession, session.companionID == owner.id {
+              Task {
+                await session.restoreHistory()
+                if let messageID { await session.browser.show(.around(messageID)) }
+              }
+            }
+          })
+      })
     let host = ThemedHostingController(rootView: rootView, appearance: appearance)
     host.sizingOptions = []
     if let vaultWindow {

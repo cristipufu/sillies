@@ -5,14 +5,17 @@ package actor LocalConversationService: ConversationResponding {
   private let backend: @Sendable () async -> any ReasoningBackend
   private let tools: [any ConversationTool]
   private let turns: ReasoningTurnGate
+  private let historyTools: @Sendable (ChatContext) -> [any ConversationTool]
 
   package init(
     resolveBackend: @escaping @Sendable () async -> any ReasoningBackend,
-    tools: [any ConversationTool], turns: ReasoningTurnGate
+    tools: [any ConversationTool], turns: ReasoningTurnGate,
+    historyTools: @escaping @Sendable (ChatContext) -> [any ConversationTool] = { _ in [] }
   ) {
     backend = resolveBackend
     self.tools = tools
     self.turns = turns
+    self.historyTools = historyTools
   }
   package func availabilityNotice(localeIdentifier: String?) async -> String? {
     await backend().availabilityNotice(localeIdentifier: localeIdentifier)
@@ -43,7 +46,7 @@ package actor LocalConversationService: ConversationResponding {
     try await turns.acquire(.interactive)
     defer { Task { await turns.release() } }
     try Task.checkCancellation()
-    let toolbox = try ConversationToolbox(tools: tools, progress: progress)
+    let toolbox = try ConversationToolbox(tools: tools + historyTools(context), progress: progress)
     let manager = ConversationContextManager(
       backend: selected, tools: toolbox.definitions, progress: progress)
     var working = try await manager.prepare(context)
@@ -55,7 +58,7 @@ package actor LocalConversationService: ConversationResponding {
     } catch TextModelError.contextLimit {
       guard await !delivery.hasOutput else { throw TextModelError.contextLimit }
       // A backend can include hidden framing or a tool result that changes the budget.
-      // Retry once; all operations are read-only and already discovered cards remain available.
+      // Retry once; tool results (including writes) are cached for this turn.
       try await toolbox.beginRecovery()
       working = try await manager.prepare(
         contextWithMemory(context, working.memory), pressure: .recovering)
@@ -73,6 +76,6 @@ package actor LocalConversationService: ConversationResponding {
     .init(
       companionName: context.companionName, profile: context.profile, messages: context.messages,
       memory: memory
-    ).inTurn(context.turnID, session: context.sessionID)
+    ).inTurn(context.turnID, session: context.sessionID).inHistory(context.historyHandle)
   }
 }

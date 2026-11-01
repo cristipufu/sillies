@@ -79,6 +79,7 @@ struct ArchitecturePolicy {
     "AccessibilityTextAccess.swift": ["capture", "insert", "validate"],
     "ClipboardPasteTransaction.swift": ["prepare"],
     "VaultLibrary.swift": ["storage"],
+    "ConversationLibrary.swift": ["storage"],
     "WindowTextRecognition.swift": ["recognize"],
     "WindowMetadataReader.swift": ["snapshot"],
     "WindowMetadataClient.swift": ["read"],

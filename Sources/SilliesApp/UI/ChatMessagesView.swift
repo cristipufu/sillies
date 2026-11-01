@@ -13,6 +13,7 @@ struct ChatMessagesView: View {
   @State private var followsLatest = true
   @State private var nearBottom = true
   @State private var selectedMessages: Set<UUID> = []
+  @State private var visibleMessages: Set<UUID> = []
   @State private var selectionReset: UUID?
   private static let bottomID = "latest-chat-message"
   private static let bottomThreshold: CGFloat = 48
@@ -22,12 +23,38 @@ struct ChatMessagesView: View {
       ScrollView {
         LazyVStack(alignment: .leading, spacing: 14) {
           if model.messages.isEmpty { welcome }
-          ForEach(model.messages) { message in
+          if let page = model.browser.page {
+            HStack {
+              if page.hasOlder, let first = page.entries.first {
+                Button("Older") { Task { await model.browser.show(.before(first.sequence)) } }
+              }
+              Spacer()
+              if page.hasNewer, let last = page.entries.last {
+                Button("Newer") { Task { await model.browser.show(.after(last.sequence)) } }
+              }
+            }.buttonStyle(SoftButtonStyle()).disabled(model.browser.isLoading)
+          } else if model.history.handle != nil {
+            Button("Earlier messages") { Task { await model.browser.show(.latest) } }
+              .buttonStyle(SoftButtonStyle()).frame(maxWidth: .infinity)
+          }
+          ForEach(model.browser.page?.entries.map(\.message) ?? model.messages) { message in
             bubble(message).id(message.id)
+              .onScrollVisibilityChange(threshold: 0.5) { visible in
+                if visible {
+                  visibleMessages.insert(message.id)
+                } else {
+                  visibleMessages.remove(message.id)
+                }
+                if !followsLatest, model.browser.page == nil,
+                  let first = model.messages.first(where: { visibleMessages.contains($0.id) })
+                {
+                  model.browser.rememberPosition(first.id)
+                }
+              }
               .transition(
                 .asymmetric(insertion: .opacity.combined(with: .offset(y: 8)), removal: .opacity))
           }
-          if model.isWorking {
+          if model.isWorking, model.browser.page == nil {
             Label(model.status, systemImage: "ellipsis.bubble.fill")
               .font(.callout).foregroundStyle(theme.secondary).padding(12)
           }
@@ -45,18 +72,41 @@ struct ChatMessagesView: View {
             <= Self.bottomThreshold)
       } action: { previous, current in
         nearBottom = current.nearBottom
-        if current.contentHeight != previous.contentHeight, followsLatest, selectedMessages.isEmpty
+        if current.contentHeight != previous.contentHeight, followsLatest, selectedMessages.isEmpty,
+          model.browser.page == nil
         {
           proxy.scrollTo(Self.bottomID, anchor: .bottom)
         }
       }
+      .onAppear {
+        if let id = model.browser.focusedMessageID ?? model.history.checkpoint.readingMessageID {
+          followsLatest = false
+          if model.messages.contains(where: { $0.id == id }) || model.browser.page != nil {
+            proxy.scrollTo(id, anchor: .top)
+          } else {
+            Task { await model.browser.show(.around(id)) }
+          }
+        }
+      }
+      .onChange(of: model.browser.focusedMessageID) { _, id in
+        guard let id else { return }
+        followsLatest = false
+        proxy.scrollTo(id, anchor: .top)
+        model.browser.rememberPosition(id)
+      }
       .onScrollPhaseChange { _, phase in
         if phase == .interacting { followsLatest = false }
-        if phase == .idle, nearBottom { followsLatest = true }
+        if phase == .idle, nearBottom, model.browser.page == nil {
+          followsLatest = true
+          model.browser.rememberPosition(nil)
+        }
       }
       .overlay(alignment: .bottom) {
-        if !followsLatest || !selectedMessages.isEmpty, !nearBottom {
+        if model.browser.page != nil
+          || ((!followsLatest || !selectedMessages.isEmpty) && !nearBottom)
+        {
           Button("Latest", systemImage: "arrow.down") {
+            model.browser.showLatest()
             followsLatest = true
             selectedMessages.removeAll()
             selectionReset = UUID()
@@ -89,7 +139,7 @@ struct ChatMessagesView: View {
       Image(systemName: "bubble.left.and.bubble.right.fill")
         .font(.system(size: 38)).foregroundStyle(theme.accent)
       Text("A little company.").font(.system(size: 24, weight: .bold, design: .rounded))
-      Text("Say hello to \(model.companionName).\nType a thought, or start a voice conversation.")
+      Text("Say hello to \(model.companionName).\nPick up wherever you left off.")
         .font(.callout).foregroundStyle(theme.secondary).multilineTextAlignment(.center)
     }.frame(maxWidth: .infinity).padding(.vertical, 38)
   }

@@ -21,7 +21,7 @@ public enum CompanionSkillKind: String, Codable, CaseIterable, Sendable, Identif
 
   public var id: Self { self }
 
-  public static let radialSkills: [Self] = [.listen, .participate, .snap, .explain, .record, .chat]
+  public static let radialSkills: [Self] = [.listen, .participate, .snap, .explain]
 
   public var title: String {
     switch self {
@@ -109,7 +109,7 @@ public enum CompanionSkillKind: String, Codable, CaseIterable, Sendable, Identif
 
   public var stopActionTitle: String? {
     switch self {
-    case .chat: String(localized: "Finish Chat")
+    case .chat: String(localized: "Close conversation")
     case .listen, .participate, .record: String(localized: "Finish")
     case .watch, .focus: String(localized: "Done")
     case .snap, .explain, .stash: nil

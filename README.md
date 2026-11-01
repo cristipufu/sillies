@@ -51,7 +51,7 @@ Right-click menus and configurable global shortcuts offer the same actions.
 | Skill | What happens |
 | --- | --- |
 | **Listen** | Record app audio and your microphone, follow a live transcript, and save the conversation with notes and action items. |
-| **Chat** | Type or have a voice conversation with a companion. Automatic voice turns, optional local spoken replies, and search across your saved screenshots, links, and meetings. |
+| **Chat & Talk** | Double-click a companion to type or talk. Pick up the same conversation later, search earlier messages and your Vault, and review personal memories with Undo. |
 | **Participate** | Everything in Listen, with suggested questions in your companion’s speech bubble, grounded in the conversation. |
 | **Snap** | Capture a window to the clipboard and Vault. Background text recognition makes the screenshot searchable. |
 | **Explain** | Read the text in a window screenshot and explain it with your chosen local text model. |

@@ -152,7 +152,7 @@ private func chatFinishPreservesFinalWordsBeforeSaving(_ timing: FinishTiming) a
         .init(languages: [.init(id: "ro-RO", name: "Romanian", isInstalled: true)])
       },
       conversation: reply, speech: voice,
-      deliver: deliver))
+      deliver: deliver, history: .transient))
 }
 
 @MainActor private func waitFor(_ predicate: @MainActor () async -> Bool) async throws {
@@ -640,4 +640,60 @@ private actor RepeatedSourcesProbe: ConversationResponding {
   for update in updates.withLock({ $0 }) { update() }
   #expect(chat.messages.count == 1)
   #expect(chat.discoveredSources.isEmpty)
+}
+
+@Test @MainActor func conversationTalkKeepsTypedDraftWhenMicrophoneStops() async throws {
+  let chat = session(reply: ReplyProbe(), voice: VoiceProbe())
+  chat.draft = "A thought I have not sent"
+  await chat.startTalk()
+  try await waitFor { chat.phase == .listening }
+  #expect(chat.mode == .talk)
+  #expect(chat.draft.isEmpty)
+  chat.muteMicrophone()
+  try await waitFor { chat.phase == .ready }
+  #expect(!chat.isVoiceConversationActive)
+  #expect(chat.draft == "A thought I have not sent")
+  #expect(chat.messages.last?.role == .user)
+  #expect(chat.messages.last?.text == "Salut, Ștefan!")
+  chat.showChat()
+  #expect(chat.mode == .chat)
+  #expect(!chat.spokenReplies)
+  chat.finish {}
+}
+
+private actor DelayedAvailability: ConversationResponding {
+  private var waiter: CheckedContinuation<String?, Never>?
+  var isWaiting: Bool { waiter != nil }
+  func availabilityNotice(localeIdentifier: String?) async -> String? {
+    await withCheckedContinuation { waiter = $0 }
+  }
+  func resolve() {
+    waiter?.resume(returning: nil)
+    waiter = nil
+  }
+  func reply(to context: ChatContext, progress: @escaping @Sendable (ChatProgress) -> Void)
+    -> ChatReply
+  {
+    .init(text: "Hello")
+  }
+}
+
+@Test @MainActor func conversationSwitchToChatCancelsDelayedTalkStartup() async throws {
+  let reply = DelayedAvailability()
+  let starts = Mutex(0)
+  let chat = session(
+    reply: reply, voice: VoiceProbe(),
+    capture: { _, update in
+      starts.withLock { $0 += 1 }
+      return CaptureProbe(update: update)
+    })
+  let activation = Task { await chat.startTalk() }
+  try await waitFor { await reply.isWaiting }
+  chat.showChat()
+  await reply.resolve()
+  await activation.value
+  #expect(chat.mode == .chat)
+  #expect(!chat.isVoiceConversationActive)
+  #expect(starts.withLock { $0 } == 0)
+  chat.finish {}
 }

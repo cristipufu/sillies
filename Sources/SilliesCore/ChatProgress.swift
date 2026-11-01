@@ -5,4 +5,5 @@ public enum ChatProgress: Sendable {
   case memory(ConversationMemory)
   case usingTool(String)
   case sources([ChatSource])
+  case remembered(MemoryReceipt)
 }

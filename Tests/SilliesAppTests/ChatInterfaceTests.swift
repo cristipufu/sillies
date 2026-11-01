@@ -199,15 +199,17 @@ private struct VaultCardReply: ConversationResponding {
     try await Task.sleep(for: .milliseconds(5))
   }
   let expected = session.transcript
-  let skill = ChatSkillSession(presentation: session)
-  var saved: SkillCompletionOutcome?
+  let skill = ConversationActivity(presentation: session)
+  var completed = false
   skill.finish(
     .init(now: 10, startedAt: 0, companionID: "mochi", companionName: "Mochi", target: nil)
   ) {
-    saved = $0
+    #expect($0 == nil)
+    completed = true
   }
-  pumpChatTermination { saved != nil }
-  #expect(try #require(saved).record.transcript == expected)
+  pumpChatTermination { completed }
+  #expect(completed)
+  #expect(session.transcript == expected)
 }
 
 @MainActor private func pumpChatTermination(_ finished: () -> Bool) {
@@ -376,4 +378,29 @@ private actor StreamingInterfaceReply: ConversationResponding {
       size: ChatWindowLayout.initialSize,
       name: "sillies-chat-typography-\(scheme == .light ? "light" : "dark")")
   }
+}
+
+@Test @MainActor func conversationAttachedBubbleFitsBothModesWithoutNativePresentation()
+  async throws
+{
+  let session = ChatWindowFixture.makeSession()
+  session.showChat()
+  for _ in 0..<100 {
+    if session.phase == .ready { break }
+    try await Task.sleep(for: .milliseconds(5))
+  }
+  let presentation = ConversationBubblePresentation()
+  for scheme in [ColorScheme.light, .dark] {
+    try renderSkillInterface(
+      ConversationBubbleView(
+        presentation: presentation,
+        content: ChatSessionView(model: session, openSettings: { _ in }, renderer: "cat")
+      )
+      .environment(\.colorScheme, scheme), size: ChatWindowLayout.initialSize,
+      name: "sillies-continuous-chat-\(scheme)")
+  }
+  try renderSkillInterface(
+    TalkCaptionsView(model: session), size: CGSize(width: 360, height: 120),
+    name: "sillies-talk-captions")
+  session.finish {}
 }

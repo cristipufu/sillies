@@ -88,9 +88,11 @@ final class VaultSQLConnection {
     return value
   }
 
-  static func data(_ row: OpaquePointer, column: Int32 = 0) throws -> Data {
+  static func data(_ row: OpaquePointer, column: Int32 = 0, maximumBytes: Int = Int.max) throws
+    -> Data
+  {
     let count = sqlite3_column_bytes(row, column)
-    guard count >= 0 else { throw CocoaError(.fileReadCorruptFile) }
+    guard count >= 0, count <= maximumBytes else { throw CocoaError(.fileReadCorruptFile) }
     guard count > 0 else { return Data() }
     guard let bytes = sqlite3_column_blob(row, column) else {
       throw CocoaError(.fileReadCorruptFile)

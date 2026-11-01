@@ -26,7 +26,7 @@ import SilliesTTS
         captureFactory: { _, _ in UnavailableMicrophone() },
         loadLanguages: { .init(languages: []) },
         conversation: conversation, speech: SilentVoice(),
-        deliver: { MainRunLoopDelivery.perform($0) }))
+        deliver: { MainRunLoopDelivery.perform($0) }, history: .transient))
     session.spokenReplies = false
     return session
   }

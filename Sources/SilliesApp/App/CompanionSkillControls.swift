@@ -14,6 +14,7 @@ final class CompanionSkillControls {
   }
   private let skills: SkillCoordinator
   private let environment: Environment
+  private let directMenu: CompanionDirectMenu
   private let feedback: StashFeedbackController
   private var isActive = false
   private var generation = UUID()
@@ -22,6 +23,8 @@ final class CompanionSkillControls {
     self.skills = skills
     self.environment = environment
     feedback = StashFeedbackController(appearance: appearance)
+    directMenu = CompanionDirectMenu(appearance: appearance)
+    directMenu.onClose = { [weak self] in self?.environment.motionChanged() }
   }
 
   func start() { isActive = true }
@@ -30,9 +33,17 @@ final class CompanionSkillControls {
     isActive = false
     generation = UUID()
     feedback.close()
+    directMenu.close()
   }
 
   func configure(_ pet: CompanionInstance) {
+    pet.view.onDoubleClick = { [weak self, weak pet] in
+      guard let self, let pet, self.isActive, self.environment.isRunning() else { return }
+      self.directMenu.show(for: pet) { [weak self, weak pet] action in
+        guard let self, let pet, self.isActive else { return }
+        self.perform(action, for: pet, target: nil)
+      }
+    }
     configureHUD(pet)
     pet.configureStashControls(
       .init(
@@ -88,6 +99,12 @@ final class CompanionSkillControls {
     _ action: CompanionMenuAction, for pet: CompanionInstance, target: WindowTargetCandidate?
   ) {
     switch action {
+    case .talk:
+      guard canStartConversation(with: pet) else { return }
+      skills.startConversation(.talk, for: pet.definition.id, name: pet.definition.name)
+    case .skill(.chat):
+      guard canStartConversation(with: pet) else { return }
+      skills.startConversation(.chat, for: pet.definition.id, name: pet.definition.name)
     case .skill(let skill):
       environment.performSkill(skill, pet, target)
     case .saveClipboard: stash(StashPasteboard.items(from: .general), with: pet, target: target)
@@ -99,6 +116,15 @@ final class CompanionSkillControls {
         skills.openActiveSession()
       }
     }
+  }
+
+  private func canStartConversation(with pet: CompanionInstance) -> Bool {
+    guard skills.activeAudioSession == nil, skills.canStartAudio(), !pet.isWritingIndicator else {
+      feedback.showMessage(
+        String(localized: "Choose an available companion first."), at: pet.position)
+      return false
+    }
+    return true
   }
 
   func saveClipboard(with pet: CompanionInstance) {

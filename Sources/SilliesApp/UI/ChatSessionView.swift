@@ -12,6 +12,9 @@ struct ChatSessionView: View {
   var renderer: String? = nil
   var motion = ChatPresentationMotion.animated
   var vault: ChatVaultPresentation? = nil
+  @State private var showsMemories = false
+  @State private var showsSearch = false
+  @State private var confirmsClear = false
   @State private var registry = RendererRegistry()
   @State private var availabilityRevision = UUID()
   private static let maximumNoticeHeight: CGFloat = 96
@@ -25,10 +28,14 @@ struct ChatSessionView: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      header.padding(16)
+      header.padding(12)
       Divider().overlay(theme.border)
-      ChatMessagesView(model: model, motion: motion, vault: vault)
-      if model.failure != nil || model.notice != nil
+      if model.mode == .chat {
+        ChatMessagesView(model: model, motion: motion, vault: vault)
+      } else {
+        TalkCaptionsView(model: model)
+      }
+      if model.failure != nil || model.notice != nil || model.history.failure != nil
         || model.draft.count > ChatContext.maximumMessageCharacters
       {
         ScrollView { notices.padding(.horizontal, 16).padding(.vertical, 8) }
@@ -37,7 +44,17 @@ struct ChatSessionView: View {
       composer.padding(14).background(theme.card)
     }
     .background(theme.paper).foregroundStyle(theme.ink).tint(theme.accent)
-    .task(id: availabilityRevision) { await model.refreshAvailability() }
+    .task(id: availabilityRevision) {
+      await model.restoreHistory()
+      await model.refreshAvailability()
+    }
+    .sheet(isPresented: $showsMemories) { ConversationMemoriesView(model: model) }
+    .sheet(isPresented: $showsSearch) { ConversationSearchView(browser: model.browser) }
+    .confirmationDialog("Clear this conversation and its memories?", isPresented: $confirmsClear) {
+      Button("Clear conversation", role: .destructive) { Task { await model.clearConversation() } }
+    } message: {
+      Text("Saved messages and memories for this companion will be deleted from this Mac.")
+    }
     .onChange(of: model.language) { availabilityRevision = UUID() }
     .onChange(of: model.spokenReplies) { availabilityRevision = UUID() }
     .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in
@@ -50,14 +67,14 @@ struct ChatSessionView: View {
       ZStack {
         Circle().fill(theme.accent.opacity(0.13))
         if let renderer {
-          CharacterPortrait(renderer: renderer, size: 48, registry: registry)
+          CharacterPortrait(renderer: renderer, size: 36, registry: registry)
         } else {
           Image(systemName: "face.smiling.fill").font(.system(size: 30)).foregroundStyle(
             theme.accent)
         }
-      }.frame(width: 52, height: 52)
+      }.frame(width: 40, height: 40)
       VStack(alignment: .leading, spacing: 4) {
-        Text(model.companionName).font(.system(size: 22, weight: .bold, design: .rounded))
+        Text(model.companionName).font(.system(size: 19, weight: .bold, design: .rounded))
         HStack(spacing: 5) {
           Circle().fill(
             model.isVoiceConversationActive ? theme.success : theme.accent
@@ -71,10 +88,10 @@ struct ChatSessionView: View {
       Button {
         model.onFinish?()
       } label: {
-        Image(systemName: "checkmark.circle")
+        Image(systemName: "xmark")
       }
-      .buttonStyle(.plain).font(.title3).help("Finish & Save conversation")
-      .accessibilityLabel("Finish and save conversation")
+      .buttonStyle(.plain).font(.title3).help("Close conversation")
+      .accessibilityLabel("Close conversation")
     }
   }
 
@@ -86,7 +103,13 @@ struct ChatSessionView: View {
         }
         ForEach(Self.languages, id: \.self) { Text(Self.languageName($0)).tag($0) }
       }.disabled(!model.canCompose)
-      Toggle("Spoken replies", isOn: $model.spokenReplies).disabled(!model.canCompose)
+      Button("Chat") { model.showChat() }
+      Button("Talk") { Task { await model.startTalk() } }.disabled(!model.canCompose)
+      Divider()
+      Button("Search conversation…") { showsSearch = true }
+      Button("Memories…") { showsMemories = true }
+      Button("Clear conversation…", role: .destructive) { confirmsClear = true }.disabled(
+        !model.canCompose)
       Divider()
       Button("Choose a voice…") { openSettings(.voices) }
       Button("Choose a text model…") { openSettings(.textModels) }
@@ -103,6 +126,10 @@ struct ChatSessionView: View {
         Text(
           "This thought is too long to send. Shorten it to \(ChatContext.maximumMessageCharacters) characters; your words are kept here."
         ).font(.caption)
+      }
+      if let error = model.history.failure {
+        Text(error).font(.caption).textSelection(.enabled)
+        Button("Retry saving") { Task { await model.retrySaving() } }.buttonStyle(SoftButtonStyle())
       }
       if let failure = model.failure { SessionFailureNotice(failure: failure) }
       if let notice = model.notice {
@@ -123,27 +150,37 @@ struct ChatSessionView: View {
     }.frame(maxWidth: .infinity, alignment: .leading)
   }
 
-  private var composer: some View {
-    VStack(spacing: 9) {
-      if model.isVoiceConversationActive {
-        VStack(spacing: 6) {
-          Label(model.status, systemImage: "waveform").font(
-            .system(.callout, design: .rounded).weight(.semibold)
-          )
-          .foregroundStyle(theme.accent)
-          Text(
-            model.draft.isEmpty
-              ? String(localized: "Speak naturally. You can interrupt a reply.") : model.draft
-          )
-          .font(.callout).foregroundStyle(theme.secondary).lineLimit(3)
-          .frame(maxWidth: .infinity, minHeight: 34)
-        }.padding(10)
-      } else {
+  @ViewBuilder private var composer: some View {
+    if model.mode == .talk {
+      VStack(spacing: 10) {
+        Text(
+          model.draft.isEmpty
+            ? String(localized: "Speak naturally. You can interrupt a reply.") : model.draft
+        )
+        .font(.callout).foregroundStyle(theme.secondary).lineLimit(3)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        HStack {
+          if model.isVoiceConversationActive {
+            Button("Mute", systemImage: "mic.slash.fill") { model.muteMicrophone() }
+            Button("End voice", systemImage: "phone.down.fill") { model.stopVoiceConversation() }
+          } else {
+            Button("Start talking", systemImage: "mic.fill") { Task { await model.startTalk() } }
+              .disabled(!model.canCompose)
+          }
+          Spacer()
+          if model.isWorking {
+            Button("Stop reply", systemImage: "stop.fill") { model.interrupt() }
+          }
+        }.buttonStyle(SoftButtonStyle())
+      }
+    } else {
+      HStack(alignment: .bottom, spacing: 10) {
         ZStack(alignment: .topLeading) {
           ChatComposer(
-            text: $model.draft, isEditable: model.canCompose || model.isWorking, send: model.send
+            text: $model.draft,
+            isEditable: model.history.isLoaded && model.phase != .finished, send: model.send
           )
-          .frame(height: 68)
+          .frame(height: 44)
           if model.draft.isEmpty {
             Text("Message \(model.companionName)…").font(.system(size: 15))
               .foregroundStyle(theme.secondary).padding(.leading, 9).padding(.top, 8)
@@ -151,44 +188,19 @@ struct ChatSessionView: View {
           }
         }.padding(4).background(theme.paper, in: RoundedRectangle(cornerRadius: 18))
           .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(theme.border))
-      }
-      HStack {
-        if model.isVoiceConversationActive {
-          Button("End voice", systemImage: "phone.down.fill") { model.stopVoiceConversation() }
-            .buttonStyle(SoftButtonStyle())
-          if model.phase == .listening {
-            Button("Send now", systemImage: "arrow.up") { model.finishListening() }.buttonStyle(
-              .plain)
-          }
-        } else {
-          Button("Voice", systemImage: "mic.fill") { model.startListening() }
-            .buttonStyle(SoftButtonStyle()).disabled(!model.canCompose || !model.draft.isEmpty)
-            .help("Start a voice conversation with automatic turn-taking")
-        }
-        Spacer()
         if model.isWorking {
-          Button("Stop reply", systemImage: "stop.fill") { model.interrupt() }.buttonStyle(.plain)
-        } else if !model.isVoiceConversationActive {
+          Button("Stop reply", systemImage: "stop.fill") { model.interrupt() }
+            .labelStyle(.iconOnly).buttonStyle(SoftButtonStyle())
+        } else {
           Button {
             model.send()
           } label: {
             Image(systemName: "arrow.up").font(.headline).frame(width: 20, height: 24)
-          }
-          .buttonStyle(AccentButtonStyle()).clipShape(Circle()).disabled(!model.canSend)
-          .accessibilityLabel("Send message").help("Send · Return")
-          .keyboardShortcut(.return, modifiers: .command)
+          }.buttonStyle(AccentButtonStyle()).clipShape(Circle()).disabled(!model.canSend)
+            .accessibilityLabel("Send message").help("Send · Return")
+            .keyboardShortcut(.return, modifiers: .command)
         }
-      }
-      HStack {
-        Label("On your Mac", systemImage: "lock.fill")
-        Spacer()
-        Text(
-          model.isVoiceConversationActive
-            ? (model.phase == .preparingMicrophone
-              ? String(localized: "Preparing voice conversation…")
-              : String(localized: "Microphone on · Echo cancellation"))
-            : String(localized: "Return to send · Shift–Return for a new line"))
-      }.font(.system(size: 10)).foregroundStyle(theme.secondary)
+      }.help("Return to send · Shift–Return for a new line")
     }
   }
 }

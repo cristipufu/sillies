@@ -25,9 +25,13 @@ import SilliesTextModels
     let service = LocalReasoningService(resolveBackend: { await models.backend() }, turns: turns)
     reasoning = service
   }
-  func makeConversation(tools: [any ConversationTool]) -> any ConversationResponding {
+  func makeConversation(
+    tools: [any ConversationTool],
+    historyTools: @escaping @Sendable (ChatContext) -> [any ConversationTool] = { _ in [] }
+  ) -> any ConversationResponding {
     LocalConversationService(
-      resolveBackend: { [models] in await models.backend() }, tools: tools, turns: turns)
+      resolveBackend: { [models] in await models.backend() }, tools: tools, turns: turns,
+      historyTools: historyTools)
   }
 
   func makeVault(directory: URL? = nil) -> SessionVaultStore {

@@ -1,7 +1,7 @@
 import Foundation
 
 /// A bounded working memory; it never replaces the user's full transcript.
-public struct ConversationMemory: Equatable, Sendable {
+public struct ConversationMemory: Codable, Equatable, Sendable {
   public static let maximumSummaryCharacters = 1_200
   public static let maximumOpeningCharacters = 320
   public let openingStatement: String
@@ -20,7 +20,7 @@ public struct ConversationMemory: Equatable, Sendable {
     self.references = Array(references.suffix(Self.maximumReferences))
   }
 
-  public struct Reference: Equatable, Sendable {
+  public struct Reference: Codable, Equatable, Sendable {
     private static let maximumTitleCharacters = 120
     public let id: UUID
     public let title: String

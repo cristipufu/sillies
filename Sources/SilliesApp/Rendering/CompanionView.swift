@@ -13,6 +13,7 @@ final class CompanionView: NSView {
   let presentationLayer = CALayer()
   var onPickup: (() -> Void)?
   var onDrag: ((CGPoint) -> Void)?
+  var onDoubleClick: (() -> Void)?
   var onDrop: ((Bool) -> Void)?
   var onContextMenu: (() -> NSMenu)?
   var onStashTargetChanged: ((Bool) -> Void)?
@@ -260,7 +261,7 @@ final class CompanionView: NSView {
     if dragged { continueDrag(at: NSEvent.mouseLocation) }
     let wasDragged = dragged
     cancelInteraction()
-    onDrop?(wasDragged)
+    if !wasDragged, event.clickCount == 2 { onDoubleClick?() } else { onDrop?(wasDragged) }
   }
 
   func cancelInteraction() {

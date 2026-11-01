@@ -9,6 +9,11 @@ All records, people and saved memories are synthetic. Native Swift workers run t
 a Python 3.11+ standard-library supervisor manages deadlines, receipts and scoring.
 There is no Python inference runtime, cloud judge or additional dependency.
 
+`fixtures` validates every seeded database without loading a model and runs in `make check`.
+Screenshot fixtures include real tiny PNG attachments and synthetic OCR text, so the normal
+screenshot category can retrieve them. This measures text-based screenshot retrieval, not vision.
+Each inference case also runs the same preflight before admitting the model.
+
 ## What it covers
 
 The initial corpus has **52 scenarios, 71 tool-profile cases and 105 turns per model**.
@@ -40,6 +45,7 @@ source scripts/toolchain.sh
 swift build --product ChatModelBenchmark
 make debug BUILD_DIR=/tmp/sillies-eval-app
 python3 Benchmarks/Chat/benchmark.py validate
+python3 Benchmarks/Chat/benchmark.py fixtures
 python3 Benchmarks/Chat/benchmark.py run \
   --models apple \
   --helper /tmp/sillies-eval-app/Sillies.app/Contents/Helpers/SilliesTextInference.app/Contents/MacOS/SilliesTextInference \

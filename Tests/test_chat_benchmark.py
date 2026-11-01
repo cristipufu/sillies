@@ -124,6 +124,19 @@ class ChatBenchmarkTests(unittest.TestCase):
         profiles = {profile for case in cases for profile in case["profiles"]}
         self.assertEqual({corpus.PROFILES[profile] for profile in profiles}, {0, 1, 3, 5, 8, 12})
 
+    def test_malformed_native_event_preserves_failed_case(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            worker = root / "worker.py"
+            worker.write_text("#!/usr/bin/env python3\nimport json,sys\np=json.load(open(sys.argv[1]))\nprint(json.dumps({'event':'model','payload':{'id':p['model']}}),flush=True)\ninput()\nprint(json.dumps({'event':'caseStarted','payload':p['jobs'][0]}),flush=True)\nprint('{}',flush=True)\n")
+            worker.chmod(0o755)
+            options = SimpleNamespace(output=root / "output", worker=worker, models_root=root,
+                                      helper=worker, startup_timeout=1, case_timeout=1, turn_timeout=1)
+            ModelBatch(options, "apple", corpus.jobs([scenario()], 1), time.monotonic() + 5).run()
+            result = json.loads((options.output / "apple/cases/sample-case--app--r1.json").read_text())
+            self.assertFalse(result["passed"])
+            self.assertIn("protocol failed", result["error"])
+
 
 if __name__ == "__main__":
     unittest.main()

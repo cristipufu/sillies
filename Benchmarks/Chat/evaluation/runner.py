@@ -109,7 +109,7 @@ class ModelBatch:
             self.turn_deadline = time.monotonic() + self.options.startup_timeout
             try:
                 return self._consume(worker)
-            except (ValueError, OSError) as error:
+            except (ValueError, KeyError, TypeError, OSError) as error:
                 return f"Worker protocol failed: {error}"
             finally:
                 worker.close()

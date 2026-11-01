@@ -6,6 +6,7 @@ import argparse
 import json
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -18,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def arguments():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("validate", "run", "report", "export"))
+    parser.add_argument("command", choices=("validate", "fixtures", "run", "report", "export"))
     parser.add_argument("--archive", type=Path)
     parser.add_argument("--corpus", type=Path, default=Path(__file__).parent / "cases")
     parser.add_argument("--output", type=Path, default=ROOT / "build/chat-benchmark")
@@ -60,6 +61,15 @@ def main() -> None:
     jobs = corpus.jobs(cases, options.repeats)
     print(f"{len(cases)} scenarios · {len(jobs)} model cases · {sum(len(job['case']['turns']) for job in jobs)} turns per model", flush=True)
     if options.command == "validate":
+        return
+    if options.command == "fixtures":
+        with tempfile.TemporaryDirectory(prefix="sillies-fixtures-") as workspace:
+            plan = {"model": "apple", "modelDirectory": str(options.models_root),
+                    "helper": str(options.helper), "workspace": workspace,
+                    "jobs": [corpus.worker_job(job) for job in jobs]}
+            plan_path = Path(workspace) / "plan.json"
+            plan_path.write_text(json.dumps(plan))
+            subprocess.run([str(options.worker), "--validate-fixtures", str(plan_path)], check=True, timeout=60)
         return
     catalog = json.loads((ROOT / "Sources/SilliesModelStore/Resources/text-models.json").read_text())
     supported = {"apple"} | {manifest["model"]["id"] for manifest in catalog["manifests"]}

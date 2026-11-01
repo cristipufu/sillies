@@ -5,16 +5,33 @@ import SilliesTextModels
 @main enum ChatModelBenchmark {
   static func main() async {
     do {
-      guard CommandLine.arguments.count == 2 else {
-        throw BenchmarkError.usage
+      let arguments = Array(CommandLine.arguments.dropFirst())
+      switch arguments.count {
+      case 1: try await run(load(arguments[0]))
+      case 2 where arguments[0] == "--validate-fixtures":
+        try await validate(load(arguments[1]))
+      default: throw BenchmarkError.usage
       }
-      let data = try Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[1]))
-      let plan = try JSONDecoder().decode(BenchmarkPlan.self, from: data)
-      try await run(plan)
     } catch {
       fputs("Chat benchmark worker failed: \(error)\n", stderr)
       exit(EXIT_FAILURE)
     }
+  }
+
+  private static func load(_ path: String) throws -> BenchmarkPlan {
+    let data = try Data(contentsOf: URL(fileURLWithPath: path))
+    return try JSONDecoder().decode(BenchmarkPlan.self, from: data)
+  }
+
+  private static func validate(_ plan: BenchmarkPlan) async throws {
+    var verified = Set<String>()
+    for job in plan.jobs where verified.insert(job.scenario.id).inserted {
+      let fixture = try await BenchmarkFixture.create(
+        for: job.scenario, root: URL(fileURLWithPath: plan.workspace))
+      fixture.remove()
+    }
+    print(
+      "Validated \(verified.count) synthetic scenario fixtures, including screenshot retrieval.")
   }
 
   private static func run(_ plan: BenchmarkPlan) async throws {

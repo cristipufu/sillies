@@ -90,6 +90,7 @@ public struct ConversationPageRequest: Sendable {
   public enum Position: Sendable {
     case latest
     case before(Int64)
+    case beforeMessage(UUID)
     case after(Int64)
     case around(UUID)
   }

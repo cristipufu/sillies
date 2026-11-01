@@ -17,6 +17,11 @@ struct ChatMessagesView: View {
   @State private var selectionReset: UUID?
   private static let bottomID = "latest-chat-message"
   private static let bottomThreshold: CGFloat = 48
+  private var navigation: ConversationNavigation {
+    .init(
+      latestMessageID: model.messages.last?.id, hasEarlierMessages: model.hasEarlierMessages,
+      page: model.browser.page, nearBottom: nearBottom)
+  }
 
   var body: some View {
     ScrollViewReader { proxy in
@@ -24,18 +29,23 @@ struct ChatMessagesView: View {
         LazyVStack(alignment: .leading, spacing: 14) {
           if model.messages.isEmpty { welcome }
           if let page = model.browser.page {
-            HStack {
-              if page.hasOlder, let first = page.entries.first {
-                Button("Older") { Task { await model.browser.show(.before(first.sequence)) } }
-              }
-              Spacer()
-              if page.hasNewer, let last = page.entries.last {
-                Button("Newer") { Task { await model.browser.show(.after(last.sequence)) } }
-              }
-            }.buttonStyle(SoftButtonStyle()).disabled(model.browser.isLoading)
-          } else if model.history.handle != nil {
-            Button("Earlier messages") { Task { await model.browser.show(.latest) } }
-              .buttonStyle(SoftButtonStyle()).frame(maxWidth: .infinity)
+            if page.hasOlder || page.hasNewer {
+              HStack {
+                if page.hasOlder, let first = page.entries.first {
+                  Button("Older") { Task { await model.browser.show(.before(first.sequence)) } }
+                }
+                Spacer()
+                if page.hasNewer, let last = page.entries.last {
+                  Button("Newer") { Task { await model.browser.show(.after(last.sequence)) } }
+                }
+              }.buttonStyle(SoftButtonStyle()).disabled(model.browser.isLoading)
+            }
+          } else if navigation.showsEarlier, let first = model.messages.first {
+            Button("Earlier messages") {
+              Task { await model.browser.show(.beforeMessage(first.id)) }
+            }
+            .buttonStyle(SoftButtonStyle()).frame(maxWidth: .infinity)
+            .disabled(model.browser.isLoading)
           }
           ForEach(model.browser.page?.entries.map(\.message) ?? model.messages) { message in
             bubble(message).id(message.id)
@@ -102,9 +112,7 @@ struct ChatMessagesView: View {
         }
       }
       .overlay(alignment: .bottom) {
-        if model.browser.page != nil
-          || ((!followsLatest || !selectedMessages.isEmpty) && !nearBottom)
-        {
+        if navigation.showsLatest {
           Button("Latest", systemImage: "arrow.down") {
             model.browser.showLatest()
             followsLatest = true

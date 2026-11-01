@@ -14,17 +14,16 @@ extension ConversationDatabase {
     case .before(let sequence):
       predicate += " AND sequence<?"
       values.append(.integer(sequence))
+    case .beforeMessage(let id):
+      predicate += " AND sequence<?"
+      values.append(.integer(try sequence(of: id, owner: owner)))
     case .after(let sequence):
       predicate += " AND sequence>?"
       values.append(.integer(sequence))
       order = "ASC"
     case .around(let id):
-      let sequence = try sql.integer(
-        "SELECT sequence FROM conversation_messages WHERE owner=? AND id=?",
-        [.text(owner), .text(id.uuidString)])
-      guard sequence > 0 else { throw ConversationStorageError.changed }
       predicate += " AND sequence>=?"
-      values.append(.integer(Int64(sequence)))
+      values.append(.integer(try sequence(of: id, owner: owner)))
       order = "ASC"
     }
     var entries: [ConversationEntry] = []
@@ -70,6 +69,14 @@ extension ConversationDatabase {
             name: VaultSQLConnection.text(row, column: 4)), entry: entry(row)))
     }
     return results
+  }
+
+  private func sequence(of id: UUID, owner: String) throws -> Int64 {
+    let value = try sql.integer(
+      "SELECT sequence FROM conversation_messages WHERE owner=? AND id=?",
+      [.text(owner), .text(id.uuidString)])
+    guard value > 0 else { throw ConversationStorageError.changed }
+    return Int64(value)
   }
 
   public func conversations() throws -> [ConversationHeader] {

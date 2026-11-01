@@ -23,6 +23,7 @@ enum ChatWindowLayout {
   private let bubble = ConversationBubblePresentation()
   private var anchor: ConversationCompanionAnchor?
   private weak var displayedSession: ChatSession?
+  let dismissal = ConversationWindowDismissal()
   var prefersReducedMotion: () -> Bool = { false }
   private var reducesMotion: Bool {
     prefersReducedMotion() || NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
@@ -67,6 +68,7 @@ enum ChatWindowLayout {
     if let anchor { attach(to: anchor) }
     window?.title = String(localized: "Sillies · Chat with \(model.companionName)")
     if displayedSession !== model {
+      dismissal.stop()
       let view = ThemedHostingView(
         rootView: ConversationBubbleView(
           presentation: bubble,
@@ -118,6 +120,7 @@ enum ChatWindowLayout {
   }
   private func observeMode(_ model: ChatSession) {
     if let anchor { attach(to: anchor) }
+    updateDismissal()
     withObservationTracking {
       _ = model.mode
     } onChange: { [weak self, weak model] in
@@ -137,6 +140,7 @@ enum ChatWindowLayout {
       window.setFrame(target.offsetBy(dx: 0, dy: -Self.entranceOffset), display: false)
     }
     window.makeKeyAndOrderFront(nil)
+    updateDismissal()
     window.contentView?.layoutSubtreeIfNeeded()
     if let editor = composer(in: window.contentView) { window.makeFirstResponder(editor) }
     NSAnimationContext.runAnimationGroup { context in
@@ -146,11 +150,30 @@ enum ChatWindowLayout {
     }
   }
   func windowShouldClose(_ sender: NSWindow) -> Bool {
-    displayedSession?.onFinish?()
-    if window != nil { close() }
+    dismissConversation()
     return false
   }
-  func windowWillClose(_ notification: Notification) { displayedSession?.stopVoiceConversation() }
+  func dismissConversation() {
+    dismissal.stop()
+    displayedSession?.onFinish?()
+    if window != nil { close() }
+  }
+  private func updateDismissal() {
+    guard let window, window.isVisible, displayedSession?.mode == .chat else {
+      dismissal.stop()
+      return
+    }
+    if !dismissal.isMonitoring {
+      dismissal.start(window: window) { [weak self] in
+        guard self?.displayedSession?.mode == .chat else { return }
+        self?.dismissConversation()
+      }
+    }
+  }
+  func windowWillClose(_ notification: Notification) {
+    dismissal.stop()
+    displayedSession?.stopVoiceConversation()
+  }
   private func composer(in view: NSView?) -> ChatComposerTextView? {
     if let composer = view as? ChatComposerTextView { return composer }
     for child in view?.subviews ?? [] {
@@ -162,6 +185,7 @@ enum ChatWindowLayout {
     if displayedSession === session { close() }
   }
   func close() {
+    dismissal.stop()
     animationID = UUID()
     guard let closing = window else { return }
     window = nil

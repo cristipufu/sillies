@@ -17,7 +17,7 @@ package struct ConversationHistoryTools: Sendable {
     else { return [] }
     return [
       ConversationSearchTool(repository: conversations, handle: handle),
-      MemorySearchTool(repository: memories, handle: handle),
+      MemorySearchTool(repository: memories, handle: handle, companionName: context.companionName),
       MemorySaveTool(repository: memories, handle: handle, statement: statement),
     ]
   }

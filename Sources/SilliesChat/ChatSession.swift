@@ -19,6 +19,7 @@ package final class ChatSession {
   package let browser: ConversationBrowser
   package private(set) var mode = ConversationMode.chat
   package private(set) var messages: [ChatMessage] = []
+  package private(set) var hasEarlierMessages = false
   package private(set) var streamedText = ""
   @ObservationIgnored private var streamingMessageID: UUID?
   package private(set) var phase = Phase.ready
@@ -379,6 +380,7 @@ package final class ChatSession {
     saveCheckpoint()
     if messages.count > Self.maximumLoadedMessages {
       messages.removeFirst(messages.count - Self.maximumLoadedMessages)
+      hasEarlierMessages = history.handle != nil
       rebuildSourceCardOwners()
     }
   }
@@ -541,7 +543,9 @@ package final class ChatSession {
   package func restore(_ snapshot: ConversationSnapshot) {
     isRestoringHistory = true
     history.restore(snapshot)
+    browser.reset()
     messages = snapshot.page.entries.map(\.message)
+    hasEarlierMessages = snapshot.page.hasOlder
     memory = snapshot.checkpoint.memory
     draft = snapshot.checkpoint.draft
     language = snapshot.checkpoint.language ?? profile.languageIdentifier

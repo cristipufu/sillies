@@ -3,14 +3,16 @@ import SilliesCore
 
 struct MemorySearchTool: ConversationTool {
   private static let resultLimit = 4
+  private static let statementCharacterLimit = 100
   let repository: any CompanionMemoryRepository
   let handle: ConversationHandle
+  let companionName: String
   var activity: String { String(localized: "Checking memories…") }
   var definition: ConversationToolDefinition {
     .init(
       name: "search_memories",
       description:
-        "Look up previously saved personal facts when the user asks about themselves.",
+        "Look up saved facts about the human user. These memories describe the user, not the assistant.",
       parameters: [
         .init("query", description: "Topic keywords, or an empty string for recent memories.")
       ])
@@ -21,11 +23,26 @@ struct MemorySearchTool: ConversationTool {
     struct Fact: Encodable {
       let key: String
       let value: String
-      let quote: String
+      let userStatement: String
+    }
+    struct Result: Encodable {
+      let subject = "user"
+      let attribution: String
+      let facts: [Fact]
     }
     let results = facts.prefix(Self.resultLimit).map {
-      Fact(key: $0.key, value: $0.value, quote: String($0.sourceQuote.prefix(100)))
+      Fact(
+        key: $0.key, value: $0.value,
+        userStatement: String($0.sourceQuote.prefix(Self.statementCharacterLimit)))
     }
-    return .init(text: String(decoding: try JSONEncoder().encode(results), as: UTF8.self))
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.sortedKeys]
+    return .init(
+      text: String(
+        decoding: try encoder.encode(
+          Result(
+            attribution:
+              "These facts describe the human chatting with \(companionName). They do not describe \(companionName).",
+            facts: results)), as: UTF8.self))
   }
 }

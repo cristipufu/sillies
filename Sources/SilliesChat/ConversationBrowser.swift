@@ -40,7 +40,9 @@ package final class ConversationBrowser {
         focusedMessageID = result.entries.first?.id
       }
       failure = nil
-    } catch { report(error) }
+    } catch {
+      if requestID == request, history.handle == handle, !Task.isCancelled { report(error) }
+    }
   }
 
   package func search(_ query: String) async {
@@ -56,11 +58,22 @@ package final class ConversationBrowser {
   }
 
   package func showLatest() {
+    resetPage()
+    rememberPosition(nil)
+  }
+
+  package func reset() {
+    resetPage()
+    matches = []
+    failure = nil
+  }
+
+  private func resetPage() {
     requestID = UUID()
     page = nil
     focusedMessageID = nil
     isLoading = false
-    rememberPosition(nil)
+    sourceOwners.removeAll(keepingCapacity: true)
   }
 
   package func sourceCards(for message: ChatMessage) -> [ChatSource] {

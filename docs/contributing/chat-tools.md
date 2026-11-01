@@ -68,6 +68,10 @@ and a persisted `ConversationMemory`; `ConversationBrowser` pages older original
 `ConversationHistoryTools` creates companion-scoped tools per turn from injected repository protocols.
 `save_memory` asks the model only for the fact’s key and value. The host binds the original current
 user message and its ID as provenance, so model capitalization or punctuation cannot break a save.
+Memory search returns an explicitly user-attributed envelope, with original excerpts labeled as user
+statements. These facts describe the person chatting, not the mascot. The companion's identity comes
+from its character profile in the instructions; native user/assistant roles and historical tool results
+remain intact.
 Storage verifies that the source belongs to this companion and was written by the user; stored receipts
 make successful changes visible and undoable. Clear/Forget/Undo rotate the storage generation so late work cannot restore deleted state.
 `LocalConversationService` shares the interactive inference gate with other reasoning work.
@@ -108,6 +112,8 @@ the earlier link. On the Apple model tested on 2026-11-01 this evaluation has bo
 fresh sessions with tools still performed irrelevant searches in the controlled comparison. Passing the
 default injected-backend suite or one model run does not establish reliable native model quality. See the
 [investigation and Apple references](../reports/chat-reliability-2026-11-01.md).
+The [identity and memory evaluation](../reports/chat-identity-2026-11-01.md) also records unresolved
+recovery from incorrect earlier replies. Keep those failures visible when comparing models.
 
 For a controlled integration comparison, run:
 

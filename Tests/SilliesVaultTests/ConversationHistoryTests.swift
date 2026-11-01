@@ -25,6 +25,13 @@ import Testing
   let older = try await store.page(.init(handle: opened.handle, position: .before(first.sequence)))
   #expect(Set(older.entries.map(\.id)).isDisjoint(with: reopened.page.entries.map(\.id)))
   #expect(older.entries.last?.message.text == "Thought 119")
+  let preceding = try await store.page(
+    .init(handle: opened.handle, position: .beforeMessage(first.id)))
+  #expect(preceding.entries.map(\.id) == older.entries.map(\.id))
+  #expect(preceding.hasOlder && preceding.hasNewer)
+  await #expect(throws: ConversationStorageError.self) {
+    _ = try await store.page(.init(handle: opened.handle, position: .beforeMessage(UUID())))
+  }
   let headers = try await store.conversations()
   #expect(headers.first?.messageCount == 180)
 }

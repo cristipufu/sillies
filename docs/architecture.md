@@ -64,6 +64,14 @@ Chat supplies a shared inference lifetime to text and voice registries. Closed l
 
 Live source cards belong to a stable reply ID. A record's first reply owns its card within that conversation; later replies retain their own retrieval evidence without displaying duplicate cards. Late progress cannot enter a different turn. Native chat text measures proposed widths with a separate TextKit layout, leaving the displayed view's layout untouched. Scroll following responds to committed content geometry and pauses while reading or selecting text.
 
+Chat navigation reflects actual history and viewport state: Earlier messages loads the page preceding
+the first loaded message, and Latest appears only when newer messages are out of view. Empty or fully
+visible conversations show neither control. Plain outside clicks dismiss text Chat on mouse release
+through the existing session close/flush path, preserving drafts and history. Mouse drags leave it open,
+including host-window moves and resizes. Native menus and attached sheets belong to Chat. Talk requires
+explicit closure. Mouse-only monitors stop on close, session replacement, and switching to Talk; no focus-loss
+observer or window polling drives dismissal.
+
 `ConversationContextManager` measures model input, reserves reply/tool space, and compacts older complete turns through `ConversationCompactor`. `ConversationLibrary` retains individual messages in SQLite; `ChatSession` holds a bounded recent page and scoped memory; a compacted-through message ID prevents summarizing old turns repeatedly. Apple token counting is available from macOS 26.4, with an estimate on older systems; MLX measurement runs in the isolated helper. Overflow retries once with stronger compaction and shorter cached tool results. Cancellation is turn-scoped. Summarization failure uses attributed source excerpts without discarding the visible chat. `ChatHistory` coalesces edits by message ID and persists them through the repository actor. Acknowledgements preserve newer edits. Final flush delivery uses the modal-safe run loop; unsaved failures cancel termination. `ConversationBrowser` pages older messages without replacing the context used for inference. Clear/Forget/Undo invalidate stale generations and summarized context. Memory tools accept a fact key and value; the host attaches the original current user message as provenance instead of requiring the model to reproduce a quote. Storage verifies the user source, and visible receipts allow Undo. Models decide which explicit facts qualify; tool choice remains a model-quality concern. See [Chat tools and context](contributing/chat-tools.md).
 
 `ChatTurnOperation` joins cancellable text and speech branches. Native text deltas reach a bounded

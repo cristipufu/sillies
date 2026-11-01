@@ -176,6 +176,34 @@ private func chatFinishPreservesFinalWordsBeforeSaving(_ timing: FinishTiming) a
   chat.finish {}
 }
 
+@Test @MainActor func chatHistoryNavigationTracksRestorationTrimmingAndClearing() async throws {
+  let chat = session(reply: ReplyProbe(), voice: VoiceProbe())
+  defer { chat.finish {} }
+  let handle = ConversationHandle(companionID: "mochi", generation: UUID())
+  let messages = (0..<ConversationPageRequest.maximumLimit).map {
+    ConversationEntry(
+      sequence: Int64($0 + 1), message: .init(role: .user, text: "Message \($0)"),
+      createdAt: .distantPast)
+  }
+  chat.restore(
+    .init(
+      handle: handle, checkpoint: .init(),
+      page: .init(entries: messages, hasOlder: false, hasNewer: false)))
+  #expect(!chat.hasEarlierMessages)
+  chat.spokenReplies = false
+  chat.draft = "One more thought"
+  chat.send()
+  try await waitFor { chat.phase == .ready }
+  #expect(chat.messages.count == ConversationPageRequest.maximumLimit)
+  #expect(chat.hasEarlierMessages)
+  chat.restore(
+    .init(
+      handle: handle, checkpoint: .init(),
+      page: .init(entries: [], hasOlder: false, hasNewer: false)))
+  #expect(chat.messages.isEmpty && !chat.hasEarlierMessages)
+  #expect(chat.browser.page == nil)
+}
+
 @Test @MainActor func chatPreservesRomanianAndReplyWhenVoiceFails() async throws {
   let reply = ReplyProbe()
   let voice = VoiceProbe(fails: true)

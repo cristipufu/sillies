@@ -74,6 +74,12 @@
   "ControlCenterDismissalTests.swift": {
     "default": "gui"
   },
+  "ConversationDismissalTests.swift": {
+    "default": "headless",
+    "tests": {
+      "chatNativeDismissalStopsMonitoringInTalkAndRestartsForChat()": "gui"
+    }
+  },
   "ControlCenterSizingTests.swift": {
     "default": "headless"
   },

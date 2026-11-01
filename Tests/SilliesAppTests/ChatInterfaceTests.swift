@@ -8,6 +8,36 @@ import Testing
 
 @testable import SilliesApp
 
+@Test @MainActor func emptyAndShortSavedChatsFitWithoutHistoryNavigation() throws {
+  let session = ChatWindowFixture.makeReadySession(conversation: MissingChatModel())
+  defer { session.finish {} }
+  let handle = ConversationHandle(companionID: "mochi", generation: UUID())
+  let entries: [ConversationEntry] = [
+    .init(sequence: 1, message: .init(role: .user, text: "Hello!"), createdAt: .distantPast),
+    .init(
+      sequence: 2, message: .init(role: .companion, text: "Hello! How's your day going?"),
+      createdAt: .distantPast),
+  ]
+  for page in [
+    ConversationPage(entries: [], hasOlder: false, hasNewer: false),
+    .init(entries: entries, hasOlder: false, hasNewer: false),
+  ] {
+    session.restore(.init(handle: handle, checkpoint: .init(), page: page))
+    let navigation = ConversationNavigation(
+      latestMessageID: session.messages.last?.id, hasEarlierMessages: session.hasEarlierMessages,
+      page: session.browser.page, nearBottom: true)
+    #expect(!navigation.showsEarlier && !navigation.showsLatest)
+    try renderSkillInterface(
+      ConversationBubbleView(
+        presentation: ConversationBubblePresentation(),
+        content: ChatSessionView(
+          model: session, openSettings: { _ in }, renderer: "cat", motion: .reduced)
+      ).environment(\.colorScheme, .light),
+      size: ChatWindowLayout.initialSize,
+      name: "sillies-chat-navigation-\(page.entries.isEmpty ? "empty" : "short")")
+  }
+}
+
 @Test @MainActor func chatExplainsMissingTextModelsBeforeTheFirstMessage() async throws {
   let session = ChatWindowFixture.makeReadySession(conversation: MissingChatModel())
   await session.refreshAvailability()

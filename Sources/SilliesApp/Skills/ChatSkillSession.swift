@@ -17,28 +17,36 @@ import SilliesCore
   ) {
     presentation.finish { [presentation] in
       let draft = presentation.draft.trimmingCharacters(in: .whitespacesAndNewlines)
-      let transcript = [
-        presentation.transcript, draft.isEmpty ? "" : String(localized: "You (unsent)\n\(draft)"),
-      ]
-      .filter { !$0.isEmpty }.joined(separator: "\n\n")
-      guard !transcript.isEmpty else {
-        completion(nil)
-        return
+      let messages = presentation.messages
+      let language = presentation.language
+      let unsent = draft.isEmpty ? "" : String(localized: "You (unsent)\n\(draft)")
+      Task.detached(priority: .utility) {
+        let transcript =
+          [ChatTranscript.render(messages, companionName: context.companionName), unsent]
+          .filter { !$0.isEmpty }.joined(separator: "\n\n")
+        MainRunLoopDelivery.perform {
+          guard !transcript.isEmpty else {
+            completion(nil)
+            return
+          }
+          let record = SessionRecord(
+            kind: .chat,
+            origin: .init(
+              characterID: context.companionID, characterName: context.companionName,
+              source: .init(appName: context.companionName)),
+            content: .init(
+              text: .init(transcript: transcript),
+              notes: .init(
+                summary: String(localized: "A conversation with \(context.companionName)."))),
+            metadata: .init(
+              durationSeconds: max(0, context.now - context.startedAt),
+              transcription: .init(languageIdentifier: language)))
+          completion(
+            .init(
+              record: record, image: nil,
+              bannerSummary: String(localized: "Chat saved · Open Vault")))
+        }
       }
-      let record = SessionRecord(
-        kind: .chat,
-        origin: .init(
-          characterID: context.companionID, characterName: context.companionName,
-          source: .init(appName: context.companionName)),
-        content: .init(
-          text: .init(transcript: transcript),
-          notes: .init(summary: String(localized: "A conversation with \(context.companionName)."))),
-        metadata: .init(
-          durationSeconds: max(0, context.now - context.startedAt),
-          transcription: .init(languageIdentifier: presentation.language)))
-      completion(
-        .init(
-          record: record, image: nil, bannerSummary: String(localized: "Chat saved · Open Vault")))
     }
   }
   func cancel() { presentation.finish {} }

@@ -24,9 +24,27 @@ package protocol ChatSpeechOutput: Sendable {
     receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void
   ) async throws -> String?
   func stop(id: UUID) async
+  func speakStream(
+    _ request: ChatSpeechRequest, text: SpeechTextStream,
+    receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void
+  ) async throws -> String?
 }
 
 extension ChatSpeechOutput {
+  package func speakStream(
+    _ request: ChatSpeechRequest, text: SpeechTextStream,
+    receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void
+  ) async throws -> String? {
+    while let phrase = try await text.next() {
+      if let notice = try await speak(
+        .init(id: request.id, text: phrase, profile: request.profile), receive: receive)
+      {
+        return notice
+      }
+      receive(.utteranceFinished(phrase))
+    }
+    return nil
+  }
   package func availabilityNotice(language: String) async -> String? { nil }
 }
 

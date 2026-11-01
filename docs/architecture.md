@@ -58,9 +58,26 @@ Vault pagination uses a stable `(createdAt, id)` cursor. Show more reads one fol
 
 `SilliesChat` owns conversation state and joins utterance finalization with microphone teardown. It receives `ConversationCapture`, language discovery, `ConversationResponding`, and `ChatSpeechOutput` capabilities; it imports no UI or inference SDK. `ChatSkillSession` adapts it to the existing skill lifecycle and Vault. Character JSON supplies personality and preferred voices. The messenger UI uses native selectable text, preserves reading/selection during replies, and shares application theme and typed failure notices. Return-to-send respects input-method composition.
 
+`LocalConversationService` receives `ConversationBackend` and `ConversationTool` capabilities. Apple and MLX adapters preserve native roles and call/result IDs. `ConversationToolbox` bounds tool execution and emits actual source references; `VaultSearchTool` and `VaultReadTool` own local retrieval in `SilliesVault`. Ranked FTS search reads headers and snippets without decoding every record. Source cards and image caching remain in the app UI. Tools have no write, shell, or network capability.
+
+`ConversationContextManager` measures model input, reserves reply/tool space, and compacts older complete turns through `ConversationCompactor`. `ChatSession` retains the full history and scoped memory; a compacted-through message ID prevents summarizing old turns repeatedly. Apple token counting is available from macOS 26.4, with an estimate on older systems; MLX measurement runs in the isolated helper. Overflow retries once with stronger compaction and shorter cached tool results. Cancellation is turn-scoped. Summarization failure uses attributed source excerpts without discarding the visible chat. Chat saving formats the full transcript on a worker and delivers completion through the modal-safe run loop. See [Chat tools and context](contributing/chat-tools.md).
+
+`ChatTurnOperation` joins cancellable text and speech branches. Native text deltas reach a bounded
+phrase assembler and a coalesced UI presentation; whole history arrays are not rebuilt per token.
+`SpeechTextStream` can hold one bounded reply while synthesis waits for memory admission. The player
+keeps one device session across phrases and records completed spoken phrases only after hardware
+completion. Partial replies survive interruption; automatic context/preemption retries are disabled
+after text delivery. Tools remain typed protocol events, separate from spoken text.
+
+`InferenceActivity` permits same-turn text/voice overlap within conservative memory reservations.
+`InferenceModelResidency` accounts for cached idle helpers and evicts an incompatible peer before
+loading. Large pairs serialize without cancelling the text stream. Recognition still preempts both;
+background notes cannot take over an active conversation. Reservations are estimates, not measured
+peak memory guarantees.
+
 `VoiceConversationCapture` keeps the microphone, WebRTC AEC3, and WebRTC VAD on the serial audio worker. `VoicePlaybackReference` bounds the render callback handoff; host-clock PCM passes through the existing meeting alignment and echo processor. `VoiceTurnEndpoint` in Core detects utterance boundaries from sample duration without timers. Only per-utterance `ConversationSpeechTurn` instances own recognizers and speech priority. Bounded pre-roll preserves onset while the warm recognizer is acquired. Stop closes device admission immediately, flushes held PCM, joins detached and active turn callbacks exactly once, and retains available words on failure or deadline.
 
-`SilliesTTS` owns provider contracts, model leases, exclusive admission, and bounded process messages. `SilliesTTSInference` hosts Core ML runtimes and the app-owned `SilliesFishSpeech` MLX implementation. Package/import checks forbid the app and feature targets from depending on Fish or its tensor SDK. Only pinned local artifacts enter inference; downloading belongs to `SilliesModelStore`. Cancellation kills and reaps a stalled helper. An idle model is released after 60 seconds.
+`SilliesTTS` owns provider contracts, model leases, coordinated admission, and bounded process messages. `SilliesTTSInference` hosts Core ML runtimes and the app-owned `SilliesFishSpeech` MLX implementation. Package/import checks forbid the app and feature targets from depending on Fish or its tensor SDK. Only pinned local artifacts enter inference; downloading belongs to `SilliesModelStore`. Cancellation kills and reaps a stalled helper. An idle model is released after 60 seconds.
 
 `SilliesVoicePlayback` owns the audio device and at most 0.75 seconds of queued PCM, applying backpressure to synthesis. Native playback callbacks report amplitude to the mascot's existing artwork; a mixer tap supplies rendered audio for echo cancellation. No companion owns an audio engine, model, or timer. `InferenceActivity` arbitrates speech recognition, voice synthesis, and text work; active recognition preempts synthesis, and synthesis preempts background text work. Continuous AEC/VAD monitoring does not reserve inference. Stop, pause, exclusion, and termination cancel active work and release resources.
 

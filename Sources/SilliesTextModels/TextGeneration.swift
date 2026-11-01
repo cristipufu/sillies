@@ -1,16 +1,41 @@
 import Foundation
+import SilliesCore
 
 package struct TextGenerationRequest: Codable, Sendable {
+  package enum Operation: String, Codable, Sendable { case generate, measure }
+  package private(set) var operation = Operation.generate
+  package private(set) var conversationID: UUID?
+  package func inConversation(_ id: UUID?) -> Self {
+    var copy = self
+    copy.conversationID = id
+    return copy
+  }
+  package func measuringTokens() -> Self {
+    var result = self
+    result.operation = .measure
+    return result
+  }
   package let instructions: String
-  package let prompt: String
+  package let messages: [TextMessage]
+  package let tools: [ConversationToolDefinition]
+  package var prompt: String { messages.last?.content ?? "" }
   package let maximumTokens: Int
   package let style: TextGenerationStyle
   package init(
     instructions: String, prompt: String, maximumTokens: Int,
     style: TextGenerationStyle = .precise
   ) {
-    self.instructions = instructions
-    self.prompt = prompt
+    self.init(
+      conversation: .init(
+        instructions: instructions, messages: [.init(role: .user, content: prompt)], tools: []),
+      maximumTokens: maximumTokens, style: style)
+  }
+  package init(
+    conversation: TextConversationInput, maximumTokens: Int, style: TextGenerationStyle
+  ) {
+    instructions = conversation.instructions
+    messages = conversation.messages
+    tools = conversation.tools
     self.maximumTokens = maximumTokens
     self.style = style
   }
@@ -19,7 +44,26 @@ package struct TextGenerationRequest: Codable, Sendable {
 /// Backends own inference. Prompts, evidence validation and session presentation stay in the app.
 package protocol PreparedTextModel: Sendable {
   func generate(_ request: TextGenerationRequest) async throws -> String
+  func complete(_ request: TextGenerationRequest) async throws -> TextGenerationOutput
+  func stream(_ request: TextGenerationRequest, receive: @escaping TextDeltaSink) async throws
+    -> TextGenerationOutput
   func stop() async
+}
+
+extension PreparedTextModel {
+  package func stream(_ request: TextGenerationRequest, receive: @escaping TextDeltaSink)
+    async throws -> TextGenerationOutput
+  {
+    let output = try await complete(request)
+    if !output.text.isEmpty { try await receive(output.text) }
+    return output
+  }
+  package func complete(_ request: TextGenerationRequest) async throws -> TextGenerationOutput {
+    guard request.tools.isEmpty, request.operation == .generate else {
+      throw TextModelError.toolsUnavailable
+    }
+    return try await .init(text: generate(request))
+  }
 }
 
 package protocol TextModelProvider: Sendable {
@@ -40,11 +84,17 @@ package struct TextModelPreparation: Codable, Sendable {
 
 package enum TextModelError: LocalizedError {
   case unavailable(String)
-  case busy, invalidResponse, interrupted, repetitiveResponse
+  case busy, invalidResponse, interrupted, repetitiveResponse, toolsUnavailable, contextLimit
   package var errorDescription: String? {
     switch self {
     case .unavailable(let message): message
     case .busy: String(localized: "The text model is busy. Please try again.")
+    case .contextLimit:
+      String(localized: "This passage exceeds the local model’s context. Try a shorter passage.")
+    case .toolsUnavailable:
+      String(
+        localized:
+          "This text model does not support Vault tools. Choose another in Settings → Local AI.")
     case .invalidResponse:
       String(
         localized: "The local text model returned an incomplete response. Your source is unchanged."

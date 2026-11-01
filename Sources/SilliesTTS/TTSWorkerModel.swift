@@ -22,14 +22,15 @@ actor TTSWorkerModel: PreparedTTSModel {
     try Task.checkCancellation()
     let worker = try connection ?? InferenceWorkerConnection(executable: executable)
     connection = worker
+    let deadline = InferenceDeadline(timeout: Self.responseTimeout)
     let message = TTSInferenceRequest(configuration: configuration, synthesis: request)
     try await withTaskCancellationHandler {
       do {
         try Task.checkCancellation()
         try await Task.detached(priority: .userInitiated) {
-          try worker.send(message, timeout: Self.responseTimeout)
+          try worker.send(message, timeout: deadline.remaining())
         }.value
-        try await consume(worker, receive: receive)
+        try await consume(worker, deadline: deadline, receive: receive)
       } catch {
         worker.stop()
         await worker.reap()
@@ -41,7 +42,9 @@ actor TTSWorkerModel: PreparedTTSModel {
     }
   }
 
-  private func consume(_ worker: InferenceWorkerConnection, receive: SynthesizedAudioSink)
+  private func consume(
+    _ worker: InferenceWorkerConnection, deadline: InferenceDeadline, receive: SynthesizedAudioSink
+  )
     async throws
   {
     var seconds: Double = 0
@@ -49,7 +52,7 @@ actor TTSWorkerModel: PreparedTTSModel {
     while true {
       try Task.checkCancellation()
       let response = try await Task.detached(priority: .userInitiated) {
-        try worker.receive(TTSInferenceResponse.self, timeout: Self.responseTimeout)
+        try worker.receive(TTSInferenceResponse.self, timeout: deadline.remaining())
       }.value
       switch response {
       case .audio(let audio):
@@ -62,7 +65,7 @@ actor TTSWorkerModel: PreparedTTSModel {
         guard seconds <= Double(Self.maximumAudioSeconds) else { throw TTSError.invalidAudio }
         try await receive(audio)
         try await Task.detached(priority: .userInitiated) {
-          try worker.send(TTSInferenceAcknowledgement.consumed, timeout: Self.responseTimeout)
+          try worker.send(TTSInferenceAcknowledgement.consumed, timeout: deadline.remaining())
         }.value
       case .finished:
         guard seconds > 0 else { throw TTSError.invalidAudio }

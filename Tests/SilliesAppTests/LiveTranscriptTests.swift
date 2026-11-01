@@ -109,6 +109,7 @@ private let liveTranscriptFixture = String(
   #expect(scroll.contentView.bounds.height >= 150)
   #expect(scroll.contentView.bounds.height < window.frame.height)
   #expect(host.bounds.contains(scroll.convert(scroll.bounds, to: host)))
+  window.orderFront(nil)
   try DisplayFrameSequence.presentCreatedWindows()
   var samples: [Duration] = []
   try DisplayFrameSequence.run(count: 120) { index in
@@ -159,7 +160,6 @@ private let liveTranscriptFixture = String(
     backing: .buffered, defer: false)
   window.isReleasedWhenClosed = false
   window.contentView = content
-  window.orderFront(nil)
   content.layoutSubtreeIfNeeded()
   return window
 }

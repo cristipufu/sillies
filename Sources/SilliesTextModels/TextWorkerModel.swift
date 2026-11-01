@@ -12,6 +12,16 @@ actor TextWorkerModel: PreparedTextModel {
   }
 
   func generate(_ request: TextGenerationRequest) async throws -> String {
+    let output = try await complete(request)
+    guard output.calls.isEmpty else { throw TextModelError.invalidResponse }
+    return output.text
+  }
+  func complete(_ request: TextGenerationRequest) async throws -> TextGenerationOutput {
+    try await stream(request, receive: { _ in })
+  }
+  func stream(_ request: TextGenerationRequest, receive: @escaping TextDeltaSink) async throws
+    -> TextGenerationOutput
+  {
     guard !busy else { throw TextModelError.busy }
     busy = true
     defer { busy = false }
@@ -22,10 +32,11 @@ actor TextWorkerModel: PreparedTextModel {
     return try await withTaskCancellationHandler {
       do {
         try Task.checkCancellation()
-        let output = try await Task.detached(priority: .utility) { try worker.generate(message) }
-          .value
+        let output = try await worker.stream(message, receive: receive)
         try Task.checkCancellation()
         return output
+      } catch TextModelError.contextLimit {
+        throw TextModelError.contextLimit
       } catch {
         worker.stop()
         await worker.reap()

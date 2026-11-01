@@ -20,6 +20,16 @@ package actor FishSpeechEngine {
   package func synthesize(_ request: SpeechSynthesisRequest, directory: URL) async throws -> [Float]
   {
     dispatchPrecondition(condition: .notOnQueue(.main))
+    var samples: [Float] = []
+    try await stream(request, directory: directory) { samples.append(contentsOf: $0) }
+    return samples
+  }
+
+  package func stream(
+    _ request: SpeechSynthesisRequest, directory: URL,
+    receive: ([Float]) throws -> Void
+  ) async throws {
+    dispatchPrecondition(condition: .notOnQueue(.main))
     try request.validate()
     guard request.voiceID == "automatic" else { throw TTSError.unsupportedVoice }
     Memory.cacheLimit = Self.cacheBytes
@@ -28,8 +38,11 @@ package actor FishSpeechEngine {
     if loaded?.directory != directory { try await load(directory) }
     guard let loaded else { throw TTSError.interrupted }
     let prompt = try loaded.prompt.tokens(for: request.text)
-    let codes = try loaded.generator.generate(prompt: prompt)
-    return try loaded.decoder.decode(codes)
+    loaded.decoder.reset()
+    defer { loaded.decoder.reset() }
+    try loaded.generator.stream(prompt: prompt) { frames in
+      try receive(loaded.decoder.decodeNext(frames))
+    }
   }
 
   private func load(_ directory: URL) async throws {

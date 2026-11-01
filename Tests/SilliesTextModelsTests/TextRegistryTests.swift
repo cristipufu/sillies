@@ -140,3 +140,45 @@ private func waitFor(_ predicate: () async -> Bool) async throws {
     try await Task.sleep(for: .milliseconds(5))
   }
 }
+
+private actor StreamingPreemptionProbe: PreparedTextModel {
+  var calls = 0
+  func generate(_ request: TextGenerationRequest) async throws -> String { "Hello" }
+  func stream(_ request: TextGenerationRequest, receive: @escaping TextDeltaSink) async throws
+    -> TextGenerationOutput
+  {
+    calls += 1
+    try await receive("Already delivered. ")
+    try await Task.sleep(for: .seconds(5))
+    return .init(text: "Already delivered. The rest.")
+  }
+  func stop() {}
+}
+private struct StreamingProbeProvider: TextModelProvider {
+  let id = "mlx"
+  let model: StreamingPreemptionProbe
+  func prepare(_ configuration: TextModelPreparation) async throws -> any PreparedTextModel {
+    model
+  }
+}
+
+@Test func preemptedTextStreamNeverAutomaticallyReplaysADeliveredPrefix() async throws {
+  let fixture = try TextFixture()
+  defer { fixture.remove() }
+  let store = ModelStore(root: fixture.root, downloader: FixtureDownloader())
+  try await store.install(fixture.manifest) { _ in }
+  let activity = InferenceActivity()
+  let model = StreamingPreemptionProbe()
+  let registry = try TextModelRegistry(
+    store: store, providers: [StreamingProbeProvider(model: model)], activity: activity)
+  let generation = Task {
+    try await registry.stream(fixture.request, using: fixture.manifest, receive: { _ in })
+  }
+  try await waitFor { await model.calls == 1 }
+  await activity.beginSpeech()
+  await activity.endSpeech()
+  await #expect(throws: CancellationError.self) { try await generation.value }
+  #expect(await model.calls == 1)
+  await registry.stop()
+  try await store.remove(fixture.manifest)
+}

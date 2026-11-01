@@ -10,18 +10,34 @@ final class FishAudioDecoder {
   private static let layerNormalizationEpsilon: Float = 1e-6
   private let weights: FishWeights
   private let convolution: FishCodecConvolution
+  private let transformer: FishCodecTransformer
+  private var decodedFrames = 0
 
   init(tensors: [String: MLXArray]) {
     weights = FishWeights(tensors: tensors)
     convolution = FishCodecConvolution(weights: weights)
+    transformer = FishCodecTransformer(weights: weights)
+  }
+
+  func reset() {
+    decodedFrames = 0
+    convolution.reset()
+    transformer.reset()
   }
 
   func decode(_ frames: [[Int32]]) throws -> [Float] {
+    reset()
+    defer { reset() }
+    return try decodeNext(frames)
+  }
+
+  func decodeNext(_ frames: [[Int32]]) throws -> [Float] {
     guard !frames.isEmpty, frames.count <= FishConfiguration.maximumAudioFrames,
+      decodedFrames <= FishConfiguration.maximumAudioFrames - frames.count,
       frames.allSatisfy({ $0.count == FishConfiguration.codebookCount })
     else { throw FishError.emptyAudio }
     var hidden = try decodeCodebooks(frames)
-    hidden = try FishCodecTransformer(weights: weights).apply(hidden)
+    hidden = try transformer.apply(hidden)
     for stage in 0..<Self.latentUpsampleStages {
       let path = "quantizer.upsample.\(stage)"
       hidden = try convolution.upsample(
@@ -43,6 +59,7 @@ final class FishAudioDecoder {
     let audio = tanh(hidden)[0, 0, 0..<sampleCount].asType(.float32)
     eval(audio)
     try Task.checkCancellation()
+    decodedFrames += frames.count
     return audio.asArray(Float.self)
   }
 

@@ -26,7 +26,7 @@ enum ChatWindowLayout {
 
   func show(
     _ model: ChatSession, openSettings: @escaping (ChatNotice.SettingsDestination) -> Void,
-    renderer: String? = nil
+    renderer: String? = nil, vault: ChatVaultPresentation? = nil
   ) {
     if window == nil {
       let window = CompanionUtilityWindow(
@@ -49,7 +49,7 @@ enum ChatWindowLayout {
       let view = ThemedHostingView(
         rootView: ChatSessionView(
           model: model, openSettings: openSettings, renderer: renderer,
-          motion: reducesMotion ? .reduced : .animated), appearance: appearance)
+          motion: reducesMotion ? .reduced : .animated, vault: vault), appearance: appearance)
       view.sizingOptions = []
       window?.contentView = view
       displayedSession = model

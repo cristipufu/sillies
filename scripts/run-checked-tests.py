@@ -11,6 +11,7 @@ import sys
 import tempfile
 
 from checked_test_process import TestProcess
+from test_presentation import TestPresentation
 from test_evidence import (IncompleteTestRun, selected_tests, swift_inventory, swift_test_name,
                            verify_swift_run, verify_xctest_run, xctest_inventory)
 
@@ -26,6 +27,7 @@ class NativeTestRunner:
         self.helpers = toolchain / "libexec/swift/pm"
         self.xctest = subprocess.check_output(["xcrun", "--find", "xctest"], text=True).strip()
         environment = dict(os.environ)
+        environment["SILLIES_TEST_PRESENTATION"] = options.presentation
         for key, location in [("DYLD_FRAMEWORK_PATH", platform / "Library/Frameworks"),
                               ("DYLD_LIBRARY_PATH", platform / "usr/lib")]:
             environment[key] = str(location) + (":" + environment[key] if environment.get(key) else "")
@@ -52,14 +54,19 @@ class NativeTestRunner:
         subprocess.run(["swiftc", *instrumentation, "-swift-version", "6", "-parse-as-library",
                         "-F", str(platform / "Library/Frameworks"),
                         "-Xlinker", "-rpath", "-Xlinker", str(platform / "Library/Frameworks"),
-                        "scripts/native-test-host.swift", "-o", str(executable)], check=True)
+                        "scripts/native-test-host.swift", "scripts/native-test-presentation.swift",
+                        "-o", str(executable)], check=True)
         return executable
 
     def run(self):
+        if self.options.presentation == "headless":
+            self.verify_presentation_boundary()
         bundles = sorted(self.options.bin_path.glob("*.xctest"))
         if not bundles:
             raise IncompleteTestRun("No built test bundles found")
         for bundle in bundles:
+            if self.options.presentation == "gui" and bundle.stem != "SilliesAppTests":
+                continue
             # Avoid loading deliberately excluded GPU libraries in TSAN processes.
             if any(re.fullmatch(pattern, bundle.stem) for pattern in self.options.skip):
                 continue
@@ -72,6 +79,16 @@ class NativeTestRunner:
         (self.results / "verified.json").write_text(json.dumps(self.receipts, indent=2) + "\n")
         count = sum(receipt["tests"] for receipt in self.receipts)
         print(f"Verified completion of {count} selected tests across {len(self.receipts)} runs.")
+
+    def verify_presentation_boundary(self):
+        for operation in ["front", "back", "key", "regardless", "relative", "activate",
+                          "activateCurrent", "makeKey", "makeMain", "offscreen"]:
+            expected = 0 if operation == "offscreen" else 86
+            log = self.results / f"presentation-{operation}.log"
+            self.process.run([str(self.native_host), "--presentation-probe", operation], log,
+                             expected_exit_codes=(expected,))
+            if expected and "Headless test rejected visible UI" not in log.read_text():
+                raise IncompleteTestRun(f"Presentation boundary did not reject {operation}")
 
     def select(self, tests, name=lambda value: value):
         return selected_tests(tests, self.options.filter, self.options.skip, name)
@@ -91,6 +108,15 @@ class NativeTestRunner:
         if code == 69 and discovered:
             raise IncompleteTestRun("Empty-discovery exit code contradicts its inventory")
         expected = self.select(discovered, swift_test_name)
+        if bundle.stem == "SilliesAppTests":
+            groups = TestPresentation().partition(discovered)
+            deferred = expected - groups[self.options.presentation]
+            expected &= groups[self.options.presentation]
+            prefix.with_suffix(".presentation.json").write_text(json.dumps(
+                dict(mode=self.options.presentation, selected=sorted(expected),
+                     deferred=sorted(deferred)), indent=2) + "\n")
+            print(f"Native presentation: {len(expected)} {self.options.presentation} tests; "
+                  f"{len(deferred)} tests reserved for the other presentation mode.", flush=True)
         if not expected:
             return
         # Runtime regexes also match source-file paths. Execute the discovered IDs exactly,
@@ -101,7 +127,8 @@ class NativeTestRunner:
             command[0] = str(self.native_host)
         self.execute(command + ["--no-parallel", "--event-stream-output-path", str(events)] + selection, log)
         count = verify_swift_run(events, expected)
-        self.receipts.append(dict(bundle=bundle.stem, framework="swift-testing", tests=count))
+        self.receipts.append(dict(bundle=bundle.stem, framework="swift-testing", tests=count,
+                                  presentation=self.options.presentation))
 
     def run_xctest(self, bundle):
         prefix = self.results / (bundle.stem + "-xctest")
@@ -109,6 +136,10 @@ class NativeTestRunner:
         self.process.run([str(self.helpers / "swiftpm-xctest-helper"), str(bundle), str(inventory)],
                          prefix.with_suffix(".discovery.log"))
         expected = self.select(xctest_inventory(json.loads(inventory.read_text())))
+        if bundle.stem == "SilliesAppTests" and expected:
+            raise IncompleteTestRun("Native AppKit tests must use Swift Testing presentation classification")
+        if self.options.presentation == "gui":
+            return
         if not expected:
             return
         log = prefix.with_suffix(".log")
@@ -132,6 +163,8 @@ def main():
     parser.add_argument("--filter", action="append", default=[])
     parser.add_argument("--skip", action="append", default=[])
     parser.add_argument("--framework", choices=["all", "swift-testing", "xctest"], default="all")
+    parser.add_argument("--presentation", choices=["headless", "gui"], default="headless",
+                        help="headless by default; gui explicitly permits visible native tests")
     options = parser.parse_args()
     options.bin_path = options.bin_path.resolve()
     root = Path("build/test-results")

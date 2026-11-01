@@ -8,7 +8,7 @@ import SilliesTextModels
 @MainActor final class ReasoningServices {
   let models: TextModelEnvironment
   let reasoning: any LocalReasoning
-  let conversation: any ConversationResponding
+  private let turns = ReasoningTurnGate()
 
   init(defaults: UserDefaults = .standard, directory: URL? = nil) {
     let support =
@@ -22,9 +22,12 @@ import SilliesTextModels
       store: ModelStore(root: support), preference: preference,
       providers: [MLXTextModelProvider()])
     self.models = models
-    let service = LocalReasoningService(resolveBackend: { await models.backend() })
+    let service = LocalReasoningService(resolveBackend: { await models.backend() }, turns: turns)
     reasoning = service
-    conversation = service
+  }
+  func makeConversation(tools: [any ConversationTool]) -> any ConversationResponding {
+    LocalConversationService(
+      resolveBackend: { [models] in await models.backend() }, tools: tools, turns: turns)
   }
 
   func makeVault(directory: URL? = nil) -> SessionVaultStore {

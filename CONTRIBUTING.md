@@ -80,7 +80,11 @@ make check BUILD_DIR=/tmp/sillies-check
 Run `make check` for behavior/platform changes. Audio/transcript/lifecycle changes also need relevant
 `make stress` coverage; concurrency changes need `make race-check`. Scene changes need a short visual
 check of movement as well as deterministic tests. Crash fixes need the failing-input regression and the
-real triggering workflow; Settings/menu/window changes need the native lifecycle check included in `make check`.
+real triggering workflow; Settings/menu/window changes need native lifecycle coverage in the explicit
+`make gui-check` suite. Routine checks are headless; run visible checks only when requested and report
+them as not run otherwise. Classify native test files and overrides in
+`Tests/SilliesAppTests/execution-modes.json`; the test host fails accidental presentation before windows
+appear.
 
 Use focused tests for observable behavior, failure, cancellation, and recovery. Do not add tests that merely
 repeat the implementation. Bounded, accelerated workloads replace multi-hour tests. Routine checks do not

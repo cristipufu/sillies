@@ -2,7 +2,8 @@ import Foundation
 import SilliesTextModels
 
 /// Bounded, cancellation-aware queue. Interactive writing goes before waiting background notes.
-actor ReasoningTurnGate {
+package actor ReasoningTurnGate {
+  package init() {}
   enum Priority { case background, interactive }
   private struct Waiter {
     let id: UUID

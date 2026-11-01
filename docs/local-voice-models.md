@@ -25,12 +25,17 @@ Choosing a different model takes effect on a later request. Downloading does not
 | Kokoro | FluidAudio / Core ML | English in the supported pack | 12 supplied voices |
 | Pocket TTS | FluidAudio / Core ML | English in the supported pack | 8 supplied voices |
 | Qwen3-TTS | Argmax TTSKit / Core ML | Chinese, English, French, German, Italian, Japanese, Korean, Portuguese, Russian, Spanish | 9 supplied voices |
-| Fish S2 Pro | Sillies / Apple MLX | [Publisher's supported languages](https://huggingface.co/fishaudio/s2-pro#supported-languages); the full list appears in Settings | Automatic voice; may vary between replies |
+| Fish S2 Pro | Sillies / Apple MLX | [Publisher's supported languages](https://huggingface.co/fishaudio/s2-pro#supported-languages); the full list appears in Settings | Automatic voice; may vary between phrases |
 
 Companion personality and preferred provider voices live in character JSON (`chat.personality`,
 `chat.languageIdentifier`, `chat.preferredVoices`). The conversation language can be changed before a
 turn. Runtime support can be narrower than a base model's training-language list. Model licenses
 remain separate from the app's MIT license; see [third-party notices](../THIRD_PARTY_NOTICES.md).
+
+Replies appear progressively and can start speaking before the full answer is ready. Pocket, Qwen,
+and Fish stream audio; Kokoro speaks completed short phrases. If the selected text and voice models
+exceed the overlap budget, text finishes first so the two models do not compete for that memory.
+Interruptions preserve the visible partial reply; a voice failure leaves the written answer available.
 
 Voice inference runs in a separate process with bounded messages and killable cancellation. Playback
 buffers at most 0.75 seconds ahead, and its amplitude drives native mouth/head animation. No mascot
@@ -43,9 +48,10 @@ worker; recognizers acquire speech-model priority per utterance. This leaves tex
 available between turns without pausing the microphone. Echo cancellation is not speaker identification:
 another person in the room may start a turn, and clipping or unusual routing can impair cancellation.
 
-Conversation generation uses conversational sampling rather than extraction settings. A general
-repetition guard rejects sustained output loops with a retryable error before displaying or speaking
-them. Responses remain model-generated and may be inaccurate.
+Downloaded conversation models use conversational sampling; Apple tool-enabled conversations use
+greedy sampling for native reliability. The existing repetition limit can stop sustained loops, but
+streamed text may already have been displayed or spoken. Responses remain model-generated and may
+be inaccurate. Streaming is not semantic validation.
 
 Voice-model revisions currently ship in the app catalog; daily speech-recognition update checks do not
 discover voice-model updates. No weights ship inside the app. Installing a voice needs network access;

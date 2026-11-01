@@ -1,0 +1,256 @@
+{
+  "AnimationContinuityTests.swift": {
+    "default": "headless",
+    "tests": {
+      "applicationDiscoveryAndUnrelatedSettingsPreservePlayingClips()": "gui",
+      "nativeMinimizeSuppressesLateGeometryAndTracksRestoreWhilePaused()": "gui"
+    }
+  },
+  "AnimationExtensionTests.swift": {
+    "default": "headless",
+    "tests": {
+      "companionHUDCachesLayoutSizeAcrossFrameAndAudioUpdates()": "gui",
+      "customEventProducerRoutesEventsAndStopsWhenPaused()": "gui",
+      "desktopModeCompanionsRemainInteractiveAndDraggable()": "gui",
+      "pickedUpCompanionRendersUnclippedAboveFocusedWindow()": "gui"
+    }
+  },
+  "AppContentWindowStackingTests.swift": {
+    "default": "gui"
+  },
+  "AppearanceSettingsTests.swift": {
+    "default": "headless"
+  },
+  "ApplicationIconCacheTests.swift": {
+    "default": "headless"
+  },
+  "ApplicationMenuTests.swift": {
+    "default": "gui"
+  },
+  "ArtworkHitTesterTests.swift": {
+    "default": "headless"
+  },
+  "AudioDeliveryStressTests.swift": {
+    "default": "headless"
+  },
+  "AudioEnduranceTests.swift": {
+    "default": "headless"
+  },
+  "AudioSkillTests.swift": {
+    "default": "headless"
+  },
+  "BoundWindowVisibilityTests.swift": {
+    "default": "headless",
+    "tests": {
+      "boundCompanionAndHUDHideTogetherWithoutEndingTheirSkill()": "gui"
+    }
+  },
+  "CharacterRosterTests.swift": {
+    "default": "headless",
+    "tests": {
+      "wholeCrewHasDistinctInteractivePerches()": "gui"
+    }
+  },
+  "ChatComposerTests.swift": {
+    "default": "headless"
+  },
+  "ChatInterfaceTests.swift": {
+    "default": "headless",
+    "tests": {
+      "chatInterfaceKeepsTranscriptAndComposerInsideMinimumWindow()": "gui",
+      "chatRapidCloseAndReopenDoesNotLeaveAnInvisibleWindow()": "gui",
+      "chatStreamingBubbleUpdatesWithoutReplacingHistoryOrLosingSelection()": "gui"
+    }
+  },
+  "CommandTests.swift": {
+    "default": "headless"
+  },
+  "ControlCenterDismissalTests.swift": {
+    "default": "gui"
+  },
+  "ControlCenterSizingTests.swift": {
+    "default": "headless"
+  },
+  "DictationTests.swift": {
+    "default": "headless",
+    "tests": {
+      "dictationDetailsKeepTheFullTranscriptAndDoNotStealFocus()": "gui",
+      "dictationFeedbackWrapsItsContentAndNeverTakesKeyboardFocus()": "gui",
+      "dictationHistoryFailureUsesTheSharedNoticeAndRetryWithoutLosingText(permissionGranted:)": "gui"
+    }
+  },
+  "DisplayFrameSequence.swift": {
+    "default": "gui"
+  },
+  "DragTargetingTests.swift": {
+    "default": "headless",
+    "tests": {
+      "unselectedDropSkipsReleaseQueriesAndClearsOverlays()": "gui",
+      "radialSelectionRequiresTheSameLiveWindowAtRelease(skill:windowChanges:)": "gui"
+    }
+  },
+  "DragWindowSnapshotTests.swift": {
+    "default": "headless"
+  },
+  "DropHighlightStagingTests.swift": {
+    "default": "headless",
+    "tests": {
+      "dropHighlightPreparesNativeBackingWithoutShowingOrInterceptingInput()": "gui"
+    }
+  },
+  "DropReturnTests.swift": {
+    "default": "gui"
+  },
+  "InteractionSmoothnessMetricsTests.swift": {
+    "default": "headless"
+  },
+  "LanguagePreferencesTests.swift": {
+    "default": "headless"
+  },
+  "LiveTranscriptTests.swift": {
+    "default": "headless",
+    "tests": {
+      "populatedTranscriptWindowKeepsUpdatesWithinAFrame(_:size:)": "gui"
+    }
+  },
+  "LocalAIIntegrationTests.swift": {
+    "default": "headless",
+    "tests": {
+      "localModelsAndAACEncodingKeepAllInteractionPathsWithinBudget()": "gui",
+      "downloadedSpeechModelsKeepAllInteractionPathsWithinBudget()": "gui"
+    }
+  },
+  "MeetingEchoIntegrationTests.swift": {
+    "default": "gui"
+  },
+  "MeetingSpeechBubbleTests.swift": {
+    "default": "headless",
+    "tests": {
+      "renderMeetingSpeechBubblePreview()": "gui",
+      "suggestionBubbleReplacesOneIdeaAndHidesWithHUD()": "gui",
+      "suggestionBubbleWrapsItsTextAndStaysAboveWalkingCompanions()": "gui"
+    }
+  },
+  "NativeModelUpdateTests.swift": {
+    "default": "headless"
+  },
+  "NativeWindowIdentityTests.swift": {
+    "default": "headless",
+    "tests": {
+      "invalidNativeWindowNumbersNeverCrashFocusOrWindowNotifications(_:)": "gui"
+    }
+  },
+  "ParakeetInputTests.swift": {
+    "default": "headless"
+  },
+  "PerchSpacingIntegrationTests.swift": {
+    "default": "gui"
+  },
+  "PlayfulContactTests.swift": {
+    "default": "gui"
+  },
+  "PlayfulDescentTests.swift": {
+    "default": "gui"
+  },
+  "PlayfulMoviePreviewTests.swift": {
+    "default": "gui"
+  },
+  "PlayfulScenePlaybackTests.swift": {
+    "default": "gui"
+  },
+  "PlayfulSceneTests.swift": {
+    "default": "headless",
+    "tests": {
+      "playfulBorderClimbUsesTheExistingSideGripAndRestoresItsPerch()": "gui",
+      "playfulScenesYieldToPickupPauseAndWindowGeometry()": "gui"
+    }
+  },
+  "ReadmePreviewTests.swift": {
+    "default": "headless"
+  },
+  "SessionRecoveryTests.swift": {
+    "default": "headless"
+  },
+  "SessionVaultModelTests.swift": {
+    "default": "headless"
+  },
+  "SettingsNavigationTests.swift": {
+    "default": "headless"
+  },
+  "SkillInterfaceTests.swift": {
+    "default": "headless"
+  },
+  "SmoothnessBudgetTests.swift": {
+    "default": "gui"
+  },
+  "SpeechProviderContractTests.swift": {
+    "default": "headless"
+  },
+  "SpeechRuntimeTests.swift": {
+    "default": "headless"
+  },
+  "TextInsertionTests.swift": {
+    "default": "headless"
+  },
+  "UtilityWindowTests.swift": {
+    "default": "headless",
+    "tests": {
+      "ordinarySilliesWindowsNeverReplaceExternalFocusOrBecomeSkillTargets()": "gui",
+      "transcriptionWindowNeverBecomesAPerchOrDropTarget()": "gui"
+    }
+  },
+  "VaultCommandTests.swift": {
+    "default": "headless"
+  },
+  "VaultDetailLoadingTests.swift": {
+    "default": "headless"
+  },
+  "VaultIncrementalBrowsingTests.swift": {
+    "default": "headless"
+  },
+  "VaultLoadingTests.swift": {
+    "default": "headless"
+  },
+  "VaultOCRSchedulerTests.swift": {
+    "default": "headless"
+  },
+  "VaultRecordEditorTests.swift": {
+    "default": "headless"
+  },
+  "VaultWriteCoordinatorTests.swift": {
+    "default": "headless"
+  },
+  "WhisperPromptAlignmentTests.swift": {
+    "default": "headless"
+  },
+  "WindowMetadataProcessTests.swift": {
+    "default": "headless",
+    "tests": {
+      "metadataProcessReadsExactWindowAndStopsWithItsLastOwner()": "gui"
+    }
+  },
+  "WindowMetadataWireTests.swift": {
+    "default": "headless"
+  },
+  "WindowTargetCacheTests.swift": {
+    "default": "headless"
+  },
+  "WindowTrackingScheduleTests.swift": {
+    "default": "headless"
+  },
+  "WorkspaceLifecycleTests.swift": {
+    "default": "headless"
+  },
+  "WritingHistoryTerminationTests.swift": {
+    "default": "headless"
+  },
+  "WritingHistoryTests.swift": {
+    "default": "headless"
+  },
+  "WritingWorkflowInterfaceTests.swift": {
+    "default": "headless",
+    "tests": {
+      "writingReservesOneAvailableMascotUntilReleased()": "gui"
+    }
+  }
+}

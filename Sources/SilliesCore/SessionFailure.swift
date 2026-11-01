@@ -5,6 +5,7 @@ public struct SessionFailure: Error, LocalizedError, Codable, Equatable, Sendabl
   public enum Category: String, Codable, Sendable {
     case permissionDenied, captureUnavailable, captureInterrupted, audioProcessing
     case transcription, recordingSave, finalization, unknown
+    case textGeneration, speechSynthesis
   }
   public enum RecoveryAction: String, Codable, Sendable {
     case openMicrophoneSettings, openScreenRecordingSettings, openAccessibilitySettings

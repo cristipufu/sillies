@@ -19,14 +19,16 @@ private let reportedChatContext = ChatContext(
 
 @Test func chatRejectsReportedLoopAndRequestsConversationSampling() async throws {
   let backend = ChatBackendProbe()
-  let service = LocalReasoningService(backend: backend)
+  let service = LocalConversationService(resolveBackend: { backend }, tools: [], turns: .init())
   await #expect(throws: TextModelError.self) { try await service.reply(to: reportedChatContext) }
   #expect(await backend.style == .conversation)
 }
 
-private actor ChatBackendProbe: ReasoningBackend {
+private actor ChatBackendProbe: ConversationBackend {
   var style: TextGenerationStyle?
   func availabilityNotice(localeIdentifier: String?) -> String? { nil }
+  func converse(_ request: TextGenerationRequest, tools: ConversationToolbox) async throws -> String
+  { generate(request, format: .text) }
   func generate(_ request: TextGenerationRequest, format: ReasoningFormat) -> String {
     style = request.style
     return String(repeating: "I'm 100% sure ", count: 40) + "I'm 10"
@@ -35,13 +37,14 @@ private actor ChatBackendProbe: ReasoningBackend {
 
 @Test(.enabled(if: ProcessInfo.processInfo.environment["SILLIES_CHAT_MODEL_CHECK"] == "1"))
 func appleChatHandlesTheReportedConversationWithoutRepeating() async throws {
-  let service = LocalReasoningService(backend: AppleReasoningBackend())
+  let service = LocalConversationService(
+    resolveBackend: { AppleReasoningBackend() }, tools: [], turns: .init())
   let notice = await service.availabilityNotice(localeIdentifier: "en")
   try #require(notice == nil, "Apple model is unavailable: \(notice ?? "")")
   for _ in 0..<3 {
     let reply = try await service.reply(to: reportedChatContext)
     print("CHAT MODEL CHECK: \(reply)")
-    #expect(!TextRepetitionGuard.containsLoop(reply))
-    #expect(!reply.isEmpty)
+    #expect(!TextRepetitionGuard.containsLoop(reply.text))
+    #expect(!reply.text.isEmpty)
   }
 }

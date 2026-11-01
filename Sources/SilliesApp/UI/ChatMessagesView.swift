@@ -7,11 +7,13 @@ struct ChatMessagesView: View {
   @Environment(\.silliesTheme) private var theme
   let model: ChatSession
   let motion: ChatPresentationMotion
+  var vault: ChatVaultPresentation? = nil
   @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
   private var reduceMotion: Bool { systemReduceMotion || motion == .reduced }
   @State private var followsLatest = true
   @State private var nearBottom = true
   @State private var selectedMessages: Set<UUID> = []
+  @State private var selectionReset: UUID?
   private static let bottomID = "latest-chat-message"
   private static let bottomThreshold: CGFloat = 48
 
@@ -29,8 +31,12 @@ struct ChatMessagesView: View {
             Label(model.status, systemImage: "ellipsis.bubble.fill")
               .font(.callout).foregroundStyle(theme.secondary).padding(12)
           }
+          if let vault, !model.discoveredSources.isEmpty {
+            ChatSourcesView(sources: model.discoveredSources, vault: vault)
+          }
           Color.clear.frame(height: 1).id(Self.bottomID)
         }.padding(18)
+          .environment(\.chatSelectionReset, selectionReset)
           .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: model.messages.count)
       }
       .defaultScrollAnchor(.bottom, for: .initialOffset)
@@ -50,10 +56,17 @@ struct ChatMessagesView: View {
           proxy.scrollTo(Self.bottomID, anchor: .bottom)
         }
       }
+      .onChange(of: model.streamedText) {
+        guard followsLatest, selectedMessages.isEmpty else { return }
+        // Streaming growth follows without stacking animations on every text batch.
+        proxy.scrollTo(Self.bottomID, anchor: .bottom)
+      }
       .overlay(alignment: .bottom) {
-        if !followsLatest, !nearBottom {
+        if !followsLatest || !selectedMessages.isEmpty, !nearBottom {
           Button("Latest", systemImage: "arrow.down") {
             followsLatest = true
+            selectedMessages.removeAll()
+            selectionReset = UUID()
             withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) {
               proxy.scrollTo(Self.bottomID, anchor: .bottom)
             }
@@ -64,38 +77,12 @@ struct ChatMessagesView: View {
   }
 
   private func bubble(_ message: ChatMessage) -> some View {
-    let fromUser = message.role == .user
-    return HStack(alignment: .bottom, spacing: 0) {
-      if fromUser { Spacer(minLength: 52) }
-      VStack(alignment: .leading, spacing: 5) {
-        Text(fromUser ? String(localized: "You") : model.companionName)
-          .font(.system(size: 11, weight: .semibold, design: .rounded))
-          .foregroundStyle(fromUser ? theme.onAccent.opacity(0.8) : theme.secondary)
-        ChatMessageText(text: message.text, color: theme.native(fromUser ? .onAccent : .ink)) {
-          selected in
-          if selected {
-            selectedMessages.insert(message.id)
-          } else {
-            selectedMessages.remove(message.id)
-          }
-        }
+    ChatMessageBubble(model: model, original: message, vault: vault) { selected in
+      if selected {
+        selectedMessages.insert(message.id)
+      } else {
+        selectedMessages.remove(message.id)
       }
-      .padding(.horizontal, 14).padding(.vertical, 11)
-      .background(
-        fromUser ? theme.accentFill : theme.card,
-        in: RoundedRectangle(cornerRadius: 18)
-      )
-      .overlay(
-        RoundedRectangle(cornerRadius: 18).strokeBorder(
-          fromUser ? Color.clear : theme.border)
-      )
-      .contextMenu {
-        Button("Copy message", systemImage: "doc.on.doc") {
-          NSPasteboard.general.clearContents()
-          NSPasteboard.general.setString(message.text, forType: .string)
-        }
-      }
-      if !fromUser { Spacer(minLength: 52) }
     }
   }
 

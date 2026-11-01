@@ -78,6 +78,8 @@ visual check of actual movement, cancellation, and reduced motion:
 
 ```sh
 bash scripts/test.sh --filter playful
+# Only when visible desktop tests are requested:
+bash scripts/test.sh --presentation gui --filter playful
 /tmp/sillies-check/Sillies.app/Contents/MacOS/Sillies --playful-scene dance --without-accessibility
 ```
 

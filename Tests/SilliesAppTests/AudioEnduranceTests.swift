@@ -19,9 +19,9 @@ import Testing
   model.languages = [fixtureEnglish]
   model.selectedLanguageID = fixtureEnglish.id
   model.followsLiveTranscript = true
-  let window = AudioSessionWindowController(appearance: ThemeEnvironment())
-  defer { window.close() }
-  window.show(model)
+  let view = NSHostingView(rootView: AudioSessionView(model: model))
+  view.frame = CGRect(x: 0, y: 0, width: 640, height: 760)
+  view.layoutSubtreeIfNeeded()
   let delivery = AudioSessionUpdateDelivery {
     if case .transcript(let text, let level, let elapsed) = $0 {
       model.transcript = text
@@ -39,7 +39,7 @@ import Testing
   let deadline = ContinuousClock.now.advanced(by: .seconds(60))
   var scrollSamples: [Duration] = []
   while !progress.isFinished && ContinuousClock.now < deadline {
-    if let view = window.window?.contentView, let duration = measureEnduranceScroll(in: view) {
+    if let duration = measureEnduranceScroll(in: view) {
       scrollSamples.append(duration)
     }
     try await Task.sleep(for: .milliseconds(8))

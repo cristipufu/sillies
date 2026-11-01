@@ -12,6 +12,8 @@ final class FishCodecConvolution {
   private static let snakeEpsilon: Float = 1e-9
   private let weights: FishWeights
   private var kernels: [String: MLXArray] = [:]
+  private var history: [String: MLXArray] = [:]
+  func reset() { history.removeAll() }
 
   init(weights: FishWeights) { self.weights = weights }
 
@@ -22,7 +24,15 @@ final class FishCodecConvolution {
       throw FishError.invalidTensor(path)
     }
     let padding = (weight.dim(2) - 1) * geometry.dilation + 1 - geometry.stride
-    let padded = MLX.padded(input, widths: [.init(0), .init(0), .init((padding, 0))])
+    guard geometry.stride == 1 else { throw FishError.invalidTensor(path) }
+    let previous =
+      history[path] ?? MLXArray.zeros([input.dim(0), input.dim(1), padding], dtype: input.dtype)
+    let padded = concatenated([previous, input], axis: 2)
+    if padding > 0 {
+      let retained = padded[0..., 0..., (padded.dim(2) - padding)...]
+      eval(retained)
+      history[path] = retained
+    }
     let output = conv1d(
       padded.transposed(0, 2, 1), weight.transposed(0, 2, 1),
       stride: geometry.stride, dilation: geometry.dilation, groups: geometry.groups)
@@ -34,12 +44,21 @@ final class FishCodecConvolution {
     guard input.ndim == 3, input.dim(1) == weight.dim(0), weight.dim(2) >= stride else {
       throw FishError.invalidTensor(path)
     }
+    let prior = history[path]
+    let combined = prior.map { concatenated([$0, input], axis: 2) } ?? input
+    let offset = (prior?.dim(2) ?? 0) * stride
     let output = convTransposed1d(
-      input.transposed(0, 2, 1), weight.transposed(1, 2, 0), stride: stride,
+      combined.transposed(0, 2, 1), weight.transposed(1, 2, 0), stride: stride,
       outputPadding: stride > 1 ? 1 : 0)
     let biased = try output + weights.vector(path + ".bias", count: output.dim(2))
-    let length = biased.dim(1) - (weight.dim(2) - stride)
-    return biased[0..., 0..<length, 0...].transposed(0, 2, 1)
+    let length = input.dim(2) * stride
+    let retainedFrames = min(combined.dim(2), (weight.dim(2) - 1) / stride)
+    if retainedFrames > 0 {
+      let retained = combined[0..., 0..., (combined.dim(2) - retainedFrames)...]
+      eval(retained)
+      history[path] = retained
+    }
+    return biased[0..., offset..<(offset + length), 0...].transposed(0, 2, 1)
   }
 
   func snake(_ input: MLXArray, at path: String) throws -> MLXArray {

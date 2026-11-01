@@ -121,8 +121,6 @@ import Testing
   let view = host.view
   view.frame = CGRect(origin: .zero, size: size)
   window.setContentSize(size)
-  window.orderFront(nil)
-  try DisplayFrameSequence.presentCreatedWindows()
   view.layoutSubtreeIfNeeded()
   #expect(view.bounds.size == size)
   let fitting = host.sizeThatFits(in: size)

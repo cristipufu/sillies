@@ -13,8 +13,8 @@ import SilliesTextModels
 
   private static func run() async throws {
     let arguments = CommandLine.arguments
-    guard arguments.count == 4, ["install", "run"].contains(arguments[1]) else {
-      fputs("Usage: TextModelBenchmark install|run MODEL_ID MODEL_DIRECTORY\n", stderr)
+    guard arguments.count == 4, ["install", "run", "stream"].contains(arguments[1]) else {
+      fputs("Usage: TextModelBenchmark install|run|stream MODEL_ID MODEL_DIRECTORY\n", stderr)
       exit(EXIT_FAILURE)
     }
     guard
@@ -30,12 +30,24 @@ import SilliesTextModels
       print("Verified installation: \(manifest.model.name)")
       return
     }
-    let helper = URL(fileURLWithPath: arguments[0]).deletingLastPathComponent()
+    let helper =
+      ProcessInfo.processInfo.environment["SILLIES_TEXT_HELPER"].map {
+        URL(fileURLWithPath: $0)
+      }
+      ?? URL(fileURLWithPath: arguments[0]).deletingLastPathComponent()
       .appendingPathComponent("SilliesTextInference")
     let registry = try TextModelRegistry(
       store: store, providers: [MLXTextModelProvider(executable: helper)])
     let backend = DownloadedReasoningBackend(manifest: manifest, store: store, registry: registry)
     do {
+      if arguments[1] == "stream" {
+        for preparation in ["Initial helper", "Reused helper"] {
+          print(preparation)
+          try await TextStreamBenchmark.run(registry: registry, manifest: manifest)
+        }
+        await registry.stop()
+        return
+      }
       for fixture in TextQualityFixtures.cases {
         let language = fixture.language
         let source = fixture.source

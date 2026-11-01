@@ -48,17 +48,31 @@ For a new STT engine, follow [the separate speech-provider recipe](local-speech-
 
 ## Resource and failure behavior
 
-One downloaded text model is loaded at a time. Each request starts a fresh prompt cache; it never retains a meeting conversation. Input is checked against a 4,096-token total context and generation is limited to 1,400 tokens (individual tasks use smaller limits). MLX uses the model-specific allocation budget described above, with a 128 MiB cache. These limits do not describe total process RSS or all driver allocations.
+One downloaded text model is loaded at a time. Each request starts a fresh prompt cache. Chat reconstructs native conversation messages from its bounded working context; meeting tasks remain independent. Input is checked against a 4,096-token total context and generation is limited to 1,400 tokens (individual tasks use smaller limits). MLX uses the model-specific allocation budget described above, with a 128 MiB cache. These limits do not describe total process RSS or all driver allocations.
 
 The helper runs at utility priority. Speech inference preempts active downloaded-text inference, waits for worker exit, and allows interrupted text work to retry once speech is idle. Explicit dictation reserves that priority through finalization, including Apple Speech. Text model leases prevent deletion while loading or generating. A 60-second idle release, pause/exclusion handling, selection changes, and termination release the worker. IPC responses are bounded to 128 KiB and each request has a 120-second deadline. The app does not wait synchronously for helper exit.
 
 Interactive writing goes ahead of queued background notes, and long meetings yield between chunks. Dictation retains its separate 750 ms cleanup deadline: if loading or generation misses it, the finalized transcript is inserted once. A delayed model output never rewrites the destination. This means larger models may improve meeting notes without being fast enough for dictation cleanup.
 
-Generated notes must decode to the expected schema. Truncated output and unexpected reasoning/tool output are rejected. Task commitments must match source passages before translation. Writing retains the existing name/number/identifier guards. Failures preserve source material and label extracted highlights honestly. Capture warnings and notes-generation notices have separate saved fields.
+Generated notes must decode to the expected schema. Truncated output and unexpected reasoning/tool output are rejected for text-only tasks. Chat handles native tool calls through explicitly injected local capabilities. Task commitments must match source passages before translation. Writing retains the existing name/number/identifier guards. Failures preserve source material and label extracted highlights honestly. Capture warnings and notes-generation notices have separate saved fields.
+
+## Chat context and tools
+
+Chat keeps the full conversation visible while incrementally summarizing older turns for the model.
+Recent turns, native tool results, and actual record references preserve continuity within the selected
+model's context limit. Compaction is lossy and scoped to the active chat. Read-only Vault tools can
+retrieve saved screenshots, URLs, and meeting passages; result cards open actual records. Screenshot
+retrieval uses OCR and metadata, not pixel understanding. See [the Chat tool guide](contributing/chat-tools.md)
+for budgets, recovery behavior, and provider requirements.
+
+Native tool APIs are provided by [Apple Foundation Models](https://developer.apple.com/documentation/foundationmodels/expanding-generation-with-tool-calling)
+and [MLX Swift LM](https://github.com/ml-explore/mlx-swift-lm/blob/main/skills/mlx-swift-lm/references/tool-calling.md).
+A model must have a supported tool format in the pinned runtime; family support alone does not establish
+reliable tool selection or answer quality.
 
 ## Bounded verification
 
-`make check` covers contracts, storage, cancellation, worker exits, queue behavior, JSON/evidence handling, native window lifecycle, and a real Metal-kernel self-test of the bundled helper. `make stress` covers bounded audio/transcript workloads. Tests do not download model weights. To keep a running app untouched:
+`make check` covers contracts, storage, cancellation, worker exits, queue behavior, JSON/evidence handling, offscreen interface layout, and a real Metal-kernel self-test of the bundled helper. `make stress` covers bounded audio/transcript workloads. Tests do not download model weights. To keep a running app untouched:
 
 ```sh
 make check BUILD_DIR=/tmp/sillies-verification

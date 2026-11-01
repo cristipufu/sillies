@@ -31,6 +31,10 @@ package actor VaultLibrary {
     try Task.checkCancellation()
     return try storage().page(request)
   }
+  package func search(_ request: VaultSearchRequest) throws -> [VaultSearchMatch] {
+    try Task.checkCancellation()
+    return try storage().search(request)
+  }
   package func matchingHeaders(_ ids: Set<UUID>, search: SessionRecordSearch) throws
     -> VaultHeaderMatches
   {

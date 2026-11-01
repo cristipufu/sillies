@@ -7,6 +7,12 @@ import Testing
 @main @MainActor struct NativeTestHost {
   static func main() {
     let arguments = CommandLine.arguments
+    NativeTestPresentation.configure()
+    if let flag = arguments.firstIndex(of: "--presentation-probe"),
+      arguments.indices.contains(flag + 1)
+    {
+      NativeTestPresentation.probe(arguments[flag + 1])
+    }
     guard let flag = arguments.firstIndex(of: "--test-bundle-path"),
       arguments.indices.contains(flag + 1)
     else { fail("Missing test bundle path") }
@@ -14,7 +20,6 @@ import Testing
       fail(dlerror().map { String(cString: $0) } ?? "Could not load the test bundle")
     }
     let application = NSApplication.shared
-    application.setActivationPolicy(.accessory)
     Task {
       let status: CInt = await Testing.__swiftPMEntryPoint()
       exit(status)

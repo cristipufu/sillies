@@ -1,18 +1,25 @@
 import Darwin
 import Foundation
 import MLX
+import SilliesInference
 import SilliesTextModels
 
 @main enum TextInferenceMain {
   private static let idleTimeout: TimeInterval = 90
   static func main() async {
+    let parentMonitor = InferenceParentMonitor.start()
+    defer { parentMonitor.cancel() }
     if let library = Bundle.main.url(forResource: "mlx", withExtension: "metallib") {
       GPU.metallib = library
     }
     if CommandLine.arguments.contains("--self-test") {
       let result = (MLXArray([1, 2, 3]) * 2).sum().item(Int.self)
       guard result == 12 else { exit(EXIT_FAILURE) }
-      print("Text inference GPU and bundled kernels: passed")
+      do { try TextConversationSelfCheck.run() } catch {
+        fputs("Native conversation check failed: \(error)\n", stderr)
+        exit(EXIT_FAILURE)
+      }
+      print("Text inference GPU, native conversation protocol and bundled kernels: passed")
       return
     }
     if CommandLine.arguments.count == 3, CommandLine.arguments[1] == "--check-tokenizer" {
@@ -46,13 +53,26 @@ import SilliesTextModels
           deadline: ProcessInfo.processInfo.systemUptime + idleTimeout)
       } catch { return }
       let response: TextInferenceResponse
-      do { response = TextInferenceResponse(text: try await runtime.generate(request)) } catch {
+      do {
+        let result = try await runtime.generate(request) { delta in
+          try TextInferenceWire.write(
+            TextInferenceEvent.delta(delta), to: .standardOutput,
+            deadline: ProcessInfo.processInfo.systemUptime + idleTimeout)
+          _ = try TextInferenceWire.read(
+            TextInferenceAcknowledgement.self, from: .standardInput,
+            deadline: ProcessInfo.processInfo.systemUptime + idleTimeout)
+        }
+        response = TextInferenceResponse(output: result)
+      } catch TextModelError.contextLimit {
+        response = TextInferenceResponse(
+          failure: TextModelError.contextLimit.localizedDescription, code: .contextLimit)
+      } catch {
         fputs("Local text inference failed: \(error.localizedDescription)\n", stderr)
         response = TextInferenceResponse(failure: error.localizedDescription)
       }
       do {
         try TextInferenceWire.write(
-          response, to: .standardOutput,
+          TextInferenceEvent.finished(response), to: .standardOutput,
           deadline: ProcessInfo.processInfo.systemUptime + idleTimeout)
       } catch { return }
     }

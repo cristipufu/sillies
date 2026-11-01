@@ -64,7 +64,7 @@ let package = Package(
     .executableTarget(
       name: "SilliesTextInference",
       dependencies: [
-        "SilliesTextModels",
+        "SilliesTextModels", "SilliesInference",
         .product(name: "MLX", package: "mlx-swift"),
         .product(name: "MLXLLM", package: "mlx-swift-lm"),
         .product(name: "MLXLMCommon", package: "mlx-swift-lm"),
@@ -185,7 +185,7 @@ let package = Package(
         "SilliesSpeechNemotron",
         "SilliesModelStore", "SilliesDiarizationNemotron",
         "WindowMetadataProtocol",
-      ]),
+      ], exclude: ["execution-modes.json"]),
   ],
   swiftLanguageModes: [.v6]
 )

@@ -67,7 +67,7 @@ Storage is `~/Library/Application Support/Sillies/Vault`. AAC encoding, file fin
 
 ## Validation
 
-`make check` covers formatting, concurrency/build checks, catalog validation, interaction budgets, archive decoding, windowless microphone lifecycle, termination through the modal run loop, persistence errors, old record decoding, and stash retention.
+`make check` covers formatting, concurrency/build checks, catalog validation, offscreen interface layout, archive decoding, windowless microphone lifecycle, termination through the modal run loop, persistence errors, old record decoding, and stash retention.
 
 For a real local-model workload without microphone/application capture:
 
@@ -75,7 +75,7 @@ For a real local-model workload without microphone/application capture:
 say -v Samantha -r 155 -o /tmp/sillies-meeting-fixture.aiff \
   'We agreed to ship the report on Friday. Alex will review the draft tomorrow. The owner of the customer follow up is still undecided.'
 SILLIES_LOCAL_AI_CHECK=1 SILLIES_SPEECH_FIXTURE=/tmp/sillies-meeting-fixture.aiff \
-  bash scripts/test.sh --filter localModelsAndAACEncoding
+  bash scripts/test.sh --presentation gui --filter localModelsAndAACEncoding
 ```
 
 This feeds a generated fixture three times into two speech streams using 10 ms input buffers, alongside notes generation and AAC encoding while exercising window move, resize, switch and companion drag budgets. It does not certify every meeting app/device combination; simultaneous live Meet/Zoom capture remains a manual acceptance check with a consenting test call.
@@ -89,7 +89,7 @@ say -v Samantha -r 155 -o /tmp/sillies-near-speech-fixture.aiff \
   'I will contact the customer and confirm the deadline tomorrow.'
 SILLIES_ECHO_SPEECH_CHECK=1 SILLIES_SPEECH_FIXTURE=/tmp/sillies-meeting-fixture.aiff \
   SILLIES_NEAR_SPEECH_FIXTURE=/tmp/sillies-near-speech-fixture.aiff \
-  bash scripts/test.sh --filter localSpeechWithEchoCancellation
+  bash scripts/test.sh --presentation gui --filter localSpeechWithEchoCancellation
 ```
 
 This feeds 24 seconds of simulated delayed speaker echo and overlapping local speech through the actual synchronization, AEC, two Apple recognizers, and AAC encoder while exercising all four interaction budgets. It checks that remote words do not appear in the microphone transcript and that the local speaker’s commitment survives. Separate deterministic tests measure echo reduction and near-speaker waveform preservation. This is not a live Meet/Zoom call or a measurement of this room’s acoustics.
@@ -103,3 +103,5 @@ Audio and transcripts remain on the Mac. Model files are fetched from pinned Hug
 Settings also offers optional on-device speaker detection (up to eight speakers per source, with delayed and potentially incorrect labels), daily metadata-only model update checks, explicit update downloads with native compatibility validation, and rollback. Recording continues if speaker detection fails. See [local speech models](local-speech-models.md) for limits and short validation commands.
 
 Everyday dictation, selection editing, paste-back, retention, and exports are described in [everyday workflows](everyday-workflows.md).
+
+Native interaction budgets and activation/stacking checks run only in the explicit `make gui-check` suite. Routine checks do not display windows.

@@ -5,6 +5,7 @@ import SilliesModelStore
 /// One voice runtime for the entire crew. Installation leases outlive all native model reads.
 package actor TTSModelRegistry {
   private struct Loaded {
+    let residencyID = UUID()
     let id: String
     let revision: String
     let model: any PreparedTTSModel
@@ -67,11 +68,17 @@ package actor TTSModelRegistry {
     cancellation: InferenceCancellation, receive: @escaping SynthesizedAudioSink
   ) async throws {
     let id = UUID()
-    guard await activity.claimSynthesis(id, cancel: { cancellation.cancel() }) else {
+    let reservation = InferenceReservation(
+      conversationID: request.conversationID, modelBytes: manifest.downloadBytes)
+    guard
+      await activity.claimSynthesis(id, reservation: reservation, cancel: { cancellation.cancel() })
+    else {
+      try Task.checkCancellation()
       throw TTSError.busy
     }
     do {
       try Task.checkCancellation()
+      await activity.prepareVoiceModel(reservation)
       let model = try await prepare(manifest)
       try await model.synthesize(request, receive: receive)
       try Task.checkCancellation()
@@ -114,7 +121,16 @@ package actor TTSModelRegistry {
         await model.stop()
         throw CancellationError()
       }
-      loaded = .init(id: manifest.modelID, revision: manifest.revision, model: model, lease: lease)
+      let resident = Loaded(
+        id: manifest.modelID, revision: manifest.revision, model: model, lease: lease)
+      loaded = resident
+      let residencyID = resident.residencyID
+      await activity.rememberVoiceModel(
+        id: residencyID,
+        reservation: .init(modelBytes: manifest.downloadBytes)
+      ) { [weak self] in
+        await self?.evict(residencyID)
+      }
       return model
     } catch {
       await lease.close()
@@ -142,6 +158,11 @@ package actor TTSModelRegistry {
     loaded = nil
     await previous?.model.stop()
     await previous?.lease.close()
+    if let previous { await activity.forgetVoiceModel(previous.residencyID) }
+  }
+  private func evict(_ id: UUID) async {
+    guard loaded?.residencyID == id else { return }
+    await releaseModel()
   }
 
   private func scheduleRelease() {

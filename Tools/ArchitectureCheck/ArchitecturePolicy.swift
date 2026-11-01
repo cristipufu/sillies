@@ -48,6 +48,7 @@ struct ArchitecturePolicy {
     ],
     "SilliesTextInference": [
       "Foundation", "Darwin", "MLX", "MLXLLM", "MLXLMCommon", "Tokenizers", "SilliesTextModels",
+      "SilliesInference",
     ],
     "SilliesModelValidation": ["Foundation", "CoreML"],
     "SilliesPersistence": ["Foundation", "Darwin", "SQLite3", "SilliesCore"],
@@ -83,7 +84,7 @@ struct ArchitecturePolicy {
     "ThemeCatalog.swift": ["load"],
     "LanguageCatalog.swift": ["load"],
     "KokoroPackagePreparation.swift": ["prepare"],
-    "FishSpeechEngine.swift": ["synthesize"],
+    "FishSpeechEngine.swift": ["synthesize", "stream"],
     "ApplicationIconCache.swift": ["load"],
   ]
 }

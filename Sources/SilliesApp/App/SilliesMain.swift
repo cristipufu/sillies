@@ -3,6 +3,7 @@ import Observation
 import SilliesAudio
 import SilliesChat
 import SilliesCore
+import SilliesVault
 import SwiftUI
 
 @main
@@ -233,7 +234,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     let services = ChatServices(
       captureFactory: speech.conversationCaptureFactory(reference: reference),
       loadLanguages: speech.languages.load,
-      conversation: reasoningServices.conversation, speech: voices.speech,
+      conversation: reasoningServices.makeConversation(tools: [
+        VaultSearchTool(library: skills.vault.library),
+        VaultReadTool(library: skills.vault.library),
+      ]), speech: voices.speech,
       deliver: { MainRunLoopDelivery.perform($0) })
     skills.makeChatSession = { id, name in
       guard let profile = profiles[id] else { return nil }
@@ -246,7 +250,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
           self?.settingsNavigation.destination =
             destination == .textModels ? .intelligence : .voices
           self?.showSettings()
-        }, renderer: characters.first(where: { $0.id == session.companionID })?.renderer)
+        }, renderer: characters.first(where: { $0.id == session.companionID })?.renderer,
+        vault: .init(
+          store: skills.vault, openRecord: { [weak self] in self?.showVault(recordID: $0) }))
     }
   }
 

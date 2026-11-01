@@ -4,6 +4,7 @@ import MLX
 /// Slow autoregression advances time; the fast transformer fills the remaining codebooks.
 final class FishCodeGenerator {
   private static let repetitionWindow = 10
+  private static let framesPerChunk = 4
   private let configuration: FishConfiguration
   private let weights: FishWeights
   private let semanticHead: FishWeights
@@ -25,6 +26,12 @@ final class FishCodeGenerator {
   }
 
   func generate(prompt: [Int32]) throws -> [[Int32]] {
+    var frames: [[Int32]] = []
+    try stream(prompt: prompt) { frames.append(contentsOf: $0) }
+    return frames
+  }
+
+  func stream(prompt: [Int32], receive: ([[Int32]]) throws -> Void) throws {
     slow.reset()
     defer {
       slow.reset()
@@ -34,7 +41,7 @@ final class FishCodeGenerator {
     var hidden = try slow.apply(embedded)[0..., (prompt.count - 1)..<prompt.count, 0...]
     var previousSemantics: [Int32] = []
     var frames: [[Int32]] = []
-    for _ in 0..<FishConfiguration.maximumAudioFrames {
+    for index in 0..<FishConfiguration.maximumAudioFrames {
       try Task.checkCancellation()
       let logits = try semanticHead.linear(hidden, at: "output").reshaped(1, -1)
       var choice = try FishSampling.sample(logits)
@@ -42,14 +49,19 @@ final class FishCodeGenerator {
         choice = try FishSampling.sample(logits, settings: .repetitionRecovery)
       }
       if choice == 0 {
-        guard !frames.isEmpty else { throw FishError.emptyAudio }
-        return frames
+        guard index > 0 else { throw FishError.emptyAudio }
+        if !frames.isEmpty { try receive(frames) }
+        return
       }
       previousSemantics.append(choice)
       if previousSemantics.count > Self.repetitionWindow { previousSemantics.removeFirst() }
       let code = choice - 1
       let frame = try generateFrame(semanticCode: code, hidden: hidden)
       frames.append(frame)
+      if frames.count == Self.framesPerChunk {
+        try receive(frames)
+        frames.removeAll(keepingCapacity: true)
+      }
       let next = try audioEmbedding(frame)
       hidden = try slow.apply(next)
       eval(hidden)

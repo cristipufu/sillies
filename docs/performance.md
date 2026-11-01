@@ -1,5 +1,7 @@
 # Performance
 
+Current test modes: routine checks render offscreen. Live WindowServer/frame measurements below require explicit `make gui-check` or `scripts/test.sh --presentation gui`; headless success does not measure compositor timing.
+
 ## Implemented constraints
 
 - Native AppKit, SwiftUI, and Core Animation for companions; no web runtime or game engine.
@@ -411,3 +413,58 @@ stale callbacks, and priority over background text work. Chat tests preserve fin
 words before saving, retain written replies on synthesis failure, and reject late replies after stop.
 Native UI checks cover minimum-size and long-error states, transcript scrolling, activation, stacking,
 and own-window exclusion.
+
+
+## Incremental Chat delivery — November 2026
+
+Chat now forwards native text deltas through bounded presentation and phrase assembly. Text and voice
+can overlap for the same turn within conservative memory reservations; larger pairs serialize and
+evict incompatible idle weights. Audio acknowledgements propagate the player's 0.75-second queue
+limit to helpers. Total IPC deadlines, cancellation, interrupted partial replies, output-device
+changes, and a playback-progress watchdog prevent an abandoned branch from holding the conversation.
+Neither long-running microphone capture nor a multi-hour soak is required by these regressions.
+
+Short offline checks used existing installations and packaged helpers. No weights were downloaded.
+All four voice families generated the sentence “Hello there. I can start speaking before the whole
+reply is ready.” Local transcription recovered its words from each WAV (Kokoro changed punctuation).
+This is an intelligibility smoke check, not a listening/prosody evaluation or coverage of every voice
+and language. Qwen3-TTS used the 0.6B pack; the 1.7B pack was not downloaded for this check.
+
+| Provider | First PCM at the sink | Total synthesis | Generated audio |
+| --- | ---: | ---: | ---: |
+| Kokoro | 2.73 s | 2.80 s | 4.35 s |
+| Pocket TTS | 1.25 s | 1.94 s | 3.28 s |
+| Qwen3-TTS 0.6B | 2.93 s | 11.51 s | 6.32 s |
+| Fish S2 Pro | 10.67 s | 19.60 s | 4.64 s |
+
+Each row starts a new helper on this 48 GB Mac; filesystem and compiled-model caches can remain warm.
+These are single observations, not comparative benchmarks. First PCM is before hardware playback and
+does not include microphone endpointing or language-model generation. A slower-than-real-time voice
+can still pause during playback. Kokoro streams completed short phrases, while the other three
+emit native audio chunks. Fish's unconditioned voice can vary between phrases.
+
+The downloaded Qwen3.5 2B check emitted 9 deltas with first text at 2.89 s in an initial helper, then
+12 deltas with first text at 72 ms in the reused helper. These synthetic greetings had different
+sampled outputs. Apple streaming passed three Bolt greeting attempts and real tool use against
+synthetic Vault records. Those tool checks establish executed tool calls and matching record IDs;
+they do not establish the factual correctness of all generated prose.
+
+During a Fish request, the native move/resize check recorded zero attachment error over 3,600 samples,
+handler maxima of 0.46 ms, and a maximum display callback gap of 19.45 ms. A preliminary manually
+invoked full-crew stress run, missing its metadata-helper environment, exceeded the resize p90 budget
+(3.67 ms versus 3 ms; maximum 4.55 ms). The isolated resize control and the subsequent complete run
+with the standard helper environment passed unchanged budgets while Fish synthesized. That does not
+prove the missing environment caused the earlier timing miss or guarantee budgets under arbitrary
+system contention. No thresholds were raised.
+
+
+## Headless verification — November 2026
+
+Routine checks now use offscreen AppKit layout/rendering. The final streaming/headless validation
+passed 506 selected tests in `make check`, 142 in `make stress`, and 173 under Thread Sanitizer
+(161 Swift Testing plus 12 XCTest), with no reported races. The accelerated 600-second audio
+fixture retained four hours of transcript history and measured offscreen scroll p95 of 1.34 ms.
+This measures view work, not compositor presentation. Chat and session PNG exports were also
+verified offscreen. The 59 native GUI cases remain in the explicit visible suite; they were not
+rerun after switching the default mode. Native host subprocess probes verify that ordering and
+activation attempts fail before presentation, while hidden layout and teardown still work.

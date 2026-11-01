@@ -76,7 +76,6 @@ import Testing
     backing: .buffered, defer: false)
   window.isReleasedWhenClosed = false
   window.contentView = host
-  window.makeKeyAndOrderFront(nil)
   defer {
     window.close()
     defaults.removePersistentDomain(forName: suite)

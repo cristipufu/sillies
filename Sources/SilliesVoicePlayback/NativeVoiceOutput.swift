@@ -10,8 +10,13 @@ final class NativeVoiceOutput: VoiceOutputDevice {
   private var engine: AVAudioEngine?
   private var player: AVAudioPlayerNode?
   private var sampleRate: Int?
+  private var interrupted: (@Sendable () -> Void)?
+  private var configurationObserver: (any NSObjectProtocol)?
 
   init(reference: (@Sendable (AudioRenderFrame) -> Void)? = nil) { self.reference = reference }
+  deinit { stop() }
+
+  func onInterruption(_ receive: @escaping @Sendable () -> Void) { interrupted = receive }
 
   func schedule(_ audio: SynthesizedAudio, completed: @escaping @Sendable () -> Void) throws {
     dispatchPrecondition(condition: .notOnQueue(.main))
@@ -27,6 +32,10 @@ final class NativeVoiceOutput: VoiceOutputDevice {
   }
 
   func stop() {
+    if let configurationObserver {
+      NotificationCenter.default.removeObserver(configurationObserver)
+    }
+    configurationObserver = nil
     player?.stop()
     if reference != nil { engine?.mainMixerNode.removeTap(onBus: 0) }
     engine?.stop()
@@ -55,6 +64,11 @@ final class NativeVoiceOutput: VoiceOutputDevice {
     installReferenceTap(on: engine)
     engine.prepare()
     try engine.start()
+    if let interrupted {
+      configurationObserver = NotificationCenter.default.addObserver(
+        forName: .AVAudioEngineConfigurationChange, object: engine, queue: nil
+      ) { _ in interrupted() }
+    }
     self.engine = engine
     self.player = player
     sampleRate = requestedRate

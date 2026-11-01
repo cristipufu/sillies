@@ -4,15 +4,22 @@ import SilliesCore
 import SilliesTextModels
 
 /// One bounded on-device inference at a time. No model session retains a whole meeting.
-package actor LocalReasoningService: LocalReasoning, ConversationResponding {
+package actor LocalReasoningService: LocalReasoning {
   private static let sourceChunkCharacters = 3_000
   private static let maximumOutputTokens = 650
-  private let turns = ReasoningTurnGate()
+  private let turns: ReasoningTurnGate
   private let backend: @Sendable () async -> any ReasoningBackend
 
-  package init(backend: any ReasoningBackend) { self.backend = { backend } }
-  package init(resolveBackend: @escaping @Sendable () async -> any ReasoningBackend) {
+  package init(backend: any ReasoningBackend, turns: ReasoningTurnGate = .init()) {
+    self.backend = { backend }
+    self.turns = turns
+  }
+  package init(
+    resolveBackend: @escaping @Sendable () async -> any ReasoningBackend,
+    turns: ReasoningTurnGate = .init()
+  ) {
     backend = resolveBackend
+    self.turns = turns
   }
 
   private func resolvedLanguage(_ identifier: String?, source: String) -> String? {
@@ -24,20 +31,6 @@ package actor LocalReasoningService: LocalReasoning, ConversationResponding {
   package func availabilityNotice(localeIdentifier: String? = nil) async -> String? {
     let backend = await backend()
     return await backend.availabilityNotice(localeIdentifier: localeIdentifier)
-  }
-
-  package func reply(to context: ChatContext) async throws -> String {
-    guard context.messages.last?.role == .user else { throw TextModelError.invalidResponse }
-    let backend = await backend()
-    if let notice = await backend.availabilityNotice(
-      localeIdentifier: context.profile.languageIdentifier)
-    {
-      throw TextModelError.unavailable(notice)
-    }
-    try await turns.acquire(.interactive)
-    defer { Task { await turns.release() } }
-    try Task.checkCancellation()
-    return try await ChatReplyGenerator.reply(to: context, backend: backend)
   }
 
   package func notes(

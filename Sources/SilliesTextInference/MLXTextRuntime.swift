@@ -12,12 +12,15 @@ actor MLXTextRuntime {
   private var model: ModelContainer?
   private var directory: URL?
 
-  func generate(_ request: TextInferenceRequest) async throws -> String {
+  func generate(_ request: TextInferenceRequest, receive: @escaping TextDeltaSink) async throws
+    -> TextGenerationOutput
+  {
     let configuration = request.configuration
     let generation = request.generation
     guard configuration.directory.isFileURL, (2_048...8_192).contains(configuration.contextTokens),
       (1...Self.maximumOutputTokens).contains(generation.maximumTokens),
-      generation.instructions.count + generation.prompt.count <= Self.maximumPromptCharacters
+      generation.instructions.count + generation.messages.reduce(0, { $0 + $1.content.count })
+        <= Self.maximumPromptCharacters
     else { throw TextModelError.invalidResponse }
     guard configuration.memoryLimitBytes > 0,
       configuration.memoryLimitBytes
@@ -30,13 +33,19 @@ actor MLXTextRuntime {
     Memory.cacheLimit = Self.cacheBytes
     Memory.memoryLimit = configuration.memoryLimitBytes
     let container = try await load(configuration.directory)
+    let tools = MLXConversationInput.tools(generation)
+    if !tools.isEmpty, await container.configuration.toolCallFormat == nil {
+      throw TextModelError.toolsUnavailable
+    }
     let input = try await container.prepare(
       input: UserInput(
-        chat: [.system(generation.instructions), .user(generation.prompt)],
+        chat: try MLXConversationInput.messages(generation), tools: tools.isEmpty ? nil : tools,
         additionalContext: ["enable_thinking": false]))
+    if generation.operation == .measure {
+      return .init(text: "", inputTokens: input.text.tokens.size)
+    }
     guard input.text.tokens.size + generation.maximumTokens <= configuration.contextTokens else {
-      throw TextModelError.unavailable(
-        String(localized: "This passage exceeds the local model’s context. Try a shorter passage."))
+      throw TextModelError.contextLimit
     }
     var parameters = GenerateParameters(
       maxTokens: generation.maximumTokens, maxKVSize: configuration.contextTokens,
@@ -45,29 +54,39 @@ actor MLXTextRuntime {
       repetitionPenalty: generation.style.repetitionPenalty,
       repetitionContextSize: generation.style.repetitionContextSize)
     parameters.prefill = PrefillParameters(stepSize: 64)
-    let stream = try await container.generate(input: input, parameters: parameters)
+    let stream = try await container.generate(
+      input: input, parameters: parameters, tools: tools.isEmpty ? nil : tools)
     var output = ""
+    var calls: [TextGenerationOutput.Call] = []
     var completed = false
+    var batch = TextStreamBatch()
     for await event in stream {
       try Task.checkCancellation()
       switch event {
       case .chunk(let text):
         output += text
+        if let delta = batch.append(text) { try await receive(delta) }
         if generation.style == .conversation, TextRepetitionGuard.containsLoop(output) {
           throw TextModelError.repetitiveResponse
         }
       case .info(let info):
         guard case .stop = info.stopReason else { throw TextModelError.invalidResponse }
         completed = true
-      case .toolCall, .rejectedToolCall: throw TextModelError.invalidResponse
+      case .toolCall(let call):
+        calls.append(
+          .init(
+            id: call.id ?? UUID().uuidString, name: call.function.name,
+            arguments: try JSONEncoder().encode(call.function.arguments)))
+      case .rejectedToolCall: throw TextModelError.invalidResponse
       }
       guard output.utf8.count <= TextInferenceWire.maximumMessageBytes / 2 else {
         throw TextModelError.invalidResponse
       }
     }
     guard completed else { throw TextModelError.invalidResponse }
+    if let delta = batch.flush() { try await receive(delta) }
     Memory.clearCache()
-    return output.trimmingCharacters(in: .whitespacesAndNewlines)
+    return .init(text: output.trimmingCharacters(in: .whitespacesAndNewlines), calls: calls)
   }
 
   private func load(_ location: URL) async throws -> ModelContainer {

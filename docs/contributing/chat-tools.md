@@ -1,0 +1,89 @@
+# Add a local Chat tool
+
+Chat passes native user, assistant, tool-call, and tool-result messages to its selected local model.
+A tool is a capability supplied by app composition, not a function name parsed out of generated prose.
+The current tools search the Vault and read a bounded passage from a saved record. They cannot edit
+or delete records, run commands, or access the network.
+
+## Add a capability
+
+1. Implement `ConversationTool` in the feature that owns the data. Define a stable name, a concise
+   description, typed parameter definitions, localized activity text, and `call(arguments:)`.
+   Decode arguments into a small `Decodable` type and validate identifiers and limits at the boundary.
+2. Return `ConversationToolOutput` with bounded source text and an optional shorter `briefText` for
+   context recovery. Return `ChatSource` references only for records actually retrieved. Keep full
+   record bodies, storage paths, and image bytes out of model context. Empty text and missing records
+   are different cases: describe them accurately.
+3. Inject the tool through `ReasoningServices.makeConversation(tools:)`. Chat and reasoning depend
+   on the capability; they must not import storage or construct live services. Native window actions
+   belong in the app's presentation adapter. A returned source card opens the existing Vault.
+4. Exercise the tool against temporary storage, including deleted records, malformed arguments,
+   large bodies, cancellation, and bounded results. Add an injected-backend test for the native
+   call/result exchange and an opt-in short real-model evaluation for its natural-language use.
+
+`ConversationToolbox` owns each turn's allowed names, call budget, cached read results, progress, and
+source references. Each attempt permits four calls and 12 KB of returned text; one context recovery
+attempt may reuse cached results in shorter form. Arguments are capped at 2 KB. Model-produced query
+syntax never becomes SQL. Vault search quotes literal keywords, ranks matching terms through FTS,
+and returns at most five records. Screenshot search uses indexed OCR and metadata, not image vision.
+
+These limits are resource boundaries, not a way to determine whether a model's answer is true.
+Evaluate prompt and tool design with real examples; do not add word-specific output filters.
+
+## Add a conversation backend
+
+Implement `ConversationBackend` with native roles, tool definitions, `contextWindowTokens`, and
+`inputTokenCount`, and `streamConversation`. Await the user-facing text sink; keep tool arguments
+and results in native protocol entries rather than the speech stream. Normalize a genuine context overflow to `TextModelError.contextLimit`. Preserve
+call IDs and names across assistant requests and tool results. An unsupported native tool format
+must report a capability error; it must not simulate execution by inventing results.
+
+Apple uses `LanguageModelSession`, `Transcript`, and `Tool`. The downloaded runtime uses the official
+MLX Swift LM message and tool APIs in the isolated helper. `PreparedTextModel.complete` returns text
+and native calls; a measurement request tokenizes without generating. Do not flatten a conversation
+into one JSON user message or ask the model to print a tool invocation as ordinary text.
+
+Apple conversations with tools use greedy sampling: on macOS 26.7.2, both custom stochastic
+sampling and the system default intermittently failed on a first-turn greeting with an internal
+token-generation error. This is an adapter policy, not a shared setting for downloaded models.
+`AppleGenerationFailure` preserves cancellation and context-overflow recovery, unwraps tool
+failures, and translates undocumented engine errors without logging conversation content.
+Chat distinguishes reply generation from voice synthesis so recovery opens the appropriate settings.
+Real-model checks verify successful replies and retrieved record IDs; they do not guarantee that
+Apple avoids unnecessary read-only searches or that every sentence of its prose is accurate.
+
+## Context and continuity
+
+`ChatSession` owns the full visible history and per-conversation `ConversationMemory`.
+`LocalConversationService` shares the interactive inference gate with other reasoning work.
+`ConversationContextManager` measures instructions, history, and tool schemas, then reserves room
+for the reply and tool results. Apple uses its tokenizer on macOS 26.4 or later; earlier systems use
+an estimate. Downloaded models use the installed tokenizer in the helper.
+
+When necessary, `ConversationCompactor` summarizes older complete turns in bounded batches. A short,
+attributed opening statement is retained separately; later corrections take precedence. Recent
+turns retain native roles and tool exchanges. The summarizer is a separate text task: attributed old turns are source data, not an active
+conversation to continue. The summary keeps attributed facts, preferences,
+corrections, decisions, and unresolved questions. Record references come from executed tools and
+remain separate from generated memory. The original history remains visible and is saved in full;
+there is no 100-message stop. Memory is scoped to this active chat, not shared across mascots.
+
+Summaries are lossy. This is continuity, not perfect recall of every sentence. If summarization
+fails, a bounded attributed excerpt preserves some continuity and the full transcript remains
+intact. Cancellation retains an already visible partial reply, marked as interrupted, together with the
+prefix of fully played phrases. A context overflow before text delivery triggers one stronger
+compaction attempt; after delivery it must not replay the reply. Repeated failure stays recoverable, with the user's message and found cards
+available. An individual message still has the composer limit and can exceed a model's token budget
+with unusual tokenization. No model-size policy can guarantee that arbitrary input always fits.
+
+## Check it
+
+```sh
+make check BUILD_DIR=/tmp/sillies-check
+SILLIES_CHAT_MODEL_CHECK=1 bash scripts/test.sh --filter 'appleChat|chatCompacts'
+```
+
+Default tests use injected backends and temporary Vaults. The opt-in checks exercise real Apple
+inference with synthetic records and a bounded long conversation; they do not read the user's Vault
+or download model weights. Test installed downloaded models separately before claiming their
+end-to-end tool quality. See [text providers](text-models.md) for the runtime integration checklist.

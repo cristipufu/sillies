@@ -113,7 +113,7 @@ def qwen(variant):
 def fish():
     required = {"config.json", "tokenizer.json", "tokenizer_config.json", "special_tokens_map.json", "model.safetensors", "codec.safetensors"}
     parts = [component(FISH_REPO, FISH_REVISION, "", "", lambda p: p in required)]
-    return manifest(dict(id="fish-s2-pro-8bit", providerID="fish-speech", runtimeVariant="s2-pro-8bit", name="Fish S2 Pro", detail="Multilingual speech with an automatic voice that can vary between replies. Slower first audio; requires more memory.", revision=FISH_REVISION, license="Fish Audio Research License (non-commercial)", sourceURL="https://huggingface.co/fishaudio/s2-pro", minimumMemoryGB=24, languages=FISH_LANGUAGES, voices=[dict(id="automatic", name="Automatic voice", languages=FISH_LANGUAGES)], streamsAudio=False), parts)
+    return manifest(dict(id="fish-s2-pro-8bit", providerID="fish-speech", runtimeVariant="s2-pro-8bit", name="Fish S2 Pro", detail="Multilingual speech with an automatic voice that can vary between replies. Slower first audio; requires more memory.", revision=FISH_REVISION, license="Fish Audio Research License (non-commercial)", sourceURL="https://huggingface.co/fishaudio/s2-pro", minimumMemoryGB=24, languages=FISH_LANGUAGES, voices=[dict(id="automatic", name="Automatic voice", languages=FISH_LANGUAGES)], streamsAudio=True), parts)
 
 
 if __name__ == "__main__":

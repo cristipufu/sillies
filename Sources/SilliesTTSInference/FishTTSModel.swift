@@ -14,7 +14,8 @@ struct FishTTSModel: NativeTTSModel {
   func synthesize(_ request: SpeechSynthesisRequest, output: @escaping NativeSpeechSink)
     async throws
   {
-    let samples = try await engine.synthesize(request, directory: directory)
-    try output(samples, FishConfiguration.sampleRate)
+    try await engine.stream(request, directory: directory) { samples in
+      try output(samples, FishConfiguration.sampleRate)
+    }
   }
 }

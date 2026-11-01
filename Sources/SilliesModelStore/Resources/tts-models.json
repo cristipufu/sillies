@@ -2001,7 +2001,7 @@
             ]
           }
         ],
-        "streamsAudio": false
+        "streamsAudio": true
       },
       "components": [
         {

@@ -86,3 +86,103 @@ import Testing
     }
   }
 }
+
+extension FishRuntimeTests {
+  @Test func streamingConvolutionMatchesIndependentCausalReferenceAcrossDilatedBoundaries() throws {
+    let input = MLXArray((1...23).map(Float.init)).reshaped(1, 1, 23)
+    let weight = MLXArray([Float(1), 2, 3]).reshaped(1, 1, 3)
+    let weights = FishWeights(tensors: [
+      "test.conv.weight": weight, "test.conv.bias": MLXArray([Float(0.5)]),
+    ])
+    for dilation in [1, 3, 9] {
+      let padding = MLXArray.zeros([1, 1, 2 * dilation])
+      let reference =
+        conv1d(
+          concatenated([padding, input], axis: 2).transposed(0, 2, 1),
+          weight.transposed(0, 2, 1), dilation: dilation) + 0.5
+      let decoder = FishCodecConvolution(weights: weights)
+      var chunks: [MLXArray] = []
+      for range in [0..<1, 1..<4, 4..<7, 7..<23] {
+        chunks.append(
+          try decoder.forward(
+            input[0..., 0..., range], at: "test.conv", geometry: .init(dilation: dilation)))
+      }
+      #expect(concatenated(chunks, axis: 2).asArray(Float.self) == reference.asArray(Float.self))
+      decoder.reset()
+      #expect(
+        try decoder.forward(input, at: "test.conv", geometry: .init(dilation: dilation)).asArray(
+          Float.self) == reference.asArray(Float.self))
+    }
+  }
+
+  @Test func streamingUpsamplingMatchesIndependentTransposedConvolution() throws {
+    let input = MLXArray((1...11).map { Float($0) / 11 }).reshaped(1, 1, 11)
+    for stride in [2, 4, 8] {
+      let weight = MLXArray((1...(stride * 2)).map { Float($0) / 10 }).reshaped(1, 1, stride * 2)
+      let weights = FishWeights(tensors: [
+        "test.conv.weight": weight, "test.conv.bias": MLXArray([Float(0.5)]),
+      ])
+      let full =
+        convTransposed1d(
+          input.transposed(0, 2, 1), weight.transposed(1, 2, 0), stride: stride, outputPadding: 1)
+        + 0.5
+      let expected = full[0..., 0..<(11 * stride), 0...].asArray(Float.self)
+      let decoder = FishCodecConvolution(weights: weights)
+      var chunks: [MLXArray] = []
+      for range in [0..<1, 1..<3, 3..<11] {
+        chunks.append(
+          try decoder.upsample(input[0..., 0..., range], at: "test.conv", stride: stride))
+      }
+      let actual = concatenated(chunks, axis: 2).asArray(Float.self)
+      #expect(actual.count == expected.count)
+      #expect(zip(actual, expected).allSatisfy { abs($0 - $1) < 0.00001 })
+    }
+  }
+
+  @Test func streamingCodecAttentionMatchesWholeSequenceAcrossSlidingWindowBoundary() throws {
+    let weights = FishWeights(tensors: Self.codecAttentionWeights())
+    let input = sin(arange(132 * 1_024).asType(.float32) * 0.003).reshaped(1, 132, 1_024)
+      .transposed(0, 2, 1)
+    let whole = try FishCodecTransformer(weights: weights).apply(input).asArray(Float.self)
+    let streaming = FishCodecTransformer(weights: weights)
+    var chunks: [MLXArray] = []
+    for range in [0..<9, 9..<129, 129..<132] {
+      let chunk = try streaming.apply(input[0..., 0..., range])
+      eval(chunk)
+      chunks.append(chunk)
+    }
+    let actual = concatenated(chunks, axis: 2).asArray(Float.self)
+    #expect(actual.count == whole.count)
+    let error = zip(actual, whole).map { abs($0 - $1) }.max() ?? .infinity
+    #expect(error < 0.0001, "Maximum codec streaming error: \(error)")
+    streaming.reset()
+    let restarted = try streaming.apply(input).asArray(Float.self)
+    #expect(zip(restarted, whole).allSatisfy { abs($0 - $1) < 0.0001 })
+  }
+
+  private static func codecAttentionWeights() -> [String: MLXArray] {
+    let width = 1_024
+    let identity = eye(width)
+    let projection = concatenated([identity * 0.2, identity * 0.3, identity * 0.4], axis: 0)
+    let ones = MLXArray.ones([width])
+    let zeros = MLXArray.zeros([width])
+    var tensors: [String: MLXArray] = [
+      "quantizer.post_module.norm.weight": ones, "quantizer.post_module.norm.bias": zeros,
+    ]
+    for index in 0..<8 {
+      let path = "quantizer.post_module.layers.\(index)"
+      for norm in ["attention_norm", "ffn_norm"] {
+        tensors[path + ".\(norm).weight"] = ones
+        tensors[path + ".\(norm).bias"] = zeros
+      }
+      tensors[path + ".attention.wqkv.weight"] = projection
+      tensors[path + ".attention.wo.weight"] = identity
+      tensors[path + ".attention_layer_scale.gamma"] = ones * 0.1
+      tensors[path + ".ffn_layer_scale.gamma"] = ones * 0.1
+      tensors[path + ".feed_forward.w1.weight"] = MLXArray.zeros([4, width])
+      tensors[path + ".feed_forward.w3.weight"] = MLXArray.zeros([4, width])
+      tensors[path + ".feed_forward.w2.weight"] = MLXArray.zeros([width, 4])
+    }
+    return tensors
+  }
+}

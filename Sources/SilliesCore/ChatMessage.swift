@@ -4,32 +4,42 @@ public struct ChatMessage: Codable, Equatable, Identifiable, Sendable {
   public enum Role: String, Codable, Sendable { case user, companion }
   public let id: UUID
   public let role: Role
-  public let text: String
+  public private(set) var text: String
+  public let sources: [ChatSource]
+  public let exchanges: [ConversationToolExchange]
+  public enum Completion: String, Codable, Sendable { case streaming, complete, interrupted }
+  private struct Delivery: Codable, Equatable, Sendable {
+    let completion: Completion
+    let spokenText: String?
+  }
+  private var delivery: Delivery?
+  public var completion: Completion? { delivery?.completion }
+  public var spokenText: String? { delivery?.spokenText }
 
-  public init(id: UUID = UUID(), role: Role, text: String) {
+  public init(id: UUID = UUID(), role: Role, text: String, evidence: Evidence = .init()) {
     self.id = id
     self.role = role
     self.text = text
+    sources = evidence.sources
+    exchanges = evidence.exchanges
+
   }
-}
-
-public struct ChatContext: Sendable {
-  public static let maximumCharacters = 6_000
-  public static let maximumMessageCharacters = 2_000
-  public let companionName: String
-  public let profile: CharacterChatProfile
-  public let messages: [ChatMessage]
-
-  public init(companionName: String, profile: CharacterChatProfile, messages: [ChatMessage]) {
-    self.companionName = companionName
-    self.profile = profile
-    var remaining = Self.maximumCharacters
-    var selected: [ChatMessage] = []
-    for message in messages.reversed() {
-      guard message.text.count <= remaining else { break }
-      remaining -= message.text.count
-      selected.append(message)
+  public func withDelivery(_ completion: Completion, spokenText: String?) -> Self {
+    var copy = self
+    copy.delivery = Delivery(completion: completion, spokenText: spokenText)
+    return copy
+  }
+  public func withText(_ text: String) -> Self {
+    var copy = self
+    copy.text = text
+    return copy
+  }
+  public struct Evidence: Sendable {
+    public let sources: [ChatSource]
+    public let exchanges: [ConversationToolExchange]
+    public init(sources: [ChatSource] = [], exchanges: [ConversationToolExchange] = []) {
+      self.sources = sources
+      self.exchanges = exchanges
     }
-    self.messages = selected.reversed()
   }
 }

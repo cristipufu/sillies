@@ -24,7 +24,9 @@ private struct MissingChatModel: ConversationResponding {
   func availabilityNotice(localeIdentifier: String?) async -> String? {
     "Choose Apple Intelligence or download a text model in Local AI to start chatting."
   }
-  func reply(to context: ChatContext) async throws -> String {
+  func reply(to context: ChatContext, progress: @escaping @Sendable (ChatProgress) -> Void)
+    async throws -> ChatReply
+  {
     throw SessionFailure(category: .unknown, message: "A text model is needed for replies.")
   }
 }
@@ -37,6 +39,8 @@ private struct MissingChatModel: ConversationResponding {
   }
   #expect(session.failure != nil)
   #expect(session.messages.count == 1)
+  #expect(session.recoverySettingsDestination == .textModels)
+  #expect(session.canRetry)
   session.draft = "My next thought is still editable."
   try renderSkillInterface(
     ChatSessionView(model: session, openSettings: { _ in }), size: ChatWindowLayout.minimumSize,
@@ -45,9 +49,12 @@ private struct MissingChatModel: ConversationResponding {
 }
 
 private struct FailedChatReply: ConversationResponding {
-  func reply(to context: ChatContext) async throws -> String {
+  func reply(to context: ChatContext, progress: @escaping @Sendable (ChatProgress) -> Void)
+    async throws -> ChatReply
+  {
     throw SessionFailure(
-      category: .unknown, message: String(repeating: "A long runtime diagnostic. ", count: 100))
+      category: .textGeneration,
+      message: String(repeating: "A long runtime diagnostic. ", count: 100))
   }
 }
 
@@ -143,4 +150,164 @@ private struct FailedChatReply: ConversationResponding {
   }
   #expect(!window.isVisible)
   #expect(session.phase != .finished)
+}
+
+private struct VaultCardReply: ConversationResponding {
+  let sources: [ChatSource]
+  func reply(to context: ChatContext, progress: @escaping @Sendable (ChatProgress) -> Void)
+    async throws -> ChatReply
+  {
+    .init(text: "Here are the saved items I found.", sources: sources)
+  }
+}
+
+@Test @MainActor func chatVaultResultsFitTheSharedChatWindow() async throws {
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { removeTestFile(at: directory) }
+  let store = SessionVaultStore(directory: directory)
+  let sources = (0..<3).map { index in
+    ChatSource(
+      header: .init(
+        SessionRecord(
+          kind: index == 0 ? .snap : .stash,
+          origin: .init(
+            characterID: "pogo", characterName: "Pogo",
+            source: .init(appName: index == 0 ? "Ghostty terminal" : "Aurora project")))),
+      excerpt: "A saved project item with searchable text and a link to its original record.",
+      links: index == 0 ? [] : [URL(string: "https://example.com/project-aurora")!])
+  }
+  let session = ChatWindowFixture.makeSession(conversation: VaultCardReply(sources: sources))
+  for _ in 0..<100 {
+    if session.phase == .ready { break }
+    try await Task.sleep(for: .milliseconds(5))
+  }
+  #expect(session.messages.last?.sources == sources)
+  let presentation = ChatVaultPresentation(store: store, openRecord: { _ in })
+  for scheme in [ColorScheme.light, .dark] {
+    try renderSkillInterface(
+      ChatSessionView(model: session, openSettings: { _ in }, motion: .reduced, vault: presentation)
+        .environment(\.colorScheme, scheme),
+      size: ChatWindowLayout.minimumSize, name: "sillies-chat-vault-\(scheme)")
+  }
+  session.finish {}
+}
+
+@Test @MainActor func chatSaveDeliversTheFullTranscriptDuringModalTermination() async throws {
+  let session = ChatWindowFixture.makeSession()
+  for _ in 0..<100 {
+    if session.phase == .ready { break }
+    try await Task.sleep(for: .milliseconds(5))
+  }
+  let expected = session.transcript
+  let skill = ChatSkillSession(presentation: session)
+  var saved: SkillCompletionOutcome?
+  skill.finish(
+    .init(now: 10, startedAt: 0, companionID: "mochi", companionName: "Mochi", target: nil)
+  ) {
+    saved = $0
+  }
+  pumpChatTermination { saved != nil }
+  #expect(try #require(saved).record.transcript == expected)
+}
+
+@MainActor private func pumpChatTermination(_ finished: () -> Bool) {
+  let deadline = ContinuousClock.now.advanced(by: .seconds(3))
+  while !finished(), ContinuousClock.now < deadline {
+    CFRunLoopRunInMode(CFRunLoopMode(RunLoop.Mode.modalPanel.rawValue as CFString), 0.01, true)
+  }
+}
+
+@Test @MainActor func streamedMessageUpdatesPreserveSelectionAcrossUnicodeBoundaries() {
+  let view = NSTextView()
+  let coordinator = ChatMessageText.Coordinator { _ in }
+  view.string = "Read this 👋 carefully"
+  view.setSelectedRange(NSRange(location: 0, length: 9))
+  for text in [
+    "Read this 👋 carefully. More text", "Read this 👋🏽 carefully. More text",
+    "Read this 🙂 carefully.", "Read",
+  ] {
+    coordinator.replaceText(in: view, with: text)
+    #expect(view.string == text)
+    #expect(view.selectedRange() == NSRange(location: 0, length: min(9, (text as NSString).length)))
+  }
+}
+
+private actor StreamingInterfaceReply: ConversationResponding {
+  var continuation: CheckedContinuation<Void, Never>?
+  func reply(to context: ChatContext, progress: @escaping @Sendable (ChatProgress) -> Void)
+    async throws -> ChatReply
+  {
+    try await streamReply(to: context, progress: progress, receive: { _ in })
+  }
+  func streamReply(
+    to context: ChatContext, progress: @escaping @Sendable (ChatProgress) -> Void,
+    receive: @escaping ConversationTextSink
+  ) async throws -> ChatReply {
+    try await receive("Read this first. ")
+    await withCheckedContinuation { continuation = $0 }
+    try await receive("Then the new words arrive. ")
+    await withCheckedContinuation { continuation = $0 }
+    return .init(text: "Read this first. Then the new words arrive.")
+  }
+  func advance() {
+    continuation?.resume()
+    continuation = nil
+  }
+}
+
+@Test @MainActor func chatStreamingBubbleUpdatesWithoutReplacingHistoryOrLosingSelection()
+  async throws
+{
+  let reply = StreamingInterfaceReply()
+  let session = ChatWindowFixture.makeSession(conversation: reply)
+  let controller = ChatSessionWindowController(appearance: ThemeEnvironment())
+  controller.show(session, openSettings: { _ in }, renderer: "cat")
+  let content = try #require(controller.window?.contentView)
+  defer {
+    controller.close()
+    session.finish {}
+  }
+  func messageView(in view: NSView) -> NSTextView? {
+    if let text = view as? NSTextView, text.string.hasPrefix("Read this") { return text }
+    return view.subviews.lazy.compactMap { messageView(in: $0) }.first
+  }
+  for _ in 0..<100 {
+    try DisplayFrameSequence.presentCreatedWindows()
+    if messageView(in: content) != nil, await reply.continuation != nil { break }
+    try await Task.sleep(for: .milliseconds(5))
+  }
+  let first = try #require(messageView(in: content))
+  first.setSelectedRange(NSRange(location: 0, length: 9))
+  let placeholder = try #require(session.messages.last)
+  await reply.advance()
+  for _ in 0..<100 {
+    try DisplayFrameSequence.presentCreatedWindows()
+    if first.string.contains("new words"), await reply.continuation != nil { break }
+    try await Task.sleep(for: .milliseconds(5))
+  }
+  #expect(session.messages.last == placeholder)
+  #expect(first.string == "Read this first. Then the new words arrive. ")
+  #expect(first.selectedRange() == NSRange(location: 0, length: 9))
+  await reply.advance()
+  for _ in 0..<100 {
+    if session.phase == .ready { break }
+    try await Task.sleep(for: .milliseconds(5))
+  }
+  #expect(session.phase == .ready)
+}
+
+@Test @MainActor func latestActionClearsSelectionOnceThenAllowsNewSelections() {
+  let view = NSTextView()
+  let coordinator = ChatMessageText.Coordinator { _ in }
+  view.string = "Earlier words and new words."
+  view.setSelectedRange(NSRange(location: 0, length: 7))
+  coordinator.resetSelection(in: view, revision: nil)
+  #expect(view.selectedRange().length == 7)
+  let latestAction = UUID()
+  coordinator.resetSelection(in: view, revision: latestAction)
+  #expect(view.selectedRange().length == 0)
+  view.setSelectedRange(NSRange(location: 0, length: 7))
+  coordinator.replaceText(in: view, with: "Earlier words and new words. Another batch.")
+  coordinator.resetSelection(in: view, revision: latestAction)
+  #expect(view.selectedRange().length == 7)
 }

@@ -1,5 +1,14 @@
 import Foundation
+import SilliesCore
 import SilliesInference
+
+package enum TextInferenceEvent: Codable, Sendable {
+  case delta(String)
+  case finished(TextInferenceResponse)
+}
+package struct TextInferenceAcknowledgement: Codable, Sendable {
+  package init() {}
+}
 
 package struct TextInferenceRequest: Codable, Sendable {
   package let configuration: TextModelPreparation
@@ -11,11 +20,25 @@ package struct TextInferenceRequest: Codable, Sendable {
 }
 
 package struct TextInferenceResponse: Codable, Sendable {
+  package enum FailureCode: String, Codable, Sendable { case contextLimit }
+  package let failureCode: FailureCode?
+  package let inputTokens: Int?
   package let text: String?
   package let failure: String?
-  package init(text: String? = nil, failure: String? = nil) {
-    self.text = text
+  package let calls: [ConversationToolCall]?
+  package init(output: TextGenerationOutput) {
+    inputTokens = output.inputTokens
+    failureCode = nil
+    text = output.text
+    failure = nil
+    calls = output.calls
+  }
+  package init(failure: String, code: FailureCode? = nil) {
+    inputTokens = nil
+    failureCode = code
+    text = nil
     self.failure = failure
+    calls = nil
   }
 }
 

@@ -51,7 +51,7 @@ Right-click menus and configurable global shortcuts offer the same actions.
 | Skill | What happens |
 | --- | --- |
 | **Listen** | Record app audio and your microphone, follow a live transcript, and save the conversation with notes and action items. |
-| **Chat** | Type or have a voice conversation with a companion. Automatic turns, echo cancellation, and optional local spoken replies with speaking animation. |
+| **Chat** | Type or have a voice conversation with a companion. Automatic voice turns, optional local spoken replies, and search across your saved screenshots, links, and meetings. |
 | **Participate** | Everything in Listen, with suggested questions in your companion’s speech bubble, grounded in the conversation. |
 | **Snap** | Capture a window to the clipboard and Vault. Background text recognition makes the screenshot searchable. |
 | **Explain** | Read the text in a window screenshot and explain it with your chosen local text model. |
@@ -188,6 +188,7 @@ Start with [Contributing to Sillies](CONTRIBUTING.md) for setup, bug reports, ch
 | **An interaction** | [Reactions, animations, and scenes between companions](docs/contributing/interactions.md) |
 | **A skill** | [Session lifecycle, commands, UI, and saved results](docs/contributing/skills.md) |
 | **A speech model or STT engine** | [Model manifests and speech-provider adapters](docs/contributing/speech-models.md) |
+| **A Chat tool** | [Local capabilities, Vault sources, and conversation memory](docs/contributing/chat-tools.md) |
 | **A text / LLM model** | [Model manifests and text-provider adapters](docs/contributing/text-models.md) |
 | **A voice / TTS model** | [Voice providers, native runtimes, and playback](docs/contributing/voice-models.md) |
 | **A language** | [JSON translations, plural forms, and native macOS localization](docs/contributing/localization.md) |

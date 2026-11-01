@@ -2,7 +2,6 @@ import Foundation
 import SilliesCore
 
 extension VaultDatabase {
-  private static let maximumSearchTokens = 32
   public func page(_ request: VaultPageRequest) throws -> VaultPage {
     var filter = queryFilter(request.search)
     let total = try sql.integer("SELECT count(*) FROM records r \(filter.sql)", filter.values)
@@ -144,14 +143,11 @@ extension VaultDatabase {
       values.append(.text(kind.rawValue))
     }
     if !request.query.isEmpty {
-      let tokens = request.query.split { !$0.isLetter && !$0.isNumber && $0 != "_" }.prefix(
-        Self.maximumSearchTokens)
-      if tokens.isEmpty {
-        conditions.append("0")
-      } else {
-        let expression = tokens.map { "\"\($0)\"*" }.joined(separator: " AND ")
+      if let expression = VaultSearchTerms.expression(request.query) {
         conditions.append("r.id IN (SELECT id FROM documents WHERE documents MATCH ?)")
         values.append(.text(expression))
+      } else {
+        conditions.append("0")
       }
     }
     return (conditions.isEmpty ? "" : "WHERE " + conditions.joined(separator: " AND "), values)

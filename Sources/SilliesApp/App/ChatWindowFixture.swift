@@ -32,8 +32,10 @@ import SilliesTTS
   }
 
   private struct Reply: ConversationResponding {
-    func reply(to context: ChatContext) async throws -> String {
-      "Of course. I’ll keep this corner warm. What are you working on?"
+    func reply(to context: ChatContext, progress: @escaping @Sendable (ChatProgress) -> Void)
+      async throws -> ChatReply
+    {
+      .init(text: "Of course. I’ll keep this corner warm. What are you working on?")
     }
   }
 

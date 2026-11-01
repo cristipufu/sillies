@@ -8,6 +8,7 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
   private let models: VoiceModelEnvironment
   private let playback: any SpeechPlayback
   private var active: (id: UUID, task: Task<String?, Error>)?
+  private var interruptedPlaybackID: UUID?
 
   init(models: VoiceModelEnvironment, playback: any SpeechPlayback) {
     self.models = models
@@ -42,10 +43,32 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
     _ request: ChatSpeechRequest,
     receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void
   ) async throws -> String? {
+    let text = SpeechTextStream()
+    for phrase in SpokenTextChunks.split(
+      request.text, maximumCharacters: SpeechSynthesisRequest.maximumTextCharacters)
+    {
+      try await text.append(phrase)
+    }
+    await text.finish()
+    return try await speakStream(request, text: text, receive: receive)
+  }
+
+  func speakStream(
+    _ request: ChatSpeechRequest, text: SpeechTextStream,
+    receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void
+  ) async throws -> String? {
+    if let previous = active, previous.task.isCancelled {
+      _ = await previous.task.result
+      if active?.id == previous.id { active = nil }
+    }
+    try Task.checkCancellation()
     guard active == nil else { throw TTSError.busy }
-    let task = Task { try await self.perform(request, receive: receive) }
+    let task = Task { try await self.perform(request, text: text, receive: receive) }
     active = (request.id, task)
-    defer { active = nil }
+    defer {
+      if active?.id == request.id { active = nil }
+      if interruptedPlaybackID == request.id { interruptedPlaybackID = nil }
+    }
     return try await withTaskCancellationHandler {
       try await task.value
     } onCancel: {
@@ -61,7 +84,8 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
   }
 
   private func perform(
-    _ request: ChatSpeechRequest, receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void
+    _ request: ChatSpeechRequest, text: SpeechTextStream,
+    receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void
   ) async throws -> String? {
     guard let manifest = try await models.selectedModel() else {
       return String(
@@ -82,21 +106,33 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
       throw TTSError.unsupportedVoice
     }
     try Task.checkCancellation()
-    await playback.start(id: request.id, receive: receive)
+    await playback.start(id: request.id) { [weak self] update in
+      receive(update)
+      if case .interrupted = update {
+        Task { await self?.playbackInterrupted(id: request.id) }
+      }
+    }
     do {
-      for chunk in SpokenTextChunks.split(
-        request.text, maximumCharacters: SpeechSynthesisRequest.maximumTextCharacters)
-      {
+      while let chunk = try await text.next() {
         try Task.checkCancellation()
         try await models.synthesize(
-          .init(text: chunk, voiceID: voice.id, language: language), using: manifest
+          .init(text: chunk, voiceID: voice.id, language: language, conversationID: request.id),
+          using: manifest
         ) { [playback] audio in try await playback.enqueue(audio, id: request.id) }
+        try await playback.markUtterance(chunk, id: request.id)
       }
       try await playback.finish(id: request.id)
       return nil
     } catch {
       await playback.stop(id: request.id)
+      if interruptedPlaybackID == request.id { throw TTSError.interrupted }
       throw error
     }
+  }
+
+  private func playbackInterrupted(id: UUID) {
+    guard active?.id == id else { return }
+    interruptedPlaybackID = id
+    active?.task.cancel()
   }
 }

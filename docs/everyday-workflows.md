@@ -48,7 +48,7 @@ Custom commands, Vault question answering, and calendar assistance remain later 
 
 ## Fast acceptance checks
 
-`make check` covers domain, lifecycle, persistence, architecture, and native interaction budgets. Tests exercise late cleanup, changed focus/clipboard, single insertion, early release, cancellation, OCR suspension, retention, corrupt-history recovery, and full-text retrieval beyond the old preview limit. UI snapshot tests include compact, non-activating dictation recovery.
+`make check` covers domain, lifecycle, persistence, architecture, and offscreen interface layout. Native interaction budgets, activation, and stacking remain in the explicitly requested `make gui-check` suite. Tests exercise late cleanup, changed focus/clipboard, single insertion, early release, cancellation, OCR suspension, retention, corrupt-history recovery, and full-text retrieval beyond the old preview limit. UI snapshot tests run offscreen; dictation panel focus and recovery presentation are covered by the visible suite.
 
 The opt-in `SpeechBenchmark dictate MODEL_ID STORE AUDIO_FILE...` feeds short prerecorded fixtures through the actual interactive provider with dictionary hints. It reports release-to-final-text separately from total duration and probes main-actor scheduling delay. Run English, Romanian, mixed-language, silence, and noisy-speech fixtures under `scripts/run-bounded-test.py`; model preparation may need a larger cold-start allowance. No multi-hour soak is required. End-to-end insertion additionally requires checking the intended destination apps; a speech benchmark cannot establish compatibility with every editor or browser.
 

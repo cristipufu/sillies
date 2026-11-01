@@ -9,7 +9,6 @@ import Testing
     contentRect: editor.frame, styleMask: [.titled], backing: .buffered, defer: false)
   window.isReleasedWhenClosed = false
   window.contentView = editor
-  window.makeKeyAndOrderFront(nil)
   defer { window.close() }
   #expect(window.makeFirstResponder(editor))
   var sends = 0

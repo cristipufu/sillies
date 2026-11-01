@@ -14,10 +14,12 @@ private actor ReplyProbe: ConversationResponding {
   let mode: Mode
   enum Mode { case immediate, delayed }
   init(_ mode: Mode = .immediate) { self.mode = mode }
-  func reply(to context: ChatContext) async throws -> String {
+  func reply(to context: ChatContext, progress: @escaping @Sendable (ChatProgress) -> Void)
+    async throws -> ChatReply
+  {
     contexts.append(context)
-    if mode == .delayed { return await withCheckedContinuation { delayed = $0 } }
-    return "Mâine, Ștefan trimite API_v2 la 14:30."
+    if mode == .delayed { return await .init(text: withCheckedContinuation { delayed = $0 }) }
+    return .init(text: "Mâine, Ștefan trimite API_v2 la 14:30.")
   }
   func resolve() {
     delayed?.resume(returning: "Late reply")
@@ -180,8 +182,57 @@ private func chatFinishPreservesFinalWordsBeforeSaving(_ timing: FinishTiming) a
   #expect(chat.messages.count == 2)
   #expect(chat.messages.last?.text == "Mâine, Ștefan trimite API_v2 la 14:30.")
   #expect(chat.failure != nil)
+  #expect(chat.failure?.category == .speechSynthesis)
+  #expect(chat.recoverySettingsDestination == .voices)
   #expect(await reply.contexts.first?.profile.languageIdentifier == "ro")
   #expect(await voice.requests.first?.text == chat.messages.last?.text)
+  chat.finish {}
+}
+
+private actor RecoveringReplyProbe: ConversationResponding {
+  var contexts: [ChatContext] = []
+  func reply(to context: ChatContext, progress: @escaping @Sendable (ChatProgress) -> Void)
+    async throws -> ChatReply
+  {
+    contexts.append(context)
+    if contexts.count == 1 {
+      throw NSError(domain: "FoundationModels.LanguageModelSession.GenerationError", code: -1)
+    }
+    return .init(text: "I'm Bolt, your window companion.")
+  }
+}
+
+@Test @MainActor func firstSpokenTurnSurvivesGenerationFailureAndCanBeRetried() async throws {
+  let reply = RecoveringReplyProbe()
+  let voice = VoiceProbe()
+  let capture = Mutex<CaptureProbe?>(nil)
+  let chat = session(
+    reply: reply, voice: voice,
+    capture: { _, update in
+      let probe = CaptureProbe(update: update)
+      probe.words.withLock { $0 = "Hey man, what's uh what's your name?" }
+      capture.withLock { $0 = probe }
+      return probe
+    })
+  chat.startListening()
+  try await waitFor { chat.phase == .listening }
+  let microphone = try #require(capture.withLock { $0 })
+  microphone.update(.speechEnded)
+  try await waitFor { chat.phase == .ready && chat.failure != nil }
+  #expect(chat.messages.count == 1)
+  #expect(chat.messages.first?.text == "Hey man, what's uh what's your name?")
+  #expect(chat.failure?.category == .textGeneration)
+  #expect(chat.recoverySettingsDestination == .textModels)
+  #expect(chat.canRetry)
+  #expect(!chat.isVoiceConversationActive)
+  #expect(microphone.stopped.withLock { $0 } == 1)
+  #expect(await voice.requests.isEmpty)
+  chat.retry()
+  try await waitFor { chat.phase == .ready && chat.messages.count == 2 }
+  #expect(chat.failure == nil)
+  #expect(await reply.contexts.count == 2)
+  #expect(await reply.contexts.allSatisfy { $0.messages.count == 1 })
+  #expect(await voice.requests.count == 1)
   chat.finish {}
 }
 
@@ -236,13 +287,13 @@ private func chatFinishPreservesFinalWordsBeforeSaving(_ timing: FinishTiming) a
   chat.finish {}
 }
 
-@Test func chatContextAndSpokenChunksStayBoundedWithoutLosingWords() {
+@Test func chatRetainsFullHistoryAndSpokenChunksStayBounded() {
   let messages = (0..<100).map { _ in
     ChatMessage(role: .user, text: String(repeating: "a", count: 1_000))
   }
   let context = ChatContext(
     companionName: "Mochi", profile: .init(personality: "Playful"), messages: messages)
-  #expect(context.messages.count == 6)
+  #expect(context.messages == messages)
   let text = String(repeating: "Mâine Ștefan folosește API_v2. ", count: 100)
   let chunks = SpokenTextChunks.split(text, maximumCharacters: 100)
   #expect(chunks.allSatisfy { $0.count <= 100 })
@@ -293,4 +344,181 @@ private actor ConversationalVoiceProbe: ChatSpeechOutput {
   #expect(captures.withLock { $0.count } == 1)
   #expect(chat.messages[2].text == "Wait, I meant something else.")
   chat.finish {}
+}
+
+private actor MemoryReplyProbe: ConversationResponding {
+  var contexts: [ChatContext] = []
+  func reply(to context: ChatContext, progress: @escaping @Sendable (ChatProgress) -> Void)
+    -> ChatReply
+  {
+    contexts.append(context)
+    let memory = ConversationMemory(
+      summary: "The user's name is Ada.", throughMessageID: context.messages.dropLast().last?.id)
+    progress(.compacting)
+    progress(.memory(memory))
+    return .init(text: "Hello Ada.", memory: memory)
+  }
+}
+
+@Test @MainActor func chatContinuesPastOneHundredMessagesAndCarriesMemoryBetweenTurns() async throws
+{
+  let reply = MemoryReplyProbe()
+  let chat = session(reply: reply, voice: VoiceProbe())
+  chat.spokenReplies = false
+  for index in 0..<60 {
+    chat.draft = "Question \(index)"
+    #expect(chat.canSend)
+    chat.send()
+    try await waitFor { chat.phase == .ready }
+  }
+  #expect(chat.messages.count == 120)
+  #expect(chat.transcript.contains("Question 0"))
+  #expect(chat.transcript.contains("Question 59"))
+  let context = try #require(await reply.contexts.last)
+  #expect(context.memory.summary.contains("Ada"))
+  #expect(context.messages.count == 119)
+  chat.finish {}
+}
+
+private actor SourceFailureProbe: ConversationResponding {
+  let source: ChatSource
+  init(source: ChatSource) { self.source = source }
+  func reply(to context: ChatContext, progress: @escaping @Sendable (ChatProgress) -> Void) throws
+    -> ChatReply
+  {
+    progress(.sources([source]))
+    throw SessionFailure(category: .unknown, message: "Generation failed after search")
+  }
+}
+
+@Test @MainActor func chatKeepsFoundVaultCardsWhenTheFinalAnswerFails() async throws {
+  let source = ChatSource(
+    header: .init(
+      SessionRecord(
+        kind: .stash,
+        origin: .init(characterID: "pogo", characterName: "Pogo", source: .init(appName: "Safari")))
+    ), excerpt: "Saved URL")
+  let chat = session(reply: SourceFailureProbe(source: source), voice: VoiceProbe())
+  chat.spokenReplies = false
+  chat.draft = "Find my saved links"
+  chat.send()
+  try await waitFor { chat.failure != nil }
+  #expect(chat.canRetry)
+  #expect(chat.discoveredSources.map(\.id) == [source.id])
+  chat.finish {}
+}
+
+private actor StreamingReplyProbe: ConversationResponding {
+  enum Ending { case complete, fail, rewrite }
+  let ending: Ending
+  var waiting: CheckedContinuation<Void, Never>?
+  var completed = false
+  init(_ ending: Ending = .complete) { self.ending = ending }
+  func reply(to context: ChatContext, progress: @escaping @Sendable (ChatProgress) -> Void)
+    async throws -> ChatReply
+  {
+    try await streamReply(to: context, progress: progress, receive: { _ in })
+  }
+  func streamReply(
+    to context: ChatContext, progress: @escaping @Sendable (ChatProgress) -> Void,
+    receive: @escaping ConversationTextSink
+  ) async throws -> ChatReply {
+    try await receive("Hello there. ")
+    await withCheckedContinuation { waiting = $0 }
+    try Task.checkCancellation()
+    if ending == .fail {
+      throw SessionFailure(category: .textGeneration, message: "Worker exited mid-reply")
+    }
+    try await receive("The rest arrives later.")
+    completed = true
+    return .init(
+      text: ending == .rewrite
+        ? "A different final answer." : "Hello there. The rest arrives later.")
+  }
+  func resume() {
+    waiting?.resume()
+    waiting = nil
+  }
+}
+
+@Test @MainActor func chatShowsAndSpeaksTheFirstPhraseBeforeTextGenerationFinishes() async throws {
+  let reply = StreamingReplyProbe()
+  let voice = VoiceProbe()
+  let chat = session(reply: reply, voice: voice)
+  chat.draft = "Hello"
+  chat.send()
+  try await waitFor { await voice.requests.count == 1 }
+  #expect(await !reply.completed)
+  #expect(chat.messages.count == 2)
+  #expect(chat.presentedMessage(try #require(chat.messages.last)).text == "Hello there. ")
+  #expect(chat.messages.last?.completion == .streaming)
+  #expect(chat.transcript.contains("Hello there."))
+  #expect(chat.firstTextLatency != nil)
+  #expect(chat.firstAudioLatency != nil)
+  await reply.resume()
+  try await waitFor { chat.phase == .ready }
+  #expect(chat.messages.last?.text == "Hello there. The rest arrives later.")
+  #expect(chat.messages.last?.completion == .complete)
+  #expect(await voice.requests.map(\.text) == ["Hello there.", "The rest arrives later."])
+  #expect(chat.messages.last?.spokenText == "Hello there. The rest arrives later.")
+  chat.finish {}
+}
+
+@Test @MainActor func streamedVoiceFailureDoesNotDiscardOrStopTheTextBranch() async throws {
+  let reply = StreamingReplyProbe()
+  let voice = VoiceProbe(fails: true)
+  let chat = session(reply: reply, voice: voice)
+  chat.draft = "Hello"
+  chat.send()
+  try await waitFor { await voice.requests.count == 1 }
+  await reply.resume()
+  try await waitFor { chat.phase == .ready }
+  #expect(chat.messages.last?.text == "Hello there. The rest arrives later.")
+  #expect(chat.failure?.category == .speechSynthesis)
+  #expect(await voice.requests.count == 1)
+  #expect(chat.messages.last?.spokenText == "")
+  chat.finish {}
+}
+
+@Test @MainActor func interruptingAStreamPreservesItsPartialReplyAndRejectsLateText() async throws {
+  let reply = StreamingReplyProbe()
+  let voice = VoiceProbe()
+  let chat = session(reply: reply, voice: voice)
+  chat.draft = "Hello"
+  chat.send()
+  try await waitFor { await voice.requests.count == 1 }
+  chat.interrupt()
+  #expect(chat.phase == .ready)
+  #expect(chat.messages.last?.completion == .interrupted)
+  #expect(chat.messages.last?.text == "Hello there. ")
+  #expect(chat.canRetry)
+  await reply.resume()
+  try await Task.sleep(for: .milliseconds(20))
+  #expect(chat.messages.count == 2)
+  #expect(chat.messages.last?.text == "Hello there. ")
+  #expect(await voice.requests.count == 1)
+  chat.finish {}
+}
+
+@Test @MainActor func modelFailureAfterPartialOutputIsRecoverableWithoutAutomaticReplay()
+  async throws
+{
+  for ending in [StreamingReplyProbe.Ending.fail, .rewrite] {
+    let reply = StreamingReplyProbe(ending)
+    let voice = VoiceProbe()
+    let chat = session(reply: reply, voice: voice)
+    chat.spokenReplies = false
+    chat.draft = "Hello"
+    chat.send()
+    try await waitFor { await reply.waiting != nil }
+    await reply.resume()
+    try await waitFor { chat.failure != nil }
+    #expect(chat.messages.count == 2)
+    #expect(chat.messages.last?.completion == .interrupted)
+    #expect(chat.messages.last?.text.hasPrefix("Hello there.") == true)
+    #expect(chat.failure?.category == .textGeneration)
+    #expect(chat.canRetry)
+    #expect(await voice.requests.isEmpty)
+    chat.finish {}
+  }
 }

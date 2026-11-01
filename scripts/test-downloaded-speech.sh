@@ -1,10 +1,10 @@
 #!/bin/bash
-# Opt-in real ASR + native interaction check. Uses generated audio, never a device.
+# Opt-in real ASR check. Native interaction additionally requires --gui.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/toolchain.sh
-if [[ $# != 2 ]]; then
-  echo "Usage: $0 MODEL_ID MODEL_STORE_DIRECTORY" >&2
+if [[ $# -lt 2 || $# -gt 3 || ( $# == 3 && "${3:-}" != "--gui" ) ]]; then
+  echo "Usage: $0 MODEL_ID MODEL_STORE_DIRECTORY [--gui]" >&2
   exit 2
 fi
 export SILLIES_STT_MODEL="$1" SILLIES_STT_STORE="$2"
@@ -18,5 +18,10 @@ say -v Samantha -r 155 -o "$SILLIES_SPEECH_FIXTURE" \
 # Cold Core ML specialization is separate from the short execution budget.
 SILLIES_STT_PREPARE_ONLY=1 python3 -B scripts/run-checked-tests.py --timeout 300 --bin-path "$(swift build --show-bin-path)" \
   --filter prepareDownloadedSpeechModelForIntegration
-SILLIES_DOWNLOADED_STT_CHECK=1 python3 -B scripts/run-checked-tests.py --timeout 90 --bin-path "$(swift build --show-bin-path)" \
-  --filter downloadedSpeechModelsKeepAllInteractionPathsWithinBudget
+if [[ "${3:-}" == "--gui" ]]; then
+  SILLIES_DOWNLOADED_STT_CHECK=1 python3 -B scripts/run-checked-tests.py --timeout 90 --bin-path "$(swift build --show-bin-path)" \
+    --presentation gui --filter downloadedSpeechModelsKeepAllInteractionPathsWithinBudget
+else
+  SILLIES_LOCAL_AI_CHECK=1 python3 -B scripts/run-checked-tests.py --timeout 90 --bin-path "$(swift build --show-bin-path)" \
+    --filter localSpeechHandlesFrequentCallbacksWithoutLosingAudio
+fi

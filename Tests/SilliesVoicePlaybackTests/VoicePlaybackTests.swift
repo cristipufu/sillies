@@ -5,6 +5,10 @@ import Synchronization
 import Testing
 
 private final class OutputProbe: VoiceOutputDevice, Sendable {
+  let interruption = Mutex<(@Sendable () -> Void)?>(nil)
+  func onInterruption(_ receive: @escaping @Sendable () -> Void) {
+    interruption.withLock { $0 = receive }
+  }
   let completions = Mutex<[@Sendable () -> Void]>([])
   let stopCount = Mutex(0)
   func schedule(_ audio: SynthesizedAudio, completed: @escaping @Sendable () -> Void) throws {
@@ -93,4 +97,74 @@ func playbackRenderReferenceUsesTheDeviceClockAndStopsWithOutput() async throws 
   let framesAfterStop = probe.withLock { $0.frames }
   try await Task.sleep(for: .milliseconds(50))
   #expect(probe.withLock { $0.frames } == framesAfterStop)
+}
+
+@Test func spokenPhraseCompletionWaitsForHardwareAndIgnoresDuplicateCallbacks() async throws {
+  let device = OutputProbe()
+  let playback = VoicePlayback(makeDevice: { device })
+  let id = UUID()
+  let phrases = Mutex<[String]>([])
+  await playback.start(id: id) { update in
+    if case .utteranceFinished(let phrase) = update { phrases.withLock { $0.append(phrase) } }
+  }
+  let audio = try SynthesizedAudio(samples: [0.1, 0.2], sampleRate: 24_000)
+  try await playback.enqueue(audio, id: id)
+  try await playback.markUtterance("First.", id: id)
+  try await playback.enqueue(audio, id: id)
+  try await playback.markUtterance("Second.", id: id)
+  let callbacks = device.completions.withLock { $0 }
+  #expect(phrases.withLock { $0.isEmpty })
+  callbacks[1]()  // Executor delivery can be reordered even when the hardware plays in order.
+  try await Task.sleep(for: .milliseconds(10))
+  #expect(phrases.withLock { $0.isEmpty })
+  callbacks[0]()
+  for _ in 0..<100 {
+    if phrases.withLock({ $0.count == 2 }) { break }
+    try await Task.sleep(for: .milliseconds(1))
+  }
+  callbacks[0]()
+  #expect(phrases.withLock { $0 } == ["First.", "Second."])
+  try await playback.finish(id: id)
+  await playback.start(id: id) { _ in
+    Issue.record("An old completion reached a new playback session")
+  }
+  callbacks[1]()
+  try await Task.sleep(for: .milliseconds(10))
+}
+
+@Test func playbackDeviceChangeReleasesWaitersWithoutMarkingUnheardTextAsSpoken() async throws {
+  let device = OutputProbe()
+  let playback = VoicePlayback(makeDevice: { device })
+  let id = UUID()
+  let spoken = Mutex<[String]>([])
+  await playback.start(id: id) { update in
+    if case .utteranceFinished(let text) = update { spoken.withLock { $0.append(text) } }
+  }
+  try await playback.enqueue(.init(samples: [0.1, 0.2], sampleRate: 24_000), id: id)
+  try await playback.markUtterance("Still pending.", id: id)
+  let draining = Task { try await playback.finish(id: id) }
+  let interrupt = try #require(device.interruption.withLock { $0 })
+  interrupt()
+  await #expect(throws: TTSError.self) { try await draining.value }
+  let completion = try #require(device.completions.withLock { $0.first })
+  completion()
+  #expect(spoken.withLock { $0.isEmpty })
+  let next = UUID()
+  await playback.start(id: next) { _ in }
+  interrupt()
+  try await playback.enqueue(.init(samples: [0.1], sampleRate: 24_000), id: next)
+  await playback.stop(id: next)
+}
+
+@Test func playbackWatchdogRecoversWhenADeviceNeverCompletesItsBuffer() async throws {
+  let device = OutputProbe()
+  let playback = VoicePlayback(makeDevice: { device }, stallTimeout: .milliseconds(30))
+  let id = UUID()
+  await playback.start(id: id) { _ in }
+  try await playback.enqueue(.init(samples: [0.1], sampleRate: 24_000), id: id)
+  await #expect(throws: TTSError.self) { try await playback.finish(id: id) }
+  #expect(device.stopCount.withLock { $0 } == 1)
+  await #expect(throws: TTSError.self) {
+    try await playback.enqueue(.init(samples: [0.1], sampleRate: 24_000), id: id)
+  }
 }

@@ -41,19 +41,23 @@ package struct TTSModelResource: Codable, Sendable, Equatable {
 
 package struct SpeechSynthesisRequest: Codable, Sendable, Equatable {
   package static let maximumTextCharacters = 500
+  package static let maximumTextBytes = 16_000
   package let text: String
   package let voiceID: String
   package let language: String
+  package let conversationID: UUID?
 
-  package init(text: String, voiceID: String, language: String) {
+  package init(text: String, voiceID: String, language: String, conversationID: UUID? = nil) {
     self.text = text
     self.voiceID = voiceID
     self.language = language
+    self.conversationID = conversationID
   }
 
   package func validate() throws {
     guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-      text.count <= Self.maximumTextCharacters, !voiceID.isEmpty, !language.isEmpty
+      text.count <= Self.maximumTextCharacters, text.utf8.count <= Self.maximumTextBytes,
+      !voiceID.isEmpty, voiceID.utf8.count <= 128, !language.isEmpty, language.utf8.count <= 64
     else { throw TTSError.invalidRequest }
   }
 }

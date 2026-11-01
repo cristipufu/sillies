@@ -11,6 +11,7 @@ struct ChatSessionView: View {
   let openSettings: (ChatNotice.SettingsDestination) -> Void
   var renderer: String? = nil
   var motion = ChatPresentationMotion.animated
+  var vault: ChatVaultPresentation? = nil
   @State private var registry = RendererRegistry()
   @State private var availabilityRevision = UUID()
   private static let maximumNoticeHeight: CGFloat = 96
@@ -26,8 +27,8 @@ struct ChatSessionView: View {
     VStack(spacing: 0) {
       header.padding(16)
       Divider().overlay(theme.border)
-      ChatMessagesView(model: model, motion: motion)
-      if model.failure != nil || model.notice != nil || model.hasReachedMessageLimit
+      ChatMessagesView(model: model, motion: motion, vault: vault)
+      if model.failure != nil || model.notice != nil
         || model.draft.count > ChatContext.maximumMessageCharacters
       {
         ScrollView { notices.padding(.horizontal, 16).padding(.vertical, 8) }
@@ -98,9 +99,7 @@ struct ChatSessionView: View {
 
   private var notices: some View {
     VStack(alignment: .leading, spacing: 8) {
-      if model.hasReachedMessageLimit {
-        Text("This conversation is full. Finish & Save, then start a new chat.").font(.caption)
-      } else if model.draft.count > ChatContext.maximumMessageCharacters {
+      if model.draft.count > ChatContext.maximumMessageCharacters {
         Text(
           "This thought is too long to send. Shorten it to \(ChatContext.maximumMessageCharacters) characters; your words are kept here."
         ).font(.caption)
@@ -109,14 +108,14 @@ struct ChatSessionView: View {
       if let notice = model.notice {
         Text(notice.message).font(.caption).foregroundStyle(theme.secondary).textSelection(
           .enabled)
-        if let destination = notice.settingsDestination {
-          Button(
-            destination == .textModels
-              ? String(localized: "Choose a text model…") : String(localized: "Choose a voice…")
-          ) {
-            openSettings(destination)
-          }.buttonStyle(SoftButtonStyle())
-        }
+      }
+      if let destination = model.recoverySettingsDestination {
+        Button(
+          destination == .textModels
+            ? String(localized: "Choose a text model…") : String(localized: "Choose a voice…")
+        ) {
+          openSettings(destination)
+        }.buttonStyle(SoftButtonStyle())
       }
       if model.canRetry {
         Button("Try reply again") { model.retry() }.buttonStyle(SoftButtonStyle())

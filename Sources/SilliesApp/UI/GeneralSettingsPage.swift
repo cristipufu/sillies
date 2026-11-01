@@ -2,6 +2,7 @@ import ServiceManagement
 import SwiftUI
 
 struct GeneralSettingsPage: View {
+  @Environment(\.silliesTheme) private var theme
   let controller: CompanionController
   let login: LoginItemSettings?
   var language: LanguagePreferences? = nil
@@ -23,7 +24,7 @@ struct GeneralSettingsPage: View {
       Text(
         "Recording starts only when you ask. Your Vault and recent writing stay on this Mac; model downloads and update checks use the internet."
       )
-      .font(.caption).foregroundStyle(SilliesTheme.secondary)
+      .font(.caption).foregroundStyle(theme.secondary)
       Button("Open Session Vault", systemImage: "archivebox") { controller.onOpenVault?(nil) }
         .buttonStyle(SoftButtonStyle())
     }
@@ -40,7 +41,7 @@ struct GeneralSettingsPage: View {
             ? String(localized: "Low Power") : String(localized: "Normal"))
         diagnostic(String(localized: "Recent reaction"), value: controller.lastReaction)
       }.padding(.top, 12)
-    }.font(.caption).foregroundStyle(SilliesTheme.secondary)
+    }.font(.caption).foregroundStyle(theme.secondary)
   }
   private func diagnostic(_ title: String, value: String) -> some View {
     HStack {
@@ -52,6 +53,7 @@ struct GeneralSettingsPage: View {
 }
 
 private struct LoginSettingsView: View {
+  @Environment(\.silliesTheme) private var theme
   let model: LoginItemSettings
   @Environment(\.scenePhase) private var scenePhase
   var body: some View {
@@ -67,7 +69,7 @@ private struct LoginSettingsView: View {
         Button("Allow Sillies in Login Items…") { SMAppService.openSystemSettingsLoginItems() }
           .buttonStyle(SoftButtonStyle())
       }
-      if let error = model.error { Text(error).font(.caption).foregroundStyle(SilliesTheme.danger) }
+      if let error = model.error { Text(error).font(.caption).foregroundStyle(theme.danger) }
     }.task { await model.refresh() }
       .onChange(of: scenePhase) { _, phase in
         if phase == .active { Task { await model.refresh() } }

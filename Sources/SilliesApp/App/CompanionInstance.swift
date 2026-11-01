@@ -12,7 +12,7 @@ final class CompanionInstance {
   let view: CompanionView
   let panel: CompanionPanel
   let presentation: CompanionPresentation
-  let hud = CompanionHUDController()
+  let hud: CompanionHUDController
   let dropReturn = CompanionDropReturn()
   private let playback: BehaviorPlayback
   private var behavior: BehaviorEngine
@@ -179,10 +179,19 @@ final class CompanionInstance {
 
   func refreshWorldMask() { view.updateWorldMask() }
 
+  struct Configuration {
+    let definition: CharacterDefinition
+    let size: Double
+    let seed: UInt64
+  }
   init(
-    definition: CharacterDefinition, rig: CharacterRig, size: Double, seed: UInt64,
-    transitions: TransitionLibrary
+    configuration: Configuration, rig: CharacterRig,
+    transitions: TransitionLibrary, appearance: ThemeEnvironment
   ) {
+    let definition = configuration.definition
+    let size = configuration.size
+    let seed = configuration.seed
+    hud = CompanionHUDController(appearance: appearance)
     self.definition = definition
     if definition.playful != nil { _ = rig.preparePlayfulProps() }
     playback = BehaviorPlayback(rig: rig, characterID: definition.id)

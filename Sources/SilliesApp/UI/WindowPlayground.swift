@@ -10,6 +10,7 @@ final class WindowPlayground: NSObject {
   private static let crewEndSlots: Double = 2
   let window: NSWindow
   private let controller: CompanionController
+  private var appearance: ThemeEnvironment { controller.appearance }
   private var squeezed = false
   private var moved = false
   private(set) var targetFrame = CGRect.zero
@@ -34,13 +35,13 @@ final class WindowPlayground: NSObject {
     window.titlebarAppearsTransparent = true
     window.isReleasedWhenClosed = false
     window.minSize = CGSize(width: 520, height: 330)
-    let host = NSHostingController(
+    let host = ThemedHostingController(
       rootView: PlaygroundView(
         controller: controller,
         resize: { [weak self] in self?.squeeze() },
         move: { [weak self] in self?.nudge() },
         tall: { [weak self] in self?.makeTall() },
-        reset: { [weak self] in self?.reset() }))
+        reset: { [weak self] in self?.reset() }), appearance: appearance)
     // The user controls this resizable window; do not infer its minimum from an unconstrained SwiftUI proposal.
     host.sizingOptions = []
     window.contentViewController = host
@@ -127,6 +128,7 @@ final class WindowPlayground: NSObject {
 }
 
 private struct PlaygroundView: View {
+  @Environment(\.silliesTheme) private var theme
   let controller: CompanionController
   let resize: () -> Void
   let move: () -> Void
@@ -147,12 +149,12 @@ private struct PlaygroundView: View {
           } label: {
             Text(title).font(.system(size: 11, weight: tab == index ? .semibold : .regular))
               .padding(.horizontal, 14).padding(.vertical, 9)
-              .background(tab == index ? SilliesTheme.card : Color.clear, in: Capsule())
+              .background(tab == index ? theme.card : Color.clear, in: Capsule())
           }.buttonStyle(.plain)
         }
         Spacer()
-        Image(systemName: "sparkles").foregroundStyle(SilliesTheme.accent)
-      }.padding(8).background(SilliesTheme.soft, in: RoundedRectangle(cornerRadius: 14))
+        Image(systemName: "sparkles").foregroundStyle(theme.accent)
+      }.padding(8).background(theme.soft, in: RoundedRectangle(cornerRadius: 14))
       Spacer(minLength: 0)
       VStack(alignment: .leading, spacing: 12) {
         Text(
@@ -167,7 +169,7 @@ private struct PlaygroundView: View {
         Text(
           "Drag this window. Grab a corner. Your crew should hang on,\nfind their footing, and make a tiny scene about it."
         )
-        .font(.system(size: 12)).foregroundStyle(SilliesTheme.secondary).lineSpacing(4)
+        .font(.system(size: 12)).foregroundStyle(theme.secondary).lineSpacing(4)
       }
       HStack(spacing: 9) {
         Button(
@@ -180,14 +182,14 @@ private struct PlaygroundView: View {
       }.font(.system(size: 11, weight: .medium)).buttonStyle(SoftButtonStyle())
       Spacer(minLength: 0)
       HStack {
-        Circle().fill(SilliesTheme.success).frame(width: 6, height: 6)
+        Circle().fill(theme.success).frame(width: 6, height: 6)
         Text(controller.restingDescription).font(.system(size: 10)).foregroundStyle(
-          SilliesTheme.secondary)
+          theme.secondary)
         Spacer()
         Text("This is their window. The rest is yours.").font(.system(size: 10)).foregroundStyle(
-          SilliesTheme.secondary)
+          theme.secondary)
       }
     }.padding(28).frame(maxWidth: .infinity, maxHeight: .infinity)
-      .background(SilliesTheme.paper).foregroundStyle(SilliesTheme.ink)
+      .background(theme.paper).foregroundStyle(theme.ink)
   }
 }

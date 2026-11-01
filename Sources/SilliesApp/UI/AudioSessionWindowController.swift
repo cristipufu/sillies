@@ -3,6 +3,11 @@ import SwiftUI
 
 @MainActor
 final class AudioSessionWindowController {
+  private let appearance: ThemeEnvironment
+  init(appearance: ThemeEnvironment) {
+    self.appearance = appearance
+  }
+
   private(set) var window: CompanionUtilityWindow?
   private weak var displayedSession: AudioSessionPresentation?
 
@@ -19,7 +24,7 @@ final class AudioSessionWindowController {
     }
     window?.title = String(localized: "Sillies · \(model.kind.title)")
     if displayedSession !== model {
-      let view = NSHostingView(rootView: AudioSessionView(model: model))
+      let view = ThemedHostingView(rootView: AudioSessionView(model: model), appearance: appearance)
       view.sizingOptions = []
       window?.contentView = view
       displayedSession = model

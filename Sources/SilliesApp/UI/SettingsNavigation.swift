@@ -55,6 +55,7 @@ enum SettingsWindowLayout {
 }
 
 struct SettingsCard<Content: View>: View {
+  @Environment(\.silliesTheme) private var theme
   let title: String
   var detail: String? = nil
   @ViewBuilder let content: () -> Content
@@ -62,11 +63,11 @@ struct SettingsCard<Content: View>: View {
     VStack(alignment: .leading, spacing: 14) {
       VStack(alignment: .leading, spacing: 5) {
         Text(title).font(.system(size: 14, weight: .semibold, design: .rounded))
-        if let detail { Text(detail).font(.callout).foregroundStyle(SilliesTheme.secondary) }
+        if let detail { Text(detail).font(.callout).foregroundStyle(theme.secondary) }
       }
       content().font(.callout)
     }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
-      .background(SilliesTheme.card, in: RoundedRectangle(cornerRadius: 15))
-      .overlay(RoundedRectangle(cornerRadius: 15).strokeBorder(SilliesTheme.border, lineWidth: 0.8))
+      .background(theme.card, in: RoundedRectangle(cornerRadius: 15))
+      .overlay(RoundedRectangle(cornerRadius: 15).strokeBorder(theme.border, lineWidth: 0.8))
   }
 }

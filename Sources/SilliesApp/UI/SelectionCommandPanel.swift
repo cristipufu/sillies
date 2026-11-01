@@ -3,6 +3,7 @@ import SilliesWriting
 import SwiftUI
 
 private struct SelectionCommandView: View {
+  @Environment(\.silliesTheme) private var theme
   let model: SelectionCommandCoordinator
   let copy: (String) -> Void
   let history: () -> Void
@@ -11,8 +12,8 @@ private struct SelectionCommandView: View {
     VStack(alignment: .leading, spacing: 10) {
       HStack(spacing: 9) {
         Image(systemName: "text.badge.star")
-          .foregroundStyle(SilliesTheme.accent).frame(width: 28, height: 28)
-          .background(SilliesTheme.accent.opacity(0.14), in: Circle())
+          .foregroundStyle(theme.accent).frame(width: 28, height: 28)
+          .background(theme.accent.opacity(0.14), in: Circle())
         SessionHUDLabel(title: model.title, status: model.status)
         if model.isWorking {
           ProgressView().controlSize(.mini)
@@ -38,13 +39,16 @@ private struct SelectionCommandView: View {
     .padding(.horizontal, 11).padding(.vertical, 8)
     .frame(width: WritingFeedbackLayout.width)
     .background(SessionHUDBackground(emphasis: model.isWorking ? .active : .completed))
-    .foregroundStyle(SilliesTheme.ink).tint(SilliesTheme.accent)
+    .foregroundStyle(theme.ink).tint(theme.accent)
     .fixedSize(horizontal: false, vertical: true).padding(WritingFeedbackLayout.shadowInset)
   }
 }
 
 @MainActor final class SelectionCommandPanel {
-  private let panel = AnchoredWritingPanel<SelectionCommandView>()
+  private let panel: AnchoredWritingPanel<SelectionCommandView>
+  init(appearance: ThemeEnvironment) {
+    panel = AnchoredWritingPanel(appearance: appearance)
+  }
   func attach(to companion: WritingCompanionAnchor) { panel.attach(to: companion) }
   func prepare(
     _ model: SelectionCommandCoordinator, copy: @escaping (String) -> Void,

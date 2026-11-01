@@ -4,6 +4,7 @@ import SilliesCore
 import SwiftUI
 
 struct ChatMessagesView: View {
+  @Environment(\.silliesTheme) private var theme
   let model: ChatSession
   let motion: ChatPresentationMotion
   @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
@@ -26,7 +27,7 @@ struct ChatMessagesView: View {
           }
           if model.isWorking {
             Label(model.status, systemImage: "ellipsis.bubble.fill")
-              .font(.callout).foregroundStyle(SilliesTheme.secondary).padding(12)
+              .font(.callout).foregroundStyle(theme.secondary).padding(12)
           }
           Color.clear.frame(height: 1).id(Self.bottomID)
         }.padding(18)
@@ -69,9 +70,8 @@ struct ChatMessagesView: View {
       VStack(alignment: .leading, spacing: 5) {
         Text(fromUser ? String(localized: "You") : model.companionName)
           .font(.system(size: 11, weight: .semibold, design: .rounded))
-          .foregroundStyle(fromUser ? SilliesTheme.onAccent.opacity(0.8) : SilliesTheme.secondary)
-        ChatMessageText(text: message.text, color: SilliesTheme.native(fromUser ? .onAccent : .ink))
-        {
+          .foregroundStyle(fromUser ? theme.onAccent.opacity(0.8) : theme.secondary)
+        ChatMessageText(text: message.text, color: theme.native(fromUser ? .onAccent : .ink)) {
           selected in
           if selected {
             selectedMessages.insert(message.id)
@@ -82,12 +82,12 @@ struct ChatMessagesView: View {
       }
       .padding(.horizontal, 14).padding(.vertical, 11)
       .background(
-        fromUser ? SilliesTheme.accentFill : SilliesTheme.card,
+        fromUser ? theme.accentFill : theme.card,
         in: RoundedRectangle(cornerRadius: 18)
       )
       .overlay(
         RoundedRectangle(cornerRadius: 18).strokeBorder(
-          fromUser ? Color.clear : SilliesTheme.border)
+          fromUser ? Color.clear : theme.border)
       )
       .contextMenu {
         Button("Copy message", systemImage: "doc.on.doc") {
@@ -102,10 +102,10 @@ struct ChatMessagesView: View {
   private var welcome: some View {
     VStack(spacing: 12) {
       Image(systemName: "bubble.left.and.bubble.right.fill")
-        .font(.system(size: 38)).foregroundStyle(SilliesTheme.accent)
+        .font(.system(size: 38)).foregroundStyle(theme.accent)
       Text("A little company.").font(.system(size: 24, weight: .bold, design: .rounded))
       Text("Say hello to \(model.companionName).\nType a thought, or start a voice conversation.")
-        .font(.callout).foregroundStyle(SilliesTheme.secondary).multilineTextAlignment(.center)
+        .font(.callout).foregroundStyle(theme.secondary).multilineTextAlignment(.center)
     }.frame(maxWidth: .infinity).padding(.vertical, 38)
   }
 }

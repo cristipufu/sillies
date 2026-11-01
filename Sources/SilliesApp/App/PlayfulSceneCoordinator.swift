@@ -12,7 +12,7 @@ final class PlayfulSceneCoordinator {
   }
   private let catalog: PlayfulSceneCatalog
   private let animations: AnimationLibrary
-  private let prop = PlayfulPropPresentation()
+  private let prop: PlayfulPropPresentation
   private var director: PlayfulSceneDirector
   private var availability: Availability = .suspended
   private var cast: [CompanionInstance] = []
@@ -48,7 +48,11 @@ final class PlayfulSceneCoordinator {
     }
   }
 
-  init(catalog: PlayfulSceneCatalog, animations: AnimationLibrary, seed: UInt64) {
+  init(
+    catalog: PlayfulSceneCatalog, animations: AnimationLibrary, seed: UInt64,
+    appearance: ThemeEnvironment
+  ) {
+    prop = PlayfulPropPresentation(appearance: appearance)
     self.catalog = catalog
     self.animations = animations
     director = PlayfulSceneDirector(seed: seed)

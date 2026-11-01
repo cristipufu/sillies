@@ -2,15 +2,21 @@ import AppKit
 import SwiftUI
 
 private struct SavedTranscriptView: View {
+  @Environment(\.silliesTheme) private var theme
   let text: String
   var body: some View {
     LiveTranscriptTextView(text: text, followsLive: .constant(false))
       .padding(22).frame(minWidth: 520, minHeight: 320)
-      .background(SilliesTheme.paper)
+      .background(theme.paper)
   }
 }
 
 @MainActor final class SavedTranscriptWindow {
+  private let appearance: ThemeEnvironment
+  init(appearance: ThemeEnvironment) {
+    self.appearance = appearance
+  }
+
   private var window: NSWindow?
   func show(_ text: String, title: String) {
     if window == nil {
@@ -20,12 +26,13 @@ private struct SavedTranscriptView: View {
         defer: false)
       created.isReleasedWhenClosed = false
       AppContentWindowStacking.shared.register(created)
-      AppWindowAppearance.shared.register(created)
+      appearance.register(created)
       created.center()
       window = created
     }
     window?.title = title
-    window?.contentViewController = NSHostingController(rootView: SavedTranscriptView(text: text))
+    window?.contentViewController = ThemedHostingController(
+      rootView: SavedTranscriptView(text: text), appearance: appearance)
     window?.makeKeyAndOrderFront(nil)
   }
 }

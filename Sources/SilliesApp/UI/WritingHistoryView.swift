@@ -2,6 +2,7 @@ import SilliesCore
 import SwiftUI
 
 struct WritingHistoryView: View {
+  @Environment(\.silliesTheme) private var theme
   private static let previewCharacters = 400
   let model: WritingHistory
   let copy: (String) -> Void
@@ -17,7 +18,7 @@ struct WritingHistoryView: View {
       }
       Text(
         "Your latest 20 results stay here, separately from meetings. Audio isn’t saved."
-      ).font(.callout).foregroundStyle(SilliesTheme.secondary)
+      ).font(.callout).foregroundStyle(theme.secondary)
       if let failure = model.persistence.failure {
         WritingHistoryNotice(failure: failure, retry: model.retry)
       }
@@ -34,11 +35,11 @@ struct WritingHistoryView: View {
                 HStack {
                   Text(result.applicationName).fontWeight(.semibold)
                   Spacer()
-                  Text(result.createdAt, style: .time).foregroundStyle(SilliesTheme.secondary)
+                  Text(result.createdAt, style: .time).foregroundStyle(theme.secondary)
                 }
                 Text(String(result.text.prefix(Self.previewCharacters))).lineLimit(4)
                 if !result.notice.isEmpty {
-                  Text(result.notice).font(.caption).foregroundStyle(SilliesTheme.secondary)
+                  Text(result.notice).font(.caption).foregroundStyle(theme.secondary)
                 }
                 HStack {
                   Button("Open text") { openText(result) }
@@ -51,14 +52,14 @@ struct WritingHistoryView: View {
                   Button("Delete", role: .destructive) { model.remove(result.id) }
                 }
               }.padding(16)
-                .background(SilliesTheme.card, in: RoundedRectangle(cornerRadius: 14))
-                .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(SilliesTheme.border))
+                .background(theme.card, in: RoundedRectangle(cornerRadius: 14))
+                .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(theme.border))
             }
           }.padding(1)
         }
       }
     }.padding(24).frame(minWidth: 560, minHeight: 400)
-      .background(SilliesTheme.paper).foregroundStyle(SilliesTheme.ink).tint(SilliesTheme.accent)
+      .background(theme.paper).foregroundStyle(theme.ink).tint(theme.accent)
       .confirmationDialog("Delete all recent writing?", isPresented: $confirmsDeletion) {
         Button("Delete all", role: .destructive) { model.clear() }
       }

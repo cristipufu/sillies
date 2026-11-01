@@ -2,6 +2,7 @@ import SilliesCore
 import SwiftUI
 
 struct MeetingSpeechBubbleView: View {
+  @Environment(\.silliesTheme) private var theme
   private static let textInset: CGFloat = 12
   private static let rowSpacing: CGFloat = 8
   private static let headerSpacing: CGFloat = 6
@@ -10,7 +11,7 @@ struct MeetingSpeechBubbleView: View {
   private static let questionSize: CGFloat = 14
   private static let lineSpacing: CGFloat = 3
   let suggestion: MeetingSuggestion
-  private var accent: Color { SilliesTheme.accent }
+  private var accent: Color { theme.accent }
 
   var body: some View {
     VStack(alignment: .leading, spacing: Self.rowSpacing) {
@@ -23,7 +24,7 @@ struct MeetingSpeechBubbleView: View {
       }.foregroundStyle(accent)
       Text(suggestion.question)
         .font(.system(size: Self.questionSize, weight: .medium, design: .rounded))
-        .lineSpacing(Self.lineSpacing).foregroundStyle(SilliesTheme.ink)
+        .lineSpacing(Self.lineSpacing).foregroundStyle(theme.ink)
         .fixedSize(horizontal: false, vertical: true)
     }
     .padding(Self.textInset)

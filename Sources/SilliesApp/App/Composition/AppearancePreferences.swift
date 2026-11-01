@@ -39,7 +39,6 @@ enum ApplicationAppearance: String, CaseIterable, Identifiable {
   }
   private(set) var themes: [ThemeDefinition] = []
   private(set) var error: String?
-  private(set) var revision = 0
   @ObservationIgnored private let defaults: UserDefaults
   @ObservationIgnored private var loading: Task<Void, Never>?
   @ObservationIgnored private var accessibilityObserver: NSObjectProtocol?
@@ -90,7 +89,6 @@ enum ApplicationAppearance: String, CaseIterable, Identifiable {
     }
   }
   private func apply() {
-    revision &+= 1
     onChange?()
   }
 }

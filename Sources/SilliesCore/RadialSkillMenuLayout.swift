@@ -21,6 +21,7 @@ public struct RadialSkillMenuLayout: Equatable, Sendable {
   private static let minimumOrbitRadius: Double = 118
   private static let targetGap: Double = 8
 
+  public let interactionRadius: Double
   public let anchor: CGPoint
   public let items: [Item]
 
@@ -29,7 +30,8 @@ public struct RadialSkillMenuLayout: Equatable, Sendable {
     skills: [CompanionSkillKind] = CompanionSkillKind.radialSkills
   ) {
     let radius = Self.radius(for: skills.count)
-    let margin = radius + Self.bubbleHitRadius + Self.screenEdgePadding
+    interactionRadius = radius + Self.bubbleHitRadius
+    let margin = interactionRadius + Self.screenEdgePadding
     let clampedX = min(
       max(center.x, visibleFrame.minX + margin),
       visibleFrame.maxX - margin)

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct AudioHUDControls: View {
+  @Environment(\.silliesTheme) private var theme
   let session: AudioSessionPresentation
   let open: () -> Void
 
@@ -8,7 +9,7 @@ struct AudioHUDControls: View {
     HStack(spacing: 6) {
       Button(action: open) {
         Image(systemName: session.hasUnreadSuggestion ? "pawprint.fill" : "text.bubble")
-          .foregroundStyle(session.hasUnreadSuggestion ? SilliesTheme.warning : SilliesTheme.accent)
+          .foregroundStyle(session.hasUnreadSuggestion ? theme.warning : theme.accent)
           .frame(width: 24, height: 24)
       }.help(
         session.hasUnreadSuggestion

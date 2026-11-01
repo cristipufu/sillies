@@ -242,7 +242,7 @@ private actor CleanupFixture {
 @Test @MainActor func dictationFeedbackWrapsItsContentAndNeverTakesKeyboardFocus() async throws {
   _ = NSApplication.shared
   let fixture = try DictationFixture()
-  let panel = DictationPanelController()
+  let panel = DictationPanelController(appearance: ThemeEnvironment())
   let priorKeyWindow = NSApp.keyWindow
   fixture.model.start(.toggle)
   try await waitForDictation { fixture.model.canFinish }
@@ -305,7 +305,7 @@ private actor CleanupFixture {
   fixture.model.followsLiveTranscript = false
   let previousKeyWindow = NSApp.keyWindow
   let previousApplication = NSWorkspace.shared.frontmostApplication
-  let details = DictationSessionWindowController()
+  let details = DictationSessionWindowController(appearance: ThemeEnvironment())
   details.show(fixture.model, companionName: "Kiko", copy: { _ in }, history: {})
   #expect(NSApp.keyWindow === previousKeyWindow)
   #expect(NSWorkspace.shared.frontmostApplication == previousApplication)
@@ -337,7 +337,7 @@ func dictationHistoryFailureUsesTheSharedNoticeAndRetryWithoutLosingText(permiss
   if !permissionGranted { await fixture.insertion.denyPermission() }
   let blocker = fixture.directory.appendingPathComponent("history.json")
   try FileManager.default.createDirectory(at: blocker, withIntermediateDirectories: true)
-  let panel = DictationPanelController()
+  let panel = DictationPanelController(appearance: ThemeEnvironment())
   panel.attach(
     to: .init(
       name: "Kiko", position: .init(x: 300, y: 300), characterSize: 64, windowLayer: 0,

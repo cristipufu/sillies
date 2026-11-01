@@ -9,6 +9,7 @@ final class RadialWheelModel {
 }
 
 struct RadialWheelView: View {
+  @Environment(\.silliesTheme) private var theme
   private static let canvasCenter = CGPoint(
     x: RadialWheelController.canvasSize.width / 2,
     y: RadialWheelController.canvasSize.height / 2)
@@ -30,7 +31,7 @@ struct RadialWheelView: View {
       // Subtle orbital guide ring connecting the skill bubbles
       Circle()
         .strokeBorder(
-          SilliesTheme.accent.opacity(0.28),
+          theme.accent.opacity(0.28),
           style: StrokeStyle(lineWidth: 1.2, dash: [4, 5])
         )
         .frame(width: orbitDiameter, height: orbitDiameter)
@@ -38,10 +39,10 @@ struct RadialWheelView: View {
 
       // Soft anchor halo around the dragged companion
       Circle()
-        .fill(SilliesTheme.accent.opacity(0.08))
+        .fill(theme.accent.opacity(0.08))
         .frame(width: 54, height: 54)
         .overlay(
-          Circle().strokeBorder(SilliesTheme.accent.opacity(0.35), lineWidth: 1.2)
+          Circle().strokeBorder(theme.accent.opacity(0.35), lineWidth: 1.2)
         )
         .position(anchor)
 
@@ -54,21 +55,21 @@ struct RadialWheelView: View {
         VStack(spacing: 5) {
           ZStack {
             Circle()
-              .fill(isSelected ? SilliesTheme.accentFill : SilliesTheme.card.opacity(0.98))
+              .fill(isSelected ? theme.accentFill : theme.card.opacity(0.98))
               .frame(width: 48, height: 48)
               .shadow(
                 color: isSelected
-                  ? SilliesTheme.accent.opacity(0.42)
+                  ? theme.accent.opacity(0.42)
                   : Color.black.opacity(0.16),
                 radius: 6, y: 2
               )
               .overlay(
                 Circle().strokeBorder(
-                  isSelected ? SilliesTheme.onAccent.opacity(0.9) : SilliesTheme.border,
+                  isSelected ? theme.onAccent.opacity(0.9) : theme.border,
                   lineWidth: isSelected ? 2 : 1))
             Image(systemName: item.skill.symbolName)
               .font(.system(size: 17, weight: .semibold))
-              .foregroundStyle(isSelected ? SilliesTheme.onAccent : SilliesTheme.ink)
+              .foregroundStyle(isSelected ? theme.onAccent : theme.ink)
           }
           Text(item.skill.shortTitle)
             .font(.system(size: 10.5, weight: .bold, design: .rounded))
@@ -76,14 +77,14 @@ struct RadialWheelView: View {
             .padding(.vertical, 2.5)
             .background(
               Capsule().fill(
-                isSelected ? SilliesTheme.accentFill : SilliesTheme.card.opacity(0.97))
+                isSelected ? theme.accentFill : theme.card.opacity(0.97))
             )
             .overlay(
               Capsule().strokeBorder(
-                isSelected ? SilliesTheme.onAccent.opacity(0.5) : SilliesTheme.border.opacity(0.8),
+                isSelected ? theme.onAccent.opacity(0.5) : theme.border.opacity(0.8),
                 lineWidth: 0.7)
             )
-            .foregroundStyle(isSelected ? SilliesTheme.onAccent : SilliesTheme.ink)
+            .foregroundStyle(isSelected ? theme.onAccent : theme.ink)
             .shadow(color: .black.opacity(0.12), radius: 3, y: 1)
         }
         .scaleEffect(isSelected ? Self.selectedBubbleScale : Self.unselectedBubbleScale)
@@ -98,6 +99,11 @@ struct RadialWheelView: View {
 
 @MainActor
 final class RadialWheelController {
+  private let appearance: ThemeEnvironment
+  init(appearance: ThemeEnvironment) {
+    self.appearance = appearance
+  }
+
   static let canvasSize = CGSize(width: 440, height: 400)
 
   private let model = RadialWheelModel()
@@ -110,7 +116,7 @@ final class RadialWheelController {
     guard panel == nil else { return }
     let created = SkillFloatingPanel(
       contentRect: CGRect(origin: .zero, size: Self.canvasSize), ignoresMouseEvents: true)
-    let view = NSHostingView(rootView: RadialWheelView(model: model))
+    let view = ThemedHostingView(rootView: RadialWheelView(model: model), appearance: appearance)
     view.sizingOptions = []
     created.contentView = view
     panel = created

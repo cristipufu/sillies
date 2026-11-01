@@ -67,6 +67,7 @@ final class RecordingPlaybackModel {
 }
 
 struct RecordingPlaybackView: View {
+  @Environment(\.silliesTheme) private var theme
   let url: URL
   @State private var model = RecordingPlaybackModel()
 
@@ -78,7 +79,7 @@ struct RecordingPlaybackView: View {
         Button("Show audio file") { NSWorkspace.shared.activateFileViewerSelecting([url]) }
       }
       if let error = model.error {
-        Text(error).font(.caption).foregroundStyle(SilliesTheme.warning)
+        Text(error).font(.caption).foregroundStyle(theme.warning)
       }
       HStack(spacing: 12) {
         Button(action: model.togglePlayback) {
@@ -97,7 +98,7 @@ struct RecordingPlaybackView: View {
         )
         .font(.caption).monospacedDigit()
       }
-    }.padding(16).background(SilliesTheme.soft, in: RoundedRectangle(cornerRadius: 14))
+    }.padding(16).background(theme.soft, in: RoundedRectangle(cornerRadius: 14))
       .task(id: url) { await model.prepare(url) }.onDisappear { model.stop() }
   }
 }

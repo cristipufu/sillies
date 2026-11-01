@@ -66,7 +66,7 @@ say -v Samantha -o /tmp/sillies-chat-echo.aiff.near.aiff 'Wait, I have a differe
 source scripts/toolchain.sh
 swift build --build-tests
 SILLIES_VOICE_ECHO_FIXTURE=/tmp/sillies-chat-echo.aiff \
-  python3 scripts/run-bounded-test.py 90 swift test --skip-build --no-parallel \
+  python3 -B scripts/run-checked-tests.py --timeout 90 --bin-path "$(swift build --show-bin-path)" \
   --filter voiceConversationEchoReference
 ```
 

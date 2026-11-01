@@ -4,7 +4,7 @@
 
 `SilliesDesign` owns bounded, validated JSON palettes and interface-language metadata without AppKit.
 Composition owns `AppearancePreferences` and `LanguagePreferences`; presentation reads semantic roles
-through `SilliesTheme`. Native editors preserve text, selection, and scrolling during palette changes.
+through immutable `SilliesTheme` values injected by an app-owned `ThemeEnvironment`. The architecture checker rejects global theme owners and unthemed hosting roots. Native editors preserve text, selection, and scrolling during palette changes.
 Interface language applies at the next launch and never changes recognition or generation preferences.
 Build tooling discovers `Localization/*.json`, validates native argument types and plural forms, and
 packages native `.lproj` resources for the app and inference helpers. Swift syntax checks protect
@@ -228,3 +228,5 @@ The coordinator contributes deadlines and motion demand to the existing shared c
 
 
 The drop highlight stages its native backing invisibly at pickup. `conceal()` retains it while the pointer traverses the initial distance gate or an invalid target; `hide()` orders it out when the drag ends or is canceled. Presentation state is distinct from native ordering so an alpha-zero staged window is never reported as a visible highlight. It remains click-through throughout staging.
+
+Voice conversation warms the selected speech runtime before opening the microphone. Warmup has a scoped inference reservation; initial silence holds no recognizer. Each VAD utterance acquires and drains its own recognition channel, so waiting for speech does not block text or synthesis.

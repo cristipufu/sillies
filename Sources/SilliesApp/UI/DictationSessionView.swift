@@ -3,6 +3,7 @@ import SilliesWriting
 import SwiftUI
 
 struct DictationSessionView: View {
+  @Environment(\.silliesTheme) private var theme
   let model: DictationCoordinator
   let companionName: String
   let copy: (String) -> Void
@@ -29,7 +30,7 @@ struct DictationSessionView: View {
         followsLive: $session.followsLiveTranscript
       ) {
         VStack(spacing: 10) {
-          Image(systemName: "waveform").font(.system(size: 28)).foregroundStyle(SilliesTheme.accent)
+          Image(systemName: "waveform").font(.system(size: 28)).foregroundStyle(theme.accent)
           Text(
             model.phase == .listening
               ? String(localized: "Ready for your words")
@@ -37,20 +38,20 @@ struct DictationSessionView: View {
           )
           .font(.callout.weight(.medium))
           Text("Your words will appear here as you speak.")
-            .font(.caption).foregroundStyle(SilliesTheme.secondary)
+            .font(.caption).foregroundStyle(theme.secondary)
         }.frame(maxWidth: .infinity).padding(.vertical, 32)
       }
       Label(
         "On this Mac · Audio isn’t saved. Closing this window keeps dictation running.",
         systemImage: "lock.shield"
-      ).font(.caption).foregroundStyle(SilliesTheme.secondary)
+      ).font(.caption).foregroundStyle(theme.secondary)
     }
     .padding(SessionWindowLayout.padding)
     .frame(
       minWidth: SessionWindowLayout.minimumSize.width,
       minHeight: SessionWindowLayout.minimumSize.height
     )
-    .background(SilliesTheme.paper).foregroundStyle(SilliesTheme.ink).tint(SilliesTheme.accent)
+    .background(theme.paper).foregroundStyle(theme.ink).tint(theme.accent)
     .environment(\.controlActiveState, .active)
   }
 
@@ -65,7 +66,7 @@ struct DictationSessionView: View {
         WritingHistoryNotice(failure: failure, retry: model.retryHistory)
       }
       if let result = model.result, !result.notice.isEmpty {
-        Text(result.notice).font(.callout).foregroundStyle(SilliesTheme.secondary)
+        Text(result.notice).font(.callout).foregroundStyle(theme.secondary)
           .fixedSize(horizontal: false, vertical: true)
       }
     }
@@ -73,7 +74,7 @@ struct DictationSessionView: View {
 
   private var controls: some View {
     HStack(spacing: 10) {
-      Circle().fill(model.phase == .listening ? SilliesTheme.danger : SilliesTheme.secondary)
+      Circle().fill(model.phase == .listening ? theme.danger : theme.secondary)
         .frame(width: 7, height: 7)
       Text(model.status).font(.callout.weight(.medium)).fixedSize(horizontal: false, vertical: true)
       Spacer(minLength: 8)

@@ -25,7 +25,7 @@ final class MascotBubbleArtwork {
     border.lineWidth = 1
   }
 
-  func update(frame: CGRect, path: CGPath, appearance: NSAppearance) {
+  func update(frame: CGRect, path: CGPath, appearance: NSAppearance, theme: SilliesTheme) {
     CATransaction.begin()
     CATransaction.setDisableActions(true)
     layer.frame = frame
@@ -35,9 +35,9 @@ final class MascotBubbleArtwork {
     shadow.shadowPath = path
     border.path = path
     appearance.performAsCurrentDrawingAppearance {
-      fill.colors = [SilliesTheme.native(.card).cgColor, SilliesTheme.native(.paper).cgColor]
-      shadow.fillColor = SilliesTheme.native(.card).cgColor
-      border.strokeColor = SilliesTheme.native(.border).cgColor
+      fill.colors = [theme.native(.card).cgColor, theme.native(.paper).cgColor]
+      shadow.fillColor = theme.native(.card).cgColor
+      border.strokeColor = theme.native(.border).cgColor
     }
     CATransaction.commit()
   }

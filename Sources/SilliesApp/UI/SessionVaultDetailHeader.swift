@@ -2,6 +2,7 @@ import SilliesCore
 import SwiftUI
 
 struct SessionVaultDetailHeader: View {
+  @Environment(\.silliesTheme) private var theme
   private enum ButtonEmphasis { case standard, prominent }
   let record: SessionRecord
   let model: SessionVaultModel
@@ -18,22 +19,22 @@ struct SessionVaultDetailHeader: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 4.5)
-        .background(SilliesTheme.accent.opacity(0.14), in: Capsule())
-        .foregroundStyle(SilliesTheme.accent)
+        .background(theme.accent.opacity(0.14), in: Capsule())
+        .foregroundStyle(theme.accent)
 
         Text("by \(record.characterName)")
           .font(.system(size: 11.5, weight: .semibold, design: .rounded))
-          .foregroundStyle(SilliesTheme.secondary)
+          .foregroundStyle(theme.secondary)
 
         Text("· \(record.createdAt.formatted(date: .abbreviated, time: .shortened))")
           .font(.system(size: 11.5))
-          .foregroundStyle(SilliesTheme.secondary)
+          .foregroundStyle(theme.secondary)
 
         if record.durationSeconds >= 1 {
           Text("· \(SessionRecord.formatDuration(record.durationSeconds))")
             .font(.system(size: 11.5, weight: .medium))
             .monospacedDigit()
-            .foregroundStyle(SilliesTheme.secondary)
+            .foregroundStyle(theme.secondary)
         }
 
         Spacer(minLength: 8)
@@ -45,11 +46,11 @@ struct SessionVaultDetailHeader: View {
             Text(copiedFeedback)
               .font(.system(size: 11, weight: .bold, design: .rounded))
           }
-          .foregroundStyle(SilliesTheme.success)
+          .foregroundStyle(theme.success)
           .padding(.horizontal, 10)
           .padding(.vertical, 4.5)
           .background(
-            SilliesTheme.success.opacity(0.12), in: Capsule())
+            theme.success.opacity(0.12), in: Capsule())
         }
 
         Button {
@@ -61,16 +62,16 @@ struct SessionVaultDetailHeader: View {
             Text("Delete")
               .font(.system(size: 11, weight: .semibold, design: .rounded))
           }
-          .foregroundStyle(SilliesTheme.secondary)
+          .foregroundStyle(theme.secondary)
           .padding(.horizontal, 10)
           .frame(height: 28)
           .background(
-            SilliesTheme.card,
+            theme.card,
             in: RoundedRectangle(cornerRadius: 8, style: .continuous)
           )
           .overlay(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-              .strokeBorder(SilliesTheme.border, lineWidth: 0.8))
+              .strokeBorder(theme.border, lineWidth: 0.8))
         }
         .buttonStyle(.plain)
         .help("Delete session")
@@ -81,12 +82,12 @@ struct SessionVaultDetailHeader: View {
         Text(record.appName)
           .font(.system(size: 24, weight: .bold, design: .rounded))
           .tracking(-0.4)
-          .foregroundStyle(SilliesTheme.ink)
+          .foregroundStyle(theme.ink)
         if let windowTitle = record.windowTitle, !windowTitle.isEmpty, windowTitle != record.appName
         {
           Text(windowTitle)
             .font(.system(size: 13.5, weight: .medium))
-            .foregroundStyle(SilliesTheme.secondary)
+            .foregroundStyle(theme.secondary)
             .lineLimit(2)
         }
       }
@@ -155,14 +156,14 @@ struct SessionVaultDetailHeader: View {
       .fixedSize(horizontal: true, vertical: false)
       .padding(.horizontal, 13)
       .frame(height: 31)
-      .foregroundStyle(emphasis == .prominent ? SilliesTheme.onAccent : SilliesTheme.ink)
+      .foregroundStyle(emphasis == .prominent ? theme.onAccent : theme.ink)
       .background(
-        emphasis == .prominent ? SilliesTheme.accentFill : SilliesTheme.card,
+        emphasis == .prominent ? theme.accentFill : theme.card,
         in: RoundedRectangle(cornerRadius: 9, style: .continuous)
       )
       .overlay(
         RoundedRectangle(cornerRadius: 9, style: .continuous)
-          .strokeBorder(emphasis == .prominent ? Color.clear : SilliesTheme.border, lineWidth: 0.8))
+          .strokeBorder(emphasis == .prominent ? Color.clear : theme.border, lineWidth: 0.8))
     }
     .buttonStyle(.plain)
   }

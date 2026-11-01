@@ -26,7 +26,8 @@ import Testing
       size: .init(width: 560, height: 400), name: "sillies-recent-writing-\(appearance.rawValue)")
     try renderSkillInterface(
       StashPickerView(
-        vault: vault, paste: PasteBackCoordinator(), actions: .init(choose: { _ in }, close: {})),
+        model: SessionVaultModel(vault: vault, presentation: .init(appearance: ThemeEnvironment())),
+        paste: PasteBackCoordinator(), actions: .init(choose: { _ in }, close: {})),
       size: .init(width: 560, height: 440), name: "sillies-stash-picker-\(appearance.rawValue)")
     try renderSkillInterface(
       VaultRetentionView(vault: vault), size: .init(width: 470, height: 460),

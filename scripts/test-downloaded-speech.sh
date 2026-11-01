@@ -16,7 +16,7 @@ export SILLIES_SPEECH_FIXTURE="$fixture_directory/meeting.aiff"
 say -v Samantha -r 155 -o "$SILLIES_SPEECH_FIXTURE" \
   'We agreed to ship the report on Friday. Alex will review the draft tomorrow. The owner of the customer follow-up is still undecided.'
 # Cold Core ML specialization is separate from the short execution budget.
-SILLIES_STT_PREPARE_ONLY=1 python3 scripts/run-bounded-test.py 300 swift test \
-  --skip-build --no-parallel --filter prepareDownloadedSpeechModelForIntegration
-SILLIES_DOWNLOADED_STT_CHECK=1 python3 scripts/run-bounded-test.py 90 swift test \
-  --skip-build --no-parallel --filter downloadedSpeechModelsKeepAllInteractionPathsWithinBudget
+SILLIES_STT_PREPARE_ONLY=1 python3 -B scripts/run-checked-tests.py --timeout 300 --bin-path "$(swift build --show-bin-path)" \
+  --filter prepareDownloadedSpeechModelForIntegration
+SILLIES_DOWNLOADED_STT_CHECK=1 python3 -B scripts/run-checked-tests.py --timeout 90 --bin-path "$(swift build --show-bin-path)" \
+  --filter downloadedSpeechModelsKeepAllInteractionPathsWithinBudget

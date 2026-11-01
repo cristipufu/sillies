@@ -13,7 +13,8 @@ final class PlayfulPropPresentation {
   private var owner: PlayfulSceneDefinition.Role = .lead
   private var cardSize = CGSize.zero
   private var artworkSize = CGSize.zero
-  private var appliedThemeRevision = -1
+  private var lastPreparation: Preparation?
+  private let appearance: ThemeEnvironment
   var isVisible: Bool { panel.isVisible }
   var windowNumber: Int { panel.windowNumber }
   var previews: [(NSView, CGRect)] { [panel.preview].compactMap { $0 } }
@@ -21,7 +22,8 @@ final class PlayfulPropPresentation {
     panel.isVisible ? [panel.windowNumber] : []
   }
 
-  init() {
+  init(appearance: ThemeEnvironment) {
+    self.appearance = appearance
     let view = NSView()
     view.wantsLayer = true
     root.isOpaque = false
@@ -30,6 +32,7 @@ final class PlayfulPropPresentation {
     panel.contentView = view
     root.addSublayer(artwork.root)
     root.addSublayer(messageBubble.layer)
+    appearance.observe(self) { owner, _ in owner.refreshMessage() }
   }
 
   struct Preparation {
@@ -45,12 +48,11 @@ final class PlayfulPropPresentation {
   func prepare(_ request: Preparation) {
     let prop = request.prop
     let owner = request.owner
-    guard prop != current || self.owner != owner || appliedThemeRevision != SilliesTheme.revision
+    guard prop != current || self.owner != owner
     else { return }
     hide()
     current = prop
     self.owner = owner
-    appliedThemeRevision = SilliesTheme.revision
     guard prop != .none else { return }
     panel.prepare()
     artwork.prepare(prop, reducedMotion: request.reducedMotion)
@@ -60,11 +62,18 @@ final class PlayfulPropPresentation {
       }
       PlayfulClipTiming.synchronize(artwork.root, startingAt: request.startedAt)
     }
+    lastPreparation = request
+    refreshMessage()
+  }
+
+  private func refreshMessage() {
+    guard let request = lastPreparation, current != .none else { return }
     cardSize = messageBubble.prepare(
-      prop, message: LocalizedCatalogText.value(request.message),
-      appearance: panel.effectiveAppearance,
-      scale: panel.backingScaleFactor
-    )
+      request.prop,
+      message: LocalizedCatalogText.value(request.message),
+      presentation: .init(
+        appearance: panel.effectiveAppearance, theme: appearance.palette,
+        scale: panel.backingScaleFactor))
   }
 
   func place(
@@ -113,6 +122,7 @@ final class PlayfulPropPresentation {
     root.removeAllAnimations()
     panel.hide()
     current = .none
+    lastPreparation = nil
   }
 
   func close() {

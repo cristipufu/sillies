@@ -147,8 +147,8 @@ private final class WindowHitTestProbe {
 }
 
 @Test @MainActor func dragOverlaysArePreparedHiddenAndReusedAcrossGestures() throws {
-  let highlight = WindowDropHighlightController()
-  let wheel = RadialWheelController()
+  let highlight = WindowDropHighlightController(appearance: ThemeEnvironment())
+  let wheel = RadialWheelController(appearance: ThemeEnvironment())
   defer {
     highlight.close()
     wheel.close()
@@ -224,21 +224,23 @@ func unselectedDropSkipsReleaseQueriesAndClearsOverlays() async throws {
   // A plain release needs no window validation, even if the stack changed.
   let controller = CompanionDragTargetingController(
     metrics: DragResponseMetrics(enabled: false),
-    snapshot: snapshot,
-    dropHitTest: { _, below in
-      releaseQueries += 1
-      return below == 0 ? 2 : 0
-    },
-    lookup: { id, _ in dragTestTarget(id) })
+    dependencies: .init(
+      snapshot: snapshot,
+      dropHitTest: { _, below in
+        releaseQueries += 1
+        return below == 0 ? 2 : 0
+      },
+      lookup: { id, _ in dragTestTarget(id) }, appearance: ThemeEnvironment()))
   controller.start()
   defer { controller.stop() }
 
   let pet = CompanionInstance(
-    definition: try CharacterCatalog().characters[0],
+    configuration: .init(
+      definition: try CharacterCatalog().characters[0],
+      size: 64,
+      seed: 1),
     rig: CatRig(),
-    size: 64,
-    seed: 1,
-    transitions: TransitionLibrary())
+    transitions: TransitionLibrary(), appearance: ThemeEnvironment())
   defer {
     pet.hud.close()
     pet.presentation.close()
@@ -255,8 +257,10 @@ func unselectedDropSkipsReleaseQueriesAndClearsOverlays() async throws {
   #expect(!controller.diagnostics.highlight && !controller.diagnostics.wheel)
 }
 
-@Test(arguments: [false, true]) @MainActor
-func radialSelectionRequiresTheSameLiveWindowAtRelease(windowChanges: Bool) async throws {
+@Test(arguments: CompanionSkillKind.radialSkills, [false, true]) @MainActor
+func radialSelectionRequiresTheSameLiveWindowAtRelease(
+  skill: CompanionSkillKind, windowChanges: Bool
+) async throws {
   let liveWindows = WindowHitTestProbe()
   liveWindows.frontmost = 1
   let snapshot = DragWindowSnapshot(load: { _ in
@@ -267,16 +271,18 @@ func radialSelectionRequiresTheSameLiveWindowAtRelease(windowChanges: Bool) asyn
   })
   let controller = CompanionDragTargetingController(
     metrics: DragResponseMetrics(enabled: false),
-    snapshot: snapshot,
-    dropHitTest: { point, below in liveWindows.hit(point, below: below) },
-    lookup: { id, _ in dragTestTarget(id) },
+    dependencies: .init(
+      snapshot: snapshot,
+      dropHitTest: { point, below in liveWindows.hit(point, below: below) },
+      lookup: { id, _ in dragTestTarget(id) }, appearance: ThemeEnvironment()),
     radialDwellDelay: 0.02)
   let pet = CompanionInstance(
-    definition: try CharacterCatalog().characters[0],
+    configuration: .init(
+      definition: try CharacterCatalog().characters[0],
+      size: 64,
+      seed: 1),
     rig: CatRig(),
-    size: 64,
-    seed: 1,
-    transitions: TransitionLibrary())
+    transitions: TransitionLibrary(), appearance: ThemeEnvironment())
   defer {
     controller.stop()
     pet.hud.close()
@@ -304,9 +310,9 @@ func radialSelectionRequiresTheSameLiveWindowAtRelease(windowChanges: Bool) asyn
     ?? NSScreen.main?.visibleFrame
     ?? CGRect(x: 0, y: 0, width: 1440, height: 900)
   let layout = RadialSkillMenuLayout(center: anchor, visibleFrame: screen)
-  let snapBubble = try #require(layout.items.first { $0.skill == .snap }?.center)
-  controller.updateDrag(for: pet, at: snapBubble)
-  #expect(controller.hoveredSkill == .snap)
+  let skillBubble = try #require(layout.items.first { $0.skill == skill }?.center)
+  controller.updateDrag(for: pet, at: skillBubble)
+  #expect(controller.hoveredSkill == skill)
 
   // Window 2 moves underneath the radial wheel before mouse release.
   if windowChanges { liveWindows.frontmost = 2 }
@@ -314,7 +320,7 @@ func radialSelectionRequiresTheSameLiveWindowAtRelease(windowChanges: Bool) asyn
   if windowChanges {
     #expect(selection == nil)
   } else {
-    #expect(selection?.skill == .snap)
+    #expect(selection?.skill == skill)
     #expect(selection?.target.windowID == 1)
   }
   #expect(!controller.diagnostics.wheel)

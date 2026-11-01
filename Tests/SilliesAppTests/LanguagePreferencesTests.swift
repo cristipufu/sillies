@@ -1,4 +1,5 @@
 import AppKit
+import SilliesDesign
 import Testing
 
 @testable import SilliesApp
@@ -41,4 +42,54 @@ import Testing
   model.select(LanguagePreferences.systemID)
   #expect(defaults.persistentDomain(forName: suite)?["AppleLanguages"] == nil)
   #expect(!model.requiresRestart)
+}
+
+@Test @MainActor func languageRestartKeepsOwnershipWhenCancelledLoadFinishesLate() async throws {
+  let suite = "sillies-language-restart-\(UUID())"
+  let defaults = try #require(UserDefaults(suiteName: suite))
+  defer { defaults.removePersistentDomain(forName: suite) }
+  let loader = SuspendedLanguageLoader()
+  let model = LanguagePreferences(
+    defaults: defaults, metadataURL: URL(fileURLWithPath: "/unused"),
+    load: { _ in try await loader.load() })
+  model.start()
+  await loader.waitForRequest(1)
+  model.stop()
+  model.start()
+  await loader.waitForRequest(2)
+  try await loader.complete(0)
+  for _ in 0..<20 { await Task.yield() }
+  #expect(model.isLoading)
+  #expect(model.languages.isEmpty)
+  model.stop()
+  await loader.fail(1)
+  for _ in 0..<20 { await Task.yield() }
+  #expect(!model.isLoading)
+  #expect(model.error == nil)
+  model.start()
+  await loader.waitForRequest(3)
+  try await loader.complete(2)
+  let deadline = ContinuousClock.now.advanced(by: .seconds(2))
+  while model.isLoading, ContinuousClock.now < deadline { await Task.yield() }
+  #expect(model.languages.map(\.code) == ["en"])
+  #expect(model.error == nil)
+}
+
+private actor SuspendedLanguageLoader {
+  private var requests: [CheckedContinuation<[InterfaceLanguage], any Error>] = []
+  func load() async throws -> [InterfaceLanguage] {
+    try await withCheckedThrowingContinuation { requests.append($0) }
+  }
+  func waitForRequest(_ count: Int) async {
+    let deadline = ContinuousClock.now.advanced(by: .seconds(2))
+    while requests.count < count, ContinuousClock.now < deadline { await Task.yield() }
+    #expect(requests.count == count)
+  }
+  func complete(_ index: Int) throws {
+    let language = try JSONDecoder().decode(
+      InterfaceLanguage.self,
+      from: Data(#"{"code":"en","language":"English","english":"English"}"#.utf8))
+    requests[index].resume(returning: [language])
+  }
+  func fail(_ index: Int) { requests[index].resume(throwing: CocoaError(.fileReadCorruptFile)) }
 }

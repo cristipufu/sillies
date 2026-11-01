@@ -12,6 +12,13 @@ package actor InferenceActivity {
 
   package init() {}
 
+  package func prepareSpeechRuntime(_ prepare: @Sendable () async throws -> Void) async throws {
+    await beginSpeech()
+    defer { endSpeech() }
+    try Task.checkCancellation()
+    try await prepare()
+  }
+
   package func beginSpeech() async {
     speechCount += 1
     text?.cancel()

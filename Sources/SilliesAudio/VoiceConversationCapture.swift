@@ -5,6 +5,10 @@ import SilliesSpeech
 
 /// Continuous microphone/AEC/VAD, with short-lived recognizer turns. All device/DSP state is queue-confined.
 package final class VoiceConversationCapture: ConversationCapture {
+  struct Resources: Sendable {
+    let audio: AudioCaptureDependencies
+    let warmSpeech: @Sendable () async throws -> Void
+  }
   private static let preRollFrames = 40
   private static let publicationInterval: TimeInterval = 0.1
   private static let maximumTurnDuration: TimeInterval = 120
@@ -35,6 +39,7 @@ package final class VoiceConversationCapture: ConversationCapture {
   private let configuration: AudioCaptureConfiguration
   private let reference: VoicePlaybackReference
   private let dependencies: AudioCaptureDependencies
+  private let warmSpeech: @Sendable () async throws -> Void
   private let update: @Sendable (AudioCaptureUpdate) -> Void
   private let input: AudioCaptureInputQueue
   private let storage: SerialQueueStorage<State>
@@ -42,20 +47,23 @@ package final class VoiceConversationCapture: ConversationCapture {
 
   package convenience init(
     configuration: AudioCaptureConfiguration, reference: VoicePlaybackReference,
-    speech: @escaping LocalSpeechFactory.Make,
+    speech: ConversationSpeechServices,
     update: @escaping @Sendable (AudioCaptureUpdate) -> Void
   ) {
     self.init(
       configuration: configuration, reference: reference,
-      dependencies: .init(speech: speech), update: update)
+      resources: .init(audio: .init(speech: speech.makeChannel), warmSpeech: speech.warm),
+      update: update)
   }
   init(
     configuration: AudioCaptureConfiguration, reference: VoicePlaybackReference,
-    dependencies: AudioCaptureDependencies, update: @escaping @Sendable (AudioCaptureUpdate) -> Void
+    resources: Resources, update: @escaping @Sendable (AudioCaptureUpdate) -> Void
   ) {
     self.configuration = configuration
     self.reference = reference
+    let dependencies = resources.audio
     self.dependencies = dependencies
+    warmSpeech = resources.warmSpeech
     self.update = update
     input = AudioCaptureInputQueue(queue: dependencies.queue)
     storage = SerialQueueStorage(queue: dependencies.queue, makeValue: State.init)
@@ -74,8 +82,7 @@ package final class VoiceConversationCapture: ConversationCapture {
               self?.enqueue(packet)
             }, { [weak self] failure in self?.report(failure) })
           update(.preparing(String(localized: "Getting voice conversation ready…")))
-          // Warm the first recognizer before opening the microphone. Later turns reuse the warm runtime.
-          try beginTurn(state) { [weak self] in self?.startMicrophone() }
+          startMicrophone()
         } catch { report(SessionFailure(error, category: .audioProcessing)) }
       }
     }
@@ -83,8 +90,10 @@ package final class VoiceConversationCapture: ConversationCapture {
 
   private func startMicrophone() {
     guard let microphone = storage.withValue({ $0.stopped ? nil : $0.microphone }) else { return }
-    preparation.launch { [weak self] in
+    preparation.launch { [weak self, warmSpeech] in
       do {
+        try await warmSpeech()
+        try Task.checkCancellation()
         let label = try await microphone.start()
         try Task.checkCancellation()
         self?.dependencies.queue.async { [weak self] in
@@ -146,7 +155,7 @@ package final class VoiceConversationCapture: ConversationCapture {
     }
   }
 
-  private func beginTurn(_ state: State, ready: @escaping @Sendable () -> Void = {}) throws {
+  private func beginTurn(_ state: State) throws {
     guard state.draining.count < Self.maximumDrainingTurns else {
       throw AudioCaptureFailure.unavailable(
         String(
@@ -174,7 +183,7 @@ package final class VoiceConversationCapture: ConversationCapture {
         }
       }, failed: { [weak self] in self?.report($0) })
     state.turn = turn
-    turn.prepare(language: language, make: dependencies.speech, ready: ready)
+    turn.prepare(language: language, make: dependencies.speech)
   }
 
   package func finishTurn(completion: @escaping @Sendable (AudioCaptureResult) -> Void) {

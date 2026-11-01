@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct LanguageSettingsView: View {
+  @Environment(\.silliesTheme) private var theme
   @Bindable var model: LanguagePreferences
   var body: some View {
     SettingsCard(
@@ -17,12 +18,12 @@ struct LanguageSettingsView: View {
         Label(
           "Your choice takes effect the next time Sillies opens.", systemImage: "arrow.clockwise"
         )
-        .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        .font(.caption).foregroundStyle(theme.secondary)
       }
       Text("Speech recognition and companion languages have their own settings.")
-        .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        .font(.caption).foregroundStyle(theme.secondary)
       if let error = model.error {
-        Text(error).foregroundStyle(SilliesTheme.danger).textSelection(.enabled)
+        Text(error).foregroundStyle(theme.danger).textSelection(.enabled)
       }
     }.onAppear { model.start() }
   }

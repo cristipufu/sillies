@@ -3,6 +3,7 @@ import SilliesCore
 import SwiftUI
 
 struct CompanionHUDView: View {
+  @Environment(\.silliesTheme) private var theme
   let model: CompanionHUDModel
   let state: CompanionBindingState
   @State private var hoveredPrimaryAction = false
@@ -67,8 +68,8 @@ struct CompanionHUDView: View {
         Circle()
           .fill(
             completionNeedsAttention
-              ? SilliesTheme.warning.opacity(0.15)
-              : SilliesTheme.success.opacity(0.15)
+              ? theme.warning.opacity(0.15)
+              : theme.success.opacity(0.15)
           )
           .frame(width: 28, height: 28)
         Image(
@@ -77,19 +78,19 @@ struct CompanionHUDView: View {
         )
         .font(.system(size: 14, weight: .semibold))
         .foregroundStyle(
-          completionNeedsAttention ? SilliesTheme.warning : SilliesTheme.success)
+          completionNeedsAttention ? theme.warning : theme.success)
       }
 
       VStack(alignment: .leading, spacing: 1.5) {
         Text(completionHeadline(for: skill))
           .font(.system(size: 11, weight: .bold, design: .rounded))
-          .foregroundStyle(SilliesTheme.ink)
+          .foregroundStyle(theme.ink)
           .lineLimit(1)
         Text(
           "\((sourceName(target: target, skill: skill))) · \(summary)"
         )
         .font(.system(size: 10, weight: .medium))
-        .foregroundStyle(SilliesTheme.secondary)
+        .foregroundStyle(theme.secondary)
         .lineLimit(1)
         .frame(maxWidth: 205, alignment: .leading)
       }
@@ -100,10 +101,10 @@ struct CompanionHUDView: View {
         } label: {
           Text("Focus App")
             .font(.system(size: 10, weight: .bold, design: .rounded))
-            .foregroundStyle(SilliesTheme.onAccent)
+            .foregroundStyle(theme.onAccent)
             .padding(.horizontal, 9)
             .padding(.vertical, 5)
-            .background(SilliesTheme.accentFill, in: Capsule())
+            .background(theme.accentFill, in: Capsule())
         }
         .buttonStyle(.plain)
       }
@@ -117,12 +118,12 @@ struct CompanionHUDView: View {
             .font(.system(size: 8.5, weight: .bold))
         }
         .font(.system(size: 10, weight: .bold, design: .rounded))
-        .foregroundStyle(hoveredPrimaryAction ? SilliesTheme.onAccent : SilliesTheme.accent)
+        .foregroundStyle(hoveredPrimaryAction ? theme.onAccent : theme.accent)
         .padding(.horizontal, 9)
         .padding(.vertical, 5)
         .background(
           Capsule().fill(
-            hoveredPrimaryAction ? SilliesTheme.accentFill : SilliesTheme.accent.opacity(0.14))
+            hoveredPrimaryAction ? theme.accentFill : theme.accent.opacity(0.14))
         )
       }
       .buttonStyle(.plain)
@@ -164,11 +165,11 @@ struct CompanionHUDView: View {
     } else {
       ZStack {
         Circle()
-          .fill(SilliesTheme.accent.opacity(0.14))
+          .fill(theme.accent.opacity(0.14))
           .frame(width: 28, height: 28)
         Image(systemName: skill.symbolName)
           .font(.system(size: 12, weight: .semibold))
-          .foregroundStyle(SilliesTheme.accent)
+          .foregroundStyle(theme.accent)
       }
     }
   }

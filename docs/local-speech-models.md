@@ -85,7 +85,7 @@ The optional native update test clones already-downloaded files into a temporary
 source scripts/toolchain.sh
 swift build --build-tests
 SILLIES_VALIDATE_MODEL_UPDATE=1 SILLIES_STT_MODEL=parakeet-ultra SILLIES_STT_STORE=/tmp/sillies-stt-models \
-  python3 scripts/run-bounded-test.py 300 swift test --skip-build --no-parallel --filter nativeModelUpdateValidatesBeforeActivationAndCanRollBack
+  python3 -B scripts/run-checked-tests.py --timeout 300 --bin-path "$(swift build --show-bin-path)" --filter nativeModelUpdateValidatesBeforeActivationAndCanRollBack
 ```
 
 The standalone `SpeechBenchmark check MODEL_ID STORE_DIRECTORY` command queries live metadata without installing anything. Default tests use injected metadata/discovery/download clients, virtual dates, and temporary stores.

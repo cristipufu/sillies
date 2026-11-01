@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct AudioLanguagePicker: View {
+  @Environment(\.silliesTheme) private var theme
   private static let pickerWidth: CGFloat = 270
   let model: AudioSessionPresentation
 
@@ -14,12 +15,12 @@ struct AudioLanguagePicker: View {
           )
           .font(.callout.weight(.semibold))
           Text(model.model.name)
-            .font(.caption).foregroundStyle(SilliesTheme.secondary)
+            .font(.caption).foregroundStyle(theme.secondary)
         }
         Spacer(minLength: 8)
         if model.isLoadingLanguages {
           ProgressView().controlSize(.small)
-          Text("Checking languages…").font(.callout).foregroundStyle(SilliesTheme.secondary)
+          Text("Checking languages…").font(.callout).foregroundStyle(theme.secondary)
         } else {
           languageMenu
         }
@@ -31,7 +32,7 @@ struct AudioLanguagePicker: View {
             : String(localized: "Changing language. Audio capture continues."),
           systemImage: "arrow.triangle.2.circlepath"
         )
-        .font(.caption).foregroundStyle(SilliesTheme.accent)
+        .font(.caption).foregroundStyle(theme.accent)
       } else if !model.isLoadingLanguages, !model.languages.contains(where: \.isInstalled) {
         Text(
           model.model.isSystemManaged
@@ -42,20 +43,20 @@ struct AudioLanguagePicker: View {
               localized:
                 "This model is not installed. Open Settings → Transcription models to download it.")
         )
-        .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        .font(.caption).foregroundStyle(theme.secondary)
         .fixedSize(horizontal: false, vertical: true)
       } else {
         Text(SpeechLanguageGuidance.detail(for: model.model.capabilities.languageControl))
-          .font(.caption).foregroundStyle(SilliesTheme.secondary)
+          .font(.caption).foregroundStyle(theme.secondary)
       }
       if let notice = model.reasoningNotice {
-        Text(notice).font(.caption).foregroundStyle(SilliesTheme.secondary)
+        Text(notice).font(.caption).foregroundStyle(theme.secondary)
           .textSelection(.enabled)
           .fixedSize(horizontal: false, vertical: true)
       }
     }
-    .padding(16).background(SilliesTheme.card, in: RoundedRectangle(cornerRadius: 14))
-    .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(SilliesTheme.border, lineWidth: 1))
+    .padding(16).background(theme.card, in: RoundedRectangle(cornerRadius: 14))
+    .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(theme.border, lineWidth: 1))
   }
 
   private var languageMenu: some View {

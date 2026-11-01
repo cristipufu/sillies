@@ -3,6 +3,7 @@ import SilliesWriting
 import SwiftUI
 
 struct ControlCenterView: View {
+  @Environment(\.silliesTheme) private var theme
   struct Actions {
     let openSettings: () -> Void
     var openVault: () -> Void = {}
@@ -19,14 +20,14 @@ struct ControlCenterView: View {
     VStack(alignment: .leading, spacing: 18) {
       HStack(spacing: 11) {
         Image(systemName: "sparkles")
-          .font(.system(size: 21, weight: .medium)).foregroundStyle(SilliesTheme.accent)
+          .font(.system(size: 21, weight: .medium)).foregroundStyle(theme.accent)
           .frame(width: 44, height: 44).background(
-            SilliesTheme.accent.opacity(0.10), in: RoundedRectangle(cornerRadius: 15))
+            theme.accent.opacity(0.10), in: RoundedRectangle(cornerRadius: 15))
         VStack(alignment: .leading, spacing: 2) {
           Text(verbatim: "sillies").font(.system(size: 28, weight: .bold, design: .rounded))
             .tracking(-0.9)
           Text("Your workspace, with a little life.").font(.system(size: 11))
-            .foregroundStyle(SilliesTheme.secondary)
+            .foregroundStyle(theme.secondary)
         }
         Spacer(minLength: 0)
         Button {
@@ -34,7 +35,7 @@ struct ControlCenterView: View {
         } label: {
           Image(systemName: settings.paused ? "play.fill" : "pause.fill")
             .font(.system(size: 12, weight: .semibold)).frame(width: 31, height: 31)
-            .background(SilliesTheme.soft, in: Circle())
+            .background(theme.soft, in: Circle())
         }.buttonStyle(.plain).help(
           settings.paused
             ? String(localized: "Resume companions") : String(localized: "Pause companions")
@@ -47,10 +48,10 @@ struct ControlCenterView: View {
       HStack(spacing: 7) {
         Circle().fill(
           settings.paused || controller.isExcluded
-            ? SilliesTheme.warning : SilliesTheme.success
+            ? theme.warning : theme.success
         ).frame(width: 6, height: 6)
         Text(controller.restingDescription).font(.system(size: 11, weight: .medium)).lineLimit(1)
-          .foregroundStyle(SilliesTheme.secondary)
+          .foregroundStyle(theme.secondary)
       }
 
       HStack {
@@ -83,7 +84,7 @@ struct ControlCenterView: View {
         Text("THE LITTLE CREW").font(.system(size: 9, weight: .bold)).tracking(1.5)
         Spacer()
         Text("\(controller.liveCount) of \(controller.catalog.characters.count) out & about")
-          .font(.system(size: 10)).foregroundStyle(SilliesTheme.secondary)
+          .font(.system(size: 10)).foregroundStyle(theme.secondary)
       }.padding(.top, 2)
 
       LazyVGrid(
@@ -109,8 +110,8 @@ struct ControlCenterView: View {
           Spacer()
           Text("They’re happy you’re here.").font(.system(size: 10)).opacity(0.8)
         }.padding(.horizontal, 14).frame(height: 41)
-          .foregroundStyle(SilliesTheme.onAccent)
-          .background(SilliesTheme.accentFill, in: RoundedRectangle(cornerRadius: 12))
+          .foregroundStyle(theme.onAccent)
+          .background(theme.accentFill, in: RoundedRectangle(cornerRadius: 12))
       }.buttonStyle(.plain).disabled(
         settings.paused || controller.liveCount == 0 || controller.isExcluded)
 
@@ -123,7 +124,7 @@ struct ControlCenterView: View {
             Text("Desktop").tag(false)
           }.labelsHidden().pickerStyle(.segmented).frame(width: 200)
         }
-        Divider().overlay(SilliesTheme.border.opacity(0.5))
+        Divider().overlay(theme.border.opacity(0.5))
         HStack {
           Label("Energy", systemImage: "leaf").font(.system(size: 12, weight: .medium))
           Spacer()
@@ -131,28 +132,28 @@ struct ControlCenterView: View {
             ForEach(ActivityLevel.allCases) { Text($0.title).tag($0) }
           }.labelsHidden().pickerStyle(.segmented).frame(width: 156)
         }
-        Divider().overlay(SilliesTheme.border.opacity(0.5))
+        Divider().overlay(theme.border.opacity(0.5))
         HStack(spacing: 12) {
           Label("Size", systemImage: "arrow.up.left.and.arrow.down.right").font(
             .system(size: 12, weight: .medium)
           ).frame(width: 65, alignment: .leading)
           Slider(value: $settings.size, in: AppSettings.minSize...AppSettings.maxSize).tint(
-            SilliesTheme.accent
+            theme.accent
           )
           .accessibilityLabel("Character size")
           Text(sizeLabel).font(.system(size: 10, weight: .medium)).foregroundStyle(
-            SilliesTheme.secondary
+            theme.secondary
           ).frame(width: 38)
         }
-      }.padding(14).background(SilliesTheme.card, in: RoundedRectangle(cornerRadius: 15))
+      }.padding(14).background(theme.card, in: RoundedRectangle(cornerRadius: 15))
         .overlay(
           RoundedRectangle(cornerRadius: 15).strokeBorder(
-            SilliesTheme.border.opacity(0.7), lineWidth: 0.7))
+            theme.border.opacity(0.7), lineWidth: 0.7))
 
       Button(action: actions.openVault) {
         HStack(spacing: 9) {
           Image(systemName: "archivebox.fill")
-            .foregroundStyle(SilliesTheme.accent)
+            .foregroundStyle(theme.accent)
           VStack(alignment: .leading, spacing: 3) {
             Text("Session Vault & Drop Skills").font(.system(size: 11, weight: .semibold))
             Text(
@@ -163,30 +164,30 @@ struct ControlCenterView: View {
                   comment: "plural")
             )
             .font(.system(size: 10))
-            .foregroundStyle(SilliesTheme.secondary)
+            .foregroundStyle(theme.secondary)
             .lineLimit(1)
           }
           Spacer()
           Image(systemName: "arrow.up.right").font(.system(size: 11))
         }.padding(12).background(
-          SilliesTheme.card, in: RoundedRectangle(cornerRadius: 12)
+          theme.card, in: RoundedRectangle(cornerRadius: 12)
         )
         .overlay(
           RoundedRectangle(cornerRadius: 12).strokeBorder(
-            SilliesTheme.border.opacity(0.7), lineWidth: 0.7))
+            theme.border.opacity(0.7), lineWidth: 0.7))
       }.buttonStyle(.plain)
 
       if let speechModels, speechModels.availableUpdateCount > 0 {
         Button("Model updates available", systemImage: "arrow.down.circle") {
           actions.openSettings()
         }
-        .font(.caption.weight(.medium)).buttonStyle(.plain).foregroundStyle(SilliesTheme.accent)
+        .font(.caption.weight(.medium)).buttonStyle(.plain).foregroundStyle(theme.accent)
       }
 
       HStack {
-        Image(systemName: "heart.fill").font(.system(size: 9)).foregroundStyle(SilliesTheme.danger)
+        Image(systemName: "heart.fill").font(.system(size: 9)).foregroundStyle(theme.danger)
         Text("A little company. All on your Mac.").font(.system(size: 9)).foregroundStyle(
-          SilliesTheme.secondary)
+          theme.secondary)
         Spacer()
         Button(action: actions.openSettings) {
           Image(systemName: "slider.horizontal.3").font(.system(size: 12))
@@ -196,8 +197,8 @@ struct ControlCenterView: View {
           .buttonStyle(.plain).padding(.leading, 7).help("Quit Sillies").accessibilityLabel(
             "Quit Sillies")
       }
-    }.padding(22).frame(width: 388).background(SilliesTheme.paper)
-      .foregroundStyle(SilliesTheme.ink)
+    }.padding(22).frame(width: 388).background(theme.paper)
+      .foregroundStyle(theme.ink)
       .fixedSize(horizontal: false, vertical: true)
   }
 

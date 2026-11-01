@@ -19,7 +19,7 @@ import Testing
   model.languages = [fixtureEnglish]
   model.selectedLanguageID = fixtureEnglish.id
   model.followsLiveTranscript = true
-  let window = AudioSessionWindowController()
+  let window = AudioSessionWindowController(appearance: ThemeEnvironment())
   defer { window.close() }
   window.show(model)
   let delivery = AudioSessionUpdateDelivery {

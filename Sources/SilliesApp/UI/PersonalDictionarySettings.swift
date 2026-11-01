@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct PersonalDictionarySettings: View {
+  @Environment(\.silliesTheme) private var theme
   let model: VocabularyPreferences
   @State private var phrase = ""
   @State private var heardAs = ""
@@ -10,7 +11,7 @@ struct PersonalDictionarySettings: View {
         Text(
           "Help recognition with names, jargon, and technical terms. Add a “heard as” spelling to correct a repeated mistake."
         )
-        .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        .font(.caption).foregroundStyle(theme.secondary)
         TextField("Preferred spelling", text: $phrase).textFieldStyle(
           .roundedBorder)
         TextField("Often heard as (optional)", text: $heardAs).textFieldStyle(.roundedBorder)
@@ -23,7 +24,7 @@ struct PersonalDictionarySettings: View {
         }.buttonStyle(AccentButtonStyle())
           .disabled(phrase.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         if let error = model.error {
-          Text(error).font(.caption).foregroundStyle(SilliesTheme.danger)
+          Text(error).font(.caption).foregroundStyle(theme.danger)
         }
         ForEach(model.entries) { entry in
           HStack {

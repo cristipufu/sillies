@@ -4,6 +4,11 @@ import SwiftUI
 
 @MainActor
 final class CompanionHUDController {
+  private let appearance: ThemeEnvironment
+  init(appearance: ThemeEnvironment) {
+    self.appearance = appearance
+  }
+
   private static let fallbackSize = CGSize(width: 340, height: 64)
   private static let measurementProposal = CGSize(
     width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
@@ -59,8 +64,8 @@ final class CompanionHUDController {
   var companionWindowNumber: Int?
   let model = CompanionHUDModel()
   private var panel: SkillFloatingPanel?
-  let speechBubble = MeetingSpeechBubbleController()
-  private var hostingController: NSHostingController<CompanionHUDView>?
+  private(set) lazy var speechBubble = MeetingSpeechBubbleController(appearance: appearance)
+  private var hostingController: ThemedHostingController<CompanionHUDView>?
   private var lastLayoutKey: LayoutKey?
   private var cachedPanelSize: CGSize?
   private(set) var layoutMeasurements = 0
@@ -117,7 +122,7 @@ final class CompanionHUDController {
   private func updateModel(_ state: CompanionBindingState) {
     guard model.state != state else { return }
     model.state = state
-    hostingController?.rootView = CompanionHUDView(model: model, state: state)
+    hostingController?.content = CompanionHUDView(model: model, state: state)
   }
 
   func hide() {
@@ -137,7 +142,8 @@ final class CompanionHUDController {
 
   private func ensurePanelCreated(for state: CompanionBindingState) {
     guard panel == nil else { return }
-    let host = NSHostingController(rootView: CompanionHUDView(model: model, state: state))
+    let host = ThemedHostingController(
+      rootView: CompanionHUDView(model: model, state: state), appearance: appearance)
     // This controller owns the panel frame; avoid SwiftUI's extra minimum/maximum probes.
     host.sizingOptions = []
     let created = SkillFloatingPanel(

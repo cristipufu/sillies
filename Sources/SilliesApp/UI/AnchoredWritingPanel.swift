@@ -9,6 +9,11 @@ enum WritingFeedbackLayout {
 
 /// Shared non-activating presentation, measured from its contents and clamped to the visible screen.
 @MainActor final class AnchoredWritingPanel<Content: View> {
+  private let appearance: ThemeEnvironment
+  init(appearance: ThemeEnvironment) {
+    self.appearance = appearance
+  }
+
   enum Sizing: Equatable {
     case compact
     case notices([String])
@@ -18,7 +23,7 @@ enum WritingFeedbackLayout {
     }
   }
   private var panel: SkillFloatingPanel?
-  private var host: NSHostingController<Content>?
+  private var host: ThemedHostingController<Content>?
   private var anchor: WritingCompanionAnchor?
   private var measuredSizing: Sizing?
   private(set) var layoutMeasurements = 0
@@ -27,7 +32,7 @@ enum WritingFeedbackLayout {
   func prepare(_ content: Content) {
     guard panel == nil else { return }
     let panel = SkillFloatingPanel(contentRect: .zero, ignoresMouseEvents: false)
-    let host = NSHostingController(rootView: content)
+    let host = ThemedHostingController(rootView: content, appearance: appearance)
     host.sizingOptions = []
     panel.contentViewController = host
     self.panel = panel
@@ -37,7 +42,7 @@ enum WritingFeedbackLayout {
     prepare(content)
     guard let panel, let host, let anchor else { return }
     if measuredSizing != sizing {
-      host.rootView = content
+      host.content = content
       host.view.layoutSubtreeIfNeeded()
       let proposal = CGSize(
         width: WritingFeedbackLayout.width + 2 * WritingFeedbackLayout.shadowInset,

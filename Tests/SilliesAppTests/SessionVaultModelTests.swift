@@ -48,7 +48,9 @@ import Testing
       metadata: .init(createdAt: Date(timeIntervalSince1970: Double(3 - $0))))
   }
   for record in records.reversed() { vault.add(record) }
-  let model = SessionVaultModel(vault: vault, initialRecordID: records[1].id)
+  let model = SessionVaultModel(
+    vault: vault,
+    presentation: .init(initialRecordID: records[1].id, appearance: ThemeEnvironment()))
   model.searchQuery = "Meeting"
   model.selectedFilter = .record
   await model.refreshSearch()
@@ -66,7 +68,7 @@ import Testing
   defer { removeTestFile(at: directory) }
   let vault = SessionVaultStore(directory: directory)
   await vault.waitUntilLoaded()
-  let model = SessionVaultModel(vault: vault)
+  let model = SessionVaultModel(vault: vault, presentation: .init(appearance: ThemeEnvironment()))
   model.saveStash(["   \n"])
   #expect(vault.records.isEmpty)
   model.saveStash([" first ", "\n", " second\n"])

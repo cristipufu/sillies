@@ -1,4 +1,5 @@
 import AVFoundation
+import CoreMedia
 import Foundation
 import SilliesAudioTestSupport
 import SilliesCore
@@ -16,6 +17,7 @@ import Testing
   capture.start()
   capture.start()
   try await harness.wait { harness.capturing.withLock { $0 } == 1 }
+  try await harness.beginSpeech()
   harness.speech.emit("Keep this last sentence")
   let turns = Mutex<[AudioCaptureResult]>([])
   let finishes = Mutex<[AudioCaptureResult]>([])
@@ -41,6 +43,7 @@ import Testing
   let capture = harness.makeCapture(finishTimeout: 0.02)
   capture.start()
   try await harness.wait { harness.capturing.withLock { $0 } == 1 }
+  try await harness.beginSpeech()
   harness.speech.emit("An unfinished thought")
   let results = Mutex<[AudioCaptureResult]>([])
   capture.finish { result in results.withLock { $0.append(result) } }
@@ -95,23 +98,38 @@ private final class ConversationHarness: Sendable {
   let microphone = ConversationMicrophone()
   let speech = ConversationRecognizer()
   let capturing = Mutex(0)
-  func makeCapture(finishTimeout: TimeInterval = 1) -> VoiceConversationCapture {
+  let warmed = Mutex(0)
+  let channels = Mutex(0)
+  func makeCapture(
+    finishTimeout: TimeInterval = 1, warm: @escaping @Sendable () async throws -> Void = {}
+  ) -> VoiceConversationCapture {
     VoiceConversationCapture(
       configuration: .init(kind: .chat, target: nil, recordingURL: nil, language: fixtureEnglish),
       reference: VoicePlaybackReference(),
-      dependencies: .init(
-        queue: queue,
-        microphone: { [microphone] _, failure in
-          microphone.failure.withLock { $0 = failure }
-          return microphone
-        },
-        speech: { [speech] _, output, _ in
-          speech.output.withLock { $0 = output }
-          return speech
-        }, finishTimeout: finishTimeout),
+      resources: .init(
+        audio: .init(
+          queue: queue,
+          microphone: { [microphone] receive, failure in
+            microphone.receive.withLock { $0 = receive }
+            microphone.failure.withLock { $0 = failure }
+            return microphone
+          },
+          speech: { [self] _, output, _ in
+            channels.withLock { $0 += 1 }
+            speech.output.withLock { $0 = output }
+            return speech
+          }, finishTimeout: finishTimeout),
+        warmSpeech: { [self] in
+          warmed.withLock { $0 += 1 }
+          try await warm()
+        }),
       update: { [self] event in
         if case .capturing = event { capturing.withLock { $0 += 1 } }
       })
+  }
+  func beginSpeech() async throws {
+    microphone.receive.withLock { $0 }?(try conversationAudio(.speech))
+    try await wait { self.channels.withLock { $0 } == 1 }
   }
   func wait(_ predicate: @Sendable () -> Bool) async throws {
     for _ in 0..<200 {
@@ -124,6 +142,7 @@ private final class ConversationHarness: Sendable {
 }
 
 private final class ConversationMicrophone: MicrophoneCapture {
+  let receive = Mutex<(@Sendable (AudioCaptureInputQueue.Packet) -> Void)?>(nil)
   let starts = Mutex(0)
   let stops = Mutex(0)
   let failure = Mutex<AudioCaptureDependencies.Failure?>(nil)
@@ -148,4 +167,94 @@ private final class ConversationRecognizer: LocalSpeechChannel {
   }
   func complete() { completion.withLock { $0 }?() }
   func cancel() {}
+}
+
+@Test func voiceConversationWarmsWithoutReservingRecognitionDuringInitialSilence() async throws {
+  let harness = ConversationHarness()
+  let capture = harness.makeCapture()
+  capture.start()
+  try await harness.wait { harness.capturing.withLock { $0 } == 1 }
+  #expect(harness.warmed.withLock { $0 } == 1)
+  #expect(harness.channels.withLock { $0 } == 0)
+  harness.microphone.receive.withLock { $0 }?(try conversationAudio(.silence))
+  await withCheckedContinuation { continuation in harness.queue.async { continuation.resume() } }
+  #expect(harness.channels.withLock { $0 } == 0)
+  let result = Mutex<AudioCaptureResult?>(nil)
+  capture.finish { value in result.withLock { $0 = value } }
+  try await harness.wait { result.withLock { $0 != nil } }
+  #expect(result.withLock { $0?.failure } == nil)
+}
+
+private enum ConversationSignal { case speech, silence }
+
+/// Deterministic voiced harmonics exercise the real VAD and queue, without a device or model.
+private func conversationAudio(_ signal: ConversationSignal) throws -> AudioCaptureInputQueue.Packet
+{
+  let rate = 16_000
+  let frames = rate
+  let format = try #require(AVAudioFormat(standardFormatWithSampleRate: Double(rate), channels: 1))
+  let buffer = try #require(
+    AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(frames)))
+  buffer.frameLength = AVAudioFrameCount(frames)
+  let samples = try #require(buffer.floatChannelData?[0])
+  for index in 0..<frames {
+    let time = Double(index) / Double(rate)
+    let phase = 2 * Double.pi * (180 * time + 12 * sin(2 * Double.pi * 3 * time))
+    samples[index] =
+      signal == .silence
+      ? 0 : Float(0.2 * sin(phase) + 0.1 * sin(3 * phase) + 0.05 * sin(7 * phase))
+  }
+  var description: CMAudioFormatDescription?
+  #expect(
+    CMAudioFormatDescriptionCreate(
+      allocator: kCFAllocatorDefault, asbd: format.streamDescription,
+      layoutSize: 0, layout: nil, magicCookieSize: 0, magicCookie: nil, extensions: nil,
+      formatDescriptionOut: &description) == noErr)
+  var timing = CMSampleTimingInfo(
+    duration: CMTime(value: 1, timescale: Int32(rate)),
+    presentationTimeStamp: CMTime(seconds: 100, preferredTimescale: Int32(rate)),
+    decodeTimeStamp: .invalid)
+  var sample: CMSampleBuffer?
+  #expect(
+    CMSampleBufferCreate(
+      allocator: kCFAllocatorDefault, dataBuffer: nil, dataReady: true,
+      makeDataReadyCallback: nil, refcon: nil, formatDescription: description, sampleCount: frames,
+      sampleTimingEntryCount: 1, sampleTimingArray: &timing, sampleSizeEntryCount: 0,
+      sampleSizeArray: nil, sampleBufferOut: &sample) == noErr)
+  let ready = try #require(sample)
+  #expect(
+    CMSampleBufferSetDataBufferFromAudioBufferList(
+      ready, blockBufferAllocator: kCFAllocatorDefault,
+      blockBufferMemoryAllocator: kCFAllocatorDefault, flags: 0, bufferList: buffer.audioBufferList)
+      == noErr)
+  return try #require(AudioCaptureInputQueue.Packet(sample: ready, source: .microphone))
+}
+
+@Test func voiceConversationCancelledDuringWarmupNeverStartsTheMicrophoneLate() async throws {
+  let harness = ConversationHarness()
+  let warmup = SuspendedConversationWarmup()
+  let capture = harness.makeCapture(warm: { await warmup.wait() })
+  capture.start()
+  let deadline = ContinuousClock.now.advanced(by: .seconds(2))
+  while await !warmup.hasStarted, ContinuousClock.now < deadline { await Task.yield() }
+  #expect(await warmup.hasStarted)
+  let result = Mutex<AudioCaptureResult?>(nil)
+  capture.finish { value in result.withLock { $0 = value } }
+  try await harness.wait { result.withLock { $0 != nil } }
+  await warmup.complete()
+  try await Task.sleep(for: .milliseconds(20))
+  #expect(harness.microphone.starts.withLock { $0 } == 0)
+  #expect(harness.channels.withLock { $0 } == 0)
+  #expect(harness.capturing.withLock { $0 } == 0)
+  #expect(result.withLock { $0?.failure } == nil)
+}
+
+private actor SuspendedConversationWarmup {
+  private var continuation: CheckedContinuation<Void, Never>?
+  var hasStarted: Bool { continuation != nil }
+  func wait() async { await withCheckedContinuation { continuation = $0 } }
+  func complete() {
+    continuation?.resume()
+    continuation = nil
+  }
 }

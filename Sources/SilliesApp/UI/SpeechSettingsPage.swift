@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SpeechSettingsPage: View {
+  @Environment(\.silliesTheme) private var theme
   enum Section: String, CaseIterable, Identifiable {
     case transcription = "Transcription"
     case speakers = "Speaker labels"
@@ -54,7 +55,7 @@ struct SpeechSettingsPage: View {
         }
       } else {
         Text("Model update checks are unavailable in this build.").foregroundStyle(
-          SilliesTheme.secondary)
+          theme.secondary)
       }
     }
   }

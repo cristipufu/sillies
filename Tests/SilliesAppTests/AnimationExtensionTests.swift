@@ -142,7 +142,12 @@ private final class MockEventProducer: WorkspaceEventProducer {
       ReactionDefinition(id: "rest", event: .ambient, animation: .idle, duration: 5)
     ])
   let pet = CompanionInstance(
-    definition: definition, rig: CatRig(), size: 64, seed: 1, transitions: TransitionLibrary())
+    configuration: .init(
+      definition: definition,
+      size: 64,
+      seed: 1),
+    rig: CatRig(),
+    transitions: TransitionLibrary(), appearance: ThemeEnvironment())
   let focusedWindow = CGRect(x: 200, y: 200, width: 600, height: 400)
   let display = CGRect(x: 0, y: 0, width: 1440, height: 900)
   pet.view.configureSurface(pose: .standing, window: focusedWindow, display: display)
@@ -294,7 +299,7 @@ private final class MockEventProducer: WorkspaceEventProducer {
 }
 
 @Test @MainActor func companionHUDCachesLayoutSizeAcrossFrameAndAudioUpdates() throws {
-  let hud = CompanionHUDController()
+  let hud = CompanionHUDController(appearance: ThemeEnvironment())
   defer { hud.close() }
   let target = WindowTargetCandidate(
     windowID: 12, processID: 34, appName: "Xcode",

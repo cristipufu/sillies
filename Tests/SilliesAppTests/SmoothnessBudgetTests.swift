@@ -206,6 +206,7 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
   "mallow",
 ]) @MainActor
 func companionDragSmoothnessBudgetAndUnclippedMaskStability(characterID: String) throws {
+  let diagnostics = DragFrameDiagnostics.fromEnvironment()
   let suiteName = "app.sillies.test.smoothness.companion.\(UUID().uuidString)"
   let defaults = try #require(UserDefaults(suiteName: suiteName))
   defer { defaults.removePersistentDomain(forName: suiteName) }
@@ -239,7 +240,11 @@ func companionDragSmoothnessBudgetAndUnclippedMaskStability(characterID: String)
     let delta = CGPoint(
       x: Double(frameIndex) * 1.5,
       y: -Double(frameIndex) * 2.5)
-    primaryView.onDrag?(delta)
+    if let diagnostics {
+      diagnostics.measure(frame: frameIndex) { primaryView.onDrag?(delta) }
+    } else {
+      primaryView.onDrag?(delta)
+    }
   }
   primaryView.onDrop?(true)
 
@@ -247,6 +252,11 @@ func companionDragSmoothnessBudgetAndUnclippedMaskStability(characterID: String)
   #expect(pickupMaskPath === postDragMaskPath)
   #expect(controller.dragTargeting.usesHardwareBorderOutline)
   #expect(controller.smoothnessMetrics.sampleCount(for: .companionDrag) == frameCount)
+  if let diagnostics {
+    print(
+      "DRAG \(characterID): \(diagnostics.summary); \(controller.smoothnessMetrics.diagnosticReport); \(controller.dragTimingSummary)"
+    )
+  }
   #expect(
     controller.smoothnessMetrics.isWithinBudget(for: .companionDrag),
     Comment(

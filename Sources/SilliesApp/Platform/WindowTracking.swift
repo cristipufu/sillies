@@ -80,6 +80,7 @@ final class WorkspaceTracker: WorkspaceEventProducer {
   @ObservationIgnored private var housekeepingInFlight = false
   var isAwaitingApplicationWindow: Bool { focus.isAwaitingWindow }
   @ObservationIgnored private let usesAccessibility: Bool
+  @ObservationIgnored private let applicationNotifications: NotificationCenter
 
   private var isLeftMouseButtonPressed: Bool {
     guard isLeftMouseDown else { return false }
@@ -109,8 +110,12 @@ final class WorkspaceTracker: WorkspaceEventProducer {
       && !isLeftMouseButtonPressed
   }
 
-  init(accessibility: Accessibility = .enabled) {
+  init(
+    accessibility: Accessibility = .enabled,
+    applicationNotifications: NotificationCenter = .default
+  ) {
     usesAccessibility = accessibility == .enabled
+    self.applicationNotifications = applicationNotifications
     hasAccessibility = usesAccessibility && AXIsProcessTrusted()
     dragTracker.onPresentFrame = { [weak self] frame in
       guard let self else { return }
@@ -146,7 +151,9 @@ final class WorkspaceTracker: WorkspaceEventProducer {
         self.acceptAccessibility(value)
       }
     }
-    let notifications = WorkspaceNotifications { [weak self] in self?.receiveNotification($0) }
+    let notifications = WorkspaceNotifications(application: applicationNotifications) {
+      [weak self] in self?.receiveNotification($0)
+    }
     self.notifications = notifications
     notifications.start()
     followFrontmostApplication(.reconcileCurrent)

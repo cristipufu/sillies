@@ -2,6 +2,7 @@ import SilliesCore
 import SwiftUI
 
 struct VaultRetentionView: View {
+  @Environment(\.silliesTheme) private var theme
   let vault: SessionVaultStore
   @Environment(\.dismiss) private var dismiss
   @State private var selection = VaultRetentionPolicy.keepAll
@@ -24,10 +25,10 @@ struct VaultRetentionView: View {
       Text(
         "Protected records and Pocket Stash items are never automatically trimmed. Choosing a limit deletes older unprotected captures and their saved attachments, now and as new captures arrive."
       )
-      .font(.callout).foregroundStyle(SilliesTheme.secondary)
+      .font(.callout).foregroundStyle(theme.secondary)
       if count > 0 {
         Text("This change will delete \(count) existing capture(s).").foregroundStyle(
-          SilliesTheme.warning)
+          theme.warning)
       }
       HStack {
         Button("Cancel") { dismiss() }.buttonStyle(SoftButtonStyle())
@@ -41,7 +42,7 @@ struct VaultRetentionView: View {
       Button("Delete all Vault records…", role: .destructive) { confirmsClear = true }
         .disabled(!vault.isReadyForRetention || vault.recordCount == 0)
     }.padding(24).frame(width: 470)
-      .background(SilliesTheme.paper).foregroundStyle(SilliesTheme.ink).tint(SilliesTheme.accent)
+      .background(theme.paper).foregroundStyle(theme.ink).tint(theme.accent)
       .onAppear { selection = vault.retentionPolicy }
       .confirmationDialog(
         "Delete \(count) captures and their attachments?", isPresented: $confirmsDeletion

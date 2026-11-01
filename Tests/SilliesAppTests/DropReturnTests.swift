@@ -108,7 +108,12 @@ private let dropTestWindow = CGRect(x: 200, y: 150, width: 700, height: 400)
 private func dropTestCompanion() throws -> CompanionInstance {
   let definition = try #require(CharacterCatalog().characters.first)
   let pet = CompanionInstance(
-    definition: definition, rig: CatRig(), size: 64, seed: 1, transitions: TransitionLibrary())
+    configuration: .init(
+      definition: definition,
+      size: 64,
+      seed: 1),
+    rig: CatRig(),
+    transitions: TransitionLibrary(), appearance: ThemeEnvironment())
   let display = CGRect(x: 0, y: 0, width: 1500, height: 1000)
   let surface = PerchSurface(window: dropTestWindow, visibleFrame: display, characterSize: 64)
   pet.updateAttachment(.init(surface: surface, windowID: nil, windowLayer: 0))

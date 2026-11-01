@@ -1,4 +1,5 @@
 import AppKit
+import Synchronization
 import Testing
 
 @testable import SilliesApp
@@ -15,7 +16,10 @@ import Testing
   let external = WorkspaceFocusSession.Application(
     processID: 999_999, name: "Editor", bundleIdentifier: "test.editor")
   focus.follow(external, continuity: .noPreviousWindow)
-  let tracker = WorkspaceTracker(accessibility: .disabled)
+  // Invalid identifiers belong at our boundary, never in AppKit's own ViewBridge observers.
+  let notifications = NotificationCenter()
+  let tracker = WorkspaceTracker(
+    accessibility: .disabled, applicationNotifications: notifications)
   tracker.start()
   defer { tracker.stop() }
   tracker.simulateApplicationSwitchInFlight(processID: ProcessInfo.processInfo.processIdentifier)
@@ -33,15 +37,21 @@ import Testing
   #expect(window.windowServerID == nil)
   #expect(focus.frontmostReplacement(for: .reconcileCurrent, application: .current) == nil)
   #expect(focus.application == external)
+  let leakedNotifications = Mutex(0)
+  let observer = NotificationCenter.default.addObserver(
+    forName: NSWindow.didBecomeKeyNotification, object: window, queue: nil
+  ) { _ in leakedNotifications.withLock { $0 += 1 } }
+  defer { NotificationCenter.default.removeObserver(observer) }
   for name in [
     NSWindow.didBecomeKeyNotification, NSWindow.didBecomeMainNotification,
     NSWindow.didMoveNotification, NSWindow.didResizeNotification,
     NSWindow.willMiniaturizeNotification, NSWindow.willCloseNotification,
   ] {
-    NotificationCenter.default.post(name: name, object: window)
+    notifications.post(name: name, object: window)
     #expect(tracker.windowID == 987_654)
     #expect(tracker.windowFrame == frame)
   }
+  #expect(leakedNotifications.withLock { $0 } == 0)
 }
 
 @Test(arguments: [1, Int(UInt32.max)])

@@ -5,6 +5,7 @@ import SwiftUI
 
 /// A character sheet using the same catalog, rig renderer, and names as the crew picker.
 struct ReadmeCrewScene: View {
+  @Environment(\.silliesTheme) private var theme
   private static let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 6)
   let characters: [CharacterDefinition]
 
@@ -12,12 +13,12 @@ struct ReadmeCrewScene: View {
     VStack(alignment: .leading, spacing: 0) {
       Text("MEET YOUR WINDOW COMPANY")
         .font(.system(size: 11, weight: .semibold, design: .monospaced)).tracking(1.8)
-        .foregroundStyle(SilliesTheme.secondary)
+        .foregroundStyle(theme.secondary)
       HStack(alignment: .firstTextBaseline) {
         Text("Twelve little personalities.")
           .font(.system(size: 38, weight: .bold, design: .rounded)).tracking(-1.3)
         Spacer()
-        Text("Pick your crew.").font(.system(size: 16)).foregroundStyle(SilliesTheme.secondary)
+        Text("Pick your crew.").font(.system(size: 16)).foregroundStyle(theme.secondary)
       }
       .padding(.top, 12)
       LazyVGrid(columns: Self.columns, spacing: 30) {
@@ -32,10 +33,10 @@ struct ReadmeCrewScene: View {
         Spacer()
         Text("SILLIES").tracking(2)
       }
-      .font(.system(size: 12, weight: .medium)).foregroundStyle(SilliesTheme.secondary)
+      .font(.system(size: 12, weight: .medium)).foregroundStyle(theme.secondary)
     }
     .padding(.horizontal, 76).padding(.vertical, 58)
-    .foregroundStyle(SilliesTheme.ink).background(SilliesTheme.paper)
+    .foregroundStyle(theme.ink).background(theme.paper)
   }
 
   private func portrait(_ character: CharacterDefinition) -> some View {
@@ -43,10 +44,10 @@ struct ReadmeCrewScene: View {
       CharacterPortrait(renderer: character.renderer, size: 88, registry: RendererRegistry())
         .frame(width: 130, height: 130)
         .background(
-          Circle().fill(SilliesTheme.accent.opacity(0.055)).frame(width: 120, height: 120))
+          Circle().fill(theme.accent.opacity(0.055)).frame(width: 120, height: 120))
       Text(character.name).font(.system(size: 17, weight: .semibold, design: .rounded))
       Text(character.subtitle)
-        .font(.system(size: 11)).foregroundStyle(SilliesTheme.secondary)
+        .font(.system(size: 11)).foregroundStyle(theme.secondary)
         .multilineTextAlignment(.center).frame(height: 32, alignment: .top)
     }
     .frame(maxWidth: .infinity)

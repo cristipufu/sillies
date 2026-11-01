@@ -13,7 +13,8 @@ final class TranscriptScrollView: NSScrollView {
   private var latestText = ""
   private var followMode = FollowMode.reading
   private var isUpdatingText = false
-  private var appearanceRevision = -1
+  private var theme = SilliesTheme()
+  private var appliedTheme: SilliesTheme?
   var onFollowModeChange: ((FollowMode) -> Void)?
   var textView: NSTextView { transcriptView }
 
@@ -62,7 +63,7 @@ final class TranscriptScrollView: NSScrollView {
   }
 
   func update(text: String, followMode: FollowMode) {
-    updateAppearance()
+    applyTheme(theme)
     latestText = text
     let changed = displayedText != text
     let resumedFollowing = followMode == .live && self.followMode == .reading
@@ -85,13 +86,14 @@ final class TranscriptScrollView: NSScrollView {
     }
   }
 
-  private func updateAppearance() {
-    guard appearanceRevision != SilliesTheme.revision else { return }
-    appearanceRevision = SilliesTheme.revision
+  func applyTheme(_ theme: SilliesTheme) {
+    guard appliedTheme != theme else { return }
+    self.theme = theme
+    appliedTheme = theme
     updateViewport {
       let origin = contentView.bounds.origin
       let selection = transcriptView.selectedRange()
-      TextEditorAppearance.apply(to: transcriptView)
+      TextEditorAppearance.apply(theme, to: transcriptView)
       textAttributes = makeTextAttributes()
       transcriptView.setSelectedRange(selection)
       contentView.scroll(to: origin)
@@ -125,7 +127,7 @@ final class TranscriptScrollView: NSScrollView {
     let paragraph = NSMutableParagraphStyle()
     paragraph.lineSpacing = Self.lineSpacing
     return [
-      .font: NSFont.systemFont(ofSize: Self.fontSize), .foregroundColor: NSColor(SilliesTheme.ink),
+      .font: NSFont.systemFont(ofSize: Self.fontSize), .foregroundColor: theme.native(.ink),
       .paragraphStyle: paragraph,
     ]
   }

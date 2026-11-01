@@ -26,7 +26,7 @@ import Testing
   #expect(model.error == nil)
   try renderSkillInterface(
     ScrollView { SpeechModelSettingsView(model: model, activeModelID: nil).padding(20) }.background(
-      SilliesTheme.card),
+      SilliesTheme().card),
     size: CGSize(width: 520, height: 600), name: "sillies-speech-model-settings")
 }
 
@@ -91,7 +91,8 @@ import Testing
         actionItems: ["Coordinate the customer call."], suggestions: [suggestion])),
     metadata: .init(durationSeconds: 125))
   vault.add(record)
-  let vaultView = SessionVaultView(vault: vault, initialRecordID: record.id)
+  let vaultView = SessionVaultView(
+    vault: vault, initialRecordID: record.id, appearance: ThemeEnvironment())
   try renderSkillInterface(
     vaultView, size: CGSize(width: 980, height: 660), name: "sillies-vault-preview")
   let interrupted = SessionRecord(
@@ -103,7 +104,7 @@ import Testing
       processing: .init(failure: .permissionDenied(.openScreenRecordingSettings))))
   vault.add(interrupted)
   try renderSkillInterface(
-    SessionVaultView(vault: vault, initialRecordID: interrupted.id),
+    SessionVaultView(vault: vault, initialRecordID: interrupted.id, appearance: ThemeEnvironment()),
     size: CGSize(width: 980, height: 660), name: "sillies-vault-permission-preview")
   await vault.flush()
 }

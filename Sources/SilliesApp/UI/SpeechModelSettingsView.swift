@@ -3,6 +3,7 @@ import SilliesModelStore
 import SwiftUI
 
 struct SpeechModelSettingsView: View {
+  @Environment(\.silliesTheme) private var theme
   enum Scope { case all, transcription, speakers }
   let model: SpeechModelsPresentation
   let activeModelID: String?
@@ -25,7 +26,7 @@ struct SpeechModelSettingsView: View {
           VStack(alignment: .leading, spacing: 4) {
             Text("Apple Speech").fontWeight(.semibold)
             Text("Uses languages installed by macOS.").font(.caption).foregroundStyle(
-              SilliesTheme.secondary)
+              theme.secondary)
           }
           Spacer()
           if model.selectedModelID == SpeechModelDescriptor.apple.id {
@@ -45,13 +46,13 @@ struct SpeechModelSettingsView: View {
         ModelUpdateSettingsView(model: updates)
       }
       if let error = model.error {
-        Text(error).font(.caption).foregroundStyle(SilliesTheme.danger).fixedSize(
+        Text(error).font(.caption).foregroundStyle(theme.danger).fixedSize(
           horizontal: false, vertical: true)
       }
       Text(
         "Changes apply to your next session. Downloads need internet; your audio and transcripts stay on this Mac."
       )
-      .font(.caption).foregroundStyle(SilliesTheme.secondary).fixedSize(
+      .font(.caption).foregroundStyle(theme.secondary).fixedSize(
         horizontal: false, vertical: true)
     }
     .task { await model.load() }
@@ -59,7 +60,7 @@ struct SpeechModelSettingsView: View {
 
   private var selectedLabel: some View {
     Label("Selected", systemImage: "checkmark.circle.fill")
-      .font(.caption.weight(.medium)).foregroundStyle(SilliesTheme.accent)
+      .font(.caption.weight(.medium)).foregroundStyle(theme.accent)
   }
 
   private func downloadDescription(_ manifest: SpeechModelManifest) -> String {
@@ -79,13 +80,13 @@ struct SpeechModelSettingsView: View {
         VStack(alignment: .leading, spacing: 4) {
           Text(manifest.model.name).fontWeight(.semibold)
           Text(downloadDescription(manifest))
-            .font(.caption).foregroundStyle(SilliesTheme.secondary)
+            .font(.caption).foregroundStyle(theme.secondary)
         }
         Spacer(minLength: 8)
         if model.isSelected(manifest) { selectedLabel }
       }
       Text(LocalizedCatalogText.value(manifest.model.detail)).font(.caption).foregroundStyle(
-        SilliesTheme.secondary
+        theme.secondary
       )
       .fixedSize(horizontal: false, vertical: true)
       if let fraction = state.downloadFraction {
@@ -95,17 +96,17 @@ struct SpeechModelSettingsView: View {
         if state.isProcessing {
           ProgressView().controlSize(.small)
         }
-        Text(state.label).font(.caption).foregroundStyle(SilliesTheme.secondary)
+        Text(state.label).font(.caption).foregroundStyle(theme.secondary)
           .fixedSize(horizontal: false, vertical: true)
         Spacer(minLength: 8)
         actions(manifest, state: state)
       }
       if state == .preparing {
         Text("The first preparation can take longer. You can keep using Sillies.")
-          .font(.caption).foregroundStyle(SilliesTheme.secondary)
+          .font(.caption).foregroundStyle(theme.secondary)
       }
       if isInUse(manifest) {
-        Text("In use by your current session.").font(.caption).foregroundStyle(SilliesTheme.accent)
+        Text("In use by your current session.").font(.caption).foregroundStyle(theme.accent)
       }
       if state == .downloaded || state == .ready {
         updateActions(manifest)
@@ -130,7 +131,7 @@ struct SpeechModelSettingsView: View {
           if let url = URL(string: manifest.model.sourceURL) {
             Link("Model information", destination: url)
           }
-        }.font(.caption).foregroundStyle(SilliesTheme.secondary)
+        }.font(.caption).foregroundStyle(theme.secondary)
       }.font(.caption)
     }
   }
@@ -177,11 +178,11 @@ struct SpeechModelSettingsView: View {
     if let candidate = model.update(for: manifest) {
       VStack(alignment: .leading, spacing: 6) {
         Label("Model update available", systemImage: "arrow.down.circle")
-          .font(.caption.weight(.semibold)).foregroundStyle(SilliesTheme.accent)
+          .font(.caption.weight(.semibold)).foregroundStyle(theme.accent)
         Text(
           "Compatibility is checked before switching. Your current version is kept for rollback."
         )
-        .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        .font(.caption).foregroundStyle(theme.secondary)
         Button(
           "Download & check update (\(ByteCountFormatter.string(fromByteCount: candidate.downloadBytes, countStyle: .file)))"
         ) {
@@ -194,7 +195,7 @@ struct SpeechModelSettingsView: View {
         .font(.caption).buttonStyle(.borderless).disabled(isInUse(manifest))
     }
     if let notice = model.updates?.snapshot.entries[manifest.model.id]?.notice {
-      Text(notice).font(.caption).foregroundStyle(SilliesTheme.secondary)
+      Text(notice).font(.caption).foregroundStyle(theme.secondary)
         .fixedSize(horizontal: false, vertical: true)
     }
   }

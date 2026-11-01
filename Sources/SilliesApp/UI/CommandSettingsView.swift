@@ -2,6 +2,7 @@ import SilliesCore
 import SwiftUI
 
 struct CommandSettingsView: View {
+  @Environment(\.silliesTheme) private var theme
   let shortcuts: CommandShortcuts
 
   var body: some View {
@@ -9,23 +10,23 @@ struct CommandSettingsView: View {
       Text(
         "Click a shortcut, then press a key with Command, Option, or Control. While editing a shortcut, Escape cancels and Delete clears it."
       )
-      .font(.caption).foregroundStyle(SilliesTheme.secondary)
+      .font(.caption).foregroundStyle(theme.secondary)
       if shortcuts.availability == .suspended {
         Text(
           "Companions are paused or unavailable. Assigned shortcuts stay reserved; resume the crew to use skills."
         )
-        .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        .font(.caption).foregroundStyle(theme.secondary)
       }
       ForEach(CommandShortcutGroup.allCases) { group in
         VStack(alignment: .leading, spacing: 12) {
           Text(group.title).font(.system(.headline, design: .rounded))
-          Text(group.explanation).font(.caption).foregroundStyle(SilliesTheme.secondary)
+          Text(group.explanation).font(.caption).foregroundStyle(theme.secondary)
           ForEach(group.commands) { command in
             shortcutRow(command)
           }
         }.padding(14)
-          .background(SilliesTheme.card, in: RoundedRectangle(cornerRadius: 14))
-          .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(SilliesTheme.border))
+          .background(theme.card, in: RoundedRectangle(cornerRadius: 14))
+          .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(theme.border))
       }
     }
   }
@@ -44,9 +45,9 @@ struct CommandSettingsView: View {
         .frame(width: 160, height: 27)
         .accessibilityLabel("Shortcut for \(command.title)")
       }
-      Text(command.shortcutExplanation).font(.caption).foregroundStyle(SilliesTheme.secondary)
+      Text(command.shortcutExplanation).font(.caption).foregroundStyle(theme.secondary)
       if let error = shortcuts.errors[command.rawValue] {
-        Text(error).font(.caption).foregroundStyle(SilliesTheme.danger)
+        Text(error).font(.caption).foregroundStyle(theme.danger)
       }
     }
   }

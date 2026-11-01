@@ -29,17 +29,21 @@ final class CommandDispatcher {
   private let skills: SkillCoordinator
   private let environment: Environment
   private let targeting: Targeting
-  private let feedback = StashFeedbackController()
+  private let feedback: StashFeedbackController
   private var pending: Task<Void, Never>?
   private var generation = UUID()
   var onWritingCommand: ((AppCommand) -> Bool)?
   var onStopWriting: (() -> Void)?
   var onReleaseDictation: (() -> Void)?
 
-  init(skills: SkillCoordinator, environment: Environment, targeting: Targeting = .init()) {
+  init(
+    skills: SkillCoordinator, environment: Environment, targeting: Targeting = .init(),
+    appearance: ThemeEnvironment
+  ) {
     self.skills = skills
     self.environment = environment
     self.targeting = targeting
+    feedback = StashFeedbackController(appearance: appearance)
   }
 
   func perform(_ command: AppCommand, context: Context? = nil) {

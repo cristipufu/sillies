@@ -5,6 +5,9 @@ Adding a language does not require a Swift switch, a Settings row, or a package 
 The build discovers the files, validates them, and generates native `.lproj` resources and the
 language picker metadata. Nothing is translated over the network at runtime.
 
+Extraction keeps compiler output in separate module directories so same-named dependency files
+cannot overwrite app strings. The compiler wrapper is only used by `localize.py extract`.
+
 ## Contribute a catalog
 
 1. Copy `Localization/en.json` to a language-code filename, such as `fi.json`, or run
@@ -79,3 +82,5 @@ python3 scripts/test-localized-windows.py /tmp/sillies-localization/Sillies.app 
 This runs the existing activation, close/reopen, companion exclusion, and stacking checks sequentially.
 Each language has a 45-second deadline. Previews contain fixture content only; inspect them for
 truncation and wording. The command does not replace or restart your normal running app.
+
+The CLI owns catalog I/O and reporting. `localization_catalog.py` owns metadata and plural rules; `localization_validation.py` returns diagnostics without I/O or process exits. Use `Coverage.PRESENT` while authoring and `Coverage.COMPLETE` for shipping. The CLI flags remain unchanged.

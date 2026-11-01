@@ -19,7 +19,7 @@ import Testing
       question: "Who will follow up with the customer?", evidence: "The owner is still undecided.",
       elapsed: 60)
   ]
-  let hud = CompanionHUDController()
+  let hud = CompanionHUDController(appearance: ThemeEnvironment())
   defer { hud.close() }
   hud.companionWindowNumber = window.windowNumber
   hud.model.audioSession = session
@@ -78,7 +78,7 @@ import Testing
 
 @Test @MainActor func suggestionBubbleWrapsItsTextAndStaysAboveWalkingCompanions() throws {
   _ = NSApplication.shared
-  let bubble = MeetingSpeechBubbleController()
+  let bubble = MeetingSpeechBubbleController(appearance: ThemeEnvironment())
   defer { bubble.close() }
   let anchor = SuggestionBubbleLayout.Anchor(
     companionPoint: CGPoint(x: 300, y: 500), characterSize: 64,

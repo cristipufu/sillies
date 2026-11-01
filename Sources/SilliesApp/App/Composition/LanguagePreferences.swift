@@ -4,6 +4,7 @@ import SilliesDesign
 
 /// UI language is independent of recognition, writing output, and companion speech.
 @MainActor @Observable final class LanguagePreferences {
+  typealias Loader = @Sendable (URL) async throws -> [InterfaceLanguage]
   static let systemID = "system"
   private static let preferenceKey = "AppleLanguages"
   private static let selectionKey = "interfaceLanguage"
@@ -14,15 +15,22 @@ import SilliesDesign
   @ObservationIgnored private let defaults: UserDefaults
   @ObservationIgnored private let launchSelection: String
   @ObservationIgnored private let metadataURL: URL?
+  @ObservationIgnored private let load: Loader
+  @ObservationIgnored private var generation = UUID()
   @ObservationIgnored private var loading: Task<Void, Never>?
+  var isLoading: Bool { loading != nil }
 
   init(
     defaults: UserDefaults = .standard,
     metadataURL: URL? = Bundle.main.url(
-      forResource: "Languages", withExtension: "json")
+      forResource: "Languages", withExtension: "json"),
+    load: @escaping Loader = { file in
+      try await Task.detached(priority: .utility) { try LanguageCatalog.load(from: file) }.value
+    }
   ) {
     self.defaults = defaults
     self.metadataURL = metadataURL
+    self.load = load
     launchSelection = defaults.string(forKey: Self.selectionKey) ?? Self.systemID
     selectedID = launchSelection
   }
@@ -33,13 +41,14 @@ import SilliesDesign
       error = CocoaError(.fileNoSuchFile).localizedDescription
       return
     }
-    loading = Task { [weak self] in
-      defer { self?.loading = nil }
+    let token = UUID()
+    generation = token
+    loading = Task { [weak self, load] in
+      defer { if self?.generation == token { self?.loading = nil } }
       do {
-        let languages = try await Task.detached(priority: .utility) {
-          try LanguageCatalog.load(from: metadataURL)
-        }.value
+        let languages = try await load(metadataURL)
         try Task.checkCancellation()
+        guard self?.generation == token else { return }
         self?.languages = languages
         self?.error = nil
         if let self, selectedID != Self.systemID,
@@ -48,7 +57,7 @@ import SilliesDesign
           select(Self.systemID)
         }
       } catch {
-        guard !Task.isCancelled else { return }
+        guard !Task.isCancelled, self?.generation == token else { return }
         self?.error = String(
           localized: "Language choices could not be loaded. Please reopen Settings.")
         fputs("Language catalog failed: \(error)\n", stderr)
@@ -57,6 +66,7 @@ import SilliesDesign
   }
 
   func stop() {
+    generation = UUID()
     loading?.cancel()
     loading = nil
   }

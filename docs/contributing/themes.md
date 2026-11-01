@@ -30,9 +30,14 @@ the window background. Native Increase Contrast uses macOS semantic colors.
 ## Keep rendering predictable
 
 `SilliesDesign` validates bounded JSON on a worker. `AppearancePreferences` owns saved choices, and
-`SilliesTheme` exposes semantic colors to presentation. Native editors and window backgrounds share
+`SilliesTheme` is an immutable palette snapshot. The app owns a `ThemeEnvironment` and injects it into each window/overlay owner. SwiftUI views read `@Environment(\.silliesTheme)`; native artwork receives the snapshot explicitly. Use `ThemedHostingController` / `ThemedHostingView` for roots so updates retain view identity. Never add a static preference object or a shared theme environment. Native editors and window backgrounds share
 those colors. Changes must preserve selection, drafts, and transcript reading position. Character
 artwork retains its own colors; a palette is not a character repaint.
+
+Production constructors require the theme environment explicitly. Only app composition creates
+the owner; pass it through nested models and feedback controllers as well as visible windows.
+The architecture checker rejects default theme arguments and locally constructed fallback owners.
+Tests can create isolated environments in their own fixtures.
 
 Use `SilliesTheme` roles for new UI and `AccentButtonStyle` for prominent actions. Avoid fixed white
 text on a theme accent: a dark palette may need dark text on its bright accent. Do not reload a theme

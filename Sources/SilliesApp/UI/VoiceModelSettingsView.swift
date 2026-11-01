@@ -2,6 +2,7 @@ import SilliesModelStore
 import SwiftUI
 
 struct VoiceModelSettingsView: View {
+  @Environment(\.silliesTheme) private var theme
   let model: VoiceModelsPresentation
 
   var body: some View {
@@ -18,12 +19,12 @@ struct VoiceModelSettingsView: View {
         Text(
           "Download a model, then choose Use for Chat. First use takes longer while the voice loads. Speech & Meetings controls how Sillies listens; Local AI controls its replies."
         )
-        .foregroundStyle(SilliesTheme.secondary)
+        .foregroundStyle(theme.secondary)
         Text("Each model lists its supported languages and voice options below.")
-          .font(.caption).foregroundStyle(SilliesTheme.secondary)
+          .font(.caption).foregroundStyle(theme.secondary)
         if model.selectedModelID == VoiceModelEnvironment.disabledID {
           Label("Text replies only", systemImage: "text.bubble").foregroundStyle(
-            SilliesTheme.accent)
+            theme.accent)
         } else {
           Button("Use text replies only") { model.select(VoiceModelEnvironment.disabledID) }
             .buttonStyle(SoftButtonStyle()).disabled(model.activeID != nil)
@@ -48,21 +49,21 @@ struct VoiceModelSettingsView: View {
             .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
             .joined(separator: " · ")
         )
-        .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        .font(.caption).foregroundStyle(theme.secondary)
       }
-      Text(manifest.model.license).font(.caption).foregroundStyle(SilliesTheme.secondary)
+      Text(manifest.model.license).font(.caption).foregroundStyle(theme.secondary)
       Text(
         "\(ByteCountFormatter.string(fromByteCount: manifest.downloadBytes, countStyle: .file)) download · \(manifest.model.minimumMemoryGB) GB memory required"
       )
-      .font(.caption).foregroundStyle(SilliesTheme.secondary)
+      .font(.caption).foregroundStyle(theme.secondary)
       if !model.supports(manifest) {
         Label("This Mac has less memory than this model requires.", systemImage: "memorychip").font(
           .caption)
       }
       if let fraction = state.downloadFraction {
-        ProgressView(value: fraction).tint(SilliesTheme.accent)
+        ProgressView(value: fraction).tint(theme.accent)
       }
-      Text(state.label).font(.caption).foregroundStyle(SilliesTheme.secondary).textSelection(
+      Text(state.label).font(.caption).foregroundStyle(theme.secondary).textSelection(
         .enabled)
       HStack {
         actions(manifest, state: state)
@@ -78,7 +79,7 @@ struct VoiceModelSettingsView: View {
     switch state {
     case .downloaded, .ready:
       if model.selectedModelID == manifest.modelID {
-        Label("Selected", systemImage: "checkmark.circle.fill").foregroundStyle(SilliesTheme.accent)
+        Label("Selected", systemImage: "checkmark.circle.fill").foregroundStyle(theme.accent)
       } else {
         Button("Use for Chat") { model.select(manifest.modelID) }
           .buttonStyle(SoftButtonStyle()).disabled(model.activeID != nil)

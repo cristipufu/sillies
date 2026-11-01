@@ -37,6 +37,7 @@ final class Updates {
 }
 
 struct UpdatesSettingsView: View {
+  @Environment(\.silliesTheme) private var theme
   @State private var automaticallyChecks =
     Updates.shared.updater?.automaticallyChecksForUpdates ?? false
   @State private var automaticallyDownloads =
@@ -60,7 +61,7 @@ struct UpdatesSettingsView: View {
       )
       Text("Once a day, Sillies checks GitHub Releases for a signed update.")
         .font(.system(size: 11))
-        .foregroundStyle(SilliesTheme.secondary)
+        .foregroundStyle(theme.secondary)
       Divider()
       Toggle(
         "Download and install updates automatically",
@@ -76,7 +77,7 @@ struct UpdatesSettingsView: View {
       HStack {
         Text("Version \(appVersion)")
           .font(.system(size: 11, weight: .medium))
-          .foregroundStyle(SilliesTheme.secondary)
+          .foregroundStyle(theme.secondary)
         Spacer()
         Button("Check for Updates…") {
           Updates.shared.checkNow()
@@ -88,7 +89,7 @@ struct UpdatesSettingsView: View {
       HStack {
         Text("Updates are checked automatically in signed release builds (v\(appVersion)).")
           .font(.system(size: 11))
-          .foregroundStyle(SilliesTheme.secondary)
+          .foregroundStyle(theme.secondary)
         Spacer()
       }
     }

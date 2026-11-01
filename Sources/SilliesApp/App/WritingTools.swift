@@ -14,13 +14,14 @@ import SwiftUI
   let languages: AudioLanguageEnvironment
   let pasteBack = PasteBackCoordinator()
   private let stash: StashPickerController
-  private let panel = DictationPanelController()
-  private let selectionPanel = SelectionCommandPanel()
-  private let feedback = StashFeedbackController()
+  private let panel: DictationPanelController
+  private let selectionPanel: SelectionCommandPanel
+  private let feedback: StashFeedbackController
   private let clipboard = VaultClipboard(
     pasteboard: .general, queue: .init(label: "app.sillies.writing-clipboard"))
   private var historyWindow: NSWindow?
-  private let recoveredText = SavedTranscriptWindow()
+  private let recoveredText: SavedTranscriptWindow
+  private let appearance: ThemeEnvironment
   private weak var companions: (any WritingCompanionHost)?
   private let services: WritingServices
   private var isSuspended = false
@@ -32,13 +33,19 @@ import SwiftUI
     speech: SpeechServices, companions: any WritingCompanionHost, services: WritingServices,
     preferences: DictationPreferences = .init()
   ) {
+    let appearance = services.appearance
+    self.appearance = appearance
+    panel = DictationPanelController(appearance: appearance)
+    selectionPanel = SelectionCommandPanel(appearance: appearance)
+    feedback = StashFeedbackController(appearance: appearance)
+    recoveredText = SavedTranscriptWindow(appearance: appearance)
     self.preferences = preferences
     self.companions = companions
     self.services = services
     self.speech = speech
     vocabulary = speech.vocabulary
     languages = speech.languages
-    stash = StashPickerController(vault: services.vault)
+    stash = StashPickerController(vault: services.vault, appearance: appearance)
     let historyDirectory = services.vault.storageDirectory.deletingLastPathComponent()
       .appendingPathComponent("Dictation", isDirectory: true)
     history = WritingHistory(directory: historyDirectory)
@@ -215,10 +222,10 @@ import SwiftUI
         styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
       window.title = String(localized: "Sillies · Recent writing")
       AppContentWindowStacking.shared.register(window)
-      AppWindowAppearance.shared.register(window)
+      appearance.register(window)
       window.isReleasedWhenClosed = false
       window.contentMinSize = CGSize(width: 560, height: 400)
-      window.contentViewController = NSHostingController(
+      window.contentViewController = ThemedHostingController(
         rootView: WritingHistoryView(
           model: history,
           copy: { [weak self] in self?.clipboard.copyText($0) },
@@ -226,7 +233,7 @@ import SwiftUI
             self?.recoveredText.show(
               result.text,
               title: String(localized: "Sillies · \(result.applicationName) · Recent writing"))
-          }))
+          }), appearance: appearance)
       window.center()
       historyWindow = window
     }

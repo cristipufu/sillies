@@ -3,6 +3,7 @@ import SilliesSpeech
 import SwiftUI
 
 struct DictationSettingsView: View {
+  @Environment(\.silliesTheme) private var theme
   let tools: WritingTools
   var hasInsertionAccess = false
   var shortcuts: CommandShortcuts? = nil
@@ -28,7 +29,7 @@ struct DictationSettingsView: View {
         Button("Change shortcuts…", action: openShortcuts).buttonStyle(SoftButtonStyle())
         if hasInsertionAccess {
           Label("Text insertion is enabled", systemImage: "checkmark.circle.fill")
-            .font(.caption).foregroundStyle(SilliesTheme.accent)
+            .font(.caption).foregroundStyle(theme.accent)
         } else {
           SessionFailureNotice(failure: .permissionDenied(.openAccessibilitySettings))
         }
@@ -45,7 +46,7 @@ struct DictationSettingsView: View {
                 "Lightly tidy punctuation and filler words. Names, numbers, and meaning stay yours."
             )
         )
-        .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        .font(.caption).foregroundStyle(theme.secondary)
         Divider()
         Picker(
           SpeechLanguageGuidance.title(for: languageControl),
@@ -55,7 +56,7 @@ struct DictationSettingsView: View {
           ForEach(languages.filter { !$0.isAutomatic }) { Text($0.name).tag($0.id) }
         }
         if let languageError {
-          Text(languageError).foregroundStyle(SilliesTheme.danger).font(.caption)
+          Text(languageError).foregroundStyle(theme.danger).font(.caption)
         }
         Text(
           languageControl == .hinted
@@ -65,7 +66,7 @@ struct DictationSettingsView: View {
                 "For speech that mixes languages, use automatic detection with a multilingual model."
             )
         )
-        .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        .font(.caption).foregroundStyle(theme.secondary)
         Button("Choose a speech model…", action: openSpeech).buttonStyle(.link)
         Divider()
         PersonalDictionarySettings(model: tools.vocabulary)
@@ -85,7 +86,7 @@ struct DictationSettingsView: View {
         Text(
           "Uses Apple’s on-device writing model. If the language isn’t supported, your original text stays intact."
         )
-        .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        .font(.caption).foregroundStyle(theme.secondary)
         Button("Set up selection shortcuts…", action: openShortcuts).buttonStyle(.link)
       }
       SettingsCard(
@@ -102,10 +103,10 @@ struct DictationSettingsView: View {
           Text(
             "Each dictation finishes after five minutes. If cleanup is unavailable or takes too long, Sillies uses the transcript. If the destination changes, the result stays ready to copy."
           )
-          .font(.caption).foregroundStyle(SilliesTheme.secondary).padding(.top, 8)
+          .font(.caption).foregroundStyle(theme.secondary).padding(.top, 8)
           if let latency = tools.dictation.releaseToInsertion {
             Text("Last finish to insertion: \(latency, specifier: "%.2f") seconds")
-              .font(.caption).foregroundStyle(SilliesTheme.secondary)
+              .font(.caption).foregroundStyle(theme.secondary)
           }
         }.font(.caption)
       }
@@ -120,7 +121,7 @@ struct DictationSettingsView: View {
       Text(shortcuts?.bindings[command.rawValue]?.display ?? String(localized: "Not assigned"))
         .font(.system(.callout, design: .rounded).weight(.semibold))
         .padding(.horizontal, 10).padding(.vertical, 5)
-        .background(SilliesTheme.soft, in: RoundedRectangle(cornerRadius: 6))
+        .background(theme.soft, in: RoundedRectangle(cornerRadius: 6))
     }
   }
 

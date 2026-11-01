@@ -89,7 +89,7 @@ import Testing
 }
 
 @Test @MainActor func playfulPropRestoresTrackingExclusionAfterRestart() throws {
-  let prop = PlayfulPropPresentation()
+  let prop = PlayfulPropPresentation(appearance: ThemeEnvironment())
   defer { prop.close() }
   prop.close()
   prop.prepare(.init(prop: .sign, message: "A tiny sign", reducedMotion: true, startedAt: 0))

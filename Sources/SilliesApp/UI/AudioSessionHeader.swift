@@ -2,6 +2,7 @@ import SilliesCore
 import SwiftUI
 
 struct AudioSessionHeader: View {
+  @Environment(\.silliesTheme) private var theme
   let model: AudioSessionPresentation
   @State private var showsSourceDetails = false
 
@@ -34,7 +35,7 @@ struct AudioSessionHeader: View {
   private var controlsRow: some View {
     HStack(spacing: 10) {
       HStack(spacing: 7) {
-        Circle().fill(model.phase == .capturing ? SilliesTheme.danger : SilliesTheme.secondary)
+        Circle().fill(model.phase == .capturing ? theme.danger : theme.secondary)
           .frame(width: 7, height: 7)
         Text(statusTitle).font(.callout.weight(.medium))
       }
@@ -55,7 +56,7 @@ struct AudioSessionHeader: View {
           .buttonStyle(AccentButtonStyle()).controlSize(.large)
       } else {
         ProgressView().controlSize(.small)
-        Text("Saving…").font(.callout).foregroundStyle(SilliesTheme.secondary)
+        Text("Saving…").font(.callout).foregroundStyle(theme.secondary)
       }
     }
   }
@@ -96,7 +97,7 @@ struct AudioSessionHeader: View {
         )
       }
       Text("Sillies does not change your meeting’s microphone, mute, volume, or audio routing.")
-        .foregroundStyle(SilliesTheme.secondary)
+        .foregroundStyle(theme.secondary)
       if let maximumSpeakers = model.diarizationModel?.capabilities.maximumSpeakers {
         Text(
           "Speaker labels distinguish up to \(maximumSpeakers) voices per source. Speaker numbers belong to this meeting and source; a microphone speaker and a meeting speaker with the same number are not necessarily the same person. Check labels before relying on them."

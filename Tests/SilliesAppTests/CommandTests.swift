@@ -31,7 +31,7 @@ import Testing
     targeting: .init(current: {
       Issue.record("Chat must not inspect a foreground window")
       return nil
-    }))
+    }), appearance: ThemeEnvironment())
   dispatcher.perform(.chat)
   dispatcher.perform(.chat)
   #expect(created == 1 && opened == 2)
@@ -132,7 +132,7 @@ private actor FixtureLoginService: LoginItemServicing {
       current: { focused },
       resolve: { _, _ in
         await withCheckedContinuation { completion = $0 }
-      }))
+      }), appearance: ThemeEnvironment())
   defer { dispatcher.stop() }
   dispatcher.perform(.snap)
   while completion == nil { await Task.yield() }

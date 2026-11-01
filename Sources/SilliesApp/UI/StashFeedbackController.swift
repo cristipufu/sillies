@@ -11,10 +11,11 @@ private final class StashFeedbackModel {
 }
 
 private struct StashFeedbackView: View {
+  @Environment(\.silliesTheme) private var theme
   let model: StashFeedbackModel
   var body: some View {
     HStack(spacing: 10) {
-      Image(systemName: "tray.and.arrow.down.fill").foregroundStyle(SilliesTheme.accent)
+      Image(systemName: "tray.and.arrow.down.fill").foregroundStyle(theme.accent)
       Text(model.message).font(.system(size: 11, weight: .semibold, design: .rounded)).lineLimit(1)
       if let id = model.recordID {
         Button("View") { model.open?(id) }
@@ -28,14 +29,19 @@ private struct StashFeedbackView: View {
       .accessibilityLabel("Dismiss")
     }
     .buttonStyle(.plain).padding(12)
-    .background(SilliesTheme.card, in: RoundedRectangle(cornerRadius: 13))
-    .overlay(RoundedRectangle(cornerRadius: 13).strokeBorder(SilliesTheme.border))
-    .foregroundStyle(SilliesTheme.ink).padding(8)
+    .background(theme.card, in: RoundedRectangle(cornerRadius: 13))
+    .overlay(RoundedRectangle(cornerRadius: 13).strokeBorder(theme.border))
+    .foregroundStyle(theme.ink).padding(8)
   }
 }
 
 @MainActor
 final class StashFeedbackController {
+  private let appearance: ThemeEnvironment
+  init(appearance: ThemeEnvironment) {
+    self.appearance = appearance
+  }
+
   private enum Presentation { case hint, actionable }
   private static let verticalOffset: CGFloat = 100
   private static let size = CGSize(width: 350, height: 64)
@@ -70,7 +76,8 @@ final class StashFeedbackController {
     if panel == nil {
       let panel = SkillFloatingPanel(
         contentRect: CGRect(origin: .zero, size: Self.size), ignoresMouseEvents: false)
-      let host = NSHostingView(rootView: StashFeedbackView(model: model))
+      let host = ThemedHostingView(
+        rootView: StashFeedbackView(model: model), appearance: appearance)
       host.sizingOptions = []
       panel.contentView = host
       self.panel = panel

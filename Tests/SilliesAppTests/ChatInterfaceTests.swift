@@ -64,7 +64,7 @@ private struct FailedChatReply: ConversationResponding {
   #expect(services.models.error == nil)
   try renderSkillInterface(
     ScrollView { VoiceModelSettingsView(model: services.models).padding(20) }.background(
-      SilliesTheme.card),
+      SilliesTheme().card),
     size: CGSize(width: 520, height: 600), name: "sillies-voice-settings")
   await services.environment.stop()
 }
@@ -76,7 +76,7 @@ private struct FailedChatReply: ConversationResponding {
     try await Task.sleep(for: .milliseconds(5))
   }
   #expect(session.messages.count == 2)
-  let controller = ChatSessionWindowController()
+  let controller = ChatSessionWindowController(appearance: ThemeEnvironment())
   controller.show(session, openSettings: { _ in }, renderer: "cat")
   let window = try #require(controller.window)
   defer { controller.close() }
@@ -123,7 +123,7 @@ private struct FailedChatReply: ConversationResponding {
 
 @Test @MainActor func chatRapidCloseAndReopenDoesNotLeaveAnInvisibleWindow() async throws {
   let session = ChatWindowFixture.makeSession()
-  let controller = ChatSessionWindowController()
+  let controller = ChatSessionWindowController(appearance: ThemeEnvironment())
   controller.show(session, openSettings: { _ in }, renderer: "cat")
   let window = try #require(controller.window)
   defer {

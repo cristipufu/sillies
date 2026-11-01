@@ -36,7 +36,12 @@ import Testing
   defer { window.close() }
   let definition = try #require(try CharacterCatalog().characters.first { $0.id == "mochi" })
   let pet = CompanionInstance(
-    definition: definition, rig: CatRig(), size: 64, seed: 1, transitions: TransitionLibrary())
+    configuration: .init(
+      definition: definition,
+      size: 64,
+      seed: 1),
+    rig: CatRig(),
+    transitions: TransitionLibrary(), appearance: ThemeEnvironment())
   defer { pet.closeAllPanels() }
   var target = WindowTargetCandidate(
     windowID: UInt32(window.windowNumber), processID: ProcessInfo.processInfo.processIdentifier,

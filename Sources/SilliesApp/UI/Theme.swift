@@ -2,41 +2,41 @@ import AppKit
 import SilliesDesign
 import SwiftUI
 
-@MainActor
-enum SilliesTheme {
-  enum Contrast { case system, increased }
-  private static var preferences: AppearancePreferences?
-  static func configure(_ preferences: AppearancePreferences) { self.preferences = preferences }
-  static var revision: Int { preferences?.revision ?? 0 }
-  static var accent: Color { color(.accent) }
-  static var accentFill: Color { color(.accentFill) }
-  static var onAccent: Color { color(.onAccent) }
-  static var paper: Color { color(.paper) }
-  static var card: Color { color(.card) }
-  static var soft: Color { color(.soft) }
-  static var ink: Color { color(.ink) }
-  static var secondary: Color { color(.secondary) }
-  static var border: Color { color(.border) }
-  static var selection: Color { color(.selection) }
-  static var onSelection: Color { color(.onSelection) }
-  static var success: Color { color(.success) }
-  static var warning: Color { color(.warning) }
-  static var danger: Color { color(.danger) }
-  private static func color(_ role: ThemeColorRole) -> Color { Color(nsColor: native(role)) }
+struct SilliesTheme: Sendable, Equatable {
+  enum Contrast: Sendable { case system, increased }
+  let definition: ThemeDefinition?
+  let contrast: Contrast
+  init(definition: ThemeDefinition? = nil, contrast: Contrast = .system) {
+    self.definition = definition
+    self.contrast = contrast
+  }
+  var accent: Color { color(.accent) }
+  var accentFill: Color { color(.accentFill) }
+  var onAccent: Color { color(.onAccent) }
+  var paper: Color { color(.paper) }
+  var card: Color { color(.card) }
+  var soft: Color { color(.soft) }
+  var ink: Color { color(.ink) }
+  var secondary: Color { color(.secondary) }
+  var border: Color { color(.border) }
+  var selection: Color { color(.selection) }
+  var onSelection: Color { color(.onSelection) }
+  var success: Color { color(.success) }
+  var warning: Color { color(.warning) }
+  var danger: Color { color(.danger) }
+  private func color(_ role: ThemeColorRole) -> Color { Color(nsColor: native(role)) }
 
-  static func native(_ role: ThemeColorRole, contrast: Contrast = .system) -> NSColor {
-    // Access during view rendering participates in Observation. The color callback captures values only.
-    _ = revision
-    let theme = preferences?.selectedTheme
-    if contrast == .increased || NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast {
-      return accessibleColor(role)
+  func native(_ role: ThemeColorRole) -> NSColor {
+    let theme = definition
+    if contrast == .increased {
+      return Self.accessibleColor(role)
     }
     return NSColor(name: nil) { appearance in
       let match = appearance.bestMatch(from: [
         .aqua, .darkAqua, .accessibilityHighContrastAqua, .accessibilityHighContrastDarkAqua,
       ])
       if match == .accessibilityHighContrastAqua || match == .accessibilityHighContrastDarkAqua {
-        return accessibleColor(role)
+        return Self.accessibleColor(role)
       }
       let palette = match == .darkAqua ? theme?.dark : theme?.light
       guard let color = palette?[role] else {
@@ -63,27 +63,13 @@ enum SilliesTheme {
   }
 }
 
-struct CharacterPortrait: NSViewRepresentable {
-  let renderer: String
-  let size: Double
-  let registry: RendererRegistry
-
-  func makeNSView(context: Context) -> CompanionView {
-    let rig = registry.make(renderer) ?? CharacterRig()
-    return CompanionView.makePortrait(rig: rig, size: size)
-  }
-
-  func updateNSView(_ view: CompanionView, context: Context) { view.resize(to: size) }
+private struct SilliesThemeKey: EnvironmentKey {
+  static let defaultValue = SilliesTheme()
 }
 
-struct SoftButtonStyle: ButtonStyle {
-  func makeBody(configuration: Configuration) -> some View {
-    configuration.label
-      .padding(.horizontal, 12).padding(.vertical, 8)
-      .background(
-        SilliesTheme.accent.opacity(configuration.isPressed ? 0.20 : 0.10),
-        in: RoundedRectangle(cornerRadius: 9)
-      )
-      .foregroundStyle(SilliesTheme.accent)
+extension EnvironmentValues {
+  var silliesTheme: SilliesTheme {
+    get { self[SilliesThemeKey.self] }
+    set { self[SilliesThemeKey.self] = newValue }
   }
 }

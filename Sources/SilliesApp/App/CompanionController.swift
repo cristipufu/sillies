@@ -13,6 +13,7 @@ final class CompanionController {
   private static let neighborCheckCooldown: Double = 2.0
 
   let settings: AppSettings
+  let appearance: ThemeEnvironment
   let tracker: WorkspaceTracker
   let catalog: CharacterCatalog
   let renderers: RendererRegistry
@@ -32,7 +33,7 @@ final class CompanionController {
           return
         }
         self.skillControls.saveClipboard(with: pet)
-      }))
+      }), appearance: appearance)
   @ObservationIgnored var onOpenVault: ((UUID?) -> Void)?
   @ObservationIgnored var onWritingAnchorChanged: ((WritingCompanionAnchor?) -> Void)?
   @ObservationIgnored var onOpenWritingSession: (() -> Void)?
@@ -73,7 +74,7 @@ final class CompanionController {
       performSkill: { [weak self] skill, pet, target in
         self?.performSkillCommand(skill, for: pet, target: target)
       },
-      motionChanged: { [weak self] in self?.updateMotionClock() }))
+      motionChanged: { [weak self] in self?.updateMotionClock() }), appearance: appearance)
   @ObservationIgnored private let interaction = CompanionInteraction()
   @ObservationIgnored let dragTargeting: CompanionDragTargetingController
   @ObservationIgnored let smoothnessMetrics: InteractionSmoothnessMetrics
@@ -97,8 +98,11 @@ final class CompanionController {
       || ProcessInfo.processInfo.arguments.contains("--companion-drag-test")
     let metrics = DragResponseMetrics(enabled: traceEnabled)
     self.smoothnessMetrics = InteractionSmoothnessMetrics(enabled: traceEnabled)
-    self.dragTargeting = CompanionDragTargetingController(metrics: metrics)
+    self.dragTargeting = CompanionDragTargetingController(
+      metrics: metrics,
+      dependencies: .init(appearance: services.appearance))
     self.settings = settings
+    appearance = services.appearance
     self.renderers = assets.renderers
     self.animations = assets.animations
     self.transitions = assets.transitions
@@ -111,7 +115,7 @@ final class CompanionController {
     self.catalog = catalog
     playfulScenes = PlayfulSceneCoordinator(
       catalog: scenes, animations: assets.animations,
-      seed: UInt64.random(in: 1...UInt64.max))
+      seed: UInt64.random(in: 1...UInt64.max), appearance: services.appearance)
   }
 
   var isExcluded: Bool {
@@ -488,9 +492,13 @@ final class CompanionController {
     {
       guard let rig = renderers.make(definition.renderer) else { continue }
       let pet = CompanionInstance(
-        definition: definition, rig: rig, size: settings.size,
-        seed: UInt64(index) &+ Self.baseCompanionSeed,
-        transitions: transitions)
+        configuration: .init(
+          definition: definition,
+          size: settings.size,
+          seed: UInt64(index) &+ Self.baseCompanionSeed),
+        rig: rig,
+        transitions: transitions,
+        appearance: appearance)
       configureCompanionInput(pet)
       companions.append(pet)
     }

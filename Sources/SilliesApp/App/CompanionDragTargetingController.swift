@@ -7,7 +7,6 @@ import SilliesCore
 final class CompanionDragTargetingController {
   static let defaultRadialDwellDelay: Double = 0.24
   private static let radialDwellTolerance: Double = 18
-  private static let radialDismissDistance: Double = 148
   private static let radialOppositeHemisphereDismissDistance: Double = 68
   private static let minimumDragDistanceForWheel: Double = 14
   private static let minimumDwellSleepInterval: Double = 0.002
@@ -22,8 +21,8 @@ final class CompanionDragTargetingController {
   let metrics: DragResponseMetrics
   private let radialDwellDelay: Double
 
-  private let radialWheel = RadialWheelController()
-  private let windowHighlight = WindowDropHighlightController()
+  private let radialWheel: RadialWheelController
+  private let windowHighlight: WindowDropHighlightController
   private var dragDwellTask: Task<Void, Never>?
   private(set) var draggedCompanionID: String?
   private(set) var draggedTarget: WindowTargetCandidate?
@@ -42,13 +41,21 @@ final class CompanionDragTargetingController {
   var currentTrackerWindowFrame: (() -> CGRect?)?
   var currentCharacterSize: (() -> Double)?
 
+  @MainActor struct Dependencies {
+    var snapshot = DragWindowSnapshot()
+    var dropHitTest: DragWindowTargetResolver.HitTest?
+    var lookup: DragWindowTargetResolver.Lookup?
+    let appearance: ThemeEnvironment
+  }
   init(
-    metrics: DragResponseMetrics,
-    snapshot: DragWindowSnapshot = DragWindowSnapshot(),
-    dropHitTest: DragWindowTargetResolver.HitTest? = nil,
-    lookup: DragWindowTargetResolver.Lookup? = nil,
+    metrics: DragResponseMetrics, dependencies: Dependencies,
     radialDwellDelay: Double = CompanionDragTargetingController.defaultRadialDwellDelay
   ) {
+    let snapshot = dependencies.snapshot
+    let dropHitTest = dependencies.dropHitTest
+    let lookup = dependencies.lookup
+    radialWheel = RadialWheelController(appearance: dependencies.appearance)
+    windowHighlight = WindowDropHighlightController(appearance: dependencies.appearance)
     self.windowSnapshot = snapshot
     self.metrics = metrics
     self.radialDwellDelay = radialDwellDelay
@@ -154,7 +161,7 @@ final class CompanionDragTargetingController {
       isUpdatingSynchronously = false
       let mismatchedTarget =
         targets.currentTarget != nil && targets.currentTarget?.windowID != target.windowID
-      if distance > Self.radialDismissDistance || movedOppositeToBubbles || mismatchedTarget {
+      if distance > layout.interactionRadius || movedOppositeToBubbles || mismatchedTarget {
         radialLayout = nil
         hoveredSkill = nil
         wheelRequested = false

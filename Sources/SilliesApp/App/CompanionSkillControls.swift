@@ -14,13 +14,14 @@ final class CompanionSkillControls {
   }
   private let skills: SkillCoordinator
   private let environment: Environment
-  private let feedback = StashFeedbackController()
+  private let feedback: StashFeedbackController
   private var isActive = false
   private var generation = UUID()
 
-  init(skills: SkillCoordinator, environment: Environment) {
+  init(skills: SkillCoordinator, environment: Environment, appearance: ThemeEnvironment) {
     self.skills = skills
     self.environment = environment
+    feedback = StashFeedbackController(appearance: appearance)
   }
 
   func start() { isActive = true }

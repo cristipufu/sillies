@@ -35,13 +35,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private var voiceServices: VoiceServices?
   private var appearancePreferences: AppearancePreferences?
   private var languagePreferences: LanguagePreferences?
-  private let chatWindow = ChatSessionWindowController()
+  private let appearance = ThemeEnvironment()
+  private lazy var chatWindow = ChatSessionWindowController(appearance: appearance)
   private let reasoningServices = ReasoningServices()
   private lazy var textModels = TextModelsPresentation(environment: reasoningServices.models)
   private var shortcuts: CommandShortcuts?
   private var writingTools: WritingTools?
   private let loginItems = LoginItemSettings()
-  private let audioSessionWindow = AudioSessionWindowController()
+  private lazy var audioSessionWindow = AudioSessionWindowController(appearance: appearance)
   private var vaultWindow: NSWindow?
   private var previewWindow: NSWindow?
   private var temporaryPreferencesDomain: String?
@@ -78,7 +79,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       let controller = try CompanionController(
         settings: settings,
         services: .init(
-          accessibility: launch.usesAccessibility ? .enabled : .disabled, skills: skills))
+          accessibility: launch.usesAccessibility ? .enabled : .disabled, skills: skills,
+          appearance: appearance))
       controller.onOpenVault = { [weak self] recordID in
         self?.showVault(recordID: recordID)
       }
@@ -108,7 +110,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             speech: speechServices, companions: controller,
             services: .init(
               vault: skills.vault, recording: skills, commands: controller.commands,
-              reasoning: reasoningServices.reasoning))
+              reasoning: reasoningServices.reasoning, appearance: appearance))
         }
         let shortcuts = CommandShortcuts()
         shortcuts.onEvent = { [weak controller] command, edge in
@@ -174,18 +176,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       defaults = .standard
     }
     let settings = AppSettings(defaults: defaults)
-    let appearance = AppearancePreferences(defaults: defaults)
-    appearancePreferences = appearance
+    let preferences = AppearancePreferences(defaults: defaults)
+    appearancePreferences = preferences
     let language = LanguagePreferences(defaults: defaults)
     languagePreferences = language
     language.start()
-    SilliesTheme.configure(appearance)
-    appearance.onChange = { [weak appearance] in
+    preferences.onChange = { [weak preferences, appearance] in
       NSApp.appearance =
-        launch.usesDarkAppearance ? NSAppearance(named: .darkAqua) : appearance?.appearance.native
-      AppWindowAppearance.shared.refresh()
+        launch.usesDarkAppearance ? NSAppearance(named: .darkAqua) : preferences?.appearance.native
+      appearance.update(
+        SilliesTheme(
+          definition: preferences?.selectedTheme,
+          contrast: NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast
+            ? .increased : .system))
     }
-    appearance.start()
+    preferences.start()
     launch.apply(to: settings)
     return settings
   }
@@ -365,7 +370,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     _ controller: CompanionController, screen: NSScreen?
   ) -> ControlCenterHostingController {
     ControlCenterHostingController(
-      content: controlCenter(controller), visibleFrame: CompanionPanel.visibleFrame(for: screen))
+      content: controlCenter(controller), visibleFrame: CompanionPanel.visibleFrame(for: screen),
+      appearance: appearance)
   }
 
   @objc private func togglePopover() {
@@ -476,8 +482,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     popover.performClose(nil)
     guard let controller else { return }
     let rootView = SessionVaultView(
-      vault: controller.skills.vault, initialRecordID: recordID, pasteBack: writingTools?.pasteBack)
-    let host = NSHostingController(rootView: rootView)
+      vault: controller.skills.vault, initialRecordID: recordID, pasteBack: writingTools?.pasteBack,
+      appearance: appearance)
+    let host = ThemedHostingController(rootView: rootView, appearance: appearance)
     host.sizingOptions = []
     if let vaultWindow {
       let currentFrame = vaultWindow.frame
@@ -490,7 +497,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         backing: .buffered, defer: false)
       window.title = String(localized: "Sillies · Session Vault")
       AppContentWindowStacking.shared.register(window)
-      AppWindowAppearance.shared.register(window)
+      appearance.register(window)
       window.titlebarAppearsTransparent = true
       window.isReleasedWhenClosed = false
       window.minSize = Self.minVaultWindowSize
@@ -512,17 +519,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         defer: false)
       window.title = String(localized: "Sillies · Settings")
       AppContentWindowStacking.shared.register(window)
-      AppWindowAppearance.shared.register(window)
+      appearance.register(window)
       window.contentMinSize = SettingsWindowLayout.minimumSize
       window.titlebarAppearsTransparent = true
       window.isReleasedWhenClosed = false
-      window.contentViewController = NSHostingController(
+      window.contentViewController = ThemedHostingController(
         rootView: SettingsView(
           controller: controller, appearance: appearancePreferences, language: languagePreferences,
           speechModels: speechServices?.models,
           voiceModels: voiceServices?.models, textModels: textModels,
           shortcuts: shortcuts, loginItems: loginItems, writingTools: writingTools,
-          navigation: settingsNavigation))
+          navigation: settingsNavigation), appearance: appearance)
       window.center()
       settingsWindow = window
     }
@@ -539,7 +546,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       backing: .buffered, defer: false)
     window.title = String(localized: "Sillies · Control Center")
     AppContentWindowStacking.shared.register(window)
-    AppWindowAppearance.shared.register(window)
+    appearance.register(window)
     window.contentViewController = host
     window.isReleasedWhenClosed = false
     window.center()

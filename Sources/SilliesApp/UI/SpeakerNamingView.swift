@@ -2,6 +2,7 @@ import SilliesCore
 import SwiftUI
 
 struct SpeakerNamingView: View {
+  @Environment(\.silliesTheme) private var theme
   let record: SessionRecord
   let rename: (SessionSpeakerIdentity, String) -> Void
   @State private var speakers: [SessionSpeakerIdentity] = []
@@ -13,7 +14,7 @@ struct SpeakerNamingView: View {
           Text(
             "Names apply to this recording only. Review anonymous labels first; nearby speakers and overlapping speech may be misidentified."
           )
-          .font(.caption).foregroundStyle(SilliesTheme.secondary)
+          .font(.caption).foregroundStyle(theme.secondary)
           ForEach(speakers) { speaker in
             HStack {
               Text(speaker.label).font(.caption).frame(width: 150, alignment: .leading)

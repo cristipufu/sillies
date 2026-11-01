@@ -177,7 +177,7 @@ func vaultPreservesCorruptMetadataAndMergesPendingChangesAfterRecovery() async t
   let record = makeLoadTestRecord("Protected during quit")
   vault.add(record)
   await vault.flush()
-  let model = SessionVaultModel(vault: vault)
+  let model = SessionVaultModel(vault: vault, presentation: .init(appearance: ThemeEnvironment()))
   model.toggleProtection(record)
   var finished = false
   vault.flushOnIOQueue { MainActor.assumeIsolated { finished = true } }

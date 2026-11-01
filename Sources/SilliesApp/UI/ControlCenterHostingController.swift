@@ -8,10 +8,15 @@ final class ControlCenterHostingController: NSHostingController<AnyView> {
   private static let maximumHeight: CGFloat = 640
   private static let screenMargin: CGFloat = 24
   private let content: ControlCenterView
+  private let appearance: ThemeEnvironment
   private(set) var viewportSize: CGSize = .zero
 
-  init(content: ControlCenterView, visibleFrame: CGRect) {
+  init(
+    content: ControlCenterView, visibleFrame: CGRect,
+    appearance: ThemeEnvironment
+  ) {
     self.content = content
+    self.appearance = appearance
     super.init(rootView: AnyView(EmptyView()))
     sizingOptions = []
     updateViewport(visibleFrame: visibleFrame)
@@ -26,7 +31,8 @@ final class ControlCenterHostingController: NSHostingController<AnyView> {
     guard viewportSize != size else { return }
     viewportSize = size
     rootView = AnyView(
-      ControlCenterViewport(content: content, size: size))
+      ThemedContent(
+        appearance: appearance, content: ControlCenterViewport(content: content, size: size)))
     preferredContentSize = size
     view.setFrameSize(size)
     view.layoutSubtreeIfNeeded()
@@ -34,12 +40,13 @@ final class ControlCenterHostingController: NSHostingController<AnyView> {
 }
 
 private struct ControlCenterViewport: View {
+  @Environment(\.silliesTheme) private var theme
   let content: ControlCenterView
   let size: CGSize
   var body: some View {
     ScrollView(.vertical) { content }
       .scrollBounceBehavior(.basedOnSize)
       .frame(width: size.width, height: size.height)
-      .background(SilliesTheme.paper)
+      .background(theme.paper)
   }
 }

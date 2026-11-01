@@ -16,7 +16,8 @@ import Testing
   await vault.flush()
   let loader = DelayedDetail()
   let model = SessionVaultModel(
-    vault: vault, initialRecordID: first.id,
+    vault: vault,
+    presentation: .init(initialRecordID: first.id, appearance: ThemeEnvironment()),
     loadDetail: { id in
       if id == first.id { return await loader.read(first) }
       return second
@@ -42,7 +43,8 @@ import Testing
   await vault.flush()
   let state = DetailFailureState()
   let model = SessionVaultModel(
-    vault: vault, initialRecordID: record.id,
+    vault: vault,
+    presentation: .init(initialRecordID: record.id, appearance: ThemeEnvironment()),
     loadDetail: { _ in
       if state.failed { throw CocoaError(.fileReadNoPermission) }
       return record

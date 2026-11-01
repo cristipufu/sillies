@@ -29,15 +29,20 @@ final class PlayfulSceneFixture {
     companions = try definitions.enumerated().map { index, definition in
       let rig = try #require(RendererRegistry().make(definition.renderer))
       let pet = CompanionInstance(
-        definition: definition, rig: rig, size: 64,
-        seed: UInt64(index + 1), transitions: TransitionLibrary())
+        configuration: .init(
+          definition: definition,
+          size: 64,
+          seed: UInt64(index + 1)),
+        rig: rig,
+        transitions: TransitionLibrary(), appearance: ThemeEnvironment())
       pet.updateAttachment(.init(surface: surface, windowID: 777, windowLayer: 0))
       _ = pet.configureSurface(surface, window: window, display: visible)
       pet.place(at: surface.point(at: Double(index + 1) / Double(definitions.count + 1)))
       pet.presentation.show(reducedMotion: true)
       return pet
     }
-    coordinator = PlayfulSceneCoordinator(catalog: catalog, animations: animations, seed: 7)
+    coordinator = PlayfulSceneCoordinator(
+      catalog: catalog, animations: animations, seed: 7, appearance: ThemeEnvironment())
     coordinator.configure(.animated, at: 0)
   }
 

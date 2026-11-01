@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SettingsView: View {
+  @Environment(\.silliesTheme) private var theme
   let controller: CompanionController
   var appearance: AppearancePreferences? = nil
   var language: LanguagePreferences? = nil
@@ -16,12 +17,12 @@ struct SettingsView: View {
   var body: some View {
     HStack(spacing: 0) {
       sidebar
-      Divider().overlay(SilliesTheme.border)
+      Divider().overlay(theme.border)
       ScrollView {
         VStack(alignment: .leading, spacing: 22) {
           VStack(alignment: .leading, spacing: 6) {
             Text(destination.title).font(.system(size: 26, weight: .bold, design: .rounded))
-            Text(destination.explanation).font(.callout).foregroundStyle(SilliesTheme.secondary)
+            Text(destination.explanation).font(.callout).foregroundStyle(theme.secondary)
           }.padding(.bottom, 4)
           page
         }.padding(28).frame(maxWidth: .infinity, alignment: .topLeading)
@@ -31,7 +32,7 @@ struct SettingsView: View {
       minWidth: SettingsWindowLayout.minimumSize.width,
       minHeight: SettingsWindowLayout.minimumSize.height
     )
-    .background(SilliesTheme.paper).foregroundStyle(SilliesTheme.ink).tint(SilliesTheme.accent)
+    .background(theme.paper).foregroundStyle(theme.ink).tint(theme.accent)
   }
 
   private var sidebar: some View {
@@ -44,7 +45,7 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 2) {
           Text(verbatim: "sillies").font(.system(size: 24, weight: .bold, design: .rounded))
           Text("Make yourself at home.").font(.system(size: 10)).foregroundStyle(
-            SilliesTheme.secondary)
+            theme.secondary)
         }
       }
       VStack(spacing: 6) {
@@ -63,18 +64,18 @@ struct SettingsView: View {
                 Text("\(count)").font(.caption.bold())
               }
             }.padding(.horizontal, 12).padding(.vertical, 11)
-              .foregroundStyle(destination == item ? SilliesTheme.accent : SilliesTheme.ink)
+              .foregroundStyle(destination == item ? theme.accent : theme.ink)
               .background(
-                destination == item ? SilliesTheme.accent.opacity(0.12) : .clear,
+                destination == item ? theme.accent.opacity(0.12) : .clear,
                 in: RoundedRectangle(cornerRadius: 10))
           }.buttonStyle(.plain).accessibilityAddTraits(destination == item ? .isSelected : [])
         }
       }
       Spacer()
       Label("On your Mac. In your corner.", systemImage: "lock.shield")
-        .font(.system(size: 10)).foregroundStyle(SilliesTheme.secondary)
+        .font(.system(size: 10)).foregroundStyle(theme.secondary)
     }.padding(16).frame(width: SettingsWindowLayout.sidebarWidth)
-      .background(SilliesTheme.soft.opacity(0.5))
+      .background(theme.soft.opacity(0.5))
   }
 
   @ViewBuilder private var page: some View {

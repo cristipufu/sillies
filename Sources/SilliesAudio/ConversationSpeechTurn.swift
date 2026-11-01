@@ -44,8 +44,7 @@ final class ConversationSpeechTurn: Sendable {
   }
 
   func prepare(
-    language: SpeechLanguage, make: @escaping LocalSpeechFactory.Make,
-    ready: @escaping @Sendable () -> Void = {}
+    language: SpeechLanguage, make: @escaping LocalSpeechFactory.Make
   ) {
     storage.withValue { state in
       state.preparation = Task { [weak self, queue] in
@@ -69,7 +68,7 @@ final class ConversationSpeechTurn: Sendable {
               channel.cancel()
               return
             }
-            self.install(channel, ready: ready)
+            self.install(channel)
           }
         } catch {
           guard !Task.isCancelled else { return }
@@ -121,7 +120,7 @@ final class ConversationSpeechTurn: Sendable {
     }
   }
 
-  private func install(_ channel: any LocalSpeechChannel, ready: @escaping @Sendable () -> Void) {
+  private func install(_ channel: any LocalSpeechChannel) {
     storage.withValue { state in
       guard state.result == nil else {
         channel.cancel()
@@ -131,7 +130,6 @@ final class ConversationSpeechTurn: Sendable {
       state.channel = channel
       for buffer in state.buffered { channel.append(buffer) }
       state.buffered.removeAll()
-      ready()
       if state.finishing { drain(channel) }
     }
   }

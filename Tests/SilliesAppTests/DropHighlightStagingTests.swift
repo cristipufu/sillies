@@ -5,7 +5,7 @@ import Testing
 
 @Test @MainActor func dropHighlightPreparesNativeBackingWithoutShowingOrInterceptingInput() throws {
   _ = NSApplication.shared
-  let highlight = WindowDropHighlightController()
+  let highlight = WindowDropHighlightController(appearance: ThemeEnvironment())
   defer { highlight.close() }
   highlight.prestage(target: SkillOverlayPreparation.target)
   let number = try #require(highlight.windowNumber)

@@ -50,6 +50,7 @@ final class WindowDropHighlightModel {
 }
 
 struct WindowDropHighlightView: View {
+  @Environment(\.silliesTheme) private var theme
   let model: WindowDropHighlightModel
 
   var body: some View {
@@ -70,15 +71,15 @@ struct WindowDropHighlightView: View {
         }
       }
     }
-    .foregroundStyle(model.hoveredSkill != nil ? SilliesTheme.onAccent : SilliesTheme.ink)
+    .foregroundStyle(model.hoveredSkill != nil ? theme.onAccent : theme.ink)
     .padding(.horizontal, 11).padding(.vertical, 5)
     .background(
       Capsule().fill(
-        model.hoveredSkill != nil ? SilliesTheme.accentFill : SilliesTheme.card.opacity(0.97))
+        model.hoveredSkill != nil ? theme.accentFill : theme.card.opacity(0.97))
     )
     .overlay(
       Capsule().strokeBorder(
-        model.hoveredSkill != nil ? SilliesTheme.onAccent.opacity(0.4) : SilliesTheme.border,
+        model.hoveredSkill != nil ? theme.onAccent.opacity(0.4) : theme.border,
         lineWidth: 0.8)
     )
     .shadow(color: .black.opacity(0.16), radius: 6, y: 2)
@@ -101,13 +102,15 @@ private final class WindowDropOutlineView: NSView {
   private var selected = false
 
   private let outline = CALayer()
-  let badge: NSHostingView<WindowDropHighlightView>
+  let badge: ThemedHostingView<WindowDropHighlightView>
   var hasHardwareBorderOutline: Bool {
     outline.borderWidth > 0 && outline.cornerRadius == Self.cornerRadius && outline.contents == nil
   }
 
-  init(model: WindowDropHighlightModel) {
-    badge = NSHostingView(rootView: WindowDropHighlightView(model: model))
+  private var theme = SilliesTheme()
+  init(model: WindowDropHighlightModel, appearance: ThemeEnvironment) {
+    badge = ThemedHostingView(
+      rootView: WindowDropHighlightView(model: model), appearance: appearance)
     badge.sizingOptions = []
     badge.frame = CGRect(x: 0, y: 0, width: Self.badgeWidth, height: Self.badgeHeight)
     super.init(frame: SkillOverlayPreparation.target.frame)
@@ -118,6 +121,10 @@ private final class WindowDropOutlineView: NSView {
     outline.cornerRadius = Self.cornerRadius
     outline.cornerCurve = .continuous
     updateSelection(false)
+    appearance.observe(self) { view, palette in
+      view.theme = palette
+      view.refreshAppearance()
+    }
   }
 
   required init?(coder: NSCoder) { nil }
@@ -158,7 +165,7 @@ private final class WindowDropOutlineView: NSView {
     CATransaction.setDisableActions(true)
     effectiveAppearance.performAsCurrentDrawingAppearance {
       outline.borderColor =
-        SilliesTheme.native(.accent).withAlphaComponent(selected ? 0.95 : 0.72).cgColor
+        theme.native(.accent).withAlphaComponent(selected ? 0.95 : 0.72).cgColor
     }
     outline.borderWidth = selected ? Self.selectedBorderWidth : Self.unselectedBorderWidth
     CATransaction.commit()
@@ -168,6 +175,11 @@ private final class WindowDropOutlineView: NSView {
 /// Highlights the candidate target window underneath a dragged companion.
 @MainActor
 final class WindowDropHighlightController {
+  private let appearance: ThemeEnvironment
+  init(appearance: ThemeEnvironment) {
+    self.appearance = appearance
+  }
+
   private static let highlightFrameOutset: CGFloat = -2
 
   private let model = WindowDropHighlightModel()
@@ -194,7 +206,7 @@ final class WindowDropHighlightController {
     let created = SkillFloatingPanel(
       contentRect: initialFrame, ignoresMouseEvents: true,
       level: CompanionPanel.overlayLevel)
-    let view = WindowDropOutlineView(model: model)
+    let view = WindowDropOutlineView(model: model, appearance: appearance)
     created.contentView = view
     panel = created
     visibleAlpha = created.alphaValue

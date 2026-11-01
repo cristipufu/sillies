@@ -3,6 +3,7 @@ import SwiftUI
 
 /// Bounded native message text reports selection so arriving replies cannot pull the reader away.
 struct ChatMessageText: NSViewRepresentable {
+  @Environment(\.silliesTheme) private var theme
   let text: String
   let color: NSColor
   let selectionChanged: (Bool) -> Void
@@ -22,7 +23,7 @@ struct ChatMessageText: NSViewRepresentable {
   func updateNSView(_ view: NSTextView, context: Context) {
     context.coordinator.selectionChanged = selectionChanged
     if view.string != text { view.string = text }
-    TextEditorAppearance.apply(to: view)
+    TextEditorAppearance.apply(theme, to: view)
     view.textColor = color
   }
   func sizeThatFits(_ proposal: ProposedViewSize, nsView view: NSTextView, context: Context)

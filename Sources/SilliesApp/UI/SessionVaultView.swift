@@ -3,18 +3,24 @@ import SilliesCore
 import SwiftUI
 
 struct SessionVaultView: View {
+  @Environment(\.silliesTheme) private var theme
   let vault: SessionVaultStore
   @State private var model: SessionVaultModel
   @State private var showsStashComposer = false
   @State private var showsRetention = false
 
   init(
-    vault: SessionVaultStore, initialRecordID: UUID? = nil, pasteBack: PasteBackCoordinator? = nil
+    vault: SessionVaultStore, initialRecordID: UUID? = nil, pasteBack: PasteBackCoordinator? = nil,
+    appearance: ThemeEnvironment
   ) {
     self.vault = vault
     _model = State(
       initialValue: SessionVaultModel(
-        vault: vault, initialRecordID: initialRecordID, pasteBack: pasteBack))
+        vault: vault,
+        presentation: .init(
+          initialRecordID: initialRecordID,
+          pasteBack: pasteBack,
+          appearance: appearance)))
   }
 
   var body: some View {
@@ -22,12 +28,12 @@ struct SessionVaultView: View {
     let current = model.selectedHeader(in: records)
     HStack(spacing: 0) {
       sidebar(records: records, selected: current)
-      Divider().overlay(SilliesTheme.border)
+      Divider().overlay(theme.border)
       SessionVaultDetailView(vault: vault, model: model, record: model.visibleDetail)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(SilliesTheme.paper)
-    .foregroundStyle(SilliesTheme.ink)
+    .background(theme.paper)
+    .foregroundStyle(theme.ink)
     .onDisappear { model.stop() }
     .task(id: model.searchIdentity) { await model.refreshSearch() }
     .task(id: model.detailIdentity) { await model.loadSelection() }
@@ -43,11 +49,11 @@ struct SessionVaultView: View {
       HStack(spacing: 10) {
         ZStack {
           RoundedRectangle(cornerRadius: 10, style: .continuous)
-            .fill(SilliesTheme.accent.opacity(0.14))
+            .fill(theme.accent.opacity(0.14))
             .frame(width: 34, height: 34)
           Image(systemName: "archivebox.fill")
             .font(.system(size: 15, weight: .semibold))
-            .foregroundStyle(SilliesTheme.accent)
+            .foregroundStyle(theme.accent)
         }
         VStack(alignment: .leading, spacing: 2) {
           Text("Session Vault")
@@ -55,7 +61,7 @@ struct SessionVaultView: View {
             .tracking(-0.3)
           Text("Captures, transcripts & stashes")
             .font(.system(size: 11))
-            .foregroundStyle(SilliesTheme.secondary)
+            .foregroundStyle(theme.secondary)
         }
         Spacer(minLength: 4)
         Text("\(records.count)")
@@ -63,15 +69,15 @@ struct SessionVaultView: View {
           .monospacedDigit()
           .padding(.horizontal, 9)
           .padding(.vertical, 3.5)
-          .background(SilliesTheme.soft, in: Capsule())
-          .foregroundStyle(SilliesTheme.secondary)
+          .background(theme.soft, in: Capsule())
+          .foregroundStyle(theme.secondary)
       }
 
       // Search field
       HStack(spacing: 8) {
         Image(systemName: "magnifyingglass")
           .font(.system(size: 12, weight: .medium))
-          .foregroundStyle(SilliesTheme.secondary)
+          .foregroundStyle(theme.secondary)
         TextField(
           "Search transcripts, OCR, stashes…",
           text: Binding(get: { model.searchQuery }, set: { model.searchQuery = $0 })
@@ -84,17 +90,17 @@ struct SessionVaultView: View {
           } label: {
             Image(systemName: "xmark.circle.fill")
               .font(.system(size: 12))
-              .foregroundStyle(SilliesTheme.secondary)
+              .foregroundStyle(theme.secondary)
           }
           .buttonStyle(.plain)
         }
       }
       .padding(.horizontal, 11)
       .frame(height: 34)
-      .background(SilliesTheme.card, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+      .background(theme.card, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
       .overlay(
         RoundedRectangle(cornerRadius: 10, style: .continuous)
-          .strokeBorder(SilliesTheme.border, lineWidth: 0.8))
+          .strokeBorder(theme.border, lineWidth: 0.8))
 
       HStack {
         Button("Add text / link", systemImage: "plus") { showsStashComposer = true }
@@ -129,7 +135,7 @@ struct SessionVaultView: View {
       }.font(.caption)
 
       if let error = vault.persistenceError {
-        Text(error).font(.caption).foregroundStyle(SilliesTheme.warning)
+        Text(error).font(.caption).foregroundStyle(theme.warning)
         Button("Retry saving") { vault.retrySaving() }
       }
 
@@ -140,7 +146,7 @@ struct SessionVaultView: View {
         ).font(.caption)
       }
       if let error = model.searchError {
-        Text(error).font(.caption).foregroundStyle(SilliesTheme.danger)
+        Text(error).font(.caption).foregroundStyle(theme.danger)
       }
       if records.isEmpty {
         emptySidebarState
@@ -167,11 +173,11 @@ struct SessionVaultView: View {
       Spacer()
       ZStack {
         Circle()
-          .fill(SilliesTheme.soft)
+          .fill(theme.soft)
           .frame(width: 52, height: 52)
         Image(systemName: "sparkles.rectangle.stack")
           .font(.system(size: 21, weight: .medium))
-          .foregroundStyle(SilliesTheme.secondary)
+          .foregroundStyle(theme.secondary)
       }
       Text(
         model.searchQuery.isEmpty && model.selectedFilter == nil
@@ -182,7 +188,7 @@ struct SessionVaultView: View {
         "Drag a companion onto a window to choose a skill. Record from the menu bar, or add text and links here to Pocket Stash."
       )
       .font(.system(size: 11.5))
-      .foregroundStyle(SilliesTheme.secondary)
+      .foregroundStyle(theme.secondary)
       .multilineTextAlignment(.center)
       .lineSpacing(2.5)
       .padding(.horizontal, 16)
@@ -198,36 +204,36 @@ struct SessionVaultView: View {
       HStack(alignment: .top, spacing: 11) {
         ZStack {
           RoundedRectangle(cornerRadius: 10, style: .continuous)
-            .fill(isSelected ? SilliesTheme.accent : SilliesTheme.accent.opacity(0.12))
+            .fill(isSelected ? theme.accent : theme.accent.opacity(0.12))
             .frame(width: 32, height: 32)
           Image(systemName: record.kind.symbolName)
             .font(.system(size: 13, weight: .semibold))
-            .foregroundStyle(isSelected ? SilliesTheme.onAccent : SilliesTheme.accent)
+            .foregroundStyle(isSelected ? theme.onAccent : theme.accent)
         }
 
         VStack(alignment: .leading, spacing: 5) {
           HStack(alignment: .firstTextBaseline, spacing: 6) {
             Text(record.appName)
               .font(.system(size: 13, weight: .bold, design: .rounded))
-              .foregroundStyle(SilliesTheme.ink)
+              .foregroundStyle(theme.ink)
               .lineLimit(1)
             Spacer(minLength: 4)
             Text(record.createdAt.formatted(date: .omitted, time: .shortened))
               .font(.system(size: 10, weight: .medium))
               .monospacedDigit()
-              .foregroundStyle(SilliesTheme.secondary)
+              .foregroundStyle(theme.secondary)
           }
 
           if let title = record.windowTitle, !title.isEmpty, title != record.appName {
             Text(title)
               .font(.system(size: 11, weight: .semibold))
-              .foregroundStyle(SilliesTheme.secondary)
+              .foregroundStyle(theme.secondary)
               .lineLimit(1)
           }
 
           Text(cleanPreviewText(for: record))
             .font(.system(size: 11))
-            .foregroundStyle(SilliesTheme.ink.opacity(0.80))
+            .foregroundStyle(theme.ink.opacity(0.80))
             .lineSpacing(1.5)
             .lineLimit(2)
             .multilineTextAlignment(.leading)
@@ -235,28 +241,28 @@ struct SessionVaultView: View {
           HStack(spacing: 6) {
             Text(record.kind.shortTitle)
               .font(.system(size: 9.5, weight: .bold, design: .rounded))
-              .foregroundStyle(SilliesTheme.accent)
+              .foregroundStyle(theme.accent)
             Text("· \(record.characterName)")
               .font(.system(size: 9.5, weight: .medium, design: .rounded))
-              .foregroundStyle(SilliesTheme.secondary)
+              .foregroundStyle(theme.secondary)
             if record.durationSeconds >= 1 {
               Text("· \(SessionRecord.formatDuration(record.durationSeconds))")
                 .font(.system(size: 9.5, weight: .medium))
                 .monospacedDigit()
-                .foregroundStyle(SilliesTheme.secondary)
+                .foregroundStyle(theme.secondary)
             }
             if record.kind == .stash && record.stashItemCount > 0 {
               Text(
                 String(localized: "· \(record.stashItemCount) items", comment: "plural")
               )
               .font(.system(size: 9.5, weight: .medium))
-              .foregroundStyle(SilliesTheme.secondary)
+              .foregroundStyle(theme.secondary)
             }
             if record.imageFilename != nil {
               Spacer()
               Image(systemName: "photo")
                 .font(.system(size: 9.5))
-                .foregroundStyle(SilliesTheme.secondary)
+                .foregroundStyle(theme.secondary)
             }
           }
           .padding(.top, 1)
@@ -265,12 +271,12 @@ struct SessionVaultView: View {
       .padding(12)
       .frame(maxWidth: .infinity, alignment: .leading)
       .background(
-        isSelected ? SilliesTheme.accent.opacity(0.10) : SilliesTheme.card,
+        isSelected ? theme.accent.opacity(0.10) : theme.card,
         in: RoundedRectangle(cornerRadius: 13, style: .continuous)
       )
       .overlay(
         RoundedRectangle(cornerRadius: 13, style: .continuous).strokeBorder(
-          isSelected ? SilliesTheme.accent : SilliesTheme.border.opacity(0.80),
+          isSelected ? theme.accent : theme.border.opacity(0.80),
           lineWidth: isSelected ? 1.4 : 0.75))
     }
     .buttonStyle(.plain)

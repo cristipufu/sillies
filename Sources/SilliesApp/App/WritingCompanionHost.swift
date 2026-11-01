@@ -27,4 +27,5 @@ extension SkillCoordinator: RecordingActivity {
   let recording: any RecordingActivity
   let commands: CommandDispatcher
   let reasoning: any LocalReasoning
+  let appearance: ThemeEnvironment
 }

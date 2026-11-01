@@ -85,3 +85,19 @@ import Testing
   #expect(await activity.claimText(next, cancel: {}))
   await activity.releaseText(next)
 }
+
+@Test func voiceWarmupReleasesInferenceAdmissionOnSuccessAndFailure() async throws {
+  let activity = InferenceActivity()
+  try await activity.prepareSpeechRuntime {
+    #expect(await activity.claimText(UUID(), cancel: {}) == false)
+  }
+  let text = UUID()
+  #expect(await activity.claimText(text, cancel: {}))
+  await activity.releaseText(text)
+  await #expect(throws: CancellationError.self) {
+    try await activity.prepareSpeechRuntime { throw CancellationError() }
+  }
+  let voice = UUID()
+  #expect(await activity.claimSynthesis(voice, cancel: {}))
+  await activity.releaseSynthesis(voice)
+}

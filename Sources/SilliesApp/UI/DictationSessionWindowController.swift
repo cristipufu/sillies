@@ -4,6 +4,11 @@ import SwiftUI
 
 /// A familiar session window that opens only on request and preserves the destination app's focus.
 @MainActor final class DictationSessionWindowController {
+  private let appearance: ThemeEnvironment
+  init(appearance: ThemeEnvironment) {
+    self.appearance = appearance
+  }
+
   private(set) var window: NSPanel?
 
   func show(
@@ -21,9 +26,10 @@ import SwiftUI
       panel.becomesKeyOnlyIfNeeded = true
       panel.level = CompanionPanel.contentWindowLevel
       panel.contentMinSize = SessionWindowLayout.minimumSize
-      let host = NSHostingController(
+      let host = ThemedHostingController(
         rootView: DictationSessionView(
-          model: model, companionName: companionName, copy: copy, history: history))
+          model: model, companionName: companionName, copy: copy, history: history),
+        appearance: appearance)
       host.sizingOptions = []
       panel.contentViewController = host
       panel.center()

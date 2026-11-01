@@ -8,6 +8,12 @@ enum ChatWindowLayout {
 }
 
 @MainActor final class ChatSessionWindowController: NSObject, NSWindowDelegate {
+  private let appearance: ThemeEnvironment
+  init(appearance: ThemeEnvironment) {
+    self.appearance = appearance
+    super.init()
+  }
+
   private static let animationDuration: TimeInterval = 0.18
   private static let entranceOffset: CGFloat = 14
   private var animationID = UUID()
@@ -34,16 +40,16 @@ enum ChatWindowLayout {
       window.titlebarAppearsTransparent = true
       window.level = .normal
       AppContentWindowStacking.shared.register(window)
-      AppWindowAppearance.shared.register(window)
+      appearance.register(window)
       window.center()
       self.window = window
     }
     window?.title = String(localized: "Sillies · Chat with \(model.companionName)")
     if displayedSession !== model {
-      let view = NSHostingView(
+      let view = ThemedHostingView(
         rootView: ChatSessionView(
           model: model, openSettings: openSettings, renderer: renderer,
-          motion: reducesMotion ? .reduced : .animated))
+          motion: reducesMotion ? .reduced : .animated), appearance: appearance)
       view.sizingOptions = []
       window?.contentView = view
       displayedSession = model

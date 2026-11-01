@@ -5,11 +5,11 @@ import SilliesPersistence
 import SwiftUI
 
 struct StashPickerView: View {
+  @Environment(\.silliesTheme) private var theme
   struct Actions {
     let choose: (UUID) -> Void
     let close: () -> Void
   }
-  let vault: SessionVaultStore
   let paste: PasteBackCoordinator
   let actions: Actions
   let readError: () -> String?
@@ -17,14 +17,12 @@ struct StashPickerView: View {
   @State private var selected: UUID?
   @FocusState private var searchFocused: Bool
   init(
-    vault: SessionVaultStore, paste: PasteBackCoordinator,
+    model: SessionVaultModel, paste: PasteBackCoordinator,
     actions: Actions, readError: @escaping () -> String? = { nil }
   ) {
-    self.vault = vault
     self.paste = paste
     self.actions = actions
     self.readError = readError
-    let model = SessionVaultModel(vault: vault)
     model.selectedFilter = .stash
     _model = State(initialValue: model)
   }
@@ -47,24 +45,24 @@ struct StashPickerView: View {
           return .handled
         }
       if let notice = paste.notice {
-        Text(notice).font(.caption).foregroundStyle(SilliesTheme.secondary)
+        Text(notice).font(.caption).foregroundStyle(theme.secondary)
       }
       if model.isSearching { ProgressView().controlSize(.small) }
-      if let error = model.searchError { Text(error).foregroundStyle(SilliesTheme.danger) }
+      if let error = model.searchError { Text(error).foregroundStyle(theme.danger) }
       if let error = readError() {
-        Text(error).font(.caption).foregroundStyle(SilliesTheme.danger).textSelection(.enabled)
+        Text(error).font(.caption).foregroundStyle(theme.danger).textSelection(.enabled)
       }
       List(model.filteredRecords, selection: $selected) { record in
         VStack(alignment: .leading, spacing: 4) {
           Text(record.preview).lineLimit(3)
           Text(record.createdAt, style: .date).font(.caption).foregroundStyle(
-            SilliesTheme.secondary)
+            theme.secondary)
         }.padding(.vertical, 4).tag(record.id)
-          .listRowBackground(SilliesTheme.card)
+          .listRowBackground(theme.card)
           .onTapGesture(count: 2) { actions.choose(record.id) }
       }.scrollContentBackground(.hidden)
-        .background(SilliesTheme.card, in: RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(SilliesTheme.border))
+        .background(theme.card, in: RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(theme.border))
         .overlay {
           if model.filteredRecords.isEmpty, !model.isSearching {
             ContentUnavailableView(
@@ -78,14 +76,14 @@ struct StashPickerView: View {
       if model.hasMoreResults { Button("Show more") { model.showMore() } }
       HStack {
         Text("Return to choose · Escape to close").font(.caption).foregroundStyle(
-          SilliesTheme.secondary)
+          theme.secondary)
         Spacer()
         Button(paste.actionTitle) { activateSelection() }
           .buttonStyle(AccentButtonStyle()).keyboardShortcut(.defaultAction).disabled(
             model.filteredRecords.isEmpty || paste.isPasting)
       }
     }.padding(24).frame(minWidth: 560, minHeight: 440)
-      .background(SilliesTheme.paper).foregroundStyle(SilliesTheme.ink).tint(SilliesTheme.accent)
+      .background(theme.paper).foregroundStyle(theme.ink).tint(theme.accent)
       .task(id: model.searchIdentity) { await model.refreshSearch() }
       .onAppear { searchFocused = true }
       .onExitCommand(perform: actions.close)
@@ -113,7 +111,11 @@ struct StashPickerView: View {
   @ObservationIgnored private var window: NSWindow?
   @ObservationIgnored private var opening: Task<Void, Never>?
   @ObservationIgnored private var insertion: Task<Void, Never>?
-  init(vault: SessionVaultStore) { self.vault = vault }
+  private let appearance: ThemeEnvironment
+  init(vault: SessionVaultStore, appearance: ThemeEnvironment) {
+    self.vault = vault
+    self.appearance = appearance
+  }
   func show() {
     readError = nil
     opening?.cancel()
@@ -131,15 +133,16 @@ struct StashPickerView: View {
         styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
       window.title = String(localized: "Sillies · Pocket Stash")
       AppContentWindowStacking.shared.register(window)
-      AppWindowAppearance.shared.register(window)
+      appearance.register(window)
       window.isReleasedWhenClosed = false
       window.contentMinSize = CGSize(width: 560, height: 440)
-      window.contentViewController = NSHostingController(
+      window.contentViewController = ThemedHostingController(
         rootView: StashPickerView(
-          vault: vault, paste: paste,
+          model: SessionVaultModel(vault: vault, presentation: .init(appearance: appearance)),
+          paste: paste,
           actions: .init(
             choose: { [weak self] in self?.choose($0) }, close: { [weak self] in self?.stop() }),
-          readError: { [weak self] in self?.readError }))
+          readError: { [weak self] in self?.readError }), appearance: appearance)
       window.center()
       self.window = window
     }

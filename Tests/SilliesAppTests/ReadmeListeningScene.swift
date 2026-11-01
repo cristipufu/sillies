@@ -7,6 +7,7 @@ import SwiftUI
 
 /// Sample meeting content, with the production recording HUD and transcript view.
 struct ReadmeListeningScene: View {
+  @Environment(\.silliesTheme) private var theme
   private static let meetingFrame = CGRect(x: 76, y: 350, width: 640, height: 352)
   private static let companionCenter = CGPoint(x: 320, y: 320)
   private let session: AudioSessionPresentation
@@ -44,13 +45,13 @@ struct ReadmeListeningScene: View {
   var body: some View {
     ZStack(alignment: .topLeading) {
       LinearGradient(
-        colors: [SilliesTheme.paper, SilliesTheme.accent.opacity(0.16)],
+        colors: [theme.paper, theme.accent.opacity(0.16)],
         startPoint: .topLeading, endPoint: .bottomTrailing)
       header.offset(x: 76, y: 58)
       meeting
         .frame(width: Self.meetingFrame.width, height: Self.meetingFrame.height)
-        .background(SilliesTheme.card, in: RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(SilliesTheme.border))
+        .background(theme.card, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(theme.border))
         .shadow(color: .black.opacity(0.10), radius: 24, y: 14)
         .offset(x: Self.meetingFrame.minX, y: Self.meetingFrame.minY)
       CharacterPortrait(renderer: "cat", size: 64, registry: RendererRegistry())
@@ -59,22 +60,22 @@ struct ReadmeListeningScene: View {
       AudioSessionView(model: session)
         .frame(width: 560, height: 640)
         .clipShape(RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(SilliesTheme.border))
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(theme.border))
         .shadow(color: .black.opacity(0.12), radius: 28, y: 16)
         .offset(x: 600, y: 88)
       Text("Your conversation, saved on your Mac.")
-        .font(.system(size: 13, weight: .medium)).foregroundStyle(SilliesTheme.secondary)
+        .font(.system(size: 13, weight: .medium)).foregroundStyle(theme.secondary)
         .offset(x: 76, y: 746)
     }
-    .foregroundStyle(SilliesTheme.ink)
-    .background(SilliesTheme.paper)
+    .foregroundStyle(theme.ink)
+    .background(theme.paper)
   }
 
   private var header: some View {
     VStack(alignment: .leading, spacing: 12) {
       Text("SILLIES  /  LISTEN")
         .font(.system(size: 11, weight: .semibold, design: .monospaced)).tracking(1.8)
-        .foregroundStyle(SilliesTheme.secondary)
+        .foregroundStyle(theme.secondary)
       Text("Your meeting.\nTheir full attention.")
         .font(.system(size: 38, weight: .bold, design: .rounded)).tracking(-1.3)
     }
@@ -89,14 +90,14 @@ struct ReadmeListeningScene: View {
         Text("Design catch-up").font(.system(size: 12, weight: .medium))
           .padding(.leading, 18)
       }.padding(.horizontal, 20).frame(height: 48)
-      Rectangle().fill(SilliesTheme.border).frame(height: 1)
+      Rectangle().fill(theme.border).frame(height: 1)
       HStack(spacing: 16) {
-        participant(initials: "A", name: "Alex", color: SilliesTheme.accent)
+        participant(initials: "A", name: "Alex", color: theme.accent)
         participant(initials: "Y", name: "You", color: Color(red: 0.71, green: 0.54, blue: 0.36))
       }
       .padding(24)
       Label("Sample meeting · No live audio", systemImage: "waveform")
-        .font(.system(size: 11)).foregroundStyle(SilliesTheme.secondary)
+        .font(.system(size: 11)).foregroundStyle(theme.secondary)
         .padding(.horizontal, 24)
       Spacer(minLength: 0)
     }
@@ -110,6 +111,6 @@ struct ReadmeListeningScene: View {
       Text(name).font(.system(size: 13, weight: .medium))
     }
     .frame(width: 210, height: 192)
-    .background(SilliesTheme.soft.opacity(0.65), in: RoundedRectangle(cornerRadius: 12))
+    .background(theme.soft.opacity(0.65), in: RoundedRectangle(cornerRadius: 12))
   }
 }

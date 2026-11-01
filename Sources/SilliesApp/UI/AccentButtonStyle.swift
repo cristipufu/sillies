@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Explicit foreground/background pairs keep custom palettes readable in inactive windows too.
 struct AccentButtonStyle: ButtonStyle {
+  @Environment(\.silliesTheme) private var theme
   @Environment(\.isEnabled) private var isEnabled
   @Environment(\.controlSize) private var controlSize
   @Environment(\.isFocused) private var isFocused
@@ -9,14 +10,14 @@ struct AccentButtonStyle: ButtonStyle {
   func makeBody(configuration: Configuration) -> some View {
     configuration.label
       .padding(.horizontal, horizontalPadding).padding(.vertical, verticalPadding)
-      .foregroundStyle(isEnabled ? SilliesTheme.onAccent : SilliesTheme.secondary)
+      .foregroundStyle(isEnabled ? theme.onAccent : theme.secondary)
       .background(
-        isEnabled ? SilliesTheme.accentFill : SilliesTheme.soft,
+        isEnabled ? theme.accentFill : theme.soft,
         in: RoundedRectangle(cornerRadius: 9)
       )
       .overlay(
         RoundedRectangle(cornerRadius: 9).strokeBorder(
-          isFocused ? SilliesTheme.onAccent : .clear, lineWidth: 2)
+          isFocused ? theme.onAccent : .clear, lineWidth: 2)
       )
       .opacity(configuration.isPressed ? 0.88 : 1)
   }

@@ -21,7 +21,7 @@ final class SessionVaultModel {
   @ObservationIgnored private let exporter: VaultExportController
   @ObservationIgnored private let speakerWorker = SessionSpeakerWorker()
   @ObservationIgnored private var speakerTask: Task<Void, Never>?
-  @ObservationIgnored private let transcriptWindow = SavedTranscriptWindow()
+  @ObservationIgnored private let transcriptWindow: SavedTranscriptWindow
   let pasteBack: PasteBackCoordinator?
   private var listing: VaultListing
   var filteredRecords: [SessionRecordHeader] { listing.records }
@@ -61,16 +61,22 @@ final class SessionVaultModel {
   }
   var visibleDetail: SessionRecord? { detail?.id == selectedRecordID ? detail : nil }
 
+  @MainActor struct Presentation {
+    var initialRecordID: UUID?
+    var pasteBack: PasteBackCoordinator?
+    let appearance: ThemeEnvironment
+  }
   init(
-    vault: SessionVaultStore, initialRecordID: UUID? = nil, pasteBack: PasteBackCoordinator? = nil,
+    vault: SessionVaultStore, presentation: Presentation,
     loadDetail: (@MainActor (UUID) async throws -> SessionRecord?)? = nil
   ) {
+    transcriptWindow = SavedTranscriptWindow(appearance: presentation.appearance)
     self.vault = vault
     self.loadDetail = loadDetail ?? { try await vault.record(id: $0) }
     exporter = VaultExportController(library: vault.library)
     listing = VaultListing(.init(records: vault.records, total: vault.recordCount, nextCursor: nil))
-    self.pasteBack = pasteBack
-    selectedRecordID = initialRecordID ?? vault.records.first?.id
+    self.pasteBack = presentation.pasteBack
+    selectedRecordID = presentation.initialRecordID ?? vault.records.first?.id
   }
 
   var hasMoreResults: Bool { listing.hasMore }

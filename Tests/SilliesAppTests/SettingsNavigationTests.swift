@@ -24,7 +24,7 @@ import Testing
     speech: speech, companions: controller,
     services: .init(
       vault: controller.skills.vault, recording: controller.skills, commands: controller.commands,
-      reasoning: FixtureReasoning()),
+      reasoning: FixtureReasoning(), appearance: ThemeEnvironment()),
     preferences: DictationPreferences(defaults: defaults))
   let shortcuts = CommandShortcuts(defaults: defaults)
   await speech.models.load()

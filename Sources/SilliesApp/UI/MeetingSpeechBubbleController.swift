@@ -6,6 +6,11 @@ import SwiftUI
 /// One nonactivating, click-through bubble. Geometry follows native placement; only new ideas animate.
 @MainActor
 final class MeetingSpeechBubbleController {
+  private let appearance: ThemeEnvironment
+  init(appearance: ThemeEnvironment) {
+    self.appearance = appearance
+  }
+
   struct Placement {
     let anchor: SuggestionBubbleLayout.Anchor
     let windowLayer: Int
@@ -18,7 +23,7 @@ final class MeetingSpeechBubbleController {
   private static let maximumWidth: CGFloat = 300
   private static let initialSize = CGSize(width: maximumWidth, height: 1)
   private var panel: SkillFloatingPanel?
-  private var host: NSHostingController<MeetingSpeechBubbleView>?
+  private var host: ThemedHostingController<MeetingSpeechBubbleView>?
   private var suggestionID: UUID?
   private var background: MeetingSpeechBubbleBackground?
   private var trackingExclusion: WindowTrackingExclusions.Registration?
@@ -49,7 +54,7 @@ final class MeetingSpeechBubbleController {
   private func updateContent(_ suggestion: MeetingSuggestion) {
     guard suggestionID != suggestion.id else { return }
     let view = MeetingSpeechBubbleView(suggestion: suggestion)
-    if let host { host.rootView = view } else { createPanel(view) }
+    if let host { host.content = view } else { createPanel(view) }
     suggestionID = suggestion.id
     contentUpdates += 1
   }
@@ -75,13 +80,14 @@ final class MeetingSpeechBubbleController {
   }
 
   private func createPanel(_ view: MeetingSpeechBubbleView) {
-    let host = NSHostingController(rootView: view)
+    let host = ThemedHostingController(rootView: view, appearance: appearance)
     host.sizingOptions = []
     let panel = SkillFloatingPanel(
       contentRect: CGRect(origin: .zero, size: Self.initialSize),
       ignoresMouseEvents: true)
     let background = MeetingSpeechBubbleBackground(
       frame: panel.contentRect(forFrameRect: panel.frame))
+    appearance.observe(background) { view, palette in view.applyTheme(palette) }
     host.view.frame = background.bounds
     host.view.autoresizingMask = [.width, .height]
     host.view.wantsLayer = true

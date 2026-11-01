@@ -9,6 +9,7 @@ import Testing
 final class DisplayFrameSequence: NSObject {
   private static let timeoutSeconds: Double = 20
   private static let initialPresentationFrames = 8
+  private static let eventPollInterval: TimeInterval = 0.01
   private let count: Int
   private let operation: (Int) -> Void
   private var index = 0
@@ -37,7 +38,7 @@ final class DisplayFrameSequence: NSObject {
       watchdog.cancel()
       sequence.link?.invalidate()
     }
-    application.run()
+    sequence.pumpEvents(application)
     #expect(!sequence.timedOut)
     #expect(sequence.index == count)
   }
@@ -70,17 +71,32 @@ final class DisplayFrameSequence: NSObject {
     if index >= count { stop() }
   }
 
+  private func pumpEvents(_ application: NSApplication) {
+    // NSApp.stop() also stops the run loop used by Swift's async main, which can exit
+    // the test process with status zero before the remaining cases execute.
+    while index < count, !timedOut {
+      autoreleasepool {
+        if let event = application.nextEvent(
+          matching: .any,
+          until: Date().addingTimeInterval(Self.eventPollInterval), inMode: .default, dequeue: true)
+        {
+          application.sendEvent(event)
+        }
+        application.updateWindows()
+      }
+    }
+  }
+
   private func stop() {
     link?.invalidate()
     link = nil
-    NSApp.stop(nil)
-    // Wake nextEvent so run() returns even when the user is not moving the mouse.
-    if let event = NSEvent.otherEvent(
-      with: .applicationDefined, location: .zero, modifierFlags: [],
-      timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: 0, context: nil,
-      subtype: 0, data1: 0, data2: 0)
-    {
-      NSApp.postEvent(event, atStart: true)
-    }
   }
+}
+
+@Test(arguments: 0..<3) @MainActor func displayFrameSequenceReturnsWithoutStoppingTheTestRun(
+  _ iteration: Int
+) throws {
+  var frames: [Int] = []
+  try DisplayFrameSequence.run(count: 2) { frames.append($0) }
+  #expect(frames == [1, 2], "Repeated run \(iteration) must return to the test runner")
 }

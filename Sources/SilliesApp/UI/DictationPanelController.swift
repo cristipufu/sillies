@@ -3,6 +3,7 @@ import SilliesWriting
 import SwiftUI
 
 struct DictationFeedbackView: View {
+  @Environment(\.silliesTheme) private var theme
   let model: DictationCoordinator
   let openSession: () -> Void
   let copy: (String) -> Void
@@ -14,7 +15,7 @@ struct DictationFeedbackView: View {
         SessionHUDLabel(
           title: String(localized: "Dictate · \(model.applicationName)"), status: model.hudStatus)
         Button(action: openSession) {
-          Image(systemName: "text.bubble").foregroundStyle(SilliesTheme.accent)
+          Image(systemName: "text.bubble").foregroundStyle(theme.accent)
             .frame(width: 24, height: 24)
         }.buttonStyle(.plain).help("Open dictation and transcript")
           .accessibilityLabel("Open dictation session")
@@ -40,14 +41,18 @@ struct DictationFeedbackView: View {
     .padding(.horizontal, 11).padding(.vertical, 8)
     .frame(width: WritingFeedbackLayout.width)
     .background(SessionHUDBackground(emphasis: model.isActive ? .active : .completed))
-    .foregroundStyle(SilliesTheme.ink).tint(SilliesTheme.accent)
+    .foregroundStyle(theme.ink).tint(theme.accent)
     .fixedSize(horizontal: false, vertical: true).padding(WritingFeedbackLayout.shadowInset)
   }
 }
 
 @MainActor final class DictationPanelController {
-  private let panel = AnchoredWritingPanel<DictationFeedbackView>()
-  private let session = DictationSessionWindowController()
+  private let panel: AnchoredWritingPanel<DictationFeedbackView>
+  private let session: DictationSessionWindowController
+  init(appearance: ThemeEnvironment) {
+    panel = AnchoredWritingPanel(appearance: appearance)
+    session = DictationSessionWindowController(appearance: appearance)
+  }
   private var companionName = String(localized: "Your companion")
   var frame: CGRect? { panel.frame }
   var layoutMeasurements: Int { panel.layoutMeasurements }

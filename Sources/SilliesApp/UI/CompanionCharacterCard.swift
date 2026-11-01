@@ -2,6 +2,7 @@ import SilliesCore
 import SwiftUI
 
 struct CompanionCharacterCard: View {
+  @Environment(\.silliesTheme) private var theme
   let character: CharacterDefinition
   let enabled: Bool
   let registry: RendererRegistry
@@ -17,7 +18,7 @@ struct CompanionCharacterCard: View {
             .opacity(enabled ? 1 : 0.4)
           Image(systemName: enabled ? "checkmark.circle.fill" : "circle")
             .font(.system(size: 15)).foregroundStyle(
-              enabled ? SilliesTheme.accent : SilliesTheme.secondary.opacity(0.4)
+              enabled ? theme.accent : theme.secondary.opacity(0.4)
             )
             .padding(9)
         }.frame(height: 111)
@@ -25,14 +26,14 @@ struct CompanionCharacterCard: View {
           .top, 5)
         Text(LocalizedCatalogText.value(character.subtitle)).font(.system(size: 10))
           .foregroundStyle(
-            SilliesTheme.secondary
+            theme.secondary
           )
           .lineLimit(2).frame(minHeight: 26, alignment: .topLeading)
       }.padding(10).frame(maxWidth: .infinity, alignment: .leading)
-        .background(SilliesTheme.card, in: RoundedRectangle(cornerRadius: 17))
+        .background(theme.card, in: RoundedRectangle(cornerRadius: 17))
         .overlay(
           RoundedRectangle(cornerRadius: 17).strokeBorder(
-            enabled ? SilliesTheme.accent.opacity(0.45) : SilliesTheme.border,
+            enabled ? theme.accent.opacity(0.45) : theme.border,
             lineWidth: enabled ? 1.3 : 0.7))
     }.buttonStyle(.plain)
       .accessibilityLabel("\(character.name), \(LocalizedCatalogText.value(character.subtitle))")

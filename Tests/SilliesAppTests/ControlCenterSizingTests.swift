@@ -18,7 +18,8 @@ import Testing
   let content = ControlCenterView(
     controller: controller, actions: .init(openSettings: {}, quit: {}))
   let host = ControlCenterHostingController(
-    content: content, visibleFrame: CGRect(x: 0, y: 81, width: 1512, height: 868))
+    content: content, visibleFrame: CGRect(x: 0, y: 81, width: 1512, height: 868),
+    appearance: ThemeEnvironment())
   #expect(host.sizingOptions.isEmpty)
   #expect(host.view.frame.size == CGSize(width: 388, height: 640))
   #expect(host.preferredContentSize == host.viewportSize)

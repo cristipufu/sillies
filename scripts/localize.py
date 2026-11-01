@@ -25,10 +25,8 @@ that change with a number are objects with one form per plural category the lang
 """
 import contextlib
 import json
-import os
 import re
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -36,42 +34,10 @@ ROOT = Path(__file__).resolve().parent.parent
 FOLDER = ROOT / "Localization"
 SOURCE = FOLDER / "en.json"
 
-# Languages Sillies knows the names and plural rules of. Another language works too: `new` asks for its names, and
-# its plural categories default to one/other (pass --plurals one,few,other to change them).
-LANGUAGES = {
-    "en": ("English", "English", ["one", "other"], []),
-    "de": ("Deutsch", "German", ["one", "other"], []),
-    "fr": ("Français", "French", ["one", "other"], ["many"]),
-    "es": ("Español", "Spanish", ["one", "other"], ["many"]),
-    "it": ("Italiano", "Italian", ["one", "other"], ["many"]),
-    "pt-BR": ("Português (Brasil)", "Portuguese (Brazil)", ["one", "other"], ["many"]),
-    "pt-PT": ("Português (Portugal)", "Portuguese (Portugal)", ["one", "other"], ["many"]),
-    "nl": ("Nederlands", "Dutch", ["one", "other"], []),
-    "sv": ("Svenska", "Swedish", ["one", "other"], []),
-    "da": ("Dansk", "Danish", ["one", "other"], []),
-    "nb": ("Norsk bokmål", "Norwegian Bokmål", ["one", "other"], []),
-    "pl": ("Polski", "Polish", ["one", "few", "many", "other"], []),
-    "cs": ("Čeština", "Czech", ["one", "few", "other"], ["many"]),
-    "hu": ("Magyar", "Hungarian", ["one", "other"], []),
-    "ro": ("Română", "Romanian", ["one", "few", "other"], []),
-    "uk": ("Українська", "Ukrainian", ["one", "few", "many", "other"], []),
-    "ru": ("Русский", "Russian", ["one", "few", "many", "other"], []),
-    "tr": ("Türkçe", "Turkish", ["one", "other"], []),
-    "ja": ("日本語", "Japanese", ["other"], []),
-    "ko": ("한국어", "Korean", ["other"], []),
-    "zh-Hans": ("简体中文", "Chinese (Simplified)", ["other"], []),
-    "zh-Hant": ("繁體中文", "Chinese (Traditional)", ["other"], []),
-}
-
 from localization_formats import SPEC, specifiers, placeholder_problem
-
-
-def english_text(key, source):
-    """The English a key stands for: the key itself, or for a named key ("git.status.added") its value in en.json."""
-    if isinstance(source, dict):
-        other = source.get("other")
-        return other if has_text(other) else key
-    return source if has_text(source) else key
+from localization_catalog import LANGUAGES, has_text, english_text, plural_rules
+from localization_validation import Coverage, source_problems, catalog_problems
+from localization_compiler import compile_strings
 
 
 def unique_keys(pairs):
@@ -82,24 +48,6 @@ def unique_keys(pairs):
         result[key] = value
     return result
 
-
-def metadata_problems(data, code):
-    problems = []
-    if not re.fullmatch(r"[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*", code) or len(code) > 35:
-        problems.append("invalid language code")
-    for field in ("language", "english"):
-        value = data.get(field)
-        if not has_text(value) or len(value) > 80 or any(ord(c) < 32 for c in value):
-            problems.append(f"{field} must be a short, nonblank language name")
-    maintainers = data.get("maintainers", [])
-    if not isinstance(maintainers, list) or any(not has_text(name) for name in maintainers):
-        problems.append("maintainers must be a list of nonblank names")
-    required, optional = plural_rules(code, data)
-    if not isinstance(required, list) or not required or "other" not in required:
-        problems.append("plural categories must include other")
-    elif set(required + optional) - {"zero", "one", "two", "few", "many", "other"}:
-        problems.append("unknown plural category")
-    return problems
 
 
 def load(path):
@@ -117,11 +65,6 @@ def save(path, data):
         file.write("\n")
 
 
-def plural_rules(code, data=None):
-    if code in LANGUAGES:
-        return LANGUAGES[code][2], LANGUAGES[code][3]
-    required = (data or {}).get("plurals") or ["one", "other"]
-    return required, []
 
 
 # macOS's permission prompts are the Info.plist's *UsageDescription texts: they're in en.json under named keys
@@ -179,15 +122,13 @@ def extract(mode="update"):
     """Builds the app with the compiler's string extraction on, then rewrites en.json: new strings added (as their own
     English), gone ones removed, plural forms and translators' notes kept."""
     with extraction_workspace() as scratch:
-        out = Path(scratch) / "strings"
-        out.mkdir(exist_ok=True)
-        command = ["swift", "build", "--product", "Sillies", "-Xswiftc", "-emit-localized-strings", "-Xswiftc", "-emit-localized-strings-path", "-Xswiftc", str(out)]
         print("Building to find every string (a minute or two)…", file=sys.stderr)
-        result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
-        if result.returncode != 0:
-            sys.exit("The build failed:\n" + result.stderr[-4000:] + result.stdout[-4000:])
+        try:
+            paths = compile_strings(ROOT, scratch)
+        except RuntimeError as error:
+            sys.exit(str(error))
         found = {}
-        for path in sorted(out.rglob("*.stringsdata")):
+        for path in paths:
             data = load(path)
             source_path = Path(data.get("source", ""))
             if not source_path.is_absolute():
@@ -244,108 +185,33 @@ def extract(mode="update"):
 
 # MARK: - check
 
-def has_text(value):
-    return isinstance(value, str) and bool(value.strip())
-
-
-def check(code_or_all, complete=False):
-    english = load(SOURCE)["strings"]
-    problems = 0
-    for key, value in english.items():
-        if isinstance(value, dict):
-            ints = [kind for _, kind, _ in specifiers(english_text(key, value)) if kind == "int"]
-            if not ints:
-                print(f"en: “{key}” has plural forms but no whole-number placeholder")
-                problems += 1
-            for category in ("one", "other"):
-                if not has_text(value.get(category)):
-                    print(f"en: “{key}” needs its English “{category}” form")
-                    problems += 1
-            for category, form in value.items():
-                if not isinstance(form, str):
-                    print(f"en: “{key}” [{category}] must be text")
-                    problems += 1
-                elif form and (problem := placeholder_problem(english_text(key, value), form)):
-                    print(f"en: “{key}” [{category}] {problem}")
-                    problems += 1
-        elif not has_text(value):
-            print(f"en: “{key}” needs its English text")
-            problems += 1
+def catalog_diagnostics(code_or_all, coverage):
+    """Own file access here; validators return diagnostics without printing or exiting."""
+    try:
+        source = load(SOURCE)
+    except (ValueError, OSError) as error:
+        return [f"en.json: not valid JSON ({error})"]
+    if not isinstance(source, dict) or not isinstance(source.get("strings"), dict):
+        return ["en: the source catalog must contain a strings object"]
+    english = source["strings"]
+    problems = source_problems(english)
     paths = [SOURCE] + language_files() if code_or_all == "--all" else [FOLDER / f"{code_or_all}.json"]
     for path in paths:
-        if not path.exists():
-            sys.exit(f"No {path.name}; start one with: scripts/localize.py new {path.stem}")
         try:
-            data = load(path)
+            data = source if path == SOURCE else load(path)
         except (ValueError, OSError) as error:
-            print(f"{path.name}: not valid JSON ({error})")
-            problems += 1
+            problems.append(f"{path.name}: not valid JSON ({error})")
             continue
-        code = path.stem
-        if not isinstance(data, dict):
-            print(f"{code}: the language file must be an object")
-            problems += 1
-            continue
-        for field in ("language", "english", "code", "strings"):
-            if field not in data:
-                print(f"{code}: missing “{field}”")
-                problems += 1
-        if data.get("code") != code:
-            print(f"{code}: “code” is {data.get('code')!r}; it must match the file name")
-            problems += 1
-        for problem in metadata_problems(data, code):
-            print(f"{code}: {problem}")
-            problems += 1
-        required, optional = plural_rules(code, data)
-        strings = data.get("strings", {})
-        if not isinstance(strings, dict):
-            print(f"{code}: “strings” must be an object")
-            problems += 1
-            continue
-        if complete:
-            for key in sorted(english.keys() - strings.keys()):
-                print(f"{code}: “{key}” is missing its translation")
-                problems += 1
-        for key, value in strings.items():
-            if key not in english:
-                print(f"{code}: “{key}” isn't in the app (anymore); remove it")
-                problems += 1
-                continue
-            source = english[key]
-            if (not isinstance(value, (str, dict)) or
-                    isinstance(source, dict) != isinstance(value, dict)):
-                kind = "plural forms (an object)" if isinstance(source, dict) else "a plain string"
-                print(f"{code}: “{key}” should be {kind}")
-                problems += 1
-                continue
-            if isinstance(value, dict):
-                extra = set(value) - set(required) - set(optional)
-                if extra:
-                    print(f"{code}: “{key}” has forms {sorted(extra)} that {code} doesn't use (it uses {required + optional})")
-                    problems += 1
-                filled = [category for category in required if has_text(value.get(category))]
-                if (complete or filled) and len(filled) != len(required):
-                    missing = [category for category in required if category not in filled]
-                    print(f"{code}: “{key}” needs translated plural forms: {missing}")
-                    problems += 1
-                for category, form in value.items():
-                    if not isinstance(form, str):
-                        print(f"{code}: “{key}” [{category}] must be text")
-                        problems += 1
-                    elif complete and not has_text(form) and category not in required:
-                        print(f"{code}: “{key}” [{category}] needs a nonblank translation")
-                        problems += 1
-                    elif has_text(form) and (problem := placeholder_problem(english_text(key, source), form)):
-                        print(f"{code}: “{key}” [{category}] {problem}")
-                        problems += 1
-            elif complete and not has_text(value):
-                print(f"{code}: “{key}” needs a nonblank translation")
-                problems += 1
-            elif has_text(value) and (problem := placeholder_problem(english_text(key, source), value)):
-                print(f"{code}: “{key}” {problem}")
-                problems += 1
+        problems.extend(catalog_problems(data, path.stem, english, coverage))
+    return problems
+
+
+def check(code_or_all, coverage=Coverage.PRESENT):
+    problems = catalog_diagnostics(code_or_all, coverage)
+    for problem in problems:
+        print(problem)
     if problems:
-        print(f"{problems} problem{'s' if problems != 1 else ''}.")
+        print(f"{len(problems)} problem{'s' if len(problems) != 1 else ''}.")
         sys.exit(1)
     print("No problems.")
 
@@ -433,7 +299,7 @@ def build(out, info_plist=None):
     import plistlib
     # Packaging never silently accepts missing or unsafe translations.
     with contextlib.redirect_stdout(sys.stderr):
-        check("--all", complete=True)
+        check("--all", coverage=Coverage.COMPLETE)
     out = Path(out)
     english = load(SOURCE)["strings"]
     codes = ["en"]
@@ -507,7 +373,7 @@ def main():
     if command == "extract":
         extract("check" if "--check" in args else "update")
     elif command == "check" and (len(args) == 2 or (len(args) == 3 and args[2] == "--complete")):
-        check(args[1], complete=len(args) == 3)
+        check(args[1], coverage=Coverage.COMPLETE if len(args) == 3 else Coverage.PRESENT)
     elif command == "stats":
         stats()
     elif command == "sync":

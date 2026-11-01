@@ -2,6 +2,7 @@ import SilliesDesign
 import SwiftUI
 
 struct AppearanceSettingsPage: View {
+  @Environment(\.silliesTheme) private var theme
   @Bindable var model: AppearancePreferences
   @Environment(\.colorScheme) private var colorScheme
   private static let previewHeight: CGFloat = 68
@@ -23,10 +24,10 @@ struct AppearanceSettingsPage: View {
         ForEach(model.themes) { theme in themeButton(theme) }
       }
       if let error = model.error {
-        Text(error).textSelection(.enabled).foregroundStyle(SilliesTheme.danger)
+        Text(error).textSelection(.enabled).foregroundStyle(theme.danger)
       }
       Text("Themes work in both Light and Dark. Increase Contrast uses native macOS colors.")
-        .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        .font(.caption).foregroundStyle(self.theme.secondary)
     }.task { await model.load() }
   }
 
@@ -54,19 +55,19 @@ struct AppearanceSettingsPage: View {
             .system(.callout, design: .rounded).weight(.semibold))
           Spacer()
           Image(systemName: selected ? "checkmark.circle.fill" : "circle").foregroundStyle(
-            selected ? SilliesTheme.accent : SilliesTheme.secondary)
+            selected ? self.theme.accent : self.theme.secondary)
         }
       }.padding(12).background(
-        SilliesTheme.soft.opacity(selected ? 1 : 0.4), in: RoundedRectangle(cornerRadius: 14)
+        self.theme.soft.opacity(selected ? 1 : 0.4), in: RoundedRectangle(cornerRadius: 14)
       )
       .overlay(
         RoundedRectangle(cornerRadius: 14).strokeBorder(
-          selected ? SilliesTheme.accent : SilliesTheme.border))
+          selected ? self.theme.accent : self.theme.border))
     }.buttonStyle(.plain).accessibilityAddTraits(selected ? .isSelected : [])
   }
 
   private func previewColor(_ palette: ThemePalette, _ role: ThemeColorRole) -> Color {
-    guard let color = palette[role] else { return SilliesTheme.paper }
+    guard let color = palette[role] else { return theme.paper }
     return Color(.sRGB, red: color.red, green: color.green, blue: color.blue)
   }
 }

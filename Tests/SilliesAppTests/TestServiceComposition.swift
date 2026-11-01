@@ -61,10 +61,12 @@ extension SkillCoordinator {
 extension CompanionServices {
   init(
     accessibility: WorkspaceTracker.Accessibility = .enabled,
+    skills: SkillCoordinator = SkillCoordinator(vault: SessionVaultStore()),
     eventProducers: [any WorkspaceEventProducer] = []
   ) {
     self.init(
-      accessibility: accessibility, skills: SkillCoordinator(vault: SessionVaultStore()),
+      accessibility: accessibility, skills: skills,
+      appearance: ThemeEnvironment(),
       eventProducers: eventProducers)
   }
 }

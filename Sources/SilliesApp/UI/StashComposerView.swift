@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct StashComposerView: View {
+  @Environment(\.silliesTheme) private var theme
   let save: (String) -> Void
   @Environment(\.dismiss) private var dismiss
   @State private var text = ""
@@ -11,10 +12,10 @@ struct StashComposerView: View {
       Label("Add to Pocket Stash", systemImage: "tray.and.arrow.down")
         .font(.title2.weight(.semibold))
       Text("Paste a link, write a note, or keep a snippet for later.")
-        .foregroundStyle(SilliesTheme.secondary)
+        .foregroundStyle(theme.secondary)
       TextEditor(text: $text).font(.body).focused($focused)
         .frame(width: 420, height: 180).scrollContentBackground(.hidden)
-        .padding(10).background(SilliesTheme.soft, in: RoundedRectangle(cornerRadius: 10))
+        .padding(10).background(theme.soft, in: RoundedRectangle(cornerRadius: 10))
       HStack {
         Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
         Spacer()
@@ -25,7 +26,7 @@ struct StashComposerView: View {
         .buttonStyle(AccentButtonStyle()).keyboardShortcut(.defaultAction)
         .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
       }
-    }.padding(24).background(SilliesTheme.paper).tint(SilliesTheme.accent)
+    }.padding(24).background(theme.paper).tint(theme.accent)
       .onAppear { focused = true }
   }
 }

@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Skills share the same stable, selectable transcript viewport and follow controls.
 struct SessionTranscriptCard<EmptyContent: View>: View {
+  @Environment(\.silliesTheme) private var theme
   private static var minimumHeight: CGFloat { 160 }
   let text: String
   let isFinished: Bool
@@ -19,7 +20,7 @@ struct SessionTranscriptCard<EmptyContent: View>: View {
         Spacer()
         if !isFinished, !text.isEmpty {
           Toggle("Follow live", isOn: $followsLive).toggleStyle(.checkbox)
-            .font(.caption).foregroundStyle(SilliesTheme.secondary)
+            .font(.caption).foregroundStyle(theme.secondary)
         }
         if !followsLive, !text.isEmpty {
           Button("Jump to latest", systemImage: "arrow.down") { followsLive = true }
@@ -35,7 +36,7 @@ struct SessionTranscriptCard<EmptyContent: View>: View {
         }
       }.frame(minHeight: Self.minimumHeight, maxHeight: .infinity)
     }
-    .padding(16).background(SilliesTheme.card, in: RoundedRectangle(cornerRadius: 14))
-    .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(SilliesTheme.border, lineWidth: 1))
+    .padding(16).background(theme.card, in: RoundedRectangle(cornerRadius: 14))
+    .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(theme.border, lineWidth: 1))
   }
 }

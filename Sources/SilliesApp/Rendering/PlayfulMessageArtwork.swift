@@ -5,6 +5,12 @@ import SilliesCore
 /// All playful text shares the same bubble material, sizing, and appearance contract.
 @MainActor
 final class PlayfulMessageArtwork {
+  struct Presentation {
+    let appearance: NSAppearance
+    let theme: SilliesTheme
+    let scale: CGFloat
+  }
+  private var theme = SilliesTheme()
   private enum Design {
     static let maximumTextWidth: CGFloat = 190
     static let padding: CGFloat = 14
@@ -26,8 +32,11 @@ final class PlayfulMessageArtwork {
 
   func prepare(
     _ prop: PlayfulSceneDefinition.Prop, message: String,
-    appearance: NSAppearance, scale: CGFloat
+    presentation: Presentation
   ) -> CGSize {
+    theme = presentation.theme
+    let appearance = presentation.appearance
+    let scale = presentation.scale
     guard [.sign, .letter, .score].contains(prop) else {
       hide()
       return .zero
@@ -51,7 +60,7 @@ final class PlayfulMessageArtwork {
       frame: body,
       path: MascotBubbleContour.path(
         in: CGRect(origin: .zero, size: body.size), tail: .bottom,
-        offset: body.width / 2, depth: depth), appearance: appearance)
+        offset: body.width / 2, depth: depth), appearance: appearance, theme: theme)
     text.frame = CGRect(
       x: inset + Design.padding, y: inset + depth + Design.padding,
       width: ceil(measured.width), height: ceil(measured.height))
@@ -69,7 +78,7 @@ final class PlayfulMessageArtwork {
     let paragraph = NSMutableParagraphStyle()
     paragraph.alignment = .center
     paragraph.lineSpacing = 3
-    var ink = SilliesTheme.native(.ink)
+    var ink = theme.native(.ink)
     appearance.performAsCurrentDrawingAppearance {
       ink = NSColor(cgColor: ink.cgColor) ?? ink
     }

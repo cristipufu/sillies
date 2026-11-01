@@ -6,6 +6,7 @@ import SwiftUI
 enum ChatPresentationMotion { case animated, reduced }
 
 struct ChatSessionView: View {
+  @Environment(\.silliesTheme) private var theme
   @Bindable var model: ChatSession
   let openSettings: (ChatNotice.SettingsDestination) -> Void
   var renderer: String? = nil
@@ -24,7 +25,7 @@ struct ChatSessionView: View {
   var body: some View {
     VStack(spacing: 0) {
       header.padding(16)
-      Divider().overlay(SilliesTheme.border)
+      Divider().overlay(theme.border)
       ChatMessagesView(model: model, motion: motion)
       if model.failure != nil || model.notice != nil || model.hasReachedMessageLimit
         || model.draft.count > ChatContext.maximumMessageCharacters
@@ -32,9 +33,9 @@ struct ChatSessionView: View {
         ScrollView { notices.padding(.horizontal, 16).padding(.vertical, 8) }
           .scrollBounceBehavior(.basedOnSize).frame(maxHeight: Self.maximumNoticeHeight)
       }
-      composer.padding(14).background(SilliesTheme.card)
+      composer.padding(14).background(theme.card)
     }
-    .background(SilliesTheme.paper).foregroundStyle(SilliesTheme.ink).tint(SilliesTheme.accent)
+    .background(theme.paper).foregroundStyle(theme.ink).tint(theme.accent)
     .task(id: availabilityRevision) { await model.refreshAvailability() }
     .onChange(of: model.language) { availabilityRevision = UUID() }
     .onChange(of: model.spokenReplies) { availabilityRevision = UUID() }
@@ -46,22 +47,22 @@ struct ChatSessionView: View {
   private var header: some View {
     HStack(spacing: 12) {
       ZStack {
-        Circle().fill(SilliesTheme.accent.opacity(0.13))
+        Circle().fill(theme.accent.opacity(0.13))
         if let renderer {
           CharacterPortrait(renderer: renderer, size: 48, registry: registry)
         } else {
           Image(systemName: "face.smiling.fill").font(.system(size: 30)).foregroundStyle(
-            SilliesTheme.accent)
+            theme.accent)
         }
       }.frame(width: 52, height: 52)
       VStack(alignment: .leading, spacing: 4) {
         Text(model.companionName).font(.system(size: 22, weight: .bold, design: .rounded))
         HStack(spacing: 5) {
           Circle().fill(
-            model.isVoiceConversationActive ? SilliesTheme.success : SilliesTheme.accent
+            model.isVoiceConversationActive ? theme.success : theme.accent
           ).frame(
             width: 6, height: 6)
-          Text(model.status).font(.caption).foregroundStyle(SilliesTheme.secondary)
+          Text(model.status).font(.caption).foregroundStyle(theme.secondary)
         }
       }
       Spacer(minLength: 4)
@@ -106,7 +107,7 @@ struct ChatSessionView: View {
       }
       if let failure = model.failure { SessionFailureNotice(failure: failure) }
       if let notice = model.notice {
-        Text(notice.message).font(.caption).foregroundStyle(SilliesTheme.secondary).textSelection(
+        Text(notice.message).font(.caption).foregroundStyle(theme.secondary).textSelection(
           .enabled)
         if let destination = notice.settingsDestination {
           Button(
@@ -130,12 +131,12 @@ struct ChatSessionView: View {
           Label(model.status, systemImage: "waveform").font(
             .system(.callout, design: .rounded).weight(.semibold)
           )
-          .foregroundStyle(SilliesTheme.accent)
+          .foregroundStyle(theme.accent)
           Text(
             model.draft.isEmpty
               ? String(localized: "Speak naturally. You can interrupt a reply.") : model.draft
           )
-          .font(.callout).foregroundStyle(SilliesTheme.secondary).lineLimit(3)
+          .font(.callout).foregroundStyle(theme.secondary).lineLimit(3)
           .frame(maxWidth: .infinity, minHeight: 34)
         }.padding(10)
       } else {
@@ -146,11 +147,11 @@ struct ChatSessionView: View {
           .frame(height: 68)
           if model.draft.isEmpty {
             Text("Message \(model.companionName)…").font(.system(size: 15))
-              .foregroundStyle(SilliesTheme.secondary).padding(.leading, 9).padding(.top, 8)
+              .foregroundStyle(theme.secondary).padding(.leading, 9).padding(.top, 8)
               .allowsHitTesting(false)
           }
-        }.padding(4).background(SilliesTheme.paper, in: RoundedRectangle(cornerRadius: 18))
-          .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(SilliesTheme.border))
+        }.padding(4).background(theme.paper, in: RoundedRectangle(cornerRadius: 18))
+          .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(theme.border))
       }
       HStack {
         if model.isVoiceConversationActive {
@@ -188,7 +189,7 @@ struct ChatSessionView: View {
               ? String(localized: "Preparing voice conversation…")
               : String(localized: "Microphone on · Echo cancellation"))
             : String(localized: "Return to send · Shift–Return for a new line"))
-      }.font(.system(size: 10)).foregroundStyle(SilliesTheme.secondary)
+      }.font(.system(size: 10)).foregroundStyle(theme.secondary)
     }
   }
 }

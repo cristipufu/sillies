@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct AudioTranscriptView: View {
+  @Environment(\.silliesTheme) private var theme
   let model: AudioSessionPresentation
 
   var body: some View {
@@ -11,7 +12,7 @@ struct AudioTranscriptView: View {
     ) {
       VStack(spacing: 10) {
         Image(systemName: "waveform").font(.system(size: 28)).foregroundStyle(
-          SilliesTheme.accent)
+          theme.accent)
         Text(
           model.phase == .capturing
             ? String(localized: "Ready for your words")
@@ -24,7 +25,7 @@ struct AudioTranscriptView: View {
           }
             ?? String(localized: "Choose a ready language to begin.")
         )
-        .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        .font(.caption).foregroundStyle(theme.secondary)
       }.frame(maxWidth: .infinity).padding(.vertical, 32)
     }
   }

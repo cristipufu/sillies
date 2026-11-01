@@ -3,6 +3,7 @@ import SwiftUI
 
 /// Native editing keeps input-method composition and standard selection/copy behavior intact.
 struct ChatComposer: NSViewRepresentable {
+  @Environment(\.silliesTheme) private var theme
   @Binding var text: String
   let isEditable: Bool
   let send: () -> Void
@@ -15,7 +16,7 @@ struct ChatComposer: NSViewRepresentable {
     editor.isRichText = false
     editor.drawsBackground = false
     editor.font = .systemFont(ofSize: 15)
-    TextEditorAppearance.apply(to: editor)
+    TextEditorAppearance.apply(theme, to: editor)
     editor.textContainerInset = CGSize(width: 4, height: 8)
     editor.isVerticallyResizable = true
     editor.isHorizontallyResizable = false
@@ -31,7 +32,7 @@ struct ChatComposer: NSViewRepresentable {
   func updateNSView(_ scroll: NSScrollView, context: Context) {
     context.coordinator.parent = self
     guard let editor = scroll.documentView as? ChatComposerTextView else { return }
-    TextEditorAppearance.apply(to: editor)
+    TextEditorAppearance.apply(theme, to: editor)
     if editor.string != text, !editor.hasMarkedText() { editor.string = text }
     editor.isEditable = isEditable
     editor.onSend = send

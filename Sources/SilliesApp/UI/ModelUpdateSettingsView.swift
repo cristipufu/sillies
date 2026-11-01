@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ModelUpdateSettingsView: View {
+  @Environment(\.silliesTheme) private var theme
   let model: ModelUpdatesPresentation
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
@@ -16,7 +17,7 @@ struct ModelUpdateSettingsView: View {
           ProgressView("Checking publishers…").controlSize(.small)
         } else if let date = model.snapshot.checkedAt {
           Text("Last checked \(date.formatted(date: .abbreviated, time: .shortened))")
-            .font(.caption).foregroundStyle(SilliesTheme.secondary)
+            .font(.caption).foregroundStyle(theme.secondary)
         }
         Spacer()
         Button("Check now") { model.checkNow() }.buttonStyle(SoftButtonStyle())
@@ -25,9 +26,9 @@ struct ModelUpdateSettingsView: View {
       Text(
         "Checks use publisher metadata only. Updates download when you choose; active sessions keep their current model."
       )
-      .font(.caption).foregroundStyle(SilliesTheme.secondary)
+      .font(.caption).foregroundStyle(theme.secondary)
       .fixedSize(horizontal: false, vertical: true)
-      if let error = model.error { Text(error).font(.caption).foregroundStyle(SilliesTheme.danger) }
+      if let error = model.error { Text(error).font(.caption).foregroundStyle(theme.danger) }
     }
   }
 }

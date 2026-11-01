@@ -2,6 +2,7 @@ import Foundation
 import SilliesAudio
 import SilliesCore
 import SilliesDiarizationNemotron
+import SilliesInference
 import SilliesModelStore
 import SilliesSpeech
 import SilliesSpeechApple
@@ -99,14 +100,20 @@ final class SpeechServices {
       let model = configuration.model
       return VoiceConversationCapture(
         configuration: configuration, reference: reference,
-        speech: { language, output, failure in
-          var request = SpeechChannelRequest(language: language, output: output, failure: failure)
-          request.context = .init(vocabulary: dictionary.hints, priority: .interactive)
-          let channelRequest = request
-          return try await InteractiveSpeechChannel.make {
-            try await dictationRuntime.makeChannel(model: model, request: channelRequest)
-          }
-        }, update: update)
+        speech: .init(
+          warm: {
+            try await InferenceActivity.shared.prepareSpeechRuntime {
+              try await dictationRuntime.prepare(model: model)
+            }
+          },
+          makeChannel: { language, output, failure in
+            var request = SpeechChannelRequest(language: language, output: output, failure: failure)
+            request.context = .init(vocabulary: dictionary.hints, priority: .interactive)
+            let channelRequest = request
+            return try await InteractiveSpeechChannel.make {
+              try await dictationRuntime.makeChannel(model: model, request: channelRequest)
+            }
+          }), update: update)
     }
   }
 

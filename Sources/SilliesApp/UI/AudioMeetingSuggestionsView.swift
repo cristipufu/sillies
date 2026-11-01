@@ -2,6 +2,7 @@ import SilliesCore
 import SwiftUI
 
 struct AudioMeetingSuggestionsView: View {
+  @Environment(\.silliesTheme) private var theme
   private static let suggestionRowHeight: CGFloat = 88
   private static let maximumSuggestionsHeight: CGFloat = 152
   let model: AudioSessionPresentation
@@ -31,10 +32,10 @@ struct AudioMeetingSuggestionsView: View {
                 "Your companion will quietly flag useful questions as the conversation develops.")
             : String(localized: "Suggestions are unavailable. You can still keep the transcript.")
         )
-        .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        .font(.caption).foregroundStyle(theme.secondary)
       }
     }
     .padding(14).background(
-      SilliesTheme.accent.opacity(0.06), in: RoundedRectangle(cornerRadius: 14))
+      theme.accent.opacity(0.06), in: RoundedRectangle(cornerRadius: 14))
   }
 }

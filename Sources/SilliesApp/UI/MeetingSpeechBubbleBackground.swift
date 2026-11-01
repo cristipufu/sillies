@@ -9,7 +9,7 @@ final class MeetingSpeechBubbleBackground: NSView {
   private var tail: SuggestionBubbleLayout.Tail?
   private var tailOffset: CGFloat?
   private var appliedSize: CGSize?
-  private var appliedThemeRevision = -1
+  private var theme = SilliesTheme()
   override var isFlipped: Bool { true }
 
   override init(frame: NSRect) {
@@ -24,21 +24,24 @@ final class MeetingSpeechBubbleBackground: NSView {
   func update(_ layout: SuggestionBubbleLayout) {
     guard
       tail != layout.tail || tailOffset != layout.tailOffset || appliedSize != bounds.size
-        || appliedThemeRevision != SilliesTheme.revision
     else { return }
     tail = layout.tail
     tailOffset = layout.tailOffset
     appliedSize = bounds.size
-    appliedThemeRevision = SilliesTheme.revision
     let inset = SuggestionBubbleLayout.shadowInset
     let rect = bounds.insetBy(dx: inset, dy: inset)
     let path = SpeechBubbleShape(tail: layout.tail, tailOffset: layout.tailOffset - inset)
       .path(in: CGRect(origin: .zero, size: rect.size)).cgPath
-    artwork.update(frame: rect, path: path, appearance: effectiveAppearance)
+    artwork.update(frame: rect, path: path, appearance: effectiveAppearance, theme: theme)
   }
 
   override func viewDidChangeEffectiveAppearance() {
     super.viewDidChangeEffectiveAppearance()
+    updateColors()
+  }
+
+  func applyTheme(_ theme: SilliesTheme) {
+    self.theme = theme
     updateColors()
   }
 
@@ -48,6 +51,6 @@ final class MeetingSpeechBubbleBackground: NSView {
     let rect = bounds.insetBy(dx: inset, dy: inset)
     let path = SpeechBubbleShape(tail: tail, tailOffset: tailOffset - inset)
       .path(in: CGRect(origin: .zero, size: rect.size)).cgPath
-    artwork.update(frame: rect, path: path, appearance: effectiveAppearance)
+    artwork.update(frame: rect, path: path, appearance: effectiveAppearance, theme: theme)
   }
 }

@@ -2,6 +2,7 @@ import SilliesCore
 import SwiftUI
 
 struct AudioSessionView: View {
+  @Environment(\.silliesTheme) private var theme
   let model: AudioSessionPresentation
 
   var body: some View {
@@ -10,8 +11,8 @@ struct AudioSessionView: View {
         minWidth: SessionWindowLayout.minimumSize.width,
         minHeight: SessionWindowLayout.minimumSize.height
       )
-      .background(SilliesTheme.paper).foregroundStyle(SilliesTheme.ink)
-      .tint(SilliesTheme.accent)
+      .background(theme.paper).foregroundStyle(theme.ink)
+      .tint(theme.accent)
       .onAppear { model.hasUnreadSuggestion = false }
       .onChange(of: model.suggestions.count) { _, _ in model.hasUnreadSuggestion = false }
   }
@@ -43,7 +44,7 @@ struct AudioSessionView: View {
             ?? String(localized: "Speaker labels enabled · Labels may take a few seconds"),
           systemImage: "person.2.wave.2"
         )
-        .font(.caption).foregroundStyle(SilliesTheme.secondary)
+        .font(.caption).foregroundStyle(theme.secondary)
         .fixedSize(horizontal: false, vertical: true)
       }
       if case .failed(let failure) = model.phase {
@@ -58,11 +59,11 @@ struct AudioSessionView: View {
 
   private var footer: some View {
     HStack(alignment: .top, spacing: 8) {
-      Image(systemName: "lock.shield").foregroundStyle(SilliesTheme.accent)
+      Image(systemName: "lock.shield").foregroundStyle(theme.accent)
       Text(footerMessage)
         .fixedSize(horizontal: false, vertical: true)
     }
-    .font(.caption).foregroundStyle(SilliesTheme.secondary)
+    .font(.caption).foregroundStyle(theme.secondary)
   }
 
   private var footerMessage: String {

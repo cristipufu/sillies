@@ -132,6 +132,11 @@ let package = Package(
       dependencies: ["SilliesModelStore", "SilliesTextModels", "SilliesReasoning"],
       path: "Tools/TextModelBenchmark"),
     .executableTarget(
+      name: "ChatModelBenchmark",
+      dependencies: [
+        "SilliesCore", "SilliesModelStore", "SilliesTextModels", "SilliesReasoning", "SilliesVault",
+      ], path: "Tools/ChatModelBenchmark", exclude: ["AGENTS.md"]),
+    .executableTarget(
       name: "TTSBenchmark", dependencies: ["SilliesModelStore", "SilliesTTS", "SilliesInference"],
       path: "Tools/TTSBenchmark"),
     .testTarget(

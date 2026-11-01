@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "language-es",
+      "group": "multilingual",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "¿Cuál es la capital de Francia? Responde solo con el nombre de la ciudad.",
+          "rubric": "Answer in the requested language using general knowledge, not personal records.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "París",
+                "Paris"
+              ]
+            }
+          ]
+        }
+      ],
+      "language": "es"
+    },
+    {
+      "id": "language-fr",
+      "group": "multilingual",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Quelle est la capitale de la France ? Réponds uniquement avec le nom de la ville.",
+          "rubric": "Answer in the requested language using general knowledge, not personal records.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Paris",
+                "Paris"
+              ]
+            }
+          ]
+        }
+      ],
+      "language": "fr"
+    },
+    {
+      "id": "language-de",
+      "group": "multilingual",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Was ist die Hauptstadt von Frankreich? Antworte nur mit dem Stadtnamen.",
+          "rubric": "Answer in the requested language using general knowledge, not personal records.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Paris",
+                "Paris"
+              ]
+            }
+          ]
+        }
+      ],
+      "language": "de"
+    },
+    {
+      "id": "language-ro",
+      "group": "multilingual",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Care este capitala Franței? Răspunde doar cu numele orașului.",
+          "rubric": "Answer in the requested language using general knowledge, not personal records.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Paris",
+                "Paris"
+              ]
+            }
+          ]
+        }
+      ],
+      "language": "ro"
+    }
+  ]
+}

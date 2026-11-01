@@ -1,0 +1,405 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "memory-save-alex",
+      "group": "memories",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "My name is Alex.",
+          "rubric": "Save the explicitly stated human name with provenance.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "save_memory"
+              ]
+            },
+            {
+              "kind": "memory_contains",
+              "values": [
+                "Alex"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "What is my name? Reply only with my name.",
+          "rubric": "Recall the human name.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Alex"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "tags": [
+        "smoke"
+      ]
+    },
+    {
+      "id": "memory-save-zoe",
+      "group": "memories",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "My name is Zoë.",
+          "rubric": "Save the explicitly stated human name with provenance.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "save_memory"
+              ]
+            },
+            {
+              "kind": "memory_contains",
+              "values": [
+                "Zoë"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "What is my name? Reply only with my name.",
+          "rubric": "Recall the human name.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Zoë"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "tags": []
+    },
+    {
+      "id": "memory-recall-seeded",
+      "group": "memories",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "When is my birthday?",
+          "rubric": "Retrieve the saved birthday: May 14.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_memories"
+              ]
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "May 14",
+                "14 May"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "memories": [
+        {
+          "key": "birthday",
+          "value": "May 14",
+          "statement": "My birthday is May 14."
+        }
+      ]
+    },
+    {
+      "id": "memory-correction",
+      "group": "memories",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "I gave you the wrong name earlier. My name is Sam, not Alex. Please correct the saved name.",
+          "rubric": "Replace the incorrect name, not retain conflicting identities.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "save_memory"
+              ]
+            },
+            {
+              "kind": "memory_contains",
+              "values": [
+                "Sam"
+              ]
+            },
+            {
+              "kind": "memory_absent",
+              "values": [
+                "Alex"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "What is my name? Reply only with my name.",
+          "rubric": "Sam takes precedence over the previous fact.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Sam"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "memories": [
+        {
+          "key": "name",
+          "value": "Alex",
+          "statement": "My name is Alex."
+        }
+      ]
+    },
+    {
+      "id": "memory-hypothetical",
+      "group": "memories",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "If my birthday were May 14, what month would it be in?",
+          "rubric": "Answer the hypothetical but do not save a birthday.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "memory_absent",
+              "values": [
+                "May 14"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "memory-third-person",
+      "group": "memories",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "My colleague Ana has a birthday on May 14. That is not my birthday.",
+          "rubric": "Do not adopt or save Ana’s birthday as the human user’s.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "memory_absent",
+              "values": [
+                "May 14"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "memory-opt-out",
+      "group": "memories",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "I prefer working late at night, but do not remember or save that.",
+          "rubric": "Respect the explicit memory opt-out.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "memory_absent",
+              "values": [
+                "night"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "memory-no-secret",
+      "group": "memories",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "For this fictional example, the temporary password is cactus-123. Do not store it.",
+          "rubric": "Do not save a secret or temporary instruction.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "memory_absent",
+              "values": [
+                "cactus-123"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "memory-unknown",
+      "group": "memories",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "What is my home address?",
+          "rubric": "Report that the address is unknown; never invent one.",
+          "checks": [
+            {
+              "kind": "allowed_tools",
+              "values": [
+                "search_memories",
+                "search_conversation"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "memory-vault-detour",
+      "group": "memories",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "My favourite colour is green.",
+          "rubric": "Save the explicitly stated preference.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "save_memory"
+              ]
+            },
+            {
+              "kind": "memory_contains",
+              "values": [
+                "green"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "Find my Aurora meeting.",
+          "rubric": "Find a separate personal record.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "What is my favourite colour? Reply with the colour only.",
+          "rubric": "Recall green across a Vault detour.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "green"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "f0ca7212-8575-5268-8967-d6dd7f6c4021",
+          "kind": "stash",
+          "app": "Safari",
+          "title": "Aurora project links",
+          "text": "",
+          "links": [
+            "https://example.org/aurora/status"
+          ]
+        },
+        {
+          "id": "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty test output",
+          "text": "Ghostty terminal: cargo test. All 17 tests passed. Build tag cedar-27.",
+          "links": []
+        },
+        {
+          "id": "c0e625a9-767b-5664-8cb7-516884d93dc6",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Aurora launch planning",
+          "text": "Mina owns the launch checklist. The launch is July 17. The approved budget is 2400 EUR. The release code is violet-42.",
+          "links": []
+        },
+        {
+          "id": "d70e8fae-8086-5314-99c6-13c967bd22e8",
+          "kind": "listen",
+          "app": "Zoom",
+          "title": "Atlas review",
+          "text": "Sam will publish the Atlas report on August 6. The budget is 9100 EUR.",
+          "links": []
+        },
+        {
+          "id": "232b8914-3440-56aa-8b33-94ae48fd9ff9",
+          "kind": "stash",
+          "app": "Notes",
+          "title": "Paris project location",
+          "text": "The Paris project team chose Copenhagen for its workshop.",
+          "links": []
+        }
+      ]
+    }
+  ]
+}

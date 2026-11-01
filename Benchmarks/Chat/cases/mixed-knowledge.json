@@ -1,0 +1,682 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "mixed-url-world-url",
+      "group": "mixed-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Which URLs did I save?",
+          "rubric": "Return the saved URL.",
+          "checks": [
+            {
+              "kind": "contains_any",
+              "values": [
+                "https://example.org/aurora/status"
+              ]
+            },
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "What is the tallest mountain in the world?",
+          "rubric": "Answer Mount Everest directly, without Vault search.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "Everest"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "What was the URL you found earlier?",
+          "rubric": "Recover the earlier saved URL.",
+          "checks": [
+            {
+              "kind": "contains_any",
+              "values": [
+                "https://example.org/aurora/status"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "f0ca7212-8575-5268-8967-d6dd7f6c4021",
+          "kind": "stash",
+          "app": "Safari",
+          "title": "Aurora project links",
+          "text": "",
+          "links": [
+            "https://example.org/aurora/status"
+          ]
+        },
+        {
+          "id": "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty test output",
+          "text": "Ghostty terminal: cargo test. All 17 tests passed. Build tag cedar-27.",
+          "links": []
+        },
+        {
+          "id": "c0e625a9-767b-5664-8cb7-516884d93dc6",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Aurora launch planning",
+          "text": "Mina owns the launch checklist. The launch is July 17. The approved budget is 2400 EUR. The release code is violet-42.",
+          "links": []
+        },
+        {
+          "id": "d70e8fae-8086-5314-99c6-13c967bd22e8",
+          "kind": "listen",
+          "app": "Zoom",
+          "title": "Atlas review",
+          "text": "Sam will publish the Atlas report on August 6. The budget is 9100 EUR.",
+          "links": []
+        },
+        {
+          "id": "232b8914-3440-56aa-8b33-94ae48fd9ff9",
+          "kind": "stash",
+          "app": "Notes",
+          "title": "Paris project location",
+          "text": "The Paris project team chose Copenhagen for its workshop.",
+          "links": []
+        }
+      ],
+      "tags": [
+        "smoke"
+      ]
+    },
+    {
+      "id": "mixed-world-vault-world",
+      "group": "mixed-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "What is photosynthesis?",
+          "rubric": "Answer the general question directly.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "sunlight",
+                "light energy"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "Who owns the checklist in my Aurora meeting?",
+          "rubric": "Search personal records and identify Mina.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault"
+              ]
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "Mina"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "And what is the capital of France? Reply only with the city name.",
+          "rubric": "Return to general knowledge; Paris.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Paris"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "f0ca7212-8575-5268-8967-d6dd7f6c4021",
+          "kind": "stash",
+          "app": "Safari",
+          "title": "Aurora project links",
+          "text": "",
+          "links": [
+            "https://example.org/aurora/status"
+          ]
+        },
+        {
+          "id": "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty test output",
+          "text": "Ghostty terminal: cargo test. All 17 tests passed. Build tag cedar-27.",
+          "links": []
+        },
+        {
+          "id": "c0e625a9-767b-5664-8cb7-516884d93dc6",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Aurora launch planning",
+          "text": "Mina owns the launch checklist. The launch is July 17. The approved budget is 2400 EUR. The release code is violet-42.",
+          "links": []
+        },
+        {
+          "id": "d70e8fae-8086-5314-99c6-13c967bd22e8",
+          "kind": "listen",
+          "app": "Zoom",
+          "title": "Atlas review",
+          "text": "Sam will publish the Atlas report on August 6. The budget is 9100 EUR.",
+          "links": []
+        },
+        {
+          "id": "232b8914-3440-56aa-8b33-94ae48fd9ff9",
+          "kind": "stash",
+          "app": "Notes",
+          "title": "Paris project location",
+          "text": "The Paris project team chose Copenhagen for its workshop.",
+          "links": []
+        }
+      ],
+      "tags": [
+        "smoke"
+      ]
+    },
+    {
+      "id": "mixed-paris-meaning",
+      "group": "mixed-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "What is the capital of France?",
+          "rubric": "Paris; no personal lookup.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "Paris"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "Which city did we choose for the Paris project?",
+          "rubric": "Interpret Paris as the saved project; answer Copenhagen.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault"
+              ]
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "Copenhagen"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "What country is the city of Paris in? Reply only with the country.",
+          "rubric": "Return to the real-world city; France.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "France"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "f0ca7212-8575-5268-8967-d6dd7f6c4021",
+          "kind": "stash",
+          "app": "Safari",
+          "title": "Aurora project links",
+          "text": "",
+          "links": [
+            "https://example.org/aurora/status"
+          ]
+        },
+        {
+          "id": "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty test output",
+          "text": "Ghostty terminal: cargo test. All 17 tests passed. Build tag cedar-27.",
+          "links": []
+        },
+        {
+          "id": "c0e625a9-767b-5664-8cb7-516884d93dc6",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Aurora launch planning",
+          "text": "Mina owns the launch checklist. The launch is July 17. The approved budget is 2400 EUR. The release code is violet-42.",
+          "links": []
+        },
+        {
+          "id": "d70e8fae-8086-5314-99c6-13c967bd22e8",
+          "kind": "listen",
+          "app": "Zoom",
+          "title": "Atlas review",
+          "text": "Sam will publish the Atlas report on August 6. The budget is 9100 EUR.",
+          "links": []
+        },
+        {
+          "id": "232b8914-3440-56aa-8b33-94ae48fd9ff9",
+          "kind": "stash",
+          "app": "Notes",
+          "title": "Paris project location",
+          "text": "The Paris project team chose Copenhagen for its workshop.",
+          "links": []
+        }
+      ]
+    },
+    {
+      "id": "mixed-empty-search-world",
+      "group": "mixed-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Find my meeting about the lunar elevator.",
+          "rubric": "Report no matching records.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "Who wrote Pride and Prejudice? Reply only with the name.",
+          "rubric": "An empty Vault search does not erase general knowledge.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Jane Austen"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "f0ca7212-8575-5268-8967-d6dd7f6c4021",
+          "kind": "stash",
+          "app": "Safari",
+          "title": "Aurora project links",
+          "text": "",
+          "links": [
+            "https://example.org/aurora/status"
+          ]
+        },
+        {
+          "id": "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty test output",
+          "text": "Ghostty terminal: cargo test. All 17 tests passed. Build tag cedar-27.",
+          "links": []
+        },
+        {
+          "id": "c0e625a9-767b-5664-8cb7-516884d93dc6",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Aurora launch planning",
+          "text": "Mina owns the launch checklist. The launch is July 17. The approved budget is 2400 EUR. The release code is violet-42.",
+          "links": []
+        },
+        {
+          "id": "d70e8fae-8086-5314-99c6-13c967bd22e8",
+          "kind": "listen",
+          "app": "Zoom",
+          "title": "Atlas review",
+          "text": "Sam will publish the Atlas report on August 6. The budget is 9100 EUR.",
+          "links": []
+        },
+        {
+          "id": "232b8914-3440-56aa-8b33-94ae48fd9ff9",
+          "kind": "stash",
+          "app": "Notes",
+          "title": "Paris project location",
+          "text": "The Paris project team chose Copenhagen for its workshop.",
+          "links": []
+        }
+      ]
+    },
+    {
+      "id": "mixed-combined-question",
+      "group": "mixed-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Who owns our Aurora checklist, and what is photosynthesis?",
+          "rubric": "Answer the personal part from Vault (Mina) and the general part from knowledge; do not claim a Vault source proves the science.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault"
+              ]
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "Mina"
+              ]
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "sunlight",
+                "light energy"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "f0ca7212-8575-5268-8967-d6dd7f6c4021",
+          "kind": "stash",
+          "app": "Safari",
+          "title": "Aurora project links",
+          "text": "",
+          "links": [
+            "https://example.org/aurora/status"
+          ]
+        },
+        {
+          "id": "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty test output",
+          "text": "Ghostty terminal: cargo test. All 17 tests passed. Build tag cedar-27.",
+          "links": []
+        },
+        {
+          "id": "c0e625a9-767b-5664-8cb7-516884d93dc6",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Aurora launch planning",
+          "text": "Mina owns the launch checklist. The launch is July 17. The approved budget is 2400 EUR. The release code is violet-42.",
+          "links": []
+        },
+        {
+          "id": "d70e8fae-8086-5314-99c6-13c967bd22e8",
+          "kind": "listen",
+          "app": "Zoom",
+          "title": "Atlas review",
+          "text": "Sam will publish the Atlas report on August 6. The budget is 9100 EUR.",
+          "links": []
+        },
+        {
+          "id": "232b8914-3440-56aa-8b33-94ae48fd9ff9",
+          "kind": "stash",
+          "app": "Notes",
+          "title": "Paris project location",
+          "text": "The Paris project team chose Copenhagen for its workshop.",
+          "links": []
+        }
+      ]
+    },
+    {
+      "id": "mixed-back-reference-after-detour",
+      "group": "mixed-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Show my Ghostty screenshot.",
+          "rubric": "Retrieve the screenshot.",
+          "checks": [
+            {
+              "kind": "source_includes",
+              "values": [
+                "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "Why does the Moon have phases?",
+          "rubric": "Answer generally without tools.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            }
+          ]
+        },
+        {
+          "user": "How many tests passed in that screenshot? Reply only with the number.",
+          "rubric": "Return to the screenshot after the detour; 17.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "17"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "f0ca7212-8575-5268-8967-d6dd7f6c4021",
+          "kind": "stash",
+          "app": "Safari",
+          "title": "Aurora project links",
+          "text": "",
+          "links": [
+            "https://example.org/aurora/status"
+          ]
+        },
+        {
+          "id": "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty test output",
+          "text": "Ghostty terminal: cargo test. All 17 tests passed. Build tag cedar-27.",
+          "links": []
+        },
+        {
+          "id": "c0e625a9-767b-5664-8cb7-516884d93dc6",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Aurora launch planning",
+          "text": "Mina owns the launch checklist. The launch is July 17. The approved budget is 2400 EUR. The release code is violet-42.",
+          "links": []
+        },
+        {
+          "id": "d70e8fae-8086-5314-99c6-13c967bd22e8",
+          "kind": "listen",
+          "app": "Zoom",
+          "title": "Atlas review",
+          "text": "Sam will publish the Atlas report on August 6. The budget is 9100 EUR.",
+          "links": []
+        },
+        {
+          "id": "232b8914-3440-56aa-8b33-94ae48fd9ff9",
+          "kind": "stash",
+          "app": "Notes",
+          "title": "Paris project location",
+          "text": "The Paris project team chose Copenhagen for its workshop.",
+          "links": []
+        }
+      ]
+    },
+    {
+      "id": "mixed-four-switches",
+      "group": "mixed-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "What is the largest ocean?",
+          "rubric": "Pacific; general knowledge.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "Pacific"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "When is the launch in my Aurora meeting?",
+          "rubric": "July 17, from the meeting.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault"
+              ]
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "July 17",
+                "17 July"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "What does CPU stand for?",
+          "rubric": "Central processing unit, without personal search.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "central processing unit"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "And who owns that launch checklist?",
+          "rubric": "Resolve the earlier Aurora reference and answer Mina.",
+          "checks": [
+            {
+              "kind": "contains_any",
+              "values": [
+                "Mina"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "f0ca7212-8575-5268-8967-d6dd7f6c4021",
+          "kind": "stash",
+          "app": "Safari",
+          "title": "Aurora project links",
+          "text": "",
+          "links": [
+            "https://example.org/aurora/status"
+          ]
+        },
+        {
+          "id": "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty test output",
+          "text": "Ghostty terminal: cargo test. All 17 tests passed. Build tag cedar-27.",
+          "links": []
+        },
+        {
+          "id": "c0e625a9-767b-5664-8cb7-516884d93dc6",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Aurora launch planning",
+          "text": "Mina owns the launch checklist. The launch is July 17. The approved budget is 2400 EUR. The release code is violet-42.",
+          "links": []
+        },
+        {
+          "id": "d70e8fae-8086-5314-99c6-13c967bd22e8",
+          "kind": "listen",
+          "app": "Zoom",
+          "title": "Atlas review",
+          "text": "Sam will publish the Atlas report on August 6. The budget is 9100 EUR.",
+          "links": []
+        },
+        {
+          "id": "232b8914-3440-56aa-8b33-94ae48fd9ff9",
+          "kind": "stash",
+          "app": "Notes",
+          "title": "Paris project location",
+          "text": "The Paris project team chose Copenhagen for its workshop.",
+          "links": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,376 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "knowledge-mountain",
+      "group": "general-knowledge",
+      "profiles": [
+        "none",
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "What is the tallest mountain above sea level on Earth? Reply only with its name.",
+          "rubric": "Correct world knowledge, without consulting personal records.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Mount Everest",
+                "Everest"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "f0ca7212-8575-5268-8967-d6dd7f6c4021",
+          "kind": "stash",
+          "app": "Safari",
+          "title": "Aurora project links",
+          "text": "",
+          "links": [
+            "https://example.org/aurora/status"
+          ]
+        },
+        {
+          "id": "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty test output",
+          "text": "Ghostty terminal: cargo test. All 17 tests passed. Build tag cedar-27.",
+          "links": []
+        },
+        {
+          "id": "c0e625a9-767b-5664-8cb7-516884d93dc6",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Aurora launch planning",
+          "text": "Mina owns the launch checklist. The launch is July 17. The approved budget is 2400 EUR. The release code is violet-42.",
+          "links": []
+        },
+        {
+          "id": "d70e8fae-8086-5314-99c6-13c967bd22e8",
+          "kind": "listen",
+          "app": "Zoom",
+          "title": "Atlas review",
+          "text": "Sam will publish the Atlas report on August 6. The budget is 9100 EUR.",
+          "links": []
+        },
+        {
+          "id": "232b8914-3440-56aa-8b33-94ae48fd9ff9",
+          "kind": "stash",
+          "app": "Notes",
+          "title": "Paris project location",
+          "text": "The Paris project team chose Copenhagen for its workshop.",
+          "links": []
+        }
+      ],
+      "tags": [
+        "smoke"
+      ]
+    },
+    {
+      "id": "knowledge-photosynthesis",
+      "group": "general-knowledge",
+      "profiles": [
+        "none",
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "What process do plants use to convert sunlight into chemical energy? Reply with the process name only.",
+          "rubric": "Correct world knowledge, without consulting personal records.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Photosynthesis"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "f0ca7212-8575-5268-8967-d6dd7f6c4021",
+          "kind": "stash",
+          "app": "Safari",
+          "title": "Aurora project links",
+          "text": "",
+          "links": [
+            "https://example.org/aurora/status"
+          ]
+        },
+        {
+          "id": "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty test output",
+          "text": "Ghostty terminal: cargo test. All 17 tests passed. Build tag cedar-27.",
+          "links": []
+        },
+        {
+          "id": "c0e625a9-767b-5664-8cb7-516884d93dc6",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Aurora launch planning",
+          "text": "Mina owns the launch checklist. The launch is July 17. The approved budget is 2400 EUR. The release code is violet-42.",
+          "links": []
+        },
+        {
+          "id": "d70e8fae-8086-5314-99c6-13c967bd22e8",
+          "kind": "listen",
+          "app": "Zoom",
+          "title": "Atlas review",
+          "text": "Sam will publish the Atlas report on August 6. The budget is 9100 EUR.",
+          "links": []
+        },
+        {
+          "id": "232b8914-3440-56aa-8b33-94ae48fd9ff9",
+          "kind": "stash",
+          "app": "Notes",
+          "title": "Paris project location",
+          "text": "The Paris project team chose Copenhagen for its workshop.",
+          "links": []
+        }
+      ],
+      "tags": [
+        "smoke"
+      ]
+    },
+    {
+      "id": "knowledge-capital",
+      "group": "general-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "What is the capital of France? Reply only with the city name.",
+          "rubric": "Correct world knowledge, without consulting personal records.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Paris"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "f0ca7212-8575-5268-8967-d6dd7f6c4021",
+          "kind": "stash",
+          "app": "Safari",
+          "title": "Aurora project links",
+          "text": "",
+          "links": [
+            "https://example.org/aurora/status"
+          ]
+        },
+        {
+          "id": "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty test output",
+          "text": "Ghostty terminal: cargo test. All 17 tests passed. Build tag cedar-27.",
+          "links": []
+        },
+        {
+          "id": "c0e625a9-767b-5664-8cb7-516884d93dc6",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Aurora launch planning",
+          "text": "Mina owns the launch checklist. The launch is July 17. The approved budget is 2400 EUR. The release code is violet-42.",
+          "links": []
+        },
+        {
+          "id": "d70e8fae-8086-5314-99c6-13c967bd22e8",
+          "kind": "listen",
+          "app": "Zoom",
+          "title": "Atlas review",
+          "text": "Sam will publish the Atlas report on August 6. The budget is 9100 EUR.",
+          "links": []
+        },
+        {
+          "id": "232b8914-3440-56aa-8b33-94ae48fd9ff9",
+          "kind": "stash",
+          "app": "Notes",
+          "title": "Paris project location",
+          "text": "The Paris project team chose Copenhagen for its workshop.",
+          "links": []
+        }
+      ],
+      "tags": []
+    },
+    {
+      "id": "knowledge-planet",
+      "group": "general-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Which planet is called the Red Planet? Reply with its name only.",
+          "rubric": "Correct world knowledge, without consulting personal records.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Mars"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [],
+      "tags": []
+    },
+    {
+      "id": "knowledge-ocean",
+      "group": "general-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Which ocean is the largest? Reply only with its name.",
+          "rubric": "Correct world knowledge, without consulting personal records.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Pacific Ocean",
+                "The Pacific Ocean",
+                "Pacific"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [],
+      "tags": []
+    },
+    {
+      "id": "knowledge-author",
+      "group": "general-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Who wrote Pride and Prejudice? Reply only with the author’s name.",
+          "rubric": "Correct world knowledge, without consulting personal records.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Jane Austen"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [],
+      "tags": []
+    },
+    {
+      "id": "knowledge-arithmetic",
+      "group": "general-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "What is 7 multiplied by 8? Reply with the number only.",
+          "rubric": "Correct world knowledge, without consulting personal records.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "56"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [],
+      "tags": []
+    },
+    {
+      "id": "knowledge-element",
+      "group": "general-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "What is the chemical symbol for gold? Reply with the symbol only.",
+          "rubric": "Correct world knowledge, without consulting personal records.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Au"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [],
+      "tags": []
+    },
+    {
+      "id": "knowledge-explanation",
+      "group": "general-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Explain why we have seasons in two short sentences.",
+          "rubric": "Explain axial tilt and changing sunlight; not distance from the Sun.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "tilt",
+                "tilted"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

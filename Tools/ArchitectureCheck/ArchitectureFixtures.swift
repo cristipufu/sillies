@@ -4,6 +4,7 @@ import Foundation
 enum ArchitectureFixtures {
   private static func verifyPackageBoundaries() -> Bool {
     let valid = [
+      "let t = [.executableTarget(name: \"ChatModelBenchmark\", dependencies: [\"SilliesReasoning\", \"SilliesVault\"])]",
       "let t = [.target(name: \"SilliesWriting\", dependencies: [\"SilliesCore\", \"SilliesAudio\", \"SilliesReasoning\"]) ]",
 
       "let t = [.target(name: \"SilliesReasoning\", dependencies: [\"SilliesCore\", \"SilliesTextModels\"])]",
@@ -12,6 +13,7 @@ enum ArchitectureFixtures {
       "let t = [.target(name: \"SilliesChat\", dependencies: [\"SilliesReasoning\", \"SilliesTTS\"])]",
     ]
     let invalid = [
+      "let t = [.executableTarget(name: \"ChatModelBenchmark\", dependencies: [\"SilliesApp\"])]",
       "let t = [.target(name: \"SilliesWriting\", dependencies: [\"SilliesApp\"])]",
       "let t = [.target(name: \"SilliesWriting\", dependencies: [\"SilliesPersistence\"])]",
       "let t = [.target(name: \"SilliesWriting\", dependencies: [\"SilliesSpeechApple\"])]",
@@ -45,6 +47,15 @@ enum ArchitectureFixtures {
     let permission = "Sources/SilliesApp/Skills/WindowSnapshotService.swift"
     let rendering = "Sources/SilliesApp/Rendering/CompanionPanel.swift"
     let fixtures: [Fixture] = [
+      .init(
+        source: "func build() { let engine = AppleReasoningBackend() }",
+        path: "Tools/ChatModelBenchmark/Composition/BenchmarkModel.swift", rules: []),
+      .init(
+        source: "func build() { let engine = AppleReasoningBackend() }",
+        path: "Tools/ChatModelBenchmark/BenchmarkConversation.swift", rules: ["reasoning-boundary"]),
+      .init(
+        source: "import AppKit", path: "Tools/ChatModelBenchmark/Runner.swift",
+        rules: ["module-boundary"]),
       .init(
         source: "let defaults = UserDefaults.standard",
         path: "Sources/SilliesWriting/NewWorkflow.swift", rules: ["writing-boundary"]),

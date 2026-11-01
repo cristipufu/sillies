@@ -1,0 +1,229 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "identity-pogo",
+      "group": "identity",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "My name is Alex.",
+          "rubric": "Keep the human identity separate from the companion.",
+          "checks": [
+            {
+              "kind": "memory_contains",
+              "values": [
+                "Alex"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "What is your name? Reply only with your own name.",
+          "rubric": "Return the companion’s identity, not the human’s.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Pogo"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        },
+        {
+          "user": "And what is my name? Reply only with my name.",
+          "rubric": "Alex is the human; pronouns must stay correctly attributed.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Alex"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "owner": {
+        "id": "pogo",
+        "name": "Pogo",
+        "personality": "Warm, curious and upbeat."
+      },
+      "tags": [
+        "smoke"
+      ]
+    },
+    {
+      "id": "identity-bolt",
+      "group": "identity",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "My name is Alex.",
+          "rubric": "Keep the human identity separate from the companion.",
+          "checks": [
+            {
+              "kind": "memory_contains",
+              "values": [
+                "Alex"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "What is your name? Reply only with your own name.",
+          "rubric": "Return the companion’s identity, not the human’s.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Bolt"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        },
+        {
+          "user": "And what is my name? Reply only with my name.",
+          "rubric": "Alex is the human; pronouns must stay correctly attributed.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Alex"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "owner": {
+        "id": "bolt",
+        "name": "Bolt",
+        "personality": "Warm, curious and upbeat."
+      },
+      "tags": []
+    },
+    {
+      "id": "identity-saved-user",
+      "group": "identity",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "What's your name?",
+          "rubric": "Introduce yourself as Pogo, never as Alex.",
+          "checks": [
+            {
+              "kind": "contains_any",
+              "values": [
+                "Pogo"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "memories": [
+        {
+          "key": "name",
+          "value": "Alex",
+          "statement": "My name is Alex."
+        }
+      ]
+    },
+    {
+      "id": "identity-recovery",
+      "group": "identity",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "What is your name? Reply with your own name only.",
+          "rubric": "Correct the earlier assistant mistake; Pogo.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Pogo"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "history": [
+        {
+          "role": "user",
+          "text": "My name is Alex."
+        },
+        {
+          "role": "assistant",
+          "text": "Your name is Alex."
+        },
+        {
+          "role": "user",
+          "text": "What's your name?"
+        },
+        {
+          "role": "assistant",
+          "text": "I'm Alex, your friendly window companion."
+        }
+      ],
+      "tags": [
+        "smoke"
+      ]
+    },
+    {
+      "id": "identity-not-user-birthday",
+      "group": "identity",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Is May 14 your birthday or mine?",
+          "rubric": "Attribute the saved birthday to the human user, not the mascot.",
+          "checks": [
+            {
+              "kind": "contains_any",
+              "values": [
+                "your",
+                "yours"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "memories": [
+        {
+          "key": "birthday",
+          "value": "May 14",
+          "statement": "My birthday is May 14."
+        }
+      ]
+    }
+  ]
+}

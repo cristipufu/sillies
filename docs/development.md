@@ -65,6 +65,12 @@ Writing lifecycles live in `SilliesWriting`, behind explicit capture, insertion,
 
 See [local text model extension contracts](local-text-models.md) and [speech provider contracts](local-speech-models.md) before adding a runtime or model.
 
+The [local Chat evaluation suite](../Benchmarks/Chat/README.md) compares the production conversation
+pipeline across Apple and downloaded models using synthetic data. It covers general knowledge,
+Vault retrieval, mixed-topic follow-ups, identities, persistent memories, compaction and tool-count
+scaling. Runs are headless, bounded and resumable; actual model quality checks are opt-in and separate
+from deterministic `make check` results.
+
 ## Verification
 
 Routine commands (`make check`, `make stress`, `make race-check`, and `scripts/test.sh`) are headless: native views lay out and render offscreen without ordering windows or activating the test app. They still need macOS/AppKit; this is not a Linux or WindowServer-free runner. Focus, stacking, popover dismissal, live drag/frame budgets, and scene playback remain in the explicit visible suite:

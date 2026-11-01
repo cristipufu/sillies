@@ -4,6 +4,10 @@ struct ArchitecturePolicy {
   var uncheckedOwners: [String: String]
 
   static let imports: [String: Set<String>] = [
+    "ChatModelBenchmark": [
+      "Foundation", "SilliesCore", "SilliesModelStore", "SilliesTextModels", "SilliesReasoning",
+      "SilliesVault", "Synchronization",
+    ],
     "SilliesCore": ["Foundation", "CoreGraphics"],
     "SilliesDesign": ["Foundation"],
     "SilliesReasoning": [

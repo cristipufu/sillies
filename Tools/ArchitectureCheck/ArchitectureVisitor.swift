@@ -178,7 +178,8 @@ final class ArchitectureVisitor: SyntaxVisitor {
   private func checkReasoningBoundary(_ node: some SyntaxProtocol, name: String) {
     guard Self.reasoningOwners.contains(name),
       !path.hasPrefix("Sources/SilliesReasoning/"),
-      !path.hasPrefix("Sources/SilliesApp/App/Composition/")
+      !path.hasPrefix("Sources/SilliesApp/App/Composition/"),
+      path != "Tools/ChatModelBenchmark/Composition/BenchmarkModel.swift"
     else { return }
     // Presentation of model installation is a separate adapter, not a reasoning consumer.
     if name == "TextModelEnvironment", path == "Sources/SilliesApp/App/TextModelsPresentation.swift"
@@ -188,7 +189,8 @@ final class ArchitectureVisitor: SyntaxVisitor {
     if name == "ReasoningServices", path == "Sources/SilliesApp/App/SilliesMain.swift" { return }
     report(
       node, "reasoning-boundary",
-      "Inject LocalReasoning. Construct concrete reasoning owners only in App/Composition.")
+      "Inject reasoning interfaces. Construct concrete owners only in the app or benchmark composition root."
+    )
   }
 
   private func checkWritingBoundary(_ node: some SyntaxProtocol, name: String) {

@@ -189,6 +189,7 @@ Start with [Contributing to Sillies](CONTRIBUTING.md) for setup, bug reports, ch
 | **A skill** | [Session lifecycle, commands, UI, and saved results](docs/contributing/skills.md) |
 | **A speech model or STT engine** | [Model manifests and speech-provider adapters](docs/contributing/speech-models.md) |
 | **A Chat tool** | [Local capabilities, Vault sources, and conversation memory](docs/contributing/chat-tools.md) |
+| **A Chat evaluation** | [General knowledge, Vault retrieval, memories, and tool reliability](Benchmarks/Chat/README.md) |
 | **A text / LLM model** | [Model manifests and text-provider adapters](docs/contributing/text-models.md) |
 | **A voice / TTS model** | [Voice providers, native runtimes, and playback](docs/contributing/voice-models.md) |
 | **A language** | [JSON translations, plural forms, and native macOS localization](docs/contributing/localization.md) |

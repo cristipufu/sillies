@@ -6,3 +6,5 @@ dist/
 *.xcuserstate
 *.profraw
 *.trace
+__pycache__/
+*.py[cod]

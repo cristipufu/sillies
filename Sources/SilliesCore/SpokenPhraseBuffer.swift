@@ -3,36 +3,54 @@ import Foundation
 /// Incremental, lossless segmentation. Keep a lookahead character for decimals and abbreviations.
 public struct SpokenPhraseBuffer: Sendable {
   public static let maximumPhraseCharacters = 180
+  public static let maximumOpeningCharacters = 72
   private static let minimumClauseCharacters = 48
+  private static let minimumOpeningCharacters = 20
   private static let sentenceMarks = Set<Character>(".!?。！？\n")
   private static let clauseMarks = Set<Character>(",;:，；：")
   private var pending = ""
+  private var openingEmitted = false
   public init() {}
 
   public mutating func append(_ delta: String) -> [String] {
     pending += delta
     var result: [String] = []
     while let boundary = boundary() {
-      let phrase = String(pending[..<boundary]).trimmingCharacters(in: .whitespacesAndNewlines)
-      pending = String(pending[boundary...])
+      let phrase = takePrefix(through: boundary)
       if !phrase.isEmpty { result.append(phrase) }
     }
     return result
   }
+  /// Called with an elapsed-time decision from the orchestration layer; never cuts a word.
+  public mutating func flushOpeningPhrase() -> [String] {
+    guard !openingEmitted, pending.count >= Self.minimumOpeningCharacters,
+      let boundary = pending.prefix(Self.maximumOpeningCharacters).lastIndex(where: \.isWhitespace)
+    else { return [] }
+    let prefix = pending[..<boundary]
+    guard prefix.count >= Self.minimumOpeningCharacters else { return [] }
+    let phrase = takePrefix(through: pending.index(after: boundary))
+    return phrase.isEmpty ? [] : [phrase]
+  }
+
+  public var hasOpeningPhrase: Bool { openingEmitted }
   public mutating func finish() -> [String] {
     let remainder = pending.trimmingCharacters(in: .whitespacesAndNewlines)
     pending = ""
+    if !remainder.isEmpty { openingEmitted = true }
     return remainder.isEmpty
       ? [] : SpokenTextChunks.split(remainder, maximumCharacters: Self.maximumPhraseCharacters)
   }
   private func boundary() -> String.Index? {
+    let limit = openingEmitted ? Self.maximumPhraseCharacters : Self.maximumOpeningCharacters
+    let clauseMinimum =
+      openingEmitted ? Self.minimumClauseCharacters : Self.minimumOpeningCharacters
     let characters = Array(pending)
     guard characters.count > 1 else { return nil }
-    for index in 0..<min(characters.count - 1, Self.maximumPhraseCharacters) {
+    for index in 0..<min(characters.count - 1, limit) {
       let current = characters[index]
       let next = characters[index + 1]
       let sentence = Self.sentenceMarks.contains(current)
-      let clause = index >= Self.minimumClauseCharacters && Self.clauseMarks.contains(current)
+      let clause = index >= clauseMinimum && Self.clauseMarks.contains(current)
       if sentence || clause {
         guard next.isWhitespace || "。！？".contains(current) else { continue }
         if current == "." {
@@ -44,10 +62,22 @@ public struct SpokenPhraseBuffer: Sendable {
         return pending.index(pending.startIndex, offsetBy: index + 1)
       }
     }
+    guard characters.count > limit else { return nil }
+    if let boundary = characters.prefix(limit).lastIndex(where: \.isWhitespace) {
+      return pending.index(pending.startIndex, offsetBy: boundary + 1)
+    }
+    // A short opening must not split an identifier. Keep the existing hard bound for long tokens.
     guard characters.count > Self.maximumPhraseCharacters else { return nil }
-    let prefix = characters.prefix(Self.maximumPhraseCharacters)
     let count =
-      prefix.lastIndex(where: \.isWhitespace).map { $0 + 1 } ?? Self.maximumPhraseCharacters
+      characters.prefix(Self.maximumPhraseCharacters).lastIndex(where: \.isWhitespace)
+      .map { $0 + 1 } ?? Self.maximumPhraseCharacters
     return pending.index(pending.startIndex, offsetBy: count)
+  }
+
+  private mutating func takePrefix(through boundary: String.Index) -> String {
+    let phrase = String(pending[..<boundary]).trimmingCharacters(in: .whitespacesAndNewlines)
+    pending = String(pending[boundary...])
+    if !phrase.isEmpty { openingEmitted = true }
+    return phrase
   }
 }

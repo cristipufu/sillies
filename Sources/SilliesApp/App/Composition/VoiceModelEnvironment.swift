@@ -10,6 +10,7 @@ actor VoiceModelEnvironment {
   private let savePreference: @MainActor @Sendable (String) -> Void
   private var selected: String
   private var catalog: TTSModelCatalog?
+  private let memoryPressure = MemoryPressureMonitor()
 
   init(
     store: ModelStore, registry: TTSModelRegistry, selectedID: String,
@@ -56,8 +57,28 @@ actor VoiceModelEnvironment {
     _ request: SpeechSynthesisRequest, using manifest: TTSModelManifest,
     receive: @escaping SynthesizedAudioSink
   ) async throws {
+    await observeMemoryPressure()
     try await registry.synthesize(request, using: manifest, receive: receive)
   }
+
+  func prepareVoiceIfPossible(
+    _ voice: SpeechVoice, using manifest: TTSModelManifest, conversationID: UUID
+  ) async throws -> Bool {
+    await observeMemoryPressure()
+    return try await registry.prepareVoiceIfPossible(
+      voice, using: manifest, conversationID: conversationID)
+  }
+
+  func retain(for lifetime: SpeechModelLifetime) async { await registry.retain(for: lifetime) }
   func resume() async { await registry.resume() }
-  func stop() async { await registry.suspend() }
+  func stop() async {
+    await memoryPressure.stop()
+    await registry.suspend()
+  }
+
+  private func observeMemoryPressure() async {
+    await memoryPressure.start { [registry] pressure in
+      await registry.setRetention(pressure == .constrained ? .memoryPressure : .available)
+    }
+  }
 }

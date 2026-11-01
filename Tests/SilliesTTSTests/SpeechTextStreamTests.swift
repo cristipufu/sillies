@@ -2,6 +2,18 @@ import Foundation
 import SilliesTTS
 import Testing
 
+@Test func speechTextStartWaitersFinishOnEmptyOutputAndCancellation() async throws {
+  let empty = SpeechTextStream()
+  let waiting = Task { try await empty.waitForTextStart() }
+  await empty.finish()
+  #expect(try await !waiting.value)
+  let cancelled = SpeechTextStream()
+  let cancelledWaiter = Task { try await cancelled.waitForTextStart() }
+  cancelledWaiter.cancel()
+  await #expect(throws: CancellationError.self) { try await cancelledWaiter.value }
+  await #expect(throws: CancellationError.self) { try await cancelled.next() }
+}
+
 @Test func speechTextStreamDrainsInOrderAfterProducerFinishes() async throws {
   let stream = SpeechTextStream()
   try await stream.append("First phrase.")

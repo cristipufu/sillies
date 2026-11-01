@@ -6,6 +6,10 @@ import Testing
 
 private final class OutputProbe: VoiceOutputDevice, Sendable {
   let interruption = Mutex<(@Sendable () -> Void)?>(nil)
+  let audible = Mutex<(@Sendable (TimeInterval) -> Void)?>(nil)
+  func onAudibleOutput(_ receive: @escaping @Sendable (TimeInterval) -> Void) {
+    audible.withLock { $0 = receive }
+  }
   func onInterruption(_ receive: @escaping @Sendable () -> Void) {
     interruption.withLock { $0 = receive }
   }
@@ -15,6 +19,33 @@ private final class OutputProbe: VoiceOutputDevice, Sendable {
     completions.withLock { $0.append(completed) }
   }
   func stop() { stopCount.withLock { $0 += 1 } }
+}
+
+@Test func playbackAudibleTimingUsesTheDeviceAndRejectsPreviousPlaybackCallbacks() async throws {
+  let device = OutputProbe()
+  let playback = VoicePlayback(makeDevice: { device })
+  let id = UUID()
+  let times = Mutex<[TimeInterval]>([])
+  let receive: @Sendable (SpeechPlaybackUpdate) -> Void = { update in
+    if case .milestone(.audibleOutput(let time)) = update { times.withLock { $0.append(time) } }
+  }
+  let audio = try SynthesizedAudio(samples: [0.1], sampleRate: 24_000)
+  await playback.start(id: id, receive: receive)
+  try await playback.enqueue(audio, id: id)
+  #expect(times.withLock { $0.isEmpty })
+  let old = try #require(device.audible.withLock { $0 })
+  await playback.stop(id: id)
+  await playback.start(id: id, receive: receive)
+  try await playback.enqueue(audio, id: id)
+  old(100)
+  let current = try #require(device.audible.withLock { $0 })
+  current(200)
+  for _ in 0..<100 {
+    if !times.withLock({ $0.isEmpty }) { break }
+    try await Task.sleep(for: .milliseconds(2))
+  }
+  #expect(times.withLock { $0 } == [200])
+  await playback.stop(id: id)
 }
 
 @Test func playbackBackpressureStopsProducersUntilSamplesPlay() async throws {

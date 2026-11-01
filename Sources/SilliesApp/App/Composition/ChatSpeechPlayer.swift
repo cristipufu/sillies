@@ -9,6 +9,7 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
   private let playback: any SpeechPlayback
   private var active: (id: UUID, task: Task<String?, Error>)?
   private var interruptedPlaybackID: UUID?
+  private var firstPCMFor: UUID?
 
   init(models: VoiceModelEnvironment, playback: any SpeechPlayback) {
     self.models = models
@@ -106,6 +107,15 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
       throw TTSError.unsupportedVoice
     }
     try Task.checkCancellation()
+    if let lifetime = request.lifetime { await models.retain(for: lifetime) }
+    guard try await text.waitForTextStart() else { return nil }
+    receive(.milestone(.preparationStarted))
+    if try await models.prepareVoiceIfPossible(
+      .init(id: voice.id, language: language), using: manifest, conversationID: request.id)
+    {
+      receive(.milestone(.voicePrepared))
+    }
+    firstPCMFor = nil
     await playback.start(id: request.id) { [weak self] update in
       receive(update)
       if case .interrupted = update {
@@ -118,7 +128,7 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
         try await models.synthesize(
           .init(text: chunk, voiceID: voice.id, language: language, conversationID: request.id),
           using: manifest
-        ) { [playback] audio in try await playback.enqueue(audio, id: request.id) }
+        ) { audio in try await self.enqueue(audio, id: request.id, receive: receive) }
         try await playback.markUtterance(chunk, id: request.id)
       }
       try await playback.finish(id: request.id)
@@ -128,6 +138,16 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
       if interruptedPlaybackID == request.id { throw TTSError.interrupted }
       throw error
     }
+  }
+
+  private func enqueue(
+    _ audio: SynthesizedAudio, id: UUID, receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void
+  ) async throws {
+    if firstPCMFor != id {
+      firstPCMFor = id
+      receive(.milestone(.firstPCM))
+    }
+    try await playback.enqueue(audio, id: id)
   }
 
   private func playbackInterrupted(id: UUID) {

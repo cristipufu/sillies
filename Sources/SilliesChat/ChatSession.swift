@@ -39,8 +39,11 @@ package final class ChatSession {
   @ObservationIgnored private var voiceSequence = 0
   @ObservationIgnored private var spokenDelivery: ChatTurnDelivery?
   @ObservationIgnored private var voiceTurnEndedAt: ContinuousClock.Instant?
+  @ObservationIgnored private let voiceLifetime = SpeechModelLifetime()
   package var firstTextLatency: Duration? { spokenDelivery?.snapshot.firstText }
   package var firstAudioLatency: Duration? { spokenDelivery?.snapshot.firstAudio }
+  package var firstPCMLatency: Duration? { spokenDelivery?.snapshot.firstPCM }
+  package var voicePreparedLatency: Duration? { spokenDelivery?.snapshot.voicePrepared }
 
   package init(
     companionName: String, profile: CharacterChatProfile, services: ChatServices,
@@ -53,6 +56,8 @@ package final class ChatSession {
     self.services = services
     microphone = ChatMicrophone(services: services)
   }
+
+  deinit { Task { [voiceLifetime] in await voiceLifetime.end() } }
 
   package var isRecording: Bool { phase == .preparingMicrophone || phase == .listening }
   package var isWorking: Bool { [.thinking, .preparingVoice, .speaking].contains(phase) }
@@ -183,6 +188,7 @@ package final class ChatSession {
   }
 
   package func finish(completion: @escaping @MainActor () -> Void) {
+    Task { [voiceLifetime] in await voiceLifetime.end() }
     isVoiceConversationActive = false
     voiceTurnEndedAt = nil
     cancelReply()
@@ -211,7 +217,7 @@ package final class ChatSession {
       companionName: companionName, profile: profile, messages: messages, memory: memory,
       turnID: token)
     setPhase(.thinking)
-    operation = Task { [weak self, services] in
+    operation = Task { [weak self, services, voiceLifetime] in
       do {
         let turn = ChatTurnOperation(
           services: services,
@@ -231,7 +237,7 @@ package final class ChatSession {
                 delivery.received(update)
                 self?.receivePlayback(update, token: token)
               }
-            }))
+            }), voiceLifetime: voiceLifetime)
         let result = try await turn.run(
           context, output: self?.spokenReplies == true ? .spoken : .text)
         try Task.checkCancellation()
@@ -358,6 +364,7 @@ package final class ChatSession {
   private func receivePlayback(_ update: SpeechPlaybackUpdate, token: UUID) {
     guard turnID == token, phase != .finished else { return }
     switch update {
+    case .milestone: return
     case .speaking(let level):
       guard isWorking else { return }
       phase = .speaking

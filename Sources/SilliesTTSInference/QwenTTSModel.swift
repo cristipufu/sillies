@@ -11,6 +11,7 @@ actor QwenTTSModel: NativeTTSModel {
     "fr": "french", "ru": "russian", "pt": "portuguese", "es": "spanish", "it": "italian",
   ]
   private let model: TTSKit
+  private var preparedVoice: SpeechVoice?
 
   init(configuration: TTSPreparation) async throws {
     guard let variant = TTSModelVariant(rawValue: configuration.variant) else {
@@ -26,12 +27,7 @@ actor QwenTTSModel: NativeTTSModel {
   func synthesize(_ request: SpeechSynthesisRequest, output: @escaping NativeSpeechSink)
     async throws
   {
-    let languageCode =
-      request.language.replacingOccurrences(of: "_", with: "-")
-      .lowercased().split(separator: "-").first.map(String.init) ?? ""
-    guard let language = Self.languages[languageCode] else {
-      throw SilliesTTS.TTSError.unsupportedLanguage
-    }
+    let language = try Self.modelLanguage(request.language)
     let failure = Mutex<(any Error)?>(nil)
     _ = try await model.generate(
       text: request.text, voice: request.voiceID, language: language,
@@ -49,5 +45,22 @@ actor QwenTTSModel: NativeTTSModel {
       }
     }
     if let error = failure.withLock({ $0 }) { throw error }
+  }
+
+  func prepareVoice(_ voice: SpeechVoice) async throws {
+    guard preparedVoice != voice else { return }
+    _ = try await model.buildPromptCache(
+      voice: voice.id, language: Self.modelLanguage(voice.language))
+    preparedVoice = voice
+  }
+
+  private static func modelLanguage(_ identifier: String) throws -> String {
+    let languageCode =
+      identifier.replacingOccurrences(of: "_", with: "-")
+      .lowercased().split(separator: "-").first.map(String.init) ?? ""
+    guard let language = Self.languages[languageCode] else {
+      throw SilliesTTS.TTSError.unsupportedLanguage
+    }
+    return language
   }
 }

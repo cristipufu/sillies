@@ -23,9 +23,11 @@ struct ChatTurnOperation: Sendable {
   }
   let services: ChatServices
   let delivery: Delivery
+  var voiceLifetime: SpeechModelLifetime? = nil
 
   func run(_ context: ChatContext, output: Output) async throws -> Result {
-    let stream = ChatTurnStream(receive: delivery.text)
+    let stream = ChatTurnStream(
+      receive: delivery.text, milestone: { delivery.playback(.milestone($0)) })
     let voice = Task { () -> VoiceResult in
       guard output == .spoken else {
         await stream.stopSpeech()
@@ -33,7 +35,8 @@ struct ChatTurnOperation: Sendable {
       }
       do {
         let notice = try await services.speech.speakStream(
-          .init(id: context.turnID, text: "", profile: context.profile), text: stream.speech,
+          .init(id: context.turnID, text: "", profile: context.profile, lifetime: voiceLifetime),
+          text: stream.speech,
           receive: delivery.playback)
         await stream.stopSpeech()
         return notice.map(VoiceResult.notice) ?? .finished

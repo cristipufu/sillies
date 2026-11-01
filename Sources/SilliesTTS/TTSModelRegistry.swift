@@ -4,6 +4,7 @@ import SilliesModelStore
 
 /// One voice runtime for the entire crew. Installation leases outlive all native model reads.
 package actor TTSModelRegistry {
+  package static let defaultIdleDuration: Duration = .seconds(60)
   private struct Loaded {
     let residencyID = UUID()
     let id: String
@@ -11,24 +12,34 @@ package actor TTSModelRegistry {
     let model: any PreparedTTSModel
     let lease: InstalledModelLease
   }
-  private static let idleDuration: Duration = .seconds(60)
+  package enum Retention { case available, memoryPressure }
   private static let bytesPerGiB: UInt64 = 1_024 * 1_024 * 1_024
   private let store: ModelStore
   private let providers: [String: any TTSProvider]
   private let activity: InferenceActivity
   private var loaded: Loaded?
-  private var active: Task<Void, Error>?
+  private struct Work {
+    let task: Task<Bool, Error>
+    let kind: VoiceModelOperation.Kind
+  }
+  private var active: Work?
   private var idle: Task<Void, Never>?
   private var suspended = false
+  private var retention = Retention.available
+  private var lifetimes: [UUID: SpeechModelLifetime] = [:]
+  private let idleDuration: Duration
 
-  package init(store: ModelStore, providers: [any TTSProvider], activity: InferenceActivity) throws
-  {
+  package init(
+    store: ModelStore, providers: [any TTSProvider], activity: InferenceActivity,
+    idleDuration: Duration = TTSModelRegistry.defaultIdleDuration
+  ) throws {
     guard Set(providers.map(\.id)).count == providers.count else {
       throw TTSError.unavailable(String(localized: "Duplicate voice provider registration."))
     }
     self.store = store
     self.providers = Dictionary(uniqueKeysWithValues: providers.map { ($0.id, $0) })
     self.activity = activity
+    self.idleDuration = idleDuration
   }
 
   package func synthesize(
@@ -36,56 +47,97 @@ package actor TTSModelRegistry {
     receive: @escaping SynthesizedAudioSink
   ) async throws {
     try request.validate()
+    _ = try await run(.synthesize(request, receive), using: manifest)
+  }
+
+  package func prepareVoiceIfPossible(
+    _ voice: SpeechVoice, using manifest: TTSModelManifest, conversationID: UUID
+  ) async throws -> Bool {
+    try voice.validate()
+    guard retention == .available else { return false }
+    do {
+      return try await run(.prepare(voice, conversationID: conversationID), using: manifest)
+    } catch is CancellationError {
+      try Task.checkCancellation()
+      return false
+    }
+  }
+
+  package func retain(for lifetime: SpeechModelLifetime) { lifetimes[lifetime.id] = lifetime }
+
+  package func setRetention(_ retention: Retention) async {
+    self.retention = retention
+    guard retention == .memoryPressure else { return }
+    if active?.kind == .preparation { active?.task.cancel() }
+    if active == nil { await releaseModel() }
+  }
+
+  private func run(_ operation: VoiceModelOperation, using manifest: TTSModelManifest) async throws
+    -> Bool
+  {
     guard !suspended else { throw TTSError.interrupted }
     guard active == nil else { throw TTSError.busy }
-    guard manifest.model.supports(language: request.language) else {
+    guard manifest.model.supports(language: operation.voice.language) else {
       throw TTSError.unsupportedLanguage
     }
-    guard let voice = manifest.model.voices.first(where: { $0.id == request.voiceID }),
-      voice.supports(language: request.language)
+    guard let voice = manifest.model.voices.first(where: { $0.id == operation.voice.id }),
+      voice.supports(language: operation.voice.language)
     else { throw TTSError.unsupportedVoice }
     idle?.cancel()
     let cancellation = InferenceCancellation()
     let task = Task {
       try await self.perform(
-        request, manifest: manifest, cancellation: cancellation, receive: receive)
+        operation, manifest: manifest, cancellation: cancellation)
     }
-    active = task
+    active = Work(task: task, kind: operation.kind)
     cancellation.install { task.cancel() }
-    defer {
-      active = nil
-      scheduleRelease()
-    }
-    try await withTaskCancellationHandler {
-      try await task.value
+    let result = await withTaskCancellationHandler {
+      await task.result
     } onCancel: {
       task.cancel()
     }
+    active = nil
+    if retention == .memoryPressure { await releaseModel() } else { scheduleRelease() }
+    return try result.get()
   }
 
   private func perform(
-    _ request: SpeechSynthesisRequest, manifest: TTSModelManifest,
-    cancellation: InferenceCancellation, receive: @escaping SynthesizedAudioSink
-  ) async throws {
+    _ operation: VoiceModelOperation, manifest: TTSModelManifest,
+    cancellation: InferenceCancellation
+  ) async throws -> Bool {
     let id = UUID()
     let reservation = InferenceReservation(
-      conversationID: request.conversationID, modelBytes: manifest.downloadBytes)
-    guard
-      await activity.claimSynthesis(id, reservation: reservation, cancel: { cancellation.cancel() })
-    else {
-      try Task.checkCancellation()
-      throw TTSError.busy
+      conversationID: operation.conversationID, modelBytes: manifest.downloadBytes)
+    switch operation.kind {
+    case .preparation:
+      guard
+        await activity.claimVoicePreparation(
+          id, reservation: reservation, cancel: { cancellation.cancel() })
+      else {
+        try Task.checkCancellation()
+        return false
+      }
+    case .synthesis:
+      guard
+        await activity.claimSynthesis(
+          id, reservation: reservation, cancel: { cancellation.cancel() })
+      else {
+        try Task.checkCancellation()
+        throw TTSError.busy
+      }
     }
     do {
       try Task.checkCancellation()
       await activity.prepareVoiceModel(reservation)
       let model = try await prepare(manifest)
-      try await model.synthesize(request, receive: receive)
+      try await operation.run(on: model)
       try Task.checkCancellation()
       await activity.releaseSynthesis(id)
+      return true
     } catch {
       await releaseModel()
       await activity.releaseSynthesis(id)
+      try Task.checkCancellation()
       throw error
     }
   }
@@ -147,7 +199,8 @@ package actor TTSModelRegistry {
   package func stop() async {
     idle?.cancel()
     idle = nil
-    let task = active
+    lifetimes.removeAll()
+    let task = active?.task
     task?.cancel()
     await releaseModel()
     if let task { _ = await task.result }
@@ -167,10 +220,23 @@ package actor TTSModelRegistry {
 
   private func scheduleRelease() {
     idle?.cancel()
-    guard loaded != nil else { return }
+    guard let id = loaded?.residencyID else { return }
+    let delay = idleDuration
     idle = Task { [weak self] in
-      do { try await Task.sleep(for: Self.idleDuration) } catch { return }
-      await self?.releaseModel()
+      do { try await Task.sleep(for: delay) } catch { return }
+      await self?.releaseIfIdle(id)
+    }
+  }
+
+  private func releaseIfIdle(_ id: UUID) async {
+    for (key, lifetime) in lifetimes where await !lifetime.isActive {
+      lifetimes[key] = nil
+    }
+    guard !Task.isCancelled, active == nil, loaded?.residencyID == id else { return }
+    if retention == .available, !lifetimes.isEmpty {
+      scheduleRelease()
+    } else {
+      await releaseModel()
     }
   }
 }

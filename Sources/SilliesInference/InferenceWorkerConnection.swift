@@ -3,6 +3,7 @@ import Foundation
 
 /// One serial caller owns pipe I/O; cancellation may terminate the process from any executor.
 package final class InferenceWorkerConnection: @unchecked Sendable {
+  package enum Priority { case interactive, background }
   private let exit = WorkerExitSignal()
   private let process: Process
   private let input: FileHandle
@@ -10,7 +11,7 @@ package final class InferenceWorkerConnection: @unchecked Sendable {
   private let lock = NSLock()
   private var stopped = false
 
-  package init(executable: URL) throws {
+  package init(executable: URL, priority: Priority = .background) throws {
     dispatchPrecondition(condition: .notOnQueue(.main))
     let process = Process()
     let request = Pipe()
@@ -25,7 +26,7 @@ package final class InferenceWorkerConnection: @unchecked Sendable {
     process.standardInput = request
     process.standardOutput = response
     process.standardError = FileHandle.standardError
-    process.qualityOfService = .utility
+    process.qualityOfService = priority == .interactive ? .userInitiated : .utility
     let exit = exit
     process.terminationHandler = { _ in exit.complete() }
     try process.run()

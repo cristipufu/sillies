@@ -1,5 +1,10 @@
 import Foundation
 
+package enum TTSInferenceCommand: Codable, Sendable {
+  case prepare(TTSPreparation, SpeechVoice)
+  case synthesize(TTSInferenceRequest)
+}
+
 package struct TTSInferenceRequest: Codable, Sendable {
   package let configuration: TTSPreparation
   package let synthesis: SpeechSynthesisRequest
@@ -10,6 +15,7 @@ package struct TTSInferenceRequest: Codable, Sendable {
 }
 
 package enum TTSInferenceResponse: Codable, Sendable {
+  case prepared
   case audio(SynthesizedAudio)
   case finished
   case failure(String)

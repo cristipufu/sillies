@@ -20,10 +20,17 @@ audio_signal_filter="$audio_echo_filter|$audio_timing_filter"
 # The device/rate matrix processes many seconds of PCM under instrumentation. Give it its own
 # bounded run, separate from acoustic-delay and lifecycle checks; keep every case instrumented.
 race_filter='SpeechSchedulerTests|WindowSpeechChannelTests|SpeechWorkerExecutorTests|StreamingDiarizationTests|SpeakerAttributionTests|speakerActivity|diarization|speechRuntimeShares|transcriptionFailurePreserves|audioCaptureSequence|captureQueue|repeatedAudioOverload|highChannelCountAudio|duplicateRecognizer|recognizerTimeout|cancellationRejects|partialRecognizer|languageSwitch|finishingDuringLanguage|endingDuringSpeechPreparation|metadataProcess|metadataCacheSupportsConcurrent|blockedUI|progressCoalescing|cancelledDelivery|dictation|selection|Selection|writingHistory|writingRecovery|insertionRevalidates|nativeInsertion|clipboard|textAccessRejects|ocrSuspension|speechPreemptsText|cancelledText|missingModelsNever|suspendedText|workerExit|cancelledReasoning|cancellingAnUnresponsiveWorker|isolatedDictation|isolatedSelection|fieldEdit|vaultProtection|vaultRegeneration|vaultScreenshotRetry|vaultShowMore|backgroundRefreshesStay|vaultMissingUpdate|incrementalNotes|quittingFlushesField|vaultCursor|vaultInvalidation|vaultWriteBurst|vaultRetry|failedVaultIndex|vaultStartup|largeVaultPages|oversizedVaultBodies|vaultDetail|vaultDeletion|failedRecordUpdate|backgroundOCR|thousandsOfPendingNotes|cancelledVaultNotes|speechRegistry|downloadedSpeechProviders|languageRestart|voiceWarmup|chat|voice|Voice|playback|Playback|cancellingStalledVoice|sameTurnText|oversizedVoice|cancelledVoiceAdmission|cachedModels|speechTextStream|SpeechConsumer|speechQueue|SpeechStream|preemptedTextStream|textWorkerStream|textWorkerRejects|interruptingAStream|modelFailureAfterPartial|streamedVoice|spokenPhraseCompletion'
-for race_framework in swift-testing xctest; do
+voice_bundles='Chat|TTS|TextModels|VoicePlayback|Writing'
+# Each bundle belongs to exactly one batch, including future targets in the first batch.
+# TSAN process startup/discovery is substantial; keep the existing per-run watchdog bounded.
+for race_skip in \
+  "Sillies($voice_bundles)Tests|SilliesFishSpeechTests|$audio_signal_filter" \
+  "Sillies(?!($voice_bundles)Tests).*"; do
   python3 -B scripts/run-checked-tests.py --sanitizer thread --timeout 90 --bin-path "$race_binary_directory" \
-    --framework "$race_framework" --filter "$race_filter" --skip "SilliesFishSpeechTests|$audio_signal_filter"
+    --framework swift-testing --filter "$race_filter" --skip "$race_skip"
 done
+python3 -B scripts/run-checked-tests.py --sanitizer thread --timeout 90 --bin-path "$race_binary_directory" \
+  --framework xctest --filter "$race_filter" --skip "SilliesFishSpeechTests|$audio_signal_filter"
 for race_audio_filter in "$audio_timing_filter" "$audio_echo_filter"; do
   python3 -B scripts/run-checked-tests.py --sanitizer thread --timeout 90 --bin-path "$race_binary_directory" \
     --framework swift-testing --filter "$race_audio_filter" --skip 'Sillies(?!AudioTests).*'

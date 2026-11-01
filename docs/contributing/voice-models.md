@@ -23,6 +23,9 @@ inference SDK. Recognition, reasoning, synthesis, playback, and artwork have sep
 
 - Implement `TTSProvider` and `PreparedTTSModel` from `SilliesTTS`. Preparation consumes a verified
   local directory; it must not initiate downloads. Await the audio sink to preserve backpressure.
+- Implement `prepareVoice` to load the requested voice/language before text is ready. Repeated calls
+  for an unchanged, reusable voice must reuse native state. The adapter owns cache invalidation;
+  one-shot session state must be consumed/reset rather than leaking previous text into a new phrase.
 - Put the runtime in `SilliesTTSInference` or a focused target reachable only from that helper.
   Register the provider ID in `VoiceServices` and its runtime factory in `TTSInferenceMain`.
   The app only receives validated, bounded PCM through the existing process transport.
@@ -51,6 +54,24 @@ updates and assembles bounded phrases through the pure `SpokenPhraseBuffer`. `Sp
 one bounded reply with one reader; it can hold the complete reply while a large voice waits for text
 generation to release memory. This avoids a backpressure deadlock between inference branches.
 
+The first text delta starts speculative voice preparation while phrase assembly continues. Admission
+must never preempt active reasoning to warm a voice: defer when memory or another interactive task
+prevents overlap. New incompatible text or recognition can cancel preparation without failing the
+spoken reply. Synthesis subsequently uses the ordinary admission path. Helpers run at interactive
+priority, with native work outside the UI process.
+
+Opening phrases use a shorter word/clause boundary than later phrases. A finite 350 ms deadline can
+release at least 20 complete characters during slow, unpunctuated output; it never cuts a partial
+word. Later chunks retain the existing 180-character bound. Keep segmentation pure and the deadline
+owned/cancelled by `ChatTurnStream`, including text failure and voice-only cancellation.
+
+`SpeechModelLifetime` keeps the single selected voice runtime available while Chat is open. The
+registry owns the 60-second idle eviction schedule; active lifetimes defer eviction, while memory
+pressure or an incompatible model reservation can reclaim it. Closing Chat ends its lifetime;
+pause/termination stop the environment and its memory-pressure subscription. Helpers have no second
+idle timer that can silently discard an otherwise retained runtime. Parent-death, request deadlines,
+and explicit cancellation remain mandatory.
+
 `ChatSpeechPlayer` starts one playback session for the turn, synthesizes phrases in order with the
 same selected voice, and drains playback once at the end. Pocket and Qwen emit native audio chunks;
 Fish decodes groups of generated codec frames incrementally. Kokoro completes a short phrase before
@@ -68,6 +89,12 @@ watchdog detects a device that stops completing buffers, releases blocked produc
 cancelled on every playback stop. It does not run on the UI actor. Device adapters report failures
 through `onInterruption`; the player cancels synthesis immediately even if it is waiting for a native
 model rather than blocked on an audio buffer. A partly played phrase is conservatively absent from the completed-phrase prefix.
+
+Latency milestones distinguish phrase readiness, voice preparation, first PCM, and first non-silent
+device output. `onAudibleOutput` uses the post-render presentation timestamp, skipping leading
+silence; scheduling a buffer or starting the speaking animation is not evidence of audible output.
+Callbacks retain playback-generation ownership. This measures device presentation, not room sound
+or whether the user muted the speakers.
 
 A voice error stops that branch while written output continues. Text failure or interruption cancels
 both branches, retains the partial bubble, and never retries already delivered speech automatically.
@@ -104,8 +131,10 @@ The conversion is downloaded as data; it does not execute code from the model re
 Run headless `make check BUILD_DIR=/tmp/sillies-check` and relevant cancellation/race checks.
 The explicit `make gui-check` suite covers Chat activation, close/reopen, stacking, and exclusion
 from mascot attachment. Routine checks also kill a fixture caller while keeping the helper's input pipe open, verifying that parent
-death alone terminates the helper. Thread Sanitizer runs the Swift Testing and XCTest frameworks
-separately, each with a 90-second execution watchdog; compilation is outside those deadlines.
+death alone terminates the helper. Thread Sanitizer runs Swift Testing in two disjoint groups of
+bundles, then XCTest and the audio signal matrices separately. Each run has a 90-second execution
+watchdog; compilation is outside those deadlines. The groups retain all selected tests and each run
+verifies completion receipts against discovery.
 The app, capture, admission, process transport, and playback tests remain instrumented. Fish's GPU
 numerical suite runs in normal `make check` and the real-model checks: MLX's own
 [build configuration](https://github.com/ml-explore/mlx/blob/main/CMakeLists.txt) rejects Thread
@@ -130,4 +159,7 @@ non-silent PCM alone does not establish speech quality. Optional final arguments
 and a short passage. Test the packaged helper too, since command-line execution does not establish
 that all Metal and runtime resources are bundled correctly.
 Set `SILLIES_TTS_HELPER` to the absolute packaged helper executable to run the same check against it.
-The runner reports first-audio latency separately from total synthesis time.
+The runner reports first PCM separately from total synthesis time. Replace `run` with `latency` to
+compare a cold helper, explicit voice preparation, and two successive requests with retained state.
+Each phase writes a separate WAV. These sink measurements exclude text generation and device output;
+do not report them as end-to-end conversational latency. No download is performed by `run` or `latency`.

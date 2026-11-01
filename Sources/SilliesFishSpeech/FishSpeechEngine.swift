@@ -17,6 +17,14 @@ package actor FishSpeechEngine {
 
   package init() {}
 
+  package func prepare(directory: URL) async throws {
+    dispatchPrecondition(condition: .notOnQueue(.main))
+    Memory.cacheLimit = Self.cacheBytes
+    Memory.memoryLimit = min(
+      Self.maximumMemoryBytes, Int(ProcessInfo.processInfo.physicalMemory / 2))
+    if loaded?.directory != directory { try await load(directory) }
+  }
+
   package func synthesize(_ request: SpeechSynthesisRequest, directory: URL) async throws -> [Float]
   {
     dispatchPrecondition(condition: .notOnQueue(.main))
@@ -32,10 +40,7 @@ package actor FishSpeechEngine {
     dispatchPrecondition(condition: .notOnQueue(.main))
     try request.validate()
     guard request.voiceID == "automatic" else { throw TTSError.unsupportedVoice }
-    Memory.cacheLimit = Self.cacheBytes
-    Memory.memoryLimit = min(
-      Self.maximumMemoryBytes, Int(ProcessInfo.processInfo.physicalMemory / 2))
-    if loaded?.directory != directory { try await load(directory) }
+    try await prepare(directory: directory)
     guard let loaded else { throw TTSError.interrupted }
     let prompt = try loaded.prompt.tokens(for: request.text)
     loaded.decoder.reset()

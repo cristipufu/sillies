@@ -5,6 +5,7 @@ import SilliesTTS
 actor PocketTTSModel: NativeTTSModel {
   private let manager: PocketTtsManager
   private let languageRoot: URL
+  private var prepared: (voice: SpeechVoice, session: PocketTtsSession)?
 
   init(configuration: TTSPreparation) async throws {
     guard let language = PocketTtsLanguage(rawValue: configuration.variant) else {
@@ -41,15 +42,33 @@ actor PocketTTSModel: NativeTTSModel {
   func synthesize(_ request: SpeechSynthesisRequest, output: @escaping NativeSpeechSink)
     async throws
   {
-    guard request.voiceID.allSatisfy({ $0.isLetter || $0.isNumber || $0 == "_" }),
+    try await prepareVoice(request.voice)
+    guard let session = prepared?.session else { throw TTSError.interrupted }
+    prepared = nil
+    session.enqueue(request.text)
+    session.finish()
+    do {
+      for try await frame in session.frames {
+        try Task.checkCancellation()
+        try output(frame.samples, PocketTtsConstants.audioSampleRate)
+      }
+    } catch {
+      await session.cancel()
+      throw error
+    }
+  }
+
+  func prepareVoice(_ voice: SpeechVoice) async throws {
+    if prepared?.voice == voice { return }
+    if let previous = prepared {
+      prepared = nil
+      await previous.session.cancel()
+    }
+    guard voice.id.allSatisfy({ $0.isLetter || $0.isNumber || $0 == "_" }),
       FileManager.default.fileExists(
-        atPath: languageRoot.appendingPathComponent("constants_bin/\(request.voiceID).safetensors")
+        atPath: languageRoot.appendingPathComponent("constants_bin/\(voice.id).safetensors")
           .path)
     else { throw TTSError.unsupportedVoice }
-    let stream = try await manager.synthesizeStreaming(text: request.text, voice: request.voiceID)
-    for try await frame in stream {
-      try Task.checkCancellation()
-      try output(frame.samples, PocketTtsConstants.audioSampleRate)
-    }
+    prepared = (voice, try await manager.makeSession(voice: voice.id))
   }
 }

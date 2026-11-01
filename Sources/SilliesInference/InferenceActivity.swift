@@ -5,9 +5,11 @@ package actor InferenceActivity {
   package static let shared = InferenceActivity()
   private var speechCount = 0
   private struct Work {
+    enum Kind { case generation, preparation }
     let id: UUID
     let reservation: InferenceReservation
     let cancel: @Sendable () -> Void
+    var kind = Kind.generation
   }
   private var text: Work?
   private var synthesis: Work?
@@ -69,6 +71,7 @@ package actor InferenceActivity {
     let id = UUID()
     try await withTaskCancellationHandler {
       try Task.checkCancellation()
+      preemptPreparation(for: reservation)
       guard !canClaimText(reservation) else { return }
       try await withCheckedThrowingContinuation { idleWaiters[id] = $0 }
     } onCancel: {
@@ -79,6 +82,7 @@ package actor InferenceActivity {
   package func claimText(
     _ id: UUID, reservation: InferenceReservation = .init(), cancel: @escaping @Sendable () -> Void
   ) -> Bool {
+    preemptPreparation(for: reservation)
     guard canClaimText(reservation) else { return false }
     text = Work(id: id, reservation: reservation, cancel: cancel)
     return true
@@ -115,6 +119,24 @@ package actor InferenceActivity {
       return false
     }
     return true
+  }
+
+  /// Speculation must never cancel text or reserve memory ahead of an incompatible reply.
+  package func claimVoicePreparation(
+    _ id: UUID, reservation: InferenceReservation, cancel: @escaping @Sendable () -> Void
+  ) -> Bool {
+    guard speechCount == 0, synthesis == nil,
+      text.map({ reservation.canOverlap($0.reservation, budget: overlapBudget) }) ?? true
+    else { return false }
+    synthesis = Work(id: id, reservation: reservation, cancel: cancel, kind: .preparation)
+    return true
+  }
+
+  private func preemptPreparation(for reservation: InferenceReservation) {
+    guard text == nil, let synthesis, synthesis.kind == .preparation,
+      !reservation.canOverlap(synthesis.reservation, budget: overlapBudget)
+    else { return }
+    synthesis.cancel()
   }
 
   package func requiresTextEviction(_ id: UUID) -> Bool {

@@ -102,6 +102,9 @@ package actor VoicePlayback: SpeechPlayback {
       device.onInterruption { [weak self] in
         Task { await self?.outputInterrupted(id: id, generation: token) }
       }
+      device.onAudibleOutput { [weak self] time in
+        Task { await self?.audibleOutput(time, id: id, generation: token) }
+      }
     }
     self.device = device
     let power =
@@ -151,6 +154,11 @@ package actor VoicePlayback: SpeechPlayback {
   private func requireSession(_ id: UUID) throws {
     if failedID == id { throw TTSError.interrupted }
     guard currentID == id else { throw CancellationError() }
+  }
+
+  private func audibleOutput(_ time: TimeInterval, id: UUID, generation token: UUID) {
+    guard currentID == id, generation == token else { return }
+    receive?(.milestone(.audibleOutput(time)))
   }
 
   private func outputInterrupted(id: UUID, generation token: UUID) {

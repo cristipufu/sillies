@@ -1,5 +1,39 @@
+import Foundation
 import SilliesCore
 import Testing
+
+@Test func spokenOpeningUsesAShorterBoundaryWithoutLosingTheRestOfTheSentence() throws {
+  var buffer = SpokenPhraseBuffer()
+  let text = String(repeating: "helpful words ", count: 30)
+  let phrases = buffer.append(text) + buffer.finish()
+  let opening = try #require(phrases.first)
+  #expect(opening.count <= SpokenPhraseBuffer.maximumOpeningCharacters)
+  #expect(phrases.dropFirst().contains { $0.count > SpokenPhraseBuffer.maximumOpeningCharacters })
+  #expect(phrases.joined().filter { !$0.isWhitespace } == text.filter { !$0.isWhitespace })
+}
+
+@Test func spokenOpeningWaitsForLongIdentifiersWithoutSplittingThemEarly() {
+  var buffer = SpokenPhraseBuffer()
+  let identifier = String(repeating: "a", count: 100)
+  #expect(buffer.append(identifier).isEmpty)
+  #expect(buffer.flushOpeningPhrase().isEmpty)
+  #expect(buffer.finish() == [identifier])
+  buffer = SpokenPhraseBuffer()
+  let longerText = identifier + " " + String(repeating: "words ", count: 30)
+  let phrases = buffer.append(longerText) + buffer.finish()
+  #expect(phrases.first?.hasPrefix(identifier + " ") == true)
+  #expect(phrases.joined(separator: " ") == longerText.trimmingCharacters(in: .whitespaces))
+}
+
+@Test func spokenOpeningDeadlinePreservesPartialWordsNumbersAndUnicode() {
+  var buffer = SpokenPhraseBuffer()
+  #expect(buffer.append("The total is 12.50 for Ștefan and API_").isEmpty)
+  let first = buffer.flushOpeningPhrase()
+  #expect(first == ["The total is 12.50 for Ștefan and"])
+  #expect(buffer.flushOpeningPhrase().isEmpty)
+  let rest = buffer.append("v2 tomorrow.") + buffer.finish()
+  #expect(rest == ["API_v2 tomorrow."])
+}
 
 @Test func spokenPhrasesPreserveDecimalsAbbreviationsAndUnicodeAcrossTokenBoundaries() {
   var buffer = SpokenPhraseBuffer()

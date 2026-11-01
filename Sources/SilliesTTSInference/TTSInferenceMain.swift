@@ -5,7 +5,6 @@ import SilliesInference
 import SilliesTTS
 
 @main enum TTSInferenceMain {
-  private static let idleTimeout: TimeInterval = 90
   private static let responseTimeout: TimeInterval = 180
   private static let maximumGPUOperationsPerBuffer = 8
 
@@ -42,17 +41,24 @@ import SilliesTTS
       "fish-speech": { try FishTTSModel(configuration: $0) },
     ])
     while true {
-      let request: TTSInferenceRequest
+      let request: TTSInferenceCommand
       do {
         request = try InferenceWire.read(
-          TTSInferenceRequest.self, from: .standardInput, deadline: deadline(Self.idleTimeout))
+          // The registry owns idle retention; parent death and explicit stop still kill this helper.
+          TTSInferenceCommand.self, from: .standardInput, deadline: .infinity)
       } catch { return }
       let result: TTSInferenceResponse
       do {
-        try await runtime.synthesize(request) { samples, sampleRate in
-          try send(samples, sampleRate: sampleRate, output: output)
+        switch request {
+        case .prepare(let configuration, let voice):
+          try await runtime.prepare(configuration, voice: voice)
+          result = .prepared
+        case .synthesize(let synthesis):
+          try await runtime.synthesize(synthesis) { samples, sampleRate in
+            try send(samples, sampleRate: sampleRate, output: output)
+          }
+          result = .finished
         }
-        result = .finished
       } catch {
         fputs("Speech synthesis failed: \(error.localizedDescription)\n", stderr)
         result = .failure(error.localizedDescription)

@@ -9,6 +9,8 @@ package protocol TTSProvider: Sendable {
 }
 
 package protocol PreparedTTSModel: Sendable {
+  /// Prepare without consuming text. The provider owns reuse and invalidation of voice state.
+  func prepareVoice(_ voice: SpeechVoice) async throws
   func synthesize(_ request: SpeechSynthesisRequest, receive: SynthesizedAudioSink) async throws
   func stop() async
 }
@@ -46,6 +48,7 @@ package struct SpeechSynthesisRequest: Codable, Sendable, Equatable {
   package let voiceID: String
   package let language: String
   package let conversationID: UUID?
+  package var voice: SpeechVoice { .init(id: voiceID, language: language) }
 
   package init(text: String, voiceID: String, language: String, conversationID: UUID? = nil) {
     self.text = text
@@ -55,9 +58,9 @@ package struct SpeechSynthesisRequest: Codable, Sendable, Equatable {
   }
 
   package func validate() throws {
+    try voice.validate()
     guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-      text.count <= Self.maximumTextCharacters, text.utf8.count <= Self.maximumTextBytes,
-      !voiceID.isEmpty, voiceID.utf8.count <= 128, !language.isEmpty, language.utf8.count <= 64
+      text.count <= Self.maximumTextCharacters, text.utf8.count <= Self.maximumTextBytes
     else { throw TTSError.invalidRequest }
   }
 }

@@ -5,6 +5,7 @@ import SilliesTTS
 actor KokoroTTSModel: NativeTTSModel {
   private static let sampleRate = 24_000
   private let manager: KokoroAneManager
+  private var preparedVoice: SpeechVoice?
 
   init(configuration: TTSPreparation) async throws {
     guard let variant = KokoroAneVariant(rawValue: configuration.variant) else {
@@ -20,5 +21,11 @@ actor KokoroTTSModel: NativeTTSModel {
   {
     let audio = try await manager.synthesizeDetailed(text: request.text, voice: request.voiceID)
     try output(audio.samples, Self.sampleRate)
+  }
+
+  func prepareVoice(_ voice: SpeechVoice) async throws {
+    guard preparedVoice != voice else { return }
+    try await manager.initialize(preloadVoices: [voice.id])
+    preparedVoice = voice
   }
 }

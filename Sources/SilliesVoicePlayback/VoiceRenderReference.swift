@@ -14,14 +14,17 @@ final class VoiceRenderReference {
     private let sampleRate: Double
     private let latency: TimeInterval
     private let receive: @Sendable (AudioRenderFrame) -> Void
+    private let audibility: VoiceAudibilityProbe
 
     init(
       format: AudioStreamBasicDescription, latency: TimeInterval,
-      receive: @escaping @Sendable (AudioRenderFrame) -> Void
+      receive: @escaping @Sendable (AudioRenderFrame) -> Void,
+      audible: @escaping @Sendable (TimeInterval) -> Void = { _ in }
     ) {
       sampleRate = format.mSampleRate
       self.latency = latency
       self.receive = receive
+      audibility = VoiceAudibilityProbe(receive: audible)
     }
 
     func rendered(
@@ -45,10 +48,11 @@ final class VoiceRenderReference {
         flags.contains(.unitRenderAction_OutputIsSilence)
         ? [Float](repeating: 0, count: Int(frames))
         : (0..<Int(frames)).map { source[$0 * stride] }
-      receive(
-        .init(
-          samples: samples, sampleRate: sampleRate,
-          startTime: AVAudioTime.seconds(forHostTime: timestamp.mHostTime) + latency))
+      let frame = AudioRenderFrame(
+        samples: samples, sampleRate: sampleRate,
+        startTime: AVAudioTime.seconds(forHostTime: timestamp.mHostTime) + latency)
+      receive(frame)
+      audibility.observe(frame)
     }
   }
 
@@ -62,7 +66,10 @@ final class VoiceRenderReference {
     return noErr
   }
 
-  init(output: AVAudioOutputNode, receive: @escaping @Sendable (AudioRenderFrame) -> Void) throws {
+  init(
+    output: AVAudioOutputNode, receive: @escaping @Sendable (AudioRenderFrame) -> Void,
+    audible: @escaping @Sendable (TimeInterval) -> Void
+  ) throws {
     guard let unit = output.audioUnit else { throw TTSError.invalidAudio }
     var format = AudioStreamBasicDescription()
     var size = UInt32(MemoryLayout<AudioStreamBasicDescription>.size)
@@ -75,7 +82,8 @@ final class VoiceRenderReference {
       format.mSampleRate.isFinite, format.mSampleRate > 0
     else { throw TTSError.invalidAudio }
     self.unit = unit
-    delivery = Delivery(format: format, latency: output.presentationLatency, receive: receive)
+    delivery = Delivery(
+      format: format, latency: output.presentationLatency, receive: receive, audible: audible)
     guard AudioUnitAddRenderNotify(unit, Self.callback, context) == noErr else {
       throw TTSError.invalidAudio
     }

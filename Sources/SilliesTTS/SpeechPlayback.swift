@@ -1,10 +1,16 @@
 import Foundation
 
+package enum SpeechDeliveryMilestone: Sendable {
+  case phraseReady, preparationStarted, voicePrepared, firstPCM
+  case audibleOutput(TimeInterval)
+}
+
 package enum SpeechPlaybackUpdate: Sendable {
   case speaking(level: Double)
   case finished
   case interrupted
   case utteranceFinished(String)
+  case milestone(SpeechDeliveryMilestone)
 }
 
 package protocol SpeechPlayback: Sendable {

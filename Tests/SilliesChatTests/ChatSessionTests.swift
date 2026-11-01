@@ -42,6 +42,7 @@ private actor VoiceProbe: ChatSpeechOutput {
     requests.append(request)
     if fails { throw TTSError.invalidAudio }
     receive(.speaking(level: 0.5))
+    receive(.milestone(.audibleOutput(ProcessInfo.processInfo.systemUptime)))
     receive(.finished)
     return nil
   }

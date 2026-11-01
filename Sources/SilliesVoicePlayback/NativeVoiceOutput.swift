@@ -11,11 +11,13 @@ final class NativeVoiceOutput: VoiceOutputDevice {
   private var interrupted: (@Sendable () -> Void)?
   private var configurationObserver: (any NSObjectProtocol)?
   private var renderReference: VoiceRenderReference?
+  private var audible: (@Sendable (TimeInterval) -> Void)?
 
   init(reference: (@Sendable (AudioRenderFrame) -> Void)? = nil) { self.reference = reference }
   deinit { stop() }
 
   func onInterruption(_ receive: @escaping @Sendable () -> Void) { interrupted = receive }
+  func onAudibleOutput(_ receive: @escaping @Sendable (TimeInterval) -> Void) { audible = receive }
 
   func schedule(_ audio: SynthesizedAudio, completed: @escaping @Sendable () -> Void) throws {
     dispatchPrecondition(condition: .notOnQueue(.main))
@@ -65,9 +67,9 @@ final class NativeVoiceOutput: VoiceOutputDevice {
     self.engine = engine
     self.player = player
     do {
-      if let reference {
-        renderReference = try VoiceRenderReference(output: engine.outputNode, receive: reference)
-      }
+      renderReference = try VoiceRenderReference(
+        output: engine.outputNode, receive: { [reference] in reference?($0) },
+        audible: { [audible] in audible?($0) })
       try engine.start()
     } catch {
       stop()

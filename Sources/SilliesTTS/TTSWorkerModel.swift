@@ -14,27 +14,52 @@ actor TTSWorkerModel: PreparedTTSModel {
     self.executable = executable
   }
 
+  func prepareVoice(_ voice: SpeechVoice) async throws {
+    try voice.validate()
+    try await exchange(.prepare(configuration, voice)) { worker, deadline in
+      let response = try await Task.detached(priority: .userInitiated) {
+        try worker.receive(TTSInferenceResponse.self, timeout: deadline.remaining())
+      }.value
+      switch response {
+      case .prepared: return
+      case .failure(let message): throw TTSError.unavailable(message)
+      default: throw TTSError.invalidAudio
+      }
+    }
+  }
+
   func synthesize(_ request: SpeechSynthesisRequest, receive: SynthesizedAudioSink) async throws {
     try request.validate()
+    let message = TTSInferenceRequest(configuration: configuration, synthesis: request)
+    try await exchange(.synthesize(message)) { worker, deadline in
+      try await self.consume(worker, deadline: deadline, receive: receive)
+    }
+  }
+
+  private func exchange(
+    _ message: TTSInferenceCommand,
+    consume: @Sendable (InferenceWorkerConnection, InferenceDeadline) async throws -> Void
+  ) async throws {
     guard !busy else { throw TTSError.busy }
     busy = true
     defer { busy = false }
     try Task.checkCancellation()
-    let worker = try connection ?? InferenceWorkerConnection(executable: executable)
+    let worker =
+      try connection ?? InferenceWorkerConnection(executable: executable, priority: .interactive)
     connection = worker
     let deadline = InferenceDeadline(timeout: Self.responseTimeout)
-    let message = TTSInferenceRequest(configuration: configuration, synthesis: request)
     try await withTaskCancellationHandler {
       do {
         try Task.checkCancellation()
         try await Task.detached(priority: .userInitiated) {
           try worker.send(message, timeout: deadline.remaining())
         }.value
-        try await consume(worker, deadline: deadline, receive: receive)
+        try await consume(worker, deadline)
       } catch {
         worker.stop()
         await worker.reap()
         connection = nil
+        try Task.checkCancellation()
         throw error
       }
     } onCancel: {
@@ -72,6 +97,8 @@ actor TTSWorkerModel: PreparedTTSModel {
         return
       case .failure(let message):
         throw TTSError.unavailable(message)
+      case .prepared:
+        throw TTSError.invalidAudio
       }
     }
   }

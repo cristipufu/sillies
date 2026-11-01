@@ -18,4 +18,9 @@ struct FishTTSModel: NativeTTSModel {
       try output(samples, FishConfiguration.sampleRate)
     }
   }
+
+  func prepareVoice(_ voice: SpeechVoice) async throws {
+    guard voice.id == "automatic" else { throw TTSError.unsupportedVoice }
+    try await engine.prepare(directory: directory)
+  }
 }

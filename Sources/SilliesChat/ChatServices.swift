@@ -9,10 +9,14 @@ package struct ChatSpeechRequest: Sendable {
   package let id: UUID
   package let text: String
   package let profile: CharacterChatProfile
-  package init(id: UUID, text: String, profile: CharacterChatProfile) {
+  package let lifetime: SpeechModelLifetime?
+  package init(
+    id: UUID, text: String, profile: CharacterChatProfile, lifetime: SpeechModelLifetime? = nil
+  ) {
     self.id = id
     self.text = text
     self.profile = profile
+    self.lifetime = lifetime
   }
 }
 
@@ -37,7 +41,8 @@ extension ChatSpeechOutput {
   ) async throws -> String? {
     while let phrase = try await text.next() {
       if let notice = try await speak(
-        .init(id: request.id, text: phrase, profile: request.profile), receive: receive)
+        .init(id: request.id, text: phrase, profile: request.profile, lifetime: request.lifetime),
+        receive: receive)
       {
         return notice
       }

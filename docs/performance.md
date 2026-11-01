@@ -424,6 +424,47 @@ limit to helpers. Total IPC deadlines, cancellation, interrupted partial replies
 changes, and a playback-progress watchdog prevent an abandoned branch from holding the conversation.
 Neither long-running microphone capture nor a multi-hour soak is required by these regressions.
 
+### Voice preparation and conversation retention
+
+Chat starts optional voice preparation at the first text delta, without preempting text inference.
+Opening phrases use shorter boundaries and a finite 350 ms deadline. One selected runtime stays
+resident while a Chat lifetime is active; memory pressure or incompatible inference can reclaim it.
+Provider-owned caches cover Kokoro voice packs, Pocket's prepared utterance session, Qwen's voice
+prompt, and Fish's loaded weights/tokenizer/decoder. Pocket's bundled voice snapshots already contain
+conditioning state: this change does not claim to remove a repeated full voice prefill.
+
+`TTSBenchmark latency` separates process/model loading from subsequent requests, writing three WAVs.
+The following single observations used the same 66-character passage, packaged debug helpers, existing
+installations, and blocked networking on this 48 GB M4 Pro. No models were downloaded. “Prepared”
+starts after explicit preparation completes; “reused” is the next request in that helper.
+
+| Provider | Cold first PCM | Preparation alone | Prepared first PCM | Reused first PCM |
+| --- | ---: | ---: | ---: | ---: |
+| Kokoro | 2.535 s | 1.017 s | 1.302 s | 0.459 s |
+| Pocket TTS | 1.298 s | 0.568 s | 0.224 s | 0.063 s |
+| Qwen3-TTS 0.6B | 2.793 s | 2.619 s | 0.088 s | 0.114 s |
+| Fish S2 Pro | 10.173 s | 5.150 s | 1.071 s | 0.539 s |
+
+These are readiness measurements at the PCM sink, not end-to-end spoken response times or guaranteed
+speedups. They exclude text generation, playback scheduling, and output-device latency. Compiled-model
+and filesystem caches can remain warm between helpers. The 1.7B Qwen pack was not measured.
+Fish still needed 8.78 s to generate 4.04 s of audio in its reused request, so speech can pause even
+after an early start. An experiment deferring its intermediate codebook-token CPU reads preserved
+sampled choices in a numerical regression but showed no convincing real-audio improvement; it was
+not retained. Further throughput changes need stage profiling, production-build measurements, and
+validation of compositor headroom.
+
+The application records separate phrase-ready, voice-prepared, first-PCM, and first-audible-output
+milestones. Audible output uses the first non-silent sample's post-render device presentation time,
+not the speaking animation or buffer enqueue time. This is not a measurement of room sound or speaker
+volume. Headless checks cover short openings, partial identifiers, cancellation before text, preparation
+preemption, memory-pressure eviction, lifetime expiry, and stale playback callbacks.
+The retained Pocket session's 3.44-second WAV was also transcribed with the installed Parakeet model
+and networking blocked; it recovered the full test passage. This is an intelligibility smoke check,
+not a listening assessment of every voice or language.
+
+### Initial streaming checks
+
 Short offline checks used existing installations and packaged helpers. No weights were downloaded.
 All four voice families generated the sentence “Hello there. I can start speaking before the whole
 reply is ready.” Local transcription recovered its words from each WAV (Kokoro changed punctuation).

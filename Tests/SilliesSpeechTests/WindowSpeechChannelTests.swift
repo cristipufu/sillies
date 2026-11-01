@@ -45,3 +45,44 @@ private actor FailingWindowEngine: SpeechWindowEngine {
     throw SpeechError.unavailable("Fixture recognition failure")
   }
 }
+
+extension WindowSpeechChannelTests {
+  func testUnchangedFinalWindowReusesOnlyEnginesThatDeclareCompleteDrafts() async throws {
+    for policy in [SpeechFinalizationPolicy.decode, .reuseUnchangedDraft] {
+      let draft = expectation(description: "Draft delivered")
+      let finished = expectation(description: "Final delivered")
+      let engine = CountingWindowEngine(policy: policy)
+      let phrases = Mutex<[SpeechPhrase]>([])
+      let channel = try WindowSpeechChannel(
+        engine: engine,
+        request: .init(
+          language: .automatic,
+          output: { phrase in
+            phrases.withLock { $0.append(phrase) }
+            if !phrase.isFinal { draft.fulfill() }
+          }, failure: { message in XCTFail(message) }))
+      let format = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 16_000, channels: 1))
+      let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 48_000))
+      buffer.frameLength = buffer.frameCapacity
+      for index in 0..<Int(buffer.frameLength) { buffer.floatChannelData?[0][index] = 0.1 }
+      channel.append(buffer)
+      await fulfillment(of: [draft], timeout: 2)
+      channel.finish { finished.fulfill() }
+      await fulfillment(of: [finished], timeout: 2)
+      let count = await engine.count
+      XCTAssertEqual(count, policy == .decode ? 2 : 1)
+      XCTAssertTrue(phrases.withLock { $0.last?.isFinal == true })
+      XCTAssertEqual(phrases.withLock { $0.last?.text }, "hello")
+    }
+  }
+}
+
+private actor CountingWindowEngine: SpeechWindowEngine {
+  nonisolated let finalizationPolicy: SpeechFinalizationPolicy
+  private(set) var count = 0
+  init(policy: SpeechFinalizationPolicy) { finalizationPolicy = policy }
+  func transcribe(_ request: SpeechWindowRequest) async throws -> SpeechWindowResult {
+    count += 1
+    return .init(words: [.init(text: "hello", start: 0, end: 1)])
+  }
+}

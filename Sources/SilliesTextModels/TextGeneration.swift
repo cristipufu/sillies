@@ -5,6 +5,12 @@ package struct TextGenerationRequest: Codable, Sendable {
   package enum Operation: String, Codable, Sendable { case generate, measure }
   package private(set) var operation = Operation.generate
   package private(set) var conversationID: UUID?
+  package private(set) var sessionID: UUID?
+  package func inSession(_ id: UUID?) -> Self {
+    var copy = self
+    copy.sessionID = id
+    return copy
+  }
   package func inConversation(_ id: UUID?) -> Self {
     var copy = self
     copy.conversationID = id

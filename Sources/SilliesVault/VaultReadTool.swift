@@ -14,7 +14,7 @@ package struct VaultReadTool: ConversationTool {
     .init(
       name: "read_vault_record",
       description:
-        "Read a bounded passage from a record found by search_vault. Use the actual record ID. Returns source text and saved URLs, never image pixels.",
+        "Read more of a saved record already found by search_vault, only when the user asks about that saved item and its excerpt is insufficient. Use its actual record ID. Returns source text and saved URLs, never image pixels or general knowledge.",
       parameters: [
         .init("recordID", description: "The exact UUID returned by search_vault."),
         .init(

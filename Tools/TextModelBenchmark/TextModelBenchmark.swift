@@ -13,8 +13,16 @@ import SilliesTextModels
 
   private static func run() async throws {
     let arguments = CommandLine.arguments
-    guard arguments.count == 4, ["install", "run", "stream"].contains(arguments[1]) else {
-      fputs("Usage: TextModelBenchmark install|run|stream MODEL_ID MODEL_DIRECTORY\n", stderr)
+    if arguments.count == 2, arguments[1] == "apple-context" {
+      try await AppleSessionBenchmark.run()
+      return
+    }
+    guard arguments.count == 4,
+      ["install", "run", "stream", "context", "tokens"].contains(arguments[1])
+    else {
+      fputs(
+        "Usage: TextModelBenchmark install|run|stream|context|tokens MODEL_ID MODEL_DIRECTORY, or apple-context\n",
+        stderr)
       exit(EXIT_FAILURE)
     }
     guard
@@ -40,6 +48,16 @@ import SilliesTextModels
       store: store, providers: [MLXTextModelProvider(executable: helper)])
     let backend = DownloadedReasoningBackend(manifest: manifest, store: store, registry: registry)
     do {
+      if arguments[1] == "tokens" {
+        try await TextInputBenchmark.run(registry: registry, manifest: manifest)
+        await registry.stop()
+        return
+      }
+      if arguments[1] == "context" {
+        try await TextContextBenchmark.run(registry: registry, manifest: manifest)
+        await registry.stop()
+        return
+      }
       if arguments[1] == "stream" {
         for preparation in ["Initial helper", "Reused helper"] {
           print(preparation)

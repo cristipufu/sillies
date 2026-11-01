@@ -19,9 +19,14 @@ final class NativeVoiceOutput: VoiceOutputDevice {
   func onInterruption(_ receive: @escaping @Sendable () -> Void) { interrupted = receive }
   func onAudibleOutput(_ receive: @escaping @Sendable (TimeInterval) -> Void) { audible = receive }
 
+  func prepare(sampleRate: Int) throws {
+    dispatchPrecondition(condition: .notOnQueue(.main))
+    _ = try preparedFormat(sampleRate: sampleRate)
+  }
+
   func schedule(_ audio: SynthesizedAudio, completed: @escaping @Sendable () -> Void) throws {
     dispatchPrecondition(condition: .notOnQueue(.main))
-    let format = try prepare(sampleRate: audio.sampleRate)
+    let format = try preparedFormat(sampleRate: audio.sampleRate)
     guard let frameCount = AVAudioFrameCount(exactly: audio.samples.count),
       let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount),
       let channel = buffer.floatChannelData?[0], let player
@@ -46,8 +51,9 @@ final class NativeVoiceOutput: VoiceOutputDevice {
     sampleRate = nil
   }
 
-  private func prepare(sampleRate requestedRate: Int) throws -> AVAudioFormat {
+  private func preparedFormat(sampleRate requestedRate: Int) throws -> AVAudioFormat {
     guard
+      TTSModelDescriptor.supportedOutputSampleRates.contains(requestedRate),
       let format = AVAudioFormat(standardFormatWithSampleRate: Double(requestedRate), channels: 1)
     else { throw TTSError.invalidAudio }
     if engine != nil {

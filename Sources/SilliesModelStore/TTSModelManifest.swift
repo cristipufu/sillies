@@ -21,6 +21,7 @@ package struct TTSModelManifest: Codable, Equatable, ModelArtifactManifest {
     try validateArtifacts()
     guard ModelFiles.isSafeComponent(model.providerID),
       model.minimumMemoryGB > 0, !model.languages.isEmpty, !model.voices.isEmpty,
+      model.outputSampleRate.map(TTSModelDescriptor.supportedOutputSampleRates.contains) ?? true,
       Set(model.voices.map(\.id)).count == model.voices.count,
       model.voices.allSatisfy({ ModelFiles.isSafeComponent($0.id) && !$0.languages.isEmpty }),
       components.contains(where: { $0.revision == revision })

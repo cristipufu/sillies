@@ -92,14 +92,14 @@ def kokoro():
         component(KOKORO_REPO, KOKORO_BASE, "voices", runtime + "/voice-sources",
                   lambda p: p in {f"voices/{v}.json" for v in KOKORO_VOICES if v != "af_heart"}),
     ]
-    return manifest(dict(id="kokoro-82m-en", providerID="kokoro", runtimeVariant="english", name="Kokoro", detail="Quick, lightweight English speech with twelve voices. Core ML with FluidAudio.", revision=KOKORO_V3, license="Apache 2.0", sourceURL=f"https://huggingface.co/{KOKORO_REPO}", minimumMemoryGB=8, languages=["en"], voices=voices(KOKORO_VOICES, ["en"]), streamsAudio=False), parts)
+    return manifest(dict(id="kokoro-82m-en", providerID="kokoro", runtimeVariant="english", name="Kokoro", detail="Quick, lightweight English speech with twelve voices. Core ML with FluidAudio.", revision=KOKORO_V3, license="Apache 2.0", sourceURL=f"https://huggingface.co/{KOKORO_REPO}", minimumMemoryGB=8, languages=["en"], voices=voices(KOKORO_VOICES, ["en"]), streamsAudio=False, outputSampleRate=24000), parts)
 
 
 def pocket():
     required = ["cond_prefill.mlmodelc/", "flowlm_step.mlmodelc/", "flow_decoder_fused.mlmodelc/", "mimi_decoder.mlmodelc/", "constants_bin/"]
     parts = [component(POCKET_REPO, POCKET_REVISION, "", "Models/pocket-tts",
                        lambda p: any(p.startswith("v2.1/english/" + name) for name in required))]
-    return manifest(dict(id="pocket-tts-en", providerID="pocket-tts", runtimeVariant="english", name="Pocket TTS", detail="Streaming English speech with eight voices. Core ML with FluidAudio.", revision=POCKET_REVISION, license="CC BY 4.0 (weights); voice terms apply", sourceURL=f"https://huggingface.co/{POCKET_REPO}", minimumMemoryGB=8, languages=["en"], voices=voices(POCKET_VOICES, ["en"]), streamsAudio=True), parts)
+    return manifest(dict(id="pocket-tts-en", providerID="pocket-tts", runtimeVariant="english", name="Pocket TTS", detail="Streaming English speech with eight voices. Core ML with FluidAudio.", revision=POCKET_REVISION, license="CC BY 4.0 (weights); voice terms apply", sourceURL=f"https://huggingface.co/{POCKET_REPO}", minimumMemoryGB=8, languages=["en"], voices=voices(POCKET_VOICES, ["en"]), streamsAudio=True, outputSampleRate=24000), parts)
 
 
 def qwen(variant):
@@ -107,13 +107,13 @@ def qwen(variant):
         component(QWEN_REPO, QWEN_REVISION, "", "", lambda p: f"/12hz-{variant}-customvoice/" in p and ".mlmodelc/" in p),
         component("Qwen/Qwen3-0.6B", TOKENIZER_REVISION, "", "tokenizer", lambda p: p in {"config.json", "tokenizer.json", "tokenizer_config.json", "vocab.json", "merges.txt"}),
     ]
-    return manifest(dict(id="qwen3-tts-" + variant, providerID="qwen3-tts", runtimeVariant=variant, name="Qwen3-TTS " + variant.upper(), detail="Nine voices across ten languages. Core ML with Argmax TTSKit.", revision=QWEN_REVISION, license="Apache 2.0", sourceURL=f"https://huggingface.co/{QWEN_REPO}", minimumMemoryGB=8 if variant == "0.6b" else 16, languages=QWEN_LANGUAGES, voices=voices(QWEN_VOICES, QWEN_LANGUAGES), streamsAudio=True), parts)
+    return manifest(dict(id="qwen3-tts-" + variant, providerID="qwen3-tts", runtimeVariant=variant, name="Qwen3-TTS " + variant.upper(), detail="Nine voices across ten languages. Core ML with Argmax TTSKit.", revision=QWEN_REVISION, license="Apache 2.0", sourceURL=f"https://huggingface.co/{QWEN_REPO}", minimumMemoryGB=8 if variant == "0.6b" else 16, languages=QWEN_LANGUAGES, voices=voices(QWEN_VOICES, QWEN_LANGUAGES), streamsAudio=True, outputSampleRate=24000), parts)
 
 
 def fish():
     required = {"config.json", "tokenizer.json", "tokenizer_config.json", "special_tokens_map.json", "model.safetensors", "codec.safetensors"}
     parts = [component(FISH_REPO, FISH_REVISION, "", "", lambda p: p in required)]
-    return manifest(dict(id="fish-s2-pro-8bit", providerID="fish-speech", runtimeVariant="s2-pro-8bit", name="Fish S2 Pro", detail="Multilingual speech with an automatic voice that can vary between replies. Slower first audio; requires more memory.", revision=FISH_REVISION, license="Fish Audio Research License (non-commercial)", sourceURL="https://huggingface.co/fishaudio/s2-pro", minimumMemoryGB=24, languages=FISH_LANGUAGES, voices=[dict(id="automatic", name="Automatic voice", languages=FISH_LANGUAGES)], streamsAudio=True), parts)
+    return manifest(dict(id="fish-s2-pro-8bit", providerID="fish-speech", runtimeVariant="s2-pro-8bit", name="Fish S2 Pro", detail="Multilingual speech with an automatic voice that can vary between replies. Slower first audio; requires more memory.", revision=FISH_REVISION, license="Fish Audio Research License (non-commercial)", sourceURL="https://huggingface.co/fishaudio/s2-pro", minimumMemoryGB=24, languages=FISH_LANGUAGES, voices=[dict(id="automatic", name="Automatic voice", languages=FISH_LANGUAGES)], streamsAudio=True, outputSampleRate=44100), parts)
 
 
 if __name__ == "__main__":

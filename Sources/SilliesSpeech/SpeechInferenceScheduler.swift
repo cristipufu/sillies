@@ -4,6 +4,7 @@ import SilliesInference
 /// Serializes access to shared model weights across independent audio sources.
 /// An actor alone would permit overlapping predictions at suspension points.
 package actor SpeechInferenceScheduler: SpeechWindowEngine {
+  package nonisolated let finalizationPolicy: SpeechFinalizationPolicy
   private struct Job {
     let id: UUID
     let request: SpeechWindowRequest
@@ -14,7 +15,10 @@ package actor SpeechInferenceScheduler: SpeechWindowEngine {
   private var pending: [Job] = []
   private var active: (id: UUID, task: Task<Void, Never>)?
 
-  package init(engine: any SpeechWindowEngine) { self.engine = engine }
+  package init(engine: any SpeechWindowEngine) {
+    self.engine = engine
+    finalizationPolicy = engine.finalizationPolicy
+  }
 
   package func transcribe(_ request: SpeechWindowRequest) async throws -> SpeechWindowResult {
     let id = UUID()
@@ -42,8 +46,7 @@ package actor SpeechInferenceScheduler: SpeechWindowEngine {
   private func startNext() {
     guard active == nil, !pending.isEmpty else { return }
     let job = pending.removeFirst()
-    let priority: TaskPriority =
-      job.request.context.priority == .interactive ? .userInitiated : .utility
+    let priority = job.request.context.priority.taskPriority
     let task = Task(priority: priority) {
       await InferenceActivity.shared.beginSpeech()
       do {

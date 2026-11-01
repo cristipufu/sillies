@@ -12,6 +12,7 @@ struct ChatMessageBubble: View {
   let selectionChanged: (Bool) -> Void
   var body: some View {
     let message = model.presentedMessage(original)
+    let sources = model.sourceCards(for: original)
     let fromUser = message.role == .user
     return HStack(alignment: .bottom, spacing: 0) {
       if fromUser { Spacer(minLength: 52) }
@@ -19,14 +20,16 @@ struct ChatMessageBubble: View {
         Text(fromUser ? String(localized: "You") : model.companionName)
           .font(.system(size: 11, weight: .semibold, design: .rounded))
           .foregroundStyle(fromUser ? theme.onAccent.opacity(0.8) : theme.secondary)
-        ChatMessageText(
-          text: message.text, color: theme.native(fromUser ? .onAccent : .ink),
-          selectionChanged: selectionChanged)
+        if !message.text.isEmpty {
+          ChatMessageText(
+            text: message.text, color: theme.native(fromUser ? .onAccent : .ink),
+            selectionChanged: selectionChanged)
+        }
         if message.completion == .interrupted {
           Text("Stopped").font(.caption2).foregroundStyle(theme.secondary)
         }
-        if let vault, !message.sources.isEmpty {
-          ChatSourcesView(sources: message.sources, vault: vault).padding(.top, 6)
+        if let vault, !sources.isEmpty {
+          ChatSourcesView(sources: sources, vault: vault).padding(.top, 6)
         }
       }
       .padding(.horizontal, 14).padding(.vertical, 11)

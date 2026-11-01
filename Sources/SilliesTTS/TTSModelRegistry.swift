@@ -27,6 +27,7 @@ package actor TTSModelRegistry {
   private var suspended = false
   private var retention = Retention.available
   private var lifetimes: [UUID: SpeechModelLifetime] = [:]
+  private let lifetimeOwner = UUID()
   private let idleDuration: Duration
 
   package init(
@@ -63,7 +64,13 @@ package actor TTSModelRegistry {
     }
   }
 
-  package func retain(for lifetime: SpeechModelLifetime) { lifetimes[lifetime.id] = lifetime }
+  package func retain(for lifetime: SpeechModelLifetime) async {
+    lifetimes[lifetime.id] = lifetime
+    let id = lifetime.id
+    await lifetime.onEnd(owner: lifetimeOwner) { [weak self] in await self?.endLifetime(id) }
+  }
+
+  private func endLifetime(_ id: UUID) { lifetimes[id] = nil }
 
   package func setRetention(_ retention: Retention) async {
     self.retention = retention

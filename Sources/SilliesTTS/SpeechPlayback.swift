@@ -15,6 +15,7 @@ package enum SpeechPlaybackUpdate: Sendable {
 
 package protocol SpeechPlayback: Sendable {
   func start(id: UUID, receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void) async
+  func prepare(sampleRate: Int, id: UUID) async throws
   func enqueue(_ audio: SynthesizedAudio, id: UUID) async throws
   func finish(id: UUID) async throws
   func stop(id: UUID) async

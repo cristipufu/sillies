@@ -28,15 +28,43 @@ enum VaultToolContent {
       links = source.links
     }
   }
-  static func output(_ sources: [ChatSource]) throws -> ConversationToolOutput {
+
+  private struct SearchPage: Encodable {
+    let scope = "Personal records saved by the user; not web or general-knowledge search."
+    let totalVaultRecords: Int
+    let returnedRecordCount: Int
+    let records: [RecordPassage]
+    init(_ records: [RecordPassage], totalVaultRecords: Int) {
+      self.totalVaultRecords = totalVaultRecords
+      returnedRecordCount = records.count
+      self.records = records
+    }
+  }
+
+  static func searchOutput(_ sources: [ChatSource], totalVaultRecords: Int) throws
+    -> ConversationToolOutput
+  {
+    let full = SearchPage(
+      sources.map { RecordPassage($0, excerptLimit: maximumExcerptCharacters) },
+      totalVaultRecords: totalVaultRecords)
+    let brief = SearchPage(
+      sources.map { RecordPassage($0, excerptLimit: briefExcerptCharacters) },
+      totalVaultRecords: totalVaultRecords)
+    return try .init(text: encoded(full), sources: sources, briefText: encoded(brief))
+  }
+
+  private static func encoded(_ value: some Encodable) throws -> String {
     let encoder = JSONEncoder()
-    let full = try encoder.encode(
+    encoder.outputFormatting = .sortedKeys
+    return String(decoding: try encoder.encode(value), as: UTF8.self)
+  }
+  static func output(_ sources: [ChatSource]) throws -> ConversationToolOutput {
+    let full = try encoded(
       sources.map { RecordPassage($0, excerptLimit: maximumExcerptCharacters) })
-    let brief = try encoder.encode(
+    let brief = try encoded(
       sources.map { RecordPassage($0, excerptLimit: briefExcerptCharacters) })
     return .init(
-      text: String(decoding: full, as: UTF8.self), sources: sources,
-      briefText: String(decoding: brief, as: UTF8.self))
+      text: full, sources: sources, briefText: brief)
   }
   static func links(in record: SessionRecord) throws -> [URL] {
     let text = String(

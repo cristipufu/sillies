@@ -5,7 +5,7 @@ import Foundation
 import SilliesSpeech
 
 /// One decoder per audio source. The shared speech channel bounds each utterance and owns cancellation.
-actor NemotronStreamingEngine: SpeechWindowEngine {
+actor NemotronStreamingEngine: ReusableSpeechEngine {
   nonisolated private let executor = SpeechWorkerExecutor()
   nonisolated var unownedExecutor: UnownedSerialExecutor { executor.asUnownedSerialExecutor() }
   private static let sampleRate = 16_000.0
@@ -64,6 +64,13 @@ actor NemotronStreamingEngine: SpeechWindowEngine {
       words: buildWordTimings(from: timings).map {
         SpeechWord(text: $0.word, start: $0.startTime, end: $0.endTime)
       })
+  }
+
+  func resetForReuse() async throws {
+    dispatchPrecondition(condition: .notOnQueue(.main))
+    try await manager?.reset()
+    progress = SpeechIncrementalWindow()
+    timings.removeAll(keepingCapacity: true)
   }
 
   private static func audioBuffer(_ samples: [Float]) throws -> AVAudioPCMBuffer {

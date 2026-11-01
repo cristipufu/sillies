@@ -4,22 +4,25 @@ import SilliesTextModels
 
 enum MLXConversationInput {
   static func messages(_ request: TextGenerationRequest) throws -> [Chat.Message] {
-    try [.system(request.instructions)]
-      + request.messages.map { message in
-        switch message.role {
-        case .user: return .user(message.content)
-        case .assistant:
-          let calls = try message.calls.map {
-            ToolCall(
-              function: .init(
-                name: $0.name,
-                arguments: try JSONDecoder().decode([String: JSONValue].self, from: $0.arguments)),
-              id: $0.id)
-          }
-          return .assistant(message.content, toolCalls: calls.isEmpty ? nil : calls)
-        case .tool: return .tool(message.content, id: message.callID, name: message.toolName)
+    try [.system(request.instructions)] + messages(request.messages)
+  }
+
+  static func messages(_ messages: [TextMessage]) throws -> [Chat.Message] {
+    try messages.map { message in
+      switch message.role {
+      case .user: return .user(message.content)
+      case .assistant:
+        let calls = try message.calls.map {
+          ToolCall(
+            function: .init(
+              name: $0.name,
+              arguments: try JSONDecoder().decode([String: JSONValue].self, from: $0.arguments)),
+            id: $0.id)
         }
+        return .assistant(message.content, toolCalls: calls.isEmpty ? nil : calls)
+      case .tool: return .tool(message.content, id: message.callID, name: message.toolName)
       }
+    }
   }
 
   static func tools(_ request: TextGenerationRequest) -> [[String: any Sendable]] {

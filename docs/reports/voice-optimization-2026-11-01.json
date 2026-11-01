@@ -1,0 +1,2471 @@
+{
+  "baseCommit": "65aee5f64ca85d22a3ce8f31ca35d2d5a4f5dadf",
+  "hardware": "Apple M4 Pro, 48 GiB",
+  "groups": {
+    "optimized-1": {
+      "beforeProviderSeconds": 3.0884962916607037,
+      "delivery": "drain",
+      "modelID": "fish-s2-pro-8bit",
+      "preparationSeconds": 4.125205333330086,
+      "revision": "c8d4481b3f7cbfe64d855c8b7cda7739502fc3ff",
+      "verificationReplaySeconds": 0.0021605833317153156,
+      "requests": [
+        {
+          "elapsedSeconds": 10.843996375013376,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 5.259386083343998,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 1.1222749991454464,
+          "sinkWaitSeconds": 1.8750142771750689e-06,
+          "index": 0,
+          "firstPCMSeconds": 5.259386083343998,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079353423,
+          "activeMemoryBytes": 5815852571,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.684160416669329,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.2833614583360031,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.9391175408115686,
+          "sinkWaitSeconds": 2.0416773622855544e-06,
+          "index": 1,
+          "firstPCMSeconds": 0.2833614583360031,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079369809,
+          "activeMemoryBytes": 5815852571,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.760496333343326,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.28335599999991246,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 1.015757374147799,
+          "sinkWaitSeconds": 2.3333996068686247e-06,
+          "index": 2,
+          "firstPCMSeconds": 0.28335599999991246,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079369809,
+          "activeMemoryBytes": 5815852571,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.64906825000071,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.2856329583300976,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.9017094158213894,
+          "sinkWaitSeconds": 2.1667074179276824e-06,
+          "index": 3,
+          "firstPCMSeconds": 0.2856329583300976,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079369809,
+          "activeMemoryBytes": 5815852571,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.666846291671391,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.28421633334073704,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.9210525824916858,
+          "sinkWaitSeconds": 2.458284143358469e-06,
+          "index": 4,
+          "firstPCMSeconds": 0.28421633334073704,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079369809,
+          "activeMemoryBytes": 5815852571,
+          "audioFrames": 99,
+          "promptTokens": 34
+        }
+      ],
+      "warmMedianStages": {
+        "audioEmbedding": {
+          "seconds": 0.006560000030731317,
+          "count": 99
+        },
+        "codecAttention": {
+          "seconds": 0.007015999981376808,
+          "count": 25
+        },
+        "codecAttentionHistoryEvaluation": {
+          "seconds": 0.00013979162758914754,
+          "count": 25
+        },
+        "codecBlockFirst": {
+          "seconds": 0.2887382499684463,
+          "count": 25
+        },
+        "codecBlockFourth": {
+          "seconds": 0.11052962500980357,
+          "count": 25
+        },
+        "codecBlockSecond": {
+          "seconds": 0.18946193751617102,
+          "count": 25
+        },
+        "codecBlockThird": {
+          "seconds": 0.1408062916889321,
+          "count": 25
+        },
+        "codecCodebooks": {
+          "seconds": 0.0022271249763434753,
+          "count": 25
+        },
+        "codecHistoryEvaluation": {
+          "seconds": 0.001306854137510527,
+          "count": 25
+        },
+        "codecInput": {
+          "seconds": 9.958331065718085e-05,
+          "count": 25
+        },
+        "codecOutput": {
+          "seconds": 0.02030777082836721,
+          "count": 25
+        },
+        "codecTotal": {
+          "seconds": 0.7611303958110511,
+          "count": 25
+        },
+        "codecUpsampleFirst": {
+          "seconds": 0.0005048750099376775,
+          "count": 25
+        },
+        "codecUpsampleSecond": {
+          "seconds": 0.0003834791714325547,
+          "count": 25
+        },
+        "fastForward": {
+          "seconds": 0.1314374790454167,
+          "count": 891
+        },
+        "fastLogits": {
+          "seconds": 0.0012056874547852203,
+          "count": 891
+        },
+        "fastPrefill": {
+          "seconds": 0.2409596458019223,
+          "count": 99
+        },
+        "fastSampling": {
+          "seconds": 2.1973242500971537,
+          "count": 891
+        },
+        "pcmDelivery": {
+          "seconds": 0.08165097915480146,
+          "count": 25
+        },
+        "promptPrefill": {
+          "seconds": 0.0011490416654851288,
+          "count": 1
+        },
+        "promptTokens": {
+          "seconds": 0.00023222916934173554,
+          "count": 1
+        },
+        "semanticLogits": {
+          "seconds": 0.0009544583299430087,
+          "count": 100
+        },
+        "semanticResampling": {
+          "seconds": 0.005093895808386151,
+          "count": 21
+        },
+        "semanticSampling": {
+          "seconds": 0.11672014585928991,
+          "count": 100
+        },
+        "slowEvaluation": {
+          "seconds": 2.0130581249686657,
+          "count": 99
+        },
+        "slowGraph": {
+          "seconds": 0.11487745824706508,
+          "count": 99
+        },
+        "slowStep": {
+          "seconds": 2.128217104182113,
+          "count": 99
+        }
+      }
+    },
+    "fish-baseline-repeat": {
+      "beforeProviderSeconds": 2.7463937499996973,
+      "delivery": "drain",
+      "modelID": "fish-s2-pro-8bit",
+      "preparationSeconds": 3.2350370416679652,
+      "revision": "c8d4481b3f7cbfe64d855c8b7cda7739502fc3ff",
+      "verificationReplaySeconds": 0.0023334166762651876,
+      "requests": [
+        {
+          "elapsedSeconds": 6.168401624992839,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.7420227499969769,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.964055540813862,
+          "sinkWaitSeconds": 2.20834044739604e-06,
+          "index": 0,
+          "firstPCMSeconds": 0.7420227499969769,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 5974930975,
+          "activeMemoryBytes": 5815855643,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.837745666663977,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.3670549999951618,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 1.0088079574804591,
+          "sinkWaitSeconds": 2.29156285058707e-06,
+          "index": 1,
+          "firstPCMSeconds": 0.3670549999951618,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 5974947359,
+          "activeMemoryBytes": 5815855643,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.985260125002242,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.3712115833477583,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 1.152050374151005,
+          "sinkWaitSeconds": 2.2499734768643975e-06,
+          "index": 2,
+          "firstPCMSeconds": 0.3712115833477583,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 5974963743,
+          "activeMemoryBytes": 5815855643,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.9601466249878285,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.37963891666731797,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 1.1184993324738766,
+          "sinkWaitSeconds": 2.1666783140972257e-06,
+          "index": 3,
+          "firstPCMSeconds": 0.37963891666731797,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 5974980127,
+          "activeMemoryBytes": 5815855643,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.751695500002825,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.3668900833436055,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.9231546658145102,
+          "sinkWaitSeconds": 2.6249908842146397e-06,
+          "index": 4,
+          "firstPCMSeconds": 0.3668900833436055,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 5974980127,
+          "activeMemoryBytes": 5815855643,
+          "audioFrames": 99,
+          "promptTokens": 34
+        }
+      ],
+      "warmMedianStages": {
+        "audioEmbedding": {
+          "seconds": 0.005878583324374631,
+          "count": 99
+        },
+        "codecAttention": {
+          "seconds": 0.12576397918746807,
+          "count": 25
+        },
+        "codecAttentionHistoryEvaluation": {
+          "seconds": 0.11683697905391455,
+          "count": 200
+        },
+        "codecBlockFirst": {
+          "seconds": 0.25932487499085255,
+          "count": 25
+        },
+        "codecBlockFourth": {
+          "seconds": 0.10163441665645223,
+          "count": 25
+        },
+        "codecBlockSecond": {
+          "seconds": 0.1906452707698918,
+          "count": 25
+        },
+        "codecBlockThird": {
+          "seconds": 0.15612437498930376,
+          "count": 25
+        },
+        "codecCodebooks": {
+          "seconds": 0.0020867499843006954,
+          "count": 25
+        },
+        "codecHistoryEvaluation": {
+          "seconds": 0.6566087708561099,
+          "count": 500
+        },
+        "codecInput": {
+          "seconds": 0.011581395810935646,
+          "count": 25
+        },
+        "codecOutput": {
+          "seconds": 0.012755541676597204,
+          "count": 25
+        },
+        "codecTotal": {
+          "seconds": 0.8946429999850807,
+          "count": 25
+        },
+        "codecUpsampleFirst": {
+          "seconds": 0.017600375023903325,
+          "count": 25
+        },
+        "codecUpsampleSecond": {
+          "seconds": 0.016184395804884844,
+          "count": 25
+        },
+        "fastForward": {
+          "seconds": 0.12592791626229882,
+          "count": 891
+        },
+        "fastLogits": {
+          "seconds": 0.0012480210134526715,
+          "count": 891
+        },
+        "fastPrefill": {
+          "seconds": 0.24014247924060328,
+          "count": 99
+        },
+        "fastSampling": {
+          "seconds": 2.200691729223763,
+          "count": 891
+        },
+        "pcmDelivery": {
+          "seconds": 0.08110118751937989,
+          "count": 25
+        },
+        "promptPrefill": {
+          "seconds": 0.0011086666636401787,
+          "count": 1
+        },
+        "promptTokens": {
+          "seconds": 0.08116206249542302,
+          "count": 1
+        },
+        "semanticLogits": {
+          "seconds": 0.0009182708381558768,
+          "count": 100
+        },
+        "semanticResampling": {
+          "seconds": 0.004883874993538484,
+          "count": 21
+        },
+        "semanticSampling": {
+          "seconds": 0.11513231249409728,
+          "count": 100
+        },
+        "slowEvaluation": {
+          "seconds": 2.026018833304988,
+          "count": 99
+        },
+        "slowGraph": {
+          "seconds": 0.11152287498407532,
+          "count": 99
+        },
+        "slowStep": {
+          "seconds": 2.1368807499748073,
+          "count": 99
+        }
+      }
+    },
+    "fish-optimized-repeat": {
+      "beforeProviderSeconds": 2.892284166664467,
+      "delivery": "drain",
+      "modelID": "fish-s2-pro-8bit",
+      "preparationSeconds": 3.4942322916613193,
+      "revision": "c8d4481b3f7cbfe64d855c8b7cda7739502fc3ff",
+      "verificationReplaySeconds": 0.0015416666574310511,
+      "requests": [
+        {
+          "elapsedSeconds": 5.82474970833573,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.5097548750054557,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.8526637908241552,
+          "sinkWaitSeconds": 2.29165016207844e-06,
+          "index": 0,
+          "firstPCMSeconds": 0.5097548750054557,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079360079,
+          "activeMemoryBytes": 5815805979,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.6085186666750815,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.27949745833757333,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.866449249154104,
+          "sinkWaitSeconds": 1.958323991857469e-06,
+          "index": 1,
+          "firstPCMSeconds": 0.27949745833757333,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079360079,
+          "activeMemoryBytes": 5815805979,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.670010374989943,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.28149899998970795,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.9267718324724428,
+          "sinkWaitSeconds": 2.2083986550569534e-06,
+          "index": 2,
+          "firstPCMSeconds": 0.28149899998970795,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079360079,
+          "activeMemoryBytes": 5815805979,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.728901166658034,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.2840476249984931,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.9828955824802705,
+          "sinkWaitSeconds": 2.125088940374553e-06,
+          "index": 3,
+          "firstPCMSeconds": 0.2840476249984931,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079360079,
+          "activeMemoryBytes": 5815805979,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.780361333338078,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.3005036250106059,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 1.0181538324856974,
+          "sinkWaitSeconds": 1.666732714511454e-06,
+          "index": 4,
+          "firstPCMSeconds": 0.3005036250106059,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079360079,
+          "activeMemoryBytes": 5815805979,
+          "audioFrames": 99,
+          "promptTokens": 34
+        }
+      ],
+      "warmMedianStages": {
+        "audioEmbedding": {
+          "seconds": 0.006133333306934219,
+          "count": 99
+        },
+        "codecAttention": {
+          "seconds": 0.006809937505749986,
+          "count": 25
+        },
+        "codecAttentionHistoryEvaluation": {
+          "seconds": 0.0001346041462966241,
+          "count": 25
+        },
+        "codecBlockFirst": {
+          "seconds": 0.29261087499617133,
+          "count": 25
+        },
+        "codecBlockFourth": {
+          "seconds": 0.110501250019297,
+          "count": 25
+        },
+        "codecBlockSecond": {
+          "seconds": 0.19509402086259797,
+          "count": 25
+        },
+        "codecBlockThird": {
+          "seconds": 0.13980589581478853,
+          "count": 25
+        },
+        "codecCodebooks": {
+          "seconds": 0.0020619792048819363,
+          "count": 25
+        },
+        "codecHistoryEvaluation": {
+          "seconds": 0.0011741041525965557,
+          "count": 25
+        },
+        "codecInput": {
+          "seconds": 9.418749687029049e-05,
+          "count": 25
+        },
+        "codecOutput": {
+          "seconds": 0.01921945835056249,
+          "count": 25
+        },
+        "codecTotal": {
+          "seconds": 0.7681441041713697,
+          "count": 25
+        },
+        "codecUpsampleFirst": {
+          "seconds": 0.00048314583546016365,
+          "count": 25
+        },
+        "codecUpsampleSecond": {
+          "seconds": 0.00038108330772956833,
+          "count": 25
+        },
+        "fastForward": {
+          "seconds": 0.12203006225900026,
+          "count": 891
+        },
+        "fastLogits": {
+          "seconds": 0.00119593738054391,
+          "count": 891
+        },
+        "fastPrefill": {
+          "seconds": 0.24329208337439923,
+          "count": 99
+        },
+        "fastSampling": {
+          "seconds": 2.2008116460347082,
+          "count": 891
+        },
+        "pcmDelivery": {
+          "seconds": 0.08202595831971848,
+          "count": 25
+        },
+        "promptPrefill": {
+          "seconds": 0.0011678125010803342,
+          "count": 1
+        },
+        "promptTokens": {
+          "seconds": 0.00023602083092555404,
+          "count": 1
+        },
+        "semanticLogits": {
+          "seconds": 0.0009175000814138912,
+          "count": 100
+        },
+        "semanticResampling": {
+          "seconds": 0.004856958315940574,
+          "count": 21
+        },
+        "semanticSampling": {
+          "seconds": 0.11439845831046114,
+          "count": 100
+        },
+        "slowEvaluation": {
+          "seconds": 2.039324604142166,
+          "count": 99
+        },
+        "slowGraph": {
+          "seconds": 0.11283560422452865,
+          "count": 99
+        },
+        "slowStep": {
+          "seconds": 2.152423166713561,
+          "count": 99
+        }
+      }
+    },
+    "kokoro-optimized": {
+      "beforeProviderSeconds": 0.17013399999996182,
+      "delivery": "drain",
+      "modelID": "kokoro-82m-en",
+      "preparationSeconds": 0.9465154166682623,
+      "revision": "6c0750dd02ef9d981fb82f147d784a3f171755ee",
+      "verificationReplaySeconds": 0.024130999998305924,
+      "requests": [
+        {
+          "elapsedSeconds": 0.831007208340452,
+          "sampleRate": 24000,
+          "sampleCount": 104400,
+          "firstNonSilentPCM": 0.7925687083334196,
+          "leadingSilentSamples": 6896,
+          "simulatedPlaybackGapSeconds": 0,
+          "sinkWaitSeconds": 7.499911589547992e-07,
+          "index": 0,
+          "firstPCMSeconds": 0.7907749583391706,
+          "wavSHA256": "45342dd453969d759e39ee384f30181870b3e98c56b15743cee0a9d1d319b1c7"
+        },
+        {
+          "elapsedSeconds": 0.11563516665773932,
+          "sampleRate": 24000,
+          "sampleCount": 104400,
+          "firstNonSilentPCM": 0.07670179166598246,
+          "leadingSilentSamples": 6896,
+          "simulatedPlaybackGapSeconds": 0,
+          "sinkWaitSeconds": 8.749775588512421e-07,
+          "index": 1,
+          "firstPCMSeconds": 0.07507458332111128,
+          "wavSHA256": "45342dd453969d759e39ee384f30181870b3e98c56b15743cee0a9d1d319b1c7"
+        },
+        {
+          "elapsedSeconds": 0.11546704167267308,
+          "sampleRate": 24000,
+          "sampleCount": 104400,
+          "firstNonSilentPCM": 0.07687820833234582,
+          "leadingSilentSamples": 6896,
+          "simulatedPlaybackGapSeconds": 0,
+          "sinkWaitSeconds": 7.916532922536135e-07,
+          "index": 2,
+          "firstPCMSeconds": 0.07527354167541489,
+          "wavSHA256": "45342dd453969d759e39ee384f30181870b3e98c56b15743cee0a9d1d319b1c7"
+        },
+        {
+          "elapsedSeconds": 0.11494274999131449,
+          "sampleRate": 24000,
+          "sampleCount": 104400,
+          "firstNonSilentPCM": 0.07613891665823758,
+          "leadingSilentSamples": 6896,
+          "simulatedPlaybackGapSeconds": 0,
+          "sinkWaitSeconds": 5.000329110771418e-07,
+          "index": 3,
+          "firstPCMSeconds": 0.07458187500014901,
+          "wavSHA256": "45342dd453969d759e39ee384f30181870b3e98c56b15743cee0a9d1d319b1c7"
+        },
+        {
+          "elapsedSeconds": 0.11485029167670291,
+          "sampleRate": 24000,
+          "sampleCount": 104400,
+          "firstNonSilentPCM": 0.07674845833389554,
+          "leadingSilentSamples": 6896,
+          "simulatedPlaybackGapSeconds": 0,
+          "sinkWaitSeconds": 7.083290256559849e-07,
+          "index": 4,
+          "firstPCMSeconds": 0.07514208334032446,
+          "wavSHA256": "45342dd453969d759e39ee384f30181870b3e98c56b15743cee0a9d1d319b1c7"
+        }
+      ]
+    },
+    "pocket-optimized": {
+      "beforeProviderSeconds": 0.2838550000014948,
+      "delivery": "drain",
+      "modelID": "pocket-tts-en",
+      "preparationSeconds": 0.8471389583282871,
+      "revision": "b51c4854305532b182026259092cc53e4b600f49",
+      "verificationReplaySeconds": 0.015673708330723457,
+      "requests": [
+        {
+          "elapsedSeconds": 0.9330556249915389,
+          "sampleRate": 24000,
+          "sampleCount": 72960,
+          "firstNonSilentPCM": 0.2539530416688649,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0,
+          "sinkWaitSeconds": 2.0416482584550977e-06,
+          "index": 0,
+          "firstPCMSeconds": 0.2539530416688649,
+          "wavSHA256": "6f737e26cababa931d69d9ccc4bee12fc01667539ddd1a14784c298c3909e0ab"
+        },
+        {
+          "elapsedSeconds": 0.7359871250082506,
+          "sampleRate": 24000,
+          "sampleCount": 82560,
+          "firstNonSilentPCM": 0.055311458330834284,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0,
+          "sinkWaitSeconds": 1.8333084881305695e-06,
+          "index": 1,
+          "firstPCMSeconds": 0.055311458330834284,
+          "wavSHA256": "3fae0120bbc3ace5f9e7db5fecaf1eab4b4318176bda811126fbac158037c498"
+        },
+        {
+          "elapsedSeconds": 0.7529775000002701,
+          "sampleRate": 24000,
+          "sampleCount": 76800,
+          "firstNonSilentPCM": 0.051221958332462236,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0,
+          "sinkWaitSeconds": 1.874941517598927e-06,
+          "index": 2,
+          "firstPCMSeconds": 0.051221958332462236,
+          "wavSHA256": "64b245c0007dc18f9c4768a56cc6c83db26c9de0442390fc34bb1f1e30e28afd"
+        },
+        {
+          "elapsedSeconds": 0.7605409999960102,
+          "sampleRate": 24000,
+          "sampleCount": 88320,
+          "firstNonSilentPCM": 0.04177170833281707,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0,
+          "sinkWaitSeconds": 2.1249725250527263e-06,
+          "index": 3,
+          "firstPCMSeconds": 0.04177170833281707,
+          "wavSHA256": "3b4cefdb1a4aac47382efa4d70cfa87e4a1b65d59a412f8c44fc10f5cc780a36"
+        },
+        {
+          "elapsedSeconds": 0.7254080416751094,
+          "sampleRate": 24000,
+          "sampleCount": 84480,
+          "firstNonSilentPCM": 0.05254366666486021,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0,
+          "sinkWaitSeconds": 1.791675458662212e-06,
+          "index": 4,
+          "firstPCMSeconds": 0.05254366666486021,
+          "wavSHA256": "6ba3468cd2382b7608a47faf9ab87ad03363cc3991fb09b49a583f1dfe4b3355"
+        }
+      ]
+    },
+    "qwen-optimized": {
+      "beforeProviderSeconds": 0.6170556666620541,
+      "delivery": "drain",
+      "modelID": "qwen3-tts-0.6b",
+      "preparationSeconds": 1.9111074166576145,
+      "revision": "065712357592bc0d194cf7cd91852c5cde3eb1b8",
+      "verificationReplaySeconds": 0.014126958340057172,
+      "requests": [
+        {
+          "elapsedSeconds": 7.077965708333068,
+          "sampleRate": 24000,
+          "sampleCount": 261120,
+          "firstNonSilentPCM": 0.10451487499813084,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.05205345833557656,
+          "sinkWaitSeconds": 4.8332876758649945e-06,
+          "index": 0,
+          "firstPCMSeconds": 0.10451487499813084,
+          "wavSHA256": "317911bef1e96428547e51f14804c4d87b98c5ba75b41cffe888f729992442e8"
+        },
+        {
+          "elapsedSeconds": 3.64575158333173,
+          "sampleRate": 24000,
+          "sampleCount": 136320,
+          "firstNonSilentPCM": 0.0655199166649254,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.013653999996604382,
+          "sinkWaitSeconds": 2.833214239217341e-06,
+          "index": 1,
+          "firstPCMSeconds": 0.0655199166649254,
+          "wavSHA256": "a0d4b4388fd79561c236583bfe467a8c2dd5630f070a6932b756daca51c8de3e"
+        },
+        {
+          "elapsedSeconds": 3.7674324583349517,
+          "sampleRate": 24000,
+          "sampleCount": 136320,
+          "firstNonSilentPCM": 0.06955933333665598,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.01648954166914335,
+          "sinkWaitSeconds": 2.458371454849839e-06,
+          "index": 2,
+          "firstPCMSeconds": 0.06955933333665598,
+          "wavSHA256": "78d43cc11727bcad4d8fecdd5a6239e1d3762add32e80443b925bf156e2493c8"
+        },
+        {
+          "elapsedSeconds": 4.8775500416668365,
+          "sampleRate": 24000,
+          "sampleCount": 182400,
+          "firstNonSilentPCM": 0.0660011250001844,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.015093166659353285,
+          "sinkWaitSeconds": 3.3749674912542105e-06,
+          "index": 3,
+          "firstPCMSeconds": 0.0660011250001844,
+          "wavSHA256": "e8ebbd163db077987307cf118ae6e45ca9c55c79ae654f3fa3b51737638a74d2"
+        },
+        {
+          "elapsedSeconds": 3.6251438750041416,
+          "sampleRate": 24000,
+          "sampleCount": 132480,
+          "firstNonSilentPCM": 0.06926941666461062,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.015045583322644218,
+          "sinkWaitSeconds": 2.249958924949169e-06,
+          "index": 4,
+          "firstPCMSeconds": 0.06926941666461062,
+          "wavSHA256": "8062e8cfc4ae0e19fd7420aebba27a9d35206be660de973892d6454381250911"
+        }
+      ]
+    },
+    "optimized-rotary": {
+      "beforeProviderSeconds": 3.006084833337809,
+      "delivery": "drain",
+      "modelID": "fish-s2-pro-8bit",
+      "preparationSeconds": 4.0142981666722335,
+      "revision": "c8d4481b3f7cbfe64d855c8b7cda7739502fc3ff",
+      "verificationReplaySeconds": 0.002689624991035089,
+      "requests": [
+        {
+          "elapsedSeconds": 11.210400750002009,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 5.5612222499912605,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 1.1867996241369099,
+          "sinkWaitSeconds": 1.7916318029165268e-06,
+          "index": 0,
+          "firstPCMSeconds": 5.5612222499912605,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079320271,
+          "activeMemoryBytes": 5815835803,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 6.923522749988479,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.35888845832960214,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 2.1027866658139107,
+          "sinkWaitSeconds": 1.5832629287615418e-06,
+          "index": 1,
+          "firstPCMSeconds": 0.35888845832960214,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079350993,
+          "activeMemoryBytes": 5815835803,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.521436374998302,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.28534662499441765,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.774243040813164,
+          "sinkWaitSeconds": 1.8750288290902972e-06,
+          "index": 2,
+          "firstPCMSeconds": 0.28534662499441765,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079350993,
+          "activeMemoryBytes": 5815835803,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 6.134254958335077,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.2735333750024438,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 1.3992799574795949,
+          "sinkWaitSeconds": 1.7499405657872558e-06,
+          "index": 3,
+          "firstPCMSeconds": 0.2735333750024438,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079350993,
+          "activeMemoryBytes": 5815835803,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.735450208332622,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.2826470833388157,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.9915872908192995,
+          "sinkWaitSeconds": 1.7917045624926686e-06,
+          "index": 4,
+          "firstPCMSeconds": 0.2826470833388157,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079350993,
+          "activeMemoryBytes": 5815835803,
+          "audioFrames": 99,
+          "promptTokens": 34
+        }
+      ],
+      "warmMedianStages": {
+        "audioEmbedding": {
+          "seconds": 0.008468416621326469,
+          "count": 99
+        },
+        "codecAttention": {
+          "seconds": 0.008271104168670718,
+          "count": 25
+        },
+        "codecAttentionHistoryEvaluation": {
+          "seconds": 0.00016637497901683673,
+          "count": 25
+        },
+        "codecBlockFirst": {
+          "seconds": 0.2853979583378532,
+          "count": 25
+        },
+        "codecBlockFourth": {
+          "seconds": 0.1099849791280576,
+          "count": 25
+        },
+        "codecBlockSecond": {
+          "seconds": 0.18471935416891938,
+          "count": 25
+        },
+        "codecBlockThird": {
+          "seconds": 0.13591158334020292,
+          "count": 25
+        },
+        "codecCodebooks": {
+          "seconds": 0.0027804374913102947,
+          "count": 25
+        },
+        "codecHistoryEvaluation": {
+          "seconds": 0.0019898541941074654,
+          "count": 25
+        },
+        "codecInput": {
+          "seconds": 0.00010354170808568597,
+          "count": 25
+        },
+        "codecOutput": {
+          "seconds": 0.02281839585339185,
+          "count": 25
+        },
+        "codecTotal": {
+          "seconds": 0.7559639583414537,
+          "count": 25
+        },
+        "codecUpsampleFirst": {
+          "seconds": 0.0005711458288715221,
+          "count": 25
+        },
+        "codecUpsampleSecond": {
+          "seconds": 0.00042618752195267007,
+          "count": 25
+        },
+        "fastForward": {
+          "seconds": 0.13356018751801457,
+          "count": 891
+        },
+        "fastLogits": {
+          "seconds": 0.0015012707590358332,
+          "count": 891
+        },
+        "fastPrefill": {
+          "seconds": 0.253985083232692,
+          "count": 99
+        },
+        "fastSampling": {
+          "seconds": 2.368232583416102,
+          "count": 891
+        },
+        "pcmDelivery": {
+          "seconds": 0.084278145848657,
+          "count": 25
+        },
+        "promptPrefill": {
+          "seconds": 0.0011488333257148042,
+          "count": 1
+        },
+        "promptTokens": {
+          "seconds": 0.0002256874940940179,
+          "count": 1
+        },
+        "semanticLogits": {
+          "seconds": 0.0012086250426364131,
+          "count": 100
+        },
+        "semanticResampling": {
+          "seconds": 0.005900895870581735,
+          "count": 21
+        },
+        "semanticSampling": {
+          "seconds": 0.12283916667365702,
+          "count": 100
+        },
+        "slowEvaluation": {
+          "seconds": 2.10170814578305,
+          "count": 99
+        },
+        "slowGraph": {
+          "seconds": 0.09203404167055851,
+          "count": 99
+        },
+        "slowStep": {
+          "seconds": 2.194084375005332,
+          "count": 99
+        }
+      }
+    },
+    "optimized-control": {
+      "beforeProviderSeconds": 2.7996835416706745,
+      "delivery": "drain",
+      "modelID": "fish-s2-pro-8bit",
+      "preparationSeconds": 3.358600291670882,
+      "revision": "c8d4481b3f7cbfe64d855c8b7cda7739502fc3ff",
+      "verificationReplaySeconds": 0.001439916668459773,
+      "requests": [
+        {
+          "elapsedSeconds": 5.7594671249971725,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.5089535000006435,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.7879844991573206,
+          "sinkWaitSeconds": 2.4583132471889257e-06,
+          "index": 0,
+          "firstPCMSeconds": 0.5089535000006435,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079303759,
+          "activeMemoryBytes": 5815798811,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.504420124998433,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.2703120833321009,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.7718686241448467,
+          "sinkWaitSeconds": 2.3750326363369823e-06,
+          "index": 1,
+          "firstPCMSeconds": 0.2703120833321009,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079303759,
+          "activeMemoryBytes": 5815798811,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.612009458331158,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.28014629166864324,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.8698149991566624,
+          "sinkWaitSeconds": 2.2916938178241253e-06,
+          "index": 2,
+          "firstPCMSeconds": 0.28014629166864324,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079303759,
+          "activeMemoryBytes": 5815798811,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.534990333340829,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.2757977916771779,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.7977896658146364,
+          "sinkWaitSeconds": 2.124957973137498e-06,
+          "index": 3,
+          "firstPCMSeconds": 0.2757977916771779,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079303759,
+          "activeMemoryBytes": 5815798811,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.553357958327979,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.27772499999264255,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.814336332480454,
+          "sinkWaitSeconds": 2.291635610163212e-06,
+          "index": 4,
+          "firstPCMSeconds": 0.27772499999264255,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079303759,
+          "activeMemoryBytes": 5815798811,
+          "audioFrames": 99,
+          "promptTokens": 34
+        }
+      ],
+      "warmMedianStages": {
+        "audioEmbedding": {
+          "seconds": 0.005920937415794469,
+          "count": 99
+        },
+        "codecAttention": {
+          "seconds": 0.006893937475979328,
+          "count": 25
+        },
+        "codecAttentionHistoryEvaluation": {
+          "seconds": 0.00013645837316289544,
+          "count": 25
+        },
+        "codecBlockFirst": {
+          "seconds": 0.28067485418432625,
+          "count": 25
+        },
+        "codecBlockFourth": {
+          "seconds": 0.10724797918373952,
+          "count": 25
+        },
+        "codecBlockSecond": {
+          "seconds": 0.18893127085175365,
+          "count": 25
+        },
+        "codecBlockThird": {
+          "seconds": 0.13709412500611506,
+          "count": 25
+        },
+        "codecCodebooks": {
+          "seconds": 0.0020817291224375367,
+          "count": 25
+        },
+        "codecHistoryEvaluation": {
+          "seconds": 0.0011609791763476096,
+          "count": 25
+        },
+        "codecInput": {
+          "seconds": 0.00010125005064764991,
+          "count": 25
+        },
+        "codecOutput": {
+          "seconds": 0.01854775001265807,
+          "count": 25
+        },
+        "codecTotal": {
+          "seconds": 0.744592625014775,
+          "count": 25
+        },
+        "codecUpsampleFirst": {
+          "seconds": 0.0005040000323788263,
+          "count": 25
+        },
+        "codecUpsampleSecond": {
+          "seconds": 0.0003934166961698793,
+          "count": 25
+        },
+        "fastForward": {
+          "seconds": 0.11776783350069309,
+          "count": 891
+        },
+        "fastLogits": {
+          "seconds": 0.001305500220041722,
+          "count": 891
+        },
+        "fastPrefill": {
+          "seconds": 0.23522343752119923,
+          "count": 99
+        },
+        "fastSampling": {
+          "seconds": 2.148108770757972,
+          "count": 891
+        },
+        "pcmDelivery": {
+          "seconds": 0.08158604166237637,
+          "count": 25
+        },
+        "promptPrefill": {
+          "seconds": 0.0011210833326913416,
+          "count": 1
+        },
+        "promptTokens": {
+          "seconds": 0.00022754167730454355,
+          "count": 1
+        },
+        "semanticLogits": {
+          "seconds": 0.0009145624790107831,
+          "count": 100
+        },
+        "semanticResampling": {
+          "seconds": 0.004771604188135825,
+          "count": 21
+        },
+        "semanticSampling": {
+          "seconds": 0.11408331248094328,
+          "count": 100
+        },
+        "slowEvaluation": {
+          "seconds": 1.9775615416147048,
+          "count": 99
+        },
+        "slowGraph": {
+          "seconds": 0.11314162499184022,
+          "count": 99
+        },
+        "slowStep": {
+          "seconds": 2.0910545207952964,
+          "count": 99
+        }
+      }
+    },
+    "optimized-rotary-repeat": {
+      "beforeProviderSeconds": 2.8621752916660625,
+      "delivery": "drain",
+      "modelID": "fish-s2-pro-8bit",
+      "preparationSeconds": 3.439580999998725,
+      "revision": "c8d4481b3f7cbfe64d855c8b7cda7739502fc3ff",
+      "verificationReplaySeconds": 0.00164320832118392,
+      "requests": [
+        {
+          "elapsedSeconds": 5.588334458327154,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.44236820832884405,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.6842480408110727,
+          "sinkWaitSeconds": 2.041662810370326e-06,
+          "index": 0,
+          "firstPCMSeconds": 0.44236820832884405,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079312979,
+          "activeMemoryBytes": 5815830557,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.503520791666233,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.2716753749991767,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.7702526241507457,
+          "sinkWaitSeconds": 1.9583385437726974e-06,
+          "index": 1,
+          "firstPCMSeconds": 0.2716753749991767,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079312979,
+          "activeMemoryBytes": 5815830557,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.250242791662458,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.2703100833314238,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.5229960946804644,
+          "sinkWaitSeconds": 2.124957973137498e-06,
+          "index": 2,
+          "firstPCMSeconds": 0.2703100833314238,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079347793,
+          "activeMemoryBytes": 5815830557,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.285875666668289,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.26659862500673626,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.5579907908274633,
+          "sinkWaitSeconds": 1.7499551177024841e-06,
+          "index": 3,
+          "firstPCMSeconds": 0.26659862500673626,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079347793,
+          "activeMemoryBytes": 5815830557,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.311454833339667,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.26843100000405684,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.5810844696739954,
+          "sinkWaitSeconds": 2.0416337065398693e-06,
+          "index": 4,
+          "firstPCMSeconds": 0.26843100000405684,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079347793,
+          "activeMemoryBytes": 5815830557,
+          "audioFrames": 99,
+          "promptTokens": 34
+        }
+      ],
+      "warmMedianStages": {
+        "audioEmbedding": {
+          "seconds": 0.005664854135829955,
+          "count": 99
+        },
+        "codecAttention": {
+          "seconds": 0.006826500008173753,
+          "count": 25
+        },
+        "codecAttentionHistoryEvaluation": {
+          "seconds": 0.0001266875260625966,
+          "count": 25
+        },
+        "codecBlockFirst": {
+          "seconds": 0.2723028124892153,
+          "count": 25
+        },
+        "codecBlockFourth": {
+          "seconds": 0.10314416666369652,
+          "count": 25
+        },
+        "codecBlockSecond": {
+          "seconds": 0.1858266041817842,
+          "count": 25
+        },
+        "codecBlockThird": {
+          "seconds": 0.1330935208388837,
+          "count": 25
+        },
+        "codecCodebooks": {
+          "seconds": 0.0020559582990244962,
+          "count": 25
+        },
+        "codecHistoryEvaluation": {
+          "seconds": 0.0011144375457661226,
+          "count": 25
+        },
+        "codecInput": {
+          "seconds": 9.408329788129777e-05,
+          "count": 25
+        },
+        "codecOutput": {
+          "seconds": 0.017783520816010423,
+          "count": 25
+        },
+        "codecTotal": {
+          "seconds": 0.7235818541739718,
+          "count": 25
+        },
+        "codecUpsampleFirst": {
+          "seconds": 0.0004908333139610477,
+          "count": 25
+        },
+        "codecUpsampleSecond": {
+          "seconds": 0.0003921250026905909,
+          "count": 25
+        },
+        "fastForward": {
+          "seconds": 0.08526183333742665,
+          "count": 891
+        },
+        "fastLogits": {
+          "seconds": 0.0011793125522672199,
+          "count": 891
+        },
+        "fastPrefill": {
+          "seconds": 0.22719529161258833,
+          "count": 99
+        },
+        "fastSampling": {
+          "seconds": 2.0664551876907353,
+          "count": 891
+        },
+        "pcmDelivery": {
+          "seconds": 0.08064131253195228,
+          "count": 25
+        },
+        "promptPrefill": {
+          "seconds": 0.0008209375009755604,
+          "count": 1
+        },
+        "promptTokens": {
+          "seconds": 0.0002345208267797716,
+          "count": 1
+        },
+        "semanticLogits": {
+          "seconds": 0.0006583124923054129,
+          "count": 100
+        },
+        "semanticResampling": {
+          "seconds": 0.004665854154154658,
+          "count": 21
+        },
+        "semanticSampling": {
+          "seconds": 0.1107215624579112,
+          "count": 100
+        },
+        "slowEvaluation": {
+          "seconds": 1.903416625020327,
+          "count": 99
+        },
+        "slowGraph": {
+          "seconds": 0.08216354167961981,
+          "count": 99
+        },
+        "slowStep": {
+          "seconds": 1.9857565833444824,
+          "count": 99
+        }
+      }
+    },
+    "final-optimized": {
+      "beforeProviderSeconds": 4.1576577499945415,
+      "delivery": "drain",
+      "modelID": "fish-s2-pro-8bit",
+      "preparationSeconds": 5.179374333325541,
+      "revision": "c8d4481b3f7cbfe64d855c8b7cda7739502fc3ff",
+      "verificationReplaySeconds": 0.005160291664651595,
+      "requests": [
+        {
+          "elapsedSeconds": 19.54203891666839,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 7.659382875004667,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 7.418946207474402,
+          "sinkWaitSeconds": 1.8749124137684703e-06,
+          "index": 0,
+          "firstPCMSeconds": 7.659382875004667,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6078315586,
+          "activeMemoryBytes": 5815879706,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 7.5149326249957085,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.33308204167406075,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 2.7171760408116112,
+          "sinkWaitSeconds": 2.416636561974883e-06,
+          "index": 1,
+          "firstPCMSeconds": 0.33308204167406075,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6078348354,
+          "activeMemoryBytes": 5815879706,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 10.015337625009124,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.47361558333795983,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 5.066242249146598,
+          "sinkWaitSeconds": 1.958323991857469e-06,
+          "index": 2,
+          "firstPCMSeconds": 0.47361558333795983,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079362638,
+          "activeMemoryBytes": 5815879706,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 9.548578875008388,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.4615091250016121,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 4.612773040806788,
+          "sinkWaitSeconds": 2.0000588847324252e-06,
+          "index": 3,
+          "firstPCMSeconds": 0.4615091250016121,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6111861350,
+          "activeMemoryBytes": 5815879706,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 10.471917749993736,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.7707731666596374,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 5.237826332496042,
+          "sinkWaitSeconds": 1.9583094399422407e-06,
+          "index": 4,
+          "firstPCMSeconds": 0.7707731666596374,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 1,
+          "peakMemoryBytes": 6111861350,
+          "activeMemoryBytes": 5815879706,
+          "audioFrames": 99,
+          "promptTokens": 34
+        }
+      ],
+      "warmMedianStages": {
+        "audioEmbedding": {
+          "seconds": 0.017704687525110785,
+          "count": 99
+        },
+        "codecAttention": {
+          "seconds": 0.012255833338713273,
+          "count": 25
+        },
+        "codecAttentionHistoryEvaluation": {
+          "seconds": 0.00030625001818407327,
+          "count": 25
+        },
+        "codecBlockFirst": {
+          "seconds": 0.44089477082161466,
+          "count": 25
+        },
+        "codecBlockFourth": {
+          "seconds": 0.16499841663608095,
+          "count": 25
+        },
+        "codecBlockSecond": {
+          "seconds": 0.22294472914654762,
+          "count": 25
+        },
+        "codecBlockThird": {
+          "seconds": 0.1984938541863812,
+          "count": 25
+        },
+        "codecCodebooks": {
+          "seconds": 0.005360166636819486,
+          "count": 25
+        },
+        "codecHistoryEvaluation": {
+          "seconds": 0.017423437486286275,
+          "count": 25
+        },
+        "codecInput": {
+          "seconds": 0.00011547918256837875,
+          "count": 25
+        },
+        "codecOutput": {
+          "seconds": 0.04888841664069332,
+          "count": 25
+        },
+        "codecTotal": {
+          "seconds": 1.1488168541618506,
+          "count": 25
+        },
+        "codecUpsampleFirst": {
+          "seconds": 0.0006412916554836556,
+          "count": 25
+        },
+        "codecUpsampleSecond": {
+          "seconds": 0.0005049583196523599,
+          "count": 25
+        },
+        "fastForward": {
+          "seconds": 0.290613125100208,
+          "count": 891
+        },
+        "fastLogits": {
+          "seconds": 0.0021971877431496978,
+          "count": 891
+        },
+        "fastPrefill": {
+          "seconds": 0.4149528542184271,
+          "count": 99
+        },
+        "fastSampling": {
+          "seconds": 3.997914562576625,
+          "count": 891
+        },
+        "pcmDelivery": {
+          "seconds": 0.1481004374945769,
+          "count": 25
+        },
+        "promptPrefill": {
+          "seconds": 0.0013148124926374294,
+          "count": 1
+        },
+        "promptTokens": {
+          "seconds": 0.0002952499999082647,
+          "count": 1
+        },
+        "semanticLogits": {
+          "seconds": 0.002408458269201219,
+          "count": 100
+        },
+        "semanticResampling": {
+          "seconds": 0.01517754165979568,
+          "count": 21
+        },
+        "semanticSampling": {
+          "seconds": 0.25103764577943366,
+          "count": 100
+        },
+        "slowEvaluation": {
+          "seconds": 3.301876708304917,
+          "count": 99
+        },
+        "slowGraph": {
+          "seconds": 0.13257712502672803,
+          "count": 99
+        },
+        "slowStep": {
+          "seconds": 3.4354696458249236,
+          "count": 99
+        }
+      }
+    },
+    "mixed-baseline": {
+      "beforeProviderSeconds": 3.805468083344749,
+      "delivery": "drain",
+      "modelID": "fish-s2-pro-8bit",
+      "preparationSeconds": 4.673582375005935,
+      "revision": "c8d4481b3f7cbfe64d855c8b7cda7739502fc3ff",
+      "verificationReplaySeconds": 0.0013554166798712686,
+      "requests": [
+        {
+          "elapsedSeconds": 24.321067958328058,
+          "sampleRate": 44100,
+          "sampleCount": 219136,
+          "firstNonSilentPCM": 1.7711484166648006,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 17.713596641445278,
+          "sinkWaitSeconds": 2.6249908842146397e-06,
+          "index": 0,
+          "firstPCMSeconds": 1.7711484166648006,
+          "wavSHA256": "a2a97cb35b2b37070d0bfc234ecd34bdb55cffce93210a9ba06c610f114a5cdb",
+          "thermalState": 1,
+          "peakMemoryBytes": 6009446435,
+          "activeMemoryBytes": 5815907355,
+          "audioFrames": 107,
+          "promptTokens": 35
+        },
+        {
+          "elapsedSeconds": 8.163921791667235,
+          "sampleRate": 44100,
+          "sampleCount": 219136,
+          "firstNonSilentPCM": 0.9520219166588504,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 2.3790062247671324,
+          "sinkWaitSeconds": 2.3750035325065255e-06,
+          "index": 1,
+          "firstPCMSeconds": 0.9520219166588504,
+          "wavSHA256": "a2a97cb35b2b37070d0bfc234ecd34bdb55cffce93210a9ba06c610f114a5cdb",
+          "thermalState": 1,
+          "peakMemoryBytes": 6009446435,
+          "activeMemoryBytes": 5815907355,
+          "audioFrames": 107,
+          "promptTokens": 35
+        },
+        {
+          "elapsedSeconds": 6.185395625012461,
+          "sampleRate": 44100,
+          "sampleCount": 219136,
+          "firstNonSilentPCM": 0.3870722083374858,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.9652709747851513,
+          "sinkWaitSeconds": 2.333326847292483e-06,
+          "index": 2,
+          "firstPCMSeconds": 0.3870722083374858,
+          "wavSHA256": "a2a97cb35b2b37070d0bfc234ecd34bdb55cffce93210a9ba06c610f114a5cdb",
+          "thermalState": 1,
+          "peakMemoryBytes": 6009446435,
+          "activeMemoryBytes": 5815907355,
+          "audioFrames": 107,
+          "promptTokens": 35
+        },
+        {
+          "elapsedSeconds": 6.205398624995723,
+          "sampleRate": 44100,
+          "sampleCount": 219136,
+          "firstNonSilentPCM": 0.36857191666786093,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 1.0037094747776318,
+          "sinkWaitSeconds": 2.0416482584550977e-06,
+          "index": 3,
+          "firstPCMSeconds": 0.36857191666786093,
+          "wavSHA256": "a2a97cb35b2b37070d0bfc234ecd34bdb55cffce93210a9ba06c610f114a5cdb",
+          "thermalState": 1,
+          "peakMemoryBytes": 6009446435,
+          "activeMemoryBytes": 5815907355,
+          "audioFrames": 107,
+          "promptTokens": 35
+        },
+        {
+          "elapsedSeconds": 6.161330041664769,
+          "sampleRate": 44100,
+          "sampleCount": 219136,
+          "firstNonSilentPCM": 0.36201462500321213,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.965354433103992,
+          "sinkWaitSeconds": 1.833293936215341e-06,
+          "index": 4,
+          "firstPCMSeconds": 0.36201462500321213,
+          "wavSHA256": "a2a97cb35b2b37070d0bfc234ecd34bdb55cffce93210a9ba06c610f114a5cdb",
+          "thermalState": 1,
+          "peakMemoryBytes": 6009446435,
+          "activeMemoryBytes": 5815907355,
+          "audioFrames": 107,
+          "promptTokens": 35
+        }
+      ],
+      "warmMedianStages": {
+        "audioEmbedding": {
+          "seconds": 0.006061499938368797,
+          "count": 107
+        },
+        "codecAttention": {
+          "seconds": 0.13601912499871105,
+          "count": 27
+        },
+        "codecAttentionHistoryEvaluation": {
+          "seconds": 0.12627147922466975,
+          "count": 216
+        },
+        "codecBlockFirst": {
+          "seconds": 0.2426861041749362,
+          "count": 27
+        },
+        "codecBlockFourth": {
+          "seconds": 0.10143866669386625,
+          "count": 27
+        },
+        "codecBlockSecond": {
+          "seconds": 0.18877397918549832,
+          "count": 27
+        },
+        "codecBlockThird": {
+          "seconds": 0.15501547917665448,
+          "count": 27
+        },
+        "codecCodebooks": {
+          "seconds": 0.002279562504554633,
+          "count": 27
+        },
+        "codecHistoryEvaluation": {
+          "seconds": 0.6336722916676081,
+          "count": 540
+        },
+        "codecInput": {
+          "seconds": 0.012130395843996666,
+          "count": 27
+        },
+        "codecOutput": {
+          "seconds": 0.013260874984553084,
+          "count": 27
+        },
+        "codecTotal": {
+          "seconds": 0.8826260624846327,
+          "count": 27
+        },
+        "codecUpsampleFirst": {
+          "seconds": 0.017031375005899463,
+          "count": 27
+        },
+        "codecUpsampleSecond": {
+          "seconds": 0.015960624972649384,
+          "count": 27
+        },
+        "fastForward": {
+          "seconds": 0.1296019168003113,
+          "count": 963
+        },
+        "fastLogits": {
+          "seconds": 0.0012873125961050391,
+          "count": 963
+        },
+        "fastPrefill": {
+          "seconds": 0.25771437503863126,
+          "count": 107
+        },
+        "fastSampling": {
+          "seconds": 2.3380985623589368,
+          "count": 963
+        },
+        "pcmDelivery": {
+          "seconds": 0.09919129162153695,
+          "count": 27
+        },
+        "promptPrefill": {
+          "seconds": 0.0012083333349437453,
+          "count": 1
+        },
+        "promptTokens": {
+          "seconds": 0.08092437499726657,
+          "count": 1
+        },
+        "semanticLogits": {
+          "seconds": 0.0009135625223279931,
+          "count": 108
+        },
+        "semanticResampling": {
+          "seconds": 0.005586250015767291,
+          "count": 24
+        },
+        "semanticSampling": {
+          "seconds": 0.11578412507515168,
+          "count": 108
+        },
+        "slowEvaluation": {
+          "seconds": 2.1674473750099423,
+          "count": 107
+        },
+        "slowGraph": {
+          "seconds": 0.12012954165402334,
+          "count": 107
+        },
+        "slowStep": {
+          "seconds": 2.287813500028278,
+          "count": 107
+        }
+      }
+    },
+    "mixed-optimized": {
+      "beforeProviderSeconds": 2.952462999994168,
+      "delivery": "drain",
+      "modelID": "fish-s2-pro-8bit",
+      "preparationSeconds": 3.515610749993357,
+      "revision": "c8d4481b3f7cbfe64d855c8b7cda7739502fc3ff",
+      "verificationReplaySeconds": 0.0016488333349116147,
+      "requests": [
+        {
+          "elapsedSeconds": 5.9240372916683555,
+          "sampleRate": 44100,
+          "sampleCount": 219136,
+          "firstNonSilentPCM": 0.44130249999579974,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.6497066414403416,
+          "sinkWaitSeconds": 2.1249870769679546e-06,
+          "index": 0,
+          "firstPCMSeconds": 0.44130249999579974,
+          "wavSHA256": "a2a97cb35b2b37070d0bfc234ecd34bdb55cffce93210a9ba06c610f114a5cdb",
+          "thermalState": 1,
+          "peakMemoryBytes": 6081328462,
+          "activeMemoryBytes": 5815812378,
+          "audioFrames": 107,
+          "promptTokens": 35
+        },
+        {
+          "elapsedSeconds": 5.768114625010639,
+          "sampleRate": 44100,
+          "sampleCount": 219136,
+          "firstNonSilentPCM": 0.26977562499814667,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.6666334452882756,
+          "sinkWaitSeconds": 2.374945324845612e-06,
+          "index": 1,
+          "firstPCMSeconds": 0.26977562499814667,
+          "wavSHA256": "a2a97cb35b2b37070d0bfc234ecd34bdb55cffce93210a9ba06c610f114a5cdb",
+          "thermalState": 1,
+          "peakMemoryBytes": 6081328462,
+          "activeMemoryBytes": 5815812378,
+          "audioFrames": 107,
+          "promptTokens": 35
+        },
+        {
+          "elapsedSeconds": 5.733241624999209,
+          "sampleRate": 44100,
+          "sampleCount": 219136,
+          "firstNonSilentPCM": 0.2677808333392022,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.6340795702988862,
+          "sinkWaitSeconds": 2.541783032938838e-06,
+          "index": 2,
+          "firstPCMSeconds": 0.2677808333392022,
+          "wavSHA256": "a2a97cb35b2b37070d0bfc234ecd34bdb55cffce93210a9ba06c610f114a5cdb",
+          "thermalState": 1,
+          "peakMemoryBytes": 6081344846,
+          "activeMemoryBytes": 5815812378,
+          "audioFrames": 107,
+          "promptTokens": 35
+        },
+        {
+          "elapsedSeconds": 5.7828734166687354,
+          "sampleRate": 44100,
+          "sampleCount": 219136,
+          "firstNonSilentPCM": 0.26889945834409446,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.6813721119677532,
+          "sinkWaitSeconds": 2.3750326363369823e-06,
+          "index": 3,
+          "firstPCMSeconds": 0.26889945834409446,
+          "wavSHA256": "a2a97cb35b2b37070d0bfc234ecd34bdb55cffce93210a9ba06c610f114a5cdb",
+          "thermalState": 1,
+          "peakMemoryBytes": 6081344846,
+          "activeMemoryBytes": 5815812378,
+          "audioFrames": 107,
+          "promptTokens": 35
+        },
+        {
+          "elapsedSeconds": 5.783629083322012,
+          "sampleRate": 44100,
+          "sampleCount": 219136,
+          "firstNonSilentPCM": 0.2723003749997588,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.6792371952895657,
+          "sinkWaitSeconds": 2.3332395358011127e-06,
+          "index": 4,
+          "firstPCMSeconds": 0.2723003749997588,
+          "wavSHA256": "a2a97cb35b2b37070d0bfc234ecd34bdb55cffce93210a9ba06c610f114a5cdb",
+          "thermalState": 1,
+          "peakMemoryBytes": 6081344846,
+          "activeMemoryBytes": 5815812378,
+          "audioFrames": 107,
+          "promptTokens": 35
+        }
+      ],
+      "warmMedianStages": {
+        "audioEmbedding": {
+          "seconds": 0.005572083333390765,
+          "count": 107
+        },
+        "codecAttention": {
+          "seconds": 0.007556625037977938,
+          "count": 27
+        },
+        "codecAttentionHistoryEvaluation": {
+          "seconds": 0.00013220829714555293,
+          "count": 27
+        },
+        "codecBlockFirst": {
+          "seconds": 0.3091370000038296,
+          "count": 27
+        },
+        "codecBlockFourth": {
+          "seconds": 0.11372062499140156,
+          "count": 27
+        },
+        "codecBlockSecond": {
+          "seconds": 0.2026654791625333,
+          "count": 27
+        },
+        "codecBlockThird": {
+          "seconds": 0.14709883332398022,
+          "count": 27
+        },
+        "codecCodebooks": {
+          "seconds": 0.0020212916715536267,
+          "count": 27
+        },
+        "codecHistoryEvaluation": {
+          "seconds": 0.0011512292039697058,
+          "count": 27
+        },
+        "codecInput": {
+          "seconds": 0.00010445834050187841,
+          "count": 27
+        },
+        "codecOutput": {
+          "seconds": 0.019092395836196374,
+          "count": 27
+        },
+        "codecTotal": {
+          "seconds": 0.8046679999824846,
+          "count": 27
+        },
+        "codecUpsampleFirst": {
+          "seconds": 0.0005251458278507926,
+          "count": 27
+        },
+        "codecUpsampleSecond": {
+          "seconds": 0.0004160417083767243,
+          "count": 27
+        },
+        "fastForward": {
+          "seconds": 0.08923672912351321,
+          "count": 963
+        },
+        "fastLogits": {
+          "seconds": 0.0011463748742244206,
+          "count": 963
+        },
+        "fastPrefill": {
+          "seconds": 0.24558329167484771,
+          "count": 107
+        },
+        "fastSampling": {
+          "seconds": 2.243261916912161,
+          "count": 963
+        },
+        "pcmDelivery": {
+          "seconds": 0.08999760414735647,
+          "count": 27
+        },
+        "promptPrefill": {
+          "seconds": 0.0011348124971846119,
+          "count": 1
+        },
+        "promptTokens": {
+          "seconds": 0.00024433333601336926,
+          "count": 1
+        },
+        "semanticLogits": {
+          "seconds": 0.0006561249902006239,
+          "count": 108
+        },
+        "semanticResampling": {
+          "seconds": 0.005221854153205641,
+          "count": 24
+        },
+        "semanticSampling": {
+          "seconds": 0.1131950416311156,
+          "count": 108
+        },
+        "slowEvaluation": {
+          "seconds": 2.074970062596549,
+          "count": 107
+        },
+        "slowGraph": {
+          "seconds": 0.08862827079428826,
+          "count": 107
+        },
+        "slowStep": {
+          "seconds": 2.163444791593065,
+          "count": 107
+        }
+      }
+    },
+    "paired-baseline": {
+      "beforeProviderSeconds": 2.789125374998548,
+      "delivery": "drain",
+      "modelID": "fish-s2-pro-8bit",
+      "preparationSeconds": 3.2503633333253674,
+      "revision": "c8d4481b3f7cbfe64d855c8b7cda7739502fc3ff",
+      "verificationReplaySeconds": 0.0014087500021560118,
+      "requests": [
+        {
+          "elapsedSeconds": 5.765005833338364,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.5528801666660002,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.7488947491535525,
+          "sinkWaitSeconds": 2.3333559511229396e-06,
+          "index": 0,
+          "firstPCMSeconds": 0.5528801666660002,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 5974938271,
+          "activeMemoryBytes": 5815846555,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.545063333338476,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.3551794166705804,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.7282823741431657,
+          "sinkWaitSeconds": 2.2500462364405394e-06,
+          "index": 1,
+          "firstPCMSeconds": 0.3551794166705804,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 5974954655,
+          "activeMemoryBytes": 5815846555,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.563203333338606,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.3550293333391892,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.7466137074831949,
+          "sinkWaitSeconds": 2.3749744286760688e-06,
+          "index": 2,
+          "firstPCMSeconds": 0.3550293333391892,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 5974954655,
+          "activeMemoryBytes": 5815846555,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.57023645832669,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.35892358332057483,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.7499214991428034,
+          "sinkWaitSeconds": 2.0833249436691403e-06,
+          "index": 3,
+          "firstPCMSeconds": 0.35892358332057483,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 5974954655,
+          "activeMemoryBytes": 5815846555,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.589919708334492,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.35915395834308583,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.768836124147785,
+          "sinkWaitSeconds": 2.166692866012454e-06,
+          "index": 4,
+          "firstPCMSeconds": 0.35915395834308583,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 5975773863,
+          "activeMemoryBytes": 5815846555,
+          "audioFrames": 99,
+          "promptTokens": 34
+        }
+      ],
+      "warmMedianStages": {
+        "audioEmbedding": {
+          "seconds": 0.004832249971514102,
+          "count": 99
+        },
+        "codecAttention": {
+          "seconds": 0.12133933333825553,
+          "count": 25
+        },
+        "codecAttentionHistoryEvaluation": {
+          "seconds": 0.11333060417382512,
+          "count": 200
+        },
+        "codecBlockFirst": {
+          "seconds": 0.2374813750211615,
+          "count": 25
+        },
+        "codecBlockFourth": {
+          "seconds": 0.09700520835031057,
+          "count": 25
+        },
+        "codecBlockSecond": {
+          "seconds": 0.1776142499729758,
+          "count": 25
+        },
+        "codecBlockThird": {
+          "seconds": 0.14571072916442063,
+          "count": 25
+        },
+        "codecCodebooks": {
+          "seconds": 0.001890125022327993,
+          "count": 25
+        },
+        "codecHistoryEvaluation": {
+          "seconds": 0.607203499886964,
+          "count": 500
+        },
+        "codecInput": {
+          "seconds": 0.010651416676410008,
+          "count": 25
+        },
+        "codecOutput": {
+          "seconds": 0.012270395811356138,
+          "count": 25
+        },
+        "codecTotal": {
+          "seconds": 0.8349022500187857,
+          "count": 25
+        },
+        "codecUpsampleFirst": {
+          "seconds": 0.01549156249529915,
+          "count": 25
+        },
+        "codecUpsampleSecond": {
+          "seconds": 0.01526585417741444,
+          "count": 25
+        },
+        "fastForward": {
+          "seconds": 0.10583791672979714,
+          "count": 891
+        },
+        "fastLogits": {
+          "seconds": 0.0010298957349732518,
+          "count": 891
+        },
+        "fastPrefill": {
+          "seconds": 0.22833387496939395,
+          "count": 99
+        },
+        "fastSampling": {
+          "seconds": 2.0809129374392796,
+          "count": 891
+        },
+        "pcmDelivery": {
+          "seconds": 0.08060522915911861,
+          "count": 25
+        },
+        "promptPrefill": {
+          "seconds": 0.001063312498445157,
+          "count": 1
+        },
+        "promptTokens": {
+          "seconds": 0.0801922916652984,
+          "count": 1
+        },
+        "semanticLogits": {
+          "seconds": 0.0005591458975686692,
+          "count": 100
+        },
+        "semanticResampling": {
+          "seconds": 0.0045212500263005495,
+          "count": 21
+        },
+        "semanticSampling": {
+          "seconds": 0.11059404162369901,
+          "count": 100
+        },
+        "slowEvaluation": {
+          "seconds": 1.9221811875177082,
+          "count": 99
+        },
+        "slowGraph": {
+          "seconds": 0.10689070838270709,
+          "count": 99
+        },
+        "slowStep": {
+          "seconds": 2.029409916685836,
+          "count": 99
+        }
+      }
+    },
+    "paired-optimized": {
+      "beforeProviderSeconds": 2.730281833340996,
+      "delivery": "drain",
+      "modelID": "fish-s2-pro-8bit",
+      "preparationSeconds": 3.2719263333274284,
+      "revision": "c8d4481b3f7cbfe64d855c8b7cda7739502fc3ff",
+      "verificationReplaySeconds": 0.00189966666221153,
+      "requests": [
+        {
+          "elapsedSeconds": 5.420037041665637,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.43065154166833963,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.5321704696749372,
+          "sinkWaitSeconds": 2.208267687819898e-06,
+          "index": 0,
+          "firstPCMSeconds": 0.43065154166833963,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079312462,
+          "activeMemoryBytes": 5815795226,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.247358749998966,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.2659817916719476,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.5248347613438531,
+          "sinkWaitSeconds": 2.000044332817197e-06,
+          "index": 1,
+          "firstPCMSeconds": 0.2659817916719476,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079312462,
+          "activeMemoryBytes": 5815795226,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.268638249996002,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.2673064583359519,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.5450881780039785,
+          "sinkWaitSeconds": 2.1666346583515406e-06,
+          "index": 2,
+          "firstPCMSeconds": 0.2673064583359519,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079312462,
+          "activeMemoryBytes": 5815795226,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.281654458332923,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.2706072083383333,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.5526287196758937,
+          "sinkWaitSeconds": 1.7083948478102684e-06,
+          "index": 3,
+          "firstPCMSeconds": 0.2706072083383333,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079328846,
+          "activeMemoryBytes": 5815795226,
+          "audioFrames": 99,
+          "promptTokens": 34
+        },
+        {
+          "elapsedSeconds": 5.271240708330879,
+          "sampleRate": 44100,
+          "sampleCount": 202752,
+          "firstNonSilentPCM": 0.26769583333225455,
+          "leadingSilentSamples": 0,
+          "simulatedPlaybackGapSeconds": 0.5453499280034597,
+          "sinkWaitSeconds": 1.9166473066434264e-06,
+          "index": 4,
+          "firstPCMSeconds": 0.26769583333225455,
+          "wavSHA256": "8fd17152090697a935a6081584b4b960a6f4cbb52f1de56bebc4ed9907bfab01",
+          "thermalState": 0,
+          "peakMemoryBytes": 6079328846,
+          "activeMemoryBytes": 5815795226,
+          "audioFrames": 99,
+          "promptTokens": 34
+        }
+      ],
+      "warmMedianStages": {
+        "audioEmbedding": {
+          "seconds": 0.005252312563243322,
+          "count": 99
+        },
+        "codecAttention": {
+          "seconds": 0.006955999982892536,
+          "count": 25
+        },
+        "codecAttentionHistoryEvaluation": {
+          "seconds": 0.00011770831042667851,
+          "count": 25
+        },
+        "codecBlockFirst": {
+          "seconds": 0.2769656249656691,
+          "count": 25
+        },
+        "codecBlockFourth": {
+          "seconds": 0.10238106251927093,
+          "count": 25
+        },
+        "codecBlockSecond": {
+          "seconds": 0.18492120833980152,
+          "count": 25
+        },
+        "codecBlockThird": {
+          "seconds": 0.1312806249698042,
+          "count": 25
+        },
+        "codecCodebooks": {
+          "seconds": 0.0019409375090617687,
+          "count": 25
+        },
+        "codecHistoryEvaluation": {
+          "seconds": 0.0010728124907473102,
+          "count": 25
+        },
+        "codecInput": {
+          "seconds": 9.531251271255314e-05,
+          "count": 25
+        },
+        "codecOutput": {
+          "seconds": 0.018027374979283195,
+          "count": 25
+        },
+        "codecTotal": {
+          "seconds": 0.7265511249861447,
+          "count": 25
+        },
+        "codecUpsampleFirst": {
+          "seconds": 0.0004799791640834883,
+          "count": 25
+        },
+        "codecUpsampleSecond": {
+          "seconds": 0.00038633335498161614,
+          "count": 25
+        },
+        "fastForward": {
+          "seconds": 0.08313435396121349,
+          "count": 891
+        },
+        "fastLogits": {
+          "seconds": 0.0010621873589116149,
+          "count": 891
+        },
+        "fastPrefill": {
+          "seconds": 0.22439368748746347,
+          "count": 99
+        },
+        "fastSampling": {
+          "seconds": 2.0451511875508004,
+          "count": 891
+        },
+        "pcmDelivery": {
+          "seconds": 0.08386147913552122,
+          "count": 25
+        },
+        "promptPrefill": {
+          "seconds": 0.0011052291738451459,
+          "count": 1
+        },
+        "promptTokens": {
+          "seconds": 0.00022343749878928065,
+          "count": 1
+        },
+        "semanticLogits": {
+          "seconds": 0.0005998958658892661,
+          "count": 100
+        },
+        "semanticResampling": {
+          "seconds": 0.0044853749859612435,
+          "count": 21
+        },
+        "semanticSampling": {
+          "seconds": 0.110719562479062,
+          "count": 100
+        },
+        "slowEvaluation": {
+          "seconds": 1.892769166675862,
+          "count": 99
+        },
+        "slowGraph": {
+          "seconds": 0.08228435422643088,
+          "count": 99
+        },
+        "slowStep": {
+          "seconds": 1.9759063957972103,
+          "count": 99
+        }
+      }
+    }
+  }
+}

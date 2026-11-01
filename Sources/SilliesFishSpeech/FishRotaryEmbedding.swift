@@ -5,6 +5,7 @@ struct FishRotaryEmbedding {
   enum Precision { case speech, codec }
   private let cosines: MLXArray
   private let sines: MLXArray
+  private let rotate: @Sendable (MLXArray, MLXArray, MLXArray) -> MLXArray
 
   init(headDimensions: Int, positions: Int, base: Float, precision: Precision) {
     let frequencies =
@@ -15,6 +16,7 @@ struct FishRotaryEmbedding {
     let dtype: DType = precision == .speech ? .bfloat16 : .float32
     cosines = cos(angles).asType(dtype)
     sines = sin(angles).asType(dtype)
+    rotate = compile(Self.rotatePairs)
   }
 
   func apply(_ input: MLXArray, offset: Int) throws -> MLXArray {
@@ -24,6 +26,15 @@ struct FishRotaryEmbedding {
     let length = input.dim(2)
     let cosine = cosines[offset..<(offset + length)].reshaped(1, 1, length, -1)
     let sine = sines[offset..<(offset + length)].reshaped(1, 1, length, -1)
+    // Compile the repeated one-token decode shape; varying prompt/chunk lengths must not grow
+    // a cache of specialized graphs for every utterance length in a long-running conversation.
+    if length == 1 { return rotate(input, cosine, sine) }
+    return Self.rotatePairs(input, cosine, sine)
+  }
+
+  private static func rotatePairs(_ input: MLXArray, _ cosine: MLXArray, _ sine: MLXArray)
+    -> MLXArray
+  {
     let pairs = input.asType(.float32).reshaped(input.shape.dropLast() + [input.dim(3) / 2, 2])
     let even = pairs[0..., 0..., 0..., 0..., 0]
     let odd = pairs[0..., 0..., 0..., 0..., 1]

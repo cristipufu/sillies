@@ -163,3 +163,21 @@ The runner reports first PCM separately from total synthesis time. Replace `run`
 compare a cold helper, explicit voice preparation, and two successive requests with retained state.
 Each phase writes a separate WAV. These sink measurements exclude text generation and device output;
 do not report them as end-to-end conversational latency. No download is performed by `run` or `latency`.
+
+## Preparation and derived artifacts
+
+Provide the catalog's optional `outputSampleRate` when the runtime has a fixed output rate. Chat can
+then prepare its output device while the voice model is being prepared, before PCM arrives. Actual
+chunks remain validated independently. Stop, interruption and completion still tear down playback and
+its echo-reference producer; an idle engine must not silently outlive its playback owner.
+
+Use `ModelDerivedArtifact` for rebuildable conversions of verified sources, keyed by source identities
+and a versioned conversion format. It checks output size and digest, rejects symlinks, and atomically
+rebuilds corrupt or stale output. It is not a substitute for downloaded-artifact verification. Kokoro
+materializes only the selected voice instead of converting every voice at model preparation.
+
+Do not infer phrase completion from a gap between audio chunks. A persistent synthesis session needs
+an explicit utterance-completion signal and bounded delivery. The pinned Pocket API lacks that signal;
+its session is finished per phrase while model weights and native voice conditioning remain reusable.
+Qwen already caches voice/language prompts. Model-generated quiet audio is preserved unless a runtime
+contract identifies removable padding; a volume threshold cannot establish that speech is absent.

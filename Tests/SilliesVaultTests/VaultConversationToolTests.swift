@@ -1,5 +1,6 @@
 import Foundation
 import SilliesCore
+import SilliesModelStore
 import SilliesPersistence
 import SilliesReasoning
 import SilliesTextModels
@@ -148,4 +149,109 @@ func appleChatAnswersBoltsFirstSpokenGreeting() async throws {
     #expect(!reply.text.isEmpty)
     #expect(reply.text.localizedCaseInsensitiveContains("Bolt"))
   }
+}
+
+@Test(.enabled(if: ProcessInfo.processInfo.environment["SILLIES_CHAT_MODEL_CHECK"] == "1"))
+func appleChatAnswersGeneralKnowledgeAfterAVaultConversation() async throws {
+  try await checkGeneralKnowledgeAfterVaultConversation(backend: AppleReasoningBackend())
+}
+
+@Test(
+  .enabled(if: ProcessInfo.processInfo.environment["SILLIES_DOWNLOADED_CHAT_MODEL_CHECK"] == "1"))
+func downloadedChatAnswersGeneralKnowledgeAndReturnsToEarlierVaultResults() async throws {
+  let environment = ProcessInfo.processInfo.environment
+  let directory = try #require(environment["SILLIES_CHAT_MODEL_STORE"])
+  let helper = try #require(environment["SILLIES_TEXT_HELPER"])
+  let id = try #require(environment["SILLIES_CHAT_MODEL_ID"])
+  let manifest = try #require(try TextModelCatalog.bundled().manifests.first { $0.modelID == id })
+  let store = ModelStore(root: URL(fileURLWithPath: directory))
+  let registry = try TextModelRegistry(
+    store: store,
+    providers: [MLXTextModelProvider(executable: URL(fileURLWithPath: helper))])
+  do {
+    try await checkGeneralKnowledgeAfterVaultConversation(
+      backend: DownloadedReasoningBackend(manifest: manifest, store: store, registry: registry))
+    await registry.stop()
+  } catch {
+    await registry.stop()
+    throw error
+  }
+}
+
+private func checkGeneralKnowledgeAfterVaultConversation(backend: any ConversationBackend)
+  async throws
+{
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { removeVaultFixture(directory) }
+  let library = VaultLibrary(directory: directory)
+  var links = savedItem(.stash, app: "Safari", text: "")
+  links.stashedItems = ["https://example.com/project-aurora"]
+  _ = try await library.commit(.init(records: [.insert(links)]))
+  let service = LocalConversationService(
+    resolveBackend: { backend },
+    tools: [VaultSearchTool(library: library), VaultReadTool(library: library)], turns: .init())
+  let lifetime = TextModelLifetime()
+  await service.retain(for: lifetime)
+  var messages = [ChatMessage(role: .user, text: "Which URLs did I save?")]
+  func context() -> ChatContext {
+    .init(
+      companionName: "Pogo", profile: .init(personality: "Curious and upbeat"), messages: messages
+    )
+    .inTurn(UUID(), session: lifetime.id)
+  }
+  let saved = try await service.reply(to: context())
+  print("INITIAL VAULT CHECK: \(saved.text); tools=\(saved.exchanges.map { $0.call.name })")
+  #expect(saved.exchanges.contains { $0.call.name == "search_vault" })
+  messages.append(
+    .init(
+      role: .companion, text: saved.text,
+      evidence: .init(sources: saved.sources, exchanges: saved.exchanges)))
+  for (question, expected) in [
+    ("Okay, tell me what's the tallest mountain in the world?", "Everest"),
+    ("What is the process plants use to turn sunlight into energy?", "photosynthesis"),
+  ] {
+    messages.append(.init(role: .user, text: question))
+    let reply = try await service.reply(to: context())
+    print(
+      "GENERAL CHAT CHECK: \(question) → \(reply.text); tools=\(reply.exchanges.map { $0.call.name })"
+    )
+    #expect(reply.text.localizedCaseInsensitiveContains(expected))
+    #expect(reply.exchanges.isEmpty)
+    #expect(reply.sources.isEmpty)
+    messages.append(
+      .init(
+        role: .companion, text: reply.text,
+        evidence: .init(sources: reply.sources, exchanges: reply.exchanges)))
+  }
+  messages.append(
+    .init(role: .user, text: "What was the URL in that saved item you found earlier?"))
+  let followup = try await service.reply(to: context())
+  print("VAULT FOLLOW-UP CHECK: \(followup.text)")
+  #expect(followup.text.contains("https://example.com/project-aurora"))
+  await lifetime.end()
+}
+
+@Test func vaultSearchReportsTotalSeparatelyFromItsBoundedResultsWithoutLoadingBodies() async throws
+{
+  struct Page: Decodable {
+    struct Record: Decodable { let recordID: UUID }
+    let totalVaultRecords: Int
+    let returnedRecordCount: Int
+    let records: [Record]
+  }
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { removeVaultFixture(directory) }
+  let library = VaultLibrary(directory: directory)
+  let records = (0..<17).map { savedItem(.snap, app: "Terminal", text: "Capture \($0)") }
+  _ = try await library.commit(.init(records: records.map(VaultRecordWrite.insert)))
+  let before = try await library.metrics().loadedBodies
+  let result = try await VaultSearchTool(library: library).call(
+    arguments: Data(#"{"query":"","category":"all"}"#.utf8))
+  for text in [result.text, result.briefText] {
+    let page = try JSONDecoder().decode(Page.self, from: Data(text.utf8))
+    #expect(page.totalVaultRecords == 17)
+    #expect(page.returnedRecordCount == 5)
+    #expect(page.records.map(\.recordID) == result.sources.map(\.id))
+  }
+  #expect(try await library.metrics().loadedBodies == before)
 }

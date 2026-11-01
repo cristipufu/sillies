@@ -3,10 +3,11 @@ import SilliesSpeech
 @preconcurrency import WhisperKit
 
 actor WhisperWindowEngine: SpeechWindowEngine {
-  private static let maximumPromptTokens = 160
+  nonisolated var finalizationPolicy: SpeechFinalizationPolicy { .reuseUnchangedDraft }
   nonisolated private let executor = SpeechWorkerExecutor()
   nonisolated var unownedExecutor: UnownedSerialExecutor { executor.asUnownedSerialExecutor() }
   private var pipeline: WhisperKit?
+  private var vocabulary = WhisperVocabularyPrompt()
 
   // Releasing large Core ML allocations must not inherit the UI caller's executor.
   isolated deinit { dispatchPrecondition(condition: .notOnQueue(.main)) }
@@ -20,6 +21,7 @@ actor WhisperWindowEngine: SpeechWindowEngine {
       segmentSeeker: PromptAlignedSegmentSeeker(),
       verbose: false, logLevel: .error, prewarm: true, load: true, download: false)
     pipeline = try await OfflineWhisperKit(config)
+    vocabulary = WhisperVocabularyPrompt()
     try Task.checkCancellation()
   }
 
@@ -37,11 +39,9 @@ actor WhisperWindowEngine: SpeechWindowEngine {
     options.skipSpecialTokens = true
     options.temperatureFallbackCount = 1
     options.concurrentWorkerCount = 1
-    if !request.context.vocabulary.isEmpty {
-      options.promptTokens = pipeline.tokenizer.map {
-        Array(
-          $0.encode(text: request.context.vocabulary.joined(separator: ", ")).prefix(
-            Self.maximumPromptTokens))
+    if let tokenizer = pipeline.tokenizer {
+      options.promptTokens = vocabulary.tokens(for: request.context.vocabulary) {
+        tokenizer.encode(text: $0)
       }
     }
     let results = try await pipeline.transcribe(audioArray: request.samples, decodeOptions: options)

@@ -7,10 +7,16 @@ package actor TextModelRegistry {
   private struct Loaded {
     let residencyID = UUID()
     let id: String
+    let revision: String
     let model: any PreparedTextModel
     let lease: InstalledModelLease
   }
-  private static let idleDuration: Duration = .seconds(60)
+  package static let defaultIdleDuration: Duration = .seconds(60)
+  package enum Retention { case available, memoryPressure }
+  private let idleDuration: Duration
+  private var retention = Retention.available
+  private var lifetimes: [UUID: TextModelLifetime] = [:]
+  private let lifetimeOwner = UUID()
   private let store: ModelStore
   private let providers: [String: any TextModelProvider]
   private let activity: InferenceActivity
@@ -20,7 +26,8 @@ package actor TextModelRegistry {
   private var idle: Task<Void, Never>?
 
   package init(
-    store: ModelStore, providers: [any TextModelProvider], activity: InferenceActivity = .shared
+    store: ModelStore, providers: [any TextModelProvider], activity: InferenceActivity = .shared,
+    idleDuration: Duration = TextModelRegistry.defaultIdleDuration
   ) throws {
     guard Set(providers.map(\.id)).count == providers.count else {
       throw TextModelError.unavailable(
@@ -29,6 +36,20 @@ package actor TextModelRegistry {
     self.store = store
     self.providers = Dictionary(uniqueKeysWithValues: providers.map { ($0.id, $0) })
     self.activity = activity
+    self.idleDuration = idleDuration
+  }
+
+  package func retain(for lifetime: TextModelLifetime) async {
+    lifetimes[lifetime.id] = lifetime
+    let id = lifetime.id
+    await lifetime.onEnd(owner: lifetimeOwner) { [weak self] in await self?.endLifetime(id) }
+  }
+
+  private func endLifetime(_ id: UUID) { lifetimes[id] = nil }
+
+  package func setRetention(_ retention: Retention) async {
+    self.retention = retention
+    if retention == .memoryPressure, active == nil { await releaseLoadedModel() }
   }
 
   package func generate(_ request: TextGenerationRequest, using manifest: TextModelManifest)
@@ -94,12 +115,16 @@ package actor TextModelRegistry {
         } onCancel: {
           attempt.cancel()
         }
-        if await activity.requiresTextEviction(id) { await releaseLoadedModel() }
+        let mustEvict = await activity.requiresTextEviction(id)
+        if retention == .memoryPressure || mustEvict {
+          await releaseLoadedModel()
+        }
         await activity.releaseText(id)
         try Task.checkCancellation()
         return result
       } catch TextModelError.contextLimit {
-        if await activity.requiresTextEviction(id) { await releaseLoadedModel() }
+        let mustEvict = await activity.requiresTextEviction(id)
+        if retention == .memoryPressure || mustEvict { await releaseLoadedModel() }
         await activity.releaseText(id)
         try Task.checkCancellation()
         throw TextModelError.contextLimit
@@ -117,7 +142,9 @@ package actor TextModelRegistry {
   }
 
   private func prepare(_ manifest: TextModelManifest) async throws -> any PreparedTextModel {
-    if let loaded, loaded.id == manifest.modelID { return loaded.model }
+    if let loaded, loaded.id == manifest.modelID, loaded.revision == manifest.revision {
+      return loaded.model
+    }
     await releaseLoadedModel()
     guard let provider = providers[manifest.model.providerID] else {
       throw TextModelError.unavailable(
@@ -142,7 +169,8 @@ package actor TextModelRegistry {
         await model.stop()
         throw CancellationError()
       }
-      let resident = Loaded(id: manifest.modelID, model: model, lease: lease)
+      let resident = Loaded(
+        id: manifest.modelID, revision: manifest.revision, model: model, lease: lease)
       loaded = resident
       let residencyID = resident.residencyID
       await activity.rememberTextModel(
@@ -165,6 +193,7 @@ package actor TextModelRegistry {
   package func resume() { suspended = false }
 
   package func stop() async {
+    lifetimes.removeAll()
     idle?.cancel()
     idle = nil
     let task = active
@@ -187,10 +216,21 @@ package actor TextModelRegistry {
 
   private func scheduleRelease() {
     idle?.cancel()
-    guard loaded != nil else { return }
+    guard let id = loaded?.residencyID else { return }
+    let delay = idleDuration
     idle = Task { [weak self] in
-      do { try await Task.sleep(for: Self.idleDuration) } catch { return }
-      await self?.releaseLoadedModel()
+      do { try await Task.sleep(for: delay) } catch { return }
+      await self?.releaseIfIdle(id)
+    }
+  }
+
+  private func releaseIfIdle(_ id: UUID) async {
+    for (key, lifetime) in lifetimes where await !lifetime.isActive { lifetimes[key] = nil }
+    guard !Task.isCancelled, active == nil, loaded?.residencyID == id else { return }
+    if retention == .available, !lifetimes.isEmpty {
+      scheduleRelease()
+    } else {
+      await releaseLoadedModel()
     }
   }
 }

@@ -16,20 +16,27 @@ final class AnalyzerSpeechChannel: LocalSpeechChannel {
   private let input: Mutex<InputState>
   private let failure: LocalSpeechFactory.Failure
   private let resultsTask: Task<Void, Never>
+  private let priority: TaskPriority
+
+  private struct Configuration {
+    let format: AVAudioFormat
+    let failure: LocalSpeechFactory.Failure
+    let priority: TaskPriority
+  }
 
   private init(
     analyzer: SpeechAnalyzer, continuation: AsyncStream<AnalyzerInput>.Continuation,
-    format: AVAudioFormat, resultsTask: Task<Void, Never>,
-    failure: @escaping LocalSpeechFactory.Failure
+    resultsTask: Task<Void, Never>, configuration: Configuration
   ) {
     self.analyzer = analyzer
     self.continuation = continuation
     input = Mutex(
       InputState(
-        converter: SpeechBufferConverter(format: format),
-        chunker: SpeechAudioChunker(format: format)))
+        converter: SpeechBufferConverter(format: configuration.format),
+        chunker: SpeechAudioChunker(format: configuration.format)))
     self.resultsTask = resultsTask
-    self.failure = failure
+    self.failure = configuration.failure
+    self.priority = configuration.priority
   }
 
   static func make(
@@ -52,8 +59,9 @@ final class AnalyzerSpeechChannel: LocalSpeechChannel {
       throw SpeechError.unavailable(
         String(localized: "The on-device speech model is not ready for this language."))
     }
+    let priority = context.priority.taskPriority
     let analyzer = SpeechAnalyzer(
-      modules: [transcriber], options: .init(priority: .utility, modelRetention: .whileInUse))
+      modules: [transcriber], options: .init(priority: priority, modelRetention: .whileInUse))
     if !context.vocabulary.isEmpty {
       let analysisContext = AnalysisContext()
       analysisContext.contextualStrings[.general] = context.vocabulary
@@ -61,7 +69,7 @@ final class AnalyzerSpeechChannel: LocalSpeechChannel {
     }
     let (stream, continuation) = AsyncStream<AnalyzerInput>.makeStream(
       bufferingPolicy: .bufferingOldest(SpeechAudioChunker.streamCapacity))
-    let resultsTask = Task.detached(priority: .utility) {
+    let resultsTask = Task.detached(priority: priority) {
       do {
         for try await result in transcriber.results {
           var phrase = SpeechPhrase(
@@ -85,8 +93,8 @@ final class AnalyzerSpeechChannel: LocalSpeechChannel {
       }
     }
     let channel = AnalyzerSpeechChannel(
-      analyzer: analyzer, continuation: continuation, format: format, resultsTask: resultsTask,
-      failure: failure)
+      analyzer: analyzer, continuation: continuation, resultsTask: resultsTask,
+      configuration: .init(format: format, failure: failure, priority: priority))
     do {
       try await analyzer.prepareToAnalyze(in: format)
       try await analyzer.start(inputSequence: stream)
@@ -124,7 +132,7 @@ final class AnalyzerSpeechChannel: LocalSpeechChannel {
     if let message { failure(message) }
     let analyzer = analyzer
     let results = resultsTask
-    Task.detached(priority: .utility) {
+    Task.detached(priority: priority) {
       do { try await analyzer.finalizeAndFinishThroughEndOfInput() } catch {
         fputs("Speech finalization failed: \(error.localizedDescription)\n", stderr)
       }

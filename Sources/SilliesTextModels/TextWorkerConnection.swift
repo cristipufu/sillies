@@ -61,7 +61,9 @@ final class TextWorkerConnection: Sendable {
     else {
       throw TextModelError.invalidResponse
     }
-    return .init(text: text, calls: response.calls ?? [], inputTokens: response.inputTokens)
+    return .init(
+      text: text, calls: response.calls ?? [], inputTokens: response.inputTokens,
+      metrics: response.metrics)
   }
 
   func stop() { connection.stop() }

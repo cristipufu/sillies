@@ -31,9 +31,6 @@ struct ChatMessagesView: View {
             Label(model.status, systemImage: "ellipsis.bubble.fill")
               .font(.callout).foregroundStyle(theme.secondary).padding(12)
           }
-          if let vault, !model.discoveredSources.isEmpty {
-            ChatSourcesView(sources: model.discoveredSources, vault: vault)
-          }
           Color.clear.frame(height: 1).id(Self.bottomID)
         }.padding(18)
           .environment(\.chatSelectionReset, selectionReset)
@@ -41,25 +38,21 @@ struct ChatMessagesView: View {
       }
       .defaultScrollAnchor(.bottom, for: .initialOffset)
       .defaultScrollAnchor(.bottom, for: .alignment)
-      .onScrollGeometryChange(for: Bool.self) { geometry in
-        geometry.contentSize.height - geometry.visibleRect.maxY <= Self.bottomThreshold
-      } action: { _, value in
-        nearBottom = value
+      .onScrollGeometryChange(for: Viewport.self) { geometry in
+        Viewport(
+          contentHeight: geometry.contentSize.height,
+          nearBottom: geometry.contentSize.height - geometry.visibleRect.maxY
+            <= Self.bottomThreshold)
+      } action: { previous, current in
+        nearBottom = current.nearBottom
+        if current.contentHeight != previous.contentHeight, followsLatest, selectedMessages.isEmpty
+        {
+          proxy.scrollTo(Self.bottomID, anchor: .bottom)
+        }
       }
       .onScrollPhaseChange { _, phase in
         if phase == .interacting { followsLatest = false }
         if phase == .idle, nearBottom { followsLatest = true }
-      }
-      .onChange(of: model.messages.last?.id) {
-        guard followsLatest, selectedMessages.isEmpty else { return }
-        withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) {
-          proxy.scrollTo(Self.bottomID, anchor: .bottom)
-        }
-      }
-      .onChange(of: model.streamedText) {
-        guard followsLatest, selectedMessages.isEmpty else { return }
-        // Streaming growth follows without stacking animations on every text batch.
-        proxy.scrollTo(Self.bottomID, anchor: .bottom)
       }
       .overlay(alignment: .bottom) {
         if !followsLatest || !selectedMessages.isEmpty, !nearBottom {
@@ -74,6 +67,11 @@ struct ChatMessagesView: View {
         }
       }
     }
+  }
+
+  private struct Viewport: Equatable {
+    let contentHeight: CGFloat
+    let nearBottom: Bool
   }
 
   private func bubble(_ message: ChatMessage) -> some View {

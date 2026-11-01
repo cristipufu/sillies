@@ -138,7 +138,10 @@ private func chatFinishPreservesFinalWordsBeforeSaving(_ timing: FinishTiming) a
   capture: (
     @Sendable (AudioCaptureConfiguration, @escaping @Sendable (AudioCaptureUpdate) -> Void) ->
       any ConversationCapture
-  )? = nil
+  )? = nil,
+  deliver: @escaping AudioSessionUpdateDelivery.Schedule = { action in
+    Task { @MainActor in action() }
+  }
 ) -> ChatSession {
   ChatSession(
     companionName: "Mochi",
@@ -149,7 +152,7 @@ private func chatFinishPreservesFinalWordsBeforeSaving(_ timing: FinishTiming) a
         .init(languages: [.init(id: "ro-RO", name: "Romanian", isInstalled: true)])
       },
       conversation: reply, speech: voice,
-      deliver: { action in Task { @MainActor in action() } }))
+      deliver: deliver))
 }
 
 @MainActor private func waitFor(_ predicate: @MainActor () async -> Bool) async throws {
@@ -522,4 +525,119 @@ private actor StreamingReplyProbe: ConversationResponding {
     #expect(await voice.requests.isEmpty)
     chat.finish {}
   }
+}
+
+private actor RepeatedSourcesProbe: ConversationResponding {
+  let sources: [ChatSource]
+  private var continuation: CheckedContinuation<Void, Never>?
+  private(set) var waiting = false
+  init(sources: [ChatSource]) { self.sources = sources }
+  func reply(to context: ChatContext, progress: @escaping @Sendable (ChatProgress) -> Void)
+    async throws -> ChatReply
+  {
+    try await streamReply(to: context, progress: progress, receive: { _ in })
+  }
+  func streamReply(
+    to context: ChatContext, progress: @escaping @Sendable (ChatProgress) -> Void,
+    receive: @escaping ConversationTextSink
+  ) async throws -> ChatReply {
+    progress(.sources(sources))
+    try await receive("Here are the saved items.")
+    await withCheckedContinuation {
+      continuation = $0
+      waiting = true
+    }
+    return .init(text: "Here are the saved items.", sources: sources)
+  }
+  func finishTurn() {
+    waiting = false
+    continuation?.resume()
+    continuation = nil
+  }
+}
+
+@Test @MainActor func vaultCardsKeepOneMessageOwnerAcrossStreamingAndLaterReplies() async throws {
+  let sources = (0..<5).map { index in
+    ChatSource(
+      header: .init(
+        SessionRecord(
+          kind: .stash,
+          origin: .init(
+            characterID: "pogo", characterName: "Pogo",
+            source: .init(appName: "Saved item \(index)")))), excerpt: "Saved text")
+  }
+  let replies = RepeatedSourcesProbe(sources: sources)
+  let chat = session(reply: replies, voice: VoiceProbe())
+  chat.spokenReplies = false
+  chat.draft = "Show my saved items"
+  chat.send()
+  try await waitFor { await replies.waiting && chat.messages.last?.role == .companion }
+  let firstID = try #require(chat.messages.last?.id)
+  func visibleIDs() -> [UUID] { chat.messages.flatMap { chat.sourceCards(for: $0).map(\.id) } }
+  #expect(visibleIDs() == sources.map(\.id))
+  await replies.finishTurn()
+  try await waitFor { chat.phase == .ready }
+  #expect(chat.messages.last?.id == firstID)
+  #expect(visibleIDs() == sources.map(\.id))
+  chat.draft = "What do those contain?"
+  chat.send()
+  try await waitFor { await replies.waiting && chat.messages.last?.role == .companion }
+  #expect(visibleIDs() == sources.map(\.id))
+  #expect(chat.sourceCards(for: try #require(chat.messages.last)).isEmpty)
+  await replies.finishTurn()
+  try await waitFor { chat.phase == .ready }
+  #expect(visibleIDs() == sources.map(\.id))
+  // Evidence is preserved even when cards already exist.
+  #expect(chat.messages.last?.sources == sources)
+  chat.finish {}
+  let nextConversation = session(reply: replies, voice: VoiceProbe())
+  nextConversation.spokenReplies = false
+  #expect(nextConversation.messages.isEmpty)
+  #expect(nextConversation.discoveredSources.isEmpty)
+  nextConversation.draft = "Show my saved items"
+  nextConversation.send()
+  try await waitFor { await replies.waiting && nextConversation.messages.last?.role == .companion }
+  #expect(nextConversation.messages.flatMap { nextConversation.sourceCards(for: $0) } == sources)
+  await replies.finishTurn()
+  try await waitFor { nextConversation.phase == .ready }
+  nextConversation.finish {}
+}
+
+@Test @MainActor func lateVaultCardsRemainRetryableAndCannotLeakIntoANewTurn() async throws {
+  let source = ChatSource(
+    header: .init(
+      SessionRecord(
+        kind: .stash,
+        origin: .init(characterID: "pogo", characterName: "Pogo", source: .init(appName: "Safari")))
+    ),
+    excerpt: "Saved URL")
+  let updates = Mutex<[@MainActor @Sendable () -> Void]>([])
+  let chat = session(
+    reply: SourceFailureProbe(source: source), voice: VoiceProbe(),
+    deliver: { action in updates.withLock { $0.append(action) } })
+  chat.spokenReplies = false
+  chat.draft = "Find my saved links"
+  chat.send()
+  try await waitFor { chat.failure != nil }
+  #expect(chat.messages.count == 1)
+  let firstTurnUpdates = updates.withLock { pending in
+    let result = pending
+    pending.removeAll()
+    return result
+  }
+  #expect(!firstTurnUpdates.isEmpty)
+  for update in firstTurnUpdates { update() }
+  #expect(chat.canRetry)
+  #expect(chat.messages.last?.completion == .interrupted)
+  #expect(chat.messages.flatMap { chat.sourceCards(for: $0) }.map(\.id) == [source.id])
+  chat.retry()
+  for update in firstTurnUpdates { update() }
+  #expect(chat.messages.count == 1)
+  #expect(chat.discoveredSources.isEmpty)
+  try await waitFor { chat.failure != nil }
+  #expect(chat.canRetry)
+  chat.finish {}
+  for update in updates.withLock({ $0 }) { update() }
+  #expect(chat.messages.count == 1)
+  #expect(chat.discoveredSources.isEmpty)
 }

@@ -13,9 +13,17 @@ final class FishCodecConvolution {
   private let weights: FishWeights
   private var kernels: [String: MLXArray] = [:]
   private var history: [String: MLXArray] = [:]
+  private let profile: FishProfiler
   func reset() { history.removeAll() }
 
-  init(weights: FishWeights) { self.weights = weights }
+  func materializeHistory() {
+    profile.measure(.codecHistoryEvaluation) { eval(Array(history.values)) }
+  }
+
+  init(weights: FishWeights, profile: FishProfiler = FishProfiler()) {
+    self.weights = weights
+    self.profile = profile
+  }
 
   func forward(_ input: MLXArray, at path: String, geometry: Geometry = .init()) throws -> MLXArray
   {
@@ -30,7 +38,6 @@ final class FishCodecConvolution {
     let padded = concatenated([previous, input], axis: 2)
     if padding > 0 {
       let retained = padded[0..., 0..., (padded.dim(2) - padding)...]
-      eval(retained)
       history[path] = retained
     }
     let output = conv1d(
@@ -55,7 +62,6 @@ final class FishCodecConvolution {
     let retainedFrames = min(combined.dim(2), (weight.dim(2) - 1) / stride)
     if retainedFrames > 0 {
       let retained = combined[0..., 0..., (combined.dim(2) - retainedFrames)...]
-      eval(retained)
       history[path] = retained
     }
     return biased[0..., offset..<(offset + length), 0...].transposed(0, 2, 1)
@@ -80,7 +86,7 @@ final class FishCodecConvolution {
         magnitude * direction
         / (sqrt(sum(square(direction), axes: [1, 2], keepDims: true)) + Self.normalizationEpsilon)
     }
-    eval(kernel)
+    profile.measure(.codecKernelPreparation) { eval(kernel) }
     kernels[path] = kernel
     return kernel
   }

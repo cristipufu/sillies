@@ -10,8 +10,10 @@ final class FishCodeGenerator {
   private let semanticHead: FishWeights
   private let slow: FishTransformer
   private let fast: FishTransformer
+  private let profile: FishProfiler
 
-  init(configuration: FishConfiguration, weights: FishWeights) throws {
+  init(configuration: FishConfiguration, weights: FishWeights, profile: FishProfiler) throws {
+    self.profile = profile
     self.configuration = configuration
     self.weights = weights
     let allowedTokens =
@@ -37,16 +39,22 @@ final class FishCodeGenerator {
       slow.reset()
       fast.reset()
     }
-    let embedded = try weights.embedding(MLXArray(prompt).reshaped(1, -1), at: "model.embeddings")
-    var hidden = try slow.apply(embedded)[0..., (prompt.count - 1)..<prompt.count, 0...]
+    var hidden = try profile.tensor(.promptPrefill) {
+      let embedded = try weights.embedding(MLXArray(prompt).reshaped(1, -1), at: "model.embeddings")
+      return try slow.apply(embedded)[0..., (prompt.count - 1)..<prompt.count, 0...]
+    }
     var previousSemantics: [Int32] = []
     var frames: [[Int32]] = []
     for index in 0..<FishConfiguration.maximumAudioFrames {
       try Task.checkCancellation()
-      let logits = try semanticHead.linear(hidden, at: "output").reshaped(1, -1)
-      var choice = try FishSampling.sample(logits)
+      let logits = try profile.tensor(.semanticLogits) {
+        try semanticHead.linear(hidden, at: "output").reshaped(1, -1)
+      }
+      var choice = try profile.measure(.semanticSampling) { try FishSampling.sample(logits) }
       if previousSemantics.contains(choice), choice != 0 {
-        choice = try FishSampling.sample(logits, settings: .repetitionRecovery)
+        choice = try profile.measure(.semanticResampling) {
+          try FishSampling.sample(logits, settings: .repetitionRecovery)
+        }
       }
       if choice == 0 {
         guard index > 0 else { throw FishError.emptyAudio }
@@ -62,25 +70,34 @@ final class FishCodeGenerator {
         try receive(frames)
         frames.removeAll(keepingCapacity: true)
       }
-      let next = try audioEmbedding(frame)
-      hidden = try slow.apply(next)
-      eval(hidden)
+      let next = try profile.tensor(.audioEmbedding) { try audioEmbedding(frame) }
+      hidden = try profile.measure(.slowStep) {
+        let result = try profile.measure(.slowGraph) { try slow.apply(next) }
+        profile.measure(.slowEvaluation) { eval(result) }
+        return result
+      }
     }
     throw FishError.generationLimit
   }
 
   private func generateFrame(semanticCode: Int32, hidden: MLXArray) throws -> [Int32] {
-    fast.reset()
-    let prefill = try fast.apply(hidden)
-    eval(prefill)
+    try profile.measure(.fastPrefill) {
+      fast.reset()
+      let prefill = try fast.apply(hidden)
+      eval(prefill)
+    }
     var codes = [semanticCode]
     var previous = semanticCode
     for _ in 1..<FishConfiguration.codebookCount {
-      let embedded = try weights.embedding(
-        MLXArray([previous]).reshaped(1, 1), at: "model.fast_embeddings")
-      let output = try fast.apply(embedded)
-      let logits = try weights.linear(output, at: "model.fast_output").reshaped(1, -1)
-      previous = try FishSampling.sample(logits)
+      let output = try profile.tensor(.fastForward) {
+        let embedded = try weights.embedding(
+          MLXArray([previous]).reshaped(1, 1), at: "model.fast_embeddings")
+        return try fast.apply(embedded)
+      }
+      let logits = try profile.tensor(.fastLogits) {
+        try weights.linear(output, at: "model.fast_output").reshaped(1, -1)
+      }
+      previous = try profile.measure(.fastSampling) { try FishSampling.sample(logits) }
       codes.append(previous)
     }
     return codes

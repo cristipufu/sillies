@@ -8,16 +8,23 @@ public struct ChatContext: Sendable {
   public let profile: CharacterChatProfile
   public let messages: [ChatMessage]
   public let memory: ConversationMemory
-  public let turnID: UUID
+  public private(set) var turnID = UUID()
+  public private(set) var sessionID: UUID?
 
   public init(
     companionName: String, profile: CharacterChatProfile, messages: [ChatMessage],
-    memory: ConversationMemory = .init(), turnID: UUID = UUID()
+    memory: ConversationMemory = .init()
   ) {
     self.companionName = companionName
     self.profile = profile
     self.messages = messages
     self.memory = memory
-    self.turnID = turnID
+  }
+
+  public func inTurn(_ id: UUID, session: UUID?) -> Self {
+    var copy = self
+    copy.turnID = id
+    copy.sessionID = session
+    return copy
   }
 }

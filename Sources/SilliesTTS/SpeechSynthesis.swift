@@ -1,4 +1,5 @@
 import Foundation
+import SilliesCore
 
 /// The sink applies backpressure: providers await delivery instead of building an audio backlog.
 package typealias SynthesizedAudioSink = @Sendable (SynthesizedAudio) async throws -> Void
@@ -79,7 +80,8 @@ package struct SynthesizedAudio: Codable, Sendable, Equatable {
 
   package func validate() throws {
     guard !samples.isEmpty, samples.count <= Self.maximumChunkSamples,
-      (8_000...96_000).contains(sampleRate), samples.allSatisfy({ $0.isFinite && abs($0) <= 8 })
+      TTSModelDescriptor.supportedOutputSampleRates.contains(sampleRate),
+      samples.allSatisfy({ $0.isFinite && abs($0) <= 8 })
     else { throw TTSError.invalidAudio }
   }
 }

@@ -30,7 +30,8 @@ struct ConversationContextManager {
       try Task.checkCancellation()
       let working = ChatContext(
         companionName: context.companionName, profile: context.profile,
-        messages: Array(pending), memory: memory, turnID: context.turnID)
+        messages: Array(pending), memory: memory
+      ).inTurn(context.turnID, session: context.sessionID)
       let request = ChatReplyGenerator.request(for: working, tools: tools)
       let fits = try await fits(request, budget: budget)
       let starts = pending.indices.filter { pending[$0].role == .user }

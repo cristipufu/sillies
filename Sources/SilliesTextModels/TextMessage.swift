@@ -24,4 +24,8 @@ package struct TextMessage: Codable, Equatable, Sendable {
     message.toolName = call.name
     return message
   }
+
+  package static func exchanging(_ exchanges: [ConversationToolExchange]) -> [Self] {
+    exchanges.flatMap { [.calling([$0.call], text: ""), .result($0.result, for: $0.call)] }
+  }
 }

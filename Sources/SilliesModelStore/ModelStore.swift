@@ -5,13 +5,19 @@ package actor ModelStore {
   private let requestedRoot: URL
   private lazy var root = requestedRoot.resolvingSymlinksInPath()
   private let downloader: any ModelDownloading
+  private let verifier: ModelArtifactVerifier
   private var installing: Set<String> = []
   private var leases: [String: Set<UUID>] = [:]
   private static let receiptName = "installed.json"
 
   package init(root: URL, downloader: any ModelDownloading = ModelDownloadClient()) {
+    self.init(root: root, downloader: downloader, verifier: ModelArtifactVerifier())
+  }
+
+  init(root: URL, downloader: any ModelDownloading, verifier: sending ModelArtifactVerifier) {
     self.requestedRoot = root
     self.downloader = downloader
+    self.verifier = verifier
   }
 
   package func currentManifest(_ baseline: SpeechModelManifest) throws -> SpeechModelManifest {
@@ -134,7 +140,7 @@ package actor ModelStore {
     guard try isInstalled(manifest) else { throw ModelStoreError.notInstalled }
     let directory = try location(manifest)
     for artifact in manifest.artifacts {
-      try ModelFiles.verify(artifact, at: ModelFiles.child(artifact.path, in: directory))
+      try verifier.verify(artifact, at: ModelFiles.child(artifact.path, in: directory))
     }
     let token = UUID()
     let id = manifest.modelID
@@ -152,7 +158,7 @@ package actor ModelStore {
       let previous = selection.previous, try isInstalled(previous)
     else { throw ModelStoreError.notInstalled }
     for artifact in previous.artifacts {
-      try ModelFiles.verify(artifact, at: ModelFiles.child(artifact.path, in: location(previous)))
+      try verifier.verify(artifact, at: ModelFiles.child(artifact.path, in: location(previous)))
     }
     try ModelVersionSelection(current: previous, previous: nil).write(root: root)
   }
@@ -211,7 +217,7 @@ package actor ModelStore {
     if FileManager.default.fileExists(atPath: destination.path) {
       do {
         progress(.verifying, artifact.byteCount)
-        try ModelFiles.verify(artifact, at: destination)
+        try verifier.verify(artifact, at: destination)
         return
       } catch is CancellationError { throw CancellationError() } catch {
         ModelFiles.log(error)
@@ -229,7 +235,9 @@ package actor ModelStore {
       }
     }
     progress(.verifying, artifact.byteCount)
-    try ModelFiles.verify(artifact, at: temporary)
     try FileManager.default.moveItem(at: temporary, to: destination)
+    // Verify at its staging path so publication's directory rename preserves the file evidence.
+    // Failed verification leaves only an unpublished staging artifact; retry verifies/removes it.
+    try verifier.verify(artifact, at: destination)
   }
 }

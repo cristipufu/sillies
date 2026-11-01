@@ -2,6 +2,8 @@
 
 Current test modes: routine checks render offscreen. Live WindowServer/frame measurements below require explicit `make gui-check` or `scripts/test.sh --presentation gui`; headless success does not measure compositor timing.
 
+The [Fish S2 Pro profiling report](reports/fish-tts-profile-2026-11-01.md) separates model verification, first PCM, transformer execution, waveform decoding, and playback pacing, with reproducible diagnostics and measurement data. The [follow-up optimization report](reports/voice-optimization-2026-11-01.md) covers shared verification reuse and measured Fish improvements.
+
 ## Implemented constraints
 
 - Native AppKit, SwiftUI, and Core Animation for companions; no web runtime or game engine.
@@ -549,3 +551,7 @@ so device/rate, acoustic-delay, and lifecycle checks now run in separate 90-seco
 retaining all cases and the same per-run watchdog.
 The final `make race-check` passed all 182 selected tests across those groups with no race reports;
 the two additional silent native playback checks also passed under Thread Sanitizer.
+
+The [provider optimization validation](reports/provider-optimization-2026-11-01.md) records bounded
+STT, text and voice adapter measurements, retained changes, rejected experiments, and unavailable
+native coverage. It separates input preparation, inference, device preparation and audible output.

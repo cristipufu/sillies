@@ -18,7 +18,7 @@ enum ConversationToolLoop {
           conversation: .init(
             instructions: request.instructions, messages: messages, tools: request.tools),
           maximumTokens: request.maximumTokens, style: request.style
-        ).inConversation(request.conversationID), round.append)
+        ).inConversation(request.conversationID).inSession(request.sessionID), round.append)
       let delivered = try await round.finalized(matching: response.text)
       if !delivered.isEmpty { portions.append(delivered) }
       if response.calls.isEmpty {

@@ -5,8 +5,8 @@ public struct ChatMessage: Codable, Equatable, Identifiable, Sendable {
   public let id: UUID
   public let role: Role
   public private(set) var text: String
-  public let sources: [ChatSource]
-  public let exchanges: [ConversationToolExchange]
+  public private(set) var sources: [ChatSource]
+  public private(set) var exchanges: [ConversationToolExchange]
   public enum Completion: String, Codable, Sendable { case streaming, complete, interrupted }
   private struct Delivery: Codable, Equatable, Sendable {
     let completion: Completion
@@ -32,6 +32,12 @@ public struct ChatMessage: Codable, Equatable, Identifiable, Sendable {
   public func withText(_ text: String) -> Self {
     var copy = self
     copy.text = text
+    return copy
+  }
+  public func withEvidence(_ evidence: Evidence) -> Self {
+    var copy = self
+    copy.sources = evidence.sources
+    copy.exchanges = evidence.exchanges
     return copy
   }
   public struct Evidence: Sendable {

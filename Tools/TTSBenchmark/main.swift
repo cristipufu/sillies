@@ -14,10 +14,12 @@ import SilliesTTS
 
   private static func run() async throws {
     let arguments = CommandLine.arguments
-    guard [4, 6].contains(arguments.count), ["install", "run", "latency"].contains(arguments[1])
+    guard [4, 6].contains(arguments.count),
+      ["install", "run", "latency", "profile", "voices"].contains(arguments[1])
     else {
       fputs(
-        "Usage: TTSBenchmark install|run|latency MODEL_ID MODEL_DIRECTORY [LANGUAGE TEXT]\n", stderr
+        "Usage: TTSBenchmark install|run|latency|profile|voices MODEL_ID MODEL_DIRECTORY [LANGUAGE TEXT]\n",
+        stderr
       )
       exit(EXIT_FAILURE)
     }
@@ -39,17 +41,35 @@ import SilliesTTS
       }
       ?? URL(fileURLWithPath: arguments[0]).deletingLastPathComponent()
       .appendingPathComponent("SilliesTTSInference")
-    let registry = try TTSModelRegistry(
-      store: store,
-      providers: [WorkerTTSProvider(id: manifest.model.providerID, executable: executable)],
-      activity: InferenceActivity())
     let samples = SampleCollector()
     let started = ContinuousClock.now
     let language = arguments.count == 6 ? arguments[4] : "en"
     let passage =
       arguments.count == 6
       ? arguments[5] : "Hello! I’m your little window companion. What’s on your mind?"
-    guard let voice = manifest.model.voices.first else { throw TTSError.unsupportedVoice }
+    let selectedVoice = ProcessInfo.processInfo.environment["SILLIES_TTS_VOICE"]
+    guard
+      let voice = manifest.model.voices.first(where: {
+        selectedVoice == nil || $0.id == selectedVoice
+      })
+    else { throw TTSError.unsupportedVoice }
+    if arguments[1] == "profile" {
+      try await VoiceProfileBenchmark(
+        store: store,
+        provider: WorkerTTSProvider(id: manifest.model.providerID, executable: executable),
+        manifest: manifest,
+        request: .init(text: passage, voiceID: voice.id, language: language)
+      ).run()
+      return
+    }
+    let registry = try TTSModelRegistry(
+      store: store,
+      providers: [WorkerTTSProvider(id: manifest.model.providerID, executable: executable)],
+      activity: InferenceActivity())
+    if arguments[1] == "voices" {
+      try await VoicePreparationBenchmark.run(registry: registry, manifest: manifest)
+      return
+    }
     if arguments[1] == "latency" {
       try await VoiceLatencyBenchmark(
         registry: registry, manifest: manifest,

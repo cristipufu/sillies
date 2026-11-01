@@ -110,11 +110,6 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
     if let lifetime = request.lifetime { await models.retain(for: lifetime) }
     guard try await text.waitForTextStart() else { return nil }
     receive(.milestone(.preparationStarted))
-    if try await models.prepareVoiceIfPossible(
-      .init(id: voice.id, language: language), using: manifest, conversationID: request.id)
-    {
-      receive(.milestone(.voicePrepared))
-    }
     firstPCMFor = nil
     await playback.start(id: request.id) { [weak self] update in
       receive(update)
@@ -123,6 +118,12 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
       }
     }
     do {
+      async let voiceReady = models.prepareVoiceIfPossible(
+        .init(id: voice.id, language: language), using: manifest, conversationID: request.id)
+      if let sampleRate = manifest.model.outputSampleRate {
+        try await playback.prepare(sampleRate: sampleRate, id: request.id)
+      }
+      if try await voiceReady { receive(.milestone(.voicePrepared)) }
       while let chunk = try await text.next() {
         try Task.checkCancellation()
         try await models.synthesize(

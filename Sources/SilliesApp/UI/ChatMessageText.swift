@@ -14,14 +14,7 @@ struct ChatMessageText: NSViewRepresentable {
   let selectionChanged: (Bool) -> Void
   func makeCoordinator() -> Coordinator { Coordinator(selectionChanged) }
   func makeNSView(context: Context) -> NSTextView {
-    let view = NSTextView()
-    view.isEditable = false
-    view.isSelectable = true
-    view.drawsBackground = false
-    view.isRichText = false
-    view.textContainerInset = .zero
-    view.textContainer?.lineFragmentPadding = 0
-    view.font = .systemFont(ofSize: 15)
+    let view = ChatMessageTextView()
     view.delegate = context.coordinator
     return view
   }
@@ -29,24 +22,28 @@ struct ChatMessageText: NSViewRepresentable {
     context.coordinator.selectionChanged = selectionChanged
     if view.string != text { context.coordinator.replaceText(in: view, with: text) }
     context.coordinator.resetSelection(in: view, revision: selectionReset)
-    TextEditorAppearance.apply(theme, to: view)
-    view.textColor = color
+    context.coordinator.applyAppearance(theme, color: color, to: view)
   }
   func sizeThatFits(_ proposal: ProposedViewSize, nsView view: NSTextView, context: Context)
     -> CGSize?
   {
-    guard let width = proposal.width, width > 0,
-      let container = view.textContainer, let layout = view.layoutManager
-    else { return nil }
-    container.containerSize = CGSize(width: width, height: .greatestFiniteMagnitude)
-    layout.ensureLayout(for: container)
-    let used = layout.usedRect(for: container)
-    return CGSize(width: min(width, ceil(used.width)), height: max(20, ceil(used.height)))
+    guard let width = proposal.width else { return nil }
+    return context.coordinator.measurement.size(of: view.attributedString(), width: width)
   }
   @MainActor final class Coordinator: NSObject, NSTextViewDelegate {
     var selectionChanged: (Bool) -> Void
+    let measurement = ChatMessageLayout()
     private var selectionRevision: UUID?
+    private var appliedTheme: SilliesTheme?
+    private var appliedColor: NSColor?
     init(_ selectionChanged: @escaping (Bool) -> Void) { self.selectionChanged = selectionChanged }
+    func applyAppearance(_ theme: SilliesTheme, color: NSColor, to view: NSTextView) {
+      guard appliedTheme != theme || appliedColor != color else { return }
+      appliedTheme = theme
+      appliedColor = color
+      TextEditorAppearance.apply(theme, to: view)
+      view.textColor = color
+    }
     func resetSelection(in view: NSTextView, revision: UUID?) {
       guard selectionRevision != revision else { return }
       selectionRevision = revision
@@ -69,9 +66,11 @@ struct ChatMessageText: NSViewRepresentable {
       if prefix < next.length {
         prefix = min(prefix, next.rangeOfComposedCharacterSequence(at: prefix).location)
       }
+      var attributes = ChatTypography.attributes
+      if let color = view.textColor { attributes[.foregroundColor] = color }
       view.textStorage?.replaceCharacters(
         in: NSRange(location: prefix, length: previous.length - prefix),
-        with: next.substring(from: prefix))
+        with: NSAttributedString(string: next.substring(from: prefix), attributes: attributes))
       view.selectedRanges = selections.map {
         let range = $0.rangeValue
         let location = min(range.location, next.length)

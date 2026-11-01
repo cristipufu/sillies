@@ -85,9 +85,74 @@ import Testing
       try decoder.decode(Array(repeating: frame, count: FishConfiguration.maximumAudioFrames + 1))
     }
   }
+
+  @Test func compiledSpeechRotaryMatchesIndependentRoundedPairReference() throws {
+    let dimensions = 8
+    let positions = 64
+    let frequencies =
+      1
+      / pow(
+        MLXArray(Float(10_000)), arange(0, dimensions, step: 2).asType(.float32) / Float(dimensions)
+      )
+    let angles = outer(arange(positions).asType(.float32), frequencies)
+    let cosine = cos(angles).asType(.bfloat16).asArray(Float.self)
+    let sine = sin(angles).asType(.bfloat16).asArray(Float.self)
+    let rotary = FishRotaryEmbedding(
+      headDimensions: dimensions, positions: positions, base: 10_000, precision: .speech)
+    for length in [3, 1, 7, 1] {
+      let input = sin(arange(2 * length * dimensions).asType(.float32) * 0.173)
+        .asType(.bfloat16).reshaped(1, 2, length, dimensions)
+      let samples = input.asArray(Float.self)
+      for offset in [0, 1, 31] {
+        var expected: [Float] = []
+        for index in stride(from: 0, to: samples.count, by: 2) {
+          let token = (index / dimensions) % length
+          let pair = (index % dimensions) / 2
+          let coefficient = (offset + token) * (dimensions / 2) + pair
+          let even = samples[index]
+          let odd = samples[index + 1]
+          expected.append(even * cosine[coefficient] - odd * sine[coefficient])
+          expected.append(odd * cosine[coefficient] + even * sine[coefficient])
+        }
+        let rounded = MLXArray(expected).asType(.bfloat16).asArray(Float.self)
+        #expect(try rotary.apply(input, offset: offset).asArray(Float.self) == rounded)
+      }
+    }
+  }
 }
 
 extension FishRuntimeTests {
+  @Test func profilingReportsInclusiveStagesAndResetsBetweenRequests() throws {
+    var clock: TimeInterval = 10
+    let profile = FishProfiler(
+      configuration: .init(directory: URL(fileURLWithPath: "/unused"), mode: .natural, seed: 123),
+      now: { clock })
+    profile.begin(.loading)
+    profile.measure(.codecTotal) {
+      clock += 1
+      profile.measure(.codecOutput) { clock += 2 }
+      clock += 1
+    }
+    let first = try #require(profile.report())
+    #expect(first.elapsedSeconds == 4)
+    #expect(first.stages["codecTotal"]?.totalSeconds == 4)
+    #expect(first.stages["codecOutput"]?.totalSeconds == 2)
+    profile.begin(.loading)
+    #expect(profile.report()?.stages.isEmpty == true)
+    #expect(profile.report()?.elapsedSeconds == 0)
+  }
+
+  @Test func disabledProfilingDoesNotReadTheClockOrChangeTheResult() {
+    let profile = FishProfiler(now: {
+      Issue.record("Disabled diagnostics must not read a clock")
+      return 0
+    })
+    profile.begin(.loading)
+    #expect(profile.measure(.slowStep) { 42 } == 42)
+    #expect(profile.report() == nil)
+    profile.finish()
+  }
+
   @Test func streamingConvolutionMatchesIndependentCausalReferenceAcrossDilatedBoundaries() throws {
     let input = MLXArray((1...23).map(Float.init)).reshaped(1, 1, 23)
     let weight = MLXArray([Float(1), 2, 3]).reshaped(1, 1, 3)
@@ -106,6 +171,7 @@ extension FishRuntimeTests {
         chunks.append(
           try decoder.forward(
             input[0..., 0..., range], at: "test.conv", geometry: .init(dilation: dilation)))
+        decoder.materializeHistory()
       }
       #expect(concatenated(chunks, axis: 2).asArray(Float.self) == reference.asArray(Float.self))
       decoder.reset()
@@ -132,6 +198,7 @@ extension FishRuntimeTests {
       for range in [0..<1, 1..<3, 3..<11] {
         chunks.append(
           try decoder.upsample(input[0..., 0..., range], at: "test.conv", stride: stride))
+        decoder.materializeHistory()
       }
       let actual = concatenated(chunks, axis: 2).asArray(Float.self)
       #expect(actual.count == expected.count)
@@ -149,6 +216,7 @@ extension FishRuntimeTests {
     for range in [0..<9, 9..<129, 129..<132] {
       let chunk = try streaming.apply(input[0..., 0..., range])
       eval(chunk)
+      streaming.materializeHistory()
       chunks.append(chunk)
     }
     let actual = concatenated(chunks, axis: 2).asArray(Float.self)

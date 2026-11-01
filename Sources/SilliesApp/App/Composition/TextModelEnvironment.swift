@@ -12,6 +12,8 @@ actor TextModelEnvironment {
   private let registry: Result<TextModelRegistry, Error>
   private var catalog: TextModelCatalog?
   private var selected: String
+  private let memoryPressure = MemoryPressureMonitor()
+  private let apple = AppleReasoningBackend()
 
   init(store: ModelStore, preference: TextModelPreference, providers: [any TextModelProvider]) {
     self.preference = preference
@@ -35,12 +37,24 @@ actor TextModelEnvironment {
       else { throw ModelStoreError.notInstalled }
     }
     try await registry.get().stop()
+    await apple.stop()
     selected = id
     await preference.save(id)
   }
 
-  func backend() -> any ReasoningBackend {
-    guard selected != Self.appleID else { return AppleReasoningBackend() }
+  func backend() async -> any ReasoningBackend {
+    do {
+      let registry = try registry.get()
+      await memoryPressure.start { [apple] pressure in
+        let retention: TextModelRegistry.Retention =
+          pressure == .constrained ? .memoryPressure : .available
+        await registry.setRetention(retention)
+        await apple.setRetention(retention)
+      }
+    } catch {
+      return UnavailableReasoningBackend(notice: error.localizedDescription)
+    }
+    guard selected != Self.appleID else { return apple }
     do {
       guard let manifest = try modelCatalog().manifests.first(where: { $0.modelID == selected })
       else {
@@ -65,12 +79,17 @@ actor TextModelEnvironment {
     do {
       switch activity {
       case .active: try await registry.get().resume()
-      case .suspended: try await registry.get().suspend()
+      case .suspended:
+        await memoryPressure.stop()
+        await apple.stop()
+        try await registry.get().suspend()
       }
     } catch { fputs("Local text model activity failed: \(error.localizedDescription)\n", stderr) }
   }
 
   func stop() async {
+    await memoryPressure.stop()
+    await apple.stop()
     do { try await registry.get().suspend() } catch {
       fputs("Local text model shutdown failed: \(error.localizedDescription)\n", stderr)
     }

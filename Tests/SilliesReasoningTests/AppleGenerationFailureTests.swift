@@ -12,7 +12,7 @@ import Testing
       instructions: "A friendly companion", messages: [.init(role: .user, content: "Hello")],
       tools: [.init(name: "search", description: "Search saved material", parameters: [])]),
     maximumTokens: 240, style: .conversation)
-  let options = AppleReasoningBackend().options(for: request)
+  let options = AppleGenerationOptions.make(request)
   #expect(options.samplingMode == .greedy)
   #expect(options.temperature == nil)
   #expect(options.maximumResponseTokens == request.maximumTokens)

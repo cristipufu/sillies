@@ -24,6 +24,7 @@ let package = Package(
     .target(name: "SilliesCore", exclude: ["AGENTS.md"]),
     .target(name: "SilliesDesign", resources: [.copy("Themes")]),
     .target(name: "SilliesInference"),
+    .target(name: "SilliesFileSystem"),
     .target(
       name: "SilliesTTS", dependencies: ["SilliesCore", "SilliesModelStore", "SilliesInference"]),
     .target(
@@ -74,7 +75,8 @@ let package = Package(
     .target(name: "SilliesModelValidation"),
     .target(name: "SilliesSpeechApple", dependencies: ["SilliesSpeech"]),
     .target(
-      name: "SilliesModelStore", dependencies: ["SilliesCore"], resources: [.copy("Resources")]),
+      name: "SilliesModelStore", dependencies: ["SilliesCore", "SilliesFileSystem"],
+      resources: [.copy("Resources")]),
     .target(
       name: "SilliesSpeechWhisper",
       dependencies: ["SilliesSpeech", .product(name: "WhisperKit", package: "argmax-oss-swift")]),
@@ -123,6 +125,7 @@ let package = Package(
       dependencies: [
         "SilliesCore", "SilliesModelStore", "SilliesSpeech", "SilliesSpeechWhisper",
         "SilliesSpeechParakeet", "SilliesSpeechNemotron", "SilliesDiarizationNemotron",
+        "SilliesSpeechApple",
       ], path: "Tools/SpeechBenchmark"),
     .executableTarget(
       name: "TextModelBenchmark",
@@ -155,7 +158,10 @@ let package = Package(
       dependencies: ["SilliesTTS", "SilliesModelStore", "SilliesInference"]),
     .testTarget(
       name: "SilliesVaultTests",
-      dependencies: ["SilliesVault", "SilliesCore", "SilliesPersistence", "SilliesReasoning"]),
+      dependencies: [
+        "SilliesVault", "SilliesCore", "SilliesPersistence", "SilliesReasoning",
+        "SilliesModelStore", "SilliesTextModels",
+      ]),
     .testTarget(
       name: "SilliesReasoningTests",
       dependencies: ["SilliesReasoning", "SilliesCore", "SilliesTextModels"]),

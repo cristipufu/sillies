@@ -68,5 +68,10 @@ package struct SpeechWindowResult: Sendable {
 }
 
 package protocol SpeechWindowEngine: Sendable {
+  var finalizationPolicy: SpeechFinalizationPolicy { get }
   func transcribe(_ request: SpeechWindowRequest) async throws -> SpeechWindowResult
+}
+
+extension SpeechWindowEngine {
+  package var finalizationPolicy: SpeechFinalizationPolicy { .decode }
 }

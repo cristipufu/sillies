@@ -2,6 +2,7 @@ import Foundation
 
 /// Download and presentation metadata; runtime implementations live outside the domain.
 public struct TTSModelDescriptor: Codable, Equatable, Identifiable, Sendable {
+  public static let supportedOutputSampleRates = 8_000...96_000
   public let id: String
   public let providerID: String
   public let runtimeVariant: String
@@ -14,6 +15,7 @@ public struct TTSModelDescriptor: Codable, Equatable, Identifiable, Sendable {
   public let languages: [String]
   public let voices: [TTSVoice]
   public let streamsAudio: Bool
+  public let outputSampleRate: Int?
 
   public func supports(language: String) -> Bool {
     let normalized = language.replacingOccurrences(of: "_", with: "-").lowercased()

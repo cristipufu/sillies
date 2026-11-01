@@ -15,10 +15,28 @@ private final class OutputProbe: VoiceOutputDevice, Sendable {
   }
   let completions = Mutex<[@Sendable () -> Void]>([])
   let stopCount = Mutex(0)
+  let preparationCount = Mutex(0)
+  func prepare(sampleRate: Int) throws { preparationCount.withLock { $0 += 1 } }
   func schedule(_ audio: SynthesizedAudio, completed: @escaping @Sendable () -> Void) throws {
     completions.withLock { $0.append(completed) }
   }
   func stop() { stopCount.withLock { $0 += 1 } }
+}
+
+@Test func playbackPreparesBeforePCMAndCancellationDiscardsThePreparedDevice() async throws {
+  let device = OutputProbe()
+  let playback = VoicePlayback(makeDevice: { device })
+  let id = UUID()
+  await playback.start(id: id) { _ in }
+  try await playback.prepare(sampleRate: 24_000, id: id)
+  #expect(device.preparationCount.withLock { $0 } == 1)
+  #expect(device.completions.withLock { $0.isEmpty })
+  await playback.stop(id: id)
+  #expect(device.stopCount.withLock { $0 } == 1)
+  await #expect(throws: CancellationError.self) {
+    try await playback.prepare(sampleRate: 24_000, id: id)
+  }
+  #expect(device.preparationCount.withLock { $0 } == 1)
 }
 
 @Test func playbackAudibleTimingUsesTheDeviceAndRejectsPreviousPlaybackCallbacks() async throws {
@@ -125,8 +143,13 @@ func playbackRenderReferenceUsesTheDeviceClockAndStopsWithOutput() async throws 
   let id = UUID()
   await playback.start(id: id) { _ in }
   // Exercise the hardware renderer without an audible sound or microphone access.
+  let preparation = ProcessInfo.processInfo.systemUptime
+  try await playback.prepare(sampleRate: 16_000, id: id)
+  print("DEVICE PREPARATION: \(ProcessInfo.processInfo.systemUptime - preparation)s")
   let audio = try SynthesizedAudio(samples: Array(repeating: 0, count: 4_096), sampleRate: 16_000)
+  let enqueue = ProcessInfo.processInfo.systemUptime
   try await playback.enqueue(audio, id: id)
+  print("PREPARED DEVICE ENQUEUE: \(ProcessInfo.processInfo.systemUptime - enqueue)s")
   try await playback.finish(id: id)
   #expect(probe.withLock { $0.valid && $0.frames > 0 && $0.samples > 0 })
   print("DEVICE ECHO REFERENCE: \(probe.withLock { $0 })")

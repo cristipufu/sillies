@@ -26,6 +26,10 @@ source references. Each attempt permits four calls and 12 KB of returned text; o
 attempt may reuse cached results in shorter form. Arguments are capped at 2 KB. Model-produced query
 syntax never becomes SQL. Vault search quotes literal keywords, ranks matching terms through FTS,
 and returns at most five records. Screenshot search uses indexed OCR and metadata, not image vision.
+Search output distinguishes `returnedRecordCount` from `totalVaultRecords`, which counts the entire
+Vault, not a filtered category. Full and brief results preserve both counts. Output encoding is stable.
+Cards belong to replies, never a second global progress section. Repeated retrieval preserves evidence
+without duplicating cards already displayed in the same conversation.
 
 These limits are resource boundaries, not a way to determine whether a model's answer is true.
 Evaluate prompt and tool design with real examples; do not add word-specific output filters.
@@ -51,6 +55,10 @@ failures, and translates undocumented engine errors without logging conversation
 Chat distinguishes reply generation from voice synthesis so recovery opens the appropriate settings.
 Real-model checks verify successful replies and retrieved record IDs; they do not guarantee that
 Apple avoids unnecessary read-only searches or that every sentence of its prose is accurate.
+Apple retains its completed native transcript across turns when our committed history matches,
+including tool exchanges. Keep tools registered and rebind execution to the current turn's toolbox.
+Do not remove historical tool results merely because a later question is about general knowledge.
+There is no intent-classification inference step before the normal reply.
 
 ## Context and continuity
 
@@ -87,3 +95,27 @@ Default tests use injected backends and temporary Vaults. The opt-in checks exer
 inference with synthetic records and a bounded long conversation; they do not read the user's Vault
 or download model weights. Test installed downloaded models separately before claiming their
 end-to-end tool quality. See [text providers](text-models.md) for the runtime integration checklist.
+
+The mixed-topic check deliberately tests saved links → general questions → a follow-up referring to
+the earlier link. On the Apple model tested on 2026-11-01 this evaluation has both failed and passed;
+fresh sessions with tools still performed irrelevant searches in the controlled comparison. Passing the
+default injected-backend suite or one model run does not establish reliable native model quality. See the
+[investigation and Apple references](../reports/chat-reliability-2026-11-01.md).
+
+For a controlled integration comparison, run:
+
+```sh
+SILLIES_APPLE_CHAT_COMPARISON=1 bash scripts/test.sh \
+  --filter appleNativeAndApplicationTranscriptsUseIdenticalChatInputs
+```
+
+It compares identical app inputs across retained, restored and reconstructed native sessions and
+both response APIs. It also counts
+actual native session creation through the application service. Its assertions establish integration
+behavior and follow-up continuity, not reliable tool-selection quality; retain the separate mixed-topic
+evaluation above.
+
+To run the same bounded evaluation against an already installed downloaded model, set
+`SILLIES_DOWNLOADED_CHAT_MODEL_CHECK=1`, `SILLIES_CHAT_MODEL_STORE`, `SILLIES_CHAT_MODEL_ID`, and
+`SILLIES_TEXT_HELPER`, then run `bash scripts/test.sh --filter downloadedChatAnswersGeneralKnowledge`.
+This check does not download weights or read the user's Vault.

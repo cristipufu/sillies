@@ -6,6 +6,23 @@ import XCTest
 @testable import SilliesModelStore
 
 final class ModelStoreTests: XCTestCase, @unchecked Sendable {
+  func testInstallationVerificationIsReusedByFirstAndRepeatedAcquisitions() async throws {
+    let fixture = try Fixture()
+    defer { fixture.cleanup() }
+    let reads = Mutex(0)
+    let verifier = ModelArtifactVerifier { file in
+      reads.withLock { $0 += 1 }
+      return try ModelFileDigest.sha256(file)
+    }
+    let store = ModelStore(root: fixture.root, downloader: fixture.downloader, verifier: verifier)
+    try await store.install(fixture.manifest) { _ in }
+    for _ in 0..<2 {
+      let lease = try await store.acquire(fixture.manifest)
+      await lease.close()
+    }
+    XCTAssertEqual(reads.withLock { $0 }, 1)
+  }
+
   func testEachArtifactStartsDownloadingBeforeVerificationAndKeepsAggregateProgress() async throws {
     let fixture = try Fixture()
     defer { fixture.cleanup() }

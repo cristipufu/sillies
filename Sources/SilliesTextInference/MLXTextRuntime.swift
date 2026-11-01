@@ -56,22 +56,39 @@ actor MLXTextRuntime {
     parameters.prefill = PrefillParameters(stepSize: 64)
     let stream = try await container.generate(
       input: input, parameters: parameters, tools: tools.isEmpty ? nil : tools)
+    let output = try await consume(stream, request: generation, receive: receive)
+    Memory.clearCache()
+    return .init(
+      text: output.text.trimmingCharacters(in: .whitespacesAndNewlines), calls: output.calls,
+      metrics: output.metrics)
+  }
+
+  private func consume(
+    _ stream: AsyncStream<Generation>, request: TextGenerationRequest,
+    receive: @escaping TextDeltaSink
+  ) async throws -> TextGenerationOutput {
     var output = ""
     var calls: [TextGenerationOutput.Call] = []
     var completed = false
     var batch = TextStreamBatch()
+    var metrics: TextGenerationMetrics?
     for await event in stream {
       try Task.checkCancellation()
       switch event {
       case .chunk(let text):
         output += text
         if let delta = batch.append(text) { try await receive(delta) }
-        if generation.style == .conversation, TextRepetitionGuard.containsLoop(output) {
+        if request.style == .conversation, TextRepetitionGuard.containsLoop(output) {
           throw TextModelError.repetitiveResponse
         }
       case .info(let info):
         guard case .stop = info.stopReason else { throw TextModelError.invalidResponse }
         completed = true
+        metrics = .init(
+          tokens: .init(
+            processedPrompt: info.promptTokenCount,
+            cachedPrompt: info.cachedPromptTokenCount, generated: info.generationTokenCount),
+          timing: .init(prompt: info.promptTime, generation: info.generateTime))
       case .toolCall(let call):
         calls.append(
           .init(
@@ -85,8 +102,7 @@ actor MLXTextRuntime {
     }
     guard completed else { throw TextModelError.invalidResponse }
     if let delta = batch.flush() { try await receive(delta) }
-    Memory.clearCache()
-    return .init(text: output.trimmingCharacters(in: .whitespacesAndNewlines), calls: calls)
+    return .init(text: output, calls: calls, metrics: metrics)
   }
 
   private func load(_ location: URL) async throws -> ModelContainer {
@@ -95,6 +111,7 @@ actor MLXTextRuntime {
     Memory.clearCache()
     let loaded = try await LLMModelFactory.shared.loadContainer(
       from: location, using: LocalTokenizerLoader())
+    await loaded.update { $0.processor = MLXInputProcessor(base: $0.processor) }
     directory = location
     model = loaded
     return loaded

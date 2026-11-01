@@ -15,16 +15,16 @@ package struct VaultSearchTool: ConversationTool {
     .init(
       name: "search_vault",
       description:
-        "Find the user's saved screenshots, URLs, Stash items and meetings. Searches screenshot OCR, app names, transcripts and notes. Returns up to five ranked records, or recent records for an empty query. This is text search, not image recognition.",
+        "Search only the user's saved screenshots, links, Stash items and meetings when they ask about their saved material. Never use this for general-knowledge questions or web searches. Returns up to five records and a separate totalVaultRecords count for the whole Vault. Use an empty query to list recent items. Cards are already displayed; read a result only if its excerpt is insufficient. Searches text and metadata, not image pixels.",
       parameters: [
-        .init(
-          "query",
-          description:
-            "Short topic keywords, such as an app name or meeting subject. Use an empty string when listing a type of item without a topic, for example all saved URLs. Do not include words like show, find, screenshot or meeting or URL unless part of the actual topic."
-        ),
         .init(
           "category", description: "The type of saved material to find.",
           kind: .choice(VaultSearchRequest.Category.allCases.map(\.rawValue))),
+        .init(
+          "query",
+          description:
+            "Topic keywords within that category, such as an app name or meeting subject. Empty string lists the category. For saved URLs: category=links, query=\"\"."
+        ),
       ])
   }
   package func call(arguments: Data) async throws -> ConversationToolOutput {
@@ -45,6 +45,7 @@ package struct VaultSearchTool: ConversationTool {
           header: match.header, excerpt: String(match.excerpt.prefix(Self.excerptCharacters)),
           links: links))
     }
-    return try VaultToolContent.output(sources)
+    let total = try await library.page(.init(limit: 1)).total
+    return try VaultToolContent.searchOutput(sources, totalVaultRecords: total)
   }
 }

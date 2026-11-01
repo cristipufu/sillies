@@ -311,3 +311,69 @@ private actor StreamingInterfaceReply: ConversationResponding {
   coordinator.resetSelection(in: view, revision: latestAction)
   #expect(view.selectedRange().length == 7)
 }
+
+@Test @MainActor func chatSizingDoesNotRelayoutTheDisplayedTextForSpeculativeWidths() throws {
+  let view = NSTextView(frame: CGRect(x: 0, y: 0, width: 300, height: 160))
+  view.font = .systemFont(ofSize: 15)
+  view.textContainerInset = .zero
+  let container = try #require(view.textContainer)
+  container.lineFragmentPadding = 0
+  container.containerSize = CGSize(width: 300, height: CGFloat.greatestFiniteMagnitude)
+  view.string =
+    "Readable words should stay in the same place while SwiftUI asks about other widths."
+  let layout = try #require(view.layoutManager)
+  layout.ensureLayout(for: container)
+  let displayed = layout.usedRect(for: container)
+  let size = container.containerSize
+  let measurement = ChatMessageLayout()
+  let narrow = try #require(measurement.size(of: view.attributedString(), width: 60))
+  let wide = try #require(measurement.size(of: view.attributedString(), width: 300))
+  #expect(narrow.height > wide.height)
+  layout.ensureLayout(for: container)
+  #expect(container.containerSize == size)
+  #expect(layout.usedRect(for: container) == displayed)
+}
+
+@Test @MainActor func chatMessageTextKeepsItsMeasuredHeightWhileStreamingWithoutFocus() throws {
+  let view = ChatMessageTextView()
+  let coordinator = ChatMessageText.Coordinator { _ in }
+  let passages = [
+    "A small thought.", String(repeating: "A longer reply with readable line spacing. ", count: 18),
+    "One paragraph.\n\nȘtefan says hello 👋🏽. 日本語 العربية.\nOne more paragraph.",
+  ]
+  for text in passages {
+    coordinator.replaceText(in: view, with: text)
+    for width in [CGFloat(320), 160, 280] {
+      let size = try #require(
+        coordinator.measurement.size(of: view.attributedString(), width: width))
+      view.setFrameSize(size)
+      let layout = try #require(view.layoutManager)
+      let container = try #require(view.textContainer)
+      layout.ensureLayout(for: container)
+      #expect(layout.usedRect(for: container).height <= ceil(view.bounds.height))
+      #expect(layout.numberOfGlyphs > 0)
+      #expect(view.string == text)
+      #expect(view.font?.pointSize == ChatTypography.messageSize)
+      #expect(view.window == nil)
+    }
+  }
+  #expect(coordinator.measurement.size(of: view.attributedString(), width: .infinity) == nil)
+  #expect(coordinator.measurement.size(of: view.attributedString(), width: 0) == nil)
+}
+
+@Test @MainActor func chatMessageTypographyFitsTheSharedWindowInBothThemes() async throws {
+  let session = ChatWindowFixture.makeSession()
+  defer { session.finish {} }
+  for _ in 0..<100 {
+    if session.phase == .ready { break }
+    try await Task.sleep(for: .milliseconds(5))
+  }
+  #expect(session.messages.count == 2)
+  for scheme in [ColorScheme.light, .dark] {
+    try renderSkillInterface(
+      ChatSessionView(model: session, openSettings: { _ in }, renderer: "cat")
+        .environment(\.colorScheme, scheme),
+      size: ChatWindowLayout.initialSize,
+      name: "sillies-chat-typography-\(scheme == .light ? "light" : "dark")")
+  }
+}

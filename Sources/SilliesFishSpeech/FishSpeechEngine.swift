@@ -14,15 +14,23 @@ package actor FishSpeechEngine {
     let decoder: FishAudioDecoder
   }
   private var loaded: Loaded?
+  private let profile: FishProfiler
 
-  package init() {}
+  package init(profiling: FishProfileConfiguration? = nil) {
+    profile = FishProfiler(configuration: profiling)
+  }
 
   package func prepare(directory: URL) async throws {
     dispatchPrecondition(condition: .notOnQueue(.main))
-    Memory.cacheLimit = Self.cacheBytes
-    Memory.memoryLimit = min(
-      Self.maximumMemoryBytes, Int(ProcessInfo.processInfo.physicalMemory / 2))
-    if loaded?.directory != directory { try await load(directory) }
+    let requiresLoad = loaded?.directory != directory
+    if requiresLoad { profile.begin(.loading) }
+    defer { if requiresLoad { profile.finish() } }
+    profile.measure(.memoryBudgetInitialization) {
+      Memory.cacheLimit = Self.cacheBytes
+      Memory.memoryLimit = min(
+        Self.maximumMemoryBytes, Int(ProcessInfo.processInfo.physicalMemory / 2))
+    }
+    if requiresLoad { try await load(directory) }
   }
 
   package func synthesize(_ request: SpeechSynthesisRequest, directory: URL) async throws -> [Float]
@@ -42,27 +50,43 @@ package actor FishSpeechEngine {
     guard request.voiceID == "automatic" else { throw TTSError.unsupportedVoice }
     try await prepare(directory: directory)
     guard let loaded else { throw TTSError.interrupted }
-    let prompt = try loaded.prompt.tokens(for: request.text)
+    profile.begin(.synthesis)
+    defer { profile.finish() }
+    let prompt = try profile.measure(.promptTokens) { try loaded.prompt.tokens(for: request.text) }
+    profile.promptTokens = prompt.count
     loaded.decoder.reset()
     defer { loaded.decoder.reset() }
     try loaded.generator.stream(prompt: prompt) { frames in
-      try receive(loaded.decoder.decodeNext(frames))
+      profile.audioFrames += frames.count
+      let samples = try profile.measure(.codecTotal) { try loaded.decoder.decodeNext(frames) }
+      profile.generated(samples: samples.count)
+      try profile.measure(.pcmDelivery) { try receive(samples) }
     }
   }
 
   private func load(_ directory: URL) async throws {
     loaded = nil
-    let configuration = try FishConfiguration.decode(
-      Data(contentsOf: directory.appendingPathComponent("config.json")))
+    let configuration = try profile.measure(.configuration) {
+      try FishConfiguration.decode(
+        Data(contentsOf: directory.appendingPathComponent("config.json")))
+    }
+    let tokenizerStarted = ProcessInfo.processInfo.systemUptime
     let tokenizer = try await AutoTokenizer.from(modelFolder: directory)
+    profile.record(.tokenizer, elapsed: ProcessInfo.processInfo.systemUptime - tokenizerStarted)
     let prompt = FishPrompt(tokenizer: tokenizer, configuration: configuration)
-    try prompt.validateTokenizer()
+    try profile.measure(.tokenizerValidation) { try prompt.validateTokenizer() }
     try Task.checkCancellation()
-    let weights = FishWeights(
-      tensors: try loadArrays(url: directory.appendingPathComponent("model.safetensors")),
-      quantization: configuration.quantization)
-    let generator = try FishCodeGenerator(configuration: configuration, weights: weights)
-    let allCodecWeights = try loadArrays(url: directory.appendingPathComponent("codec.safetensors"))
+    let weights = try profile.measure(.speechWeights) {
+      FishWeights(
+        tensors: try loadArrays(url: directory.appendingPathComponent("model.safetensors")),
+        quantization: configuration.quantization)
+    }
+    let generator = try profile.measure(.generatorSetup) {
+      try FishCodeGenerator(configuration: configuration, weights: weights, profile: profile)
+    }
+    let allCodecWeights = try profile.measure(.codecWeights) {
+      try loadArrays(url: directory.appendingPathComponent("codec.safetensors"))
+    }
     let decoderWeights = allCodecWeights.filter { name, _ in
       name.hasPrefix("decoder.") || name.hasPrefix("quantizer.post_module.")
         || name.hasPrefix("quantizer.upsample.") || name.contains(".codebook.")
@@ -70,7 +94,7 @@ package actor FishSpeechEngine {
     }
     loaded = Loaded(
       directory: directory, prompt: prompt, generator: generator,
-      decoder: FishAudioDecoder(tensors: decoderWeights))
+      decoder: FishAudioDecoder(tensors: decoderWeights, profile: profile))
   }
 
   package static func configureMetalLibrary(_ url: URL) { GPU.metallib = url }

@@ -17,6 +17,10 @@ package actor LocalConversationService: ConversationResponding {
   package func availabilityNotice(localeIdentifier: String?) async -> String? {
     await backend().availabilityNotice(localeIdentifier: localeIdentifier)
   }
+  package func retain(for lifetime: TextModelLifetime) async {
+    let selected = await backend()
+    await (selected as? any ConversationBackend)?.retain(for: lifetime)
+  }
   package func reply(to context: ChatContext, progress: @escaping @Sendable (ChatProgress) -> Void)
     async throws -> ChatReply
   {
@@ -68,6 +72,7 @@ package actor LocalConversationService: ConversationResponding {
   {
     .init(
       companionName: context.companionName, profile: context.profile, messages: context.messages,
-      memory: memory, turnID: context.turnID)
+      memory: memory
+    ).inTurn(context.turnID, session: context.sessionID)
   }
 }

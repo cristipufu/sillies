@@ -73,3 +73,16 @@ recognition quality independently of whether the adapter successfully produced t
 
 See [provider contracts, installation, diarization, and updates](../local-speech-models.md) and
 [the development contract](../../AGENTS.md). For text generation, use the [text-model guide](text-models.md).
+
+## Reusing recognition work
+
+`SpeechEnginePool` leases stateful decoders exclusively by language. Release joins outstanding native
+inference before resetting; failed decoders are discarded. Keep the idle pool bounded and owned by the
+prepared model. Two simultaneous audio sources must never share a decoder's mutable history.
+
+Complete-window engines may declare `.reuseUnchangedDraft` only when their draft already decodes the
+whole supplied buffer and finalization adds no native work. `WindowSpeechChannel` then reuses an exact
+unchanged final window. Incremental engines keep the default `.decode` policy so their final flush is
+never skipped. Preserve this capability through decorators. Partial-transcript cadence is independent
+of this optimization. Whisper's dictionary prompt cache belongs to its loaded tokenizer and is reset
+on a tokenizer change. Honor `SpeechRecognitionContext.priority` in native and consumer tasks.

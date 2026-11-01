@@ -1,0 +1,246 @@
+{
+  "status": "complete",
+  "scope": "Validate each STT, text and TTS adapter optimization; retain improvements only when correctness and measurement support them.",
+  "items": [
+    {
+      "id": "nemotron_engine_reuse",
+      "status": "implemented_validated",
+      "changes": "Exclusive language-keyed engine leases, bounded idle retention, drain before reset, discard failed engines.",
+      "validation": "10 selected speech tests completed. Three identical 4.35-second prerecorded turns transcribed correctly with one initial runtime preparation. Explicit-English dual-source run passed twice: first channel creation 66/68 ms, reused 15/3 microseconds; both sources returned the exact fixture text.",
+      "measurement": {
+        "modelPreparationSeconds": 9.339778625,
+        "channelPreparationSeconds": [
+          5.7375e-05,
+          1.5292e-05,
+          1.675e-05
+        ],
+        "finalizationSeconds": [
+          0.029618583,
+          0.029275333,
+          0.026075792
+        ]
+      }
+    },
+    {
+      "id": "apple_stt_priority",
+      "status": "implemented_unit_validated_native_unavailable",
+      "changes": "Analyzer, result consumer and finalization now honor the shared interactive priority mapping.",
+      "remaining": "Native timing requires installed SpeechAnalyzer assets; no performance claim.",
+      "validation": "Priority propagation regression passed. Installed-language discovery returned English but channel preparation reported missing SpeechAnalyzer assets; no assets were installed for this benchmark."
+    },
+    {
+      "id": "text_context_and_input_reuse",
+      "status": "implemented_validated",
+      "changes": "Retain bounded exact input tokenization and explicit text lifetimes. Native ChatSession experiment removed.",
+      "validation": "Qwen3.5 2B native session correctly fell back to full prefill: its template removes the empty thinking block for historical replies, requiring rewind unsupported by its recurrent cache. Three reused/rebuilt pairs returned violet-42 but reused zero of 872 prompt tokens. No template or recurrent-state workarounds retained. Exact-token-count check matched across 20 repeated budget measurements; native decorator self-check covers changed content/template context and cancellation.",
+      "experiment": [
+        {
+          "totalSeconds": 0.5087965833372436,
+          "label": "reused-0",
+          "metrics": {
+            "processedPromptTokens": 872,
+            "cachedPromptTokens": 0,
+            "promptSeconds": 0.46211910247802734,
+            "generationSeconds": 0.028558969497680664,
+            "extendedSession": true,
+            "generatedTokens": 5
+          },
+          "firstTextSeconds": 0.47399087499070447,
+          "text": "violet-42"
+        },
+        {
+          "totalSeconds": 0.49885616665415,
+          "label": "rebuilt-0",
+          "metrics": {
+            "processedPromptTokens": 872,
+            "cachedPromptTokens": 0,
+            "promptSeconds": 0.4637690782546997,
+            "generationSeconds": 0.028303980827331543,
+            "extendedSession": false,
+            "generatedTokens": 5
+          },
+          "firstTextSeconds": 0.46455633333243895,
+          "text": "violet-42"
+        },
+        {
+          "totalSeconds": 0.5041942083335016,
+          "label": "reused-1",
+          "metrics": {
+            "processedPromptTokens": 872,
+            "cachedPromptTokens": 0,
+            "promptSeconds": 0.4587138891220093,
+            "generationSeconds": 0.028157949447631836,
+            "extendedSession": true,
+            "generatedTokens": 5
+          },
+          "firstTextSeconds": 0.46968270832439885,
+          "text": "violet-42"
+        },
+        {
+          "totalSeconds": 0.49741166665626224,
+          "label": "rebuilt-1",
+          "metrics": {
+            "processedPromptTokens": 872,
+            "cachedPromptTokens": 0,
+            "promptSeconds": 0.4624300003051758,
+            "generationSeconds": 0.02785205841064453,
+            "extendedSession": false,
+            "generatedTokens": 5
+          },
+          "firstTextSeconds": 0.4635557083238382,
+          "text": "violet-42"
+        },
+        {
+          "totalSeconds": 0.5060917083319509,
+          "label": "reused-2",
+          "metrics": {
+            "processedPromptTokens": 872,
+            "cachedPromptTokens": 0,
+            "promptSeconds": 0.45978808403015137,
+            "generationSeconds": 0.027861952781677246,
+            "extendedSession": true,
+            "generatedTokens": 5
+          },
+          "firstTextSeconds": 0.47130074999586213,
+          "text": "violet-42"
+        },
+        {
+          "totalSeconds": 0.4918855833384441,
+          "label": "rebuilt-2",
+          "metrics": {
+            "processedPromptTokens": 872,
+            "cachedPromptTokens": 0,
+            "promptSeconds": 0.4580240249633789,
+            "generationSeconds": 0.02710592746734619,
+            "extendedSession": false,
+            "generatedTokens": 5
+          },
+          "firstTextSeconds": 0.4587393749970943,
+          "text": "violet-42"
+        }
+      ],
+      "measurement": {
+        "tokens": 823,
+        "rounds": 20,
+        "beforeMedianSeconds": 0.009841416671406478,
+        "afterMedianSeconds": 0.00012387499737087637
+      }
+    },
+    {
+      "id": "text_model_retention",
+      "status": "implemented_validated",
+      "changes": "Shared inference lifetime, pressure-aware text retention, revision-aware identity, registry owns helper expiry.",
+      "validation": "Retention/end-of-lifetime/pressure eviction test and existing preemption tests pass."
+    },
+    {
+      "id": "audio_output_preparation_and_reuse",
+      "status": "early_preparation_implemented_validated",
+      "changes": "Fixed sample-rate catalog hint permits device preparation concurrently with model/text work; stop and echo-reference lifetime unchanged.",
+      "validation": "18 focused tests completed, including silent real-hardware render-clock, short-utterance echo reference and stopped-output checks.",
+      "measurement": {
+        "devicePreparationSeconds": 0.09535087499534711,
+        "preparedDeviceEnqueueSeconds": 0.007963666663272306
+      },
+      "decision": "No persistent idle engine: move preparation off first-PCM delivery without adding device/echo producers between replies."
+    },
+    {
+      "id": "kokoro_derived_assets",
+      "status": "implemented_validated",
+      "changes": "Selected voice conversion only; verified binaries bypass conversion. Source/version-keyed derived cache validates output digest and bounds.",
+      "validation": "Cache corruption/replacement/symlink tests, packaged binary/JSON regression, offline native voice switching, and three paired same-fixture runs.",
+      "measurement": [
+        {
+          "pair": 1,
+          "beforeProviderPreparationSeconds": 1.4083838749938877,
+          "afterProviderPreparationSeconds": 0.35904316666710656
+        },
+        {
+          "pair": 2,
+          "beforeProviderPreparationSeconds": 0.635531333333347,
+          "afterProviderPreparationSeconds": 0.350524833338568
+        },
+        {
+          "pair": 3,
+          "beforeProviderPreparationSeconds": 0.6374015833280282,
+          "afterProviderPreparationSeconds": 0.355746208326309
+        }
+      ],
+      "identicalPairedWAVs": 15
+    },
+    {
+      "id": "whisper_parakeet_partial_decoding_and_dictionary",
+      "status": "implemented_validated",
+      "changes": "Provider-declared complete drafts can finalize identical audio without another prediction; incremental providers still flush. Whisper dictionary tokenization is cached per loaded tokenizer.",
+      "validation": "Integration test confirms one decode for identical complete-window finalization and two for flush-required engines; dictionary tests cover repeat/change/clear and Unicode. Two native Parakeet turns returned the fixture transcript; finalization 46/57 ms. Whisper weights unavailable; tokenizer cache validated with injected encoder.",
+      "decision": "Keep partial cadence unchanged: no recognition-quality evidence supports reducing draft work further."
+    },
+    {
+      "id": "apple_text_session_reuse",
+      "status": "implemented_validated",
+      "changes": "One exact committed native continuation owned by stable backend; turn-local tool router; discard after errors, tool-result turns, edits, compaction, lifetime end and memory pressure.",
+      "measurement": {
+        "reusedSeconds": [
+          0.3817736250057351,
+          0.3668247916648397,
+          0.36980762500024866
+        ],
+        "rebuiltSeconds": [
+          0.6699077083467273,
+          0.6601853750034934,
+          0.6537732083379524
+        ]
+      },
+      "validation": "Application adapter native comparison returned violet-42 in all six calls. Failure, exact-history and pressure tests passed; tool-routing regression added. Full suite includes current-toolbox routing, late-call rejection and rebuilding after a tool result."
+    },
+    {
+      "id": "pocket_session_reuse",
+      "status": "persistent_session_rejected",
+      "finding": "Pinned native API provides utterance indices but no utterance completion signal, and queues output without bounded backpressure. Removing finish alone would break the phrase request protocol.",
+      "decision": "Keep bounded per-phrase completion. Existing voice snapshots avoid repeating neural voice prefill. A native end-of-utterance event and bounded frame delivery are prerequisites for a persistent session; no timing-gap heuristic.",
+      "measurement": {
+        "firstPCMSeconds": [
+          0.24461879166483413,
+          0.05643858332769014,
+          0.052025041659362614,
+          0.044291375001193956,
+          0.04181329166749492
+        ]
+      },
+      "validation": "Offline native profile plus change-voice/change-back completed with valid audio. Language matching inspected in the pinned runtime; multilingual audio quality was not assessed."
+    },
+    {
+      "id": "qwen_tts_prompt_reuse",
+      "status": "existing_cache_validated_no_change",
+      "finding": "Adapter and pinned runtime already cache and match voice/language prompts.",
+      "measurement": {
+        "firstPCMSeconds": [
+          0.07792216667439789,
+          0.07199037499958649,
+          0.07288483332376927,
+          0.07920204167021438,
+          0.07509304165432695
+        ]
+      },
+      "validation": "Offline native profile plus change-voice/change-back completed with valid audio. Language matching inspected in the pinned runtime; multilingual audio quality was not assessed.",
+      "decision": "Pinned runtime already matches voice, language and instruction before using its prompt cache; no extra cache added."
+    },
+    {
+      "id": "kokoro_leading_quiet_audio",
+      "status": "investigated_trimming_rejected",
+      "finding": "Native V3 pipeline returns the learned alignment/vocoder output directly (frames * 600 samples), without adapter-inserted leading padding. The fixture has nonzero samples before the audibility threshold is crossed.",
+      "decision": "Preserve waveform. A low-amplitude threshold is not proof that initial phonemes can be removed; no clipping or shortening of model output."
+    }
+  ],
+  "validation": {
+    "headlessMakeCheck": "passed",
+    "receiptVerifiedTests": 560,
+    "architectureFixtures": 84,
+    "packageBoundaryFixtures": 16,
+    "packagedHelperSelfChecks": "passed",
+    "helperParentExitChecks": "passed",
+    "silentHardwarePlayback": "passed",
+    "visibleGUI": "not run",
+    "appRestarted": false,
+    "committedOrPushed": false
+  }
+}

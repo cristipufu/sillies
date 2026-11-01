@@ -8,15 +8,20 @@ final class FishAudioDecoder {
   private static let latentUpsampleStages = 2
   private static let latentUpsampleFactor = 2
   private static let layerNormalizationEpsilon: Float = 1e-6
+  private static let blockStages: [FishProfileStage] = [
+    .codecBlockFirst, .codecBlockSecond, .codecBlockThird, .codecBlockFourth,
+  ]
   private let weights: FishWeights
   private let convolution: FishCodecConvolution
   private let transformer: FishCodecTransformer
   private var decodedFrames = 0
+  private let profile: FishProfiler
 
-  init(tensors: [String: MLXArray]) {
+  init(tensors: [String: MLXArray], profile: FishProfiler = FishProfiler()) {
+    self.profile = profile
     weights = FishWeights(tensors: tensors)
-    convolution = FishCodecConvolution(weights: weights)
-    transformer = FishCodecTransformer(weights: weights)
+    convolution = FishCodecConvolution(weights: weights, profile: profile)
+    transformer = FishCodecTransformer(weights: weights, profile: profile)
   }
 
   func reset() {
@@ -36,31 +41,45 @@ final class FishAudioDecoder {
       decodedFrames <= FishConfiguration.maximumAudioFrames - frames.count,
       frames.allSatisfy({ $0.count == FishConfiguration.codebookCount })
     else { throw FishError.emptyAudio }
-    var hidden = try decodeCodebooks(frames)
-    hidden = try transformer.apply(hidden)
+    var hidden = try profile.tensor(.codecCodebooks) { try decodeCodebooks(frames) }
+    hidden = try profile.tensor(.codecAttention) { try transformer.apply(hidden) }
     for stage in 0..<Self.latentUpsampleStages {
       let path = "quantizer.upsample.\(stage)"
-      hidden = try convolution.upsample(
-        hidden, at: path + ".0.conv", stride: Self.latentUpsampleFactor)
-      hidden = try convNext(hidden, at: path + ".1")
+      hidden = try profile.tensor(stage == 0 ? .codecUpsampleFirst : .codecUpsampleSecond) {
+        let result = try convolution.upsample(
+          hidden, at: path + ".0.conv", stride: Self.latentUpsampleFactor)
+        return try convNext(result, at: path + ".1")
+      }
     }
-    hidden = try convolution.forward(hidden, at: "decoder.model.0")
+    hidden = try profile.tensor(.codecInput) {
+      try convolution.forward(hidden, at: "decoder.model.0")
+    }
     for (index, stride) in Self.decoderRates.enumerated() {
       try Task.checkCancellation()
-      hidden = try decoderBlock(hidden, at: "decoder.model.\(index + 1).block", stride: stride)
-      eval(hidden)
+      hidden = try profile.measure(Self.blockStages[index]) {
+        let result = try decoderBlock(
+          hidden, at: "decoder.model.\(index + 1).block", stride: stride)
+        eval(result)
+        return result
+      }
     }
-    hidden = try convolution.snake(hidden, at: "decoder.model.5")
-    hidden = try convolution.forward(hidden, at: "decoder.model.6")
     let sampleCount = frames.count * FishConfiguration.samplesPerFrame
-    guard hidden.shape[0...1] == [1, 1], hidden.dim(2) >= sampleCount else {
-      throw FishError.emptyAudio
+    let samples = try profile.measure(.codecOutput) {
+      var output = try convolution.snake(hidden, at: "decoder.model.5")
+      output = try convolution.forward(output, at: "decoder.model.6")
+      guard output.shape[0...1] == [1, 1], output.dim(2) >= sampleCount else {
+        throw FishError.emptyAudio
+      }
+      let audio = tanh(output)[0, 0, 0..<sampleCount].asType(.float32)
+      eval(audio)
+      try Task.checkCancellation()
+      return audio.asArray(Float.self)
     }
-    let audio = tanh(hidden)[0, 0, 0..<sampleCount].asType(.float32)
-    eval(audio)
-    try Task.checkCancellation()
+    // Bound retained graphs at each chunk without fencing every individual convolution/attention.
+    convolution.materializeHistory()
+    transformer.materializeHistory()
     decodedFrames += frames.count
-    return audio.asArray(Float.self)
+    return samples
   }
 
   private func decodeCodebooks(_ frames: [[Int32]]) throws -> MLXArray {

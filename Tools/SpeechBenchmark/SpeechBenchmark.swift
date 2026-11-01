@@ -3,6 +3,7 @@ import Foundation
 import SilliesCore
 import SilliesModelStore
 import SilliesSpeech
+import SilliesSpeechApple
 import SilliesSpeechNemotron
 import SilliesSpeechParakeet
 import SilliesSpeechWhisper
@@ -28,6 +29,19 @@ private actor BenchmarkRunner {
       )
     }
     let command = arguments[0]
+    if arguments[1] == "apple", command == "dictate" || command == "run" {
+      let model = AppleSpeechProvider()
+      let catalog = try await model.languages(.init(model: .apple, availability: .installed))
+      guard let language = catalog.installedLanguage(matching: "en-US") else {
+        throw SpeechError.unavailable("English Apple speech assets are not installed.")
+      }
+      for path in arguments.dropFirst(3) {
+        try await exercise(
+          model, file: URL(fileURLWithPath: path),
+          mode: command == "dictate" ? .dictation : .meeting, language: language)
+      }
+      return
+    }
     let manifest = try SpeechModelCatalog.bundled().manifest(for: arguments[1])
     let store = ModelStore(root: URL(fileURLWithPath: arguments[2], isDirectory: true))
     if command == "check" {
@@ -77,22 +91,30 @@ private actor BenchmarkRunner {
       for path in arguments.dropFirst(3) {
         try await exercise(
           model, file: URL(fileURLWithPath: path),
-          mode: command == "dictate" ? .dictation : .meeting)
+          mode: command == "dictate" ? .dictation : .meeting,
+          language: ProcessInfo.processInfo.environment["SILLIES_SPEECH_LANGUAGE"].map {
+            SpeechLanguage(id: $0, name: $0, isInstalled: true)
+          } ?? .automatic)
       }
     }
     withExtendedLifetime(lease) {}
   }
 
-  private func exercise(_ model: any PreparedSpeechModel, file url: URL, mode: Mode) async throws {
+  private func exercise(
+    _ model: any PreparedSpeechModel, file url: URL, mode: Mode,
+    language: SpeechLanguage
+  ) async throws {
     let outputs = (0..<(mode == .dictation ? 1 : 2)).map { _ in BenchmarkOutput() }
     var channels: [any LocalSpeechChannel] = []
     for output in outputs {
       var request = SpeechChannelRequest(
-        language: .automatic, output: output.receive, failure: output.fail)
+        language: language, output: output.receive, failure: output.fail)
       if mode == .dictation {
         request.context = .init(vocabulary: ["Alex", "Ștefan", "API_v2"], priority: .interactive)
       }
+      let channelStarted = ContinuousClock.now
       channels.append(try await model.makeChannel(request))
+      print("Channel ready in \(channelStarted.duration(to: .now))")
     }
     defer { for channel in channels { channel.cancel() } }
     let probe = MainActorProbe()

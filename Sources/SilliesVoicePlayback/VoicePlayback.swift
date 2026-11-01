@@ -64,6 +64,16 @@ package actor VoicePlayback: SpeechPlayback {
     }
   }
 
+  package func prepare(sampleRate: Int, id: UUID) throws {
+    dispatchPrecondition(condition: .notOnQueue(.main))
+    try Task.checkCancellation()
+    try requireSession(id)
+    do { try outputDevice(id: id).prepare(sampleRate: sampleRate) } catch {
+      reset()
+      throw error
+    }
+  }
+
   package func finish(id: UUID) async throws {
     try await withTaskCancellationHandler {
       try Task.checkCancellation()
@@ -96,17 +106,8 @@ package actor VoicePlayback: SpeechPlayback {
 
   private func schedule(_ audio: SynthesizedAudio, id: UUID, seconds: Double) throws {
     dispatchPrecondition(condition: .notOnQueue(.main))
-    let device = device ?? makeDevice()
+    let device = outputDevice(id: id)
     let token = generation
-    if self.device == nil {
-      device.onInterruption { [weak self] in
-        Task { await self?.outputInterrupted(id: id, generation: token) }
-      }
-      device.onAudibleOutput { [weak self] time in
-        Task { await self?.audibleOutput(time, id: id, generation: token) }
-      }
-    }
-    self.device = device
     let power =
       audio.samples.reduce(0.0) { $0 + Double($1) * Double($1) } / Double(audio.samples.count)
     let level = min(1, sqrt(power) * Self.meterGain)
@@ -124,6 +125,20 @@ package actor VoicePlayback: SpeechPlayback {
     }
     watchProgress(id: id, generation: token)
     if pending.count == 1 { receive?(.speaking(level: level)) }
+  }
+
+  private func outputDevice(id: UUID) -> any VoiceOutputDevice {
+    if let device { return device }
+    let device = makeDevice()
+    let token = generation
+    device.onInterruption { [weak self] in
+      Task { await self?.outputInterrupted(id: id, generation: token) }
+    }
+    device.onAudibleOutput { [weak self] time in
+      Task { await self?.audibleOutput(time, id: id, generation: token) }
+    }
+    self.device = device
+    return device
   }
 
   private func completed(id: UUID, generation token: UUID, buffer: UUID) {

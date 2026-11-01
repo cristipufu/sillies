@@ -223,6 +223,9 @@
   "WhisperPromptAlignmentTests.swift": {
     "default": "headless"
   },
+  "WhisperVocabularyTests.swift": {
+    "default": "headless"
+  },
   "WindowMetadataProcessTests.swift": {
     "default": "headless",
     "tests": {

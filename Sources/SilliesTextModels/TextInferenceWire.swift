@@ -26,12 +26,14 @@ package struct TextInferenceResponse: Codable, Sendable {
   package let text: String?
   package let failure: String?
   package let calls: [ConversationToolCall]?
+  package let metrics: TextGenerationMetrics?
   package init(output: TextGenerationOutput) {
     inputTokens = output.inputTokens
     failureCode = nil
     text = output.text
     failure = nil
     calls = output.calls
+    metrics = output.metrics
   }
   package init(failure: String, code: FailureCode? = nil) {
     inputTokens = nil
@@ -39,6 +41,7 @@ package struct TextInferenceResponse: Codable, Sendable {
     text = nil
     self.failure = failure
     calls = nil
+    metrics = nil
   }
 }
 

@@ -154,6 +154,24 @@ enum ArchitectureFixtures {
         source: "import AppKit", path: "Sources/SilliesModelStore/Store.swift",
         rules: ["module-boundary"]),
       .init(
+        source: "import Darwin", path: "Sources/SilliesModelStore/Store.swift",
+        rules: ["module-boundary"]),
+      .init(
+        source: "import AppKit", path: "Sources/SilliesFileSystem/File.swift",
+        rules: ["module-boundary"]),
+      .init(
+        source: "func verify() { readWeights() }",
+        path: "Sources/SilliesModelStore/ModelArtifactVerifier.swift", rules: ["worker-entry"]),
+      .init(
+        source: "func materialize() { readCache() }",
+        path: "Sources/SilliesModelStore/ModelDerivedArtifact.swift", rules: ["worker-entry"]),
+      .init(
+        source: "func prepare() { startDevice() }",
+        path: "Sources/SilliesVoicePlayback/NativeVoiceOutput.swift", rules: ["worker-entry"]),
+      .init(
+        source: "func withFile() { openFile() }",
+        path: "Sources/SilliesFileSystem/RegularFileReader.swift", rules: ["worker-entry"]),
+      .init(
         source: "func load() { readWeights() }",
         path: "Sources/SilliesSpeechWhisper/WhisperWindowEngine.swift", rules: ["worker-entry"]),
       .init(

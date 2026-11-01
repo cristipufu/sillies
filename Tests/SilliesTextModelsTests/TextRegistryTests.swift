@@ -68,6 +68,44 @@ import Testing
   }
 }
 
+@Test func activeConversationRetainsTextUntilItEndsAndPressureCanEvictIt() async throws {
+  let fixture = try TextFixture()
+  defer { fixture.remove() }
+  let store = ModelStore(root: fixture.root, downloader: FixtureDownloader())
+  try await store.install(fixture.manifest) { _ in }
+  let model = RetainedTextProbe()
+  let registry = try TextModelRegistry(
+    store: store, providers: [RetainedTextProvider(model: model)], activity: InferenceActivity(),
+    idleDuration: .milliseconds(10))
+  let lifetime = TextModelLifetime()
+  await registry.retain(for: lifetime)
+  _ = try await registry.generate(fixture.request, using: fixture.manifest)
+  try await Task.sleep(for: .milliseconds(60))
+  #expect(await model.stops == 0)
+  await lifetime.end()
+  try await waitFor { await model.stops == 1 }
+  let another = TextModelLifetime()
+  await registry.retain(for: another)
+  _ = try await registry.generate(fixture.request, using: fixture.manifest)
+  await registry.setRetention(.memoryPressure)
+  #expect(await model.stops == 2)
+  await registry.stop()
+}
+
+private struct RetainedTextProvider: TextModelProvider {
+  let id = "mlx"
+  let model: RetainedTextProbe
+  func prepare(_ configuration: TextModelPreparation) async throws -> any PreparedTextModel {
+    model
+  }
+}
+
+private actor RetainedTextProbe: PreparedTextModel {
+  private(set) var stops = 0
+  func generate(_ request: TextGenerationRequest) async throws -> String { "Ready" }
+  func stop() { stops += 1 }
+}
+
 private struct ProbeProvider: TextModelProvider {
   let id = "mlx"
   let model: ProbeTextModel

@@ -12,7 +12,14 @@ final class FishCodecTransformer {
   private var position = 0
   private var keys: [String: MLXArray] = [:]
   private var values: [String: MLXArray] = [:]
-  init(weights: FishWeights) { self.weights = weights }
+  private let profile: FishProfiler
+  init(weights: FishWeights, profile: FishProfiler = FishProfiler()) {
+    self.weights = weights
+    self.profile = profile
+  }
+  func materializeHistory() {
+    profile.measure(.codecAttentionHistoryEvaluation) { eval(Array(keys.values) + values.values) }
+  }
   func reset() {
     position = 0
     keys.removeAll()
@@ -72,7 +79,6 @@ final class FishCodecTransformer {
     let start = max(0, allKeys.dim(2) - Self.attentionWindow)
     let retainedKeys = allKeys[0..., 0..., start..., 0...]
     let retainedValues = allValues[0..., 0..., start..., 0...]
-    eval(retainedKeys, retainedValues)
     keys[path] = retainedKeys
     values[path] = retainedValues
     let attended = try MLXFast.scaledDotProductAttention(

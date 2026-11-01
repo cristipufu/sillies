@@ -100,3 +100,23 @@ synthetic greeting, no user records, and does not download weights.
 
 See [runtime ownership and limits](../local-text-models.md) and [the development contract](../../AGENTS.md).
 For audio-to-text, use the [speech-model guide](speech-models.md).
+
+## Runtime and conversation reuse
+
+Chat supplies an explicit `TextModelLifetime`; the registry retains idle downloaded weights while a
+consumer remains active, with memory-pressure eviction taking precedence. The helper must not impose
+an independent idle expiry. Ending the last consumer allows normal idle eviction; stopping or
+suspending the environment releases its runtime and pressure monitor.
+
+The MLX input processor keeps one bounded, exact text tokenization to avoid repeating template work
+between context measurement and generation. Its key includes messages, tools and template context.
+Model reloads clear it. This does **not** reuse inference KV state: templates that rewrite historical
+messages can require a rewind unsupported by recurrent caches. Do not modify a model template merely
+to force a cache hit.
+
+Apple conversation sessions retain one exact completed continuation. Session identity, instructions,
+roles, tool schemas and committed history must match. Tool invocation uses the current turn's toolbox;
+a turn with tool exchanges is rebuilt from canonical history next time. Cancellation, errors, context
+compaction, edits, session end and memory pressure invalidate reuse. Native sessions never own Vault
+storage or a long-lived turn budget. The bounded `TextModelBenchmark apple-context` and `tokens` modes
+measure session and input preparation separately; neither downloads models.

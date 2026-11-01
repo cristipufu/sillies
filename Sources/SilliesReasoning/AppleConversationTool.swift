@@ -7,12 +7,19 @@ struct AppleConversationTool: Tool {
   let name: String
   let description: String
   let parameters: GenerationSchema
-  let toolbox: ConversationToolbox
+  private let invoke: @Sendable (ConversationToolCall) async throws -> String
 
   init(_ definition: ConversationToolDefinition, toolbox: ConversationToolbox) throws {
+    try self.init(definition, invoke: toolbox.invoke)
+  }
+
+  init(
+    _ definition: ConversationToolDefinition,
+    invoke: @escaping @Sendable (ConversationToolCall) async throws -> String
+  ) throws {
     name = definition.name
     description = definition.description
-    self.toolbox = toolbox
+    self.invoke = invoke
     parameters = try GenerationSchema(
       root: DynamicGenerationSchema(
         name: definition.name + "Arguments",
@@ -32,7 +39,7 @@ struct AppleConversationTool: Tool {
     }
   }
   func call(arguments: GeneratedContent) async throws -> String {
-    try await toolbox.invoke(
+    try await invoke(
       .init(id: UUID().uuidString, name: name, arguments: Data(arguments.jsonString.utf8)))
   }
 }

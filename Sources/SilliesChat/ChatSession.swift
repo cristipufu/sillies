@@ -26,6 +26,7 @@ package final class ChatSession {
   package var spokenReplies = true
   package private(set) var isVoiceConversationActive = false
   package private(set) var discoveredSources: [ChatSource] = []
+  private var sourceCardOwners: [UUID: UUID] = [:]
   @ObservationIgnored private var memory = ConversationMemory()
   private var toolActivity: String?
   package var onChange: (@MainActor () -> Void)?
@@ -39,7 +40,7 @@ package final class ChatSession {
   @ObservationIgnored private var voiceSequence = 0
   @ObservationIgnored private var spokenDelivery: ChatTurnDelivery?
   @ObservationIgnored private var voiceTurnEndedAt: ContinuousClock.Instant?
-  @ObservationIgnored private let voiceLifetime = SpeechModelLifetime()
+  @ObservationIgnored private let conversationLifetime = SpeechModelLifetime()
   package var firstTextLatency: Duration? { spokenDelivery?.snapshot.firstText }
   package var firstAudioLatency: Duration? { spokenDelivery?.snapshot.firstAudio }
   package var firstPCMLatency: Duration? { spokenDelivery?.snapshot.firstPCM }
@@ -57,7 +58,7 @@ package final class ChatSession {
     microphone = ChatMicrophone(services: services)
   }
 
-  deinit { Task { [voiceLifetime] in await voiceLifetime.end() } }
+  deinit { Task { [conversationLifetime] in await conversationLifetime.end() } }
 
   package var isRecording: Bool { phase == .preparingMicrophone || phase == .listening }
   package var isWorking: Bool { [.thinking, .preparingVoice, .speaking].contains(phase) }
@@ -102,6 +103,7 @@ package final class ChatSession {
   package func retry() {
     guard canRetry else { return }
     if messages.last?.completion == .interrupted { messages.removeLast() }
+    rebuildSourceCardOwners()
     requestReply()
   }
 
@@ -188,7 +190,7 @@ package final class ChatSession {
   }
 
   package func finish(completion: @escaping @MainActor () -> Void) {
-    Task { [voiceLifetime] in await voiceLifetime.end() }
+    Task { [conversationLifetime] in await conversationLifetime.end() }
     isVoiceConversationActive = false
     voiceTurnEndedAt = nil
     cancelReply()
@@ -214,11 +216,12 @@ package final class ChatSession {
       personality: profile.personality, languageIdentifier: language,
       preferredVoices: profile.preferredVoices)
     let context = ChatContext(
-      companionName: companionName, profile: profile, messages: messages, memory: memory,
-      turnID: token)
+      companionName: companionName, profile: profile, messages: messages, memory: memory
+    ).inTurn(token, session: conversationLifetime.id)
     setPhase(.thinking)
-    operation = Task { [weak self, services, voiceLifetime] in
+    operation = Task { [weak self, services, conversationLifetime] in
       do {
+        await services.conversation.retain(for: conversationLifetime)
         let turn = ChatTurnOperation(
           services: services,
           delivery: .init(
@@ -237,7 +240,7 @@ package final class ChatSession {
                 delivery.received(update)
                 self?.receivePlayback(update, token: token)
               }
-            }), voiceLifetime: voiceLifetime)
+            }), voiceLifetime: conversationLifetime)
         let result = try await turn.run(
           context, output: self?.spokenReplies == true ? .spoken : .text)
         try Task.checkCancellation()
@@ -273,7 +276,24 @@ package final class ChatSession {
   }
 
   package func presentedMessage(_ message: ChatMessage) -> ChatMessage {
-    message.id == streamingMessageID ? message.withText(streamedText) : message
+    guard message.id == streamingMessageID else { return message }
+    return message.withText(streamedText).withEvidence(
+      .init(sources: discoveredSources, exchanges: message.exchanges))
+  }
+
+  package func sourceCards(for message: ChatMessage) -> [ChatSource] {
+    presentedMessage(message).sources.filter { sourceCardOwners[$0.id] == message.id }
+  }
+
+  private func claimSourceCards(_ sources: [ChatSource], for messageID: UUID) {
+    for source in sources where sourceCardOwners[source.id] == nil {
+      sourceCardOwners[source.id] = messageID
+    }
+  }
+
+  private func rebuildSourceCardOwners() {
+    sourceCardOwners.removeAll(keepingCapacity: true)
+    for message in messages { claimSourceCards(message.sources, for: message.id) }
   }
 
   private func waitingForVoice(turn: UUID) {
@@ -285,25 +305,32 @@ package final class ChatSession {
   private func receiveText(_ text: String, turn: UUID) {
     guard turnID == turn, isWorking else { return }
     streamedText = text
-    if streamingMessageID != turn {
-      streamingMessageID = turn
-      messages.append(
-        ChatMessage(id: turn, role: .companion, text: text)
-          .withDelivery(.streaming, spokenText: nil))
-    }
+    beginReplyPresentation(turn)
     onChange?()
+  }
+
+  private func beginReplyPresentation(_ turn: UUID) {
+    guard streamingMessageID != turn else { return }
+    streamingMessageID = turn
+    messages.append(
+      ChatMessage(id: turn, role: .companion, text: "")
+        .withDelivery(.streaming, spokenText: nil))
   }
 
   private func completeReply(_ reply: ChatReply, turn: UUID) {
     memory = reply.memory
-    if messages.last?.id == turn { messages.removeLast() }
-    messages.append(
-      ChatMessage(
-        id: turn, role: .companion, text: reply.text,
-        evidence: .init(sources: reply.sources, exchanges: reply.exchanges)
-      )
-      .withDelivery(.complete, spokenText: spokenDelivery?.snapshot.spokenText))
+    let message = ChatMessage(
+      id: turn, role: .companion, text: reply.text,
+      evidence: .init(sources: reply.sources, exchanges: reply.exchanges)
+    )
+    .withDelivery(.complete, spokenText: spokenDelivery?.snapshot.spokenText)
+    if let index = messages.firstIndex(where: { $0.id == turn }) {
+      messages[index] = message
+    } else {
+      messages.append(message)
+    }
     clearStreamPresentation()
+    rebuildSourceCardOwners()
     discoveredSources = []
     toolActivity = nil
   }
@@ -323,17 +350,46 @@ package final class ChatSession {
   }
 
   private func receive(_ progress: ChatProgress, turn: UUID) {
-    guard turnID == turn,
-      isWorking || (phase == .ready && messages.last?.role == .user)
-    else { return }
+    guard turnID == turn, phase != .finished else { return }
+    guard isWorking else {
+      // Progress crosses an asynchronous UI delivery boundary. A search may finish before the
+      // reply fails, yet its cards reach the UI after the failure has already been presented.
+      if failure != nil, messages.last?.completion != .complete,
+        case .sources(let sources) = progress
+      {
+        preserveSourcesAfterFailure(sources, turn: turn)
+      }
+      return
+    }
     switch progress {
     case .compacting: toolActivity = String(localized: "Remembering our conversation…")
     case .memory(let value):
       memory = value
       toolActivity = nil
     case .usingTool(let activity): toolActivity = activity
-    case .sources(let sources): discoveredSources = sources
+    case .sources(let sources):
+      discoveredSources = sources
+      if sources.contains(where: { sourceCardOwners[$0.id] == nil }) {
+        beginReplyPresentation(turn)
+        claimSourceCards(sources, for: turn)
+      }
     }
+    onChange?()
+  }
+
+  private func preserveSourcesAfterFailure(_ sources: [ChatSource], turn: UUID) {
+    discoveredSources = sources
+    if let index = messages.firstIndex(where: { $0.id == turn }) {
+      messages[index] = messages[index].withEvidence(
+        .init(sources: sources, exchanges: messages[index].exchanges))
+    } else if sources.contains(where: { sourceCardOwners[$0.id] == nil }) {
+      messages.append(
+        ChatMessage(
+          id: turn, role: .companion, text: "",
+          evidence: .init(sources: sources)
+        ).withDelivery(.interrupted, spokenText: nil))
+    }
+    claimSourceCards(sources, for: turn)
     onChange?()
   }
 

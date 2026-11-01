@@ -20,7 +20,10 @@ import SilliesTTS
       FishSpeechEngine.configureMetalLibrary(library)
     }
     if CommandLine.arguments.contains("--self-test") {
-      do { try FishSpeechEngine.validateCompute() } catch {
+      do {
+        try FishSpeechEngine.validateCompute()
+        try await Task.detached { try KokoroPreparationSelfCheck.run() }.value
+      } catch {
         fputs("TTS GPU self-test failed: \(error.localizedDescription)\n", stderr)
         exit(EXIT_FAILURE)
       }

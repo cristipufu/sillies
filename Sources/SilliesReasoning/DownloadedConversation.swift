@@ -1,6 +1,9 @@
 import SilliesTextModels
 
 extension DownloadedReasoningBackend: ConversationBackend {
+  package func retain(for lifetime: TextModelLifetime) async {
+    await registry.retain(for: lifetime)
+  }
   package var contextWindowTokens: Int { manifest.model.contextTokens }
   package func inputTokenCount(_ request: TextGenerationRequest) async throws -> Int {
     let output = try await registry.complete(request.measuringTokens(), using: manifest)

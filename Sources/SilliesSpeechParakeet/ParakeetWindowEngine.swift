@@ -3,6 +3,7 @@ import Foundation
 import SilliesSpeech
 
 actor ParakeetWindowEngine: SpeechWindowEngine {
+  nonisolated var finalizationPolicy: SpeechFinalizationPolicy { .reuseUnchangedDraft }
   nonisolated private let executor = SpeechWorkerExecutor()
   nonisolated var unownedExecutor: UnownedSerialExecutor { executor.asUnownedSerialExecutor() }
   private let manager = AsrManager(config: .default)

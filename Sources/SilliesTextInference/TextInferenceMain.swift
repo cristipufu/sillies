@@ -5,7 +5,7 @@ import SilliesInference
 import SilliesTextModels
 
 @main enum TextInferenceMain {
-  private static let idleTimeout: TimeInterval = 90
+  private static let responseTimeout: TimeInterval = 90
   static func main() async {
     let parentMonitor = InferenceParentMonitor.start()
     defer { parentMonitor.cancel() }
@@ -15,7 +15,10 @@ import SilliesTextModels
     if CommandLine.arguments.contains("--self-test") {
       let result = (MLXArray([1, 2, 3]) * 2).sum().item(Int.self)
       guard result == 12 else { exit(EXIT_FAILURE) }
-      do { try TextConversationSelfCheck.run() } catch {
+      do {
+        try TextConversationSelfCheck.run()
+        try await TextInputSelfCheck.run()
+      } catch {
         fputs("Native conversation check failed: \(error)\n", stderr)
         exit(EXIT_FAILURE)
       }
@@ -50,17 +53,18 @@ import SilliesTextModels
       do {
         request = try TextInferenceWire.read(
           TextInferenceRequest.self, from: .standardInput,
-          deadline: ProcessInfo.processInfo.systemUptime + idleTimeout)
+          // The registry owns idle retention. Parent death and explicit stop terminate the helper.
+          deadline: .infinity)
       } catch { return }
       let response: TextInferenceResponse
       do {
         let result = try await runtime.generate(request) { delta in
           try TextInferenceWire.write(
             TextInferenceEvent.delta(delta), to: .standardOutput,
-            deadline: ProcessInfo.processInfo.systemUptime + idleTimeout)
+            deadline: ProcessInfo.processInfo.systemUptime + responseTimeout)
           _ = try TextInferenceWire.read(
             TextInferenceAcknowledgement.self, from: .standardInput,
-            deadline: ProcessInfo.processInfo.systemUptime + idleTimeout)
+            deadline: ProcessInfo.processInfo.systemUptime + responseTimeout)
         }
         response = TextInferenceResponse(output: result)
       } catch TextModelError.contextLimit {
@@ -73,7 +77,7 @@ import SilliesTextModels
       do {
         try TextInferenceWire.write(
           TextInferenceEvent.finished(response), to: .standardOutput,
-          deadline: ProcessInfo.processInfo.systemUptime + idleTimeout)
+          deadline: ProcessInfo.processInfo.systemUptime + responseTimeout)
       } catch { return }
     }
   }

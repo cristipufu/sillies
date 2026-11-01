@@ -72,18 +72,22 @@ import Testing
   #expect(results.withLock { $0.first?.failure } == failure)
 }
 
-@Test func voicePlaybackReferenceIsBoundedAndIgnoresStoppedAndInvalidInput() {
+@Test(arguments: [128, 512, 4_800])
+func voicePlaybackReferenceIsBoundedAndIgnoresStoppedAndInvalidInput(sampleCount: Int) {
   let reference = VoicePlaybackReference()
   let frame = AudioRenderFrame(
-    samples: [Float](repeating: 0.1, count: 4_800), sampleRate: 48_000, startTime: 100)
+    samples: [Float](repeating: 0.1, count: sampleCount), sampleRate: 48_000, startTime: 100)
   reference.append(frame)
   #expect(reference.drain().isEmpty)
   reference.start()
   for _ in 0..<10_000 { reference.append(frame) }
   let frames = reference.drain()
   #expect(!frames.isEmpty)
-  #expect(frames.count <= 64)
-  #expect(frames.reduce(0) { $0 + $1.samples.count } <= 192_000)
+  #expect(frames.count <= 512)
+  // Small native quanta must retain at least a second of reference when capture is briefly busy.
+  let retainedSamples = frames.reduce(0) { $0 + $1.samples.count }
+  #expect(retainedSamples >= 48_000)
+  #expect(retainedSamples <= 192_000)
   reference.append(.init(samples: [1], sampleRate: .nan, startTime: 1))
   reference.append(.init(samples: [1], sampleRate: 16_000, startTime: .infinity))
   #expect(reference.drain().isEmpty)

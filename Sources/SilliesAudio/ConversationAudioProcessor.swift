@@ -36,7 +36,7 @@ final class ConversationAudioProcessor {
 
   func next() throws -> (AVAudioPCMBuffer, VoiceTurnEndpoint.Event?, TimeInterval)? {
     dispatchPrecondition(condition: .notOnQueue(.main))
-    guard let microphoneEnd,
+    guard let microphoneEnd = audio.microphoneEndTime,
       let output = try audio.nextReadyOutput(
         through: microphoneEnd - MeetingAudioTimeline.callbackHoldback)
     else { return nil }

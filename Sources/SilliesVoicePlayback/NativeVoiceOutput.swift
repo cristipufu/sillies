@@ -4,14 +4,13 @@ import SilliesCore
 import SilliesTTS
 
 final class NativeVoiceOutput: VoiceOutputDevice {
-  private static let referenceBufferSize: AVAudioFrameCount = 512
-  private static let maximumReferenceSamples = 32_768
   private let reference: (@Sendable (AudioRenderFrame) -> Void)?
   private var engine: AVAudioEngine?
   private var player: AVAudioPlayerNode?
   private var sampleRate: Int?
   private var interrupted: (@Sendable () -> Void)?
   private var configurationObserver: (any NSObjectProtocol)?
+  private var renderReference: VoiceRenderReference?
 
   init(reference: (@Sendable (AudioRenderFrame) -> Void)? = nil) { self.reference = reference }
   deinit { stop() }
@@ -37,10 +36,11 @@ final class NativeVoiceOutput: VoiceOutputDevice {
     }
     configurationObserver = nil
     player?.stop()
-    if reference != nil { engine?.mainMixerNode.removeTap(onBus: 0) }
     engine?.stop()
+    renderReference?.stop()
     player = nil
     engine = nil
+    renderReference = nil
     sampleRate = nil
   }
 
@@ -61,35 +61,24 @@ final class NativeVoiceOutput: VoiceOutputDevice {
     let player = AVAudioPlayerNode()
     engine.attach(player)
     engine.connect(player, to: engine.mainMixerNode, format: format)
-    installReferenceTap(on: engine)
     engine.prepare()
-    try engine.start()
+    self.engine = engine
+    self.player = player
+    do {
+      if let reference {
+        renderReference = try VoiceRenderReference(output: engine.outputNode, receive: reference)
+      }
+      try engine.start()
+    } catch {
+      stop()
+      throw error
+    }
     if let interrupted {
       configurationObserver = NotificationCenter.default.addObserver(
         forName: .AVAudioEngineConfigurationChange, object: engine, queue: nil
       ) { _ in interrupted() }
     }
-    self.engine = engine
-    self.player = player
     sampleRate = requestedRate
     return format
-  }
-
-  private func installReferenceTap(on engine: AVAudioEngine) {
-    guard let reference else { return }
-    let latency = engine.outputNode.presentationLatency
-    engine.mainMixerNode.installTap(
-      onBus: 0, bufferSize: Self.referenceBufferSize, format: nil
-    ) { buffer, time in
-      guard time.isHostTimeValid, buffer.frameLength > 0,
-        buffer.frameLength <= Self.maximumReferenceSamples,
-        let samples = buffer.floatChannelData?[0]
-      else { return }
-      reference(
-        .init(
-          samples: Array(UnsafeBufferPointer(start: samples, count: Int(buffer.frameLength))),
-          sampleRate: buffer.format.sampleRate,
-          startTime: AVAudioTime.seconds(forHostTime: time.hostTime) + latency))
-    }
   }
 }

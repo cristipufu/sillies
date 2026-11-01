@@ -20,12 +20,14 @@ import Testing
 }
 
 @Test func textEventsRoundTripWithoutConflatingToolArgumentsWithText() throws {
+  let encoder = JSONEncoder()
+  encoder.outputFormatting = [.sortedKeys]
   let events: [TextInferenceEvent] = [
     .delta("Hello 👋🏽"), .finished(.init(output: .init(text: "Hello 👋🏽"))),
   ]
   for event in events {
-    let data = try JSONEncoder().encode(event)
+    let data = try encoder.encode(event)
     let decoded = try JSONDecoder().decode(TextInferenceEvent.self, from: data)
-    #expect(try JSONEncoder().encode(decoded) == data)
+    #expect(try encoder.encode(decoded) == data)
   }
 }

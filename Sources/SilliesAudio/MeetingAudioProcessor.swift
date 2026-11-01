@@ -1,7 +1,6 @@
 import AVFoundation
 import Foundation
 import SilliesCore
-import SilliesSpeech
 
 /// Aligns both sources before AEC. The speaker reference is never sent to a playback device.
 final class MeetingAudioProcessor {
@@ -14,8 +13,8 @@ final class MeetingAudioProcessor {
   private static let channelCount: AVAudioChannelCount = 1
   private static let mixGain: Float = 0.5
   private let format: AVAudioFormat
-  private let meetingConverter: SpeechBufferConverter
-  private let microphoneConverter: SpeechBufferConverter
+  private let meetingConverter: MeetingAudioResampler
+  private let microphoneConverter: MeetingAudioResampler
   private let canceller: MeetingEchoCanceller
   private var timeline = MeetingAudioTimeline()
 
@@ -28,28 +27,35 @@ final class MeetingAudioProcessor {
       throw AudioCaptureFailure.unavailable(String(localized: "Could not prepare meeting audio."))
     }
     self.format = format
-    meetingConverter = SpeechBufferConverter(format: format)
-    microphoneConverter = SpeechBufferConverter(format: format)
+    meetingConverter = MeetingAudioResampler(format: format)
+    microphoneConverter = MeetingAudioResampler(format: format)
     canceller = try MeetingEchoCanceller()
   }
 
   func append(_ buffer: AVAudioPCMBuffer, source: SessionAudioSource, at time: TimeInterval) throws
   {
     let converter = source == .application ? meetingConverter : microphoneConverter
-    let converted = try converter.convert(buffer)
-    guard let data = converted.floatChannelData?[0], converted.frameLength > 0 else { return }
-    let samples = Array(UnsafeBufferPointer(start: data, count: Int(converted.frameLength)))
     do {
+      let output = try converter.convert(buffer, at: time)
+      let converted = output.buffer
+      guard let data = converted.floatChannelData?[0], converted.frameLength > 0 else { return }
+      let samples = Array(UnsafeBufferPointer(start: data, count: Int(converted.frameLength)))
       try timeline.append(
-        samples, source: source == .application ? .meeting : .microphone, at: time)
-    } catch {
-      throw AudioCaptureFailure.unavailable(
-        String(
-          localized:
-            "Meeting audio timing changed unexpectedly. Finish to save the available recording and transcript."
-        )
-      )
+        samples, source: source == .application ? .meeting : .microphone, at: output.startTime)
+    } catch is MeetingAudioTimeline.Failure {
+      throw Self.timingFailure()
     }
+  }
+
+  var microphoneEndTime: TimeInterval? { microphoneConverter.outputEndTime }
+
+  private static func timingFailure() -> AudioCaptureFailure {
+    AudioCaptureFailure.unavailable(
+      String(
+        localized:
+          "Meeting audio timing changed unexpectedly. Finish to save the available recording and transcript."
+      )
+    )
   }
 
   func nextReadyOutput() throws -> Output? {

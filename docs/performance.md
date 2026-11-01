@@ -468,3 +468,43 @@ This measures view work, not compositor presentation. Chat and session PNG expor
 verified offscreen. The 59 native GUI cases remain in the explicit visible suite; they were not
 rerun after switching the default mode. Native host subprocess probes verify that ordering and
 activation attempts fail before presentation, while hidden layout and teardown still work.
+
+## Chat echo-reference timing — November 2026
+
+A device-buffer regression reproduced self-interruption with 48 kHz output in 512-frame blocks and
+microphone input in 4,800-frame blocks. The native resampler retained samples between calls, but the
+pipeline timestamped its output with the newest input block's time. This introduced gaps and overlap
+between the reference and microphone. `MeetingAudioResampler` now accounts for retained duration;
+no device-specific offset is applied. Playback also supplies actual output render quanta instead of
+batched mixer taps, including a reference for a 40 ms utterance.
+
+The default signal tests cover six acoustic delays from 0–150 ms, early and later simultaneous speech,
+and six input/output rate and packet-size pairs, with and without a second speaker. Rates span
+8–96 kHz. Separate resampling checks exercise seven rates, variable blocks, gaps, format changes,
+and reset. Callback tests cover interleaved/planar PCM, host time plus reported output latency,
+native silence, invalid buffers, and failed renders. These checks use sample time and open no devices.
+
+Prerecorded voices from the existing offline model checks were mixed with two delayed echoes and a
+second speaker starting at 9 seconds. All four had no detected speech before that second speaker:
+
+| Prerecorded voice | Echo reduction | Detected speech position |
+| --- | ---: | ---: |
+| Kokoro | 48.5 dB | 9.19 s |
+| Pocket TTS | 44.2 dB | 9.23 s |
+| Qwen3-TTS 0.6B | 62.8 dB | 9.23 s |
+| Fish S2 Pro | 47.3 dB | 9.26 s |
+
+Positions refer to processed sample time; they exclude callback holdback, device delivery, recognition,
+and reply latency. Each 14-second fixture runs in under a second without recording a microphone.
+These controlled signals do not certify arbitrary rooms, clipping, device drivers, or speaker volume.
+The optional silent native checks verified output-clock reference delivery and cleanup on the local
+device, including a Thread Sanitizer run of both checks with no race reports. No visible GUI tests
+were run.
+
+`make check` passed 515 selected tests and the signed app/helper checks. `make stress` passed 149
+selected tests; the accelerated ten-minute audio fixture measured offscreen transcript scroll p95
+of 1.20 ms. The expanded signal matrix exceeded the combined Thread Sanitizer run's deadline,
+so device/rate, acoustic-delay, and lifecycle checks now run in separate 90-second execution groups,
+retaining all cases and the same per-run watchdog.
+The final `make race-check` passed all 182 selected tests across those groups with no race reports;
+the two additional silent native playback checks also passed under Thread Sanitizer.

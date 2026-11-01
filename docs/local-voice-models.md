@@ -43,7 +43,8 @@ owns an inference model, audio engine, or animation timer. One downloaded voice 
 time and released after inactivity. Recognition takes priority over synthesis and background text work.
 
 Chat uses the existing local WebRTC AEC3 echo canceller and WebRTC voice detection. The reference comes
-from rendered Sillies audio, aligned with the microphone on the host clock. DSP runs on the capture
+from each output device render quantum, aligned with the microphone on the host clock. Resampling
+preserves sample continuity even when microphone and output rates or packet sizes differ. DSP runs on the capture
 worker; recognizers acquire speech-model priority per utterance. This leaves text and voice inference
 available between turns without pausing the microphone. Echo cancellation is not speaker identification:
 another person in the room may start a turn, and clipping or unusual routing can impair cancellation.
@@ -63,6 +64,9 @@ See [adding a voice model](contributing/voice-models.md) for provider contracts 
 
 `make check`, `make stress`, and `make race-check` cover turn boundaries, bounded queues,
 interruption, late/duplicate callbacks, final-word recovery, native editing, and window lifecycle.
+The default echo regressions vary acoustic delay, independent device rates and packet sizes, and
+simultaneous speech through real AEC/VAD without opening an audio device. Resampling checks also cover
+format changes and real timestamp gaps.
 An optional accelerated speech/echo fixture exercises the actual AEC and VAD without recording a
 microphone. It runs seconds of sample time without waiting for real-time playback:
 
@@ -76,8 +80,9 @@ SILLIES_VOICE_ECHO_FIXTURE=/tmp/sillies-chat-echo.aiff \
   --filter voiceConversationEchoReference
 ```
 
-`SILLIES_NATIVE_PLAYBACK_CHECK=1` enables `playbackRenderReferenceUsesTheDeviceClockAndStopsWithOutput`,
-a silent, subsecond output-device check. `SILLIES_CHAT_MODEL_CHECK=1` enables
+`SILLIES_NATIVE_PLAYBACK_CHECK=1` enables `playbackRenderReferenceUsesTheDeviceClockAndStopsWithOutput`
+and `playbackEchoReferenceIncludesUtterancesShorterThanATapBatch`, silent, subsecond output-device
+checks. `SILLIES_CHAT_MODEL_CHECK=1` enables
 `appleChatHandlesTheReportedConversationWithoutRepeating` on Macs with Apple Intelligence ready.
 Neither check downloads weights. Fixture results do not substitute for testing loudspeaker volume,
 room acoustics, and interruption on the intended device.

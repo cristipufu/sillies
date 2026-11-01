@@ -38,7 +38,9 @@ struct ArchitecturePolicy {
     ],
     "SilliesTTS": ["Foundation", "SilliesCore", "SilliesModelStore", "SilliesInference"],
     "SilliesFishSpeech": ["Foundation", "MLX", "Tokenizers", "SilliesTTS"],
-    "SilliesVoicePlayback": ["Foundation", "AVFoundation", "SilliesTTS", "SilliesCore"],
+    "SilliesVoicePlayback": [
+      "Foundation", "AVFoundation", "AudioToolbox", "SilliesTTS", "SilliesCore",
+    ],
     "SilliesTTSInference": [
       "Foundation", "Darwin", "Synchronization", "FluidAudio", "TTSKit", "SilliesTTS",
       "SilliesInference", "SilliesModelStore", "SilliesFishSpeech",

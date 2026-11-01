@@ -5,7 +5,9 @@ import Synchronization
 /// A bounded handoff from the render callback. Resampling and echo cancellation happen on capture's worker.
 package final class VoicePlaybackReference: Sendable {
   private static let maximumSamples = 192_000
-  private static let maximumFrames = 64
+  // Device render quanta are much smaller than the old 100 ms tap batches. Preserve the
+  // sample budget when capture is briefly busy without allowing unbounded packet overhead.
+  private static let maximumFrames = 512
   private struct State {
     var active = false
     var frames: [AudioRenderFrame] = []

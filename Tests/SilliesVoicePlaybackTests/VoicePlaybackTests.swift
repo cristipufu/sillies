@@ -73,6 +73,8 @@ func playbackRenderReferenceUsesTheDeviceClockAndStopsWithOutput() async throws 
     var frames = 0
     var samples = 0
     var valid = true
+    var maximumDuration = 0.0
+    var maximumArrivalDelay = -Double.infinity
   }
   let probe = Mutex(RenderProbe())
   let started = ProcessInfo.processInfo.systemUptime
@@ -80,6 +82,9 @@ func playbackRenderReferenceUsesTheDeviceClockAndStopsWithOutput() async throws 
     probe.withLock {
       $0.frames += 1
       $0.samples += frame.samples.count
+      $0.maximumDuration = max($0.maximumDuration, Double(frame.samples.count) / frame.sampleRate)
+      $0.maximumArrivalDelay = max(
+        $0.maximumArrivalDelay, ProcessInfo.processInfo.systemUptime - frame.startTime)
       $0.valid =
         $0.valid && frame.startTime.isFinite && frame.startTime >= started - 1
         && frame.startTime <= ProcessInfo.processInfo.systemUptime + 2
@@ -93,10 +98,25 @@ func playbackRenderReferenceUsesTheDeviceClockAndStopsWithOutput() async throws 
   try await playback.enqueue(audio, id: id)
   try await playback.finish(id: id)
   #expect(probe.withLock { $0.valid && $0.frames > 0 && $0.samples > 0 })
+  print("DEVICE ECHO REFERENCE: \(probe.withLock { $0 })")
   try await Task.sleep(for: .milliseconds(20))
   let framesAfterStop = probe.withLock { $0.frames }
   try await Task.sleep(for: .milliseconds(50))
   #expect(probe.withLock { $0.frames } == framesAfterStop)
+}
+
+@Test(.enabled(if: ProcessInfo.processInfo.environment["SILLIES_NATIVE_PLAYBACK_CHECK"] == "1"))
+func playbackEchoReferenceIncludesUtterancesShorterThanATapBatch() async throws {
+  let samples = Mutex(0)
+  let playback = VoicePlayback(reference: { frame in samples.withLock { $0 += frame.samples.count }
+  })
+  let id = UUID()
+  await playback.start(id: id) { _ in }
+  // Forty milliseconds must have a reference even though a node tap batches at least 100 ms.
+  try await playback.enqueue(
+    .init(samples: [Float](repeating: 0, count: 640), sampleRate: 16_000), id: id)
+  try await playback.finish(id: id)
+  #expect(samples.withLock { $0 } > 0)
 }
 
 @Test func spokenPhraseCompletionWaitsForHardwareAndIgnoresDuplicateCallbacks() async throws {

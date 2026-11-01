@@ -77,6 +77,12 @@
   "ControlCenterSizingTests.swift": {
     "default": "headless"
   },
+  "ConversationAttachmentTests.swift": {
+    "default": "headless",
+    "tests": {
+      "openChatAndMascotTrackEveryHostWindowDragFrame()": "gui"
+    }
+  },
   "DictationTests.swift": {
     "default": "headless",
     "tests": {

@@ -20,21 +20,17 @@ import Testing
   ).inHistory(opened.handle)
   let factory = ConversationHistoryTools(conversations: library, memories: library)
   let toolbox = try ConversationToolbox(tools: factory.tools(for: context), progress: { _ in })
-  let rejected = try await toolbox.invoke(
-    .init(
-      id: "invalid", name: "save_memory",
-      arguments: Data(#"{"key":"birthday","value":"June 2","quote":"My birthday is June 2."}"#.utf8)
-    ))
-  #expect(rejected.contains("Not saved"))
-  #expect(try await library.memories(opened.handle, query: "").isEmpty)
   let call = ConversationToolCall(
     id: "remember", name: "save_memory",
     arguments: Data(
-      #"{"key":"reply_style","value":"Short answers","quote":"I prefer short answers."}"#.utf8))
+      #"{"key":"reply_style","value":"Short answers"}"#.utf8))
   _ = try await toolbox.invoke(call)
   try await toolbox.beginRecovery()
   _ = try await toolbox.invoke(call)
   #expect(try await library.recentMemoryChanges(opened.handle).count == 1)
+  let saved = try #require(try await library.memories(opened.handle, query: "").first)
+  #expect(saved.sourceMessageID == current.id)
+  #expect(saved.sourceQuote == current.text)
   let bolt = try await library.open(.init(id: "bolt", name: "Bolt"))
   #expect(try await library.memories(bolt.handle, query: "").isEmpty)
   let found = try await toolbox.invoke(
@@ -43,8 +39,61 @@ import Testing
   #expect(found.contains("June 2"))
 }
 
+@Test func memoryToolsBindOriginalUserEvidenceWithoutModelTranscription() async throws {
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { do { try FileManager.default.removeItem(at: directory) } catch { Issue.record(error) } }
+  let library = ConversationLibrary(directory: directory)
+  let opened = try await library.open(.init(id: "pogo", name: "Pogo"))
+  let statement = ChatMessage(role: .user, text: "i'm Alex")
+  try await library.save(
+    .init(handle: opened.handle, messages: [statement], checkpoint: .init(), savedAt: Date()))
+  let context = ChatContext(
+    companionName: "Pogo", profile: .init(personality: "Friendly"), messages: [statement]
+  ).inHistory(opened.handle)
+  let tools = ConversationHistoryTools(conversations: library, memories: library).tools(
+    for: context)
+  let save = try #require(tools.first { $0.definition.name == "save_memory" })
+  #expect(save.definition.parameters.map(\.name) == ["key", "value"])
+  _ = try await save.call(arguments: Data(#"{"key":"name","value":"Alex"}"#.utf8))
+  let fact = try #require(try await library.memories(opened.handle, query: "name").first)
+  #expect(fact.sourceQuote == "i'm Alex")
+  #expect(fact.sourceMessageID == statement.id)
+  let assistantContext = ChatContext(
+    companionName: "Pogo", profile: context.profile,
+    messages: [ChatMessage(role: .companion, text: "My name is Alex.")]
+  ).inHistory(opened.handle)
+  #expect(
+    ConversationHistoryTools(conversations: library, memories: library).tools(for: assistantContext)
+      .isEmpty)
+}
+
 @Test(.enabled(if: ProcessInfo.processInfo.environment["SILLIES_CHAT_TOOL_CHECK"] == "1"))
 func appleConversationFiveToolQualityCheck() async throws {
+  _ = try await appleConversationCheck(questions: [
+    "My birthday is May 14.", "What is the tallest mountain in the world?", "When is my birthday?",
+  ])
+}
+
+@Test(.enabled(if: ProcessInfo.processInfo.environment["SILLIES_CHAT_TOOL_CHECK"] == "1"))
+func appleChatSavesAndRecallsAnOriginalUserStatement() async throws {
+  let result = try await appleConversationCheck(questions: [
+    "do you know my name?", "i'm Alex", "so what's my name",
+  ])
+  #expect(
+    result.memories.contains {
+      $0.value.localizedCaseInsensitiveContains("Alex") && $0.sourceQuote == "i'm Alex"
+    })
+  #expect(result.replies.last?.text.localizedCaseInsensitiveContains("Alex") == true)
+}
+
+private struct AppleConversationCheckResult {
+  let memories: [CompanionMemory]
+  let replies: [ChatReply]
+}
+
+private func appleConversationCheck(questions: [String]) async throws
+  -> AppleConversationCheckResult
+{
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
   defer { do { try FileManager.default.removeItem(at: directory) } catch { Issue.record(error) } }
   let library = ConversationLibrary(directory: directory)
@@ -63,9 +112,8 @@ func appleConversationFiveToolQualityCheck() async throws {
   defer { Task { await lifetime.end() } }
   var messages: [ChatMessage] = []
   var memory = ConversationMemory()
-  for question in [
-    "My birthday is May 14.", "What is the tallest mountain in the world?", "When is my birthday?",
-  ] {
+  var replies: [ChatReply] = []
+  for question in questions {
     let message = ChatMessage(role: .user, text: question)
     messages.append(message)
     try await library.save(
@@ -84,6 +132,7 @@ func appleConversationFiveToolQualityCheck() async throws {
         "FIVE-TOOL QUALITY | \(question) | \(started.duration(to: .now)) | tools=\(reply.exchanges.map { $0.call.name }) | \(reply.text)"
       )
       memory = reply.memory
+      replies.append(reply)
       messages.append(
         .init(
           role: .companion, text: reply.text,
@@ -93,5 +142,7 @@ func appleConversationFiveToolQualityCheck() async throws {
       throw error
     }
   }
-  print("FIVE-TOOL MEMORIES | \(try await library.memories(opened.handle, query: "").map(\.value))")
+  let memories = try await library.memories(opened.handle, query: "")
+  print("FIVE-TOOL MEMORIES | \(memories.map(\.value))")
+  return .init(memories: memories, replies: replies)
 }

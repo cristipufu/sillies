@@ -3,8 +3,8 @@ import Foundation
 /// Shared spacing for drag menus and companion action menus, in screen coordinates.
 public struct RadialMenuArc: Sendable {
   public static let defaultSweep: Double = 152
-  private static let minimumRadius: Double = 118
-  private static let targetSpacing: Double = 80
+  private static let minimumRadius: Double = 88
+  private static let targetSpacing: Double = 74
   public let radius: Double
   private let count: Int
   private let sweep: Double

@@ -27,7 +27,9 @@ import Testing
         #expect(screen.contains(frame))
         #expect(abs(hypot(center.x - anchor.x, center.y - anchor.y) - layout.radius) < 0.001)
         for other in layout.centers.dropFirst(index + 1) {
-          #expect(hypot(center.x - other.x, center.y - other.y) >= 79.99)
+          #expect(
+            hypot(center.x - other.x, center.y - other.y)
+              > RadialSkillMenuLayout.bubbleHitRadius * 2)
         }
       }
     }

@@ -93,3 +93,34 @@ private struct ConversationFixture {
     }
   }
 }
+
+@Test func memorySourcesKeepLongUserMessagesAndLargeUndoReceiptsReadable() async throws {
+  let fixture = ConversationFixture()
+  defer { fixture.remove() }
+  let store = ConversationLibrary(directory: fixture.directory)
+  let opened = try await store.open(.init(id: "pogo", name: "Pogo"))
+  let padding = String(repeating: "👩🏽‍💻", count: 1_050) + String(repeating: "\"", count: 200)
+  let first = ChatMessage(role: .user, text: padding + " My name is Alex.")
+  let correction = ChatMessage(role: .user, text: padding + " Call me Sam instead.")
+  #expect(first.text.utf8.count <= ChatContext.maximumMessageBytes)
+  try await store.save(
+    .init(
+      handle: opened.handle, messages: [first, correction], checkpoint: .init(),
+      savedAt: fixture.date))
+  _ = try await store.remember(
+    .init(
+      handle: opened.handle, fact: .init(key: "name", value: "Alex"),
+      source: .init(messageID: first.id, quote: first.text), savedAt: fixture.date))
+  let updated = try await store.remember(
+    .init(
+      handle: opened.handle, fact: .init(key: "name", value: "Sam"),
+      source: .init(messageID: correction.id, quote: correction.text), savedAt: fixture.date))
+  #expect(try JSONEncoder().encode(updated).count > 32_768)
+  let reopened = ConversationLibrary(directory: fixture.directory)
+  let receipts = try await reopened.recentMemoryChanges(opened.handle)
+  #expect(receipts.count == 2)
+  #expect(receipts.first?.saved.sourceQuote == correction.text)
+  let snapshot = try await reopened.undoMemory(opened.handle, receiptID: updated.id)
+  #expect(
+    try await reopened.memories(snapshot.handle, query: "name").first?.sourceQuote == first.text)
+}

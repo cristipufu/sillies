@@ -391,13 +391,18 @@ private actor StreamingInterfaceReply: ConversationResponding {
   }
   let presentation = ConversationBubblePresentation()
   for scheme in [ColorScheme.light, .dark] {
-    try renderSkillInterface(
-      ConversationBubbleView(
-        presentation: presentation,
-        content: ChatSessionView(model: session, openSettings: { _ in }, renderer: "cat")
-      )
-      .environment(\.colorScheme, scheme), size: ChatWindowLayout.initialSize,
-      name: "sillies-continuous-chat-\(scheme)")
+    for tail in [ConversationBubbleLayout.Tail.top, .bottom, .left, .right] {
+      presentation.tail = tail
+      presentation.tailOffset = tail.isSide ? 274 : 200
+      let size = tail.isSide ? CGSize(width: 412, height: 548) : ChatWindowLayout.initialSize
+      try renderSkillInterface(
+        ConversationBubbleView(
+          presentation: presentation,
+          content: ChatSessionView(model: session, openSettings: { _ in }, renderer: "cat")
+        )
+        .environment(\.colorScheme, scheme), size: size,
+        name: "sillies-continuous-chat-\(scheme)-\(tail)")
+    }
   }
   try renderSkillInterface(
     TalkCaptionsView(model: session), size: CGSize(width: 360, height: 120),

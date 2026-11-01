@@ -7,7 +7,7 @@ import AppKit
   static let shared = AppContentWindowStacking()
   private struct Entry {
     weak var window: NSWindow?
-    let backgroundLevel: NSWindow.Level
+    var backgroundLevel: NSWindow.Level
   }
   private var entries: [Entry] = []
 
@@ -27,6 +27,15 @@ import AppKit
     {
       key.orderFront(nil)
     }
+  }
+
+  /// Anchored content follows its host window's layer when another app has focus.
+  func setBackgroundLevel(_ level: NSWindow.Level, for window: NSWindow) {
+    guard let index = entries.firstIndex(where: { $0.window === window }),
+      entries[index].backgroundLevel != level
+    else { return }
+    entries[index].backgroundLevel = level
+    apply(NSApp.isActive ? .foreground : .background, to: entries[index])
   }
 
   private func apply(_ focus: Focus, to entry: Entry) {

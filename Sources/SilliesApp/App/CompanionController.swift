@@ -36,6 +36,7 @@ final class CompanionController {
       }), appearance: appearance)
   @ObservationIgnored var onOpenVault: ((UUID?) -> Void)?
   @ObservationIgnored var onWritingAnchorChanged: ((WritingCompanionAnchor?) -> Void)?
+  @ObservationIgnored var onConversationAnchorChanged: ((ConversationCompanionAnchor) -> Void)?
   @ObservationIgnored var onOpenWritingSession: (() -> Void)?
   @ObservationIgnored private let writingSelection = WritingCompanionSelection()
   private var writingCompanionID: String? { writingSelection.companionID }
@@ -512,6 +513,7 @@ final class CompanionController {
   }
 
   private func configureCompanionInput(_ pet: CompanionInstance) {
+    pet.onConversationAnchorChanged = { [weak self] in self?.onConversationAnchorChanged?($0) }
     skillControls.configure(pet)
     configureDragControls(pet)
   }
@@ -558,8 +560,8 @@ final class CompanionController {
     }
   }
 
-  func conversationAnchor(for id: String) -> WritingCompanionAnchor? {
-    companions.first { $0.definition.id == id }?.writingAnchor
+  func conversationAnchor(for id: String) -> ConversationCompanionAnchor? {
+    companions.first { $0.definition.id == id }?.conversationAnchor
   }
 
   func startMicrophoneRecording() {

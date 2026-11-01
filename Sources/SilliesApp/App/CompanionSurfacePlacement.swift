@@ -150,7 +150,7 @@ struct CompanionSurfacePlacement {
     at index: Int,
     context: inout SurfaceUpdateContext
   ) -> Bool {
-    guard !pet.holdsConversationPerch else { return false }
+    guard !pet.isChoosingDirectAction else { return false }
     guard pet.isAttachmentVisible || pet.isPickedUp else {
       pet.hideForUnavailableSurface()
       return false
@@ -161,6 +161,8 @@ struct CompanionSurfacePlacement {
       defaultWindowID: context.windowID,
       defaultLayer: context.windowLayer)
     if environment.followsWindows && (targetWindow.frame == nil || targetWindow.windowID == nil) {
+      // Chat stays put while its own excluded window has focus, but follows real window geometry.
+      if pet.isConversing { return false }
       if pet.attachmentTarget == nil && environment.isAwaitingWindow {
         return false
       }

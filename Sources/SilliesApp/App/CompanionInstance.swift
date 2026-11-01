@@ -29,6 +29,14 @@ final class CompanionInstance {
   private(set) var isWritingIndicator = false
 
   private(set) var isChoosingDirectAction = false
+  private var attachmentDisplay: CGRect?
+  var onConversationAnchorChanged: ((ConversationCompanionAnchor) -> Void)?
+  var conversationAnchor: ConversationCompanionAnchor? {
+    guard let attachmentDisplay else { return nil }
+    return .init(
+      companionID: definition.id, position: position, visibleFrame: attachmentDisplay,
+      edge: surface?.edge ?? .top, windowLayer: attachedWindowLayer)
+  }
   var holdsConversationPerch: Bool { isConversing || isChoosingDirectAction }
   func beginDirectActionMenu() {
     isChoosingDirectAction = true
@@ -184,6 +192,7 @@ final class CompanionInstance {
   }
 
   func configureSurface(_ surface: PerchSurface, window: CGRect?, display: CGRect) -> Bool {
+    attachmentDisplay = display
     let previousPose = view.rig.attachmentPose
     view.resize(to: surface.presentationSize)
     view.configureSurface(pose: surface.attachmentPose, window: window, display: display)
@@ -437,6 +446,7 @@ final class CompanionInstance {
     view.applyPanelLayout(layout)
     view.updateWorldMask()
     refreshHUD()
+    if isConversing, let anchor = conversationAnchor { onConversationAnchorChanged?(anchor) }
   }
 
   func refreshHUD() {

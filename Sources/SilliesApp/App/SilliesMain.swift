@@ -253,6 +253,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       history: .stored(conversations: conversations, memories: conversations))
     let sessions = ConversationSessions(profiles: profiles, services: services)
     conversationSessions = sessions
+    controller?.onConversationAnchorChanged = { [weak self] in self?.chatWindow.follow($0) }
     skills.makeChatSession = { id, name in sessions.session(for: .init(id: id, name: name)) }
     skills.onCloseChatSession = { [weak self] session in self?.chatWindow.close(session) }
     skills.onOpenChatSession = { [weak self] session in

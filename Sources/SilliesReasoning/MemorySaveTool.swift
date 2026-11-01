@@ -5,7 +5,6 @@ struct MemorySaveTool: ConversationTool {
   private struct Arguments: Decodable {
     let key: String
     let value: String
-    let quote: String
   }
   let repository: any CompanionMemoryRepository
   let handle: ConversationHandle
@@ -19,19 +18,18 @@ struct MemorySaveTool: ConversationTool {
       parameters: [
         .init("key", description: "Short stable topic key for this fact, reused for corrections."),
         .init("value", description: "The explicitly stated fact, preserving its meaning."),
-        .init("quote", description: "Exact supporting quote from the latest user message."),
       ])
   }
   func call(arguments: Data) async throws -> ConversationToolOutput {
     let args = try JSONDecoder().decode(Arguments.self, from: arguments)
-    guard !args.quote.isEmpty, statement.text.contains(args.quote) else {
-      return .init(text: "Not saved: the quote must come from the current user statement.")
+    guard statement.role == .user, !statement.text.isEmpty else {
+      return .init(text: "Not saved: a current user statement is required.")
     }
     let receipt = try await repository.remember(
       .init(
         handle: handle,
         fact: .init(key: args.key, value: args.value),
-        source: .init(messageID: statement.id, quote: args.quote), savedAt: Date()))
+        source: .init(messageID: statement.id, quote: statement.text), savedAt: Date()))
     return .init(text: "Memory saved. The app displays the fact and an Undo action.").remembering(
       receipt)
   }

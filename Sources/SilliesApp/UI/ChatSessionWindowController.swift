@@ -21,7 +21,7 @@ enum ChatWindowLayout {
   private var animationID = UUID()
   private(set) var window: CompanionUtilityWindow?
   private let bubble = ConversationBubblePresentation()
-  private var anchor: WritingCompanionAnchor?
+  private var anchor: ConversationCompanionAnchor?
   private weak var displayedSession: ChatSession?
   var prefersReducedMotion: () -> Bool = { false }
   private var reducesMotion: Bool {
@@ -31,7 +31,7 @@ enum ChatWindowLayout {
   func show(
     _ model: ChatSession, openSettings: @escaping (ChatNotice.SettingsDestination) -> Void,
     renderer: String? = nil, vault: ChatVaultPresentation? = nil,
-    anchor: WritingCompanionAnchor? = nil
+    anchor: ConversationCompanionAnchor? = nil
   ) {
     prepare(model, openSettings: openSettings, renderer: renderer, vault: vault, anchor: anchor)
     reveal()
@@ -42,7 +42,7 @@ enum ChatWindowLayout {
   func prepare(
     _ model: ChatSession, openSettings: @escaping (ChatNotice.SettingsDestination) -> Void,
     renderer: String? = nil, vault: ChatVaultPresentation? = nil,
-    anchor: WritingCompanionAnchor? = nil
+    anchor: ConversationCompanionAnchor? = nil
   ) {
     if window == nil {
       let window = CompanionUtilityWindow(
@@ -79,25 +79,47 @@ enum ChatWindowLayout {
       observeMode(model)
     }
   }
-  func attach(to anchor: WritingCompanionAnchor) {
+  func follow(_ anchor: ConversationCompanionAnchor) {
+    guard displayedSession?.companionID == anchor.companionID else { return }
+    attach(to: anchor)
+  }
+  private func attach(to anchor: ConversationCompanionAnchor) {
     self.anchor = anchor
     guard let window else { return }
-    window.contentMinSize =
-      displayedSession?.mode == .talk ? ChatWindowLayout.talkSize : ChatWindowLayout.minimumSize
-    let visible = CompanionPanel.visibleFrame(
-      for: NSScreen.screens.first { $0.frame.contains(anchor.position) })
+    AppContentWindowStacking.shared.setBackgroundLevel(
+      CompanionPanel.hudLevel(forWindowLayer: anchor.windowLayer), for: window)
+    let minimumSize = windowSize(
+      displayedSession?.mode == .talk ? ChatWindowLayout.talkSize : ChatWindowLayout.minimumSize,
+      edge: anchor.edge)
+    if window.contentMinSize != minimumSize { window.contentMinSize = minimumSize }
     let layout = ConversationBubbleLayout(
       anchor: anchor.position,
-      size: displayedSession?.mode == .talk
-        ? ChatWindowLayout.talkSize : ChatWindowLayout.initialSize, visibleFrame: visible)
-    bubble.tail = layout.tail
-    bubble.tailOffset = layout.tailOffset
-    window.setFrame(layout.frame, display: false)
+      size: windowSize(
+        displayedSession?.mode == .talk
+          ? ChatWindowLayout.talkSize : ChatWindowLayout.initialSize, edge: anchor.edge),
+      visibleFrame: anchor.visibleFrame, edge: anchor.edge)
+    if bubble.tail != layout.tail { bubble.tail = layout.tail }
+    if bubble.tailOffset != layout.tailOffset { bubble.tailOffset = layout.tailOffset }
+    // AppKit rounds native window origins; avoid resubmitting the same sub-point movement.
+    let frame = CGRect(
+      origin: CGPoint(x: layout.frame.minX.rounded(), y: layout.frame.minY.rounded()),
+      size: layout.frame.size)
+    if window.frame.size != frame.size {
+      window.setFrame(frame, display: false)
+    } else if window.frame.origin != frame.origin {
+      window.setFrameOrigin(frame.origin)
+    }
+  }
+  private func windowSize(_ verticalSize: CGSize, edge: PerchSurface.Edge) -> CGSize {
+    ConversationBubbleLayout.windowSize(
+      forBody: CGSize(
+        width: verticalSize.width,
+        height: verticalSize.height - ConversationBubbleLayout.tailHeight), edge: edge)
   }
   private func observeMode(_ model: ChatSession) {
+    if let anchor { attach(to: anchor) }
     withObservationTracking {
       _ = model.mode
-      if let anchor { attach(to: anchor) }
     } onChange: { [weak self, weak model] in
       MainRunLoopDelivery.perform {
         guard let self, let model, self.displayedSession === model else { return }

@@ -66,8 +66,10 @@ There is no intent-classification inference step before the normal reply.
 `ConversationLibrary` owns the durable SQLite history. `ChatSession` holds at most 128 recent messages
 and a persisted `ConversationMemory`; `ConversationBrowser` pages older originals independently.
 `ConversationHistoryTools` creates companion-scoped tools per turn from injected repository protocols.
-`save_memory` can quote only the current user message; stored receipts make successful changes visible
-and undoable. Clear/Forget/Undo rotate the storage generation so late work cannot restore deleted state.
+`save_memory` asks the model only for the fact’s key and value. The host binds the original current
+user message and its ID as provenance, so model capitalization or punctuation cannot break a save.
+Storage verifies that the source belongs to this companion and was written by the user; stored receipts
+make successful changes visible and undoable. Clear/Forget/Undo rotate the storage generation so late work cannot restore deleted state.
 `LocalConversationService` shares the interactive inference gate with other reasoning work.
 `ConversationContextManager` measures instructions, history, and tool schemas, then reserves room
 for the reply and tool results. Apple uses its tokenizer on macOS 26.4 or later; earlier systems use

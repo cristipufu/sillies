@@ -3,9 +3,9 @@ import SilliesCore
 
 extension ConversationDatabase {
   private static let maximumMemoryPayloadBytes = 32_768
+  private static let maximumMemoryReceiptBytes = maximumMemoryPayloadBytes * 2 + 1_024
   private static let maximumMemoryKeyCharacters = 80
   private static let maximumMemoryValueCharacters = 500
-  private static let maximumMemoryQuoteCharacters = 1_000
   private static let maximumMemoryCount = 200
   private static let maximumRecentMemoryChanges = 40
 
@@ -57,11 +57,15 @@ extension ConversationDatabase {
       try writeMemory(saved, owner: request.handle.companionID)
       let receipt = MemoryReceipt(
         handle: request.handle, id: UUID(), previous: previous, saved: saved)
+      let receiptData = try encoder.encode(receipt)
+      guard receiptData.count <= Self.maximumMemoryReceiptBytes else {
+        throw ConversationStorageError.invalidData
+      }
       try sql.execute(
         "INSERT INTO memory_changes(id,owner,body) VALUES(?,?,?)",
         [
           .text(receipt.id.uuidString), .text(request.handle.companionID),
-          .data(try encoder.encode(receipt)),
+          .data(receiptData),
         ])
       try sql.execute(
         "DELETE FROM memory_changes WHERE owner=? AND sequence NOT IN (SELECT sequence FROM memory_changes WHERE owner=? ORDER BY sequence DESC LIMIT ?)",
@@ -96,7 +100,7 @@ extension ConversationDatabase {
       ) { row in
         receipt = try decoder.decode(
           MemoryReceipt.self,
-          from: VaultSQLConnection.data(row, maximumBytes: Self.maximumMemoryPayloadBytes))
+          from: VaultSQLConnection.data(row, maximumBytes: Self.maximumMemoryReceiptBytes))
       }
       guard let receipt,
         try memory(owner: handle.companionID, key: receipt.saved.key)?.revision
@@ -122,14 +126,15 @@ extension ConversationDatabase {
       receipts.append(
         try decoder.decode(
           MemoryReceipt.self,
-          from: VaultSQLConnection.data(row, maximumBytes: Self.maximumMemoryPayloadBytes)))
+          from: VaultSQLConnection.data(row, maximumBytes: Self.maximumMemoryReceiptBytes)))
     }
     return receipts
   }
 
   private func validateMemorySource(_ request: MemoryWrite) throws {
     guard !request.sourceQuote.isEmpty,
-      request.sourceQuote.count <= Self.maximumMemoryQuoteCharacters
+      request.sourceQuote.count <= ChatContext.maximumMessageCharacters,
+      request.sourceQuote.utf8.count <= ChatContext.maximumMessageBytes
     else {
       throw ConversationStorageError.invalidData
     }
@@ -160,11 +165,15 @@ extension ConversationDatabase {
   }
 
   private func writeMemory(_ memory: CompanionMemory, owner: String) throws {
+    let data = try encoder.encode(memory)
+    guard data.count <= Self.maximumMemoryPayloadBytes else {
+      throw ConversationStorageError.invalidData
+    }
     try sql.execute(
       "INSERT INTO companion_memories(id,owner,key,updated,body) VALUES(?,?,?,?,?) ON CONFLICT(owner,key) DO UPDATE SET updated=excluded.updated,body=excluded.body",
       [
         .text(memory.id.uuidString), .text(owner), .text(memory.key),
-        .real(memory.savedAt.timeIntervalSince1970), .data(try encoder.encode(memory)),
+        .real(memory.savedAt.timeIntervalSince1970), .data(data),
       ])
     try sql.execute("DELETE FROM memory_search WHERE id=?", [.text(memory.id.uuidString)])
     try sql.execute(

@@ -25,6 +25,8 @@ ScreenCaptureKit's audio filter is application-wide. Selecting a Google Meet bro
 
 ApplicationAudioSource only subscribes to ScreenCaptureKit audio. MicrophoneAudioSource uses an independent AVCaptureSession, prefers a device with built-in transport, and never locks a device for configuration. There are no system-device, format, volume, mute, routing, virtual-driver, meeting-UI, or voice-processing changes. The app has the hardened-runtime audio-input entitlement; macOS permissions are still required. Capture is never started on launch or by hovering.
 
+Listen and Participate can show macOS's purple capture indicator because application audio uses ScreenCaptureKit. This does not start Teams' screen sharing or send screen content to meeting participants. Stopping capture through that system indicator also stops Sillies' application-audio stream. The bound mascot and recording bar remain visible while their host window is visible; hidden backing windows do not cover them.
+
 Listen and Participate require both inputs to start successfully. A failed or interrupted input produces an explicit stopped state, stops the capture producers, and lets the user save the partial transcript. It does not silently continue as a complete meeting recording. One audio session is allowed across the crew, including while it is finishing.
 
 Muting Meet or Zoom does not mute Sillies’ independent microphone. Both meeting skills record and transcribe the app output plus an echo-reduced microphone stream; only Participate generates suggestions. All three audio skills save playable AAC recordings. Headphones are optional. Cancellation reduces speaker echo, but clipping, unusual device routing, and room acoustics can still affect recognition.

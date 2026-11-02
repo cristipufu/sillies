@@ -4,6 +4,35 @@ import Testing
 
 @testable import SilliesApp
 
+@Test func boundWindowRemainsVisibleBehindAnOrderedOutWebView() throws {
+  // Teams keeps an ordered-out WebView with the meeting window's exact bounds.
+  // CGWindowList omits kCGWindowIsOnscreen for that hidden backing window.
+  let frame = CGRect(x: 245, y: 149, width: 1142, height: 715)
+  let target = windowEntry(id: 1, frame: frame)
+  var hiddenWebView = windowEntry(id: 2, frame: frame)
+  hiddenWebView[kCGWindowOwnerPID as String] = Int32(456)
+  hiddenWebView.removeValue(forKey: kCGWindowIsOnscreen as String)
+
+  let snapshots = BoundWindowSnapshots.resolve(
+    entries: [hiddenWebView, target], windowIDs: [1, 2], primaryScreenTop: 982)
+
+  #expect(snapshots[1]?.visibility == .visible)
+  #expect(snapshots[2]?.visibility == .hidden)
+  let boundTarget = WindowTargetCandidate(
+    windowID: 1, processID: 123, appName: "Meeting", frame: frame)
+  let updatedTarget = try #require(snapshots[1]).updating(boundTarget)
+  #expect(updatedTarget.isVisible)
+}
+
+@Test(arguments: [true, false, nil] as [Bool?])
+func windowMetadataRequiresAnExplicitOnScreenFlag(_ onScreen: Bool?) throws {
+  var entry = windowEntry(id: 1, frame: CGRect(x: 100, y: 100, width: 600, height: 400))
+  entry[kCGWindowIsOnscreen as String] = onScreen
+  let parsed = try #require(WindowServerSource.ParsedWindowEntry(dictionary: entry))
+  #expect(parsed.isOnScreen == (onScreen == true))
+  #expect(parsed.isVisible == (onScreen == true))
+}
+
 @Test func boundWindowMetadataDistinguishesCoveringFromBackgroundWindows() throws {
   let frame = CGRect(x: 100, y: 100, width: 600, height: 400)
   let target = windowEntry(id: 1, frame: frame)

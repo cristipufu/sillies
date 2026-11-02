@@ -40,7 +40,8 @@ final class WindowServerSource: Sendable {
         let bounds = dictionary[kCGWindowBounds as String] as? [String: Any],
         let frame = CGRect(dictionaryRepresentation: bounds as CFDictionary)
       else { return nil }
-      let isOnScreen = (dictionary[kCGWindowIsOnscreen as String] as? Bool) != false
+      // CGWindowList omits this key for ordered-out windows, including hidden WebView backings.
+      let isOnScreen = (dictionary[kCGWindowIsOnscreen as String] as? Bool) == true
       let alpha = dictionary[kCGWindowAlpha as String] as? Double ?? defaultWindowAlpha
       self.id = id
       self.ownerPID = ownerPID

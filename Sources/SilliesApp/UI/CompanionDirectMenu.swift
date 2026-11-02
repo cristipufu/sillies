@@ -24,8 +24,9 @@ import SwiftUI
     self.panel = panel
     interaction.start(
       panel: panel,
-      regions: zip(layout.centers, widths).map {
-        RadialMenuItemLayout(center: $0, titleWidth: $1)
+      localRegions: zip(layout.centers, widths).map {
+        RadialMenuItemLayout(
+          center: CGPoint(x: $0.x - layout.frame.minX, y: $0.y - layout.frame.minY), titleWidth: $1)
       }
     ) { [weak self] in self?.close() }
     reveal(panel, above: pet.panel.windowNumber)

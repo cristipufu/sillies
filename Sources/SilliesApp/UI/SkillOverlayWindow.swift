@@ -13,6 +13,12 @@ final class SkillFloatingPanel: NSPanel {
   override var canBecomeKey: Bool { focus == .keyboard }
   override var canBecomeMain: Bool { false }
 
+  override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect {
+    // Overlay owners position visible content. Constraining invisible canvas padding
+    // would detach that content from its mascot or window anchor.
+    frameRect
+  }
+
   init(
     contentRect: CGRect, ignoresMouseEvents: Bool, level: NSWindow.Level = .statusBar,
     focus: Focus = .pointerOnly

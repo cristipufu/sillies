@@ -46,6 +46,25 @@ import Testing
   #expect(!region.contains(CGPoint(x: 80, y: 0)))
 }
 
+@Test func companionMenuStaysCompactWhenTheUsualArcJustMissesTheDisplayEdge() {
+  let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
+  let itemSize = CGSize(width: 110, height: 100)
+  for y in [screen.minY + 30, screen.maxY - 30] {
+    let anchor = CGPoint(x: screen.midX, y: y)
+    let layout = CompanionActionMenuLayout(
+      anchor: anchor, count: 4, itemSize: itemSize, visibleFrame: screen)
+    #expect(layout.anchor == anchor)
+    #expect(layout.radius < 100, "A slightly tighter arc fits without a distant corner fallback")
+    for center in layout.centers {
+      #expect(
+        screen.contains(
+          CGRect(
+            x: center.x - itemSize.width / 2, y: center.y - itemSize.height / 2,
+            width: itemSize.width, height: itemSize.height)))
+    }
+  }
+}
+
 @Test func conversationControlsBelongInTheBubbleWhileRecordingKeepsItsHUD() {
   let chat = CompanionBindingState.active(target: nil, skill: .chat, startedAt: 0)
   #expect(chat.hasPresentation)

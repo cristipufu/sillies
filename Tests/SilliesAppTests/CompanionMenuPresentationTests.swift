@@ -45,8 +45,9 @@ import Testing
   defer { panel.close() }
   let interaction = RadialMenuInteraction()
   var dismissed = false
-  interaction.start(panel: panel, regions: [.init(center: CGPoint(x: 150, y: 150), titleWidth: 80)])
-  {
+  interaction.start(
+    panel: panel, localRegions: [.init(center: CGPoint(x: 150, y: 150), titleWidth: 80)]
+  ) {
     dismissed = true
     interaction.stop()
   }
@@ -63,6 +64,44 @@ import Testing
   #expect(panel.ignoresMouseEvents)
 }
 
+@Test @MainActor func skillOverlayKeepsItsAnchorWhenTransparentPaddingCrossesTheScreenEdge() throws
+{
+  let screen = try #require(NSScreen.main)
+  let visible = screen.visibleFrame
+  let frame = CGRect(x: visible.midX - 180, y: visible.maxY - 80, width: 360, height: 360)
+  let panel = SkillFloatingPanel(
+    contentRect: frame, ignoresMouseEvents: true,
+    level: CompanionPanel.hudLevel(forWindowLayer: 0))
+  defer { panel.close() }
+  #expect(panel.constrainFrameRect(frame, to: screen) == frame)
+}
+
+@Test @MainActor func radialMenuTracksRenderedButtonsAfterItsPanelMoves() throws {
+  let panel = SkillFloatingPanel(
+    contentRect: CGRect(x: 200, y: 300, width: 300, height: 300), ignoresMouseEvents: true)
+  defer { panel.close() }
+  let interaction = RadialMenuInteraction()
+  defer { interaction.stop() }
+  var dismissed = false
+  interaction.start(
+    panel: panel, localRegions: [.init(center: CGPoint(x: 150, y: 150), titleWidth: 80)]
+  ) { dismissed = true }
+  #expect(panel.acceptsMouseMovedEvents)
+  panel.setFrameOrigin(CGPoint(x: 400, y: 450))
+  let click = try #require(
+    NSEvent.mouseEvent(
+      with: .leftMouseDown, location: CGPoint(x: 150, y: 162), modifierFlags: [],
+      timestamp: 1, windowNumber: panel.windowNumber, context: nil,
+      eventNumber: 1, clickCount: 1, pressure: 1))
+  #expect(interaction.handleLocalEvent(click) === click)
+  #expect(!panel.ignoresMouseEvents)
+  #expect(!dismissed)
+  interaction.refresh(at: panel.convertPoint(toScreen: CGPoint(x: 30, y: 30)))
+  #expect(panel.ignoresMouseEvents)
+  interaction.stop()
+  #expect(!panel.acceptsMouseMovedEvents)
+}
+
 @Test @MainActor func directActionsUseTheSharedOrbitalArtworkInBothAppearances() throws {
   let layout = CompanionActionMenuLayout(
     anchor: CGPoint(x: 400, y: 400), count: 4,
@@ -74,6 +113,63 @@ import Testing
         .environment(\.colorScheme, scheme), size: layout.frame.size,
       name: "sillies-direct-wheel-\(scheme)")
   }
+}
+
+@Test @MainActor func directMenuButtonsDispatchEveryActionAtTheTopScreenEdge() throws {
+  let visible = try #require(NSScreen.main).visibleFrame
+  let layout = CompanionActionMenuLayout(
+    anchor: CGPoint(x: visible.midX, y: visible.maxY - 30), count: 4,
+    itemSize: CGSize(width: 110, height: 100), visibleFrame: visible)
+  let panel = SkillFloatingPanel(
+    contentRect: layout.frame, ignoresMouseEvents: false,
+    level: CompanionPanel.hudLevel(forWindowLayer: 0), focus: .keyboard)
+  defer { panel.close() }
+  var selected: [CompanionDirectAction] = []
+  let view = ThemedHostingView(
+    rootView: CompanionDirectMenuView(layout: layout) { selected.append($0) },
+    appearance: ThemeEnvironment())
+  view.sizingOptions = []
+  panel.contentView = view
+  view.frame = CGRect(origin: .zero, size: layout.frame.size)
+  view.layoutSubtreeIfNeeded()
+  let initialFrame = panel.frame
+  let interaction = RadialMenuInteraction()
+  defer { interaction.stop() }
+  var dismissals = 0
+  interaction.start(
+    panel: panel,
+    localRegions: zip(layout.centers, CompanionDirectAction.allCases).map { center, action in
+      .init(
+        center: CGPoint(x: center.x - layout.frame.minX, y: center.y - layout.frame.minY),
+        titleWidth: action.titleWidth)
+    }
+  ) { dismissals += 1 }
+  panel.orderFrontRegardless()
+  panel.makeKey()
+  try DisplayFrameSequence.presentCreatedWindows()
+  #expect(panel.frame == initialFrame)
+  for (action, center) in zip(CompanionDirectAction.allCases, layout.centers) {
+    let iconOffset = (RadialMenuItemLayout.height - RadialMenuItemLayout.iconDiameter) / 2
+    let icon = panel.convertPoint(fromScreen: CGPoint(x: center.x, y: center.y + iconOffset))
+    let down = try menuMouseEvent(.leftMouseDown, at: icon, in: panel)
+    let up = try menuMouseEvent(.leftMouseUp, at: icon, in: panel)
+    NSApp.postEvent(up, atStart: true)
+    NSApp.sendEvent(down)
+    try DisplayFrameSequence.run(count: 2) { _ in }
+    #expect(selected.last == action)
+  }
+  #expect(selected == CompanionDirectAction.allCases)
+  #expect(dismissals == 0)
+}
+
+@MainActor private func menuMouseEvent(
+  _ type: NSEvent.EventType, at point: CGPoint, in window: NSWindow
+) throws -> NSEvent {
+  try #require(
+    NSEvent.mouseEvent(
+      with: type, location: point, modifierFlags: [],
+      timestamp: ProcessInfo.processInfo.systemUptime, windowNumber: window.windowNumber,
+      context: nil, eventNumber: 1, clickCount: 1, pressure: 1))
 }
 
 @Test @MainActor func directMenuNativePresentationDismissesAndReleasesTheCompanion() throws {

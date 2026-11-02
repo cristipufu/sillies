@@ -68,6 +68,7 @@
   "CompanionMenuPresentationTests.swift": {
     "default": "headless",
     "tests": {
+      "directMenuButtonsDispatchEveryActionAtTheTopScreenEdge()": "gui",
       "directMenuNativePresentationDismissesAndReleasesTheCompanion()": "gui"
     }
   },

@@ -84,9 +84,11 @@ enum VaultToolContent {
     return result
   }
   static func excerpt(in record: SessionRecord, query: String) -> String {
-    let candidates =
-      [record.transcript, record.extractedText, record.summary, record.explanation]
-      + record.stashedItems
+    let captured =
+      ([record.transcript, record.extractedText] + record.stashedItems
+      + [record.explanation]).filter { !$0.isEmpty }
+    // A matching title/summary must not hide the captured body during a record read.
+    let candidates = captured.isEmpty ? [record.summary] : captured
     let terms = query.split(whereSeparator: \.isWhitespace).prefix(maximumQueryTerms)
     for candidate in candidates where !candidate.isEmpty {
       for term in terms {
@@ -101,6 +103,6 @@ enum VaultToolContent {
         }
       }
     }
-    return String(record.primaryText.prefix(maximumExcerptCharacters))
+    return String((candidates.first ?? "").prefix(maximumExcerptCharacters))
   }
 }

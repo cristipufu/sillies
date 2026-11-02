@@ -20,6 +20,31 @@ private func removeVaultFixture(_ directory: URL) {
   }
 }
 
+@Test func vaultRecordReadsPreferCapturedBodiesOverMatchingTitles() async throws {
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { removeVaultFixture(directory) }
+  let library = VaultLibrary(directory: directory)
+  let body = "The packaging owner is Leena. Recovery identifier: quartz-73."
+  var records = [savedItem(.listen, app: "Meet", text: body)]
+  var stash = savedItem(.stash, app: "Notes", text: "")
+  stash.stashedItems = [body]
+  records.append(stash)
+  var screenshot = savedItem(.snap, app: "Terminal", text: "")
+  screenshot.extractedText = body
+  records.append(screenshot)
+  for index in records.indices { records[index].summary = "Deployment notes" }
+  _ = try await library.commit(.init(records: records.map(VaultRecordWrite.insert)))
+  for record in records {
+    let args = try JSONEncoder().encode([
+      "recordID": record.id.uuidString, "query": "Deployment notes",
+    ])
+    let result = try await VaultReadTool(library: library).call(arguments: args)
+    #expect(result.sources.first?.excerpt == body)
+  }
+  stash.stashedItems = [String(repeating: "Earlier material. ", count: 200) + body]
+  #expect(VaultToolContent.excerpt(in: stash, query: "recovery").contains("quartz-73"))
+}
+
 @Test func vaultToolsFindScreenshotsSavedURLsAndLateMeetingTopics() async throws {
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
   defer { removeVaultFixture(directory) }

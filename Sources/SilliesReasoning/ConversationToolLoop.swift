@@ -1,6 +1,9 @@
 import SilliesTextModels
 
 enum ConversationToolLoop {
+  // One normal completion and one chance to acknowledge a refused call; never an unbounded retry.
+  private static let maximumCompletionRounds = 2
+
   static func run(
     _ request: TextGenerationRequest, tools: ConversationToolbox,
     receive: @escaping TextDeltaSink = { _ in },
@@ -10,15 +13,12 @@ enum ConversationToolLoop {
   ) async throws -> String {
     var messages = request.messages
     var portions: [String] = []
-    for _ in 0...ConversationToolbox.maximumCalls {
+    for _ in 0..<(ConversationToolbox.maximumCalls + maximumCompletionRounds) {
       try Task.checkCancellation()
       let round = ConversationStreamDelivery(receive: receive)
       let remainingCalls = await tools.remainingCalls
       let response = try await generate(
         roundRequest(request, messages: messages, remainingCalls: remainingCalls), round.append)
-      guard remainingCalls > 0 || response.calls.isEmpty else {
-        throw TextModelError.toolsUnavailable
-      }
       let delivered = try await round.finalized(matching: response.text)
       if !delivered.isEmpty { portions.append(delivered) }
       if response.calls.isEmpty {

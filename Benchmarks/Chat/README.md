@@ -173,7 +173,8 @@ Keep these measures separate:
   Copy both hashes from the turn receipt. Review the entire rubric, including calls and state,
   source attribution and unsupported claims. Reporting rejects stale or duplicate reviews.
   Existing reply-only/content-only reviews remain visible separately; they are not full-rubric passes.
-  Unreviewed and uncertain cases remain pending. Agent review is
+  Unreviewed and uncertain cases remain pending unless another reviewed turn already establishes
+  failure of that task. An uncertain turn is never counted as passing. Agent review is
   preliminary and should receive independent human review before release claims.
 
 An automated case pass is never a full-rubric pass by itself. The report shows both review coverage
@@ -192,6 +193,10 @@ A failed compaction may fail a full case; subsequent turns still have explicit f
 published comparison from complete run directories or exported `.json.gz` archives, without inference.
 It verifies matched binaries, installed model revisions, runtime, hardware and
 fixtures, rejects incomplete or unresolved primary reviews, and retains failed repeat outcomes.
+Omit `REPEATED` for a complete single-pass comparison; its output contains no repeat measurements
+and must not be presented as evidence of stability across runs. Every primary turn still needs a
+full-rubric review. A demonstrated failed turn settles a task as failed even if another turn remains
+uncertain; otherwise an uncertain task blocks scoring. The underlying judgments remain unchanged.
 Its short-answer timing subset includes only reviewed, correct exact answers; it skips whitespace
 and measures their first answer-bearing text. This conditional subset is not an all-task latency score.
 

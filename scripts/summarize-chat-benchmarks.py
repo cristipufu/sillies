@@ -54,8 +54,13 @@ def matched_model_metadata(primary, repeated):
 def reviewed_case(case, judgments):
     decisions = [judgments.get((case["model"], case["job"], index), {})
                  for index in range(len(case["turns"]))]
-    if any(not reviews.full_rubric(item) or item["verdict"] == "uncertain" for item in decisions):
-        raise ValueError(f"Every primary turn needs a resolved full-rubric review: {case['job']}")
+    if any(not reviews.full_rubric(item) for item in decisions):
+        raise ValueError(f"Every primary turn needs a full-rubric review: {case['job']}")
+    # One demonstrated failure settles the task without pretending an uncertain follow-up passed.
+    if any(item["verdict"] == "fail" for item in decisions):
+        return False
+    if any(item["verdict"] == "uncertain" for item in decisions):
+        raise ValueError(f"The primary task outcome is still uncertain: {case['job']}")
     completed = not case.get("error") and not any(turn.get("error") for turn in case["turns"])
     return completed and all(item["verdict"] == "pass" for item in decisions)
 
@@ -191,27 +196,35 @@ def repeat_measurements(primary, repeated):
     return measurements
 
 
+def summarize(primary_source: Path, repeated_source: Path | None = None):
+    configuration, primary = complete_run(primary_source)
+    metadata = model_metadata(primary_source, configuration["models"])
+    judgments = review_index(primary_source, primary)
+    result = {"sourceCommit": configuration["sourceCommit"], "machine": configuration["machine"], "models": metadata,
+              "primaryCorpusHash": configuration["corpusHash"]}
+    if repeated_source is not None:
+        repeat_configuration, repeated = complete_run(repeated_source)
+        matched_extension(configuration, repeat_configuration)
+        matched_model_metadata(metadata, model_metadata(repeated_source, repeat_configuration["models"]))
+        result["repeatCorpusHash"] = repeat_configuration["corpusHash"]
+    result["primary"] = primary_measurements(primary, judgments)
+    if repeated_source is not None:
+        result["repeatedAutomaticChecks"] = repeat_measurements(primary, repeated)
+    if "modelReleases" in configuration:
+        # Keep release metadata absent when reproducing older archives that did not record it.
+        result["modelReleases"] = configuration["modelReleases"]
+        if repeated_source is not None:
+            result["repeatedTiming"] = repeat_timings(primary, repeated)
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("primary", type=Path, help="Complete run directory or published .json.gz archive")
-    parser.add_argument("repeated", type=Path, help="Complete repeat directory or published .json.gz archive")
+    parser.add_argument("repeated", type=Path, nargs="?", help="Optional complete matched repeat run or archive")
     parser.add_argument("--output", type=Path, required=True)
     options = parser.parse_args()
-    configuration, primary = complete_run(options.primary)
-    repeat_configuration, repeated = complete_run(options.repeated)
-    matched_extension(configuration, repeat_configuration)
-    metadata = model_metadata(options.primary, configuration["models"])
-    matched_model_metadata(metadata, model_metadata(options.repeated, repeat_configuration["models"]))
-    judgments = review_index(options.primary, primary)
-    result = {"sourceCommit": configuration["sourceCommit"], "machine": configuration["machine"], "models": metadata,
-              "primaryCorpusHash": configuration["corpusHash"], "repeatCorpusHash": repeat_configuration["corpusHash"],
-              "primary": primary_measurements(primary, judgments),
-              "repeatedAutomaticChecks": repeat_measurements(primary, repeated)}
-    if "modelReleases" in configuration:
-        # Preserve byte-for-byte reproduction of published archives predating release metadata.
-        result["modelReleases"] = configuration["modelReleases"]
-        result["repeatedTiming"] = repeat_timings(primary, repeated)
-    write_json(options.output, result)
+    write_json(options.output, summarize(options.primary, options.repeated))
 
 
 if __name__ == "__main__":

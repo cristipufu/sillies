@@ -24,6 +24,10 @@ class ComparisonSummaryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary) / "run"
             prepare_run(directory, [sample_case()])
+            configuration_path = directory / "run.json"
+            configuration = json.loads(configuration_path.read_text())
+            configuration.update(sourceCommit="fixture", machine={"processor": "synthetic"})
+            configuration_path.write_text(json.dumps(configuration))
             _, case = receipt_for(sample_case())
             destination = directory / "apple" / "cases" / f"{case['job']}.json"
             destination.parent.mkdir(parents=True)
@@ -37,6 +41,11 @@ class ComparisonSummaryTests(unittest.TestCase):
             self.assertEqual(configuration, archived_configuration)
             self.assertEqual(module.primary_measurements(original, module.review_index(directory, original)),
                              module.primary_measurements(archived, module.review_index(published, archived)))
+            summary = module.summarize(published)
+            self.assertEqual(summary["primary"]["apple"]["cases"], 1)
+            self.assertNotIn("repeatedAutomaticChecks", summary)
+            self.assertNotIn("repeatedTiming", summary)
+            self.assertNotIn("repeatCorpusHash", summary)
             document = module.audit.read_document(published)
             document["models"]["apple"]["cases"][0]["turns"][0]["reply"] = "An altered response"
             corrupted = Path(temporary) / "corrupted.json"
@@ -69,6 +78,18 @@ class ComparisonSummaryTests(unittest.TestCase):
             target = case if level == "case" else case["turns"][0]
             target["error"] = "Timeout"
             self.assertFalse(module.reviewed_case(case, {("model", case["job"], 0): judgment}))
+
+    def test_failed_task_keeps_uncertain_followup_without_turning_it_into_a_pass(self):
+        case = receipt()
+        case["turns"].append({"reply": "Pogo", "checks": []})
+        judgments = {("model", case["job"], index): {
+            "scope": "rubric", "evidenceHash": "hash", "verdict": verdict
+        } for index, verdict in enumerate(("fail", "uncertain"))}
+        self.assertFalse(module.reviewed_case(case, judgments))
+        self.assertEqual(judgments[("model", case["job"], 1)]["verdict"], "uncertain")
+        del judgments[("model", case["job"], 1)]
+        with self.assertRaises(ValueError):
+            module.reviewed_case(case, judgments)
 
     def test_repeats_keep_failed_passes_and_case_instability(self):
         failed = receipt(False)

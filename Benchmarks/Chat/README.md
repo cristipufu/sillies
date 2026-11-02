@@ -266,3 +266,7 @@ after changing the harness. Use a new output directory for any changed corpus or
 Model release dates come from the reviewed text catalog and are copied with their primary source
 into `run.json`. Reports use that frozen metadata, never the current catalog or a checkpoint upload
 date. Apple is system-managed; older runs without release metadata report “Not recorded”.
+
+While downloads are arriving, use `--only-models ID ...` to schedule installed members of the
+comparison. Keep the full `--models` list unchanged on every resume. Unscheduled models retain their
+planned coverage and remain pending; they are never silently removed from the ranking denominator.

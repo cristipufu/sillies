@@ -28,6 +28,7 @@ def arguments():
     parser.add_argument("--helper", type=Path, default=ROOT / "build/Sillies.app/Contents/Helpers/SilliesTextInference.app/Contents/MacOS/SilliesTextInference")
     parser.add_argument("--models-root", type=Path, default=Path.home() / "Library/Application Support/Sillies/TextModels")
     parser.add_argument("--models", nargs="+", default=["apple"])
+    parser.add_argument("--only-models", nargs="+", help="Schedule a subset without changing the frozen comparison or its planned coverage")
     parser.add_argument("--groups", nargs="+")
     parser.add_argument("--tag")
     parser.add_argument("--repeats", type=int, default=1)
@@ -42,6 +43,14 @@ def arguments():
     if not all(5 <= value <= 300 for value in (options.turn_timeout, options.case_timeout, options.startup_timeout)):
         parser.error("Process deadlines must be 5–300 seconds")
     return options
+
+
+def scheduled_models(models, only):
+    if only is None:
+        return models
+    if not only or len(set(only)) != len(only) or not set(only) <= set(models):
+        raise ValueError("Scheduled models must be a nonempty, unique subset of --models")
+    return [model for model in models if model in only]
 
 
 def main() -> None:
@@ -84,6 +93,7 @@ def main() -> None:
     supported = {"apple"} | {manifest["model"]["id"] for manifest in catalog["manifests"]}
     if len(set(options.models)) != len(options.models) or not set(options.models) <= supported:
         raise ValueError("Choose unique model IDs from the bundled text catalog, or apple")
+    scheduled = scheduled_models(options.models, options.only_models)
     configuration = {"schema": 2, "cases": cases, "corpusHash": corpus.digest(cases), "catalogHash": corpus.digest(catalog),
                      "modelReleases": {manifest["model"]["id"]: manifest["model"].get("release")
                                        for manifest in catalog["manifests"] if manifest["model"]["id"] in options.models},
@@ -100,7 +110,7 @@ def main() -> None:
     initialize(options.output, configuration)
     deadline = time.monotonic() + options.max_seconds
     try:
-        for model in options.models:
+        for model in scheduled:
             if time.monotonic() >= deadline:
                 break
             ModelBatch(options, model, jobs, deadline).run()

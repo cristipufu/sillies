@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT / "Benchmarks/Chat"))
 from evaluation import audit, corpus, environment, evidence, receipts, report, reviews, scoring
 from evaluation.runner import ModelBatch
 from evaluation.storage import initialize, write_json
+from benchmark import scheduled_models
 
 
 def sample_case(identifier="sample-case"):
@@ -49,6 +50,14 @@ def prepare_run(path, cases):
 
 
 class ChatBenchmarkAuditTests(unittest.TestCase):
+    def test_scheduling_preserves_the_full_comparison_and_order(self):
+        planned = ["small", "large", "control"]
+        self.assertEqual(scheduled_models(planned, ["control", "small"]), ["small", "control"])
+        self.assertEqual(planned, ["small", "large", "control"])
+        for invalid in ([], ["unknown"], ["small", "small"]):
+            with self.assertRaises(ValueError):
+                scheduled_models(planned, invalid)
+
     def test_incremental_history_crosses_worker_boundary_without_gold(self):
         case = sample_case()
         case["historyBatches"] = [[{"role": "user", "text": "Our code changed to amber-61."}]]

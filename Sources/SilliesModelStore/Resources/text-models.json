@@ -2,6 +2,609 @@
   "manifests": [
     {
       "model": {
+        "id": "gemma-4-e4b",
+        "providerID": "mlx",
+        "name": "Gemma 4 E4B",
+        "detail": "Google’s compact model for local notes and writing.",
+        "revision": "475b9088d29754a3379866cf5aeb6b41acd313c2",
+        "license": "Apache 2.0",
+        "release": {
+          "date": "2026-04-02",
+          "sourceURL": "https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/"
+        },
+        "sourceURL": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit",
+        "minimumMemoryGB": 16,
+        "contextTokens": 4096,
+        "languagesDescription": "Over 140 languages. Quality varies by language.",
+        "reasoning": null
+      },
+      "artifacts": [
+        {
+          "path": "chat_template.jinja",
+          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/chat_template.jinja",
+          "byteCount": 17336,
+          "sha256": "2f1b4d75d067bae3fe44e676721c7f077d243bc007156cb9c2f8b5836613d082"
+        },
+        {
+          "path": "config.json",
+          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/config.json",
+          "byteCount": 6628,
+          "sha256": "780ccb3a514a5f1ced161d383f948fc22eca9b84b752ca19494f625bd9bad7a6"
+        },
+        {
+          "path": "generation_config.json",
+          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/generation_config.json",
+          "byteCount": 208,
+          "sha256": "d4226bbe3117d2d253ba4609720ba82c6c4ce4627a9a6ae05387c78983ac03de"
+        },
+        {
+          "path": "model.safetensors",
+          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/model.safetensors",
+          "byteCount": 5146800534,
+          "sha256": "932b8271fc3fe65adcc78b96c10c6268bbfb13e8f67d1358727c0d6ee97e1eff"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/model.safetensors.index.json",
+          "byteCount": 240961,
+          "sha256": "f8accac59ee7efe87e0c298c854610b262c3cadd477407503147c71209ff0093"
+        },
+        {
+          "path": "tokenizer.json",
+          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/tokenizer.json",
+          "byteCount": 32169626,
+          "sha256": "cc8d3a0ce36466ccc1278bf987df5f71db1719b9ca6b4118264f45cb627bfe0f"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/tokenizer_config.json",
+          "byteCount": 2740,
+          "sha256": "080d9e1aff284e2f6043889cd05367966f7c7b80e025fbc0b06745e218158656"
+        }
+      ]
+    },
+    {
+      "model": {
+        "id": "gemma-4-12b",
+        "providerID": "mlx",
+        "name": "Gemma 4 12B",
+        "detail": "Larger multilingual model for more demanding summaries.",
+        "revision": "73bcf09092aa277861d5a191b989b666f7f32e8f",
+        "license": "Apache 2.0",
+        "release": {
+          "date": "2026-06-03",
+          "sourceURL": "https://blog.google/innovation-and-ai/technology/developers-tools/introducing-gemma-4-12b/"
+        },
+        "sourceURL": "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit",
+        "minimumMemoryGB": 24,
+        "contextTokens": 4096,
+        "languagesDescription": "Over 140 languages. Quality varies by language.",
+        "reasoning": null
+      },
+      "artifacts": [
+        {
+          "path": "chat_template.jinja",
+          "url": "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit/resolve/73bcf09092aa277861d5a191b989b666f7f32e8f/chat_template.jinja",
+          "byteCount": 17466,
+          "sha256": "36e3a42e5cf14cd0020e72d92e1fdd9970f59b82170e421f0cbe1bb42bead3f0"
+        },
+        {
+          "path": "config.json",
+          "url": "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit/resolve/73bcf09092aa277861d5a191b989b666f7f32e8f/config.json",
+          "byteCount": 5415,
+          "sha256": "fbc1c1cb48ed86ec98482b2d41f5a03d3991aba74b7c29a93d430761e6518a38"
+        },
+        {
+          "path": "generation_config.json",
+          "url": "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit/resolve/73bcf09092aa277861d5a191b989b666f7f32e8f/generation_config.json",
+          "byteCount": 260,
+          "sha256": "a8349d9bd64cc5841297fcb5002f0fdc4749c473c8f1b10ea337f9ce4ee7014e"
+        },
+        {
+          "path": "model-00001-of-00002.safetensors",
+          "url": "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit/resolve/73bcf09092aa277861d5a191b989b666f7f32e8f/model-00001-of-00002.safetensors",
+          "byteCount": 5351756584,
+          "sha256": "0d58feed0c98a69c07317b4481aeae5ab2785f12a496ea96ab24c4842808de78"
+        },
+        {
+          "path": "model-00002-of-00002.safetensors",
+          "url": "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit/resolve/73bcf09092aa277861d5a191b989b666f7f32e8f/model-00002-of-00002.safetensors",
+          "byteCount": 1389282927,
+          "sha256": "5b00a1bcb596ce6e827b4cdea6ecf2a0f35bb01306eb87c1ea4b3bcde36c7755"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "url": "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit/resolve/73bcf09092aa277861d5a191b989b666f7f32e8f/model.safetensors.index.json",
+          "byteCount": 135329,
+          "sha256": "9ac99e7a6cf3e4d40eb8df01644fe9c04036ace94f3389df35db9d9449758516"
+        },
+        {
+          "path": "tokenizer.json",
+          "url": "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit/resolve/73bcf09092aa277861d5a191b989b666f7f32e8f/tokenizer.json",
+          "byteCount": 32169626,
+          "sha256": "cc8d3a0ce36466ccc1278bf987df5f71db1719b9ca6b4118264f45cb627bfe0f"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "url": "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit/resolve/73bcf09092aa277861d5a191b989b666f7f32e8f/tokenizer_config.json",
+          "byteCount": 2719,
+          "sha256": "fc1384a911d2c9860ac07bc3ceafff20bff26695991744b7dbe5e1e4522bfa57"
+        }
+      ]
+    },
+    {
+      "model": {
+        "id": "gemma-4-26b-a4b",
+        "providerID": "mlx",
+        "name": "Gemma 4 26B A4B",
+        "detail": "Larger model for conversations and summaries. Requires more available memory.",
+        "revision": "0d77464eeb233a2da68ebf9d7dc4edaac7db956d",
+        "license": "Apache 2.0",
+        "release": {
+          "date": "2026-04-02",
+          "sourceURL": "https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/"
+        },
+        "sourceURL": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit",
+        "minimumMemoryGB": 32,
+        "contextTokens": 4096,
+        "languagesDescription": "Over 140 languages. Quality varies by language.",
+        "reasoning": null
+      },
+      "artifacts": [
+        {
+          "path": "chat_template.jinja",
+          "url": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/resolve/0d77464eeb233a2da68ebf9d7dc4edaac7db956d/chat_template.jinja",
+          "byteCount": 17466,
+          "sha256": "36e3a42e5cf14cd0020e72d92e1fdd9970f59b82170e421f0cbe1bb42bead3f0"
+        },
+        {
+          "path": "config.json",
+          "url": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/resolve/0d77464eeb233a2da68ebf9d7dc4edaac7db956d/config.json",
+          "byteCount": 12180,
+          "sha256": "419e13a27ec359654c1ce7dd06d1a87149fd07d0c8af9f770494185e62e1b2ba"
+        },
+        {
+          "path": "generation_config.json",
+          "url": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/resolve/0d77464eeb233a2da68ebf9d7dc4edaac7db956d/generation_config.json",
+          "byteCount": 208,
+          "sha256": "d4226bbe3117d2d253ba4609720ba82c6c4ce4627a9a6ae05387c78983ac03de"
+        },
+        {
+          "path": "model-00001-of-00003.safetensors",
+          "url": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/resolve/0d77464eeb233a2da68ebf9d7dc4edaac7db956d/model-00001-of-00003.safetensors",
+          "byteCount": 5320218487,
+          "sha256": "683f420ee09550b8027bf0335c4202e196b37eb520b60a4bcbe8690b9e388c07"
+        },
+        {
+          "path": "model-00002-of-00003.safetensors",
+          "url": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/resolve/0d77464eeb233a2da68ebf9d7dc4edaac7db956d/model-00002-of-00003.safetensors",
+          "byteCount": 5363328422,
+          "sha256": "feab2873c2976fb7ed666f8462549564a29409364388e0c8f6b015729d165e15"
+        },
+        {
+          "path": "model-00003-of-00003.safetensors",
+          "url": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/resolve/0d77464eeb233a2da68ebf9d7dc4edaac7db956d/model-00003-of-00003.safetensors",
+          "byteCount": 4657658867,
+          "sha256": "bc607486deb1de5bc7e459932fda5c776a4f816b368feaa661bab8cfbb47e567"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "url": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/resolve/0d77464eeb233a2da68ebf9d7dc4edaac7db956d/model.safetensors.index.json",
+          "byteCount": 176940,
+          "sha256": "bf198c9f5ea6462addca1966e5dd669c407537a876e82cf06db9084c5c850b13"
+        },
+        {
+          "path": "tokenizer.json",
+          "url": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/resolve/0d77464eeb233a2da68ebf9d7dc4edaac7db956d/tokenizer.json",
+          "byteCount": 32169626,
+          "sha256": "cc8d3a0ce36466ccc1278bf987df5f71db1719b9ca6b4118264f45cb627bfe0f"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "url": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/resolve/0d77464eeb233a2da68ebf9d7dc4edaac7db956d/tokenizer_config.json",
+          "byteCount": 2740,
+          "sha256": "080d9e1aff284e2f6043889cd05367966f7c7b80e025fbc0b06745e218158656"
+        }
+      ]
+    },
+    {
+      "model": {
+        "id": "granite-4.2-3b",
+        "providerID": "mlx",
+        "name": "Granite 4.2 3B",
+        "detail": "Compact multilingual notes and writing.",
+        "revision": "0c6f39b1827afd5eb2c1c3b13751929857434953",
+        "license": "Apache 2.0",
+        "release": {
+          "date": "2026-08-25",
+          "sourceURL": "https://research.ibm.com/blog/introducing-granite-4-2"
+        },
+        "sourceURL": "https://huggingface.co/ibm-granite/granite-4.2-3b-q4-mlx",
+        "minimumMemoryGB": 8,
+        "contextTokens": 4096,
+        "languagesDescription": "12 languages. Quality varies by language.",
+        "reasoning": "switchableThinkTags"
+      },
+      "artifacts": [
+        {
+          "path": "chat_template.jinja",
+          "url": "https://huggingface.co/ibm-granite/granite-4.2-3b-q4-mlx/resolve/0c6f39b1827afd5eb2c1c3b13751929857434953/chat_template.jinja",
+          "byteCount": 9013,
+          "sha256": "f0ba43f79b3cabca5e5a7584c77aec92f49feae45cdf7779c87d9fc54cd90258"
+        },
+        {
+          "path": "config.json",
+          "url": "https://huggingface.co/ibm-granite/granite-4.2-3b-q4-mlx/resolve/0c6f39b1827afd5eb2c1c3b13751929857434953/config.json",
+          "byteCount": 1185,
+          "sha256": "bfcb1a01587dae223af89f07b960f0b456ef9fe9576167a126aa807941b213d7"
+        },
+        {
+          "path": "generation_config.json",
+          "url": "https://huggingface.co/ibm-granite/granite-4.2-3b-q4-mlx/resolve/0c6f39b1827afd5eb2c1c3b13751929857434953/generation_config.json",
+          "byteCount": 207,
+          "sha256": "1b9baf0a7959d31d7fb58ff6b506c27d09a73d395cadccc7e6dd1d4b7e43fd9d"
+        },
+        {
+          "path": "model.safetensors",
+          "url": "https://huggingface.co/ibm-granite/granite-4.2-3b-q4-mlx/resolve/0c6f39b1827afd5eb2c1c3b13751929857434953/model.safetensors",
+          "byteCount": 2059005430,
+          "sha256": "a71cf9297827b3c3d6ad426081b67c423044f6576632dabe40e7590552fd267d"
+        },
+        {
+          "path": "tokenizer.json",
+          "url": "https://huggingface.co/ibm-granite/granite-4.2-3b-q4-mlx/resolve/0c6f39b1827afd5eb2c1c3b13751929857434953/tokenizer.json",
+          "byteCount": 7153414,
+          "sha256": "883975314d58743726347caaf2c32ac89afd5ad57222cffbc4f052f2ab27b2d7"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "url": "https://huggingface.co/ibm-granite/granite-4.2-3b-q4-mlx/resolve/0c6f39b1827afd5eb2c1c3b13751929857434953/tokenizer_config.json",
+          "byteCount": 436,
+          "sha256": "0b1cc678b9fbde8ce90c81e0f6483c4e1696dfa377330e42a88106416b96e659"
+        }
+      ]
+    },
+    {
+      "model": {
+        "id": "granite-4.2-8b",
+        "providerID": "mlx",
+        "name": "Granite 4.2 8B",
+        "detail": "Larger multilingual model for more demanding summaries.",
+        "revision": "9047f073e46c527f70dade07bb55b1700d728e36",
+        "license": "Apache 2.0",
+        "release": {
+          "date": "2026-08-25",
+          "sourceURL": "https://research.ibm.com/blog/introducing-granite-4-2"
+        },
+        "sourceURL": "https://huggingface.co/ibm-granite/granite-4.2-8b-q4-mlx",
+        "minimumMemoryGB": 16,
+        "contextTokens": 4096,
+        "languagesDescription": "12 languages. Quality varies by language.",
+        "reasoning": "switchableThinkTags"
+      },
+      "artifacts": [
+        {
+          "path": "chat_template.jinja",
+          "url": "https://huggingface.co/ibm-granite/granite-4.2-8b-q4-mlx/resolve/9047f073e46c527f70dade07bb55b1700d728e36/chat_template.jinja",
+          "byteCount": 9013,
+          "sha256": "f0ba43f79b3cabca5e5a7584c77aec92f49feae45cdf7779c87d9fc54cd90258"
+        },
+        {
+          "path": "config.json",
+          "url": "https://huggingface.co/ibm-granite/granite-4.2-8b-q4-mlx/resolve/9047f073e46c527f70dade07bb55b1700d728e36/config.json",
+          "byteCount": 1187,
+          "sha256": "a1ee533ce70c3792b0281f9c7458ad4513ea3a9102e860f5da6f3f636e19c75c"
+        },
+        {
+          "path": "generation_config.json",
+          "url": "https://huggingface.co/ibm-granite/granite-4.2-8b-q4-mlx/resolve/9047f073e46c527f70dade07bb55b1700d728e36/generation_config.json",
+          "byteCount": 207,
+          "sha256": "1b9baf0a7959d31d7fb58ff6b506c27d09a73d395cadccc7e6dd1d4b7e43fd9d"
+        },
+        {
+          "path": "model.safetensors",
+          "url": "https://huggingface.co/ibm-granite/granite-4.2-8b-q4-mlx/resolve/9047f073e46c527f70dade07bb55b1700d728e36/model.safetensors",
+          "byteCount": 4945853970,
+          "sha256": "86a0c04a5deb24de6ada66a37c7373e3e37dbf2a138ed28bb03c212d331b6429"
+        },
+        {
+          "path": "tokenizer.json",
+          "url": "https://huggingface.co/ibm-granite/granite-4.2-8b-q4-mlx/resolve/9047f073e46c527f70dade07bb55b1700d728e36/tokenizer.json",
+          "byteCount": 7153414,
+          "sha256": "883975314d58743726347caaf2c32ac89afd5ad57222cffbc4f052f2ab27b2d7"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "url": "https://huggingface.co/ibm-granite/granite-4.2-8b-q4-mlx/resolve/9047f073e46c527f70dade07bb55b1700d728e36/tokenizer_config.json",
+          "byteCount": 436,
+          "sha256": "0b1cc678b9fbde8ce90c81e0f6483c4e1696dfa377330e42a88106416b96e659"
+        }
+      ]
+    },
+    {
+      "model": {
+        "id": "lfm-2.5-2.6b",
+        "providerID": "mlx",
+        "name": "LFM2.5 2.6B",
+        "detail": "Compact multilingual notes and writing.",
+        "revision": "04efa23776ce61ec34ec95ec34c859854c89542b",
+        "license": "LFM Open License 1.0",
+        "release": {
+          "date": "2026-08-04",
+          "sourceURL": "https://www.liquid.ai/blog/lfm2-5-2-6b"
+        },
+        "sourceURL": "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit",
+        "minimumMemoryGB": 8,
+        "contextTokens": 4096,
+        "languagesDescription": "16 languages. Quality varies by language.",
+        "reasoning": "alwaysOnThinkTags"
+      },
+      "artifacts": [
+        {
+          "path": "chat_template.jinja",
+          "url": "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit/resolve/04efa23776ce61ec34ec95ec34c859854c89542b/chat_template.jinja",
+          "byteCount": 5496,
+          "sha256": "aadd425edb1d42fe9288e5de3624c21c1c03099129b9cfea5978f1bc67222c0a"
+        },
+        {
+          "path": "config.json",
+          "url": "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit/resolve/04efa23776ce61ec34ec95ec34c859854c89542b/config.json",
+          "byteCount": 2202,
+          "sha256": "6ab5ad71687f6ca8d3811b9290ac06291f78e1e0f4f3ec504e6644032d58342b"
+        },
+        {
+          "path": "generation_config.json",
+          "url": "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit/resolve/04efa23776ce61ec34ec95ec34c859854c89542b/generation_config.json",
+          "byteCount": 306,
+          "sha256": "e08c9a83f4bfe64468c9671a2b69b60549728e2a9481387f3555471f64e958bc"
+        },
+        {
+          "path": "model.safetensors",
+          "url": "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit/resolve/04efa23776ce61ec34ec95ec34c859854c89542b/model.safetensors",
+          "byteCount": 1583152892,
+          "sha256": "ef350b75815752f8bff8c064c9fc8bd8b5709577d72943436852013d2bcd4691"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "url": "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit/resolve/04efa23776ce61ec34ec95ec34c859854c89542b/model.safetensors.index.json",
+          "byteCount": 41983,
+          "sha256": "620f8efaf53e826757324852e999f6ba9a5d974e193589470a70951fd17a1543"
+        },
+        {
+          "path": "tokenizer.json",
+          "url": "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit/resolve/04efa23776ce61ec34ec95ec34c859854c89542b/tokenizer.json",
+          "byteCount": 17905598,
+          "sha256": "695be7802a0e4b8a81048f0ff5ebb7fc811a0ba5a6be63dbb24deb5a81096f41"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "url": "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit/resolve/04efa23776ce61ec34ec95ec34c859854c89542b/tokenizer_config.json",
+          "byteCount": 363,
+          "sha256": "11f1de897317b489dd09199284528382eeb17f566398b16e2039bb2266d26b09"
+        }
+      ]
+    },
+    {
+      "model": {
+        "id": "lfm-2.5-24b-a2b",
+        "providerID": "mlx",
+        "name": "LFM2.5 24B A2B",
+        "detail": "Larger model for conversations and summaries. Requires more available memory.",
+        "revision": "667408d494bde191c2cb9dd4f4549827816b9275",
+        "license": "LFM Open License 1.0",
+        "release": {
+          "date": "2026-10-13",
+          "sourceURL": "https://www.liquid.ai/blog/lfm2-5-24b-a2b"
+        },
+        "sourceURL": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit",
+        "minimumMemoryGB": 32,
+        "contextTokens": 4096,
+        "languagesDescription": "16 languages. Quality varies by language.",
+        "reasoning": "alwaysOnThinkTags"
+      },
+      "artifacts": [
+        {
+          "path": "chat_template.jinja",
+          "url": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit/resolve/667408d494bde191c2cb9dd4f4549827816b9275/chat_template.jinja",
+          "byteCount": 5496,
+          "sha256": "aadd425edb1d42fe9288e5de3624c21c1c03099129b9cfea5978f1bc67222c0a"
+        },
+        {
+          "path": "config.json",
+          "url": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit/resolve/667408d494bde191c2cb9dd4f4549827816b9275/config.json",
+          "byteCount": 2148,
+          "sha256": "4901707c3cef43e3cf68a0dedc3e39687de43413cab30578a32c63c643984244"
+        },
+        {
+          "path": "generation_config.json",
+          "url": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit/resolve/667408d494bde191c2cb9dd4f4549827816b9275/generation_config.json",
+          "byteCount": 329,
+          "sha256": "d1ecad152cd278e57220364423f5a5b19350f1e6e230ff82281a5c23a3173f16"
+        },
+        {
+          "path": "model-00001-of-00003.safetensors",
+          "url": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit/resolve/667408d494bde191c2cb9dd4f4549827816b9275/model-00001-of-00003.safetensors",
+          "byteCount": 5318453801,
+          "sha256": "17e953456c62314a498f1ef5ee8a5f1b51ac83f6b6bb684f160dde4f92cd11c0"
+        },
+        {
+          "path": "model-00002-of-00003.safetensors",
+          "url": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit/resolve/667408d494bde191c2cb9dd4f4549827816b9275/model-00002-of-00003.safetensors",
+          "byteCount": 5344895125,
+          "sha256": "c3ae09dba31b3786c325425435021cf5d5bf06c1a79acb31a741e15a47e5bb14"
+        },
+        {
+          "path": "model-00003-of-00003.safetensors",
+          "url": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit/resolve/667408d494bde191c2cb9dd4f4549827816b9275/model-00003-of-00003.safetensors",
+          "byteCount": 2903945409,
+          "sha256": "9814144af5045ea8c96e2f1352148fdbe9f8a0085b76df6d6760efbe916e9840"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "url": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit/resolve/667408d494bde191c2cb9dd4f4549827816b9275/model.safetensors.index.json",
+          "byteCount": 80192,
+          "sha256": "7887b03265aef7824c8e5b9a51667e486f889749240d8c59a95f3cd899e86e4a"
+        },
+        {
+          "path": "tokenizer.json",
+          "url": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit/resolve/667408d494bde191c2cb9dd4f4549827816b9275/tokenizer.json",
+          "byteCount": 17905598,
+          "sha256": "695be7802a0e4b8a81048f0ff5ebb7fc811a0ba5a6be63dbb24deb5a81096f41"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "url": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit/resolve/667408d494bde191c2cb9dd4f4549827816b9275/tokenizer_config.json",
+          "byteCount": 363,
+          "sha256": "11f1de897317b489dd09199284528382eeb17f566398b16e2039bb2266d26b09"
+        }
+      ]
+    },
+    {
+      "model": {
+        "id": "ministral-3-8b",
+        "providerID": "mlx",
+        "name": "Ministral 3 8B",
+        "detail": "Mistral’s multilingual model for local notes and writing.",
+        "revision": "182f003f01daa75f9de0f2c4d379722fd0bc1c61",
+        "license": "Apache 2.0",
+        "release": {
+          "date": "2025-12-02",
+          "sourceURL": "https://mistral.ai/news/mistral-3"
+        },
+        "sourceURL": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit",
+        "minimumMemoryGB": 24,
+        "contextTokens": 4096,
+        "languagesDescription": "Dozens of languages; quality varies by language.",
+        "reasoning": null
+      },
+      "artifacts": [
+        {
+          "path": "chat_template.jinja",
+          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/chat_template.jinja",
+          "byteCount": 7759,
+          "sha256": "215fb003a8e13d40e26587f89951f26eac71bb32ddeac209bcbb8161df9e315f"
+        },
+        {
+          "path": "config.json",
+          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/config.json",
+          "byteCount": 1986,
+          "sha256": "390032313a9203fb1dfadfadd75bdceb46ea5409878c88cf34b96cd3739d6f28"
+        },
+        {
+          "path": "generation_config.json",
+          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/generation_config.json",
+          "byteCount": 131,
+          "sha256": "e0923390059f84a9180b00e5501778acc45ea9856cd7f2fd68208b360927c677"
+        },
+        {
+          "path": "model-00001-of-00002.safetensors",
+          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/model-00001-of-00002.safetensors",
+          "byteCount": 5294694324,
+          "sha256": "0b7c0de8f4da647f054095add6d93c1cfdd7f7f38128ecb666ebace634169aa6"
+        },
+        {
+          "path": "model-00002-of-00002.safetensors",
+          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/model-00002-of-00002.safetensors",
+          "byteCount": 301990235,
+          "sha256": "aa49bdcf4394ab16f0cbd45b750313978073f514da8b56e802ee3c7568b3a865"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/model.safetensors.index.json",
+          "byteCount": 103195,
+          "sha256": "91360719f4ce9383f46bb5750cd0b8cb4aec070dd8804c11ed94585a9924409b"
+        },
+        {
+          "path": "tokenizer.json",
+          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/tokenizer.json",
+          "byteCount": 17077402,
+          "sha256": "286acad9b0e27fce778ac429763536accf618ccb6ed72963b6f94685e531c5c7"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/tokenizer_config.json",
+          "byteCount": 21188,
+          "sha256": "54b6ee53caf87c338527472386b6adcc4253bf48b93cc9c27fe1d25db4ff36fc"
+        }
+      ]
+    },
+    {
+      "model": {
+        "id": "nemotron-3.5-bolt-e4b",
+        "providerID": "mlx",
+        "name": "Nemotron 3.5 Bolt E4B",
+        "detail": "Compact multilingual notes and writing.",
+        "revision": "0c204a16b6b186d1434e70f5fc2ca2e30984a006",
+        "license": "OpenMDW 1.1",
+        "release": {
+          "date": "2026-10-23",
+          "sourceURL": "https://research.nvidia.com/labs/nemotron/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB/"
+        },
+        "sourceURL": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit",
+        "minimumMemoryGB": 24,
+        "contextTokens": 4096,
+        "languagesDescription": "35 languages. Quality varies by language.",
+        "reasoning": null
+      },
+      "artifacts": [
+        {
+          "path": "chat_template.jinja",
+          "url": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit/resolve/0c204a16b6b186d1434e70f5fc2ca2e30984a006/chat_template.jinja",
+          "byteCount": 20161,
+          "sha256": "35b7d0641b6fb4ee41c3bc623e85bdb7d583c40f6ae9f24514ae58a9d57119f3"
+        },
+        {
+          "path": "config.json",
+          "url": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit/resolve/0c204a16b6b186d1434e70f5fc2ca2e30984a006/config.json",
+          "byteCount": 76793,
+          "sha256": "0b7b05eeb05fce2142a1b854d4fd4c9ccd2ddc635d9b32ad1b41048d183cd69a"
+        },
+        {
+          "path": "generation_config.json",
+          "url": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit/resolve/0c204a16b6b186d1434e70f5fc2ca2e30984a006/generation_config.json",
+          "byteCount": 208,
+          "sha256": "d4226bbe3117d2d253ba4609720ba82c6c4ce4627a9a6ae05387c78983ac03de"
+        },
+        {
+          "path": "model-00001-of-00002.safetensors",
+          "url": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit/resolve/0c204a16b6b186d1434e70f5fc2ca2e30984a006/model-00001-of-00002.safetensors",
+          "byteCount": 3505995882,
+          "sha256": "9b1c3769e582ab07bcb1319e1fd6a1f6ce1d5b2afed1b7b120efbd6381a67c95"
+        },
+        {
+          "path": "model-00002-of-00002.safetensors",
+          "url": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit/resolve/0c204a16b6b186d1434e70f5fc2ca2e30984a006/model-00002-of-00002.safetensors",
+          "byteCount": 3023979920,
+          "sha256": "c816c356a2bbddef2b6e6e389f77055cf4cc11b586f9d91ac4e5804537d90f99"
+        },
+        {
+          "path": "model.safetensors.index.json",
+          "url": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit/resolve/0c204a16b6b186d1434e70f5fc2ca2e30984a006/model.safetensors.index.json",
+          "byteCount": 259833,
+          "sha256": "e07e11372777639181da2c972e2bb6c759824d6f022897ad2b590ec9427e5ced"
+        },
+        {
+          "path": "optiq_vision.safetensors",
+          "url": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit/resolve/0c204a16b6b186d1434e70f5fc2ca2e30984a006/optiq_vision.safetensors",
+          "byteCount": 956351300,
+          "sha256": "edaf481025dbd76fa64b0f6bb94e5b020f5621d84b8c04ea9ecbefcd52db957f"
+        },
+        {
+          "path": "tokenizer.json",
+          "url": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit/resolve/0c204a16b6b186d1434e70f5fc2ca2e30984a006/tokenizer.json",
+          "byteCount": 32169626,
+          "sha256": "cc8d3a0ce36466ccc1278bf987df5f71db1719b9ca6b4118264f45cb627bfe0f"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "url": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit/resolve/0c204a16b6b186d1434e70f5fc2ca2e30984a006/tokenizer_config.json",
+          "byteCount": 3760,
+          "sha256": "8227f6f1d959e2ded8be6351bf863a77b781bfd93b82b01e6f65d5d91d5cecb8"
+        }
+      ]
+    },
+    {
+      "model": {
         "id": "qwen-3.5-2b",
         "providerID": "mlx",
         "name": "Qwen3.5 2B",
@@ -174,609 +777,6 @@
           "url": "https://huggingface.co/mlx-community/Qwen3.5-9B-MLX-4bit/resolve/938d8919941c6e7efd3c7150eff7fe9d12afa631/tokenizer_config.json",
           "byteCount": 1139,
           "sha256": "e98f1901ac6f0adff67b1d540bfa0c36ac1a0cf59eb72ed78146ef89aafa1182"
-        }
-      ]
-    },
-    {
-      "model": {
-        "id": "gemma-4-e4b",
-        "providerID": "mlx",
-        "name": "Gemma 4 E4B",
-        "detail": "Google’s compact model for local notes and writing.",
-        "revision": "475b9088d29754a3379866cf5aeb6b41acd313c2",
-        "license": "Apache 2.0",
-        "release": {
-          "date": "2026-04-02",
-          "sourceURL": "https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/"
-        },
-        "sourceURL": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit",
-        "minimumMemoryGB": 16,
-        "contextTokens": 4096,
-        "languagesDescription": "Over 140 languages. Quality varies by language.",
-        "reasoning": null
-      },
-      "artifacts": [
-        {
-          "path": "chat_template.jinja",
-          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/chat_template.jinja",
-          "byteCount": 17336,
-          "sha256": "2f1b4d75d067bae3fe44e676721c7f077d243bc007156cb9c2f8b5836613d082"
-        },
-        {
-          "path": "config.json",
-          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/config.json",
-          "byteCount": 6628,
-          "sha256": "780ccb3a514a5f1ced161d383f948fc22eca9b84b752ca19494f625bd9bad7a6"
-        },
-        {
-          "path": "generation_config.json",
-          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/generation_config.json",
-          "byteCount": 208,
-          "sha256": "d4226bbe3117d2d253ba4609720ba82c6c4ce4627a9a6ae05387c78983ac03de"
-        },
-        {
-          "path": "model.safetensors",
-          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/model.safetensors",
-          "byteCount": 5146800534,
-          "sha256": "932b8271fc3fe65adcc78b96c10c6268bbfb13e8f67d1358727c0d6ee97e1eff"
-        },
-        {
-          "path": "model.safetensors.index.json",
-          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/model.safetensors.index.json",
-          "byteCount": 240961,
-          "sha256": "f8accac59ee7efe87e0c298c854610b262c3cadd477407503147c71209ff0093"
-        },
-        {
-          "path": "tokenizer.json",
-          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/tokenizer.json",
-          "byteCount": 32169626,
-          "sha256": "cc8d3a0ce36466ccc1278bf987df5f71db1719b9ca6b4118264f45cb627bfe0f"
-        },
-        {
-          "path": "tokenizer_config.json",
-          "url": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/tokenizer_config.json",
-          "byteCount": 2740,
-          "sha256": "080d9e1aff284e2f6043889cd05367966f7c7b80e025fbc0b06745e218158656"
-        }
-      ]
-    },
-    {
-      "model": {
-        "id": "gemma-4-26b-a4b",
-        "providerID": "mlx",
-        "name": "Gemma 4 26B A4B",
-        "detail": "Larger model for conversations and summaries. Requires more available memory.",
-        "revision": "0d77464eeb233a2da68ebf9d7dc4edaac7db956d",
-        "license": "Apache 2.0",
-        "release": {
-          "date": "2026-04-02",
-          "sourceURL": "https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/"
-        },
-        "sourceURL": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit",
-        "minimumMemoryGB": 32,
-        "contextTokens": 4096,
-        "languagesDescription": "Over 140 languages. Quality varies by language.",
-        "reasoning": null
-      },
-      "artifacts": [
-        {
-          "path": "chat_template.jinja",
-          "url": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/resolve/0d77464eeb233a2da68ebf9d7dc4edaac7db956d/chat_template.jinja",
-          "byteCount": 17466,
-          "sha256": "36e3a42e5cf14cd0020e72d92e1fdd9970f59b82170e421f0cbe1bb42bead3f0"
-        },
-        {
-          "path": "config.json",
-          "url": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/resolve/0d77464eeb233a2da68ebf9d7dc4edaac7db956d/config.json",
-          "byteCount": 12180,
-          "sha256": "419e13a27ec359654c1ce7dd06d1a87149fd07d0c8af9f770494185e62e1b2ba"
-        },
-        {
-          "path": "generation_config.json",
-          "url": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/resolve/0d77464eeb233a2da68ebf9d7dc4edaac7db956d/generation_config.json",
-          "byteCount": 208,
-          "sha256": "d4226bbe3117d2d253ba4609720ba82c6c4ce4627a9a6ae05387c78983ac03de"
-        },
-        {
-          "path": "model-00001-of-00003.safetensors",
-          "url": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/resolve/0d77464eeb233a2da68ebf9d7dc4edaac7db956d/model-00001-of-00003.safetensors",
-          "byteCount": 5320218487,
-          "sha256": "683f420ee09550b8027bf0335c4202e196b37eb520b60a4bcbe8690b9e388c07"
-        },
-        {
-          "path": "model-00002-of-00003.safetensors",
-          "url": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/resolve/0d77464eeb233a2da68ebf9d7dc4edaac7db956d/model-00002-of-00003.safetensors",
-          "byteCount": 5363328422,
-          "sha256": "feab2873c2976fb7ed666f8462549564a29409364388e0c8f6b015729d165e15"
-        },
-        {
-          "path": "model-00003-of-00003.safetensors",
-          "url": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/resolve/0d77464eeb233a2da68ebf9d7dc4edaac7db956d/model-00003-of-00003.safetensors",
-          "byteCount": 4657658867,
-          "sha256": "bc607486deb1de5bc7e459932fda5c776a4f816b368feaa661bab8cfbb47e567"
-        },
-        {
-          "path": "model.safetensors.index.json",
-          "url": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/resolve/0d77464eeb233a2da68ebf9d7dc4edaac7db956d/model.safetensors.index.json",
-          "byteCount": 176940,
-          "sha256": "bf198c9f5ea6462addca1966e5dd669c407537a876e82cf06db9084c5c850b13"
-        },
-        {
-          "path": "tokenizer.json",
-          "url": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/resolve/0d77464eeb233a2da68ebf9d7dc4edaac7db956d/tokenizer.json",
-          "byteCount": 32169626,
-          "sha256": "cc8d3a0ce36466ccc1278bf987df5f71db1719b9ca6b4118264f45cb627bfe0f"
-        },
-        {
-          "path": "tokenizer_config.json",
-          "url": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/resolve/0d77464eeb233a2da68ebf9d7dc4edaac7db956d/tokenizer_config.json",
-          "byteCount": 2740,
-          "sha256": "080d9e1aff284e2f6043889cd05367966f7c7b80e025fbc0b06745e218158656"
-        }
-      ]
-    },
-    {
-      "model": {
-        "id": "ministral-3-8b",
-        "providerID": "mlx",
-        "name": "Ministral 3 8B",
-        "detail": "Mistral’s multilingual model for local notes and writing.",
-        "revision": "182f003f01daa75f9de0f2c4d379722fd0bc1c61",
-        "license": "Apache 2.0",
-        "release": {
-          "date": "2025-12-02",
-          "sourceURL": "https://mistral.ai/news/mistral-3"
-        },
-        "sourceURL": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit",
-        "minimumMemoryGB": 24,
-        "contextTokens": 4096,
-        "languagesDescription": "Dozens of languages; quality varies by language.",
-        "reasoning": null
-      },
-      "artifacts": [
-        {
-          "path": "chat_template.jinja",
-          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/chat_template.jinja",
-          "byteCount": 7759,
-          "sha256": "215fb003a8e13d40e26587f89951f26eac71bb32ddeac209bcbb8161df9e315f"
-        },
-        {
-          "path": "config.json",
-          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/config.json",
-          "byteCount": 1986,
-          "sha256": "390032313a9203fb1dfadfadd75bdceb46ea5409878c88cf34b96cd3739d6f28"
-        },
-        {
-          "path": "generation_config.json",
-          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/generation_config.json",
-          "byteCount": 131,
-          "sha256": "e0923390059f84a9180b00e5501778acc45ea9856cd7f2fd68208b360927c677"
-        },
-        {
-          "path": "model-00001-of-00002.safetensors",
-          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/model-00001-of-00002.safetensors",
-          "byteCount": 5294694324,
-          "sha256": "0b7c0de8f4da647f054095add6d93c1cfdd7f7f38128ecb666ebace634169aa6"
-        },
-        {
-          "path": "model-00002-of-00002.safetensors",
-          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/model-00002-of-00002.safetensors",
-          "byteCount": 301990235,
-          "sha256": "aa49bdcf4394ab16f0cbd45b750313978073f514da8b56e802ee3c7568b3a865"
-        },
-        {
-          "path": "model.safetensors.index.json",
-          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/model.safetensors.index.json",
-          "byteCount": 103195,
-          "sha256": "91360719f4ce9383f46bb5750cd0b8cb4aec070dd8804c11ed94585a9924409b"
-        },
-        {
-          "path": "tokenizer.json",
-          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/tokenizer.json",
-          "byteCount": 17077402,
-          "sha256": "286acad9b0e27fce778ac429763536accf618ccb6ed72963b6f94685e531c5c7"
-        },
-        {
-          "path": "tokenizer_config.json",
-          "url": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/tokenizer_config.json",
-          "byteCount": 21188,
-          "sha256": "54b6ee53caf87c338527472386b6adcc4253bf48b93cc9c27fe1d25db4ff36fc"
-        }
-      ]
-    },
-    {
-      "model": {
-        "id": "nemotron-3.5-bolt-e4b",
-        "providerID": "mlx",
-        "name": "Nemotron 3.5 Bolt E4B",
-        "detail": "Compact multilingual notes and writing.",
-        "revision": "0c204a16b6b186d1434e70f5fc2ca2e30984a006",
-        "license": "OpenMDW 1.1",
-        "release": {
-          "date": "2026-10-23",
-          "sourceURL": "https://research.nvidia.com/labs/nemotron/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB/"
-        },
-        "sourceURL": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit",
-        "minimumMemoryGB": 24,
-        "contextTokens": 4096,
-        "languagesDescription": "35 languages. Quality varies by language.",
-        "reasoning": null
-      },
-      "artifacts": [
-        {
-          "path": "chat_template.jinja",
-          "url": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit/resolve/0c204a16b6b186d1434e70f5fc2ca2e30984a006/chat_template.jinja",
-          "byteCount": 20161,
-          "sha256": "35b7d0641b6fb4ee41c3bc623e85bdb7d583c40f6ae9f24514ae58a9d57119f3"
-        },
-        {
-          "path": "config.json",
-          "url": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit/resolve/0c204a16b6b186d1434e70f5fc2ca2e30984a006/config.json",
-          "byteCount": 76793,
-          "sha256": "0b7b05eeb05fce2142a1b854d4fd4c9ccd2ddc635d9b32ad1b41048d183cd69a"
-        },
-        {
-          "path": "generation_config.json",
-          "url": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit/resolve/0c204a16b6b186d1434e70f5fc2ca2e30984a006/generation_config.json",
-          "byteCount": 208,
-          "sha256": "d4226bbe3117d2d253ba4609720ba82c6c4ce4627a9a6ae05387c78983ac03de"
-        },
-        {
-          "path": "model-00001-of-00002.safetensors",
-          "url": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit/resolve/0c204a16b6b186d1434e70f5fc2ca2e30984a006/model-00001-of-00002.safetensors",
-          "byteCount": 3505995882,
-          "sha256": "9b1c3769e582ab07bcb1319e1fd6a1f6ce1d5b2afed1b7b120efbd6381a67c95"
-        },
-        {
-          "path": "model-00002-of-00002.safetensors",
-          "url": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit/resolve/0c204a16b6b186d1434e70f5fc2ca2e30984a006/model-00002-of-00002.safetensors",
-          "byteCount": 3023979920,
-          "sha256": "c816c356a2bbddef2b6e6e389f77055cf4cc11b586f9d91ac4e5804537d90f99"
-        },
-        {
-          "path": "model.safetensors.index.json",
-          "url": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit/resolve/0c204a16b6b186d1434e70f5fc2ca2e30984a006/model.safetensors.index.json",
-          "byteCount": 259833,
-          "sha256": "e07e11372777639181da2c972e2bb6c759824d6f022897ad2b590ec9427e5ced"
-        },
-        {
-          "path": "optiq_vision.safetensors",
-          "url": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit/resolve/0c204a16b6b186d1434e70f5fc2ca2e30984a006/optiq_vision.safetensors",
-          "byteCount": 956351300,
-          "sha256": "edaf481025dbd76fa64b0f6bb94e5b020f5621d84b8c04ea9ecbefcd52db957f"
-        },
-        {
-          "path": "tokenizer.json",
-          "url": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit/resolve/0c204a16b6b186d1434e70f5fc2ca2e30984a006/tokenizer.json",
-          "byteCount": 32169626,
-          "sha256": "cc8d3a0ce36466ccc1278bf987df5f71db1719b9ca6b4118264f45cb627bfe0f"
-        },
-        {
-          "path": "tokenizer_config.json",
-          "url": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit/resolve/0c204a16b6b186d1434e70f5fc2ca2e30984a006/tokenizer_config.json",
-          "byteCount": 3760,
-          "sha256": "8227f6f1d959e2ded8be6351bf863a77b781bfd93b82b01e6f65d5d91d5cecb8"
-        }
-      ]
-    },
-    {
-      "model": {
-        "id": "lfm-2.5-2.6b",
-        "providerID": "mlx",
-        "name": "LFM2.5 2.6B",
-        "detail": "Compact multilingual notes and writing.",
-        "revision": "04efa23776ce61ec34ec95ec34c859854c89542b",
-        "license": "LFM Open License 1.0",
-        "release": {
-          "date": "2026-08-04",
-          "sourceURL": "https://www.liquid.ai/blog/lfm2-5-2-6b"
-        },
-        "sourceURL": "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit",
-        "minimumMemoryGB": 8,
-        "contextTokens": 4096,
-        "languagesDescription": "16 languages. Quality varies by language.",
-        "reasoning": "alwaysOnThinkTags"
-      },
-      "artifacts": [
-        {
-          "path": "chat_template.jinja",
-          "url": "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit/resolve/04efa23776ce61ec34ec95ec34c859854c89542b/chat_template.jinja",
-          "byteCount": 5496,
-          "sha256": "aadd425edb1d42fe9288e5de3624c21c1c03099129b9cfea5978f1bc67222c0a"
-        },
-        {
-          "path": "config.json",
-          "url": "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit/resolve/04efa23776ce61ec34ec95ec34c859854c89542b/config.json",
-          "byteCount": 2202,
-          "sha256": "6ab5ad71687f6ca8d3811b9290ac06291f78e1e0f4f3ec504e6644032d58342b"
-        },
-        {
-          "path": "generation_config.json",
-          "url": "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit/resolve/04efa23776ce61ec34ec95ec34c859854c89542b/generation_config.json",
-          "byteCount": 306,
-          "sha256": "e08c9a83f4bfe64468c9671a2b69b60549728e2a9481387f3555471f64e958bc"
-        },
-        {
-          "path": "model.safetensors",
-          "url": "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit/resolve/04efa23776ce61ec34ec95ec34c859854c89542b/model.safetensors",
-          "byteCount": 1583152892,
-          "sha256": "ef350b75815752f8bff8c064c9fc8bd8b5709577d72943436852013d2bcd4691"
-        },
-        {
-          "path": "model.safetensors.index.json",
-          "url": "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit/resolve/04efa23776ce61ec34ec95ec34c859854c89542b/model.safetensors.index.json",
-          "byteCount": 41983,
-          "sha256": "620f8efaf53e826757324852e999f6ba9a5d974e193589470a70951fd17a1543"
-        },
-        {
-          "path": "tokenizer.json",
-          "url": "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit/resolve/04efa23776ce61ec34ec95ec34c859854c89542b/tokenizer.json",
-          "byteCount": 17905598,
-          "sha256": "695be7802a0e4b8a81048f0ff5ebb7fc811a0ba5a6be63dbb24deb5a81096f41"
-        },
-        {
-          "path": "tokenizer_config.json",
-          "url": "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit/resolve/04efa23776ce61ec34ec95ec34c859854c89542b/tokenizer_config.json",
-          "byteCount": 363,
-          "sha256": "11f1de897317b489dd09199284528382eeb17f566398b16e2039bb2266d26b09"
-        }
-      ]
-    },
-    {
-      "model": {
-        "id": "gemma-4-12b",
-        "providerID": "mlx",
-        "name": "Gemma 4 12B",
-        "detail": "Larger multilingual model for more demanding summaries.",
-        "revision": "73bcf09092aa277861d5a191b989b666f7f32e8f",
-        "license": "Apache 2.0",
-        "release": {
-          "date": "2026-06-03",
-          "sourceURL": "https://blog.google/innovation-and-ai/technology/developers-tools/introducing-gemma-4-12b/"
-        },
-        "sourceURL": "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit",
-        "minimumMemoryGB": 24,
-        "contextTokens": 4096,
-        "languagesDescription": "Over 140 languages. Quality varies by language.",
-        "reasoning": null
-      },
-      "artifacts": [
-        {
-          "path": "chat_template.jinja",
-          "url": "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit/resolve/73bcf09092aa277861d5a191b989b666f7f32e8f/chat_template.jinja",
-          "byteCount": 17466,
-          "sha256": "36e3a42e5cf14cd0020e72d92e1fdd9970f59b82170e421f0cbe1bb42bead3f0"
-        },
-        {
-          "path": "config.json",
-          "url": "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit/resolve/73bcf09092aa277861d5a191b989b666f7f32e8f/config.json",
-          "byteCount": 5415,
-          "sha256": "fbc1c1cb48ed86ec98482b2d41f5a03d3991aba74b7c29a93d430761e6518a38"
-        },
-        {
-          "path": "generation_config.json",
-          "url": "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit/resolve/73bcf09092aa277861d5a191b989b666f7f32e8f/generation_config.json",
-          "byteCount": 260,
-          "sha256": "a8349d9bd64cc5841297fcb5002f0fdc4749c473c8f1b10ea337f9ce4ee7014e"
-        },
-        {
-          "path": "model-00001-of-00002.safetensors",
-          "url": "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit/resolve/73bcf09092aa277861d5a191b989b666f7f32e8f/model-00001-of-00002.safetensors",
-          "byteCount": 5351756584,
-          "sha256": "0d58feed0c98a69c07317b4481aeae5ab2785f12a496ea96ab24c4842808de78"
-        },
-        {
-          "path": "model-00002-of-00002.safetensors",
-          "url": "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit/resolve/73bcf09092aa277861d5a191b989b666f7f32e8f/model-00002-of-00002.safetensors",
-          "byteCount": 1389282927,
-          "sha256": "5b00a1bcb596ce6e827b4cdea6ecf2a0f35bb01306eb87c1ea4b3bcde36c7755"
-        },
-        {
-          "path": "model.safetensors.index.json",
-          "url": "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit/resolve/73bcf09092aa277861d5a191b989b666f7f32e8f/model.safetensors.index.json",
-          "byteCount": 135329,
-          "sha256": "9ac99e7a6cf3e4d40eb8df01644fe9c04036ace94f3389df35db9d9449758516"
-        },
-        {
-          "path": "tokenizer.json",
-          "url": "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit/resolve/73bcf09092aa277861d5a191b989b666f7f32e8f/tokenizer.json",
-          "byteCount": 32169626,
-          "sha256": "cc8d3a0ce36466ccc1278bf987df5f71db1719b9ca6b4118264f45cb627bfe0f"
-        },
-        {
-          "path": "tokenizer_config.json",
-          "url": "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit/resolve/73bcf09092aa277861d5a191b989b666f7f32e8f/tokenizer_config.json",
-          "byteCount": 2719,
-          "sha256": "fc1384a911d2c9860ac07bc3ceafff20bff26695991744b7dbe5e1e4522bfa57"
-        }
-      ]
-    },
-    {
-      "model": {
-        "id": "granite-4.2-3b",
-        "providerID": "mlx",
-        "name": "Granite 4.2 3B",
-        "detail": "Compact multilingual notes and writing.",
-        "revision": "0c6f39b1827afd5eb2c1c3b13751929857434953",
-        "license": "Apache 2.0",
-        "release": {
-          "date": "2026-08-25",
-          "sourceURL": "https://research.ibm.com/blog/introducing-granite-4-2"
-        },
-        "sourceURL": "https://huggingface.co/ibm-granite/granite-4.2-3b-q4-mlx",
-        "minimumMemoryGB": 8,
-        "contextTokens": 4096,
-        "languagesDescription": "12 languages. Quality varies by language.",
-        "reasoning": "switchableThinkTags"
-      },
-      "artifacts": [
-        {
-          "path": "chat_template.jinja",
-          "url": "https://huggingface.co/ibm-granite/granite-4.2-3b-q4-mlx/resolve/0c6f39b1827afd5eb2c1c3b13751929857434953/chat_template.jinja",
-          "byteCount": 9013,
-          "sha256": "f0ba43f79b3cabca5e5a7584c77aec92f49feae45cdf7779c87d9fc54cd90258"
-        },
-        {
-          "path": "config.json",
-          "url": "https://huggingface.co/ibm-granite/granite-4.2-3b-q4-mlx/resolve/0c6f39b1827afd5eb2c1c3b13751929857434953/config.json",
-          "byteCount": 1185,
-          "sha256": "bfcb1a01587dae223af89f07b960f0b456ef9fe9576167a126aa807941b213d7"
-        },
-        {
-          "path": "generation_config.json",
-          "url": "https://huggingface.co/ibm-granite/granite-4.2-3b-q4-mlx/resolve/0c6f39b1827afd5eb2c1c3b13751929857434953/generation_config.json",
-          "byteCount": 207,
-          "sha256": "1b9baf0a7959d31d7fb58ff6b506c27d09a73d395cadccc7e6dd1d4b7e43fd9d"
-        },
-        {
-          "path": "model.safetensors",
-          "url": "https://huggingface.co/ibm-granite/granite-4.2-3b-q4-mlx/resolve/0c6f39b1827afd5eb2c1c3b13751929857434953/model.safetensors",
-          "byteCount": 2059005430,
-          "sha256": "a71cf9297827b3c3d6ad426081b67c423044f6576632dabe40e7590552fd267d"
-        },
-        {
-          "path": "tokenizer.json",
-          "url": "https://huggingface.co/ibm-granite/granite-4.2-3b-q4-mlx/resolve/0c6f39b1827afd5eb2c1c3b13751929857434953/tokenizer.json",
-          "byteCount": 7153414,
-          "sha256": "883975314d58743726347caaf2c32ac89afd5ad57222cffbc4f052f2ab27b2d7"
-        },
-        {
-          "path": "tokenizer_config.json",
-          "url": "https://huggingface.co/ibm-granite/granite-4.2-3b-q4-mlx/resolve/0c6f39b1827afd5eb2c1c3b13751929857434953/tokenizer_config.json",
-          "byteCount": 436,
-          "sha256": "0b1cc678b9fbde8ce90c81e0f6483c4e1696dfa377330e42a88106416b96e659"
-        }
-      ]
-    },
-    {
-      "model": {
-        "id": "granite-4.2-8b",
-        "providerID": "mlx",
-        "name": "Granite 4.2 8B",
-        "detail": "Larger multilingual model for more demanding summaries.",
-        "revision": "9047f073e46c527f70dade07bb55b1700d728e36",
-        "license": "Apache 2.0",
-        "release": {
-          "date": "2026-08-25",
-          "sourceURL": "https://research.ibm.com/blog/introducing-granite-4-2"
-        },
-        "sourceURL": "https://huggingface.co/ibm-granite/granite-4.2-8b-q4-mlx",
-        "minimumMemoryGB": 16,
-        "contextTokens": 4096,
-        "languagesDescription": "12 languages. Quality varies by language.",
-        "reasoning": "switchableThinkTags"
-      },
-      "artifacts": [
-        {
-          "path": "chat_template.jinja",
-          "url": "https://huggingface.co/ibm-granite/granite-4.2-8b-q4-mlx/resolve/9047f073e46c527f70dade07bb55b1700d728e36/chat_template.jinja",
-          "byteCount": 9013,
-          "sha256": "f0ba43f79b3cabca5e5a7584c77aec92f49feae45cdf7779c87d9fc54cd90258"
-        },
-        {
-          "path": "config.json",
-          "url": "https://huggingface.co/ibm-granite/granite-4.2-8b-q4-mlx/resolve/9047f073e46c527f70dade07bb55b1700d728e36/config.json",
-          "byteCount": 1187,
-          "sha256": "a1ee533ce70c3792b0281f9c7458ad4513ea3a9102e860f5da6f3f636e19c75c"
-        },
-        {
-          "path": "generation_config.json",
-          "url": "https://huggingface.co/ibm-granite/granite-4.2-8b-q4-mlx/resolve/9047f073e46c527f70dade07bb55b1700d728e36/generation_config.json",
-          "byteCount": 207,
-          "sha256": "1b9baf0a7959d31d7fb58ff6b506c27d09a73d395cadccc7e6dd1d4b7e43fd9d"
-        },
-        {
-          "path": "model.safetensors",
-          "url": "https://huggingface.co/ibm-granite/granite-4.2-8b-q4-mlx/resolve/9047f073e46c527f70dade07bb55b1700d728e36/model.safetensors",
-          "byteCount": 4945853970,
-          "sha256": "86a0c04a5deb24de6ada66a37c7373e3e37dbf2a138ed28bb03c212d331b6429"
-        },
-        {
-          "path": "tokenizer.json",
-          "url": "https://huggingface.co/ibm-granite/granite-4.2-8b-q4-mlx/resolve/9047f073e46c527f70dade07bb55b1700d728e36/tokenizer.json",
-          "byteCount": 7153414,
-          "sha256": "883975314d58743726347caaf2c32ac89afd5ad57222cffbc4f052f2ab27b2d7"
-        },
-        {
-          "path": "tokenizer_config.json",
-          "url": "https://huggingface.co/ibm-granite/granite-4.2-8b-q4-mlx/resolve/9047f073e46c527f70dade07bb55b1700d728e36/tokenizer_config.json",
-          "byteCount": 436,
-          "sha256": "0b1cc678b9fbde8ce90c81e0f6483c4e1696dfa377330e42a88106416b96e659"
-        }
-      ]
-    },
-    {
-      "model": {
-        "id": "lfm-2.5-24b-a2b",
-        "providerID": "mlx",
-        "name": "LFM2.5 24B A2B",
-        "detail": "Larger model for conversations and summaries. Requires more available memory.",
-        "revision": "667408d494bde191c2cb9dd4f4549827816b9275",
-        "license": "LFM Open License 1.0",
-        "release": {
-          "date": "2026-10-13",
-          "sourceURL": "https://www.liquid.ai/blog/lfm2-5-24b-a2b"
-        },
-        "sourceURL": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit",
-        "minimumMemoryGB": 32,
-        "contextTokens": 4096,
-        "languagesDescription": "16 languages. Quality varies by language.",
-        "reasoning": "alwaysOnThinkTags"
-      },
-      "artifacts": [
-        {
-          "path": "chat_template.jinja",
-          "url": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit/resolve/667408d494bde191c2cb9dd4f4549827816b9275/chat_template.jinja",
-          "byteCount": 5496,
-          "sha256": "aadd425edb1d42fe9288e5de3624c21c1c03099129b9cfea5978f1bc67222c0a"
-        },
-        {
-          "path": "config.json",
-          "url": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit/resolve/667408d494bde191c2cb9dd4f4549827816b9275/config.json",
-          "byteCount": 2148,
-          "sha256": "4901707c3cef43e3cf68a0dedc3e39687de43413cab30578a32c63c643984244"
-        },
-        {
-          "path": "generation_config.json",
-          "url": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit/resolve/667408d494bde191c2cb9dd4f4549827816b9275/generation_config.json",
-          "byteCount": 329,
-          "sha256": "d1ecad152cd278e57220364423f5a5b19350f1e6e230ff82281a5c23a3173f16"
-        },
-        {
-          "path": "model-00001-of-00003.safetensors",
-          "url": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit/resolve/667408d494bde191c2cb9dd4f4549827816b9275/model-00001-of-00003.safetensors",
-          "byteCount": 5318453801,
-          "sha256": "17e953456c62314a498f1ef5ee8a5f1b51ac83f6b6bb684f160dde4f92cd11c0"
-        },
-        {
-          "path": "model-00002-of-00003.safetensors",
-          "url": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit/resolve/667408d494bde191c2cb9dd4f4549827816b9275/model-00002-of-00003.safetensors",
-          "byteCount": 5344895125,
-          "sha256": "c3ae09dba31b3786c325425435021cf5d5bf06c1a79acb31a741e15a47e5bb14"
-        },
-        {
-          "path": "model-00003-of-00003.safetensors",
-          "url": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit/resolve/667408d494bde191c2cb9dd4f4549827816b9275/model-00003-of-00003.safetensors",
-          "byteCount": 2903945409,
-          "sha256": "9814144af5045ea8c96e2f1352148fdbe9f8a0085b76df6d6760efbe916e9840"
-        },
-        {
-          "path": "model.safetensors.index.json",
-          "url": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit/resolve/667408d494bde191c2cb9dd4f4549827816b9275/model.safetensors.index.json",
-          "byteCount": 80192,
-          "sha256": "7887b03265aef7824c8e5b9a51667e486f889749240d8c59a95f3cd899e86e4a"
-        },
-        {
-          "path": "tokenizer.json",
-          "url": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit/resolve/667408d494bde191c2cb9dd4f4549827816b9275/tokenizer.json",
-          "byteCount": 17905598,
-          "sha256": "695be7802a0e4b8a81048f0ff5ebb7fc811a0ba5a6be63dbb24deb5a81096f41"
-        },
-        {
-          "path": "tokenizer_config.json",
-          "url": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit/resolve/667408d494bde191c2cb9dd4f4549827816b9275/tokenizer_config.json",
-          "byteCount": 363,
-          "sha256": "11f1de897317b489dd09199284528382eeb17f566398b16e2039bb2266d26b09"
         }
       ]
     }

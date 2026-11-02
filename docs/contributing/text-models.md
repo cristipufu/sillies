@@ -12,6 +12,8 @@ can use the catalog and installer; a new runtime needs a separate adapter.
    Generate `Sources/SilliesModelStore/Resources/text-models.json`. Review all required files, hashes,
    byte lengths, per-model license, original release date and its primary source, and total download size.
    A conversion upload date is not a model release date. These dates are frozen in benchmark runs.
+   Settings uses catalog order: keep families alphabetical and variants ordered by download size
+   within each family. Keep the README model table in the same order; Apple stays first.
 3. Run catalog validation and the helper's tokenizer check against the installed local files. A custom
    tokenizer may need an adapter; successful tokenization alone does not prove generation quality.
 4. Update catalog regression expectations and packaged attribution. Keep IDs stable and revisions

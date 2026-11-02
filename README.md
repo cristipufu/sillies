@@ -133,18 +133,18 @@ Settings → **Local AI**
 | Model | Download | Required memory |
 | --- | --- | --- |
 | **Apple Intelligence** | Managed by macOS | An eligible Mac with Apple Intelligence enabled |
+| **Gemma 4 E4B** | ~5.18 GB | 16 GB |
+| **Gemma 4 12B** | ~6.77 GB | 24 GB |
+| **Gemma 4 26B A4B** | ~15.37 GB | 32 GB |
+| **Granite 4.2 3B** | ~2.07 GB | 8 GB |
+| **Granite 4.2 8B** | ~4.95 GB | 16 GB |
+| **LFM2.5 2.6B** | ~1.60 GB | 8 GB |
+| **LFM2.5 24B A2B** | ~13.59 GB | 32 GB |
+| **Ministral 3 8B Instruct** | ~5.61 GB | 24 GB |
+| **Nemotron 3.5 Bolt E4B** | ~7.52 GB | 24 GB |
 | **Qwen3.5 2B** | ~1.74 GB | 8 GB |
 | **Qwen3.5 4B** | ~3.05 GB | 16 GB |
 | **Qwen3.5 9B** | ~5.97 GB | 24 GB |
-| **Gemma 4 E4B** | ~5.18 GB | 16 GB |
-| **Gemma 4 26B A4B** | ~15.37 GB | 32 GB |
-| **Ministral 3 8B Instruct** | ~5.61 GB | 24 GB |
-| **Nemotron 3.5 Bolt E4B** | ~7.52 GB | 24 GB |
-| **LFM2.5 2.6B** | ~1.60 GB | 8 GB |
-| **Gemma 4 12B** | ~6.77 GB | 24 GB |
-| **Granite 4.2 3B** | ~2.07 GB | 8 GB |
-| **Granite 4.2 8B** | ~4.95 GB | 16 GB |
-| **LFM2.5 24B A2B** | ~13.59 GB | 32 GB |
 
 The downloadable models use quantized weights and run natively through MLX. No Python environment or local
 server to set up. Memory requirements leave room for transcription and your other apps.

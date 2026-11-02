@@ -10,7 +10,9 @@ a Python 3.11+ standard-library supervisor manages deadlines, receipts and scori
 There is no Python inference runtime, cloud judge or additional dependency.
 
 Read the [model selection summary](../../docs/local-text-models.md#which-model-should-i-use)
-and the [reviewed release-build comparison](../../docs/reports/local-chat-models-2026-11-02.md).
+and the [reviewed thirteen-model comparison](../../docs/reports/corrected-local-chat-models-2026-11-02.md).
+The [earlier seven-model comparison](../../docs/reports/local-chat-models-2026-11-02.md) preserves
+its separate repeat measurements; those repeats do not certify the newer integration.
 The [first comparison](../../docs/reports/local-chat-models-2026-11-01.md) and its
 [audit](../../docs/reports/chat-benchmark-audit-2026-11-02.md) remain available as historical evidence.
 The original checks had false positives and did not prove summary retention.

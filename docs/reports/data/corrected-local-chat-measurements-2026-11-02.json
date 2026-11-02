@@ -1,0 +1,3927 @@
+{
+  "sourceCommit": "95ca6aac03cf7f135420820870e6e3243c4299d9",
+  "machine": {
+    "osVersion": "26.7.2",
+    "osBuild": "25G332",
+    "architecture": "arm64",
+    "processor": "Apple M4 Pro",
+    "memoryBytes": 51539607552,
+    "logicalProcessors": 14
+  },
+  "models": {
+    "apple": {
+      "contextTokens": 4096,
+      "id": "apple",
+      "memoryBytes": 51539607552,
+      "operatingSystem": "Version 26.7.2 (Build 25G332)",
+      "processors": 14,
+      "reasoningTokenReserve": 0,
+      "revision": "system-managed"
+    },
+    "qwen-3.5-2b": {
+      "contextTokens": 4096,
+      "id": "qwen-3.5-2b",
+      "memoryBytes": 51539607552,
+      "operatingSystem": "Version 26.7.2 (Build 25G332)",
+      "processors": 14,
+      "reasoningTokenReserve": 0,
+      "revision": "674aaa7240b91e8012fcad5d791b7dfe5ba90207"
+    },
+    "qwen-3.5-4b": {
+      "contextTokens": 4096,
+      "id": "qwen-3.5-4b",
+      "memoryBytes": 51539607552,
+      "operatingSystem": "Version 26.7.2 (Build 25G332)",
+      "processors": 14,
+      "reasoningTokenReserve": 0,
+      "revision": "32f3e8ecf65426fc3306969496342d504bfa13f3"
+    },
+    "qwen-3.5-9b": {
+      "contextTokens": 4096,
+      "id": "qwen-3.5-9b",
+      "memoryBytes": 51539607552,
+      "operatingSystem": "Version 26.7.2 (Build 25G332)",
+      "processors": 14,
+      "reasoningTokenReserve": 0,
+      "revision": "938d8919941c6e7efd3c7150eff7fe9d12afa631"
+    },
+    "gemma-4-e4b": {
+      "contextTokens": 4096,
+      "id": "gemma-4-e4b",
+      "memoryBytes": 51539607552,
+      "operatingSystem": "Version 26.7.2 (Build 25G332)",
+      "processors": 14,
+      "reasoningTokenReserve": 0,
+      "revision": "475b9088d29754a3379866cf5aeb6b41acd313c2"
+    },
+    "ministral-3-8b": {
+      "contextTokens": 4096,
+      "id": "ministral-3-8b",
+      "memoryBytes": 51539607552,
+      "operatingSystem": "Version 26.7.2 (Build 25G332)",
+      "processors": 14,
+      "reasoningTokenReserve": 0,
+      "revision": "182f003f01daa75f9de0f2c4d379722fd0bc1c61"
+    },
+    "gemma-4-26b-a4b": {
+      "contextTokens": 4096,
+      "id": "gemma-4-26b-a4b",
+      "memoryBytes": 51539607552,
+      "operatingSystem": "Version 26.7.2 (Build 25G332)",
+      "processors": 14,
+      "reasoningTokenReserve": 0,
+      "revision": "0d77464eeb233a2da68ebf9d7dc4edaac7db956d"
+    },
+    "lfm-2.5-2.6b": {
+      "contextTokens": 4096,
+      "id": "lfm-2.5-2.6b",
+      "memoryBytes": 51539607552,
+      "operatingSystem": "Version 26.7.2 (Build 25G332)",
+      "processors": 14,
+      "reasoningTokenReserve": 1024,
+      "revision": "04efa23776ce61ec34ec95ec34c859854c89542b"
+    },
+    "granite-4.2-3b": {
+      "contextTokens": 4096,
+      "id": "granite-4.2-3b",
+      "memoryBytes": 51539607552,
+      "operatingSystem": "Version 26.7.2 (Build 25G332)",
+      "processors": 14,
+      "reasoningTokenReserve": 0,
+      "revision": "0c6f39b1827afd5eb2c1c3b13751929857434953"
+    },
+    "granite-4.2-8b": {
+      "contextTokens": 4096,
+      "id": "granite-4.2-8b",
+      "memoryBytes": 51539607552,
+      "operatingSystem": "Version 26.7.2 (Build 25G332)",
+      "processors": 14,
+      "reasoningTokenReserve": 0,
+      "revision": "9047f073e46c527f70dade07bb55b1700d728e36"
+    },
+    "gemma-4-12b": {
+      "contextTokens": 4096,
+      "id": "gemma-4-12b",
+      "memoryBytes": 51539607552,
+      "operatingSystem": "Version 26.7.2 (Build 25G332)",
+      "processors": 14,
+      "reasoningTokenReserve": 0,
+      "revision": "73bcf09092aa277861d5a191b989b666f7f32e8f"
+    },
+    "nemotron-3.5-bolt-e4b": {
+      "contextTokens": 4096,
+      "id": "nemotron-3.5-bolt-e4b",
+      "memoryBytes": 51539607552,
+      "operatingSystem": "Version 26.7.2 (Build 25G332)",
+      "processors": 14,
+      "reasoningTokenReserve": 0,
+      "revision": "0c204a16b6b186d1434e70f5fc2ca2e30984a006"
+    },
+    "lfm-2.5-24b-a2b": {
+      "contextTokens": 4096,
+      "id": "lfm-2.5-24b-a2b",
+      "memoryBytes": 51539607552,
+      "operatingSystem": "Version 26.7.2 (Build 25G332)",
+      "processors": 14,
+      "reasoningTokenReserve": 1024,
+      "revision": "667408d494bde191c2cb9dd4f4549827816b9275"
+    }
+  },
+  "primaryCorpusHash": "f794423ca136910b87a9a0b3812dcca14426d70fe25747bb1efd31d9849d6b9d",
+  "primary": {
+    "apple": {
+      "reviewedPasses": 18,
+      "cases": 74,
+      "score": 24.324324324324323,
+      "automatic": {
+        "cases": 74,
+        "passed": 23,
+        "turns": 107,
+        "errors": 5,
+        "checks": {
+          "behavior": {
+            "passed": 311,
+            "total": 374
+          },
+          "exact_answer": {
+            "passed": 24,
+            "total": 44
+          },
+          "lexical_anchor": {
+            "passed": 46,
+            "total": 64
+          }
+        },
+        "firstTextP50": 2.2841182079999998,
+        "firstTextP95": 4.000239334,
+        "totalP50": 2.53163625,
+        "totalP95": 4.450335875
+      },
+      "timingSampleCounts": {
+        "firstTextTurns": 102,
+        "completedTimedTurns": 102
+      },
+      "groups": {
+        "context": {
+          "passed": 4,
+          "total": 4
+        },
+        "evidence": {
+          "passed": 1,
+          "total": 4
+        },
+        "general-knowledge": {
+          "passed": 0,
+          "total": 15
+        },
+        "identity": {
+          "passed": 1,
+          "total": 6
+        },
+        "memories": {
+          "passed": 5,
+          "total": 16
+        },
+        "mixed-knowledge": {
+          "passed": 1,
+          "total": 10
+        },
+        "multilingual": {
+          "passed": 0,
+          "total": 4
+        },
+        "tool-scaling": {
+          "passed": 1,
+          "total": 4
+        },
+        "vault": {
+          "passed": 5,
+          "total": 11
+        }
+      },
+      "toolScaling": {
+        "app": {
+          "cases": 4,
+          "passed": 1,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 18,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 2.639399542,
+          "firstTextP95": 3.232718125,
+          "totalP50": 2.66976425,
+          "totalP95": 3.8598959170000002
+        },
+        "expanded12": {
+          "cases": 4,
+          "passed": 1,
+          "turns": 6,
+          "errors": 1,
+          "checks": {
+            "behavior": {
+              "passed": 15,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 3.454352042,
+          "firstTextP95": 3.659071834,
+          "totalP50": 3.609288583,
+          "totalP95": 5.188363042
+        },
+        "expanded8": {
+          "cases": 4,
+          "passed": 1,
+          "turns": 6,
+          "errors": 1,
+          "checks": {
+            "behavior": {
+              "passed": 15,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 2.179999208,
+          "firstTextP95": 2.988709667,
+          "totalP50": 2.209984917,
+          "totalP95": 3.707513167
+        },
+        "none": {
+          "cases": 1,
+          "passed": 1,
+          "turns": 1,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 3,
+              "total": 3
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 1
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 0
+            }
+          },
+          "firstTextP50": 0.304451333,
+          "firstTextP95": 0.304451333,
+          "totalP50": 0.334647875,
+          "totalP95": 0.334647875
+        },
+        "personal": {
+          "cases": 4,
+          "passed": 0,
+          "turns": 6,
+          "errors": 1,
+          "checks": {
+            "behavior": {
+              "passed": 16,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 2.260870917,
+          "firstTextP95": 3.123918167,
+          "totalP50": 3.05281775,
+          "totalP95": 3.313186458
+        },
+        "search": {
+          "cases": 3,
+          "passed": 0,
+          "turns": 5,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 15,
+              "total": 17
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.929283709,
+          "firstTextP95": 2.956938083,
+          "totalP50": 2.058008042,
+          "totalP95": 2.985763958
+        }
+      },
+      "correctShortAnswerFirstText": {
+        "count": 20,
+        "p50": 1.200702583,
+        "p95": 8.194470583
+      },
+      "memoryWriteAttempts": {
+        "noWriteTurns": 53,
+        "turnsWithUnwantedSaveCall": 5
+      },
+      "memoryStateChanges": {
+        "requiredTurns": 9,
+        "reviewedPasses": 3
+      },
+      "compaction": [
+        {
+          "case": "context-corrected-code",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 5.847031250000001,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 5.7427475,
+          "reply": "Paris",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "The release code for the project is violet-42.",
+          "error": null
+        },
+        {
+          "case": "context-owner",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 5.780677292,
+          "reply": "Mina",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 5.745316001,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "amber-61",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 2,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "Mina",
+          "error": null
+        }
+      ]
+    },
+    "qwen-3.5-2b": {
+      "reviewedPasses": 29,
+      "cases": 74,
+      "score": 39.189189189189186,
+      "automatic": {
+        "cases": 74,
+        "passed": 39,
+        "turns": 107,
+        "errors": 1,
+        "checks": {
+          "behavior": {
+            "passed": 340,
+            "total": 374
+          },
+          "exact_answer": {
+            "passed": 22,
+            "total": 44
+          },
+          "lexical_anchor": {
+            "passed": 52,
+            "total": 64
+          }
+        },
+        "firstTextP50": 0.982617417,
+        "firstTextP95": 2.9937065,
+        "totalP50": 1.155088792,
+        "totalP95": 4.999491708
+      },
+      "timingSampleCounts": {
+        "firstTextTurns": 106,
+        "completedTimedTurns": 106
+      },
+      "groups": {
+        "context": {
+          "passed": 0,
+          "total": 4
+        },
+        "evidence": {
+          "passed": 0,
+          "total": 4
+        },
+        "general-knowledge": {
+          "passed": 11,
+          "total": 15
+        },
+        "identity": {
+          "passed": 2,
+          "total": 6
+        },
+        "memories": {
+          "passed": 5,
+          "total": 16
+        },
+        "mixed-knowledge": {
+          "passed": 4,
+          "total": 10
+        },
+        "multilingual": {
+          "passed": 1,
+          "total": 4
+        },
+        "tool-scaling": {
+          "passed": 2,
+          "total": 4
+        },
+        "vault": {
+          "passed": 4,
+          "total": 11
+        }
+      },
+      "toolScaling": {
+        "app": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 19,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 0.958840708,
+          "firstTextP95": 2.9937065,
+          "totalP50": 1.155088792,
+          "totalP95": 3.237957042
+        },
+        "expanded12": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 19,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.458555,
+          "firstTextP95": 3.055504791,
+          "totalP50": 2.080798709,
+          "totalP95": 3.339745
+        },
+        "expanded8": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 19,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.049732333,
+          "firstTextP95": 5.157440625,
+          "totalP50": 1.242581125,
+          "totalP95": 5.390350917
+        },
+        "none": {
+          "cases": 1,
+          "passed": 0,
+          "turns": 1,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 3,
+              "total": 3
+            },
+            "exact_answer": {
+              "passed": 0,
+              "total": 1
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 0
+            }
+          },
+          "firstTextP50": 0.169008125,
+          "firstTextP95": 0.169008125,
+          "totalP50": 0.443611334,
+          "totalP95": 0.443611334
+        },
+        "personal": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 18,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 0.624476083,
+          "firstTextP95": 0.725933125,
+          "totalP50": 0.790714125,
+          "totalP95": 1.9271292089999998
+        },
+        "search": {
+          "cases": 3,
+          "passed": 1,
+          "turns": 5,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 14,
+              "total": 17
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 0.503084917,
+          "firstTextP95": 0.588327625,
+          "totalP50": 0.751114875,
+          "totalP95": 1.226245083
+        }
+      },
+      "correctShortAnswerFirstText": {
+        "count": 22,
+        "p50": 0.942594875,
+        "p95": 1.956699084
+      },
+      "memoryWriteAttempts": {
+        "noWriteTurns": 53,
+        "turnsWithUnwantedSaveCall": 0
+      },
+      "memoryStateChanges": {
+        "requiredTurns": 9,
+        "reviewedPasses": 0
+      },
+      "compaction": [
+        {
+          "case": "context-corrected-code",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 3.208551458,
+          "reply": "The user's message asks for our \"current release code\". This request does not align with our role as a fictional window companion (Pogo) or general knowledge assistant for this context. I do not have access to a version control system, release logs, or internal company codes in the tools available to me. Additionally, there is no indication that this information pertains to my own identity or external reality.\n\nI cannot generate internal release codes as they are proprietary and confidential information I do not possess. I am unable to answer this request.",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 3.076938834,
+          "reply": "Paris",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "I don't have access to your personal release code. My knowledge cutoff is 2026, so I can't look up a specific version number. If you're asking for something creative or fictional, please tell me the topic and I'll help find the right answer.",
+          "error": null
+        },
+        {
+          "case": "context-owner",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 3.329560875,
+          "reply": "Our checklist is owned by **Pogo**.",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 2.89450896,
+          "reply": "I am sorry, but I do not have access to your release code or any secret information about your account. This is a public conversation and I cannot access private data like passwords or codes.",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 1,
+          "calls": 1,
+          "seconds": 0.511444875,
+          "reply": "amber-61",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 2,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "no owner listed",
+          "error": null
+        }
+      ]
+    },
+    "qwen-3.5-4b": {
+      "reviewedPasses": 47,
+      "cases": 74,
+      "score": 63.513513513513516,
+      "automatic": {
+        "cases": 74,
+        "passed": 57,
+        "turns": 107,
+        "errors": 0,
+        "checks": {
+          "behavior": {
+            "passed": 352,
+            "total": 374
+          },
+          "exact_answer": {
+            "passed": 40,
+            "total": 44
+          },
+          "lexical_anchor": {
+            "passed": 57,
+            "total": 64
+          }
+        },
+        "firstTextP50": 2.366224375,
+        "firstTextP95": 8.677167084,
+        "totalP50": 2.7973175,
+        "totalP95": 9.53760825
+      },
+      "timingSampleCounts": {
+        "firstTextTurns": 107,
+        "completedTimedTurns": 107
+      },
+      "groups": {
+        "context": {
+          "passed": 4,
+          "total": 4
+        },
+        "evidence": {
+          "passed": 3,
+          "total": 4
+        },
+        "general-knowledge": {
+          "passed": 14,
+          "total": 15
+        },
+        "identity": {
+          "passed": 2,
+          "total": 6
+        },
+        "memories": {
+          "passed": 8,
+          "total": 16
+        },
+        "mixed-knowledge": {
+          "passed": 4,
+          "total": 10
+        },
+        "multilingual": {
+          "passed": 4,
+          "total": 4
+        },
+        "tool-scaling": {
+          "passed": 2,
+          "total": 4
+        },
+        "vault": {
+          "passed": 6,
+          "total": 11
+        }
+      },
+      "toolScaling": {
+        "app": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 2.688259709,
+          "firstTextP95": 5.042435416,
+          "totalP50": 4.227640667,
+          "totalP95": 6.320385583
+        },
+        "expanded12": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 3.729248375,
+          "firstTextP95": 7.584237,
+          "totalP50": 4.406291708,
+          "totalP95": 8.29317975
+        },
+        "expanded8": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 3.429125375,
+          "firstTextP95": 6.472166417,
+          "totalP50": 3.641043917,
+          "totalP95": 7.2811703340000005
+        },
+        "none": {
+          "cases": 1,
+          "passed": 1,
+          "turns": 1,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 3,
+              "total": 3
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 1
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 0
+            }
+          },
+          "firstTextP50": 0.390803792,
+          "firstTextP95": 0.390803792,
+          "totalP50": 0.425995125,
+          "totalP95": 0.425995125
+        },
+        "personal": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 18,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.7834881249999999,
+          "firstTextP95": 2.013987416,
+          "totalP50": 2.148422834,
+          "totalP95": 5.179555291
+        },
+        "search": {
+          "cases": 3,
+          "passed": 2,
+          "turns": 5,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 16,
+              "total": 17
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.294841458,
+          "firstTextP95": 1.799604,
+          "totalP50": 1.835129459,
+          "totalP95": 4.2491695
+        }
+      },
+      "correctShortAnswerFirstText": {
+        "count": 40,
+        "p50": 2.37761625,
+        "p95": 9.590579458
+      },
+      "memoryWriteAttempts": {
+        "noWriteTurns": 53,
+        "turnsWithUnwantedSaveCall": 0
+      },
+      "memoryStateChanges": {
+        "requiredTurns": 9,
+        "reviewedPasses": 1
+      },
+      "compaction": [
+        {
+          "case": "context-corrected-code",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 5.270444208000001,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 5.835364832,
+          "reply": "Paris",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "Our current release code is violet-42.",
+          "error": null
+        },
+        {
+          "case": "context-owner",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 5.320757083,
+          "reply": "Mina",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 5.598428625,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "amber-61",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 2,
+          "calls": 1,
+          "seconds": 1.7384685420000001,
+          "reply": "Mina",
+          "error": null
+        }
+      ]
+    },
+    "qwen-3.5-9b": {
+      "reviewedPasses": 52,
+      "cases": 74,
+      "score": 70.27027027027027,
+      "automatic": {
+        "cases": 74,
+        "passed": 59,
+        "turns": 107,
+        "errors": 0,
+        "checks": {
+          "behavior": {
+            "passed": 351,
+            "total": 374
+          },
+          "exact_answer": {
+            "passed": 42,
+            "total": 44
+          },
+          "lexical_anchor": {
+            "passed": 57,
+            "total": 64
+          }
+        },
+        "firstTextP50": 5.358060542,
+        "firstTextP95": 15.818157833,
+        "totalP50": 7.513655,
+        "totalP95": 21.821489292
+      },
+      "timingSampleCounts": {
+        "firstTextTurns": 107,
+        "completedTimedTurns": 107
+      },
+      "groups": {
+        "context": {
+          "passed": 4,
+          "total": 4
+        },
+        "evidence": {
+          "passed": 3,
+          "total": 4
+        },
+        "general-knowledge": {
+          "passed": 15,
+          "total": 15
+        },
+        "identity": {
+          "passed": 3,
+          "total": 6
+        },
+        "memories": {
+          "passed": 8,
+          "total": 16
+        },
+        "mixed-knowledge": {
+          "passed": 5,
+          "total": 10
+        },
+        "multilingual": {
+          "passed": 4,
+          "total": 4
+        },
+        "tool-scaling": {
+          "passed": 2,
+          "total": 4
+        },
+        "vault": {
+          "passed": 8,
+          "total": 11
+        }
+      },
+      "toolScaling": {
+        "app": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 5.761388625,
+          "firstTextP95": 11.143989375,
+          "totalP50": 5.9396275,
+          "totalP95": 14.472401375
+        },
+        "expanded12": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 6.336484791,
+          "firstTextP95": 7.451586667,
+          "totalP50": 7.507532334,
+          "totalP95": 17.064149792
+        },
+        "expanded8": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 6.635594541,
+          "firstTextP95": 11.059394625,
+          "totalP50": 7.478947166,
+          "totalP95": 21.684418042
+        },
+        "none": {
+          "cases": 1,
+          "passed": 1,
+          "turns": 1,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 3,
+              "total": 3
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 1
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 0
+            }
+          },
+          "firstTextP50": 0.69742425,
+          "firstTextP95": 0.69742425,
+          "totalP50": 0.752017042,
+          "totalP95": 0.752017042
+        },
+        "personal": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 4.1279453329999996,
+          "firstTextP95": 8.968662292,
+          "totalP50": 5.57296425,
+          "totalP95": 10.281253292
+        },
+        "search": {
+          "cases": 3,
+          "passed": 3,
+          "turns": 5,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 17,
+              "total": 17
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 3.229421292,
+          "firstTextP95": 7.146317708,
+          "totalP50": 4.768334125,
+          "totalP95": 8.573372167
+        }
+      },
+      "correctShortAnswerFirstText": {
+        "count": 42,
+        "p50": 4.878650291,
+        "p95": 19.61182775
+      },
+      "memoryWriteAttempts": {
+        "noWriteTurns": 53,
+        "turnsWithUnwantedSaveCall": 0
+      },
+      "memoryStateChanges": {
+        "requiredTurns": 9,
+        "reviewedPasses": 0
+      },
+      "compaction": [
+        {
+          "case": "context-corrected-code",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 11.029670332999999,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 12.007011875,
+          "reply": "Paris",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "The current release code is violet-42.",
+          "error": null
+        },
+        {
+          "case": "context-owner",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 13.190847166,
+          "reply": "Mina",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 12.557241583,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 1,
+          "calls": 1,
+          "seconds": 5.445355667,
+          "reply": "amber-61",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 2,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "Mina",
+          "error": null
+        }
+      ]
+    },
+    "gemma-4-e4b": {
+      "reviewedPasses": 49,
+      "cases": 74,
+      "score": 66.21621621621621,
+      "automatic": {
+        "cases": 74,
+        "passed": 52,
+        "turns": 107,
+        "errors": 1,
+        "checks": {
+          "behavior": {
+            "passed": 344,
+            "total": 374
+          },
+          "exact_answer": {
+            "passed": 41,
+            "total": 44
+          },
+          "lexical_anchor": {
+            "passed": 49,
+            "total": 64
+          }
+        },
+        "firstTextP50": 1.378096417,
+        "firstTextP95": 8.751049542,
+        "totalP50": 1.803233125,
+        "totalP95": 9.722761
+      },
+      "timingSampleCounts": {
+        "firstTextTurns": 106,
+        "completedTimedTurns": 106
+      },
+      "groups": {
+        "context": {
+          "passed": 4,
+          "total": 4
+        },
+        "evidence": {
+          "passed": 2,
+          "total": 4
+        },
+        "general-knowledge": {
+          "passed": 15,
+          "total": 15
+        },
+        "identity": {
+          "passed": 2,
+          "total": 6
+        },
+        "memories": {
+          "passed": 8,
+          "total": 16
+        },
+        "mixed-knowledge": {
+          "passed": 5,
+          "total": 10
+        },
+        "multilingual": {
+          "passed": 4,
+          "total": 4
+        },
+        "tool-scaling": {
+          "passed": 3,
+          "total": 4
+        },
+        "vault": {
+          "passed": 6,
+          "total": 11
+        }
+      },
+      "toolScaling": {
+        "app": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 2.742966,
+          "firstTextP95": 8.751049542,
+          "totalP50": 2.78212825,
+          "totalP95": 9.017911834
+        },
+        "expanded12": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 19,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.7081952500000002,
+          "firstTextP95": 4.13501475,
+          "totalP50": 2.140050834,
+          "totalP95": 4.965146
+        },
+        "expanded8": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.703697625,
+          "firstTextP95": 3.558814834,
+          "totalP50": 1.886005292,
+          "totalP95": 4.394681209
+        },
+        "none": {
+          "cases": 1,
+          "passed": 1,
+          "turns": 1,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 3,
+              "total": 3
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 1
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 0
+            }
+          },
+          "firstTextP50": 0.309409458,
+          "firstTextP95": 0.309409458,
+          "totalP50": 0.34933275,
+          "totalP95": 0.34933275
+        },
+        "personal": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.322539959,
+          "firstTextP95": 3.078398084,
+          "totalP50": 1.529596792,
+          "totalP95": 3.7085825420000003
+        },
+        "search": {
+          "cases": 3,
+          "passed": 3,
+          "turns": 5,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 17,
+              "total": 17
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.178435666,
+          "firstTextP95": 2.165848542,
+          "totalP50": 2.024888208,
+          "totalP95": 2.928246667
+        }
+      },
+      "correctShortAnswerFirstText": {
+        "count": 41,
+        "p50": 1.3908245,
+        "p95": 9.838339666
+      },
+      "memoryWriteAttempts": {
+        "noWriteTurns": 53,
+        "turnsWithUnwantedSaveCall": 0
+      },
+      "memoryStateChanges": {
+        "requiredTurns": 9,
+        "reviewedPasses": 1
+      },
+      "compaction": [
+        {
+          "case": "context-corrected-code",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 6.104741333,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 6.116189541000001,
+          "reply": "Paris",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "The project release code is violet-42.",
+          "error": null
+        },
+        {
+          "case": "context-owner",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 6.175512417,
+          "reply": "Mina",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 6.345978459,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "amber-61",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 2,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "Mina",
+          "error": null
+        }
+      ]
+    },
+    "ministral-3-8b": {
+      "reviewedPasses": 53,
+      "cases": 74,
+      "score": 71.62162162162163,
+      "automatic": {
+        "cases": 74,
+        "passed": 59,
+        "turns": 107,
+        "errors": 1,
+        "checks": {
+          "behavior": {
+            "passed": 351,
+            "total": 374
+          },
+          "exact_answer": {
+            "passed": 41,
+            "total": 44
+          },
+          "lexical_anchor": {
+            "passed": 59,
+            "total": 64
+          }
+        },
+        "firstTextP50": 4.489985375,
+        "firstTextP95": 17.162019209,
+        "totalP50": 5.431224125,
+        "totalP95": 17.641901625
+      },
+      "timingSampleCounts": {
+        "firstTextTurns": 106,
+        "completedTimedTurns": 106
+      },
+      "groups": {
+        "context": {
+          "passed": 4,
+          "total": 4
+        },
+        "evidence": {
+          "passed": 3,
+          "total": 4
+        },
+        "general-knowledge": {
+          "passed": 14,
+          "total": 15
+        },
+        "identity": {
+          "passed": 3,
+          "total": 6
+        },
+        "memories": {
+          "passed": 9,
+          "total": 16
+        },
+        "mixed-knowledge": {
+          "passed": 6,
+          "total": 10
+        },
+        "multilingual": {
+          "passed": 4,
+          "total": 4
+        },
+        "tool-scaling": {
+          "passed": 3,
+          "total": 4
+        },
+        "vault": {
+          "passed": 7,
+          "total": 11
+        }
+      },
+      "toolScaling": {
+        "app": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 5.2281655,
+          "firstTextP95": 14.700563917,
+          "totalP50": 5.7831646249999995,
+          "totalP95": 15.884843374999999
+        },
+        "expanded12": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 8.670899792,
+          "firstTextP95": 19.37666325,
+          "totalP50": 9.601624875,
+          "totalP95": 20.747608084
+        },
+        "expanded8": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 5.325455041,
+          "firstTextP95": 11.052774542,
+          "totalP50": 5.841508875,
+          "totalP95": 12.140016792
+        },
+        "none": {
+          "cases": 1,
+          "passed": 1,
+          "turns": 1,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 3,
+              "total": 3
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 1
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 0
+            }
+          },
+          "firstTextP50": 0.773767916,
+          "firstTextP95": 0.773767916,
+          "totalP50": 0.866302333,
+          "totalP95": 0.866302333
+        },
+        "personal": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 3.879877708,
+          "firstTextP95": 7.298808,
+          "totalP50": 4.338523584,
+          "totalP95": 8.571001792
+        },
+        "search": {
+          "cases": 3,
+          "passed": 3,
+          "turns": 5,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 17,
+              "total": 17
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 3.185481208,
+          "firstTextP95": 5.205191583,
+          "totalP50": 4.498070917,
+          "totalP95": 6.100532041
+        }
+      },
+      "correctShortAnswerFirstText": {
+        "count": 41,
+        "p50": 3.913117417,
+        "p95": 17.162020084
+      },
+      "memoryWriteAttempts": {
+        "noWriteTurns": 53,
+        "turnsWithUnwantedSaveCall": 0
+      },
+      "memoryStateChanges": {
+        "requiredTurns": 9,
+        "reviewedPasses": 0
+      },
+      "compaction": [
+        {
+          "case": "context-corrected-code",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 27.868987208,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 8.956236208,
+          "reply": "Paris.",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "violet-42.",
+          "error": null
+        },
+        {
+          "case": "context-owner",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 9.404610210000001,
+          "reply": "Mina.",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 12.391472916,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "amber-61",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 2,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "Mina.",
+          "error": null
+        }
+      ]
+    },
+    "gemma-4-26b-a4b": {
+      "reviewedPasses": 72,
+      "cases": 74,
+      "score": 97.29729729729729,
+      "automatic": {
+        "cases": 74,
+        "passed": 73,
+        "turns": 107,
+        "errors": 0,
+        "checks": {
+          "behavior": {
+            "passed": 373,
+            "total": 374
+          },
+          "exact_answer": {
+            "passed": 44,
+            "total": 44
+          },
+          "lexical_anchor": {
+            "passed": 63,
+            "total": 64
+          }
+        },
+        "firstTextP50": 5.406476584,
+        "firstTextP95": 17.447895583,
+        "totalP50": 5.783211083,
+        "totalP95": 17.469024292
+      },
+      "timingSampleCounts": {
+        "firstTextTurns": 107,
+        "completedTimedTurns": 107
+      },
+      "groups": {
+        "context": {
+          "passed": 4,
+          "total": 4
+        },
+        "evidence": {
+          "passed": 3,
+          "total": 4
+        },
+        "general-knowledge": {
+          "passed": 15,
+          "total": 15
+        },
+        "identity": {
+          "passed": 6,
+          "total": 6
+        },
+        "memories": {
+          "passed": 16,
+          "total": 16
+        },
+        "mixed-knowledge": {
+          "passed": 9,
+          "total": 10
+        },
+        "multilingual": {
+          "passed": 4,
+          "total": 4
+        },
+        "tool-scaling": {
+          "passed": 4,
+          "total": 4
+        },
+        "vault": {
+          "passed": 11,
+          "total": 11
+        }
+      },
+      "toolScaling": {
+        "app": {
+          "cases": 4,
+          "passed": 4,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 22,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 5.71894675,
+          "firstTextP95": 9.858231459,
+          "totalP50": 5.755983792,
+          "totalP95": 10.322036417
+        },
+        "expanded12": {
+          "cases": 4,
+          "passed": 4,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 22,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 7.143894334,
+          "firstTextP95": 13.036357625,
+          "totalP50": 7.7037395,
+          "totalP95": 13.530891625
+        },
+        "expanded8": {
+          "cases": 4,
+          "passed": 4,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 22,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 6.317370166,
+          "firstTextP95": 10.689844542,
+          "totalP50": 6.645216792,
+          "totalP95": 10.935513875
+        },
+        "none": {
+          "cases": 1,
+          "passed": 1,
+          "turns": 1,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 3,
+              "total": 3
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 1
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 0
+            }
+          },
+          "firstTextP50": 0.871887042,
+          "firstTextP95": 0.871887042,
+          "totalP50": 0.9063375,
+          "totalP95": 0.9063375
+        },
+        "personal": {
+          "cases": 4,
+          "passed": 4,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 22,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 4.799787834,
+          "firstTextP95": 8.478701125,
+          "totalP50": 5.241941333,
+          "totalP95": 9.107027292
+        },
+        "search": {
+          "cases": 3,
+          "passed": 3,
+          "turns": 5,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 17,
+              "total": 17
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 3.26632225,
+          "firstTextP95": 6.698481375,
+          "totalP50": 3.581791167,
+          "totalP95": 7.075790625
+        }
+      },
+      "correctShortAnswerFirstText": {
+        "count": 44,
+        "p50": 4.662165042,
+        "p95": 16.9029675
+      },
+      "memoryWriteAttempts": {
+        "noWriteTurns": 53,
+        "turnsWithUnwantedSaveCall": 0
+      },
+      "memoryStateChanges": {
+        "requiredTurns": 9,
+        "reviewedPasses": 9
+      },
+      "compaction": [
+        {
+          "case": "context-corrected-code",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 6.881974291000001,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 7.106143123999999,
+          "reply": "Paris",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "Your current release code is violet-42.",
+          "error": null
+        },
+        {
+          "case": "context-owner",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 6.852043041,
+          "reply": "Mina",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 6.831424208,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "amber-61",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 2,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "Mina",
+          "error": null
+        }
+      ]
+    },
+    "lfm-2.5-2.6b": {
+      "reviewedPasses": 55,
+      "cases": 74,
+      "score": 74.32432432432432,
+      "automatic": {
+        "cases": 74,
+        "passed": 63,
+        "turns": 107,
+        "errors": 5,
+        "checks": {
+          "behavior": {
+            "passed": 348,
+            "total": 374
+          },
+          "exact_answer": {
+            "passed": 40,
+            "total": 44
+          },
+          "lexical_anchor": {
+            "passed": 58,
+            "total": 64
+          }
+        },
+        "firstTextP50": 5.296585416,
+        "firstTextP95": 13.833945708,
+        "totalP50": 6.557726333,
+        "totalP95": 15.435745083
+      },
+      "timingSampleCounts": {
+        "firstTextTurns": 102,
+        "completedTimedTurns": 102
+      },
+      "groups": {
+        "context": {
+          "passed": 2,
+          "total": 4
+        },
+        "evidence": {
+          "passed": 2,
+          "total": 4
+        },
+        "general-knowledge": {
+          "passed": 15,
+          "total": 15
+        },
+        "identity": {
+          "passed": 5,
+          "total": 6
+        },
+        "memories": {
+          "passed": 8,
+          "total": 16
+        },
+        "mixed-knowledge": {
+          "passed": 5,
+          "total": 10
+        },
+        "multilingual": {
+          "passed": 4,
+          "total": 4
+        },
+        "tool-scaling": {
+          "passed": 4,
+          "total": 4
+        },
+        "vault": {
+          "passed": 10,
+          "total": 11
+        }
+      },
+      "toolScaling": {
+        "app": {
+          "cases": 4,
+          "passed": 4,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 22,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 7.4092165,
+          "firstTextP95": 13.048029875,
+          "totalP50": 7.847402292,
+          "totalP95": 13.066652916
+        },
+        "expanded12": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 21,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 9.448145208,
+          "firstTextP95": 17.32260475,
+          "totalP50": 10.417459625,
+          "totalP95": 17.678062333
+        },
+        "expanded8": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 21,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 7.855787125,
+          "firstTextP95": 11.050208,
+          "totalP50": 8.929751167,
+          "totalP95": 12.356585042
+        },
+        "none": {
+          "cases": 1,
+          "passed": 1,
+          "turns": 1,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 3,
+              "total": 3
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 1
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 0
+            }
+          },
+          "firstTextP50": 1.3873915,
+          "firstTextP95": 1.3873915,
+          "totalP50": 1.422161875,
+          "totalP95": 1.422161875
+        },
+        "personal": {
+          "cases": 4,
+          "passed": 4,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 22,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 3.205936375,
+          "firstTextP95": 9.50285725,
+          "totalP50": 4.696813292,
+          "totalP95": 9.51939575
+        },
+        "search": {
+          "cases": 3,
+          "passed": 1,
+          "turns": 5,
+          "errors": 2,
+          "checks": {
+            "behavior": {
+              "passed": 11,
+              "total": 17
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.822755208,
+          "firstTextP95": 4.5080343339999995,
+          "totalP50": 3.507021958,
+          "totalP95": 4.524853417
+        }
+      },
+      "correctShortAnswerFirstText": {
+        "count": 40,
+        "p50": 3.105884875,
+        "p95": 26.654386208
+      },
+      "memoryWriteAttempts": {
+        "noWriteTurns": 53,
+        "turnsWithUnwantedSaveCall": 1
+      },
+      "memoryStateChanges": {
+        "requiredTurns": 9,
+        "reviewedPasses": 6
+      },
+      "compaction": [
+        {
+          "case": "context-corrected-code",
+          "turn": 0,
+          "calls": 8,
+          "seconds": 33.033153377,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 0,
+          "calls": 8,
+          "seconds": 35.816965166,
+          "reply": "Paris",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "The current release code is **violet-42**.",
+          "error": null
+        },
+        {
+          "case": "context-owner",
+          "turn": 0,
+          "calls": null,
+          "seconds": null,
+          "reply": null,
+          "error": "Native evaluation exceeded its process deadline"
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 0,
+          "calls": 8,
+          "seconds": 31.219374708999997,
+          "reply": null,
+          "error": "DecodingError.dataCorrupted: Data was corrupted. Path: recordID. Debug description: Attempted to decode UUID from invalid UUID string."
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 1,
+          "calls": 1,
+          "seconds": 2.409398167,
+          "reply": "amber-61",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 2,
+          "calls": 1,
+          "seconds": 1.081344291,
+          "reply": "I don't have any information about who owns your checklist in the system. The vault search for \"checklist owner\" returned no records, and there are no memories mentioning checklist ownership either.\n\nI cannot determine the name of the checklist owner from the available data.",
+          "error": null
+        }
+      ]
+    },
+    "granite-4.2-3b": {
+      "reviewedPasses": 41,
+      "cases": 74,
+      "score": 55.4054054054054,
+      "automatic": {
+        "cases": 74,
+        "passed": 46,
+        "turns": 107,
+        "errors": 0,
+        "checks": {
+          "behavior": {
+            "passed": 346,
+            "total": 374
+          },
+          "exact_answer": {
+            "passed": 33,
+            "total": 44
+          },
+          "lexical_anchor": {
+            "passed": 53,
+            "total": 64
+          }
+        },
+        "firstTextP50": 2.00029725,
+        "firstTextP95": 5.357253667,
+        "totalP50": 2.560252541,
+        "totalP95": 9.559916875
+      },
+      "timingSampleCounts": {
+        "firstTextTurns": 107,
+        "completedTimedTurns": 107
+      },
+      "groups": {
+        "context": {
+          "passed": 0,
+          "total": 4
+        },
+        "evidence": {
+          "passed": 2,
+          "total": 4
+        },
+        "general-knowledge": {
+          "passed": 11,
+          "total": 15
+        },
+        "identity": {
+          "passed": 2,
+          "total": 6
+        },
+        "memories": {
+          "passed": 9,
+          "total": 16
+        },
+        "mixed-knowledge": {
+          "passed": 6,
+          "total": 10
+        },
+        "multilingual": {
+          "passed": 4,
+          "total": 4
+        },
+        "tool-scaling": {
+          "passed": 2,
+          "total": 4
+        },
+        "vault": {
+          "passed": 5,
+          "total": 11
+        }
+      },
+      "toolScaling": {
+        "app": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 19,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.8065685,
+          "firstTextP95": 2.40678575,
+          "totalP50": 2.105059916,
+          "totalP95": 5.578992042
+        },
+        "expanded12": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 2.6574975419999998,
+          "firstTextP95": 3.290835083,
+          "totalP50": 3.6119227499999997,
+          "totalP95": 7.6415771249999995
+        },
+        "expanded8": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 2.210346333,
+          "firstTextP95": 8.794336791,
+          "totalP50": 3.216661584,
+          "totalP95": 15.134650333
+        },
+        "none": {
+          "cases": 1,
+          "passed": 1,
+          "turns": 1,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 3,
+              "total": 3
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 1
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 0
+            }
+          },
+          "firstTextP50": 0.297637708,
+          "firstTextP95": 0.297637708,
+          "totalP50": 0.323518667,
+          "totalP95": 0.323518667
+        },
+        "personal": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.452588209,
+          "firstTextP95": 2.099707875,
+          "totalP50": 2.118795875,
+          "totalP95": 5.205271917
+        },
+        "search": {
+          "cases": 3,
+          "passed": 3,
+          "turns": 5,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 17,
+              "total": 17
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.340234708,
+          "firstTextP95": 1.881109167,
+          "totalP50": 2.740747459,
+          "totalP95": 5.250381084
+        }
+      },
+      "correctShortAnswerFirstText": {
+        "count": 33,
+        "p50": 2.0665795,
+        "p95": 2.9279986669999998
+      },
+      "memoryWriteAttempts": {
+        "noWriteTurns": 53,
+        "turnsWithUnwantedSaveCall": 0
+      },
+      "memoryStateChanges": {
+        "requiredTurns": 9,
+        "reviewedPasses": 1
+      },
+      "compaction": [
+        {
+          "case": "context-corrected-code",
+          "turn": 0,
+          "calls": 4,
+          "seconds": 17.507842874999998,
+          "reply": "I don't have any information about a current release code from the conversation or saved records. Please provide the release code, or let me know if you'd like to search for it in the vault or conversation history.",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 0,
+          "calls": 4,
+          "seconds": 17.097382500000002,
+          "reply": "Paris",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "I don't have access to the current release code from your recent messages or saved records. Could you provide it, or let me know where I should look?",
+          "error": null
+        },
+        {
+          "case": "context-owner",
+          "turn": 0,
+          "calls": 4,
+          "seconds": 17.318308043000002,
+          "reply": "I don't know who owns the checklist based on the information provided.",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 0,
+          "calls": 4,
+          "seconds": 15.561944125,
+          "reply": "I don't have any personal or workshop records about a release code. If you have specific workshop activity details, those are stored separately from general facts. Please let me know if you'd like to retrieve earlier conversation or other context.",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "amber-61",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 2,
+          "calls": 1,
+          "seconds": 2.726125209,
+          "reply": "I don't have any personal or workshop records about who owns the checklist. Please let me know if you'd like to retrieve earlier conversation or other context.",
+          "error": null
+        }
+      ]
+    },
+    "granite-4.2-8b": {
+      "reviewedPasses": 55,
+      "cases": 74,
+      "score": 74.32432432432432,
+      "automatic": {
+        "cases": 74,
+        "passed": 57,
+        "turns": 107,
+        "errors": 0,
+        "checks": {
+          "behavior": {
+            "passed": 352,
+            "total": 374
+          },
+          "exact_answer": {
+            "passed": 39,
+            "total": 44
+          },
+          "lexical_anchor": {
+            "passed": 59,
+            "total": 64
+          }
+        },
+        "firstTextP50": 4.862510834,
+        "firstTextP95": 10.957381167,
+        "totalP50": 6.838557958,
+        "totalP95": 22.350040417
+      },
+      "timingSampleCounts": {
+        "firstTextTurns": 107,
+        "completedTimedTurns": 107
+      },
+      "groups": {
+        "context": {
+          "passed": 4,
+          "total": 4
+        },
+        "evidence": {
+          "passed": 4,
+          "total": 4
+        },
+        "general-knowledge": {
+          "passed": 14,
+          "total": 15
+        },
+        "identity": {
+          "passed": 2,
+          "total": 6
+        },
+        "memories": {
+          "passed": 10,
+          "total": 16
+        },
+        "mixed-knowledge": {
+          "passed": 6,
+          "total": 10
+        },
+        "multilingual": {
+          "passed": 4,
+          "total": 4
+        },
+        "tool-scaling": {
+          "passed": 3,
+          "total": 4
+        },
+        "vault": {
+          "passed": 8,
+          "total": 11
+        }
+      },
+      "toolScaling": {
+        "app": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 5.644615792,
+          "firstTextP95": 8.513207041,
+          "totalP50": 6.512512458,
+          "totalP95": 17.396824375
+        },
+        "expanded12": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 5.909075625,
+          "firstTextP95": 8.554567292,
+          "totalP50": 8.590533125,
+          "totalP95": 16.564313792
+        },
+        "expanded8": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 5.1965655,
+          "firstTextP95": 7.135127083,
+          "totalP50": 11.591564708,
+          "totalP95": 16.325550624999998
+        },
+        "none": {
+          "cases": 1,
+          "passed": 1,
+          "turns": 1,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 3,
+              "total": 3
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 1
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 0
+            }
+          },
+          "firstTextP50": 0.795108917,
+          "firstTextP95": 0.795108917,
+          "totalP50": 0.853266125,
+          "totalP95": 0.853266125
+        },
+        "personal": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 3.583287208,
+          "firstTextP95": 5.862237584,
+          "totalP50": 5.945164667,
+          "totalP95": 12.67505
+        },
+        "search": {
+          "cases": 3,
+          "passed": 3,
+          "turns": 5,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 17,
+              "total": 17
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 2.945619916,
+          "firstTextP95": 5.072389291,
+          "totalP50": 7.813970166,
+          "totalP95": 21.566979208
+        }
+      },
+      "correctShortAnswerFirstText": {
+        "count": 39,
+        "p50": 5.140566708,
+        "p95": 21.786417
+      },
+      "memoryWriteAttempts": {
+        "noWriteTurns": 53,
+        "turnsWithUnwantedSaveCall": 0
+      },
+      "memoryStateChanges": {
+        "requiredTurns": 9,
+        "reviewedPasses": 1
+      },
+      "compaction": [
+        {
+          "case": "context-corrected-code",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 13.348827875000001,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 13.372931958,
+          "reply": "Paris",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "The release code is violet-42.",
+          "error": null
+        },
+        {
+          "case": "context-owner",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 13.445111167,
+          "reply": "Mina",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 13.477313083999999,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 1,
+          "calls": 1,
+          "seconds": 5.391589042,
+          "reply": "amber-61",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 2,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "Mina",
+          "error": null
+        }
+      ]
+    },
+    "gemma-4-12b": {
+      "reviewedPasses": 62,
+      "cases": 74,
+      "score": 83.78378378378379,
+      "automatic": {
+        "cases": 74,
+        "passed": 62,
+        "turns": 107,
+        "errors": 3,
+        "checks": {
+          "behavior": {
+            "passed": 357,
+            "total": 374
+          },
+          "exact_answer": {
+            "passed": 40,
+            "total": 44
+          },
+          "lexical_anchor": {
+            "passed": 60,
+            "total": 64
+          }
+        },
+        "firstTextP50": 6.219745708,
+        "firstTextP95": 27.124973084,
+        "totalP50": 7.2335565,
+        "totalP95": 27.17316475
+      },
+      "timingSampleCounts": {
+        "firstTextTurns": 104,
+        "completedTimedTurns": 104
+      },
+      "groups": {
+        "context": {
+          "passed": 3,
+          "total": 4
+        },
+        "evidence": {
+          "passed": 2,
+          "total": 4
+        },
+        "general-knowledge": {
+          "passed": 15,
+          "total": 15
+        },
+        "identity": {
+          "passed": 4,
+          "total": 6
+        },
+        "memories": {
+          "passed": 11,
+          "total": 16
+        },
+        "mixed-knowledge": {
+          "passed": 10,
+          "total": 10
+        },
+        "multilingual": {
+          "passed": 4,
+          "total": 4
+        },
+        "tool-scaling": {
+          "passed": 3,
+          "total": 4
+        },
+        "vault": {
+          "passed": 10,
+          "total": 11
+        }
+      },
+      "toolScaling": {
+        "app": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 8.362887125,
+          "firstTextP95": 14.720374959,
+          "totalP50": 8.449714125,
+          "totalP95": 15.702393875
+        },
+        "expanded12": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 8.345278959,
+          "firstTextP95": 16.77518925,
+          "totalP50": 8.988926959,
+          "totalP95": 17.72545375
+        },
+        "expanded8": {
+          "cases": 4,
+          "passed": 4,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 22,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 6.754025375,
+          "firstTextP95": 13.788523167,
+          "totalP50": 8.8231445,
+          "totalP95": 16.0149535
+        },
+        "none": {
+          "cases": 1,
+          "passed": 1,
+          "turns": 1,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 3,
+              "total": 3
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 1
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 0
+            }
+          },
+          "firstTextP50": 1.150338958,
+          "firstTextP95": 1.150338958,
+          "totalP50": 1.301149708,
+          "totalP95": 1.301149708
+        },
+        "personal": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 5.641491958,
+          "firstTextP95": 13.779297792,
+          "totalP50": 6.092378083,
+          "totalP95": 14.81548175
+        },
+        "search": {
+          "cases": 3,
+          "passed": 2,
+          "turns": 5,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 17,
+              "total": 17
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 4.2740565,
+          "firstTextP95": 8.103770708,
+          "totalP50": 5.490666125,
+          "totalP95": 8.817991791
+        }
+      },
+      "correctShortAnswerFirstText": {
+        "count": 39,
+        "p50": 5.46960825,
+        "p95": 27.043692625
+      },
+      "memoryWriteAttempts": {
+        "noWriteTurns": 53,
+        "turnsWithUnwantedSaveCall": 1
+      },
+      "memoryStateChanges": {
+        "requiredTurns": 9,
+        "reviewedPasses": 6
+      },
+      "compaction": [
+        {
+          "case": "context-corrected-code",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 16.918054667,
+          "reply": null,
+          "error": "TextGenerationFailure(reason: SilliesTextModels.TextGenerationFailure.Reason.outputTokenLimit, metrics: Optional(SilliesTextModels.TextGenerationMetrics(processedPromptTokens: 2148, cachedPromptTokens: 0, generatedTokens: 240, promptSeconds: 9.46785593032837, generationSeconds: 8.341272950172424)), toolRejection: nil, outputCounts: Optional(SilliesTextModels.TextGenerationFailure.OutputCounts(responseBytes: 0, reasoningBytes: 514, acceptedToolCalls: 0)))"
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 16.661882043,
+          "reply": "Paris",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "The project release code is violet-42.",
+          "error": null
+        },
+        {
+          "case": "context-owner",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 16.392137041,
+          "reply": "Mina",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 17.243926000000002,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "amber-61",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 2,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "Mina",
+          "error": null
+        }
+      ]
+    },
+    "nemotron-3.5-bolt-e4b": {
+      "reviewedPasses": 58,
+      "cases": 74,
+      "score": 78.37837837837837,
+      "automatic": {
+        "cases": 74,
+        "passed": 60,
+        "turns": 107,
+        "errors": 0,
+        "checks": {
+          "behavior": {
+            "passed": 354,
+            "total": 374
+          },
+          "exact_answer": {
+            "passed": 41,
+            "total": 44
+          },
+          "lexical_anchor": {
+            "passed": 59,
+            "total": 64
+          }
+        },
+        "firstTextP50": 1.2678203749999999,
+        "firstTextP95": 6.263715875,
+        "totalP50": 1.689448333,
+        "totalP95": 6.658307
+      },
+      "timingSampleCounts": {
+        "firstTextTurns": 107,
+        "completedTimedTurns": 107
+      },
+      "groups": {
+        "context": {
+          "passed": 4,
+          "total": 4
+        },
+        "evidence": {
+          "passed": 3,
+          "total": 4
+        },
+        "general-knowledge": {
+          "passed": 15,
+          "total": 15
+        },
+        "identity": {
+          "passed": 3,
+          "total": 6
+        },
+        "memories": {
+          "passed": 11,
+          "total": 16
+        },
+        "mixed-knowledge": {
+          "passed": 7,
+          "total": 10
+        },
+        "multilingual": {
+          "passed": 4,
+          "total": 4
+        },
+        "tool-scaling": {
+          "passed": 2,
+          "total": 4
+        },
+        "vault": {
+          "passed": 9,
+          "total": 11
+        }
+      },
+      "toolScaling": {
+        "app": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.449218042,
+          "firstTextP95": 3.059501417,
+          "totalP50": 1.645518208,
+          "totalP95": 3.792578834
+        },
+        "expanded12": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.839106083,
+          "firstTextP95": 3.768514042,
+          "totalP50": 1.9698388329999998,
+          "totalP95": 4.420988833
+        },
+        "expanded8": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.576406167,
+          "firstTextP95": 3.284098833,
+          "totalP50": 1.797180875,
+          "totalP95": 4.058701958
+        },
+        "none": {
+          "cases": 1,
+          "passed": 1,
+          "turns": 1,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 3,
+              "total": 3
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 1
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 0
+            }
+          },
+          "firstTextP50": 0.29861075,
+          "firstTextP95": 0.29861075,
+          "totalP50": 0.345281458,
+          "totalP95": 0.345281458
+        },
+        "personal": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.2679842909999999,
+          "firstTextP95": 2.580902917,
+          "totalP50": 1.392824375,
+          "totalP95": 3.236195292
+        },
+        "search": {
+          "cases": 3,
+          "passed": 3,
+          "turns": 5,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 17,
+              "total": 17
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.009943542,
+          "firstTextP95": 2.082615833,
+          "totalP50": 2.009205458,
+          "totalP95": 2.5025422920000002
+        }
+      },
+      "correctShortAnswerFirstText": {
+        "count": 41,
+        "p50": 1.262062875,
+        "p95": 9.29783325
+      },
+      "memoryWriteAttempts": {
+        "noWriteTurns": 53,
+        "turnsWithUnwantedSaveCall": 0
+      },
+      "memoryStateChanges": {
+        "requiredTurns": 9,
+        "reviewedPasses": 1
+      },
+      "compaction": [
+        {
+          "case": "context-corrected-code",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 6.179971792,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 6.174940583,
+          "reply": "Paris",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "context-owner",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 6.1685177090000005,
+          "reply": "Mina",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 6.271501958,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "amber-61",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 2,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "Mina",
+          "error": null
+        }
+      ]
+    },
+    "lfm-2.5-24b-a2b": {
+      "reviewedPasses": 55,
+      "cases": 74,
+      "score": 74.32432432432432,
+      "automatic": {
+        "cases": 74,
+        "passed": 59,
+        "turns": 107,
+        "errors": 12,
+        "checks": {
+          "behavior": {
+            "passed": 327,
+            "total": 374
+          },
+          "exact_answer": {
+            "passed": 35,
+            "total": 44
+          },
+          "lexical_anchor": {
+            "passed": 53,
+            "total": 64
+          }
+        },
+        "firstTextP50": 9.782963625,
+        "firstTextP95": 29.269637708,
+        "totalP50": 10.115277208,
+        "totalP95": 29.579862458
+      },
+      "timingSampleCounts": {
+        "firstTextTurns": 95,
+        "completedTimedTurns": 95
+      },
+      "groups": {
+        "context": {
+          "passed": 0,
+          "total": 4
+        },
+        "evidence": {
+          "passed": 3,
+          "total": 4
+        },
+        "general-knowledge": {
+          "passed": 15,
+          "total": 15
+        },
+        "identity": {
+          "passed": 4,
+          "total": 6
+        },
+        "memories": {
+          "passed": 11,
+          "total": 16
+        },
+        "mixed-knowledge": {
+          "passed": 6,
+          "total": 10
+        },
+        "multilingual": {
+          "passed": 4,
+          "total": 4
+        },
+        "tool-scaling": {
+          "passed": 2,
+          "total": 4
+        },
+        "vault": {
+          "passed": 10,
+          "total": 11
+        }
+      },
+      "toolScaling": {
+        "app": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 18.303331417,
+          "firstTextP95": 33.371977,
+          "totalP50": 19.396031917,
+          "totalP95": 34.870945667
+        },
+        "expanded12": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 1,
+          "checks": {
+            "behavior": {
+              "passed": 19,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 24.755447958,
+          "firstTextP95": 31.260438917,
+          "totalP50": 25.842814583,
+          "totalP95": 32.102117833
+        },
+        "expanded8": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 21,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 18.281546042,
+          "firstTextP95": 41.767771792,
+          "totalP50": 18.602172792,
+          "totalP95": 42.910096209
+        },
+        "none": {
+          "cases": 1,
+          "passed": 1,
+          "turns": 1,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 3,
+              "total": 3
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 1
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 0
+            }
+          },
+          "firstTextP50": 13.147706667,
+          "firstTextP95": 13.147706667,
+          "totalP50": 13.182366334,
+          "totalP95": 13.182366334
+        },
+        "personal": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 2,
+          "checks": {
+            "behavior": {
+              "passed": 15,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 8.57370575,
+          "firstTextP95": 44.0964775,
+          "totalP50": 8.587566375,
+          "totalP95": 45.412638083
+        },
+        "search": {
+          "cases": 3,
+          "passed": 2,
+          "turns": 5,
+          "errors": 1,
+          "checks": {
+            "behavior": {
+              "passed": 14,
+              "total": 17
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 5.834603708,
+          "firstTextP95": 14.508350583,
+          "totalP50": 6.66630275,
+          "totalP95": 15.276214125
+        }
+      },
+      "correctShortAnswerFirstText": {
+        "count": 35,
+        "p50": 4.630226416,
+        "p95": 29.563107208
+      },
+      "memoryWriteAttempts": {
+        "noWriteTurns": 53,
+        "turnsWithUnwantedSaveCall": 2
+      },
+      "memoryStateChanges": {
+        "requiredTurns": 9,
+        "reviewedPasses": 4
+      },
+      "compaction": [
+        {
+          "case": "context-corrected-code",
+          "turn": 0,
+          "calls": null,
+          "seconds": null,
+          "reply": null,
+          "error": "Native evaluation exceeded its process deadline"
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 0,
+          "calls": null,
+          "seconds": null,
+          "reply": null,
+          "error": "Native evaluation exceeded its process deadline"
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 1,
+          "calls": null,
+          "seconds": null,
+          "reply": null,
+          "error": "Native evaluation exceeded its process deadline"
+        },
+        {
+          "case": "context-owner",
+          "turn": 0,
+          "calls": null,
+          "seconds": null,
+          "reply": null,
+          "error": "Native evaluation exceeded its process deadline"
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 0,
+          "calls": null,
+          "seconds": null,
+          "reply": null,
+          "error": "Native evaluation exceeded its process deadline"
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 1,
+          "calls": null,
+          "seconds": null,
+          "reply": null,
+          "error": "Native evaluation exceeded its process deadline"
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 2,
+          "calls": null,
+          "seconds": null,
+          "reply": null,
+          "error": "Native evaluation exceeded its process deadline"
+        }
+      ]
+    }
+  },
+  "modelReleases": {
+    "qwen-3.5-2b": {
+      "date": "2026-03-02",
+      "sourceURL": "https://github.com/QwenLM/Qwen3.8#news"
+    },
+    "qwen-3.5-4b": {
+      "date": "2026-03-02",
+      "sourceURL": "https://github.com/QwenLM/Qwen3.8#news"
+    },
+    "qwen-3.5-9b": {
+      "date": "2026-03-02",
+      "sourceURL": "https://github.com/QwenLM/Qwen3.8#news"
+    },
+    "gemma-4-e4b": {
+      "date": "2026-04-02",
+      "sourceURL": "https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/"
+    },
+    "gemma-4-26b-a4b": {
+      "date": "2026-04-02",
+      "sourceURL": "https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/"
+    },
+    "ministral-3-8b": {
+      "date": "2025-12-02",
+      "sourceURL": "https://mistral.ai/news/mistral-3"
+    },
+    "nemotron-3.5-bolt-e4b": {
+      "date": "2026-10-23",
+      "sourceURL": "https://research.nvidia.com/labs/nemotron/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB/"
+    },
+    "lfm-2.5-2.6b": {
+      "date": "2026-08-04",
+      "sourceURL": "https://www.liquid.ai/blog/lfm2-5-2-6b"
+    },
+    "gemma-4-12b": {
+      "date": "2026-06-03",
+      "sourceURL": "https://blog.google/innovation-and-ai/technology/developers-tools/introducing-gemma-4-12b/"
+    },
+    "granite-4.2-3b": {
+      "date": "2026-08-25",
+      "sourceURL": "https://research.ibm.com/blog/introducing-granite-4-2"
+    },
+    "granite-4.2-8b": {
+      "date": "2026-08-25",
+      "sourceURL": "https://research.ibm.com/blog/introducing-granite-4-2"
+    },
+    "lfm-2.5-24b-a2b": {
+      "date": "2026-10-13",
+      "sourceURL": "https://www.liquid.ai/blog/lfm2-5-24b-a2b"
+    }
+  }
+}

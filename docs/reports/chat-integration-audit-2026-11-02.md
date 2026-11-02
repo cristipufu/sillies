@@ -172,9 +172,10 @@ The [memory-replacement archive](data/chat-memory-replacement-checks-2026-11-02.
 all 40 turns and evidence-bound implementing-agent reviews. These checks establish neither reliable
 automatic saving for every model nor an independent statistical comparison.
 
-The fresh thirteen-model run freezes the corrected worker and native helper. Historical scores
-remain separate. Remaining channel loops, routing failures and unsupported coverage claims stay in
-the denominator; an integration score is not an intrinsic model-capability claim. Bounded runs are
+The [reviewed thirteen-model comparison](corrected-local-chat-models-2026-11-02.md) freezes the
+corrected worker and native helper. Historical scores remain separate. Remaining channel loops,
+routing failures and unsupported coverage claims stay in the denominator; an integration score is
+not an intrinsic model-capability claim. Bounded runs are
 resumable and never open the user's Vault or change the running app's model selection.
 
 The [diagnostic archive](data/chat-integration-diagnostics-2026-11-02.json.gz) contains the 24
@@ -190,5 +191,6 @@ message generator without loading model weights or running generation. It is not
 for users' conversations.
 
 The [investigation procedure](../../Benchmarks/Chat/FAILURE_INVESTIGATION.md) defines the evidence
-required before assigning a cause. Confirmed fixes will receive deterministic regressions and bounded
-real-model checks before a fresh comparison is published. There is no new model recommendation yet.
+required before assigning a cause. The fixes above received deterministic regressions and bounded
+real-model checks before the new comparison. Its report separates remaining confirmed integration defects from unresolved native
+failures; its recommendations apply to that measured configuration.

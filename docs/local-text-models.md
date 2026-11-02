@@ -7,17 +7,29 @@ Settings → **Local AI** offers Apple Intelligence plus twelve optional MLX mod
 Sillies requires an Apple silicon Mac with macOS 26 or later. The memory figures below are the
 app's minimum admission requirements; all measured timings come from the same 48 GiB Mac.
 
-**For Chat quality, Gemma 4 26B A4B is the strongest measured option if your Mac meets its 32 GB memory requirement.** Qwen3.5 4B is the smaller, quicker compromise at 16 GB. None passed every task, and the smaller models were especially unreliable at automatically saving memories.
+**Gemma 4 26B A4B has the strongest Chat task score in this comparison and requires 32 GB RAM.**
+For a 24 GB Mac, Nemotron Bolt offers a promising balance of responsiveness and task completion;
+Gemma 12B scores higher but responds more slowly. At 16 GB, Granite 8B scores higher than Qwen 4B,
+while Qwen starts responding sooner on the test Mac. These are integration results, not measurements
+on each RAM configuration. Automatic memory saving remains unreliable across several models.
 
-| Model | Model release | Required Mac RAM | Download | Reviewed task score | Median first text | Practical fit |
-| --- | --- | --- | --- | --- | --- | --- |
-| **Gemma 4 26B A4B** | [2026-04-02](https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/) | 32 GB | 15.37 GB | **94.6/100** (70/74) | 4.92 s | Highest task score; slower replies. Corrections can still leave conflicting memories. |
-| Ministral 3 8B | [2025-12-02](https://mistral.ai/news/mistral-3) | 24 GB | 5.61 GB | **73.0/100** (54/74) | 3.98 s | Useful retrieval; unreliable memory writes. Small score gain over 4B. |
-| Qwen3.5 9B | [2026-03-02](https://github.com/QwenLM/Qwen3.8#news) | 24 GB | 5.97 GB | **71.6/100** (53/74) | 4.07 s | Little observed gain over 4B, with slower replies. |
-| **Qwen3.5 4B** | [2026-03-02](https://github.com/QwenLM/Qwen3.8#news) | 16 GB | 3.05 GB | **70.3/100** (52/74) | 2.22 s | Smaller, faster compromise; weak automatic memory saves. |
-| Gemma 4 E4B | [2026-04-02](https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/) | 16 GB | 5.18 GB | **63.5/100** (47/74) | 1.16 s | Quicker chats; weaker tool follow-through and memory saves. |
-| Qwen3.5 2B | [2026-03-02](https://github.com/QwenLM/Qwen3.8#news) | 8 GB | 1.74 GB | **40.5/100** (30/74) | 0.76 s | Smallest download and quickest first text; frequent task failures. |
-| Apple Intelligence | System-managed | Apple-compatible Mac | System-managed | **23.0/100** (17/74) | 2.07 s | No separate Sillies download; poor fit for this Chat/Vault workflow. |
+| Model | Model release | Required Mac RAM | Download | Reviewed task score | Median first text |
+| --- | --- | --- | --- | --- | --- |
+| Apple Intelligence | System-managed | Apple-compatible Mac | System-managed | **24.3/100** (18/74) | 2.28 s |
+| Gemma 4 E4B | [2026-04-02](https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/) | 16 GB | 5.18 GB | **66.2/100** (49/74) | 1.38 s |
+| Gemma 4 12B | [2026-06-03](https://blog.google/innovation-and-ai/technology/developers-tools/introducing-gemma-4-12b/) | 24 GB | 6.77 GB | **83.8/100** (62/74) | 6.22 s |
+| Gemma 4 26B A4B | [2026-04-02](https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/) | 32 GB | 15.37 GB | **97.3/100** (72/74) | 5.41 s |
+| Granite 4.2 3B | [2026-08-25](https://research.ibm.com/blog/introducing-granite-4-2) | 8 GB | 2.07 GB | **55.4/100** (41/74) | 2.00 s |
+| Granite 4.2 8B | [2026-08-25](https://research.ibm.com/blog/introducing-granite-4-2) | 16 GB | 4.95 GB | **74.3/100** (55/74) | 4.86 s |
+| LFM2.5 2.6B | [2026-08-04](https://www.liquid.ai/blog/lfm2-5-2-6b) | 8 GB | 1.60 GB | **74.3/100** (55/74) | 5.30 s |
+| LFM2.5 24B A2B | [2026-10-13](https://www.liquid.ai/blog/lfm2-5-24b-a2b) | 32 GB | 13.59 GB | **74.3/100** (55/74) | 9.78 s |
+| Ministral 3 8B | [2025-12-02](https://mistral.ai/news/mistral-3) | 24 GB | 5.61 GB | **71.6/100** (53/74) | 4.49 s |
+| Nemotron 3.5 Bolt E4B | [2026-10-23](https://research.nvidia.com/labs/nemotron/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB/) | 24 GB | 7.52 GB | **78.4/100** (58/74) | 1.27 s |
+| Qwen3.5 2B | [2026-03-02](https://github.com/QwenLM/Qwen3.8#news) | 8 GB | 1.74 GB | **39.2/100** (29/74) | 0.98 s |
+| Qwen3.5 4B | [2026-03-02](https://github.com/QwenLM/Qwen3.8#news) | 16 GB | 3.05 GB | **63.5/100** (47/74) | 2.37 s |
+| Qwen3.5 9B | [2026-03-02](https://github.com/QwenLM/Qwen3.8#news) | 24 GB | 5.97 GB | **70.3/100** (52/74) | 5.36 s |
+
+Rows follow the same family order as Settings, with smaller downloads first within each family.
 
 Model release is the original publisher’s release date, not the MLX conversion upload date. Apple’s current model asset release date is not exposed by the system.
 
@@ -32,8 +44,9 @@ can be a preamble; it is not necessarily the answer or the start of speech. Init
 runtimes are mixed. These timings do not predict performance on every Mac with the listed RAM.
 
 All 107 primary turns per model were reviewed by the implementing agent, not an independent human.
-The 22 added scenarios also received two further passes to expose variability, scored automatically
-and reported separately. See the [full results, failures, methodology and downloadable evidence](reports/local-chat-models-2026-11-02.md).
+This is one fresh pass of the corrected integration. Earlier repeated checks used an older build and
+do not establish repeatability for these scores. See the
+[full results, app-side failures, methodology and downloadable evidence](reports/corrected-local-chat-models-2026-11-02.md).
 
 The helper derives its allocation budget from verified artifact sizes plus workspace, capped at 32 GiB and two thirds of physical memory. Oversized models fail admission before native loading. Gemma 26B activates a subset of its parameters per token, but its full quantized weights still need memory.
 
@@ -41,15 +54,14 @@ These are conservative admission limits for sharing the Mac with transcription a
 
 Models are pinned in `Sources/SilliesModelStore/Resources/text-models.json`, including weights, tokenizer, chat template, revision, lengths, SHA-256 hashes, license, and original release date with its source. They live in `~/Library/Application Support/Sillies/TextModels/<id>/<revision>`. Downloads use the same verified, resumable, atomic installer as speech models. Partial installations cannot be selected. No remote code, inference server, Python installation, or inference network call is involved. The existing daily speech-model update mechanism does not yet update text-model revisions; those pins ship with the app.
 
-## New model evaluation
+## Catalog coverage
 
-The catalog also includes Nemotron 3.5 Bolt E4B, Gemma 4 12B, Granite 4.2 3B and 8B,
-and LFM2.5 2.6B and 24B A2B. Their integration and evaluation are in progress; the scores above
-remain the earlier seven-model comparison until the new runs have been reviewed. The
-[app-first failure investigation](reports/chat-integration-audit-2026-11-02.md) found and corrected
-context admission, tool-limit completion, record-passage selection and memory-replacement defects.
-A fresh thirteen-model comparison is underway using the corrected implementation. Its results
-will replace the table after review; historical and corrected runs are kept separate.
+The comparison includes all twelve downloadable models plus Apple Intelligence. Before this run,
+the [app-first investigation](reports/chat-integration-audit-2026-11-02.md) corrected context admission,
+tool-limit completion, record-passage selection and memory replacement. Remaining failures include
+application-side summary fallback loss, late stream validation and unrecovered malformed tool
+arguments. They remain in the scores, with verified causes separated from unresolved ones.
+Historical results are preserved separately; no failing case was silently retried into a pass.
 
 Ling 3.0 Tiny (`bailing_hybrid`) and Bonsai 2 (`prism_hadamard_qwen35`) remain candidates.
 The pinned native Swift runtime does not implement their architectures. Their downloadable
@@ -57,8 +69,10 @@ MLX weights alone do not make them usable in Sillies; they are not offered as wo
 
 ## Benchmarks
 
-- **[Reviewed seven-model comparison and raw results](reports/local-chat-models-2026-11-02.md)** —
-  scores by task group, memory writes, repeat variability, compaction and release-build latency.
+- **[Reviewed thirteen-model comparison and raw results](reports/corrected-local-chat-models-2026-11-02.md)** —
+  scores by task group, memory writes, compaction, release-build latency and app-first investigations.
+- **[Historical seven-model comparison](reports/local-chat-models-2026-11-02.md)** —
+  earlier integration results and its separate repeated checks.
 - **[Benchmark guide](../Benchmarks/Chat/README.md)** — cases, scoring, bounded runs and reproducibility.
 - **[Benchmark audit and corrections](reports/chat-benchmark-audit-2026-11-02.md)** — what the evidence
   supports, false passes, corrected context cases and remaining validation gaps.
@@ -66,7 +80,7 @@ MLX weights alone do not make them usable in Sillies; they are not offered as wo
 
 The original audit found false passes in open-ended cases and context fixtures that left the target
 fact in recent messages. The current comparison uses corrected context fixtures, actual persisted
-state, full primary-turn rubric reviews and separate repeated checks. Independent tasks, human review
+state and full primary-turn rubric reviews. Independent tasks, repeated runs, human review
 and additional physical Macs are still needed for broad release claims. Chat scores do not establish
 meeting-summary, dictation-cleanup or TTS quality, and no model default changes from these results alone.
 
@@ -101,7 +115,7 @@ For a new STT engine, follow [the separate speech-provider recipe](local-speech-
 
 ## Resource and failure behavior
 
-One downloaded text model is loaded at a time. Each request starts a fresh prompt cache. Chat reconstructs native conversation messages from its bounded working context; meeting tasks remain independent. Input is checked against a 4,096-token total context. Tasks request at most 1,400 generation tokens (Chat normally requests 240). LFM2.5 always reasons, so its catalog policy grants an additional 1,024 total generation tokens. Context measurement and compaction reserve that allowance too. This is a bounded total allowance, not a guaranteed split between reasoning and answer tokens; an unfinished response still fails rather than exposing private reasoning. MLX uses the model-specific allocation budget described above, with a 128 MiB cache. These limits do not describe total process RSS or all driver allocations.
+One downloaded text model is loaded at a time. Each request starts a fresh prompt cache. Chat reconstructs native conversation messages from its bounded working context; meeting tasks remain independent. Input is checked against a 4,096-token total context. Tasks request at most 1,400 generation tokens (Chat normally requests 240). LFM2.5 always reasons, so its catalog policy grants an additional 1,024 total generation tokens. Context measurement and compaction reserve that allowance too. This is a bounded total allowance, not a guaranteed split between reasoning and answer tokens; unfinished responses fail. Recognized private channels are separated from visible text, but the benchmark exposed a late-validation gap for malformed LFM closing markers; see the report. MLX uses the model-specific allocation budget described above, with a 128 MiB cache. These limits do not describe total process RSS or all driver allocations.
 
 The helper runs at utility priority. Speech inference preempts active downloaded-text inference, waits for worker exit, and allows interrupted text work to retry once speech is idle. Explicit dictation reserves that priority through finalization, including Apple Speech. Text model leases prevent deletion while loading or generating. A 60-second idle release, pause/exclusion handling, selection changes, and termination release the worker. IPC responses are bounded to 128 KiB and each request has a 120-second deadline. The app does not wait synchronously for helper exit.
 

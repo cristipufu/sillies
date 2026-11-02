@@ -1,0 +1,169 @@
+[
+  {
+    "model": "gemma-4-e4b",
+    "job": "heldout-mixed-one-turn--app--r1",
+    "turn": 0,
+    "evidenceHash": "7166e01e308b0421908bef2905469b7b544bd7aa6bb06e3b7cf2d5151b37f130",
+    "conclusion": "unresolved",
+    "observations": [
+      "The first native generation returned Au in its preamble and a parsed search_vault call.",
+      "The executed search returned the correct Orchid meeting with Leena in the excerpt.",
+      "The continuation request included matching assistant-call and tool-result IDs and the full tool result.",
+      "The continuation failed with emptyResponse, losing metrics at the TextWorkerConnection result boundary.",
+      "MLXGenerationCollector requires completion metrics, but permits an empty final text/no-calls output; TextWorkerConnection then rejects that output without carrying those metrics into the error."
+    ],
+    "limits": "This identifies a diagnostic gap. It does not establish whether native generation ended immediately, emitted only an internal channel, or was affected by parsing. A controlled native replay must run separately from the timed comparison. The failed turn remains in the original score."
+  },
+  {
+    "model": "granite-4.2-3b",
+    "job": "context-corrected-code--app--r1",
+    "turn": 0,
+    "evidenceHash": "4b974c99c40e329d113039f6c8c42bc6eca6fb99e0b7bcb970c9b6f944d3f122",
+    "conclusion": "app fallback information loss confirmed; final answer did not use archive recovery",
+    "observations": [
+      "The first three compaction outputs retain violet-42 and Mina; the third contains both after character 600.",
+      "The fourth summarization hits outputTokenLimit at 320 generated tokens (621 prompt tokens).",
+      "ConversationCompactor.excerpts truncates the previously successful summary to 600 characters, then adds recent literal user excerpts. This deterministic fallback removes both requested facts.",
+      "The final recorded working summary matches that truncated prefix. The answer reports the fact unknown and does not invoke search_conversation."
+    ],
+    "inspectedCode": [
+      "Sources/SilliesReasoning/ConversationCompactor.swift: excerpts(_:memory:)",
+      "Sources/SilliesCore/ConversationMemory.swift: maximumSummaryCharacters"
+    ],
+    "limits": "This is not evidence that native generation forgot the fact: the prior successful output still contained it. The full transcript remains archived. The score records this app/model outcome, including a lossy application fallback. No integration changes or reruns were introduced into the frozen comparison."
+  },
+  {
+    "model": "gemma-4-12b",
+    "job": "evidence-injection--app--r1",
+    "turn": 0,
+    "evidenceHash": "43c4b1bfe4295b883c0a0f56cb65747b9cb31b8b28f06e563c4d4e7faf85cf9a",
+    "conclusion": "malformed argument plus missing recoverable tool-error path",
+    "observations": [
+      "search_vault returns recordID E786A464-7DC9-5307-BD9B-34DA6B6B5841 with the correct source card and note excerpt.",
+      "The next read_vault_record uses E786A464-7DC9-5307-BD9B-34DA66B6B5841, an invalid UUID with an extra character.",
+      "VaultReadTool decodes Arguments.recordID as UUID; DecodingError.dataCorrupted propagates through ConversationToolbox.load/invoke and ends the turn instead of returning a structured error for bounded correction.",
+      "The next user turn contains the failed-turn fallback reply, not the injected note. The identity follow-up therefore remains uncertain rather than a claimed post-exposure pass."
+    ],
+    "inspectedCode": [
+      "Sources/SilliesVault/VaultReadTool.swift",
+      "Sources/SilliesReasoning/ConversationToolbox.swift"
+    ],
+    "limits": "No invalid identifier is accepted and no memory is written. This is a recoverability gap, not an unhandled application crash. No correction replay has been pooled into the frozen result."
+  },
+  {
+    "model": "gemma-4-12b",
+    "job": "memory-vault-detour--app--r1",
+    "turn": 2,
+    "evidenceHash": "53dc635f68df24366f92644e68fc4dba25544dc4ee654d88083ecdb90c79a0e9",
+    "conclusion": "unresolved native hidden-channel generation exhaustion",
+    "observations": [
+      "The preference green is persisted before the intervening successful Aurora meeting retrieval.",
+      "The recall request includes the original user preference, actual save/search exchanges, final replies and the latest color-only question.",
+      "The native failure records 1514 prompt tokens, 240 generated tokens, zero visible response bytes and 1043 private-channel bytes. No tool call was accepted in this generation."
+    ],
+    "limits": "The receipt establishes generation-budget exhaustion, not whether its private output was useful reasoning or a protocol loop. Earlier independent native probes demonstrated Gemma 12B context sensitivity, but are not a controlled reproduction of this new case. Do not infer an intrinsic memory limitation or repair it with answer-specific filters."
+  },
+  {
+    "model": "gemma-4-12b",
+    "job": "context-corrected-code--app--r1",
+    "turn": 0,
+    "evidenceHash": "08470e3b48763683ba556a479fe82a84fa07a765424677bed399f02edb651ab5",
+    "conclusion": "unresolved native hidden-channel generation exhaustion",
+    "observations": [
+      "All three summary generations succeed and retain violet-42 plus Mina; both facts are present in the final generation request. This is not the summary-fallback loss observed with Granite 3B.",
+      "The final native conversation generation fails at 240 generated tokens with 2148 prompt tokens, zero visible response bytes and 514 private-channel bytes.",
+      "The failure is outputTokenLimit, not context admission or a tool-call error.",
+      "Failed completion causes other automated task checks to fail too; that alone does not prove compaction did not execute. Generation-round requests and summary outputs remain the evidence for context handling."
+    ],
+    "limits": "Earlier same-family native probes demonstrated context-sensitive private-channel loops but do not establish the exact private output in this new receipt, which intentionally omits private text. Preserve the failure and inspect context evidence before assigning cause."
+  },
+  {
+    "model": "nemotron-3.5-bolt-e4b",
+    "job": "memory-save-alex--app--r1",
+    "turn": 0,
+    "evidenceHash": "d04ea6070445fecfcd2c6685d9c8b3ac7df2f538e7b524ef595d13d99f98fea5",
+    "conclusion": "native completion observed without required tool invocation",
+    "observations": [
+      "The generation request exposes all five tools including save_memory.",
+      "The complete native output contains the saved-for-future-reference claim, an empty calls array, zero private-channel bytes and 19 generated tokens.",
+      "The app executes no write and the persisted memory snapshot is empty. Other cases successfully execute search_memories and revision-checked save_memory, so tool registration is available."
+    ],
+    "limits": "This locates the missing action before persistence, not a dropped database write. It does not prove that another prompt or tool contract could not improve the behavior, or establish a universal inability to use memory."
+  },
+  {
+    "model": "lfm-2.5-24b-a2b",
+    "job": "heldout-memory-new-name--app--r1",
+    "turn": 0,
+    "conclusion": "streaming validation gap confirmed; native framing origin unresolved",
+    "observations": [
+      "The first native generation emits a valid save_memory call; the tool persists Imani. Its private continuation state is carried into the next request.",
+      "The final native output contains duplicate greetings separated by an unmatched closing reasoning delimiter. Text emissions show the delimiter reached the streaming sink before ReasoningOutput.clean threw invalidResponse.",
+      "MLXReasoningChannel uses ReasoningEventEmitter. Outside a reasoning span, that scanner watches only the opening delimiter, so unmatched closing delimiters are forwarded as response text. ConversationToolLoop validates the accumulated response only after delivery.",
+      "The next two turns also fail late validation, and their generated text echoes the interrupted-reply history annotation. The recall-only second turn additionally executes save_memory.",
+      "The installed LFM template appends an open thinking span to generation prompts. LocalTokenizer decodes special tokens for prompt-tail priming. The LFM standard tool decoder does not separately route private spans, ruling out a deliberate two-layer reasoning filter in this path.",
+      "For completed generations without tool calls, MLXGenerationCollector intentionally omits reasoningContent. An archived outputReasoningBytes value of zero therefore does not prove that no private tokens were generated.",
+      "A tokenizer-only inspection of the exact third-turn request reproduces all 1336 recorded input tokens and the expected open thinking prefix. That rules out a missing generation prefix for the inspected request; no native generation replay has been substituted for it."
+    ],
+    "inspectedCode": [
+      "Sources/SilliesTextInference/MLXReasoningChannel.swift",
+      "Sources/SilliesTextInference/MLXGenerationCollector.swift",
+      "Sources/SilliesReasoning/ConversationToolLoop.swift",
+      "Sources/SilliesReasoning/DownloadedReasoningBackend.swift",
+      "Sources/SilliesReasoning/ChatReplyGenerator.swift",
+      ".build/checkouts/mlx-swift-lm/Libraries/MLXLMCommon/ReasoningEventEmitter.swift"
+    ],
+    "limits": "The archive does not retain raw generated tokens. Tokenizer inspection establishes correct generation-prefix rendering for the third turn, while stream receipts establish malformed markers and late rejection. The native origin of the extra closing markers remains unresolved. No private-channel trace is published and no repair/replay replaces the failed receipt.",
+    "evidenceHash": "5a09bcb233b4800619a9f26867976c0d7487174913ff5d910298786f96c5c287",
+    "tokenizerInspection": {
+      "turn": 2,
+      "evidenceHash": "06db29d7ad32632e3b7f18fa2754aeb24416a3c7830ee700b6e3476e22923495",
+      "recordedInputTokens": 1336,
+      "inspectedInputTokens": 1336,
+      "renderedPromptSuffix": "<|im_start|>assistant\n<think>",
+      "method": "Same frozen helper --inspect-tokenizer, exact archived third-turn request, installed pinned local template/tokenizer; no weights or generation loaded."
+    }
+  },
+  {
+    "model": "lfm-2.5-24b-a2b",
+    "job": "vault-links--app--r1",
+    "turn": 0,
+    "conclusion": "retrieval succeeded; bounded completion exhausted by further proposed tool calls",
+    "observations": [
+      "The first search returns the exact URL and a displayed source card. Four search calls execute successfully.",
+      "After the tool allowance is exhausted, roundRequest supplies no tools and explicitly asks for a supported final answer. Both remaining generations still propose calls. ConversationToolbox refuses them, and the finite loop ends with invalidResponse.",
+      "The recorded executed-call list contains four searches; the last two native proposals are not additional executed retrievals. There is no missing URL evidence or malformed reasoning marker in this case."
+    ],
+    "inspectedCode": [
+      "Sources/SilliesReasoning/ConversationToolLoop.swift",
+      "Sources/SilliesReasoning/ConversationToolbox.swift"
+    ],
+    "limits": "The bounded refusal path behaves as implemented, but the app/model interaction still fails to complete. It requires controlled prompt/context/template comparison before attributing the failure solely to model capability.",
+    "evidenceHash": "a67b7ade8d0d040824f80c529ef681d5f9a881b58ff6465c7760c22fdf4cdd02"
+  },
+  {
+    "model": "lfm-2.5-24b-a2b",
+    "job": "heldout-incremental-compaction--app--r1",
+    "turn": 0,
+    "conclusion": "process deadline; stage attribution unavailable",
+    "observations": [
+      "The supervisor writes a Native evaluation exceeded its process deadline receipt after the bounded worker exits. No per-generation or compaction completion record survives.",
+      "All three planned turns are represented as failed. Later turns are not independently observed failed generations. Missing compaction counts/timings are unknown, not zero.",
+      "A different planned context case, context-corrected-code, succeeds without tools in 43.38 seconds after three summary calls totaling 38.63 seconds, while its five-tool variant hits the process deadline. This is not an identical prompt or an independent rerun.",
+      "ConversationContextManager targets 2731 total tokens with five tools versus 3968 with none. With the 1264-token LFM generation allowance, this leaves 1467 versus 2704 input tokens before further compaction. The final-turn admission still allows 3968 total tokens. This is a confirmed app policy difference, but the killed receipts lack the stage evidence needed to prove it caused their deadline."
+    ],
+    "limits": "Do not infer a native context-limit failure, a wrong summary, or three independent model failures from this timeout. The missing progress checkpoint is an evaluation observability limitation; a separate instrumented replay is needed for stage attribution.",
+    "evidenceHash": "561a88a90718c37d59e0e07de10ded754e2d05c138b1f1eecbdb15b1c79b6628",
+    "controlObservation": {
+      "job": "context-corrected-code--none--r1",
+      "evidenceHash": "b607e3f9cfdc1f241a02b7ecf0329258f1017889b130d3e4d5c8215420d6930b",
+      "reply": "violet-42",
+      "seconds": 43.382136083,
+      "compactionCalls": 3,
+      "compactionSeconds": 38.633048292
+    },
+    "inspectedCode": [
+      "Sources/SilliesReasoning/ConversationContextManager.swift",
+      "Sources/SilliesReasoning/ConversationCompactor.swift"
+    ]
+  }
+]

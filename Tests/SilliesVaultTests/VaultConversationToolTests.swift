@@ -42,7 +42,7 @@ private func removeVaultFixture(_ directory: URL) {
     #expect(result.sources.first?.excerpt == body)
   }
   stash.stashedItems = [String(repeating: "Earlier material. ", count: 200) + body]
-  #expect(VaultToolContent.excerpt(in: stash, query: "recovery").contains("quartz-73"))
+  #expect(try VaultRecordPassage.select(in: stash, query: "recovery").text.contains("quartz-73"))
 }
 
 @Test func vaultToolsFindScreenshotsSavedURLsAndLateMeetingTopics() async throws {

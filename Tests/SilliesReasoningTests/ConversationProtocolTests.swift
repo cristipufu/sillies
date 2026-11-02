@@ -7,6 +7,24 @@ import Testing
 
 @testable import SilliesReasoning
 
+@Test func nativeToolSchemasPreserveOptionalContinuationParameters() throws {
+  let definition = ConversationToolDefinition(
+    name: "read_record", description: "Read a bounded passage",
+    parameters: [
+      .init("recordID", description: "Saved ID"),
+      .init("offset", description: "Continue reading", kind: .integer, requirement: .optional),
+    ])
+  let restored = try JSONDecoder().decode(
+    ConversationToolDefinition.self, from: JSONEncoder().encode(definition))
+  #expect(restored == definition)
+  let tool = try AppleConversationTool(definition, invoke: { _ in "A bounded passage" })
+  let schema = try #require(
+    JSONSerialization.jsonObject(with: JSONEncoder().encode(tool.parameters)) as? [String: Any])
+  #expect(schema["required"] as? [String] == ["recordID"])
+  let properties = try #require(schema["properties"] as? [String: Any])
+  #expect(properties["offset"] != nil)
+}
+
 private actor ConversationProbe: ConversationBackend {
   nonisolated var reasoningTokenReserve: Int { 0 }
   var request: TextGenerationRequest?

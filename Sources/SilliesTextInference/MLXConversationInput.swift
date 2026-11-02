@@ -69,7 +69,8 @@ enum MLXConversationInput {
           "name": tool.name, "description": tool.description,
           "parameters": [
             "type": "object", "properties": properties,
-            "required": tool.parameters.map(\.name), "additionalProperties": false,
+            "required": tool.parameters.filter { $0.requirement == .required }.map(\.name),
+            "additionalProperties": false,
           ] as [String: any Sendable],
         ] as [String: any Sendable],
       ]

@@ -18,7 +18,10 @@ enum TextConversationSelfCheck {
         tools: [
           .init(
             name: call.name, description: "Search saved records",
-            parameters: [.init("query", description: "Topic")])
+            parameters: [
+              .init("query", description: "Topic"),
+              .init("offset", description: "Continuation", kind: .integer, requirement: .optional),
+            ])
         ]),
       maximumTokens: 240, style: .conversation)
     let native = try MLXConversationInput.messages(request)
@@ -29,9 +32,13 @@ enum TextConversationSelfCheck {
     let generator = DefaultMessageGenerator()
     let calls = generator.generate(message: assistant)["tool_calls"] as? [[String: any Sendable]]
     let output = generator.generate(message: result)
+    let definition =
+      MLXConversationInput.tools(request).first?["function"] as? [String: any Sendable]
+    let schema = definition?["parameters"] as? [String: any Sendable]
+    let properties = schema?["properties"] as? [String: any Sendable]
     guard calls?.first?["id"] as? String == call.id,
       output["tool_call_id"] as? String == call.id, output["name"] as? String == call.name,
-      MLXConversationInput.tools(request).count == 1
+      schema?["required"] as? [String] == ["query"], properties?["offset"] != nil
     else { throw TextModelError.invalidResponse }
     let measured = try JSONDecoder().decode(
       TextGenerationRequest.self,

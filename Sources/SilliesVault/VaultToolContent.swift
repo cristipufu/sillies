@@ -3,13 +3,11 @@ import SilliesCore
 import SilliesReasoning
 
 enum VaultToolContent {
-  static let maximumExcerptCharacters = 1_600
+  static let maximumExcerptCharacters = VaultRecordPassage.maximumCharacters
   private static let briefExcerptCharacters = 100
   private static let maximumTitleCharacters = 120
   private static let maximumLinks = 5
   private static let maximumLinkSourceCharacters = 16_000
-  private static let maximumQueryTerms = 8
-  private static let leadingContextCharacters = 160
 
   private struct RecordPassage: Encodable {
     let recordID: UUID
@@ -53,6 +51,20 @@ enum VaultToolContent {
     }
   }
 
+  private struct RecordRead: Encodable {
+    let record: RecordPassage
+    let coverage: VaultRecordPassage.Coverage
+    let guidance: String
+    init(source: ChatSource, passage: VaultRecordPassage) {
+      record = RecordPassage(source, excerptLimit: passage.text.count)
+      coverage = passage.coverage
+      guidance =
+        coverage.isComplete
+        ? "The complete captured text is included."
+        : "This is a partial passage, not the complete record. Use nextOffset for later text, offset 0 for the beginning, or a more specific query with no offset. Do not infer that an absent detail is absent from the record."
+    }
+  }
+
   static func searchOutput(
     _ sources: [ChatSource], request: VaultSearchRequest, totalVaultRecords: Int
   ) throws
@@ -72,13 +84,13 @@ enum VaultToolContent {
     encoder.outputFormatting = .sortedKeys
     return String(decoding: try encoder.encode(value), as: UTF8.self)
   }
-  static func output(_ sources: [ChatSource]) throws -> ConversationToolOutput {
-    let full = try encoded(
-      sources.map { RecordPassage($0, excerptLimit: maximumExcerptCharacters) })
-    let brief = try encoded(
-      sources.map { RecordPassage($0, excerptLimit: briefExcerptCharacters) })
-    return .init(
-      text: full, sources: sources, briefText: brief)
+  static func readOutput(_ source: ChatSource, passage: VaultRecordPassage) throws
+    -> ConversationToolOutput
+  {
+    try .init(
+      text: encoded(RecordRead(source: source, passage: passage)), sources: [source],
+      briefText: encoded(
+        RecordRead(source: source, passage: passage.prefix(briefExcerptCharacters))))
   }
   static func links(in record: SessionRecord) throws -> [URL] {
     let text = String(
@@ -94,27 +106,5 @@ enum VaultToolContent {
       if result.count >= maximumLinks { stop.pointee = true }
     }
     return result
-  }
-  static func excerpt(in record: SessionRecord, query: String) -> String {
-    let captured =
-      ([record.transcript, record.extractedText] + record.stashedItems
-      + [record.explanation]).filter { !$0.isEmpty }
-    // A matching title/summary must not hide the captured body during a record read.
-    let candidates = captured.isEmpty ? [record.summary] : captured
-    let terms = query.split(whereSeparator: \.isWhitespace).prefix(maximumQueryTerms)
-    for candidate in candidates where !candidate.isEmpty {
-      for term in terms {
-        if let range = candidate.range(
-          of: String(term), options: [.caseInsensitive, .diacriticInsensitive])
-        {
-          let start =
-            candidate.index(
-              range.lowerBound, offsetBy: -leadingContextCharacters, limitedBy: candidate.startIndex
-            ) ?? candidate.startIndex
-          return String(candidate[start...].prefix(maximumExcerptCharacters))
-        }
-      }
-    }
-    return String((candidates.first ?? "").prefix(maximumExcerptCharacters))
   }
 }

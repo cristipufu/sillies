@@ -22,6 +22,11 @@ tool-result continuity and removal from subsequent user turns.
 
 Conversation search excludes the current user message before ranking and limiting results. Vault
 search explicitly returns partial excerpts; read a record for details absent from the search result.
+Record reads rank bounded, overlapping passages by distinct query-term coverage. They report the
+actual character range and total captured-text length, including in shortened recovery results.
+The optional `offset` parameter continues at the returned `nextOffset`; omit it for a new query or
+use zero to start at the beginning. An invalid offset returns no evidence. A partial passage cannot
+establish that an unmentioned detail is absent from the rest of a record.
 Memory writes bind provenance to the original current user message in application code. Tool schemas
 and prompts express the storage policy, but correct provenance alone does not prove that a model
 chose an appropriate fact: evaluate real persisted state, opt-outs and identity separately.
@@ -31,6 +36,8 @@ chose an appropriate fact: evaluate real persisted state, opt-outs and identity 
 1. Implement `ConversationTool` in the feature that owns the data. Define a stable name, a concise
    description, typed parameter definitions, localized activity text, and `call(arguments:)`.
    Decode arguments into a small `Decodable` type and validate identifiers and limits at the boundary.
+   Mark optional parameters with `.optional`; Apple and MLX adapters preserve that requirement in
+   their native schemas. An omitted optional field must have a defined meaning in the tool decoder.
 2. Return `ConversationToolOutput` with bounded source text and an optional shorter `briefText` for
    context recovery. Return `ChatSource` references only for records actually retrieved. Keep full
    record bodies, storage paths, and image bytes out of model context. Empty text and missing records
@@ -53,6 +60,9 @@ Cards belong to replies, never a second global progress section. Repeated retrie
 without duplicating cards already displayed in the same conversation.
 
 These limits are resource boundaries, not a way to determine whether a model's answer is true.
+After the execution allowance is exhausted, the downloaded-model loop requests an answer without
+advertising tools. A further attempted call receives a bounded refusal result and one final completion
+attempt. It must never execute an additional operation. Refused calls are not empty search results.
 Evaluate prompt and tool design with real examples; do not add word-specific output filters.
 
 ## Add a conversation backend

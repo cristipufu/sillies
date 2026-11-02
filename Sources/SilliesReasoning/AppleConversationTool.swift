@@ -25,7 +25,8 @@ struct AppleConversationTool: Tool {
         name: definition.name + "Arguments",
         properties: definition.parameters.map {
           DynamicGenerationSchema.Property(
-            name: $0.name, description: $0.description, schema: Self.schema($0))
+            name: $0.name, description: $0.description, schema: Self.schema($0),
+            isOptional: $0.requirement == .optional)
         }), dependencies: [])
   }
   private static func schema(_ parameter: ConversationToolDefinition.Parameter)

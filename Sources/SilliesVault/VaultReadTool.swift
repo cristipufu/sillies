@@ -6,6 +6,7 @@ package struct VaultReadTool: ConversationTool {
   private struct Arguments: Decodable {
     let recordID: UUID
     let query: String
+    let offset: Int?
   }
   private let library: VaultLibrary
   package init(library: VaultLibrary) { self.library = library }
@@ -20,6 +21,11 @@ package struct VaultReadTool: ConversationTool {
         .init(
           "query",
           description: "Topic words to locate the relevant passage, or empty for its beginning."),
+        .init(
+          "offset",
+          description:
+            "Omit to find a passage by query. Use nextOffset from a prior read to continue, or 0 for the beginning.",
+          kind: .integer, requirement: .optional),
       ])
   }
   package func call(arguments: Data) async throws -> ConversationToolOutput {
@@ -28,11 +34,17 @@ package struct VaultReadTool: ConversationTool {
       return .init(text: "The record is no longer available. It may have been deleted.")
     }
     try Task.checkCancellation()
-    return try VaultToolContent.output([
-      .init(
-        header: .init(record),
-        excerpt: VaultToolContent.excerpt(in: record, query: args.query),
-        links: VaultToolContent.links(in: record))
-    ])
+    do {
+      let passage = try VaultRecordPassage.select(
+        in: record, query: args.query, offset: args.offset)
+      let source = try ChatSource(
+        header: .init(record), excerpt: passage.text, links: VaultToolContent.links(in: record))
+      return try VaultToolContent.readOutput(source, passage: passage)
+    } catch VaultRecordPassage.SelectionError.invalidOffset {
+      return .init(
+        text:
+          "No passage was read: the offset is outside the current record. Retry without offset to select a passage by query."
+      )
+    }
   }
 }

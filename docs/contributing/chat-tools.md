@@ -19,6 +19,9 @@ a literal quoted protocol delimiter from a real channel boundary; do not claim t
 for examples that deliberately quote those reserved delimiters. Native tool framing still belongs to
 the SDK. Provider tests must cover split delimiters, primed/truncated reasoning, IPC propagation,
 tool-result continuity and removal from subsequent user turns.
+An unmatched configured closing delimiter is rejected before that delimiter reaches the text sink,
+including when split across chunks. Earlier valid deltas can remain as an interrupted reply; do not
+silently replace already displayed or spoken text. This validates protocol framing, not answer truth.
 
 Conversation search excludes the current user message before ranking and limiting results. Vault
 search explicitly returns partial excerpts; read a record for details absent from the search result.
@@ -35,7 +38,11 @@ chose an appropriate fact: evaluate real persisted state, opt-outs and identity 
 
 1. Implement `ConversationTool` in the feature that owns the data. Define a stable name, a concise
    description, typed parameter definitions, localized activity text, and `call(arguments:)`.
-   Decode arguments into a small `Decodable` type and validate identifiers and limits at the boundary.
+   Decode arguments with `ConversationToolArguments.decode` into a small `Decodable` type before
+   accessing storage, then validate identifiers and limits at the boundary. The toolbox returns a
+   bounded `notExecuted` correction result for argument-decoding failures, preserving the call ID and
+   consuming the existing call budget. Storage decoding failures and cancellation must propagate;
+   never catch every `DecodingError` around the entire tool body as an invocation mistake.
    Mark optional parameters with `.optional`; Apple and MLX adapters preserve that requirement in
    their native schemas. An omitted optional field must have a defined meaning in the tool decoder.
 2. Return `ConversationToolOutput` with bounded source text and an optional shorter `briefText` for
@@ -68,7 +75,9 @@ Evaluate prompt and tool design with real examples; do not add word-specific out
 ## Add a conversation backend
 
 Implement `ConversationBackend` with native roles, tool definitions, `contextWindowTokens`, and
-`inputTokenCount`, and `streamConversation`. Await the user-facing text sink; keep tool arguments
+`inputTokenCount`, and `streamConversation`. Forward `reasoningTokenReserve(for:)` through backend
+decorators so summary admission matches the native generation allowance. Await the user-facing text
+sink; keep tool arguments
 and results in native protocol entries rather than the speech stream. Normalize a genuine context overflow to `TextModelError.contextLimit`. Preserve
 call IDs and names across assistant requests and tool results. An unsupported native tool format
 must report a capability error; it must not simulate execution by inventing results.
@@ -115,7 +124,10 @@ make successful changes visible and undoable. Clear/Forget/Undo rotate the stora
 for the reply and tool results. Apple uses its tokenizer on macOS 26.4 or later; earlier systems use
 an estimate. Downloaded models use the installed tokenizer in the helper.
 
-When necessary, `ConversationCompactor` summarizes older complete turns in bounded batches. A short,
+When necessary, `ConversationCompactor` summarizes older complete turns in bounded batches.
+The largest recent suffix that fits remains verbatim; its preceding turns are compacted together rather than in
+fixed four-turn chunks. Oversized source batches split at complete user-turn boundaries according
+to measured token capacity, including the summary task's reasoning reserve. A short,
 attributed opening statement is retained separately; later corrections take precedence. Recent
 turns retain native roles and tool exchanges. The summarizer is a separate text task: attributed old turns are source data, not an active
 conversation to continue. The summary keeps attributed facts, preferences,
@@ -126,7 +138,8 @@ there is no 100-message stop. History, summaries and personal memories persist p
 Summaries are lossy. This is continuity, not perfect recall of every sentence. If summarization
 fails, a bounded attributed excerpt preserves some continuity and the full transcript remains
 intact. Cancellation retains an already visible partial reply, marked as interrupted, together with the
-prefix of fully played phrases. A context overflow before text delivery triggers one stronger
+prefix of fully played phrases. Interruption metadata belongs in instructions, not annotations appended
+to assistant speech in model history. A context overflow before text delivery triggers one stronger
 compaction attempt; after delivery it must not replay the reply. Repeated failure stays recoverable, with the user's message and found cards
 available. An individual message still has the composer limit and can exceed a model's token budget
 with unusual tokenization. No model-size policy can guarantee that arbitrary input always fits.

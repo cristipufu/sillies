@@ -1,5 +1,10 @@
 # Local Chat: corrected thirteen-model comparison
 
+**Update:** both LFMs have a [new integration and complete rerun](lfm-chat-rerun-2026-11-02.md).
+The results below remain unchanged as the historical comparison. The
+[model guide](../local-text-models.md#which-model-should-i-use) uses the newer LFM scores and labels
+their different build provenance.
+
 This compares Sillies' actual Chat workflow: ordinary questions, saved-record retrieval, memories,
 identity and conversation continuity. It measures the model **and its integration with the app**.
 An incorrect answer, missing write or runtime failure stays in the score even when the cause is in

@@ -38,7 +38,18 @@ For checkpoints whose reasoning protocol is not declared by the native architect
 optional catalog `reasoning` policy: `switchableThinkTags` or `alwaysOnThinkTags`. Mandatory
 reasoning receives a bounded token reserve shared by inference and context compaction. Do not
 force-close a private channel or classify visible output with model-name heuristics. Validate
-native tool continuation, hidden-channel streaming, and compaction with the actual checkpoint. Text-model revisions currently ship with the app;
+native tool continuation, hidden-channel streaming, and compaction with the actual checkpoint.
+The optional `sampling` preset carries reviewed temperature, top-p, top-k and repetition penalty
+values from the publisher; the native adapter applies it without a model-ID switch. Models without
+a preset retain the task's default sampling. Check both conversation and precise generation before
+publishing a preset. A publisher recommendation is a starting point, not proof of better app scores.
+
+`TextGenerationStyle.summary` identifies history compaction. Always-reasoning models reserve 2,048
+additional generation tokens for that task and 1,024 for ordinary replies and precise transformations, in addition
+to the requested output allowance. Admission, summary splitting and native generation use the same
+policy within the existing context limit and deadline. Reasoning and visible output share the native
+generation ceiling; these are capacity allowances, not independently enforced channel quotas.
+Text-model revisions currently ship with the app;
 the speech-model update mechanism does not discover text-model updates.
 
 ## Add another runtime

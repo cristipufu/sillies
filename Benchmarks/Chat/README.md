@@ -11,6 +11,9 @@ There is no Python inference runtime, cloud judge or additional dependency.
 
 Read the [model selection summary](../../docs/local-text-models.md#which-model-should-i-use)
 and the [reviewed thirteen-model comparison](../../docs/reports/corrected-local-chat-models-2026-11-02.md).
+Both LFMs also have a [complete rerun after integration fixes](../../docs/reports/lfm-chat-rerun-2026-11-02.md),
+with fresh reviews, before/after measurements and diagnostic controls. Its single pass is separate
+from the older comparison; it does not establish repeatability or update the other eleven models.
 The [earlier seven-model comparison](../../docs/reports/local-chat-models-2026-11-02.md) preserves
 its separate repeat measurements; those repeats do not certify the newer integration.
 The [first comparison](../../docs/reports/local-chat-models-2026-11-01.md) and its
@@ -69,6 +72,9 @@ rerun. A batch stops admitting cases after its budget; a case already running ma
 its separate deadline. Defaults: 60 seconds per turn, 180 per case, 90 for worker startup.
 The supervisor terminates the worker process group on a deadline, even if native inference ignores
 Swift cancellation. Temporary databases belong to the parent and are removed after a killed worker.
+Native generation start/finish events in `worker.stderr.log` retain content-free stage metrics
+when an unfinished turn is killed. They have no job identifiers or wall timestamps; preserve their
+ordering and do not claim exact per-case attribution without additional evidence.
 Three interrupted workers stop that model's current batch. Missing models remain visibly pending.
 An operator interruption after case admission leaves an explicit receipt and is not silently retried.
 Keep it separate from model failures when interpreting an interrupted run.

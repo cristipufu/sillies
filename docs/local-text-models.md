@@ -10,17 +10,19 @@ app's minimum admission requirements; all measured timings come from the same 48
 **Gemma 4 26B A4B has the strongest Chat task score in this comparison and requires 32 GB RAM.**
 For a 24 GB Mac, Nemotron Bolt offers a promising balance of responsiveness and task completion;
 Gemma 12B scores higher but responds more slowly. At 16 GB, Granite 8B scores higher than Qwen 4B,
-while Qwen starts responding sooner on the test Mac. These are integration results, not measurements
-on each RAM configuration. Automatic memory saving remains unreliable across several models.
+while Qwen starts responding sooner on the test Mac. LFM 2.6B has the strongest listed score among
+models admitted on an 8 GB Mac, but its new median first text is 6.46 seconds and long-history
+continuity remains uneven. These are integration results, not measurements on each RAM
+configuration. Automatic memory saving remains unreliable across several models.
 
 | Model | Model release | Required Mac RAM | Download | Reviewed task score | Median first text |
 | --- | --- | --- | --- | --- | --- |
 | Gemma 4 26B A4B | [2026-04-02](https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/) | 32 GB | 15.37 GB | **97.3/100** (72/74) | 5.41 s |
+| LFM2.5 24B A2B | [2026-10-13](https://www.liquid.ai/blog/lfm2-5-24b-a2b) | 32 GB | 13.59 GB | **85.1/100** (63/74) | 9.41 s |
 | Gemma 4 12B | [2026-06-03](https://blog.google/innovation-and-ai/technology/developers-tools/introducing-gemma-4-12b/) | 24 GB | 6.77 GB | **83.8/100** (62/74) | 6.22 s |
+| LFM2.5 2.6B | [2026-08-04](https://www.liquid.ai/blog/lfm2-5-2-6b) | 8 GB | 1.60 GB | **82.4/100** (61/74) | 6.46 s |
 | Nemotron 3.5 Bolt E4B | [2026-10-23](https://research.nvidia.com/labs/nemotron/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB/) | 24 GB | 7.52 GB | **78.4/100** (58/74) | 1.27 s |
 | Granite 4.2 8B | [2026-08-25](https://research.ibm.com/blog/introducing-granite-4-2) | 16 GB | 4.95 GB | **74.3/100** (55/74) | 4.86 s |
-| LFM2.5 2.6B | [2026-08-04](https://www.liquid.ai/blog/lfm2-5-2-6b) | 8 GB | 1.60 GB | **74.3/100** (55/74) | 5.30 s |
-| LFM2.5 24B A2B | [2026-10-13](https://www.liquid.ai/blog/lfm2-5-24b-a2b) | 32 GB | 13.59 GB | **74.3/100** (55/74) | 9.78 s |
 | Ministral 3 8B | [2025-12-02](https://mistral.ai/news/mistral-3) | 24 GB | 5.61 GB | **71.6/100** (53/74) | 4.49 s |
 | Qwen3.5 9B | [2026-03-02](https://github.com/QwenLM/Qwen3.8#news) | 24 GB | 5.97 GB | **70.3/100** (52/74) | 5.36 s |
 | Gemma 4 E4B | [2026-04-02](https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/) | 16 GB | 5.18 GB | **66.2/100** (49/74) | 1.38 s |
@@ -29,7 +31,10 @@ on each RAM configuration. Automatic memory saving remains unreliable across sev
 | Qwen3.5 2B | [2026-03-02](https://github.com/QwenLM/Qwen3.8#news) | 8 GB | 1.74 GB | **39.2/100** (29/74) | 0.98 s |
 | Apple Intelligence | System-managed | Apple-compatible Mac | System-managed | **24.3/100** (18/74) | 2.28 s |
 
-Rows are ordered by reviewed task score, highest first.
+Rows are ordered by reviewed task score, highest first. **The two LFM rows use the newer integration
+rerun; the other eleven retain the earlier comparison.** These are the latest measured results,
+not a uniform comparison of every model on the same app build.
+See the [LFM fixes, before/after results and remaining failures](reports/lfm-chat-rerun-2026-11-02.md).
 
 Model release is the original publisher’s release date, not the MLX conversion upload date. Apple’s current model asset release date is not exposed by the system.
 
@@ -44,9 +49,10 @@ can be a preamble; it is not necessarily the answer or the start of speech. Init
 runtimes are mixed. These timings do not predict performance on every Mac with the listed RAM.
 
 All 107 primary turns per model were reviewed by the implementing agent, not an independent human.
-This is one fresh pass of the corrected integration. Earlier repeated checks used an older build and
-do not establish repeatability for these scores. See the
-[full results, app-side failures, methodology and downloadable evidence](reports/corrected-local-chat-models-2026-11-02.md).
+Each published build has one full pass; earlier repeated checks do not establish repeatability for
+these scores. The LFM rerun uses the unchanged corpus after integration fixes and retains all failed
+cases. See the [original thirteen-model results and evidence](reports/corrected-local-chat-models-2026-11-02.md)
+and the [new LFM results and evidence](reports/lfm-chat-rerun-2026-11-02.md).
 
 The helper derives its allocation budget from verified artifact sizes plus workspace, capped at 32 GiB and two thirds of physical memory. Oversized models fail admission before native loading. Gemma 26B activates a subset of its parameters per token, but its full quantized weights still need memory.
 
@@ -59,8 +65,11 @@ Models are pinned in `Sources/SilliesModelStore/Resources/text-models.json`, inc
 The comparison includes all twelve downloadable models plus Apple Intelligence. Before this run,
 the [app-first investigation](reports/chat-integration-audit-2026-11-02.md) corrected context admission,
 tool-limit completion, record-passage selection and memory replacement. Remaining failures include
-application-side summary fallback loss, late stream validation and unrecovered malformed tool
-arguments. They remain in the scores, with verified causes separated from unresolved ones.
+application-side summary fallback loss and model/prompt difficulties with memory decisions and
+retrieval. The subsequent LFM integration adds stream-boundary validation, recoverable argument
+errors, publisher sampling and capacity-based compaction; both LFMs were then fully rerun. Long
+histories and evidence interpretation still fail in some cases. Verified causes remain separate
+from unresolved ones, and no model is assumed intrinsically incapable based on an app failure.
 Historical results are preserved separately; no failing case was silently retried into a pass.
 
 Ling 3.0 Tiny (`bailing_hybrid`) and Bonsai 2 (`prism_hadamard_qwen35`) remain candidates.
@@ -69,6 +78,8 @@ MLX weights alone do not make them usable in Sillies; they are not offered as wo
 
 ## Benchmarks
 
+- **[LFM integration fixes and full rerun](reports/lfm-chat-rerun-2026-11-02.md)** —
+  updated scores for both LFMs, diagnostic controls, latency trade-offs and remaining failures.
 - **[Reviewed thirteen-model comparison and raw results](reports/corrected-local-chat-models-2026-11-02.md)** —
   scores by task group, memory writes, compaction, release-build latency and app-first investigations.
 - **[Historical seven-model comparison](reports/local-chat-models-2026-11-02.md)** —
@@ -115,7 +126,7 @@ For a new STT engine, follow [the separate speech-provider recipe](local-speech-
 
 ## Resource and failure behavior
 
-One downloaded text model is loaded at a time. Each request starts a fresh prompt cache. Chat reconstructs native conversation messages from its bounded working context; meeting tasks remain independent. Input is checked against a 4,096-token total context. Tasks request at most 1,400 generation tokens (Chat normally requests 240). LFM2.5 always reasons, so its catalog policy grants an additional 1,024 total generation tokens. Context measurement and compaction reserve that allowance too. This is a bounded total allowance, not a guaranteed split between reasoning and answer tokens; unfinished responses fail. Recognized private channels are separated from visible text, but the benchmark exposed a late-validation gap for malformed LFM closing markers; see the report. MLX uses the model-specific allocation budget described above, with a 128 MiB cache. These limits do not describe total process RSS or all driver allocations.
+One downloaded text model is loaded at a time. Each request starts a fresh prompt cache. Chat reconstructs native conversation messages from its bounded working context; meeting tasks remain independent. Input is checked against a 4,096-token total context. Tasks request at most 1,400 generation tokens (Chat normally requests 240). LFM2.5 always reasons, so its catalog policy grants 1,024 additional generation tokens for replies and ordinary transformations, or 2,048 for history summaries. Context measurement and source splitting reserve the same allowance. This is a bounded combined ceiling, not a guaranteed split between reasoning and answer tokens; unfinished responses fail. Native reasoning channels are separated from visible text. Orphaned closing delimiters are now rejected before that delimiter reaches the streaming sink, including split chunks; this does not validate arbitrary generated prose. The [LFM rerun](reports/lfm-chat-rerun-2026-11-02.md) documents the verified boundary fix and remaining generation failures. MLX uses the model-specific allocation budget described above, with a 128 MiB cache. These limits do not describe total process RSS or all driver allocations.
 
 The helper runs at utility priority. Speech inference preempts active downloaded-text inference, waits for worker exit, and allows interrupted text work to retry once speech is idle. Explicit dictation reserves that priority through finalization, including Apple Speech. Text model leases prevent deletion while loading or generating. A 60-second idle release, pause/exclusion handling, selection changes, and termination release the worker. IPC responses are bounded to 128 KiB and each request has a 120-second deadline. The app does not wait synchronously for helper exit.
 

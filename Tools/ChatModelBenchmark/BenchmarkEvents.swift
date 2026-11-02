@@ -38,6 +38,10 @@ struct BenchmarkToolResult: Encodable, Sendable {
 }
 
 struct BenchmarkTurnResult: Encodable, Sendable {
+  struct TextEmission: Encodable, Sendable {
+    let text: String
+    let seconds: Double
+  }
   struct Memory: Codable, Sendable {
     let key: String
     let value: String
@@ -50,6 +54,9 @@ struct BenchmarkTurnResult: Encodable, Sendable {
   let error: String?
   let seconds: Double
   let firstTextSeconds: Double?
+  let textEmissions: [TextEmission]
+  let compactionCalls: Int
+  let compactionSeconds: Double
   let requests: [TextGenerationRequest]
   let inputTokens: [Int]
   let compacted: Bool
@@ -62,6 +69,9 @@ actor BenchmarkTurnTrace {
   private let start = ContinuousClock.now
   private var firstText: Double?
   private var compacted = false
+  private var compactionCalls = 0
+  private var compactionSeconds = 0.0
+  private var textEmissions: [BenchmarkTurnResult.TextEmission] = []
   private var requests: [TextGenerationRequest] = []
   private var inputTokens: [Int] = []
   private(set) var streamedText = ""
@@ -69,11 +79,14 @@ actor BenchmarkTurnTrace {
   func receivedText(_ text: String) {
     if firstText == nil, !text.isEmpty { firstText = elapsed }
     streamedText += text
+    textEmissions.append(.init(text: text, seconds: elapsed))
   }
   func summarized(_ request: TextGenerationRequest) {
     compacted = true
+    compactionCalls += 1
     requests.append(request)
   }
+  func finishedSummary(seconds: Double) { compactionSeconds += seconds }
   func requested(_ request: TextGenerationRequest) { requests.append(request) }
   func counted(_ tokens: Int) { inputTokens.append(tokens) }
   var elapsed: Double { Self.seconds(start.duration(to: .now)) }
@@ -95,7 +108,9 @@ actor BenchmarkTurnTrace {
     return .init(
       position: position, input: input, reply: reply?.text, partialReply: streamedText,
       error: failure,
-      seconds: elapsed, firstTextSeconds: firstText, requests: requests,
+      seconds: elapsed, firstTextSeconds: firstText,
+      textEmissions: textEmissions, compactionCalls: compactionCalls,
+      compactionSeconds: compactionSeconds, requests: requests,
       inputTokens: inputTokens, compacted: compacted, summary: reply?.memory.summary ?? "",
       sources: reply?.sources.map(\.id) ?? [],
       memories: memories.map { .init(key: $0.key, value: $0.value, source: $0.sourceQuote) })

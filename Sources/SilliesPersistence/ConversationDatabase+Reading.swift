@@ -57,6 +57,10 @@ extension ConversationDatabase {
       filter += " AND m.owner=?"
       values.append(.text(owner))
     }
+    if let excluded = request.excludingMessageID {
+      filter += " AND m.id != ?"
+      values.append(.text(excluded.uuidString))
+    }
     var results: [ConversationSearchMatch] = []
     try sql.rows(
       "SELECT m.sequence,m.created,m.body,c.id,c.name FROM conversation_search JOIN conversation_messages m ON m.id=conversation_search.id JOIN conversations c ON c.id=m.owner WHERE \(filter) ORDER BY bm25(conversation_search),m.sequence DESC LIMIT ?",

@@ -6,12 +6,13 @@ struct ConversationSearchTool: ConversationTool {
   private static let excerptLimit = 600
   let repository: any ConversationRepository
   let handle: ConversationHandle
+  let currentMessageID: UUID
   var activity: String { String(localized: "Searching our conversation…") }
   var definition: ConversationToolDefinition {
     .init(
       name: "search_conversation",
       description:
-        "Find older messages when the user asks about a previous discussion.",
+        "Search earlier chats between this companion and the user. For saved meetings, screenshots or Stash items use search_vault instead.",
       parameters: [.init("query", description: "Short topic keywords from the earlier discussion.")]
     )
   }
@@ -20,7 +21,7 @@ struct ConversationSearchTool: ConversationTool {
     let matches = try await repository.search(
       .init(
         companionID: handle.companionID,
-        query: args.query, limit: Self.resultLimit))
+        query: args.query, limit: Self.resultLimit, excludingMessageID: currentMessageID))
     struct Result: Encodable {
       let messageID: UUID
       let date: Date

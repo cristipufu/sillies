@@ -10,7 +10,7 @@ from pathlib import Path
 PROFILES = {"none": 0, "search": 1, "personal": 3, "app": 5, "expanded8": 8, "expanded12": 12}
 KINDS = {"reply_equals", "contains_any", "contains_all", "omits_all", "no_tools",
          "required_tools", "allowed_tools", "no_writes", "argument_equals", "memory_contains",
-         "memory_absent", "source_includes", "compacted", "retained_context_omits"}
+         "memory_absent", "source_includes", "compacted", "retained_context_omits", "compaction_calls_at_most"}
 OWNER = {"id": "pogo", "name": "Pogo", "personality": "Warm, curious and upbeat."}
 IDENTIFIER = re.compile(r"[a-z][a-z0-9-]{0,90}\Z")
 
@@ -53,9 +53,17 @@ def validate(case: dict) -> dict:
                     raise ValueError(f"Missing expected values: {check}")
                 if not all(isinstance(value, str) for value in check["values"]):
                     raise ValueError(f"Expected values must be strings: {check}")
+            if check["kind"] == "compaction_calls_at_most":
+                if len(check["values"]) != 1 or not check["values"][0].isdigit() or not 0 <= int(check["values"][0]) <= 200:
+                    raise ValueError(f"Invalid compaction call bound: {check}")
             if check["kind"] == "argument_equals" and not all(check.get(key) for key in ("tool", "field")):
                 raise ValueError(f"Argument checks need a tool and field: {check}")
-    for message in case.get("history", []):
+    batches = case.get("historyBatches", [])
+    if not isinstance(batches, list) or len(batches) > len(case["turns"]):
+        raise ValueError(f"Invalid incremental history: {case['id']}")
+    if any(not isinstance(batch, list) or len(batch) > 100 for batch in batches):
+        raise ValueError(f"Invalid incremental history batch: {case['id']}")
+    for message in case.get("history", []) + [item for batch in batches for item in batch]:
         if message.get("role") not in {"user", "assistant"} or not isinstance(message.get("text"), str):
             raise ValueError(f"Invalid seeded history: {case['id']}")
     if len(case.get("history", [])) > 200:
@@ -77,6 +85,6 @@ def jobs(cases: list[dict], repeats: int, order_seed: int | None = None) -> list
 def worker_job(job: dict) -> dict:
     case = job["case"]
     scenario = {"id": case["id"], "owner": case.get("owner", OWNER), "language": case.get("language", "en"),
-                "history": case.get("history", []), "records": case.get("records", []),
+                "history": case.get("history", []), "historyBatches": case.get("historyBatches", []), "records": case.get("records", []),
                 "memories": case.get("memories", []), "turns": [turn["user"] for turn in case["turns"]]}
     return {"id": job["id"], "scenario": scenario, "tools": job["profile"]}

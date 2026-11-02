@@ -8,6 +8,7 @@ actor BenchmarkDialogue {
   private let session: UUID
   private var messages: [ChatMessage]
   private var memory = ConversationMemory()
+  private var turnIndex = 0
 
   init(scenario: BenchmarkScenario, fixture: BenchmarkFixture, session: UUID) {
     self.scenario = scenario
@@ -19,6 +20,12 @@ actor BenchmarkDialogue {
   func prepare() async throws { try await fixture.save(messages, memory: memory) }
 
   func request(_ input: String) async throws -> ChatContext {
+    if let batches = scenario.historyBatches, batches.indices.contains(turnIndex) {
+      let additions = batches[turnIndex].map(\.chatMessage)
+      messages.append(contentsOf: additions)
+      try await fixture.save(additions, memory: memory)
+    }
+    turnIndex += 1
     let message = ChatMessage(role: .user, text: input)
     messages.append(message)
     try await fixture.save([message], memory: memory)

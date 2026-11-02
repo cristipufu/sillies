@@ -31,6 +31,8 @@ enum VaultToolContent {
 
   private struct SearchPage: Encodable {
     let scope = "Personal records saved by the user; not web or general-knowledge search."
+    let coverage =
+      "Search excerpts only. Use read_vault_record with recordID and topic keywords when the requested detail is missing from an excerpt."
     let totalVaultRecords: Int
     let returnedRecordCount: Int
     let records: [RecordPassage]
@@ -82,7 +84,9 @@ enum VaultToolContent {
     return result
   }
   static func excerpt(in record: SessionRecord, query: String) -> String {
-    let candidates = [record.transcript, record.extractedText, record.summary, record.explanation]
+    let candidates =
+      [record.transcript, record.extractedText, record.summary, record.explanation]
+      + record.stashedItems
     let terms = query.split(whereSeparator: \.isWhitespace).prefix(maximumQueryTerms)
     for candidate in candidates where !candidate.isEmpty {
       for term in terms {

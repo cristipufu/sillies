@@ -63,7 +63,7 @@ final class TextWorkerConnection: Sendable {
     }
     return .init(
       text: text, calls: response.calls ?? [], inputTokens: response.inputTokens,
-      metrics: response.metrics)
+      metrics: response.metrics, reasoningContent: response.reasoningContent)
   }
 
   func stop() { connection.stop() }

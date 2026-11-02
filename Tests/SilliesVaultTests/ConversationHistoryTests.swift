@@ -47,6 +47,10 @@ import Testing
   try await store.save(update)
   #expect(try await store.search(.init(companionID: "pogo", query: "Bucuresti")).count == 1)
   #expect(try await store.search(.init(companionID: "bolt", query: "Bucuresti")).isEmpty)
+  #expect(
+    try await store.search(
+      .init(companionID: "pogo", query: "Bucuresti", excludingMessageID: message.id)
+    ).isEmpty)
   let cleared = try await store.clear(opened.handle)
   #expect(cleared.handle != opened.handle)
   #expect(cleared.page.entries.isEmpty)

@@ -49,6 +49,24 @@ def prepare_run(path, cases):
 
 
 class ChatBenchmarkAuditTests(unittest.TestCase):
+    def test_incremental_history_crosses_worker_boundary_without_gold(self):
+        case = sample_case()
+        case["historyBatches"] = [[{"role": "user", "text": "Our code changed to amber-61."}]]
+        case = corpus.validate(case)
+        job = corpus.worker_job(corpus.jobs([case], 1)[0])
+        self.assertEqual(job["scenario"]["historyBatches"], case["historyBatches"])
+        self.assertNotIn("rubric", json.dumps(job))
+        case["historyBatches"].append([])
+        with self.assertRaises(ValueError):
+            corpus.validate(case)
+
+    def test_checkpoint_compaction_bound_requires_actual_measurement(self):
+        rule = {"kind": "compaction_calls_at_most", "values": ["1"]}
+        for count, expected in ((None, False), (0, True), (1, True), (2, False)):
+            with self.subTest(count=count):
+                turn = {"reply": "A reply", "compactionCalls": count}
+                self.assertEqual(scoring.check_rule(rule, turn, [])["passed"], expected)
+
     def test_published_evidence_and_primary_metrics_reproduce(self):
         directory = ROOT / "docs/reports/data"
         result = audit.verify(directory / "local-chat-models-2026-11-01.json.gz",

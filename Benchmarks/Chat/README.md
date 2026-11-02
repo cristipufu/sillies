@@ -99,6 +99,22 @@ Do not run two writers against the same output directory, or rebuild/replace bin
 
 ## Read the results honestly
 
+The November 2 extension adds 22 previously unrun scenarios (29 turns), tagged
+`heldout-2026-11-02`. Freeze them before inference; do not tune prompts to their results and keep
+calling them held out. They broaden facts, phrasing, memory opt-outs, identity, mixed questions and
+full-record retrieval. They are still authored by the implementing agent, not an independent test set.
+
+The incremental context scenario appends archived messages between measured turns while retaining
+the actual previous checkpoint. Receipts record `compactionCalls`, `compactionSeconds` and timestamped
+`textEmissions`; a replayed backlog cannot pass merely because the final answer is right. The first
+turn includes backlog compaction; subsequent turns measure checkpoint reuse. Added history is
+synthetic fixture input, never an expected answer injected through the evaluator.
+
+A user-facing task score must state its denominator and whether it means automated checks or
+full-rubric review. Keep failures, privacy violations and unresolved reviews visible. Do not average
+speed, correctness and privacy into a single unexplained number. Hardware guidance uses catalog RAM
+admission limits; timing measured on one Mac is not a prediction for every Mac with that much RAM.
+
 `report.md` and `summary.json` show coverage, group/profile breakdowns, errors and latency.
 Each `MODEL/cases/*.json` preserves the reply, partial output, actual executed tool calls and
 arguments, stored memories, retrieved IDs, compaction attempts, app-level backend requests, token measurements and

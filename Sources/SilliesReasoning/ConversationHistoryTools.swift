@@ -16,7 +16,8 @@ package struct ConversationHistoryTools: Sendable {
       statement.role == .user
     else { return [] }
     return [
-      ConversationSearchTool(repository: conversations, handle: handle),
+      ConversationSearchTool(
+        repository: conversations, handle: handle, currentMessageID: statement.id),
       MemorySearchTool(repository: memories, handle: handle, companionName: context.companionName),
       MemorySaveTool(repository: memories, handle: handle, statement: statement),
     ]

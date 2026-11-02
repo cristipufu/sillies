@@ -37,6 +37,11 @@ import Testing
     .init(id: "search", name: "search_conversation", arguments: Data(#"{"query":"birthday"}"#.utf8))
   )
   #expect(found.contains("June 2"))
+  let currentSearch = try await toolbox.invoke(
+    .init(
+      id: "current", name: "search_conversation",
+      arguments: Data(#"{"query":"short answers"}"#.utf8)))
+  #expect(!currentSearch.contains(current.text))
 }
 
 @Test func memoryToolsBindOriginalUserEvidenceWithoutModelTranscription() async throws {

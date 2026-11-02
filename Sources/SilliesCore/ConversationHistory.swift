@@ -130,10 +130,14 @@ public struct ConversationSearchRequest: Sendable {
   public let companionID: String?
   public let query: String
   public let limit: Int
-  public init(companionID: String? = nil, query: String, limit: Int = 20) {
+  public let excludingMessageID: UUID?
+  public init(
+    companionID: String? = nil, query: String, limit: Int = 20, excludingMessageID: UUID? = nil
+  ) {
     self.companionID = companionID
     self.query = query
     self.limit = max(1, min(limit, ConversationPageRequest.maximumLimit))
+    self.excludingMessageID = excludingMessageID
   }
 }
 

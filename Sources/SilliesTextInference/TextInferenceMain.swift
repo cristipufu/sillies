@@ -17,6 +17,7 @@ import SilliesTextModels
       guard result == 12 else { exit(EXIT_FAILURE) }
       do {
         try TextConversationSelfCheck.run()
+        try TextReasoningSelfCheck.run()
         try await TextInputSelfCheck.run()
       } catch {
         fputs("Native conversation check failed: \(error)\n", stderr)

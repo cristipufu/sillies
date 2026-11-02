@@ -3,6 +3,29 @@ import MLXLMCommon
 import SilliesTextModels
 
 enum MLXConversationInput {
+  static func templateMessages(
+    _ request: TextGenerationRequest, generator: any MessageGenerator = DefaultMessageGenerator()
+  ) throws -> [[String: any Sendable]] {
+    var native = try generator.generate(messages: messages(request))
+    guard let lastUser = request.messages.lastIndex(where: { $0.role == .user }) else {
+      return native
+    }
+    for message in request.messages.dropFirst(lastUser + 1) {
+      guard message.role == .assistant, !message.calls.isEmpty,
+        let reasoning = message.reasoningContent
+      else { continue }
+      guard
+        let index = native.lastIndex(where: { value in
+          let calls = value["tool_calls"] as? [[String: any Sendable]]
+          return calls?.compactMap { $0["id"] as? String } == message.calls.map(\.id)
+        })
+      else { throw TextModelError.invalidResponse }
+      // Only an unfinished tool turn retains private state. Ordinary history never does.
+      native[index]["reasoning_content"] = reasoning
+    }
+    return native
+  }
+
   static func messages(_ request: TextGenerationRequest) throws -> [Chat.Message] {
     try [.system(request.instructions)] + messages(request.messages)
   }

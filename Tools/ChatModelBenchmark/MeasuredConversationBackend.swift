@@ -16,7 +16,15 @@ struct MeasuredConversationBackend: ConversationBackend {
   }
   func generate(_ request: TextGenerationRequest, format: ReasoningFormat) async throws -> String {
     await trace.summarized(request)
-    return try await base.generate(request, format: format)
+    let started = ContinuousClock.now
+    do {
+      let text = try await base.generate(request, format: format)
+      await trace.finishedSummary(seconds: BenchmarkTurnTrace.seconds(started.duration(to: .now)))
+      return text
+    } catch {
+      await trace.finishedSummary(seconds: BenchmarkTurnTrace.seconds(started.duration(to: .now)))
+      throw error
+    }
   }
   func converse(_ request: TextGenerationRequest, tools: ConversationToolbox) async throws -> String
   {

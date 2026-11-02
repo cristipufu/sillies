@@ -6,6 +6,26 @@ The tools search/read Vault records, search earlier conversation messages, look 
 and save explicit user facts with provenance. They cannot edit/delete Vault records, run commands,
 or access the network. Memory removal and Undo are explicit user actions in the interface.
 
+Downloaded providers separate reasoning from visible text before streaming across IPC. Private
+reasoning may travel in `TextGenerationOutput.reasoningContent` and `TextMessage.reasoningContent`
+only to continue the current tool turn. It is never part of `ChatMessage`, saved tool exchanges,
+conversation summaries, or speech. The adapter supplies it to the native chat template as
+`reasoning_content`; it excludes it once a new user turn begins. This follows
+[Gemma's documented tool-turn exception](https://ai.google.dev/gemma/docs/core/prompt-formatting-gemma4#managing_thought_context_between_turns).
+
+`MLXReasoningChannel` uses the pinned SDK's streaming channel parser and declared model conventions,
+with the Gemma 4 channel convention supplied by the adapter. Its decoded-text parser cannot distinguish
+a literal quoted protocol delimiter from a real channel boundary; do not claim token-level fidelity
+for examples that deliberately quote those reserved delimiters. Native tool framing still belongs to
+the SDK. Provider tests must cover split delimiters, primed/truncated reasoning, IPC propagation,
+tool-result continuity and removal from subsequent user turns.
+
+Conversation search excludes the current user message before ranking and limiting results. Vault
+search explicitly returns partial excerpts; read a record for details absent from the search result.
+Memory writes bind provenance to the original current user message in application code. Tool schemas
+and prompts express the storage policy, but correct provenance alone does not prove that a model
+chose an appropriate fact: evaluate real persisted state, opt-outs and identity separately.
+
 ## Add a capability
 
 1. Implement `ConversationTool` in the feature that owns the data. Define a stable name, a concise

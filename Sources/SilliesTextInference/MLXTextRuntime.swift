@@ -8,6 +8,7 @@ import SilliesTextModels
 actor MLXTextRuntime {
   private static let maximumOutputTokens = 1_400
   private static let maximumPromptCharacters = 24_000
+  private static let promptTailTokenCount = 64
   private static let cacheBytes = 128 * 1024 * 1024
   private var model: ModelContainer?
   private var directory: URL?
@@ -19,7 +20,9 @@ actor MLXTextRuntime {
     let generation = request.generation
     guard configuration.directory.isFileURL, (2_048...8_192).contains(configuration.contextTokens),
       (1...Self.maximumOutputTokens).contains(generation.maximumTokens),
-      generation.instructions.count + generation.messages.reduce(0, { $0 + $1.content.count })
+      generation.instructions.count
+        + generation.messages.reduce(
+          0, { $0 + $1.content.count + ($1.reasoningContent?.count ?? 0) })
         <= Self.maximumPromptCharacters
     else { throw TextModelError.invalidResponse }
     guard configuration.memoryLimitBytes > 0,
@@ -37,9 +40,17 @@ actor MLXTextRuntime {
     if !tools.isEmpty, await container.configuration.toolCallFormat == nil {
       throw TextModelError.toolsUnavailable
     }
+    let messages = try await container.perform { context in
+      let generator =
+        context.configuration.messageGenerator
+        ?? (context.model as? any LLMModel)?.messageGenerator(tokenizer: context.tokenizer)
+        ?? DefaultMessageGenerator()
+      return try MLXConversationInput.templateMessages(generation, generator: generator)
+    }
     let input = try await container.prepare(
       input: UserInput(
-        chat: try MLXConversationInput.messages(generation), tools: tools.isEmpty ? nil : tools,
+        messages: messages,
+        tools: tools.isEmpty ? nil : tools,
         additionalContext: ["enable_thinking": false]))
     if generation.operation == .measure {
       return .init(text: "", inputTokens: input.text.tokens.size)
@@ -54,55 +65,20 @@ actor MLXTextRuntime {
       repetitionPenalty: generation.style.repetitionPenalty,
       repetitionContextSize: generation.style.repetitionContextSize)
     parameters.prefill = PrefillParameters(stepSize: 64)
+    let promptTailTokens = Array(
+      input.text.tokens.asArray(Int.self).suffix(Self.promptTailTokenCount))
+    let promptTail = await container.tokenizer.decode(tokenIds: promptTailTokens)
+    var collector = await MLXGenerationCollector(
+      style: generation.style,
+      channel: .init(configuration: container.configuration, promptTail: promptTail))
     let stream = try await container.generate(
       input: input, parameters: parameters, tools: tools.isEmpty ? nil : tools)
-    let output = try await consume(stream, request: generation, receive: receive)
-    Memory.clearCache()
-    return .init(
-      text: output.text.trimmingCharacters(in: .whitespacesAndNewlines), calls: output.calls,
-      metrics: output.metrics)
-  }
-
-  private func consume(
-    _ stream: AsyncStream<Generation>, request: TextGenerationRequest,
-    receive: @escaping TextDeltaSink
-  ) async throws -> TextGenerationOutput {
-    var output = ""
-    var calls: [TextGenerationOutput.Call] = []
-    var completed = false
-    var batch = TextStreamBatch()
-    var metrics: TextGenerationMetrics?
+    defer { Memory.clearCache() }
     for await event in stream {
       try Task.checkCancellation()
-      switch event {
-      case .chunk(let text):
-        output += text
-        if let delta = batch.append(text) { try await receive(delta) }
-        if request.style == .conversation, TextRepetitionGuard.containsLoop(output) {
-          throw TextModelError.repetitiveResponse
-        }
-      case .info(let info):
-        guard case .stop = info.stopReason else { throw TextModelError.invalidResponse }
-        completed = true
-        metrics = .init(
-          tokens: .init(
-            processedPrompt: info.promptTokenCount,
-            cachedPrompt: info.cachedPromptTokenCount, generated: info.generationTokenCount),
-          timing: .init(prompt: info.promptTime, generation: info.generateTime))
-      case .toolCall(let call):
-        calls.append(
-          .init(
-            id: call.id ?? UUID().uuidString, name: call.function.name,
-            arguments: try JSONEncoder().encode(call.function.arguments)))
-      case .rejectedToolCall: throw TextModelError.invalidResponse
-      }
-      guard output.utf8.count <= TextInferenceWire.maximumMessageBytes / 2 else {
-        throw TextModelError.invalidResponse
-      }
+      if let delta = try collector.consume(event) { try await receive(delta) }
     }
-    guard completed else { throw TextModelError.invalidResponse }
-    if let delta = batch.flush() { try await receive(delta) }
-    return .init(text: output, calls: calls, metrics: metrics)
+    return try await collector.finish(receive: receive)
   }
 
   private func load(_ location: URL) async throws -> ModelContainer {

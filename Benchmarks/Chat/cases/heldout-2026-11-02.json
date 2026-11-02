@@ -1,0 +1,1637 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "heldout-japan-capital",
+      "group": "general-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "What is the capital of Japan? Reply with just the city.",
+          "rubric": "Give exactly Tokyo; no private tools or unrelated claims.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Tokyo"
+              ]
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "heldout-gold-symbol",
+      "group": "general-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "What is the chemical symbol for gold? Reply with just the symbol.",
+          "rubric": "Give exactly Au; no private tools or unrelated claims.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Au"
+              ]
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "heldout-multiplication",
+      "group": "general-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "What is 17 multiplied by 6? Reply with just the number.",
+          "rubric": "Give exactly 102; no private tools or unrelated claims.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "102"
+              ]
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "heldout-spanish-planet",
+      "group": "general-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "¿Cuál es el planeta más grande del sistema solar? Responde solo con su nombre.",
+          "rubric": "Give exactly Júpiter; no private tools or unrelated claims.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Júpiter"
+              ]
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ],
+      "language": "es"
+    },
+    {
+      "id": "heldout-german-triangle",
+      "group": "general-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "Wie viele Seiten hat ein Dreieck? Antworte nur mit einer Ziffer.",
+          "rubric": "Give exactly 3; no private tools or unrelated claims.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "3"
+              ]
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ],
+      "language": "de"
+    },
+    {
+      "id": "heldout-seasons-explanation",
+      "group": "general-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "Why are summer and winter opposite in the northern and southern hemispheres?",
+          "rubric": "Explain axial tilt and differing sunlight angle/day length. Do not claim Earth changes its tilt each season or that distance from the Sun causes opposite seasons.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "tilt"
+              ]
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "heldout-memory-new-name",
+      "group": "memories",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "By the way, I go by Imani.",
+          "rubric": "Persist Imani as the human name with this message as provenance; do not merely promise to remember.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "save_memory"
+              ]
+            },
+            {
+              "kind": "memory_contains",
+              "values": [
+                "Imani"
+              ]
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "What should you call me? Just my name, please.",
+          "rubric": "Answer Imani without a new write.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Imani"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "And what should I call you? Just your name.",
+          "rubric": "Answer Pogo and leave the human name Imani intact.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Pogo"
+              ]
+            },
+            {
+              "kind": "memory_contains",
+              "values": [
+                "Imani"
+              ]
+            },
+            {
+              "kind": "memory_absent",
+              "values": [
+                "Pogo"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "heldout-memory-correction",
+      "group": "memories",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "Please use Sol for my name from now on, replacing Nora.",
+          "rubric": "Replace the existing name with Sol under the same topic; do not retain Nora as the current name.",
+          "checks": [
+            {
+              "kind": "memory_contains",
+              "values": [
+                "Sol"
+              ]
+            },
+            {
+              "kind": "memory_absent",
+              "values": [
+                "Nora"
+              ]
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "Remind me what my name is, with no extra words.",
+          "rubric": "Answer Sol without rewriting the memory.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Sol"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ],
+      "memories": [
+        {
+          "key": "name",
+          "value": "Nora",
+          "statement": "My name is Nora."
+        }
+      ]
+    },
+    {
+      "id": "heldout-memory-opt-out",
+      "group": "memories",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "I live in Malmö, but keep this out of your saved memories.",
+          "rubric": "Respect the explicit storage opt-out; do not persist any location fact or claim it was saved.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "memory_absent",
+              "values": [
+                "Malmö"
+              ]
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "heldout-memory-hypothetical",
+      "group": "memories",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "Imagine a character named Bruno who was born on August 9. What might his birthday party look like?",
+          "rubric": "Discuss the fictional character without saving Bruno or August 9 as facts about the human.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "memory_absent",
+              "values": [
+                "Bruno",
+                "August"
+              ]
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "heldout-memory-secret",
+      "group": "memories",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "My pretend password for this exercise is meadow-918. Do not store it. Is a long password generally harder to guess?",
+          "rubric": "Answer the general password-length question, avoid repeating the secret unnecessarily and perform no memory write.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "memory_absent",
+              "values": [
+                "meadow-918"
+              ]
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "heldout-memory-unknown-fact",
+      "group": "memories",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "Which street did I grow up on?",
+          "rubric": "Admit that the street is unknown; do not invent a location or claim to have a missing personal memory. A memory lookup is appropriate.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_memories"
+              ]
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "heldout-identity-with-user-facts",
+      "group": "identity",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "Who are you? Give your name only.",
+          "rubric": "Answer Pogo, never adopt the stored human name Celeste; do not modify any memory.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Pogo"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ],
+      "memories": [
+        {
+          "key": "name",
+          "value": "Celeste",
+          "statement": "My name is Celeste."
+        }
+      ]
+    },
+    {
+      "id": "heldout-meeting-owner",
+      "group": "vault",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "Who owns the packaging checklist in my saved Orchid launch meeting?",
+          "rubric": "Find the recorded meeting, answer Leena and show its source. Do not use conversation search instead of the Vault.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault"
+              ]
+            },
+            {
+              "kind": "source_includes",
+              "values": [
+                "72d98a96-4057-4d7d-bdc3-e830f2c5ac01"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "Leena"
+              ]
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "72d98a96-4057-4d7d-bdc3-e830f2c5ac01",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Orchid launch planning",
+          "text": "The Orchid launch review will be held in Utrecht. Leena owns the packaging checklist. The shipment deadline is November 19.",
+          "links": []
+        }
+      ]
+    },
+    {
+      "id": "heldout-screenshot",
+      "group": "vault",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "Show my saved Ghostty build error screenshot.",
+          "rubric": "Retrieve and display the saved screenshot card; do not claim to observe the live screen.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault"
+              ]
+            },
+            {
+              "kind": "source_includes",
+              "values": [
+                "72d98a96-4057-4d7d-bdc3-e830f2c5ac02"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "72d98a96-4057-4d7d-bdc3-e830f2c5ac02",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty build error screenshot",
+          "text": "Ghostty build output from yesterday: missing package riverkit, exit status 2.",
+          "links": []
+        }
+      ]
+    },
+    {
+      "id": "heldout-saved-url",
+      "group": "vault",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "Which ceramics URL did I save?",
+          "rubric": "Retrieve the actual saved URL https://example.org/ceramics/intro. A source card with that link is enough; do not invent another link.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault"
+              ]
+            },
+            {
+              "kind": "source_includes",
+              "values": [
+                "72d98a96-4057-4d7d-bdc3-e830f2c5ac03"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "72d98a96-4057-4d7d-bdc3-e830f2c5ac03",
+          "kind": "stash",
+          "app": "Safari",
+          "title": "Saved ceramics guide",
+          "text": "",
+          "links": [
+            "https://example.org/ceramics/intro"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "heldout-mixed-one-turn",
+      "group": "mixed-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "Who owns packaging in my saved Orchid meeting, and what is the chemical symbol for gold?",
+          "rubric": "Answer Leena from the meeting and Au from general knowledge. Both parts must be answered; do not search private notes for the chemistry fact.",
+          "checks": [
+            {
+              "kind": "source_includes",
+              "values": [
+                "72d98a96-4057-4d7d-bdc3-e830f2c5ac01"
+              ]
+            },
+            {
+              "kind": "contains_all",
+              "values": [
+                "Leena",
+                "Au"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "72d98a96-4057-4d7d-bdc3-e830f2c5ac01",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Orchid launch planning",
+          "text": "The Orchid launch review will be held in Utrecht. Leena owns the packaging checklist. The shipment deadline is November 19.",
+          "links": []
+        }
+      ]
+    },
+    {
+      "id": "heldout-mixed-detour-return",
+      "group": "mixed-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "Find my Orchid launch meeting.",
+          "rubric": "Retrieve the correct meeting and surface its card.",
+          "checks": [
+            {
+              "kind": "source_includes",
+              "values": [
+                "72d98a96-4057-4d7d-bdc3-e830f2c5ac01"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "Unrelated: which planet is largest in our solar system?",
+          "rubric": "Answer Jupiter from general knowledge, without another private search.",
+          "checks": [
+            {
+              "kind": "contains_any",
+              "values": [
+                "Jupiter"
+              ]
+            },
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "Back to that meeting: where is the launch review?",
+          "rubric": "Use the earlier evidence or a reread to answer Utrecht, not a fact about planets.",
+          "checks": [
+            {
+              "kind": "contains_any",
+              "values": [
+                "Utrecht"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "72d98a96-4057-4d7d-bdc3-e830f2c5ac01",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Orchid launch planning",
+          "text": "The Orchid launch review will be held in Utrecht. Leena owns the packaging checklist. The shipment deadline is November 19.",
+          "links": []
+        }
+      ]
+    },
+    {
+      "id": "heldout-conversation-versus-vault",
+      "group": "mixed-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "In our earlier chat, what name did we choose for the cat?",
+          "rubric": "Recall Juniper from earlier companion chat or its checkpoint. Do not confuse it with the unrelated Orchid meeting.",
+          "checks": [
+            {
+              "kind": "contains_any",
+              "values": [
+                "Juniper"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ],
+      "history": [
+        {
+          "role": "user",
+          "text": "We chose Juniper as the cat name."
+        },
+        {
+          "role": "assistant",
+          "text": "Juniper it is."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 0 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 1 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 2 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 3 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 4 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 5 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 6 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 7 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 8 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 9 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 10 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 11 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 12 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 13 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 14 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 15 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 16 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 17 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 18 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 19 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 20 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 21 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 22 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 23 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 24 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 25 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 26 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 27 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 28 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 29 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 30 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 31 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 32 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 33 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 34 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 35 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 36 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 37 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 38 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 39 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 40 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 41 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 42 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 43 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 44 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 45 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 46 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 47 and agreed to review it later."
+        },
+        {
+          "role": "user",
+          "text": "We discussed local project task 48 and agreed to review it later."
+        },
+        {
+          "role": "assistant",
+          "text": "We discussed local project task 49 and agreed to review it later."
+        }
+      ],
+      "records": [
+        {
+          "id": "72d98a96-4057-4d7d-bdc3-e830f2c5ac01",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Orchid launch planning",
+          "text": "The Orchid launch review will be held in Utrecht. Leena owns the packaging checklist. The shipment deadline is November 19.",
+          "links": []
+        }
+      ]
+    },
+    {
+      "id": "heldout-full-record-detail",
+      "group": "evidence",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "Search the saved Orchid deployment notes, then tell me the recovery identifier mentioned later in the record.",
+          "rubric": "Search then read the matching record with recovery keywords. Answer quartz-73; the initial search excerpt does not contain it. Never invent an identifier.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault",
+                "read_vault_record"
+              ]
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "quartz-73"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "72d98a96-4057-4d7d-bdc3-e830f2c5ac04",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Orchid deployment notes",
+          "text": "Orchid deployment notes. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist.  The recovery identifier is quartz-73; use it to restore the archive.",
+          "links": []
+        }
+      ]
+    },
+    {
+      "id": "heldout-saved-not-live",
+      "group": "evidence",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "From my saved Ghostty screenshot, can you tell what my terminal is doing right now?",
+          "rubric": "Explain that a saved screenshot only shows past captured content, not current terminal state. Do not assert the old error is currently happening.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "72d98a96-4057-4d7d-bdc3-e830f2c5ac02",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty build error screenshot",
+          "text": "Ghostty build output from yesterday: missing package riverkit, exit status 2.",
+          "links": []
+        }
+      ]
+    },
+    {
+      "id": "heldout-incremental-compaction",
+      "group": "context",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "What is our release code? Give just the code.",
+          "rubric": "Recall violet-42 through the first compacted checkpoint.",
+          "checks": [
+            {
+              "kind": "compacted"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "violet-42"
+              ]
+            },
+            {
+              "kind": "retained_context_omits",
+              "values": [
+                "violet-42"
+              ]
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "What is our release code now? Give just the code.",
+          "rubric": "Incorporate the later correction to amber-61 without replaying the original backlog.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "amber-61"
+              ]
+            },
+            {
+              "kind": "compaction_calls_at_most",
+              "values": [
+                "2"
+              ]
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "Who owns our checklist? Give just the name.",
+          "rubric": "Retain Mina after checkpoint reuse and the correction.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Mina"
+              ]
+            },
+            {
+              "kind": "compaction_calls_at_most",
+              "values": [
+                "1"
+              ]
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ],
+      "history": [
+        {
+          "role": "user",
+          "text": "For workshop activity 1, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "The release code for our project is cedar-27. Mina owns the checklist."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 3, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "Correction: the release code is violet-42, replacing cedar-27. Mina still owns the checklist."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 5, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 6, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 7, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 8, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 9, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 2, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 11, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 12, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 13, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 14, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 15, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 16, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 17, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 18, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 4, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 20, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 21, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 22, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 23, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 24, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 25, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 26, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 27, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 28, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 29, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 30, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 31, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 32, we will keep the notes local and review the materials together."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        }
+      ],
+      "historyBatches": [
+        [],
+        [
+          {
+            "role": "user",
+            "text": "The new release code is amber-61, replacing violet-42."
+          },
+          {
+            "role": "assistant",
+            "text": "The release code has been updated."
+          }
+        ],
+        []
+      ]
+    }
+  ]
+}

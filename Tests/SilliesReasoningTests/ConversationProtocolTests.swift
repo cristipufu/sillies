@@ -64,7 +64,9 @@ private actor GenerationProbe {
   init(call: ConversationToolCall) { self.call = call }
   func generate(_ request: TextGenerationRequest) -> TextGenerationOutput {
     requests.append(request)
-    return requests.count == 1 ? .init(text: "", calls: [call]) : .init(text: "Found it.")
+    return requests.count == 1
+      ? .init(text: "", calls: [call], reasoningContent: "Private turn state")
+      : .init(text: "Found it.")
   }
 }
 
@@ -88,6 +90,8 @@ private actor GenerationProbe {
   let followup = try #require(await generator.requests.last)
   #expect(followup.messages.map(\.role) == [.user, .assistant, .tool])
   #expect(followup.messages[1].calls == [call])
+  #expect(followup.messages[1].reasoningContent == "Private turn state")
+  #expect(TextMessage.exchanging(await toolbox.exchanges).allSatisfy { $0.reasoningContent == nil })
   #expect(followup.messages[2].callID == call.id)
   #expect(followup.messages[2].toolName == call.name)
   #expect(followup.messages[2].content == "A real saved record")

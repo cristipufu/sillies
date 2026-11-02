@@ -25,7 +25,8 @@ enum ConversationToolLoop {
         return try ReasoningOutput.clean(portions.joined(separator: "\n"), format: .text)
       }
       if !delivered.isEmpty { try await receive("\n") }
-      messages.append(.calling(response.calls, text: response.text))
+      messages.append(
+        .calling(response.calls, text: response.text, reasoningContent: response.reasoningContent))
       for call in response.calls {
         messages.append(.result(try await tools.invoke(call), for: call))
       }

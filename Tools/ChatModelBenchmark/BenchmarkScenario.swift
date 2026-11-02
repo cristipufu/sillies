@@ -45,6 +45,8 @@ struct BenchmarkScenario: Codable, Sendable {
   let owner: Owner
   let language: String
   let history: [Message]
+  /// Additional archived turns between measured requests, exercising checkpoint reuse.
+  let historyBatches: [[Message]]?
   let records: [Record]
   let memories: [Fact]
   let turns: [String]

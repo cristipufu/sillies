@@ -14,7 +14,7 @@ struct MemorySaveTool: ConversationTool {
     .init(
       name: "save_memory",
       description:
-        "Save an explicit personal fact from the latest user statement.",
+        "Remember a lasting fact explicitly stated about the human user. Never save a question, fictional character fact, secret, or anything the user asks not to store. A correction replaces the same topic key. Only claim a fact was saved after this tool succeeds.",
       parameters: [
         .init("key", description: "Short stable topic key for this fact, reused for corrections."),
         .init("value", description: "The explicitly stated fact, preserving its meaning."),

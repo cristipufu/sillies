@@ -51,6 +51,9 @@ def check_rule(rule: dict, turn: dict, tools: list[dict]) -> dict:
         passed = {value.casefold() for value in values} <= {value.casefold() for value in observed}
     elif kind == "compacted":
         passed, observed = bool(turn.get("compacted")), turn.get("compacted", False)
+    elif kind == "compaction_calls_at_most":
+        observed = turn.get("compactionCalls")
+        passed = isinstance(observed, int) and 0 <= observed <= int(values[0])
     elif kind == "retained_context_omits":
         requests = turn.get("requests", [])
         observed = [message["content"] for message in requests[-1]["messages"]] if requests else []

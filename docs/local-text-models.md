@@ -17,6 +17,18 @@ These are conservative admission limits for sharing the Mac with transcription a
 
 Models are pinned in `Sources/SilliesModelStore/Resources/text-models.json`, including weights, tokenizer, chat template, revision, lengths, and SHA-256 hashes. They live in `~/Library/Application Support/Sillies/TextModels/<id>/<revision>`. Downloads use the same verified, resumable, atomic installer as speech models. Partial installations cannot be selected. No remote code, inference server, Python installation, or inference network call is involved. The existing daily speech-model update mechanism does not yet update text-model revisions; those pins ship with the app.
 
+## Benchmarks and evaluation status
+
+- **[Seven-model Chat comparison and raw results](reports/local-chat-models-2026-11-01.md)** —
+  general knowledge, Vault questions, mixed conversations, identities, memories, tools and latency.
+- **[Benchmark guide](../Benchmarks/Chat/README.md)** — cases, scoring, bounded runs and reproducibility.
+
+The first comparison is exploratory: one pass on one Mac. Automated checks are not a complete
+answer-quality score. An audit found false passes in open-ended cases and found that the original
+compaction cases left the corrected fact in recent context. Those results do not establish summary
+retention or a release-ready default; the original evidence is preserved while the harness is corrected.
+Chat results also do not establish meeting-summary, dictation-cleanup or TTS quality.
+
 ## Ownership and extension points
 
 | Concern | Owner |
@@ -97,4 +109,4 @@ The helper also accepts `--check-tokenizer /path/to/pinned-local-files` for a sm
 
 Model quality cases belong in `Tools/TextModelBenchmark/TextQualityFixtures.swift`, not in provider-specific production heuristics. The benchmark checks required facts and prints every output for semantic review. Runtime schema/evidence checks cannot guarantee that a generated summary is factually correct.
 
-Development checks on an M4 Pro with 48 GB (debug build): all six pinned tokenizers/templates passed the multilingual round-trip check. Full-weight Qwen3.5 4B runs took roughly 12–23 seconds for the first request including hash verification/loading, then 1–1.4 seconds per short warm request. Qwen3.5 2B took about 3.6 seconds for the first request and 0.7–0.9 seconds for subsequent short requests. Both preserved the monolingual Romanian/English fixture facts but changed a weekday in the mixed-language fixture, which the quality check reports as a failure. No production weekday workaround is used. The remaining models, including Gemma 26B, have not received full-weight quality/performance evaluation; successful catalog/tokenizer checks do not certify their summaries.
+Earlier summarization smoke checks on an M4 Pro with 48 GB (debug build): all six pinned tokenizers/templates passed the multilingual round-trip check. Full-weight Qwen3.5 4B runs took roughly 12–23 seconds for the first request including hash verification/loading, then 1–1.4 seconds per short warm request. Qwen3.5 2B took about 3.6 seconds for the first request and 0.7–0.9 seconds for subsequent short requests. Both preserved the monolingual Romanian/English fixture facts but changed a weekday in the mixed-language fixture, which the quality check reports as a failure. No production weekday workaround is used. All six downloads subsequently received the full-weight **Chat** evaluation linked above. That comparison does not certify their meeting summaries, and these earlier timings are not a current cross-model comparison.

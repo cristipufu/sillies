@@ -21,6 +21,8 @@ struct MemorySearchTool: ConversationTool {
     let args = try JSONDecoder().decode(ConversationSearchArguments.self, from: arguments)
     let facts = try await repository.memories(handle, query: args.query)
     struct Fact: Encodable {
+      let memoryID: UUID
+      let revision: UUID
       let key: String
       let value: String
       let userStatement: String
@@ -32,6 +34,7 @@ struct MemorySearchTool: ConversationTool {
     }
     let results = facts.prefix(Self.resultLimit).map {
       Fact(
+        memoryID: $0.id, revision: $0.revision,
         key: $0.key, value: $0.value,
         userStatement: String($0.sourceQuote.prefix(Self.statementCharacterLimit)))
     }

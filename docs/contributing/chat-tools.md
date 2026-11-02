@@ -96,7 +96,13 @@ There is no intent-classification inference step before the normal reply.
 `ConversationLibrary` owns the durable SQLite history. `ChatSession` holds at most 128 recent messages
 and a persisted `ConversationMemory`; `ConversationBrowser` pages older originals independently.
 `ConversationHistoryTools` creates companion-scoped tools per turn from injected repository protocols.
-`save_memory` asks the model only for the fact’s key and value. The host binds the original current
+`save_memory` asks for the fact’s key and value. Corrections can also supply the exact `memoryID`
+and `revision` returned by `search_memories`. Storage resolves that identity inside the write
+transaction, retains its canonical topic key, and rejects stale, deleted or foreign targets. This
+prevents a correction that names its target from creating another fact under a different key.
+The model still owns the semantic decision to correct a fact rather than create one; IDs do not
+prove that decision is appropriate. Evaluate actual resulting memories, including duplicate facts.
+The host binds the original current
 user message and its ID as provenance, so model capitalization or punctuation cannot break a save.
 Memory search returns an explicitly user-attributed envelope, with original excerpts labeled as user
 statements. These facts describe the person chatting, not the mascot. The companion's identity comes

@@ -15,7 +15,7 @@ requiring investigation, not 130 established model defects. Original receipts re
 | Empty Vault search | The response had an empty `records` array and a zero returned count, but still told the model to read a record for missing details. It now identifies a completed no-match search, including the normalized query and category. | Whether this clearer contract reduces unnecessary searches across models; a corrected contract is not proof of improved model behavior. |
 | Tool-call budget | After four calls, the downloaded-model loop still advertised tools. It now offers an answer-only completion round. A further call receives an explicit not-executed result and one bounded final completion attempt, without touching storage. | All 18 new diagnostic runs completed without runtime errors, but only eight met the full task rubric. Several replies falsely described refused searches as completed. Completion availability does not establish truthful coverage. |
 | Native errors | Token-limit stops, rejected tool calls and other incomplete results previously shared one generic error. Diagnostics now preserve reason codes, token counts and content-free response/reasoning byte counts. | Several Gemma 12B failures reproduce as output-token exhaustion. Their underlying cause remains unresolved; increasing the cap alone did not fix the controlled request below. |
-| Memory corrections | Writes replace an exact topic key. A correction under `user_name` can coexist with an older `name` entry. | A reliable correction contract that exposes the existing identity and preserves provenance, without name-specific aliases or another heuristic filter. |
+| Memory corrections | Search now exposes a memory ID and revision; a save can explicitly replace that version while preserving its canonical key and provenance. Stale, deleted and foreign targets cannot be overwritten or recreated. | Deterministic transaction, tool and Undo tests pass. Models must still choose the correct target instead of making a new fact; bounded decision-quality checks are pending. No semantic aliases or keyword filter was added. |
 | Record reading | An early broad keyword could hide a later passage matching the full query. Reads now rank overlapping passages by distinct query-term coverage and return exact coverage plus an optional continuation offset. | Deterministic regressions pass for later details, query order, Unicode pagination, recovery excerpts and invalid offsets. Bounded real-model follow-up checks are pending. |
 | Context admission | Confirmed app defect: a 1,623-token input plus 240 answer tokens and 1,024 reasoning tokens fits the 4,096-token context, but was rejected because of another 1,365-token tool reserve. The final remaining turn can now use available context while retaining a 128-token safety margin. | The six previously rejected LFM turns now reach generation; five pass task checks, while one completes without saving the required memory. Regression tests cover the exact safety boundary, negative counts and integer overflow. |
 
@@ -145,6 +145,20 @@ The subsequent record-passage and optional-parameter schema changes passed `make
 selected tests and verified receipts. Apple and MLX both preserve optional fields in their native
 tool schemas. This validates the retrieval and continuation contract; it does not yet establish how
 reliably each model uses it. The native-model receipts above predate that change.
+
+A release-worker check then exercised four unchanged scenarios / eight turns each with Apple,
+Gemma 12B and Gemma 26B A4B. Both Gemma models completed all four tasks under the full rubric.
+Apple failed the four scenarios: it selected the wrong category or tool in two, generated a fictitious
+image response and lost the topic during a detour in another, and answered the correct meeting code
+with extra prose despite an explicit code-only request in the last. The latter is a formatting
+failure, not a retrieval failure. The [passage-check archive](data/chat-vault-passage-checks-2026-11-02.json.gz)
+preserves all 24 turns and evidence-bound implementing-agent reviews. Its archive audit reproduced
+the recorded checks and metrics. These single observations are not a new model ranking.
+
+Explicit memory replacement subsequently passed `make check` with 632 selected tests and verified
+receipts. Regressions cover canonical-key preservation, stale and deleted targets, companion ownership,
+paired identifiers, original-message provenance and Undo. This establishes storage behavior, not
+automatic semantic detection of every correction or opt-out.
 
 The [diagnostic archive](data/chat-integration-diagnostics-2026-11-02.json.gz) contains the 24
 scenario receipts, original run metadata, three native generation probes and the tokenizer inspection.

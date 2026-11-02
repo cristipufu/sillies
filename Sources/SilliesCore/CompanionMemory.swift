@@ -20,6 +20,14 @@ public struct MemorySource: Codable, Equatable, Sendable {
 }
 
 public struct CompanionMemory: Codable, Equatable, Identifiable, Sendable {
+  public struct Reference: Equatable, Sendable {
+    public let id: UUID
+    public let revision: UUID
+    public init(id: UUID, revision: UUID) {
+      self.id = id
+      self.revision = revision
+    }
+  }
   public let id: UUID
   public let revision: UUID
   public let fact: MemoryFact
@@ -29,6 +37,7 @@ public struct CompanionMemory: Codable, Equatable, Identifiable, Sendable {
   public var value: String { fact.value }
   public var sourceMessageID: UUID { source.messageID }
   public var sourceQuote: String { source.quote }
+  public var reference: Reference { .init(id: id, revision: revision) }
   public init(
     replacing previous: CompanionMemory?, fact: MemoryFact, source: MemorySource, savedAt: Date
   ) {
@@ -45,6 +54,7 @@ public struct MemoryWrite: Sendable {
   public let fact: MemoryFact
   public let source: MemorySource
   public let savedAt: Date
+  public private(set) var replacement: CompanionMemory.Reference?
   public var key: String { fact.key }
   public var value: String { fact.value }
   public var sourceMessageID: UUID { source.messageID }
@@ -55,7 +65,15 @@ public struct MemoryWrite: Sendable {
     self.source = source
     self.savedAt = savedAt
   }
+
+  public func replacing(_ reference: CompanionMemory.Reference) -> Self {
+    var copy = self
+    copy.replacement = reference
+    return copy
+  }
 }
+
+public enum MemoryMutationError: Error { case replacementChanged }
 
 public struct MemoryReceipt: Codable, Equatable, Identifiable, Sendable {
   public let handle: ConversationHandle

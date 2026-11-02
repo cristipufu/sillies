@@ -58,7 +58,10 @@ import Testing
   let tools = ConversationHistoryTools(conversations: library, memories: library).tools(
     for: context)
   let save = try #require(tools.first { $0.definition.name == "save_memory" })
-  #expect(save.definition.parameters.map(\.name) == ["key", "value"])
+  #expect(
+    save.definition.parameters.filter { $0.requirement == .required }.map(\.name) == [
+      "key", "value",
+    ])
   _ = try await save.call(arguments: Data(#"{"key":"name","value":"Alex"}"#.utf8))
   let fact = try #require(try await library.memories(opened.handle, query: "name").first)
   #expect(fact.sourceQuote == "i'm Alex")
@@ -66,6 +69,8 @@ import Testing
   let search = try #require(tools.first { $0.definition.name == "search_memories" })
   struct MemoryResult: Decodable {
     struct Fact: Decodable {
+      let memoryID: UUID
+      let revision: UUID
       let key: String
       let value: String
       let userStatement: String
@@ -76,6 +81,8 @@ import Testing
   let output = try await search.call(arguments: Data(#"{"query":"name"}"#.utf8))
   let result = try JSONDecoder().decode(MemoryResult.self, from: Data(output.text.utf8))
   #expect(result.subject == "user")
+  #expect(result.facts.first?.memoryID == fact.id)
+  #expect(result.facts.first?.revision == fact.revision)
   #expect(result.facts.first?.key == "name")
   #expect(result.facts.first?.value == "Alex")
   #expect(result.facts.first?.userStatement == statement.text)

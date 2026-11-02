@@ -41,7 +41,7 @@ extension ConversationDatabase {
       guard !key.isEmpty, key.count <= Self.maximumMemoryKeyCharacters,
         !request.value.isEmpty, request.value.count <= Self.maximumMemoryValueCharacters
       else { throw ConversationStorageError.invalidData }
-      let previous = try memory(owner: request.handle.companionID, key: key)
+      let previous = try previousMemory(for: request, key: key)
       if previous == nil {
         guard
           try sql.integer(
@@ -52,7 +52,7 @@ extension ConversationDatabase {
         }
       }
       let saved = CompanionMemory(
-        replacing: previous, fact: .init(key: key, value: request.value),
+        replacing: previous, fact: .init(key: previous?.key ?? key, value: request.value),
         source: request.source, savedAt: request.savedAt)
       try writeMemory(saved, owner: request.handle.companionID)
       let receipt = MemoryReceipt(
@@ -103,7 +103,7 @@ extension ConversationDatabase {
           from: VaultSQLConnection.data(row, maximumBytes: Self.maximumMemoryReceiptBytes))
       }
       guard let receipt,
-        try memory(owner: handle.companionID, key: receipt.saved.key)?.revision
+        try memory(owner: handle.companionID, identity: .key(receipt.saved.key))?.revision
           == receipt.saved.revision
       else { throw ConversationStorageError.changed }
       try removeMemory(receipt.saved.id, owner: handle.companionID)
@@ -152,10 +152,38 @@ extension ConversationDatabase {
     }
   }
 
-  private func memory(owner: String, key: String) throws -> CompanionMemory? {
+  private func previousMemory(for request: MemoryWrite, key: String) throws -> CompanionMemory? {
+    guard let target = request.replacement else {
+      return try memory(owner: request.handle.companionID, identity: .key(key))
+    }
+    guard let previous = try memory(owner: request.handle.companionID, identity: .id(target.id)),
+      previous.revision == target.revision
+    else { throw MemoryMutationError.replacementChanged }
+    return previous
+  }
+
+  private enum MemoryIdentity {
+    case key(String)
+    case id(UUID)
+    var column: String {
+      switch self {
+      case .key: "key"
+      case .id: "id"
+      }
+    }
+    var value: String {
+      switch self {
+      case .key(let key): key
+      case .id(let id): id.uuidString
+      }
+    }
+  }
+
+  private func memory(owner: String, identity: MemoryIdentity) throws -> CompanionMemory? {
     var memory: CompanionMemory?
     try sql.rows(
-      "SELECT body FROM companion_memories WHERE owner=? AND key=?", [.text(owner), .text(key)]
+      "SELECT body FROM companion_memories WHERE owner=? AND \(identity.column)=?",
+      [.text(owner), .text(identity.value)]
     ) { row in
       memory = try decoder.decode(
         CompanionMemory.self,

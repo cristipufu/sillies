@@ -24,6 +24,27 @@ not remove the need to investigate; larger models can be constrained by the same
 7. Fix general contracts or lifecycle defects, then run the affected regression cases across
    providers. Freeze a fresh complete comparison before publishing updated recommendations.
 
+## Use reference implementations before speculative changes
+
+Compare a captured synthetic failure with a minimal native runner before changing prompts or
+adding recovery rules. Reuse the installed checkpoint and tokenizer. Pin the reference source,
+runtime, template and sampling parameters; record the rendered prompt hash and input-token count.
+Run each probe under a process deadline, preserving unsuccessful results. A minimal runner using
+the same tensor library isolates app orchestration and parsing, **not** the tensor implementation.
+
+Useful upstream references are [MLX Swift's chat example](https://github.com/ml-explore/mlx-swift-examples/tree/main/Applications/MLXChatExample)
+and [command-line chat](https://github.com/ml-explore/mlx-swift-examples/tree/main/Tools/llm-tool),
+[llama.cpp's Gemma adapter](https://github.com/ggml-org/llama.cpp/blob/master/common/parsers/gemma4.cpp),
+and [Ollama's Gemma renderer](https://github.com/ollama/ollama/blob/main/model/renderers/gemma4.go).
+Check the checkpoint author's current instructions too. A workaround for an older template must
+not be applied when the installed template already implements it.
+
+Start with exact input parity, then vary one factor at a time. An author's recommended sampling
+preset is also a useful comparison, but changes several factors and cannot establish causality.
+Use matched seeds where supported and repeat the observation; one successful answer is not a fix.
+Keep raw private channels out of published receipts. Token counts, protocol-marker counts and
+output hashes can establish a protocol loop without publishing its private contents.
+
 ## Record the conclusion
 
 For each investigated failure, retain its receipt identity and evidence hash, observed behavior,

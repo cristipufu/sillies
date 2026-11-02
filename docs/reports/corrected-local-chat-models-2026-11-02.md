@@ -12,7 +12,7 @@ use automated checks and are exploratory.
 
 ## Scores and hardware requirements
 
-Rows are ranked by reviewed task score. For family ordering and selection guidance, see the
+Rows are ranked by reviewed task score. For selection guidance, see the
 [model guide](../local-text-models.md#which-model-should-i-use).
 
 | Model | Model release | Required Mac RAM | Download | Reviewed task score | Median first text |

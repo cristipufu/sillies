@@ -15,21 +15,21 @@ on each RAM configuration. Automatic memory saving remains unreliable across sev
 
 | Model | Model release | Required Mac RAM | Download | Reviewed task score | Median first text |
 | --- | --- | --- | --- | --- | --- |
-| Apple Intelligence | System-managed | Apple-compatible Mac | System-managed | **24.3/100** (18/74) | 2.28 s |
-| Gemma 4 E4B | [2026-04-02](https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/) | 16 GB | 5.18 GB | **66.2/100** (49/74) | 1.38 s |
-| Gemma 4 12B | [2026-06-03](https://blog.google/innovation-and-ai/technology/developers-tools/introducing-gemma-4-12b/) | 24 GB | 6.77 GB | **83.8/100** (62/74) | 6.22 s |
 | Gemma 4 26B A4B | [2026-04-02](https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/) | 32 GB | 15.37 GB | **97.3/100** (72/74) | 5.41 s |
-| Granite 4.2 3B | [2026-08-25](https://research.ibm.com/blog/introducing-granite-4-2) | 8 GB | 2.07 GB | **55.4/100** (41/74) | 2.00 s |
+| Gemma 4 12B | [2026-06-03](https://blog.google/innovation-and-ai/technology/developers-tools/introducing-gemma-4-12b/) | 24 GB | 6.77 GB | **83.8/100** (62/74) | 6.22 s |
+| Nemotron 3.5 Bolt E4B | [2026-10-23](https://research.nvidia.com/labs/nemotron/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB/) | 24 GB | 7.52 GB | **78.4/100** (58/74) | 1.27 s |
 | Granite 4.2 8B | [2026-08-25](https://research.ibm.com/blog/introducing-granite-4-2) | 16 GB | 4.95 GB | **74.3/100** (55/74) | 4.86 s |
 | LFM2.5 2.6B | [2026-08-04](https://www.liquid.ai/blog/lfm2-5-2-6b) | 8 GB | 1.60 GB | **74.3/100** (55/74) | 5.30 s |
 | LFM2.5 24B A2B | [2026-10-13](https://www.liquid.ai/blog/lfm2-5-24b-a2b) | 32 GB | 13.59 GB | **74.3/100** (55/74) | 9.78 s |
 | Ministral 3 8B | [2025-12-02](https://mistral.ai/news/mistral-3) | 24 GB | 5.61 GB | **71.6/100** (53/74) | 4.49 s |
-| Nemotron 3.5 Bolt E4B | [2026-10-23](https://research.nvidia.com/labs/nemotron/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB/) | 24 GB | 7.52 GB | **78.4/100** (58/74) | 1.27 s |
-| Qwen3.5 2B | [2026-03-02](https://github.com/QwenLM/Qwen3.8#news) | 8 GB | 1.74 GB | **39.2/100** (29/74) | 0.98 s |
-| Qwen3.5 4B | [2026-03-02](https://github.com/QwenLM/Qwen3.8#news) | 16 GB | 3.05 GB | **63.5/100** (47/74) | 2.37 s |
 | Qwen3.5 9B | [2026-03-02](https://github.com/QwenLM/Qwen3.8#news) | 24 GB | 5.97 GB | **70.3/100** (52/74) | 5.36 s |
+| Gemma 4 E4B | [2026-04-02](https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/) | 16 GB | 5.18 GB | **66.2/100** (49/74) | 1.38 s |
+| Qwen3.5 4B | [2026-03-02](https://github.com/QwenLM/Qwen3.8#news) | 16 GB | 3.05 GB | **63.5/100** (47/74) | 2.37 s |
+| Granite 4.2 3B | [2026-08-25](https://research.ibm.com/blog/introducing-granite-4-2) | 8 GB | 2.07 GB | **55.4/100** (41/74) | 2.00 s |
+| Qwen3.5 2B | [2026-03-02](https://github.com/QwenLM/Qwen3.8#news) | 8 GB | 1.74 GB | **39.2/100** (29/74) | 0.98 s |
+| Apple Intelligence | System-managed | Apple-compatible Mac | System-managed | **24.3/100** (18/74) | 2.28 s |
 
-Rows follow the same family order as Settings, with smaller downloads first within each family.
+Rows are ordered by reviewed task score, highest first.
 
 Model release is the original publisher’s release date, not the MLX conversion upload date. Apple’s current model asset release date is not exposed by the system.
 

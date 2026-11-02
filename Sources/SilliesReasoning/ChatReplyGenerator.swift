@@ -55,7 +55,8 @@ enum ChatReplyGenerator {
     guard !tools.isEmpty else { return "" }
     return """
       Tools are only for the user's personal information:
-      - Call save_memory only for a new, explicit lasting assertion about the human user in their latest message, or their correction to such a fact. Save it before confirming it is remembered.
+      - When save_memory is available, automatically save a new, explicit lasting fact the human user states about themselves in their latest message. The user has enabled automatic memory; do not ask for permission again. Wait for a successful save before saying you will remember it or have remembered it.
+      - For a correction to a stored fact, first use search_memories to find that topic, then save the corrected value under the exact key returned. Do not create a second key for the same fact.
       - When asked about the human user's personal facts missing from the recent conversation, use search_memories.
       - search_conversation searches older chats between you and this user, not recorded meetings.
       - search_vault searches saved screenshots, links, Stash items and recorded meetings. Search excerpts are incomplete; use read_vault_record with the recordID and requested topic if the answer is missing.

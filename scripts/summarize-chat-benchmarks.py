@@ -144,6 +144,8 @@ def matched_extension(primary, repeated):
                   "runtimeResources", "machine", "turnTimeout", "caseTimeout", "startupTimeout")
     if any(primary[key] != repeated[key] for key in comparable):
         raise ValueError("Repeated measurements must use the same build, runtime and machine")
+    if primary.get("modelReleases") != repeated.get("modelReleases"):
+        raise ValueError("Repeated measurements must preserve the frozen model release metadata")
     if set(primary["models"]) != set(repeated["models"]):
         raise ValueError("Repeated measurements must cover the same models")
     originals = {case["id"]: case for case in primary["cases"]}
@@ -151,16 +153,30 @@ def matched_extension(primary, repeated):
         raise ValueError("Repeated scenarios must match their original frozen fixtures exactly")
 
 
+def comparison_passes(primary, repeated):
+    subset = [case for case in repeated if case["profile"] == "app"]
+    identifiers = {case["case"] for case in subset}
+    baseline = [case for case in primary if case["profile"] == "app" and case["case"] in identifiers]
+    rounds = [baseline] + [[case for case in subset if case["repeat"] == number]
+                           for number in sorted({case["repeat"] for case in subset})]
+    if any({case["case"] for case in items} != identifiers for items in rounds):
+        raise ValueError("Each repeated pass must contain every comparison scenario")
+    return identifiers, rounds
+
+
+def repeat_timings(primary, repeated):
+    measurements = {}
+    for model, cases in repeated.items():
+        _, rounds = comparison_passes(primary[model], cases)
+        measurements[model] = [{"automatic": report.aggregate(items), "sampleCounts": timing_counts(items)}
+                               for items in rounds]
+    return measurements
+
+
 def repeat_measurements(primary, repeated):
     measurements = {}
     for model, cases in repeated.items():
-        subset = [case for case in cases if case["profile"] == "app"]
-        identifiers = {case["case"] for case in subset}
-        baseline = [case for case in primary[model] if case["profile"] == "app" and case["case"] in identifiers]
-        rounds = [baseline] + [[case for case in subset if case["repeat"] == number]
-                               for number in sorted({case["repeat"] for case in subset})]
-        if any({case["case"] for case in items} != identifiers for items in rounds):
-            raise ValueError("Each repeated pass must contain every comparison scenario")
+        identifiers, rounds = comparison_passes(primary[model], cases)
         by_case = {identifier: [next(case["passed"] for case in items if case["case"] == identifier)
                                 for items in rounds] for identifier in sorted(identifiers)}
         measurements[model] = {
@@ -191,6 +207,10 @@ def main():
               "primaryCorpusHash": configuration["corpusHash"], "repeatCorpusHash": repeat_configuration["corpusHash"],
               "primary": primary_measurements(primary, judgments),
               "repeatedAutomaticChecks": repeat_measurements(primary, repeated)}
+    if "modelReleases" in configuration:
+        # Preserve byte-for-byte reproduction of published archives predating release metadata.
+        result["modelReleases"] = configuration["modelReleases"]
+        result["repeatedTiming"] = repeat_timings(primary, repeated)
     write_json(options.output, result)
 
 

@@ -146,7 +146,7 @@ Settings → **Local AI**
 | **Granite 4.2 8B** | ~4.95 GB | 16 GB |
 | **LFM2.5 24B A2B** | ~13.59 GB | 32 GB |
 
-The downloadable models use 4-bit weights and run natively through MLX. No Python environment or local
+The downloadable models use quantized weights and run natively through MLX. No Python environment or local
 server to set up. Memory requirements leave room for transcription and your other apps.
 
 These are multilingual alternatives to Apple’s model, whose available languages depend on your Mac.

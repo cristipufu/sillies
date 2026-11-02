@@ -16,7 +16,7 @@ from test_chat_benchmark_audit import prepare_run, receipt_for, rubric_review, s
 
 def receipt(passed=True, repeat=1):
     return {"model": "model", "job": f"case--app--r{repeat}", "case": "case", "group": "knowledge",
-            "profile": "app", "repeat": repeat, "passed": passed, "turns": [{"reply": "Paris"}]}
+            "profile": "app", "repeat": repeat, "passed": passed, "turns": [{"reply": "Paris", "checks": []}]}
 
 
 class ComparisonSummaryTests(unittest.TestCase):
@@ -72,13 +72,22 @@ class ComparisonSummaryTests(unittest.TestCase):
 
     def test_repeats_keep_failed_passes_and_case_instability(self):
         failed = receipt(False)
-        failed["turns"] = [{"error": "Incomplete response"}]
+        failed["turns"] = [{"error": "Incomplete response", "checks": []}]
         result = module.repeat_measurements({"model": [receipt()]},
                                             {"model": [failed, receipt(True, 2)]})["model"]
         self.assertEqual(result["automatedPasses"], [1, 0, 1])
         self.assertEqual(result["errorTurns"], [0, 1, 0])
         self.assertEqual(result["allPassesSucceeded"], 0)
         self.assertEqual(result["changedOutcome"], 1)
+
+    def test_repeat_timings_keep_passes_separate_and_exclude_error_samples(self):
+        primary, failed, repeated = receipt(), receipt(False), receipt(True, 2)
+        for case, seconds in ((primary, 2), (failed, 90), (repeated, 4)):
+            case["turns"][0].update(checks=[], firstTextSeconds=seconds, seconds=seconds + 1)
+        failed["turns"][0]["error"] = "Timeout"
+        timings = module.repeat_timings({"model": [primary]}, {"model": [failed, repeated]})["model"]
+        self.assertEqual([item["sampleCounts"]["firstTextTurns"] for item in timings], [1, 0, 1])
+        self.assertEqual([item["automatic"]["firstTextP50"] for item in timings], [2, None, 4])
 
     def test_failed_context_turn_without_a_reply_remains_reportable(self):
         case = receipt(False)
@@ -114,7 +123,7 @@ class ComparisonSummaryTests(unittest.TestCase):
             "runtimeResources", "machine", "turnTimeout", "caseTimeout", "startupTimeout")}
         configuration.update(models=["model"], cases=[{"id": "case", "turns": ["Original question"]}])
         module.matched_extension(configuration, copy.deepcopy(configuration))
-        for key in ("machine", "helperHash", "models", "cases"):
+        for key in ("machine", "helperHash", "models", "cases", "modelReleases"):
             changed = copy.deepcopy(configuration)
             changed[key] = [{"id": "case", "turns": ["Changed question"]}] if key == "cases" else "changed"
             with self.assertRaises(ValueError):

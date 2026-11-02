@@ -8,6 +8,7 @@ struct BenchmarkModel {
     let id: String
     let revision: String
     let contextTokens: Int
+    let reasoningTokenReserve: Int
     let operatingSystem: String
     let memoryBytes: UInt64
     let processors: Int
@@ -50,6 +51,7 @@ struct BenchmarkModel {
   {
     .init(
       id: id, revision: revision, contextTokens: backend.contextWindowTokens,
+      reasoningTokenReserve: backend.reasoningTokenReserve,
       operatingSystem: ProcessInfo.processInfo.operatingSystemVersionString,
       memoryBytes: ProcessInfo.processInfo.physicalMemory,
       processors: ProcessInfo.processInfo.activeProcessorCount)

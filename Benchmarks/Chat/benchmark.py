@@ -85,6 +85,8 @@ def main() -> None:
     if len(set(options.models)) != len(options.models) or not set(options.models) <= supported:
         raise ValueError("Choose unique model IDs from the bundled text catalog, or apple")
     configuration = {"schema": 2, "cases": cases, "corpusHash": corpus.digest(cases), "catalogHash": corpus.digest(catalog),
+                     "modelReleases": {manifest["model"]["id"]: manifest["model"].get("release")
+                                       for manifest in catalog["manifests"] if manifest["model"]["id"] in options.models},
                      "workerHash": file_hash(options.worker), "helperHash": file_hash(options.helper),
                      "runtimeResources": environment.runtime_resources(options.worker, options.helper),
                      "evaluatorHash": corpus.digest({str(path.relative_to(Path(__file__).parent)): file_hash(path)

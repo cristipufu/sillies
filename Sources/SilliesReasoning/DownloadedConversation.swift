@@ -5,6 +5,7 @@ extension DownloadedReasoningBackend: ConversationBackend {
     await registry.retain(for: lifetime)
   }
   package var contextWindowTokens: Int { manifest.model.contextTokens }
+  package var reasoningTokenReserve: Int { manifest.model.reasoning?.tokenReserve ?? 0 }
   package func inputTokenCount(_ request: TextGenerationRequest) async throws -> Int {
     let output = try await registry.complete(request.measuringTokens(), using: manifest)
     guard let count = output.inputTokens, count >= 0 else { throw TextModelError.invalidResponse }

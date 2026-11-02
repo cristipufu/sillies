@@ -188,6 +188,7 @@ private func compareApplicationConversation(library: VaultLibrary, messages: [Ch
 }
 
 private struct ComparisonBackend: ConversationBackend {
+  var reasoningTokenReserve: Int { apple.reasoningTokenReserve }
   let apple: AppleReasoningBackend
   let expected: TextGenerationRequest
   func availabilityNotice(localeIdentifier: String?) async -> String? {

@@ -5,6 +5,7 @@ struct MeasuredConversationBackend: ConversationBackend {
   let base: any ConversationBackend
   let trace: BenchmarkTurnTrace
   var contextWindowTokens: Int { base.contextWindowTokens }
+  var reasoningTokenReserve: Int { base.reasoningTokenReserve }
   func availabilityNotice(localeIdentifier: String?) async -> String? {
     await base.availabilityNotice(localeIdentifier: localeIdentifier)
   }

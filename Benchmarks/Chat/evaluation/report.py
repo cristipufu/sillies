@@ -46,6 +46,8 @@ def generate(output: Path) -> dict:
     for model in configuration["models"]:
         results = all_results[model]
         primary = [result for result in results if result["profile"] == "app"]
+        release = configuration.get("modelReleases", {}).get(model)
+        release_date = release["date"] if release else ("System-managed" if model == "apple" else "Not recorded")
         stats = aggregate(primary)
         total = sum(job["profile"] == "app" for job in configuration["jobs"])
         review = semantic_reviews[model]
@@ -54,17 +56,18 @@ def generate(output: Path) -> dict:
         profiles = {profile: aggregate([result for result in results if result["profile"] == profile])
                     for profile in PROFILES if any(result["profile"] == profile for result in results)}
         summary["models"][model] = {"completed": len(results), "planned": len(configuration["jobs"]),
-                                    "primary": stats, "groups": groups, "profiles": profiles,
+                                    "release": release, "primary": stats, "groups": groups, "profiles": profiles,
                                     "semanticReviews": review,
                                     "pendingPrimaryCases": total - len(primary),
                                     "evidenceValidation": "recomputed" if configuration.get("cases") else "legacy-inventory-and-reply-hashes"}
-        rows.append(f"| {model} | {len(primary)}/{total} | {stats['passed']}/{total} | "
+        rows.append(f"| {model} | {release_date} | {len(primary)}/{total} | {stats['passed']}/{total} | "
                     f"{ratio(stats['checks']['behavior'])} | {ratio(stats['checks']['exact_answer'])} | "
                     f"{ratio(stats['checks']['lexical_anchor'])} | {review['primaryRubricReviewedTurns']}/{stats['turns']} | {seconds(stats['firstTextP50'])} / {seconds(stats['firstTextP95'])} | "
                     f"{seconds(stats['totalP50'])} | {stats['errors']} |")
     lines = ["# Local Chat model evaluation", "", "Primary comparison: the app's five tools. Automated checks alone do not establish answer correctness or release readiness.", "",
-             "| Model | Completed/planned | Checks passed/planned | Behavior checks | Exact answers | Lexical anchors | Full rubric reviews/observed turns | First text p50 / p95 | Turn p50 | Failed turns |",
-             "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |", *rows, "",
+             "| Model | Model release | Completed/planned | Checks passed/planned | Behavior checks | Exact answers | Lexical anchors | Full rubric reviews/observed turns | First text p50 / p95 | Turn p50 | Failed turns |",
+             "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |", *rows, "",
+             "Model release means the original publisher release, not a converted checkpoint upload; source links are frozen in run.json.",
              "Missing cases remain pending in the planned denominator. Failed and timed-out cases remain failures; pending is not a measured failure.",
              "Open-ended answers need full rubric review bound to the input, tool calls, saved state and reply. Unreviewed turns remain pending.",
              "Earlier reply-only/content-only reviews remain separately visible in summary.json; they do not certify the full task rubric.",

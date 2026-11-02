@@ -1,6 +1,6 @@
 # Local text models
 
-Settings → **Local AI** offers Apple Intelligence plus six optional MLX models. Speech recognition stays in **Speech & Meetings** and has its own selection. Downloading never selects a model automatically. Selection applies to notes, Participate suggestions, Chat replies, dictation cleanup, and selection commands. The Vault's **Regenerate notes** action applies the selected model to an existing transcript without transcribing or recording again.
+Settings → **Local AI** offers Apple Intelligence plus twelve optional MLX models. Speech recognition stays in **Speech & Meetings** and has its own selection. Downloading never selects a model automatically. Selection applies to notes, Participate suggestions, Chat replies, dictation cleanup, and selection commands. The Vault's **Regenerate notes** action applies the selected model to an existing transcript without transcribing or recording again.
 
 ## Which model should I use?
 
@@ -9,15 +9,17 @@ app's minimum admission requirements; all measured timings come from the same 48
 
 **For Chat quality, Gemma 4 26B A4B is the strongest measured option if your Mac meets its 32 GB memory requirement.** Qwen3.5 4B is the smaller, quicker compromise at 16 GB. None passed every task, and the smaller models were especially unreliable at automatically saving memories.
 
-| Model | Required Mac RAM | Download | Reviewed task score | Median first text | Practical fit |
-| --- | --- | --- | --- | --- | --- |
-| **Gemma 4 26B A4B** | 32 GB | 15.37 GB | **94.6/100** (70/74) | 4.92 s | Highest task score; slower replies. Corrections can still leave conflicting memories. |
-| Ministral 3 8B | 24 GB | 5.61 GB | **73.0/100** (54/74) | 3.98 s | Useful retrieval; unreliable memory writes. Small score gain over 4B. |
-| Qwen3.5 9B | 24 GB | 5.97 GB | **71.6/100** (53/74) | 4.07 s | Little observed gain over 4B, with slower replies. |
-| **Qwen3.5 4B** | 16 GB | 3.05 GB | **70.3/100** (52/74) | 2.22 s | Smaller, faster compromise; weak automatic memory saves. |
-| Gemma 4 E4B | 16 GB | 5.18 GB | **63.5/100** (47/74) | 1.16 s | Quicker chats; weaker tool follow-through and memory saves. |
-| Qwen3.5 2B | 8 GB | 1.74 GB | **40.5/100** (30/74) | 0.76 s | Smallest download and quickest first text; frequent task failures. |
-| Apple Intelligence | Apple-compatible Mac | System-managed | **23.0/100** (17/74) | 2.07 s | No separate Sillies download; poor fit for this Chat/Vault workflow. |
+| Model | Model release | Required Mac RAM | Download | Reviewed task score | Median first text | Practical fit |
+| --- | --- | --- | --- | --- | --- | --- |
+| **Gemma 4 26B A4B** | [2026-04-02](https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/) | 32 GB | 15.37 GB | **94.6/100** (70/74) | 4.92 s | Highest task score; slower replies. Corrections can still leave conflicting memories. |
+| Ministral 3 8B | [2025-12-02](https://mistral.ai/news/mistral-3) | 24 GB | 5.61 GB | **73.0/100** (54/74) | 3.98 s | Useful retrieval; unreliable memory writes. Small score gain over 4B. |
+| Qwen3.5 9B | [2026-03-02](https://github.com/QwenLM/Qwen3.8#news) | 24 GB | 5.97 GB | **71.6/100** (53/74) | 4.07 s | Little observed gain over 4B, with slower replies. |
+| **Qwen3.5 4B** | [2026-03-02](https://github.com/QwenLM/Qwen3.8#news) | 16 GB | 3.05 GB | **70.3/100** (52/74) | 2.22 s | Smaller, faster compromise; weak automatic memory saves. |
+| Gemma 4 E4B | [2026-04-02](https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/) | 16 GB | 5.18 GB | **63.5/100** (47/74) | 1.16 s | Quicker chats; weaker tool follow-through and memory saves. |
+| Qwen3.5 2B | [2026-03-02](https://github.com/QwenLM/Qwen3.8#news) | 8 GB | 1.74 GB | **40.5/100** (30/74) | 0.76 s | Smallest download and quickest first text; frequent task failures. |
+| Apple Intelligence | System-managed | Apple-compatible Mac | System-managed | **23.0/100** (17/74) | 2.07 s | No separate Sillies download; poor fit for this Chat/Vault workflow. |
+
+Model release is the original publisher’s release date, not the MLX conversion upload date. Apple’s current model asset release date is not exposed by the system.
 
 **Score:** reviewed tasks passed out of 74, expressed on a 100-point scale. Each task includes
 its whole conversation: general answers, Vault retrieval, identity, memories, topic changes or
@@ -37,7 +39,17 @@ The helper derives its allocation budget from verified artifact sizes plus works
 
 These are conservative admission limits for sharing the Mac with transcription and other apps, not measured peak-memory promises. Language coverage comes from the upstream model cards; actual summarization quality needs evaluation with representative recordings. Multilingual tokenizer/chat-template checks do not establish accuracy in every supported language. Apple Intelligence remains the default and retains its own hardware, availability and language requirements.
 
-Models are pinned in `Sources/SilliesModelStore/Resources/text-models.json`, including weights, tokenizer, chat template, revision, lengths, and SHA-256 hashes. They live in `~/Library/Application Support/Sillies/TextModels/<id>/<revision>`. Downloads use the same verified, resumable, atomic installer as speech models. Partial installations cannot be selected. No remote code, inference server, Python installation, or inference network call is involved. The existing daily speech-model update mechanism does not yet update text-model revisions; those pins ship with the app.
+Models are pinned in `Sources/SilliesModelStore/Resources/text-models.json`, including weights, tokenizer, chat template, revision, lengths, SHA-256 hashes, license, and original release date with its source. They live in `~/Library/Application Support/Sillies/TextModels/<id>/<revision>`. Downloads use the same verified, resumable, atomic installer as speech models. Partial installations cannot be selected. No remote code, inference server, Python installation, or inference network call is involved. The existing daily speech-model update mechanism does not yet update text-model revisions; those pins ship with the app.
+
+## New model evaluation
+
+The catalog also includes Nemotron 3.5 Bolt E4B, Gemma 4 12B, Granite 4.2 3B and 8B,
+and LFM2.5 2.6B and 24B A2B. Their integration and evaluation are in progress; the scores above
+remain the earlier seven-model comparison until the new runs have been reviewed.
+
+Ling 3.0 Tiny (`bailing_hybrid`) and Bonsai 2 (`prism_hadamard_qwen35`) remain candidates.
+The pinned native Swift runtime does not implement their architectures. Their downloadable
+MLX weights alone do not make them usable in Sillies; they are not offered as working downloads.
 
 ## Benchmarks
 
@@ -85,7 +97,7 @@ For a new STT engine, follow [the separate speech-provider recipe](local-speech-
 
 ## Resource and failure behavior
 
-One downloaded text model is loaded at a time. Each request starts a fresh prompt cache. Chat reconstructs native conversation messages from its bounded working context; meeting tasks remain independent. Input is checked against a 4,096-token total context and generation is limited to 1,400 tokens (individual tasks use smaller limits). MLX uses the model-specific allocation budget described above, with a 128 MiB cache. These limits do not describe total process RSS or all driver allocations.
+One downloaded text model is loaded at a time. Each request starts a fresh prompt cache. Chat reconstructs native conversation messages from its bounded working context; meeting tasks remain independent. Input is checked against a 4,096-token total context. Tasks request at most 1,400 generation tokens (Chat normally requests 240). LFM2.5 always reasons, so its catalog policy grants an additional 1,024 total generation tokens. Context measurement and compaction reserve that allowance too. This is a bounded total allowance, not a guaranteed split between reasoning and answer tokens; an unfinished response still fails rather than exposing private reasoning. MLX uses the model-specific allocation budget described above, with a 128 MiB cache. These limits do not describe total process RSS or all driver allocations.
 
 The helper runs at utility priority. Speech inference preempts active downloaded-text inference, waits for worker exit, and allows interrupted text work to retry once speech is idle. Explicit dictation reserves that priority through finalization, including Apple Speech. Text model leases prevent deletion while loading or generating. A 60-second idle release, pause/exclusion handling, selection changes, and termination release the worker. IPC responses are bounded to 128 KiB and each request has a 120-second deadline. The app does not wait synchronously for helper exit.
 

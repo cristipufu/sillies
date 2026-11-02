@@ -4,6 +4,7 @@ import SilliesTextModels
 /// Native roles, tool execution and context measurement are explicit backend capabilities.
 package protocol ConversationBackend: ReasoningBackend {
   var contextWindowTokens: Int { get }
+  var reasoningTokenReserve: Int { get }
   func retain(for lifetime: TextModelLifetime) async
   func inputTokenCount(_ request: TextGenerationRequest) async throws -> Int
   func converse(_ request: TextGenerationRequest, tools: ConversationToolbox) async throws -> String

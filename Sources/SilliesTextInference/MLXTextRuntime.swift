@@ -35,7 +35,7 @@ actor MLXTextRuntime {
     }
     Memory.cacheLimit = Self.cacheBytes
     Memory.memoryLimit = configuration.memoryLimitBytes
-    let container = try await load(configuration.directory)
+    let container = try await load(configuration)
     let tools = MLXConversationInput.tools(generation)
     if !tools.isEmpty, await container.configuration.toolCallFormat == nil {
       throw TextModelError.toolsUnavailable
@@ -51,15 +51,16 @@ actor MLXTextRuntime {
       input: UserInput(
         messages: messages,
         tools: tools.isEmpty ? nil : tools,
-        additionalContext: ["enable_thinking": false]))
+        additionalContext: MLXReasoningPolicy(preparation: configuration).templateContext))
     if generation.operation == .measure {
       return .init(text: "", inputTokens: input.text.tokens.size)
     }
-    guard input.text.tokens.size + generation.maximumTokens <= configuration.contextTokens else {
+    let outputTokens = generation.maximumTokens + (configuration.reasoning?.tokenReserve ?? 0)
+    guard input.text.tokens.size + outputTokens <= configuration.contextTokens else {
       throw TextModelError.contextLimit
     }
     var parameters = GenerateParameters(
-      maxTokens: generation.maximumTokens, maxKVSize: configuration.contextTokens,
+      maxTokens: outputTokens, maxKVSize: configuration.contextTokens,
       temperature: Float(generation.style.temperature),
       topP: Float(generation.style.probabilityThreshold),
       repetitionPenalty: generation.style.repetitionPenalty,
@@ -81,13 +82,19 @@ actor MLXTextRuntime {
     return try await collector.finish(receive: receive)
   }
 
-  private func load(_ location: URL) async throws -> ModelContainer {
+  private func load(_ preparation: TextModelPreparation) async throws -> ModelContainer {
+    let location = preparation.directory
     if directory == location, let model { return model }
     model = nil
     Memory.clearCache()
     let loaded = try await LLMModelFactory.shared.loadContainer(
       from: location, using: LocalTokenizerLoader())
-    await loaded.update { $0.processor = MLXInputProcessor(base: $0.processor) }
+    await loaded.update {
+      $0.processor = MLXInputProcessor(base: $0.processor)
+      if let reasoning = MLXReasoningPolicy(preparation: preparation).configuration {
+        $0.configuration.reasoningConfig = reasoning
+      }
+    }
     directory = location
     model = loaded
     return loaded

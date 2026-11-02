@@ -8,6 +8,7 @@ import Testing
 @testable import SilliesReasoning
 
 private actor ConversationProbe: ConversationBackend {
+  nonisolated var reasoningTokenReserve: Int { 0 }
   var request: TextGenerationRequest?
   func availabilityNotice(localeIdentifier: String?) -> String? { nil }
   func generate(_ request: TextGenerationRequest, format: ReasoningFormat) throws -> String {

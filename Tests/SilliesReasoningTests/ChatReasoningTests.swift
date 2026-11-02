@@ -25,6 +25,7 @@ private let reportedChatContext = ChatContext(
 }
 
 private actor ChatBackendProbe: ConversationBackend {
+  nonisolated var reasoningTokenReserve: Int { 0 }
   var style: TextGenerationStyle?
   func availabilityNotice(localeIdentifier: String?) -> String? { nil }
   func converse(_ request: TextGenerationRequest, tools: ConversationToolbox) async throws -> String

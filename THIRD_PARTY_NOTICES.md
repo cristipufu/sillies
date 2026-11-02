@@ -34,11 +34,17 @@ weights and does not claim authorship of them.
 - **Nemotron Unified ASR:** NVIDIA, with Core ML conversion by Fluid Inference.
   [OpenMDW 1.1 license](https://huggingface.co/nvidia/nemotron-labs-unified-asr-0.6b).
 - **Qwen3.5:** Qwen/Alibaba, with MLX quantization by MLX Community; Apache 2.0.
-- **Gemma 4 E4B / 26B A4B:** Google DeepMind, with MLX quantization by MLX Community. Google's
+- **Gemma 4 E4B / 12B / 26B A4B:** Google DeepMind, with MLX quantization by MLX Community. Google's
   [Gemma 4 license is Apache 2.0](https://ai.google.dev/gemma/docs/gemma_4_license).
   The pinned community conversion's model-card metadata says `gemma`; the base model's official
   license is linked here to make that metadata discrepancy explicit.
 - **Ministral 3 8B:** Mistral AI, with MLX quantization by MLX Community; Apache 2.0.
+- **Granite 4.2 3B / 8B:** IBM Granite, including its official MLX quantizations; Apache 2.0.
+- **LFM2.5 2.6B / 24B A2B:** Liquid AI, including its official MLX quantizations;
+  [LFM Open License 1.0](https://huggingface.co/LiquidAI/LFM2.5-2.6B/blob/main/LICENSE).
+  This is a custom model license; review its terms before redistribution or commercial deployment.
+- **Nemotron 3.5 Bolt E4B:** NVIDIA post-training of Google's Gemma 4 E4B, with MLX quantization
+  by MLX Community; [OpenMDW 1.1](https://openmdw.ai/license/1-1/).
 
 - **Kokoro:** hexgrad's Kokoro 82M, with Core ML conversion by Fluid Inference; Apache 2.0.
   The catalog includes the ANE-v3 conversion, pinned base modules, pronunciation files, and voice embeddings.
@@ -69,6 +75,12 @@ Review the upstream model cards and applicable license before redistributing wei
 | Gemma 4 E4B | Apache 2.0 | [Model card](https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit) | [475b9088d297](https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/tree/475b9088d29754a3379866cf5aeb6b41acd313c2) |
 | Gemma 4 26B A4B | Apache 2.0 | [Model card](https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit) | [0d77464eeb23](https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/tree/0d77464eeb233a2da68ebf9d7dc4edaac7db956d) |
 | Ministral 3 8B | Apache 2.0 | [Model card](https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit) | [182f003f01da](https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/tree/182f003f01daa75f9de0f2c4d379722fd0bc1c61) |
+| Nemotron 3.5 Bolt E4B | OpenMDW 1.1 | [Model card](https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit) | [0c204a16b6b1](https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit/tree/0c204a16b6b186d1434e70f5fc2ca2e30984a006) |
+| LFM2.5 2.6B | LFM Open License 1.0 | [Model card](https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit) | [04efa23776ce](https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit/tree/04efa23776ce61ec34ec95ec34c859854c89542b) |
+| Gemma 4 12B | Apache 2.0 | [Model card](https://huggingface.co/mlx-community/gemma-4-12B-it-4bit) | [73bcf09092aa](https://huggingface.co/mlx-community/gemma-4-12B-it-4bit/tree/73bcf09092aa277861d5a191b989b666f7f32e8f) |
+| Granite 4.2 3B | Apache 2.0 | [Model card](https://huggingface.co/ibm-granite/granite-4.2-3b-q4-mlx) | [0c6f39b1827a](https://huggingface.co/ibm-granite/granite-4.2-3b-q4-mlx/tree/0c6f39b1827afd5eb2c1c3b13751929857434953) |
+| Granite 4.2 8B | Apache 2.0 | [Model card](https://huggingface.co/ibm-granite/granite-4.2-8b-q4-mlx) | [9047f073e46c](https://huggingface.co/ibm-granite/granite-4.2-8b-q4-mlx/tree/9047f073e46c527f70dade07bb55b1700d728e36) |
+| LFM2.5 24B A2B | LFM Open License 1.0 | [Model card](https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit) | [667408d494bd](https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit/tree/667408d494bde191c2cb9dd4f4549827816b9275) |
 | Kokoro | Apache 2.0 | [Model card](https://huggingface.co/FluidInference/kokoro-82m-coreml) | [6c0750dd02ef](https://huggingface.co/FluidInference/kokoro-82m-coreml/tree/6c0750dd02ef9d981fb82f147d784a3f171755ee) |
 | Pocket TTS | CC BY 4.0 (weights); voice terms apply | [Model card](https://huggingface.co/FluidInference/pocket-tts-coreml) | [b51c48543055](https://huggingface.co/FluidInference/pocket-tts-coreml/tree/b51c4854305532b182026259092cc53e4b600f49) |
 | Qwen3-TTS 0.6B | Apache 2.0 | [Model card](https://huggingface.co/argmaxinc/ttskit-coreml) | [065712357592](https://huggingface.co/argmaxinc/ttskit-coreml/tree/065712357592bc0d194cf7cd91852c5cde3eb1b8) |

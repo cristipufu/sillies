@@ -81,11 +81,17 @@ weights and does not claim authorship of them.
 - **Nemotron Unified ASR:** NVIDIA, with Core ML conversion by Fluid Inference.
   [OpenMDW 1.1 license](https://huggingface.co/nvidia/nemotron-labs-unified-asr-0.6b).
 - **Qwen3.5:** Qwen/Alibaba, with MLX quantization by MLX Community; Apache 2.0.
-- **Gemma 4 E4B / 26B A4B:** Google DeepMind, with MLX quantization by MLX Community. Google's
+- **Gemma 4 E4B / 12B / 26B A4B:** Google DeepMind, with MLX quantization by MLX Community. Google's
   [Gemma 4 license is Apache 2.0](https://ai.google.dev/gemma/docs/gemma_4_license).
   The pinned community conversion's model-card metadata says `gemma`; the base model's official
   license is linked here to make that metadata discrepancy explicit.
 - **Ministral 3 8B:** Mistral AI, with MLX quantization by MLX Community; Apache 2.0.
+- **Granite 4.2 3B / 8B:** IBM Granite, including its official MLX quantizations; Apache 2.0.
+- **LFM2.5 2.6B / 24B A2B:** Liquid AI, including its official MLX quantizations;
+  [LFM Open License 1.0](https://huggingface.co/LiquidAI/LFM2.5-2.6B/blob/main/LICENSE).
+  This is a custom model license; review its terms before redistribution or commercial deployment.
+- **Nemotron 3.5 Bolt E4B:** NVIDIA post-training of Google's Gemma 4 E4B, with MLX quantization
+  by MLX Community; [OpenMDW 1.1](https://openmdw.ai/license/1-1/).
 
 - **Kokoro:** hexgrad's Kokoro 82M, with Core ML conversion by Fluid Inference; Apache 2.0.
   The catalog includes the ANE-v3 conversion, pinned base modules, pronunciation files, and voice embeddings.

@@ -132,7 +132,28 @@ class ChatBenchmarkAuditTests(unittest.TestCase):
             write_json(path / "apple/cases" / f"{job['id']}.json", receipt)
             result = report.generate(path)["models"]["apple"]
             self.assertEqual(result["pendingPrimaryCases"], 1)
-            self.assertIn("| apple | 1/2 | 1/2 |", (path / "report.md").read_text())
+            self.assertIn("| apple | System-managed | 1/2 | 1/2 |", (path / "report.md").read_text())
+
+    def test_release_date_comes_from_frozen_run_metadata(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)
+            case = sample_case()
+            configuration = prepare_run(path, [case])
+            configuration["models"] = ["test-model"]
+            release = {"date": "2026-08-04", "sourceURL": "https://example.org/original-release"}
+            configuration["modelReleases"] = {"test-model": release}
+            write_json(path / "run.json", configuration)
+            job, receipt = receipt_for(case)
+            receipt["model"] = "test-model"
+            write_json(path / "test-model/cases" / f"{job['id']}.json", receipt)
+            result = report.generate(path)["models"]["test-model"]
+            self.assertEqual(result["release"], release)
+            self.assertEqual(result["primary"]["passed"], 1)
+            self.assertIn("| test-model | 2026-08-04 | 1/1 |", (path / "report.md").read_text())
+            configuration.pop("modelReleases")
+            write_json(path / "run.json", configuration)
+            report.generate(path)
+            self.assertIn("| test-model | Not recorded |", (path / "report.md").read_text())
 
     def test_receipt_loading_rejects_extra_files_and_modified_checks(self):
         with tempfile.TemporaryDirectory() as directory:

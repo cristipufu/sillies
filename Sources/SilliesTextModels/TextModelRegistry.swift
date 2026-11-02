@@ -164,7 +164,7 @@ package actor TextModelRegistry {
       let model = try await provider.prepare(
         .init(
           directory: lease.directory, contextTokens: manifest.model.contextTokens,
-          memoryLimitBytes: memoryLimit))
+          memoryLimitBytes: memoryLimit, reasoning: manifest.model.reasoning))
       if Task.isCancelled {
         await model.stop()
         throw CancellationError()

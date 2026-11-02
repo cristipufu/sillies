@@ -20,7 +20,27 @@ enum TextReasoningSelfCheck {
     var plain = MLXReasoningChannel(configuration: ModelConfiguration(id: "plain"), promptTail: "")
     try require(plain.append("a < b, <think> is literal here") == "a < b, <think> is literal here")
     try checkThinkTags()
+    try checkAlwaysOnThinking()
     try checkToolContinuation()
+  }
+
+  private static func checkAlwaysOnThinking() throws {
+    let policy = MLXReasoningPolicy(
+      preparation: .init(
+        directory: URL(fileURLWithPath: "/fixture"), contextTokens: 4096, memoryLimitBytes: 1,
+        reasoning: .alwaysOnThinkTags))
+    try require(policy.templateContext.isEmpty)
+    try require(policy.configuration?.promptStrategy == .alwaysOn)
+    let model = ModelConfiguration(id: "fixture", reasoningConfig: policy.configuration)
+    let source = "Private state</think>Visible answer"
+    for offset in 0...source.count {
+      let split = source.index(source.startIndex, offsetBy: offset)
+      var channel = MLXReasoningChannel(configuration: model, promptTail: "assistant\n<think>")
+      let text =
+        channel.append(String(source[..<split]))
+        + channel.append(String(source[split...])) + channel.finish()
+      try require(text == "Visible answer" && channel.content == "Private state")
+    }
   }
 
   private static func checkThinkTags() throws {

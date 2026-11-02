@@ -10,15 +10,17 @@ what to download.
 
 **Gemma 4 26B A4B had the highest reviewed task score: 70/74 (94.6%).** It also had the slowest median first text in this run. Qwen3.5 4B was a useful smaller compromise: 52/74 (70.3%) at less than half that median latency. Differences of one or two cases between 4B, 9B and Ministral do not establish a meaningful quality ranking.
 
-| Model | Reviewed tasks | Score / 100 | Automated checks passed | Error turns / 107 |
-| --- | --- | --- | --- | --- |
-| Gemma 4 26B A4B | 70/74 | 94.6 | 71/74 | 0 |
-| Ministral 3 8B | 54/74 | 73.0 | 59/74 | 0 |
-| Qwen3.5 9B | 53/74 | 71.6 | 56/74 | 1 |
-| Qwen3.5 4B | 52/74 | 70.3 | 57/74 | 0 |
-| Gemma 4 E4B | 47/74 | 63.5 | 51/74 | 0 |
-| Qwen3.5 2B | 30/74 | 40.5 | 38/74 | 0 |
-| Apple Intelligence | 17/74 | 23.0 | 22/74 | 11 |
+| Model | Model release | Reviewed tasks | Score / 100 | Automated checks passed | Error turns / 107 |
+| --- | --- | --- | --- | --- | --- |
+| Gemma 4 26B A4B | [2026-04-02](https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/) | 70/74 | 94.6 | 71/74 | 0 |
+| Ministral 3 8B | [2025-12-02](https://mistral.ai/news/mistral-3) | 54/74 | 73.0 | 59/74 | 0 |
+| Qwen3.5 9B | [2026-03-02](https://github.com/QwenLM/Qwen3.8#news) | 53/74 | 71.6 | 56/74 | 1 |
+| Qwen3.5 4B | [2026-03-02](https://github.com/QwenLM/Qwen3.8#news) | 52/74 | 70.3 | 57/74 | 0 |
+| Gemma 4 E4B | [2026-04-02](https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/) | 47/74 | 63.5 | 51/74 | 0 |
+| Qwen3.5 2B | [2026-03-02](https://github.com/QwenLM/Qwen3.8#news) | 30/74 | 40.5 | 38/74 | 0 |
+| Apple Intelligence | System-managed | 17/74 | 23.0 | 22/74 | 11 |
+
+Model release is the original publisher’s release date, not the MLX conversion upload date. Apple’s current model asset release date is not exposed by the system.
 
 Every primary turn is reviewed: **107/107 per model, 749/749 overall**. Errors and failed tasks remain in the denominator. This is an unweighted scenario score; a multi-turn scenario fails if any turn fails.
 

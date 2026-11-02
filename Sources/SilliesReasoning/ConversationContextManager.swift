@@ -71,6 +71,7 @@ struct ConversationContextManager {
         $0 + $1.content.utf8.count + $1.calls.reduce(0) { $0 + $1.arguments.count }
       }
     guard bytes <= Self.maximumMeasurementBytes else { return false }
-    return try await backend.inputTokenCount(request) + request.maximumTokens <= budget
+    return try await backend.inputTokenCount(request) + request.maximumTokens
+      + backend.reasoningTokenReserve <= budget
   }
 }

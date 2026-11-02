@@ -81,10 +81,15 @@ package struct TextModelPreparation: Codable, Sendable {
   package let directory: URL
   package let contextTokens: Int
   package let memoryLimitBytes: Int
-  package init(directory: URL, contextTokens: Int, memoryLimitBytes: Int) {
+  package let reasoning: TextModelReasoning?
+  package init(
+    directory: URL, contextTokens: Int, memoryLimitBytes: Int,
+    reasoning: TextModelReasoning? = nil
+  ) {
     self.directory = directory
     self.contextTokens = contextTokens
     self.memoryLimitBytes = memoryLimitBytes
+    self.reasoning = reasoning
   }
 }
 

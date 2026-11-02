@@ -2,6 +2,7 @@ import FoundationModels
 import SilliesTextModels
 
 extension AppleReasoningBackend: ConversationBackend {
+  package var reasoningTokenReserve: Int { 0 }
   package func retain(for lifetime: TextModelLifetime) async {
     await conversations.retain(for: lifetime)
   }

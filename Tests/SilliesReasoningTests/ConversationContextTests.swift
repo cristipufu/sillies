@@ -10,9 +10,13 @@ private actor ContextBackend: ConversationBackend {
   enum Behavior { case succeeds, summaryFailure, overflowOnce, cancelSummary }
   let behavior: Behavior
   nonisolated let contextWindowTokens = 1_400
+  nonisolated let reasoningTokenReserve: Int
   var summaries: [TextGenerationRequest] = []
   var replies: [TextGenerationRequest] = []
-  init(_ behavior: Behavior = .succeeds) { self.behavior = behavior }
+  init(_ behavior: Behavior = .succeeds, reasoningTokenReserve: Int = 0) {
+    self.behavior = behavior
+    self.reasoningTokenReserve = reasoningTokenReserve
+  }
   func availabilityNotice(localeIdentifier: String?) -> String? { nil }
   func inputTokenCount(_ request: TextGenerationRequest) async throws -> Int {
     (request.instructions.utf8.count + request.messages.reduce(0) { $0 + $1.content.utf8.count })
@@ -50,6 +54,21 @@ private func context(_ messages: [ChatMessage], memory: ConversationMemory = .in
   .init(
     companionName: "Pogo", profile: .init(personality: "Curious"), messages: messages,
     memory: memory)
+}
+
+@Test func chatCompactionReservesSpaceForMandatoryReasoning() async throws {
+  let backend = ContextBackend(reasoningTokenReserve: 256)
+  let service = LocalConversationService(resolveBackend: { backend }, tools: [], turns: .init())
+  _ = try await service.reply(to: context(longHistory(turns: 10)))
+  let final = try #require(await backend.replies.last)
+  #expect(
+    try await backend.inputTokenCount(final) + final.maximumTokens + backend.reasoningTokenReserve
+      <= backend.contextWindowTokens)
+  for summary in await backend.summaries {
+    #expect(
+      try await backend.inputTokenCount(summary) + summary.maximumTokens
+        + backend.reasoningTokenReserve <= backend.contextWindowTokens)
+  }
 }
 
 @Test func chatCompactsHundredsOfTurnsWithoutDroppingVisibleHistory() async throws {
@@ -161,6 +180,7 @@ func appleChatCompactsNativeHistoryAndRecallsEarlierUserFacts() async throws {
 }
 
 private actor PartiallyDeliveredOverflow: ConversationBackend {
+  nonisolated var reasoningTokenReserve: Int { 0 }
   nonisolated let contextWindowTokens = 8_192
   var calls = 0
   func availabilityNotice(localeIdentifier: String?) -> String? { nil }

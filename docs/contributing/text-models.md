@@ -10,7 +10,8 @@ can use the catalog and installer; a new runtime needs a separate adapter.
    template. Review the upstream license and device requirements. Do not load remote executable code.
 2. Add its pinned repository/revision and display/hardware metadata to `scripts/update-text-catalog.py`.
    Generate `Sources/SilliesModelStore/Resources/text-models.json`. Review all required files, hashes,
-   byte lengths, license information, and the total download size.
+   byte lengths, per-model license, original release date and its primary source, and total download size.
+   A conversion upload date is not a model release date. These dates are frozen in benchmark runs.
 3. Run catalog validation and the helper's tokenizer check against the installed local files. A custom
    tokenizer may need an adapter; successful tokenization alone does not prove generation quality.
 4. Update catalog regression expectations and packaged attribution. Keep IDs stable and revisions
@@ -30,7 +31,12 @@ the generated license, artifact selection, and context limits; existing generato
 automatically appropriate for a new model family.
 
 Downloads use `ModelArtifactManifest` and `ModelStore`; provider selection uses `TextModelRegistry`.
-Downloading does not automatically select a model. Text-model revisions currently ship with the app;
+Downloading does not automatically select a model.
+For checkpoints whose reasoning protocol is not declared by the native architecture, set the
+optional catalog `reasoning` policy: `switchableThinkTags` or `alwaysOnThinkTags`. Mandatory
+reasoning receives a bounded token reserve shared by inference and context compaction. Do not
+force-close a private channel or classify visible output with model-name heuristics. Validate
+native tool continuation, hidden-channel streaming, and compaction with the actual checkpoint. Text-model revisions currently ship with the app;
 the speech-model update mechanism does not discover text-model updates.
 
 ## Add another runtime

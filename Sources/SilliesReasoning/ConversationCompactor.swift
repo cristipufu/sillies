@@ -14,6 +14,7 @@ struct ConversationCompactor {
     let request = summaryRequest(messages, memory: memory)
     if messages.count > 2,
       try await backend.inputTokenCount(request) + Self.outputTokens + Self.safetyTokens
+        + backend.reasoningTokenReserve
         > backend.contextWindowTokens
     {
       let starts = messages.indices.filter { messages[$0].role == .user }
@@ -27,6 +28,7 @@ struct ConversationCompactor {
     do {
       guard
         try await backend.inputTokenCount(request) + Self.outputTokens + Self.safetyTokens
+          + backend.reasoningTokenReserve
           <= backend.contextWindowTokens
       else {
         throw TextModelError.contextLimit

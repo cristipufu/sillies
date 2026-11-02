@@ -262,3 +262,7 @@ Keep the Swift worker independent of AppKit and model SDKs; architecture checks 
 
 Run `python3 -B -m unittest discover -s Tests -p 'test_chat_*.py'` and `make check`
 after changing the harness. Use a new output directory for any changed corpus or implementation.
+
+Model release dates come from the reviewed text catalog and are copied with their primary source
+into `run.json`. Reports use that frozen metadata, never the current catalog or a checkpoint upload
+date. Apple is system-managed; older runs without release metadata report “Not recorded”.

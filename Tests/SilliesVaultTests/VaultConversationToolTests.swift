@@ -281,3 +281,35 @@ private func checkGeneralKnowledgeAfterVaultConversation(backend: any Conversati
   }
   #expect(try await library.metrics().loadedBodies == before)
 }
+
+@Test func emptyVaultSearchReportsACompletedQueryWithoutSuggestingANonexistentRecordRead()
+  async throws
+{
+  struct Page: Decodable {
+    let status: String
+    let query: String
+    let category: String
+    let coverage: String
+    let returnedRecordCount: Int
+    let totalVaultRecords: Int
+    let records: [String]
+  }
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { removeVaultFixture(directory) }
+  let library = VaultLibrary(directory: directory)
+  let record = savedItem(.listen, app: "Meet", text: "Discussed the summer workshop.")
+  _ = try await library.commit(.init(records: [.insert(record)]))
+  let result = try await VaultSearchTool(library: library).call(
+    arguments: Data(#"{"query":"  missing topic  ","category":"meetings"}"#.utf8))
+  for text in [result.text, result.briefText] {
+    let page = try JSONDecoder().decode(Page.self, from: Data(text.utf8))
+    #expect(page.status == "noMatches")
+    #expect(page.query == "missing topic")
+    #expect(page.category == "meetings")
+    #expect(page.returnedRecordCount == 0)
+    #expect(page.totalVaultRecords == 1)
+    #expect(page.records.isEmpty)
+    #expect(!page.coverage.contains("read_vault_record"))
+  }
+  #expect(result.sources.isEmpty)
+}

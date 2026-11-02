@@ -12,6 +12,16 @@ import SilliesTextModels
     if let library = Bundle.main.url(forResource: "mlx", withExtension: "metallib") {
       GPU.metallib = library
     }
+    if CommandLine.arguments.count == 3, CommandLine.arguments[1] == "--inspect-tokenizer" {
+      do {
+        try await TextTokenizerInspection.run(
+          requestURL: URL(fileURLWithPath: CommandLine.arguments[2]))
+      } catch {
+        fputs("Tokenizer inspection failed: \(error)\n", stderr)
+        exit(EXIT_FAILURE)
+      }
+      return
+    }
     if CommandLine.arguments.contains("--self-test") {
       let result = (MLXArray([1, 2, 3]) * 2).sum().item(Int.self)
       guard result == 12 else { exit(EXIT_FAILURE) }

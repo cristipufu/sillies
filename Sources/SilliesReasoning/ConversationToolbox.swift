@@ -11,12 +11,14 @@ package actor ConversationToolbox {
   private let tools: [String: any ConversationTool]
   private let progress: @Sendable (ChatProgress) -> Void
   private var calls = 0
+  private var declinedCalls = 0
   private var recovering = false
   private var cached: [String: ConversationToolOutput] = [:]
 
   private var resultBytes = 0
   private(set) var sources: [ChatSource] = []
   private(set) var exchanges: [ConversationToolExchange] = []
+  var remainingCalls: Int { Self.maximumCalls - calls }
 
   package init(tools: [any ConversationTool], progress: @escaping @Sendable (ChatProgress) -> Void)
     throws
@@ -31,6 +33,7 @@ package actor ConversationToolbox {
     guard !recovering else { throw ToolFailure.budget }
     recovering = true
     calls = 0
+    declinedCalls = 0
     resultBytes = 0
   }
 
@@ -38,15 +41,28 @@ package actor ConversationToolbox {
     try Task.checkCancellation()
     guard let tool = tools[call.name] else { throw ToolFailure.unknown }
     guard call.arguments.count <= Self.maximumArgumentBytes else { throw ToolFailure.budget }
-    guard calls < Self.maximumCalls else { throw ToolFailure.budget }
+    let key = try cacheKey(for: call)
+    guard calls < Self.maximumCalls else { return try decline(call) }
     calls += 1
     progress(.usingTool(tool.activity))
-    let result = try await load(call, using: tool)
+    let result = try await load(call, using: tool, key: key)
     // A committed memory must remain visible even if cancellation arrives after its write.
     if let receipt = result.memoryReceipt { progress(.remembered(receipt)) }
     try Task.checkCancellation()
     publish(result.sources)
     let text = recovering ? result.briefText : result.text
+    return try recordExchange(text, for: call)
+  }
+
+  private func decline(_ call: ConversationToolCall) throws -> String {
+    // Native tool loops also receive an explicit stop result, with a bounded refusal allowance.
+    guard declinedCalls < Self.maximumCalls else { throw ToolFailure.budget }
+    declinedCalls += 1
+    let text = String(decoding: try JSONEncoder().encode(ToolLimitResult()), as: UTF8.self)
+    return try recordExchange(text, for: call)
+  }
+
+  private func recordExchange(_ text: String, for call: ConversationToolCall) throws -> String {
     guard text.utf8.count <= Self.maximumResultBytes - resultBytes else {
       throw ToolFailure.budget
     }
@@ -55,18 +71,20 @@ package actor ConversationToolbox {
     return text
   }
 
-  private func load(_ call: ConversationToolCall, using tool: any ConversationTool) async throws
-    -> ConversationToolOutput
-  {
+  private func cacheKey(for call: ConversationToolCall) throws -> String {
     guard let object = try JSONSerialization.jsonObject(with: call.arguments) as? [String: Any]
     else {
       throw ToolFailure.arguments
     }
-    let key =
-      call.name
+    return call.name
       + String(
         decoding: try JSONSerialization.data(withJSONObject: object, options: .sortedKeys),
         as: UTF8.self)
+  }
+
+  private func load(_ call: ConversationToolCall, using tool: any ConversationTool, key: String)
+    async throws -> ConversationToolOutput
+  {
     let result: ConversationToolOutput
     if let previous = cached[key] {
       result = previous
@@ -87,6 +105,14 @@ package actor ConversationToolbox {
     }
     progress(.sources(sources))
   }
+}
+
+private struct ToolLimitResult: Encodable {
+  let status = "notExecuted"
+  let reason = "turnToolLimitReached"
+  let remainingCalls = 0
+  let coverage =
+    "No operation was performed. The tool allowance for this turn is exhausted. Answer from the results already returned and state any missing evidence; do not request more tools."
 }
 
 private enum ToolFailure: LocalizedError {

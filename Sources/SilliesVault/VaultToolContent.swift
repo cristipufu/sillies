@@ -30,28 +30,40 @@ enum VaultToolContent {
   }
 
   private struct SearchPage: Encodable {
+    enum Status: String, Encodable { case matches, noMatches }
     let scope = "Personal records saved by the user; not web or general-knowledge search."
-    let coverage =
-      "Search excerpts only. Use read_vault_record with recordID and topic keywords when the requested detail is missing from an excerpt."
+    let status: Status
+    let query: String
+    let category: VaultSearchRequest.Category
+    let coverage: String
     let totalVaultRecords: Int
     let returnedRecordCount: Int
     let records: [RecordPassage]
-    init(_ records: [RecordPassage], totalVaultRecords: Int) {
+    init(_ records: [RecordPassage], request: VaultSearchRequest, totalVaultRecords: Int) {
+      status = records.isEmpty ? .noMatches : .matches
+      query = request.query
+      category = request.category
+      coverage =
+        records.isEmpty
+        ? "Search completed: no saved records matched this query and category. The whole-Vault count is not a count of matches."
+        : "Search excerpts only. Use read_vault_record with recordID and topic keywords when the requested detail is missing from an excerpt."
       self.totalVaultRecords = totalVaultRecords
       returnedRecordCount = records.count
       self.records = records
     }
   }
 
-  static func searchOutput(_ sources: [ChatSource], totalVaultRecords: Int) throws
+  static func searchOutput(
+    _ sources: [ChatSource], request: VaultSearchRequest, totalVaultRecords: Int
+  ) throws
     -> ConversationToolOutput
   {
     let full = SearchPage(
       sources.map { RecordPassage($0, excerptLimit: maximumExcerptCharacters) },
-      totalVaultRecords: totalVaultRecords)
+      request: request, totalVaultRecords: totalVaultRecords)
     let brief = SearchPage(
       sources.map { RecordPassage($0, excerptLimit: briefExcerptCharacters) },
-      totalVaultRecords: totalVaultRecords)
+      request: request, totalVaultRecords: totalVaultRecords)
     return try .init(text: encoded(full), sources: sources, briefText: encoded(brief))
   }
 

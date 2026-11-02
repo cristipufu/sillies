@@ -27,7 +27,7 @@ struct MLXGenerationCollector {
         timing: .init(prompt: info.promptTime, generation: info.generateTime))
       switch info.stopReason {
       case .stop: break
-      case .length: throw TextGenerationFailure(reason: .outputTokenLimit, metrics: metrics)
+      case .length: throw failure(.outputTokenLimit)
       case .cancelled: throw CancellationError()
       }
     case .toolCall(let call):
@@ -38,13 +38,13 @@ struct MLXGenerationCollector {
     case .rejectedToolCall(let rejection):
       throw TextGenerationFailure(
         reason: .rejectedToolCall, metrics: metrics,
-        toolRejection: .init(rejection))
+        toolRejection: .init(rejection), outputCounts: outputCounts)
     }
     return nil
   }
 
   mutating func finish(receive: @escaping TextDeltaSink) async throws -> TextGenerationOutput {
-    guard metrics != nil else { throw TextGenerationFailure(reason: .missingCompletion) }
+    guard metrics != nil else { throw failure(.missingCompletion) }
     if let delta = try append(channel.finish()) { try await receive(delta) }
     if let delta = batch.flush() { try await receive(delta) }
     return .init(
@@ -55,10 +55,20 @@ struct MLXGenerationCollector {
   private mutating func append(_ delta: String) throws -> String? {
     text += delta
     guard text.utf8.count + channel.content.utf8.count <= TextInferenceWire.maximumMessageBytes / 2
-    else { throw TextGenerationFailure(reason: .responseSizeLimit, metrics: metrics) }
+    else { throw failure(.responseSizeLimit) }
     if style == .conversation, TextRepetitionGuard.containsLoop(text) {
       throw TextModelError.repetitiveResponse
     }
     return batch.append(delta)
+  }
+
+  private var outputCounts: TextGenerationFailure.OutputCounts {
+    .init(
+      responseBytes: text.utf8.count, reasoningBytes: channel.content.utf8.count,
+      acceptedToolCalls: calls.count)
+  }
+
+  private func failure(_ reason: TextGenerationFailure.Reason) -> TextGenerationFailure {
+    .init(reason: reason, metrics: metrics, outputCounts: outputCounts)
   }
 }

@@ -35,12 +35,16 @@ struct ConversationContextManager {
         messages: Array(pending), memory: memory
       ).inTurn(context.turnID, session: context.sessionID).inHistory(context.historyHandle)
       let request = ChatReplyGenerator.request(for: working, tools: tools)
-      let fits = try await fits(request, budget: budget)
+      let requiredTokens = try await requiredTokens(for: request)
+      let fits = requiredTokens.map { $0 <= budget } ?? false
       let starts = pending.indices.filter { pending[$0].role == .user }
       guard starts.count > 1 else {
-        if fits { return working }
+        // Tool-result headroom is a compaction target, not a reason to reject the last turn.
+        let admissionBudget = backend.contextWindowTokens - Self.safetyTokens
+        if let requiredTokens, requiredTokens <= admissionBudget { return working }
         // Reclaim summary space before asking the user to shorten a single oversized message.
         guard
+          memory.throughMessageID != nil,
           !memory.summary.isEmpty || !memory.references.isEmpty || !memory.openingStatement.isEmpty
         else {
           throw TextModelError.contextLimit
@@ -64,14 +68,20 @@ struct ConversationContextManager {
     }
   }
 
-  private func fits(_ request: TextGenerationRequest, budget: Int) async throws -> Bool {
+  private func requiredTokens(for request: TextGenerationRequest) async throws -> Int? {
     let bytes =
       request.instructions.utf8.count
       + request.messages.reduce(0) {
         $0 + $1.content.utf8.count + $1.calls.reduce(0) { $0 + $1.arguments.count }
       }
-    guard bytes <= Self.maximumMeasurementBytes else { return false }
-    return try await backend.inputTokenCount(request) + request.maximumTokens
-      + backend.reasoningTokenReserve <= budget
+    guard bytes <= Self.maximumMeasurementBytes else { return nil }
+    let inputTokens = try await backend.inputTokenCount(request)
+    guard inputTokens >= 0, request.maximumTokens >= 0, backend.reasoningTokenReserve >= 0 else {
+      throw TextModelError.contextLimit
+    }
+    let generation = inputTokens.addingReportingOverflow(request.maximumTokens)
+    let total = generation.partialValue.addingReportingOverflow(backend.reasoningTokenReserve)
+    guard !generation.overflow, !total.overflow else { throw TextModelError.contextLimit }
+    return total.partialValue
   }
 }

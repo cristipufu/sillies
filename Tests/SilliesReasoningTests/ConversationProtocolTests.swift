@@ -112,6 +112,14 @@ private actor GenerationProbe {
     _ = try await toolbox.invoke(
       .init(id: "\(index)", name: "search", arguments: Data("{\"query\":\"\(index)\"}".utf8)))
   }
+  for index in 0..<ConversationToolbox.maximumCalls {
+    let refusal = try await toolbox.invoke(
+      .init(id: "refused-\(index)", name: "search", arguments: Data("{}".utf8)))
+    let result = try #require(
+      JSONSerialization.jsonObject(with: Data(refusal.utf8)) as? [String: Any])
+    #expect(result["status"] as? String == "notExecuted")
+    #expect(result["remainingCalls"] as? Int == 0)
+  }
   await #expect(throws: (any Error).self) {
     _ = try await toolbox.invoke(.init(id: "overflow", name: "search", arguments: Data("{}".utf8)))
   }

@@ -29,7 +29,8 @@ package struct VaultSearchTool: ConversationTool {
   }
   package func call(arguments: Data) async throws -> ConversationToolOutput {
     let args = try JSONDecoder().decode(Arguments.self, from: arguments)
-    let matches = try await library.search(.init(query: args.query, category: args.category))
+    let request = VaultSearchRequest(query: args.query, category: args.category)
+    let matches = try await library.search(request)
     var sources: [ChatSource] = []
     for match in matches {
       try Task.checkCancellation()
@@ -46,6 +47,6 @@ package struct VaultSearchTool: ConversationTool {
           links: links))
     }
     let total = try await library.page(.init(limit: 1)).total
-    return try VaultToolContent.searchOutput(sources, totalVaultRecords: total)
+    return try VaultToolContent.searchOutput(sources, request: request, totalVaultRecords: total)
   }
 }

@@ -2,34 +2,57 @@
 
 Settings → **Local AI** offers Apple Intelligence plus six optional MLX models. Speech recognition stays in **Speech & Meetings** and has its own selection. Downloading never selects a model automatically. Selection applies to notes, Participate suggestions, Chat replies, dictation cleanup, and selection commands. The Vault's **Regenerate notes** action applies the selected model to an existing transcript without transcribing or recording again.
 
-| Model | Approximate download | Required unified memory |
-| --- | --- | --- |
-| Qwen3.5 2B, 4-bit | 1.74 GB | 8 GB |
-| Qwen3.5 4B, 4-bit | 3.05 GB | 16 GB |
-| Qwen3.5 9B, 4-bit | 5.97 GB | 24 GB |
-| Gemma 4 E4B, 4-bit | 5.18 GB | 16 GB |
-| Gemma 4 26B A4B, 4-bit | 15.37 GB | 32 GB |
-| Ministral 3 8B Instruct, 4-bit | 5.61 GB | 24 GB |
+## Which model should I use?
+
+Sillies requires an Apple silicon Mac with macOS 26 or later. The memory figures below are the
+app's minimum admission requirements; all measured timings come from the same 48 GiB Mac.
+
+**For Chat quality, Gemma 4 26B A4B is the strongest measured option if your Mac meets its 32 GB memory requirement.** Qwen3.5 4B is the smaller, quicker compromise at 16 GB. None passed every task, and the smaller models were especially unreliable at automatically saving memories.
+
+| Model | Required Mac RAM | Download | Reviewed task score | Median first text | Practical fit |
+| --- | --- | --- | --- | --- | --- |
+| **Gemma 4 26B A4B** | 32 GB | 15.37 GB | **94.6/100** (70/74) | 4.92 s | Highest task score; slower replies. Corrections can still leave conflicting memories. |
+| Ministral 3 8B | 24 GB | 5.61 GB | **73.0/100** (54/74) | 3.98 s | Useful retrieval; unreliable memory writes. Small score gain over 4B. |
+| Qwen3.5 9B | 24 GB | 5.97 GB | **71.6/100** (53/74) | 4.07 s | Little observed gain over 4B, with slower replies. |
+| **Qwen3.5 4B** | 16 GB | 3.05 GB | **70.3/100** (52/74) | 2.22 s | Smaller, faster compromise; weak automatic memory saves. |
+| Gemma 4 E4B | 16 GB | 5.18 GB | **63.5/100** (47/74) | 1.16 s | Quicker chats; weaker tool follow-through and memory saves. |
+| Qwen3.5 2B | 8 GB | 1.74 GB | **40.5/100** (30/74) | 0.76 s | Smallest download and quickest first text; frequent task failures. |
+| Apple Intelligence | Apple-compatible Mac | System-managed | **23.0/100** (17/74) | 2.07 s | No separate Sillies download; poor fit for this Chat/Vault workflow. |
+
+**Score:** reviewed tasks passed out of 74, expressed on a 100-point scale. Each task includes
+its whole conversation: general answers, Vault retrieval, identity, memories, topic changes or
+context compaction. A fluent reply that invents a source or fails to save a requested memory does
+not pass. Strict formatting requests also count. This is a Sillies task score, not a percentage of
+all world knowledge the model knows.
+
+**Timing:** median first streamed text on one M4 Pro with 48 GiB, using release builds. That text
+can be a preamble; it is not necessarily the answer or the start of speech. Initial loads and reused
+runtimes are mixed. These timings do not predict performance on every Mac with the listed RAM.
+
+All 107 primary turns per model were reviewed by the implementing agent, not an independent human.
+The 22 added scenarios also received two further passes to expose variability, scored automatically
+and reported separately. See the [full results, failures, methodology and downloadable evidence](reports/local-chat-models-2026-11-02.md).
 
 The helper derives its allocation budget from verified artifact sizes plus workspace, capped at 32 GiB and two thirds of physical memory. Oversized models fail admission before native loading. Gemma 26B activates a subset of its parameters per token, but its full quantized weights still need memory.
 
-These are conservative admission limits for sharing the Mac with transcription and other apps, not measured peak-memory promises. Language coverage comes from the upstream model cards; actual summarization quality needs evaluation with representative recordings. English and Romanian tokenizer/chat-template checks do not establish accuracy in every supported language. Apple Intelligence remains the default and retains its own hardware, availability and language requirements.
+These are conservative admission limits for sharing the Mac with transcription and other apps, not measured peak-memory promises. Language coverage comes from the upstream model cards; actual summarization quality needs evaluation with representative recordings. Multilingual tokenizer/chat-template checks do not establish accuracy in every supported language. Apple Intelligence remains the default and retains its own hardware, availability and language requirements.
 
 Models are pinned in `Sources/SilliesModelStore/Resources/text-models.json`, including weights, tokenizer, chat template, revision, lengths, and SHA-256 hashes. They live in `~/Library/Application Support/Sillies/TextModels/<id>/<revision>`. Downloads use the same verified, resumable, atomic installer as speech models. Partial installations cannot be selected. No remote code, inference server, Python installation, or inference network call is involved. The existing daily speech-model update mechanism does not yet update text-model revisions; those pins ship with the app.
 
-## Benchmarks and evaluation status
+## Benchmarks
 
-- **[Seven-model Chat comparison and raw results](reports/local-chat-models-2026-11-01.md)** —
-  general knowledge, Vault questions, mixed conversations, identities, memories, tools and latency.
+- **[Reviewed seven-model comparison and raw results](reports/local-chat-models-2026-11-02.md)** —
+  scores by task group, memory writes, repeat variability, compaction and release-build latency.
 - **[Benchmark guide](../Benchmarks/Chat/README.md)** — cases, scoring, bounded runs and reproducibility.
 - **[Benchmark audit and corrections](reports/chat-benchmark-audit-2026-11-02.md)** — what the evidence
   supports, false passes, corrected context cases and remaining validation gaps.
+- **[Original exploratory comparison](reports/local-chat-models-2026-11-01.md)** — preserved historical results.
 
-The first comparison is exploratory: one pass on one Mac. Automated checks are not a complete
-answer-quality score. An audit found false passes in open-ended cases and found that the original
-compaction cases left the corrected fact in recent context. Those results do not establish summary
-retention or a release-ready default; the original evidence is preserved while the harness is corrected.
-Chat results also do not establish meeting-summary, dictation-cleanup or TTS quality.
+The original audit found false passes in open-ended cases and context fixtures that left the target
+fact in recent messages. The current comparison uses corrected context fixtures, actual persisted
+state, full primary-turn rubric reviews and separate repeated checks. Independent tasks, human review
+and additional physical Macs are still needed for broad release claims. Chat scores do not establish
+meeting-summary, dictation-cleanup or TTS quality, and no model default changes from these results alone.
 
 ## Ownership and extension points
 
@@ -48,7 +71,7 @@ Adding another compatible MLX model:
 
 1. Add its pinned repository/revision and display/hardware metadata to `scripts/update-text-catalog.py`. Run the generator. Review the resulting manifest, license, chat template, required artifacts, architecture support in the pinned MLX runtime, and total disk size. Models do not require new UI branches.
 2. Run catalog validation and the helper's tokenizer check on the pinned local support files. The Swift tokenizer must load entirely from the installed folder. Models requiring custom tokenizer code need an adapter rather than a catalog-only change.
-3. Use the bounded benchmark below with English, Romanian, mixed-language text, names, dates and identifiers. Check malformed/incomplete output, cancellation and speech contention. Do not advertise a language solely because the tokenizer can encode it.
+3. Use the bounded benchmark below with supported languages, mixed-language text, names, dates and identifiers. Check malformed/incomplete output, cancellation and speech contention. Do not advertise a language solely because the tokenizer can encode it.
 4. Update the catalog regression expectations and attribution. Keep IDs stable; never replace a pinned revision silently in an existing installation.
 
 Adding a different text runtime:
@@ -105,10 +128,10 @@ text_benchmark="$(swift build --show-bin-path)/TextModelBenchmark"
 python3 scripts/run-bounded-test.py 120 "$text_benchmark" run qwen-3.5-4b /tmp/sillies-text-models
 ```
 
-Use another catalog ID, such as `qwen-3.5-2b`, `qwen-3.5-9b`, `gemma-4-e4b`, `gemma-4-26b-a4b`, or `ministral-3-8b`, to check another model. The benchmark loads the installed files offline through `DownloadedReasoningBackend`, including the same JSON shaping and fence handling used by the app. It checks three short English/Romanian/mixed-language outputs against required source facts, prints request-to-result timings, and shuts the runtime down. It is a smoke check, not an accuracy leaderboard or a guarantee of interactive latency on other Macs.
+Use another catalog ID, such as `qwen-3.5-2b`, `qwen-3.5-9b`, `gemma-4-e4b`, `gemma-4-26b-a4b`, or `ministral-3-8b`, to check another model. The benchmark loads the installed files offline through `DownloadedReasoningBackend`, including the same JSON shaping and fence handling used by the app. It checks three short monolingual and mixed-language outputs against required source facts, prints request-to-result timings, and shuts the runtime down. It is a smoke check, not an accuracy leaderboard or a guarantee of interactive latency on other Macs.
 
 The helper also accepts `--check-tokenizer /path/to/pinned-local-files` for a small multilingual round-trip/chat-template check and `--self-test` for bundled GPU-kernel validation. Neither command downloads anything.
 
 Model quality cases belong in `Tools/TextModelBenchmark/TextQualityFixtures.swift`, not in provider-specific production heuristics. The benchmark checks required facts and prints every output for semantic review. Runtime schema/evidence checks cannot guarantee that a generated summary is factually correct.
 
-Earlier summarization smoke checks on an M4 Pro with 48 GB (debug build): all six pinned tokenizers/templates passed the multilingual round-trip check. Full-weight Qwen3.5 4B runs took roughly 12–23 seconds for the first request including hash verification/loading, then 1–1.4 seconds per short warm request. Qwen3.5 2B took about 3.6 seconds for the first request and 0.7–0.9 seconds for subsequent short requests. Both preserved the monolingual Romanian/English fixture facts but changed a weekday in the mixed-language fixture, which the quality check reports as a failure. No production weekday workaround is used. All six downloads subsequently received the full-weight **Chat** evaluation linked above. That comparison does not certify their meeting summaries, and these earlier timings are not a current cross-model comparison.
+Earlier summarization smoke checks on an M4 Pro with 48 GB (debug build): all six pinned tokenizers/templates passed the multilingual round-trip check. Full-weight Qwen3.5 4B runs took roughly 12–23 seconds for the first request including hash verification/loading, then 1–1.4 seconds per short warm request. Qwen3.5 2B took about 3.6 seconds for the first request and 0.7–0.9 seconds for subsequent short requests. Both preserved the monolingual fixture facts but changed a weekday in the mixed-language fixture, which the quality check reports as a failure. No production weekday workaround is used. All six downloads subsequently received the full-weight **Chat** evaluation linked above. That comparison does not certify their meeting summaries, and these earlier timings are not a current cross-model comparison.

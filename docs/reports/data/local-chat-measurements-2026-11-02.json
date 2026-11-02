@@ -1,0 +1,2980 @@
+{
+  "sourceCommit": "bd35e9a47de535d7ab6df533eec926e1a9e6ed82",
+  "machine": {
+    "osVersion": "26.7.2",
+    "osBuild": "25G332",
+    "architecture": "arm64",
+    "processor": "Apple M4 Pro",
+    "memoryBytes": 51539607552,
+    "logicalProcessors": 14
+  },
+  "models": {
+    "apple": {
+      "contextTokens": 4096,
+      "id": "apple",
+      "memoryBytes": 51539607552,
+      "operatingSystem": "Version 26.7.2 (Build 25G332)",
+      "processors": 14,
+      "revision": "system-managed"
+    },
+    "qwen-3.5-2b": {
+      "contextTokens": 4096,
+      "id": "qwen-3.5-2b",
+      "memoryBytes": 51539607552,
+      "operatingSystem": "Version 26.7.2 (Build 25G332)",
+      "processors": 14,
+      "revision": "674aaa7240b91e8012fcad5d791b7dfe5ba90207"
+    },
+    "qwen-3.5-4b": {
+      "contextTokens": 4096,
+      "id": "qwen-3.5-4b",
+      "memoryBytes": 51539607552,
+      "operatingSystem": "Version 26.7.2 (Build 25G332)",
+      "processors": 14,
+      "revision": "32f3e8ecf65426fc3306969496342d504bfa13f3"
+    },
+    "qwen-3.5-9b": {
+      "contextTokens": 4096,
+      "id": "qwen-3.5-9b",
+      "memoryBytes": 51539607552,
+      "operatingSystem": "Version 26.7.2 (Build 25G332)",
+      "processors": 14,
+      "revision": "938d8919941c6e7efd3c7150eff7fe9d12afa631"
+    },
+    "gemma-4-e4b": {
+      "contextTokens": 4096,
+      "id": "gemma-4-e4b",
+      "memoryBytes": 51539607552,
+      "operatingSystem": "Version 26.7.2 (Build 25G332)",
+      "processors": 14,
+      "revision": "475b9088d29754a3379866cf5aeb6b41acd313c2"
+    },
+    "ministral-3-8b": {
+      "contextTokens": 4096,
+      "id": "ministral-3-8b",
+      "memoryBytes": 51539607552,
+      "operatingSystem": "Version 26.7.2 (Build 25G332)",
+      "processors": 14,
+      "revision": "182f003f01daa75f9de0f2c4d379722fd0bc1c61"
+    },
+    "gemma-4-26b-a4b": {
+      "contextTokens": 4096,
+      "id": "gemma-4-26b-a4b",
+      "memoryBytes": 51539607552,
+      "operatingSystem": "Version 26.7.2 (Build 25G332)",
+      "processors": 14,
+      "revision": "0d77464eeb233a2da68ebf9d7dc4edaac7db956d"
+    }
+  },
+  "primaryCorpusHash": "f794423ca136910b87a9a0b3812dcca14426d70fe25747bb1efd31d9849d6b9d",
+  "repeatCorpusHash": "a27f63ef85688af5466478f3a5789a5be63b821a0d637169a0a7777f80d9c763",
+  "primary": {
+    "apple": {
+      "reviewedPasses": 17,
+      "cases": 74,
+      "score": 22.972972972972972,
+      "automatic": {
+        "cases": 74,
+        "passed": 22,
+        "turns": 107,
+        "errors": 11,
+        "checks": {
+          "behavior": {
+            "passed": 299,
+            "total": 374
+          },
+          "exact_answer": {
+            "passed": 17,
+            "total": 44
+          },
+          "lexical_anchor": {
+            "passed": 47,
+            "total": 64
+          }
+        },
+        "firstTextP50": 2.070548833,
+        "firstTextP95": 7.730165166,
+        "totalP50": 2.2840100420000002,
+        "totalP95": 7.757723125
+      },
+      "timingSampleCounts": {
+        "firstTextTurns": 96,
+        "completedTimedTurns": 96
+      },
+      "groups": {
+        "context": {
+          "passed": 3,
+          "total": 4
+        },
+        "evidence": {
+          "passed": 1,
+          "total": 4
+        },
+        "general-knowledge": {
+          "passed": 0,
+          "total": 15
+        },
+        "identity": {
+          "passed": 1,
+          "total": 6
+        },
+        "memories": {
+          "passed": 5,
+          "total": 16
+        },
+        "mixed-knowledge": {
+          "passed": 2,
+          "total": 10
+        },
+        "multilingual": {
+          "passed": 0,
+          "total": 4
+        },
+        "tool-scaling": {
+          "passed": 1,
+          "total": 4
+        },
+        "vault": {
+          "passed": 4,
+          "total": 11
+        }
+      },
+      "toolScaling": {
+        "app": {
+          "cases": 4,
+          "passed": 1,
+          "turns": 6,
+          "errors": 1,
+          "checks": {
+            "behavior": {
+              "passed": 15,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 2.608216292,
+          "firstTextP95": 2.636934375,
+          "totalP50": 2.669624417,
+          "totalP95": 3.444214292
+        },
+        "expanded12": {
+          "cases": 4,
+          "passed": 1,
+          "turns": 6,
+          "errors": 1,
+          "checks": {
+            "behavior": {
+              "passed": 15,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 0,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 3.073477917,
+          "firstTextP95": 3.618642625,
+          "totalP50": 3.422714375,
+          "totalP95": 5.759516625
+        },
+        "expanded8": {
+          "cases": 4,
+          "passed": 1,
+          "turns": 6,
+          "errors": 1,
+          "checks": {
+            "behavior": {
+              "passed": 15,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 0,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 2.852791375,
+          "firstTextP95": 2.961411417,
+          "totalP50": 2.989247834,
+          "totalP95": 3.503246208
+        },
+        "none": {
+          "cases": 1,
+          "passed": 0,
+          "turns": 1,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 3,
+              "total": 3
+            },
+            "exact_answer": {
+              "passed": 0,
+              "total": 1
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 0
+            }
+          },
+          "firstTextP50": 0.381663375,
+          "firstTextP95": 0.381663375,
+          "totalP50": 0.954989708,
+          "totalP95": 0.954989708
+        },
+        "personal": {
+          "cases": 4,
+          "passed": 0,
+          "turns": 6,
+          "errors": 2,
+          "checks": {
+            "behavior": {
+              "passed": 13,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.7731387920000001,
+          "firstTextP95": 2.484304833,
+          "totalP50": 1.961920708,
+          "totalP95": 2.939447292
+        },
+        "search": {
+          "cases": 3,
+          "passed": 0,
+          "turns": 5,
+          "errors": 1,
+          "checks": {
+            "behavior": {
+              "passed": 13,
+              "total": 17
+            },
+            "exact_answer": {
+              "passed": 0,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.7267442499999999,
+          "firstTextP95": 2.022610458,
+          "totalP50": 2.054452,
+          "totalP95": 2.335837291
+        }
+      },
+      "correctShortAnswerFirstText": {
+        "count": 16,
+        "p50": 1.001730125,
+        "p95": 7.791596667
+      },
+      "memoryWriteAttempts": {
+        "noWriteTurns": 53,
+        "turnsWithUnwantedSaveCall": 6
+      },
+      "memoryStateChanges": {
+        "requiredTurns": 9,
+        "reviewedPasses": 3
+      },
+      "compaction": [
+        {
+          "case": "context-corrected-code",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 5.584744959,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 5.60724025,
+          "reply": "Paris",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "The release code for the project is violet-42.",
+          "error": null
+        },
+        {
+          "case": "context-owner",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 5.589021167,
+          "reply": "Mina",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 5.541564375,
+          "reply": "The release code for our project is violet-42.",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 1,
+          "calls": 2,
+          "seconds": 7.21524975,
+          "reply": "The release code for our project is amber-61.",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 2,
+          "calls": 3,
+          "seconds": 11.711861874,
+          "reply": "Mina owns the checklist.",
+          "error": null
+        }
+      ]
+    },
+    "qwen-3.5-2b": {
+      "reviewedPasses": 30,
+      "cases": 74,
+      "score": 40.54054054054054,
+      "automatic": {
+        "cases": 74,
+        "passed": 38,
+        "turns": 107,
+        "errors": 0,
+        "checks": {
+          "behavior": {
+            "passed": 341,
+            "total": 374
+          },
+          "exact_answer": {
+            "passed": 20,
+            "total": 44
+          },
+          "lexical_anchor": {
+            "passed": 52,
+            "total": 64
+          }
+        },
+        "firstTextP50": 0.763990125,
+        "firstTextP95": 3.292769209,
+        "totalP50": 0.956876334,
+        "totalP95": 3.923902042
+      },
+      "timingSampleCounts": {
+        "firstTextTurns": 107,
+        "completedTimedTurns": 107
+      },
+      "groups": {
+        "context": {
+          "passed": 0,
+          "total": 4
+        },
+        "evidence": {
+          "passed": 1,
+          "total": 4
+        },
+        "general-knowledge": {
+          "passed": 8,
+          "total": 15
+        },
+        "identity": {
+          "passed": 2,
+          "total": 6
+        },
+        "memories": {
+          "passed": 7,
+          "total": 16
+        },
+        "mixed-knowledge": {
+          "passed": 4,
+          "total": 10
+        },
+        "multilingual": {
+          "passed": 2,
+          "total": 4
+        },
+        "tool-scaling": {
+          "passed": 2,
+          "total": 4
+        },
+        "vault": {
+          "passed": 4,
+          "total": 11
+        }
+      },
+      "toolScaling": {
+        "app": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 19,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 0.795704125,
+          "firstTextP95": 1.933559875,
+          "totalP50": 1.115562208,
+          "totalP95": 2.117036458
+        },
+        "expanded12": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 19,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.026802541,
+          "firstTextP95": 2.370585417,
+          "totalP50": 1.215531667,
+          "totalP95": 2.610617334
+        },
+        "expanded8": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 19,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 0.866965,
+          "firstTextP95": 2.143734916,
+          "totalP50": 1.144851,
+          "totalP95": 2.419632208
+        },
+        "none": {
+          "cases": 1,
+          "passed": 0,
+          "turns": 1,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 3,
+              "total": 3
+            },
+            "exact_answer": {
+              "passed": 0,
+              "total": 1
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 0
+            }
+          },
+          "firstTextP50": 0.144023875,
+          "firstTextP95": 0.144023875,
+          "totalP50": 0.368825958,
+          "totalP95": 0.368825958
+        },
+        "personal": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 19,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 0.68430575,
+          "firstTextP95": 2.138616166,
+          "totalP50": 1.00585425,
+          "totalP95": 2.596162166
+        },
+        "search": {
+          "cases": 3,
+          "passed": 1,
+          "turns": 5,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 14,
+              "total": 17
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 0.472667583,
+          "firstTextP95": 0.543889708,
+          "totalP50": 0.766437417,
+          "totalP95": 1.003157125
+        }
+      },
+      "correctShortAnswerFirstText": {
+        "count": 20,
+        "p50": 0.76399075,
+        "p95": 1.289558625
+      },
+      "memoryWriteAttempts": {
+        "noWriteTurns": 53,
+        "turnsWithUnwantedSaveCall": 0
+      },
+      "memoryStateChanges": {
+        "requiredTurns": 9,
+        "reviewedPasses": 0
+      },
+      "compaction": [
+        {
+          "case": "context-corrected-code",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 2.916003166,
+          "reply": "I do not know your current release code. Could you please tell me which software or application this is about?",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 3.1476440410000004,
+          "reply": "Paris",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "I don't have access to your current release code or internal developer tools to retrieve this information. I can't provide private credentials, API keys, or internal system configurations.\n\nFor workshop and development activities involving code releases, you'll need to reference the official documentation, internal wikis, or your local version control system where these are stored.",
+          "error": null
+        },
+        {
+          "case": "context-owner",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 2.9190848750000002,
+          "reply": "I don't see any specific information about checklist ownership in my records. Can you clarify what you mean by \"the person's locale\" or help me locate any relevant details?",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 2.9317181239999996,
+          "reply": "I'm Pogo, your window companion. I don't know what \"release code\" means to you—we're making sure we keep notes local and review materials together for activities 1 through 32 without using any tools. I hope that's okay! What do you need?",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "amber-61",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 2,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "The owner of our checklist is Amber.",
+          "error": null
+        }
+      ]
+    },
+    "qwen-3.5-4b": {
+      "reviewedPasses": 52,
+      "cases": 74,
+      "score": 70.27027027027027,
+      "automatic": {
+        "cases": 74,
+        "passed": 57,
+        "turns": 107,
+        "errors": 0,
+        "checks": {
+          "behavior": {
+            "passed": 351,
+            "total": 374
+          },
+          "exact_answer": {
+            "passed": 41,
+            "total": 44
+          },
+          "lexical_anchor": {
+            "passed": 57,
+            "total": 64
+          }
+        },
+        "firstTextP50": 2.2188025,
+        "firstTextP95": 7.343144708,
+        "totalP50": 2.709821167,
+        "totalP95": 9.979758458
+      },
+      "timingSampleCounts": {
+        "firstTextTurns": 107,
+        "completedTimedTurns": 107
+      },
+      "groups": {
+        "context": {
+          "passed": 4,
+          "total": 4
+        },
+        "evidence": {
+          "passed": 2,
+          "total": 4
+        },
+        "general-knowledge": {
+          "passed": 14,
+          "total": 15
+        },
+        "identity": {
+          "passed": 2,
+          "total": 6
+        },
+        "memories": {
+          "passed": 9,
+          "total": 16
+        },
+        "mixed-knowledge": {
+          "passed": 6,
+          "total": 10
+        },
+        "multilingual": {
+          "passed": 4,
+          "total": 4
+        },
+        "tool-scaling": {
+          "passed": 3,
+          "total": 4
+        },
+        "vault": {
+          "passed": 8,
+          "total": 11
+        }
+      },
+      "toolScaling": {
+        "app": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 2.185692625,
+          "firstTextP95": 4.867916417,
+          "totalP50": 3.063806542,
+          "totalP95": 11.055584875
+        },
+        "expanded12": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 2.810677625,
+          "firstTextP95": 3.851027042,
+          "totalP50": 3.888069292,
+          "totalP95": 7.903894542
+        },
+        "expanded8": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 3.025381667,
+          "firstTextP95": 9.820795291,
+          "totalP50": 4.009241,
+          "totalP95": 10.590988833
+        },
+        "none": {
+          "cases": 1,
+          "passed": 1,
+          "turns": 1,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 3,
+              "total": 3
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 1
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 0
+            }
+          },
+          "firstTextP50": 0.396839,
+          "firstTextP95": 0.396839,
+          "totalP50": 0.431536375,
+          "totalP95": 0.431536375
+        },
+        "personal": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 18,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.7070414170000001,
+          "firstTextP95": 2.525106792,
+          "totalP50": 2.597969875,
+          "totalP95": 4.719447167
+        },
+        "search": {
+          "cases": 3,
+          "passed": 3,
+          "turns": 5,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 17,
+              "total": 17
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.340292875,
+          "firstTextP95": 2.188327541,
+          "totalP50": 3.0991632080000002,
+          "totalP95": 4.782941833
+        }
+      },
+      "correctShortAnswerFirstText": {
+        "count": 41,
+        "p50": 2.201261209,
+        "p95": 9.224332875
+      },
+      "memoryWriteAttempts": {
+        "noWriteTurns": 53,
+        "turnsWithUnwantedSaveCall": 0
+      },
+      "memoryStateChanges": {
+        "requiredTurns": 9,
+        "reviewedPasses": 1
+      },
+      "compaction": [
+        {
+          "case": "context-corrected-code",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 5.341824875,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 5.431677041,
+          "reply": "Paris",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "Our current release code is violet-42.",
+          "error": null
+        },
+        {
+          "case": "context-owner",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 5.451951875000001,
+          "reply": "Mina",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 5.515911582999999,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "amber-61",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 2,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "Mina",
+          "error": null
+        }
+      ]
+    },
+    "qwen-3.5-9b": {
+      "reviewedPasses": 53,
+      "cases": 74,
+      "score": 71.62162162162163,
+      "automatic": {
+        "cases": 74,
+        "passed": 56,
+        "turns": 107,
+        "errors": 1,
+        "checks": {
+          "behavior": {
+            "passed": 349,
+            "total": 374
+          },
+          "exact_answer": {
+            "passed": 40,
+            "total": 44
+          },
+          "lexical_anchor": {
+            "passed": 56,
+            "total": 64
+          }
+        },
+        "firstTextP50": 4.074833083,
+        "firstTextP95": 14.366397791,
+        "totalP50": 4.975754458,
+        "totalP95": 15.836779416
+      },
+      "timingSampleCounts": {
+        "firstTextTurns": 106,
+        "completedTimedTurns": 106
+      },
+      "groups": {
+        "context": {
+          "passed": 4,
+          "total": 4
+        },
+        "evidence": {
+          "passed": 3,
+          "total": 4
+        },
+        "general-knowledge": {
+          "passed": 15,
+          "total": 15
+        },
+        "identity": {
+          "passed": 3,
+          "total": 6
+        },
+        "memories": {
+          "passed": 6,
+          "total": 16
+        },
+        "mixed-knowledge": {
+          "passed": 7,
+          "total": 10
+        },
+        "multilingual": {
+          "passed": 4,
+          "total": 4
+        },
+        "tool-scaling": {
+          "passed": 3,
+          "total": 4
+        },
+        "vault": {
+          "passed": 8,
+          "total": 11
+        }
+      },
+      "toolScaling": {
+        "app": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 4.938831,
+          "firstTextP95": 8.928141833,
+          "totalP50": 6.018713209,
+          "totalP95": 17.122241333
+        },
+        "expanded12": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 5.363672875,
+          "firstTextP95": 7.728404833,
+          "totalP50": 7.472317459,
+          "totalP95": 14.864075875
+        },
+        "expanded8": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 1,
+          "checks": {
+            "behavior": {
+              "passed": 18,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 4.362292042,
+          "firstTextP95": 6.85087775,
+          "totalP50": 6.906358375,
+          "totalP95": 13.642525958
+        },
+        "none": {
+          "cases": 1,
+          "passed": 1,
+          "turns": 1,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 3,
+              "total": 3
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 1
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 0
+            }
+          },
+          "firstTextP50": 0.713175625,
+          "firstTextP95": 0.713175625,
+          "totalP50": 0.767943833,
+          "totalP95": 0.767943833
+        },
+        "personal": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 3.747706,
+          "firstTextP95": 7.458049916,
+          "totalP50": 4.761121833,
+          "totalP95": 9.443091583
+        },
+        "search": {
+          "cases": 3,
+          "passed": 3,
+          "turns": 5,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 17,
+              "total": 17
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 3.468578083,
+          "firstTextP95": 6.05601825,
+          "totalP50": 6.449531666,
+          "totalP95": 8.196190083
+        }
+      },
+      "correctShortAnswerFirstText": {
+        "count": 40,
+        "p50": 4.073300958,
+        "p95": 17.945758292
+      },
+      "memoryWriteAttempts": {
+        "noWriteTurns": 53,
+        "turnsWithUnwantedSaveCall": 0
+      },
+      "memoryStateChanges": {
+        "requiredTurns": 9,
+        "reviewedPasses": 1
+      },
+      "compaction": [
+        {
+          "case": "context-corrected-code",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 11.425382293,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 11.232872376,
+          "reply": "Paris",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "Our current release code is violet-42.",
+          "error": null
+        },
+        {
+          "case": "context-owner",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 11.052905875,
+          "reply": "Mina",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 10.903232041999999,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "amber-61",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 2,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "Mina",
+          "error": null
+        }
+      ]
+    },
+    "gemma-4-e4b": {
+      "reviewedPasses": 47,
+      "cases": 74,
+      "score": 63.513513513513516,
+      "automatic": {
+        "cases": 74,
+        "passed": 51,
+        "turns": 107,
+        "errors": 0,
+        "checks": {
+          "behavior": {
+            "passed": 343,
+            "total": 374
+          },
+          "exact_answer": {
+            "passed": 41,
+            "total": 44
+          },
+          "lexical_anchor": {
+            "passed": 50,
+            "total": 64
+          }
+        },
+        "firstTextP50": 1.155401375,
+        "firstTextP95": 5.584239041,
+        "totalP50": 1.548842209,
+        "totalP95": 5.607699041
+      },
+      "timingSampleCounts": {
+        "firstTextTurns": 107,
+        "completedTimedTurns": 107
+      },
+      "groups": {
+        "context": {
+          "passed": 4,
+          "total": 4
+        },
+        "evidence": {
+          "passed": 2,
+          "total": 4
+        },
+        "general-knowledge": {
+          "passed": 14,
+          "total": 15
+        },
+        "identity": {
+          "passed": 2,
+          "total": 6
+        },
+        "memories": {
+          "passed": 8,
+          "total": 16
+        },
+        "mixed-knowledge": {
+          "passed": 4,
+          "total": 10
+        },
+        "multilingual": {
+          "passed": 4,
+          "total": 4
+        },
+        "tool-scaling": {
+          "passed": 2,
+          "total": 4
+        },
+        "vault": {
+          "passed": 7,
+          "total": 11
+        }
+      },
+      "toolScaling": {
+        "app": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.350832167,
+          "firstTextP95": 2.673422416,
+          "totalP50": 1.5661654170000001,
+          "totalP95": 3.407756209
+        },
+        "expanded12": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.748793708,
+          "firstTextP95": 3.598742792,
+          "totalP50": 1.9773195829999999,
+          "totalP95": 4.085765667
+        },
+        "expanded8": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.6546397499999999,
+          "firstTextP95": 4.930864708,
+          "totalP50": 1.747477041,
+          "totalP95": 5.5327385
+        },
+        "none": {
+          "cases": 1,
+          "passed": 1,
+          "turns": 1,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 3,
+              "total": 3
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 1
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 0
+            }
+          },
+          "firstTextP50": 0.293648666,
+          "firstTextP95": 0.293648666,
+          "totalP50": 0.331615083,
+          "totalP95": 0.331615083
+        },
+        "personal": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.19422725,
+          "firstTextP95": 2.336988791,
+          "totalP50": 1.302543083,
+          "totalP95": 3.020585625
+        },
+        "search": {
+          "cases": 3,
+          "passed": 3,
+          "turns": 5,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 17,
+              "total": 17
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 1.063889375,
+          "firstTextP95": 2.178668458,
+          "totalP50": 1.659599417,
+          "totalP95": 2.6011115
+        }
+      },
+      "correctShortAnswerFirstText": {
+        "count": 41,
+        "p50": 1.181516167,
+        "p95": 9.387499833
+      },
+      "memoryWriteAttempts": {
+        "noWriteTurns": 53,
+        "turnsWithUnwantedSaveCall": 0
+      },
+      "memoryStateChanges": {
+        "requiredTurns": 9,
+        "reviewedPasses": 0
+      },
+      "compaction": [
+        {
+          "case": "context-corrected-code",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 6.097978501,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 6.206281751000001,
+          "reply": "Paris",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "The project release code is violet-42.",
+          "error": null
+        },
+        {
+          "case": "context-owner",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 6.090918415,
+          "reply": "Mina",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 6.117300042,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "amber-61",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 2,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "Mina",
+          "error": null
+        }
+      ]
+    },
+    "ministral-3-8b": {
+      "reviewedPasses": 54,
+      "cases": 74,
+      "score": 72.97297297297297,
+      "automatic": {
+        "cases": 74,
+        "passed": 59,
+        "turns": 107,
+        "errors": 0,
+        "checks": {
+          "behavior": {
+            "passed": 354,
+            "total": 374
+          },
+          "exact_answer": {
+            "passed": 41,
+            "total": 44
+          },
+          "lexical_anchor": {
+            "passed": 59,
+            "total": 64
+          }
+        },
+        "firstTextP50": 3.980317417,
+        "firstTextP95": 15.867350208,
+        "totalP50": 4.986942458,
+        "totalP95": 16.609729875
+      },
+      "timingSampleCounts": {
+        "firstTextTurns": 107,
+        "completedTimedTurns": 107
+      },
+      "groups": {
+        "context": {
+          "passed": 4,
+          "total": 4
+        },
+        "evidence": {
+          "passed": 3,
+          "total": 4
+        },
+        "general-knowledge": {
+          "passed": 14,
+          "total": 15
+        },
+        "identity": {
+          "passed": 3,
+          "total": 6
+        },
+        "memories": {
+          "passed": 8,
+          "total": 16
+        },
+        "mixed-knowledge": {
+          "passed": 7,
+          "total": 10
+        },
+        "multilingual": {
+          "passed": 4,
+          "total": 4
+        },
+        "tool-scaling": {
+          "passed": 3,
+          "total": 4
+        },
+        "vault": {
+          "passed": 8,
+          "total": 11
+        }
+      },
+      "toolScaling": {
+        "app": {
+          "cases": 4,
+          "passed": 2,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 1,
+              "total": 2
+            }
+          },
+          "firstTextP50": 4.111092083,
+          "firstTextP95": 8.362787041,
+          "totalP50": 4.709543167,
+          "totalP95": 9.544176
+        },
+        "expanded12": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 6.149045541,
+          "firstTextP95": 24.011518042,
+          "totalP50": 7.013857,
+          "totalP95": 25.365595
+        },
+        "expanded8": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 4.862724333,
+          "firstTextP95": 10.128993042,
+          "totalP50": 6.209759875,
+          "totalP95": 11.14512125
+        },
+        "none": {
+          "cases": 1,
+          "passed": 0,
+          "turns": 1,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 3,
+              "total": 3
+            },
+            "exact_answer": {
+              "passed": 0,
+              "total": 1
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 0
+            }
+          },
+          "firstTextP50": 0.763122042,
+          "firstTextP95": 0.763122042,
+          "totalP50": 1.239918,
+          "totalP95": 1.239918
+        },
+        "personal": {
+          "cases": 4,
+          "passed": 3,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 20,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 3.505959333,
+          "firstTextP95": 6.416192208,
+          "totalP50": 3.937102458,
+          "totalP95": 7.572133375
+        },
+        "search": {
+          "cases": 3,
+          "passed": 3,
+          "turns": 5,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 17,
+              "total": 17
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 3.139618166,
+          "firstTextP95": 5.09427575,
+          "totalP50": 4.609884459,
+          "totalP95": 6.158979667
+        }
+      },
+      "correctShortAnswerFirstText": {
+        "count": 41,
+        "p50": 3.499733041,
+        "p95": 16.609344125
+      },
+      "memoryWriteAttempts": {
+        "noWriteTurns": 53,
+        "turnsWithUnwantedSaveCall": 0
+      },
+      "memoryStateChanges": {
+        "requiredTurns": 9,
+        "reviewedPasses": 0
+      },
+      "compaction": [
+        {
+          "case": "context-corrected-code",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 10.796486334,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 10.045878541,
+          "reply": "Paris.",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "violet-42.",
+          "error": null
+        },
+        {
+          "case": "context-owner",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 10.195852333,
+          "reply": "Mina.",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 9.237863334,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "amber-61",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 2,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "Mina.",
+          "error": null
+        }
+      ]
+    },
+    "gemma-4-26b-a4b": {
+      "reviewedPasses": 70,
+      "cases": 74,
+      "score": 94.5945945945946,
+      "automatic": {
+        "cases": 74,
+        "passed": 71,
+        "turns": 107,
+        "errors": 0,
+        "checks": {
+          "behavior": {
+            "passed": 371,
+            "total": 374
+          },
+          "exact_answer": {
+            "passed": 44,
+            "total": 44
+          },
+          "lexical_anchor": {
+            "passed": 62,
+            "total": 64
+          }
+        },
+        "firstTextP50": 4.921868583,
+        "firstTextP95": 19.460416459,
+        "totalP50": 5.309674292,
+        "totalP95": 19.701601959
+      },
+      "timingSampleCounts": {
+        "firstTextTurns": 107,
+        "completedTimedTurns": 107
+      },
+      "groups": {
+        "context": {
+          "passed": 4,
+          "total": 4
+        },
+        "evidence": {
+          "passed": 4,
+          "total": 4
+        },
+        "general-knowledge": {
+          "passed": 15,
+          "total": 15
+        },
+        "identity": {
+          "passed": 5,
+          "total": 6
+        },
+        "memories": {
+          "passed": 15,
+          "total": 16
+        },
+        "mixed-knowledge": {
+          "passed": 8,
+          "total": 10
+        },
+        "multilingual": {
+          "passed": 4,
+          "total": 4
+        },
+        "tool-scaling": {
+          "passed": 4,
+          "total": 4
+        },
+        "vault": {
+          "passed": 11,
+          "total": 11
+        }
+      },
+      "toolScaling": {
+        "app": {
+          "cases": 4,
+          "passed": 4,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 22,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 6.970231167,
+          "firstTextP95": 19.305453458,
+          "totalP50": 7.304231167,
+          "totalP95": 19.345141042
+        },
+        "expanded12": {
+          "cases": 4,
+          "passed": 4,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 22,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 5.0831845,
+          "firstTextP95": 11.870924709,
+          "totalP50": 5.244532167,
+          "totalP95": 12.226809209
+        },
+        "expanded8": {
+          "cases": 4,
+          "passed": 4,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 22,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 6.305883417,
+          "firstTextP95": 10.442316583,
+          "totalP50": 7.038656959,
+          "totalP95": 10.821957542
+        },
+        "none": {
+          "cases": 1,
+          "passed": 1,
+          "turns": 1,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 3,
+              "total": 3
+            },
+            "exact_answer": {
+              "passed": 1,
+              "total": 1
+            },
+            "lexical_anchor": {
+              "passed": 0,
+              "total": 0
+            }
+          },
+          "firstTextP50": 16.542068416,
+          "firstTextP95": 16.542068416,
+          "totalP50": 16.57638525,
+          "totalP95": 16.57638525
+        },
+        "personal": {
+          "cases": 4,
+          "passed": 4,
+          "turns": 6,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 22,
+              "total": 22
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 4.484069,
+          "firstTextP95": 8.250869792,
+          "totalP50": 4.798187917,
+          "totalP95": 8.711742709
+        },
+        "search": {
+          "cases": 3,
+          "passed": 3,
+          "turns": 5,
+          "errors": 0,
+          "checks": {
+            "behavior": {
+              "passed": 17,
+              "total": 17
+            },
+            "exact_answer": {
+              "passed": 2,
+              "total": 2
+            },
+            "lexical_anchor": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "firstTextP50": 3.5373445,
+          "firstTextP95": 5.244409167,
+          "totalP50": 4.245729667,
+          "totalP95": 5.795366167
+        }
+      },
+      "correctShortAnswerFirstText": {
+        "count": 44,
+        "p50": 4.12119275,
+        "p95": 14.067209083
+      },
+      "memoryWriteAttempts": {
+        "noWriteTurns": 53,
+        "turnsWithUnwantedSaveCall": 0
+      },
+      "memoryStateChanges": {
+        "requiredTurns": 9,
+        "reviewedPasses": 8
+      },
+      "compaction": [
+        {
+          "case": "context-corrected-code",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 6.957596333,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 8.026473876,
+          "reply": "Paris",
+          "error": null
+        },
+        {
+          "case": "context-general-detour",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "The current release code is violet-42.",
+          "error": null
+        },
+        {
+          "case": "context-owner",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 6.953144834,
+          "reply": "Mina",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 0,
+          "calls": 3,
+          "seconds": 6.754291333,
+          "reply": "violet-42",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 1,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "amber-61",
+          "error": null
+        },
+        {
+          "case": "heldout-incremental-compaction",
+          "turn": 2,
+          "calls": 0,
+          "seconds": 0,
+          "reply": "Mina",
+          "error": null
+        }
+      ]
+    }
+  },
+  "repeatedAutomaticChecks": {
+    "gemma-4-26b-a4b": {
+      "casesPerPass": 22,
+      "automatedPasses": [
+        22,
+        22,
+        22
+      ],
+      "errorTurns": [
+        0,
+        0,
+        0
+      ],
+      "allPassesSucceeded": 22,
+      "changedOutcome": 0,
+      "outcomes": {
+        "heldout-conversation-versus-vault": [
+          true,
+          true,
+          true
+        ],
+        "heldout-full-record-detail": [
+          true,
+          true,
+          true
+        ],
+        "heldout-german-triangle": [
+          true,
+          true,
+          true
+        ],
+        "heldout-gold-symbol": [
+          true,
+          true,
+          true
+        ],
+        "heldout-identity-with-user-facts": [
+          true,
+          true,
+          true
+        ],
+        "heldout-incremental-compaction": [
+          true,
+          true,
+          true
+        ],
+        "heldout-japan-capital": [
+          true,
+          true,
+          true
+        ],
+        "heldout-meeting-owner": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-correction": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-hypothetical": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-new-name": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-opt-out": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-secret": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-unknown-fact": [
+          true,
+          true,
+          true
+        ],
+        "heldout-mixed-detour-return": [
+          true,
+          true,
+          true
+        ],
+        "heldout-mixed-one-turn": [
+          true,
+          true,
+          true
+        ],
+        "heldout-multiplication": [
+          true,
+          true,
+          true
+        ],
+        "heldout-saved-not-live": [
+          true,
+          true,
+          true
+        ],
+        "heldout-saved-url": [
+          true,
+          true,
+          true
+        ],
+        "heldout-screenshot": [
+          true,
+          true,
+          true
+        ],
+        "heldout-seasons-explanation": [
+          true,
+          true,
+          true
+        ],
+        "heldout-spanish-planet": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    "ministral-3-8b": {
+      "casesPerPass": 22,
+      "automatedPasses": [
+        20,
+        20,
+        17
+      ],
+      "errorTurns": [
+        0,
+        0,
+        1
+      ],
+      "allPassesSucceeded": 17,
+      "changedOutcome": 3,
+      "outcomes": {
+        "heldout-conversation-versus-vault": [
+          true,
+          true,
+          true
+        ],
+        "heldout-full-record-detail": [
+          true,
+          true,
+          false
+        ],
+        "heldout-german-triangle": [
+          true,
+          true,
+          false
+        ],
+        "heldout-gold-symbol": [
+          true,
+          true,
+          true
+        ],
+        "heldout-identity-with-user-facts": [
+          true,
+          true,
+          true
+        ],
+        "heldout-incremental-compaction": [
+          true,
+          true,
+          true
+        ],
+        "heldout-japan-capital": [
+          true,
+          true,
+          true
+        ],
+        "heldout-meeting-owner": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-correction": [
+          false,
+          false,
+          false
+        ],
+        "heldout-memory-hypothetical": [
+          true,
+          true,
+          false
+        ],
+        "heldout-memory-new-name": [
+          false,
+          false,
+          false
+        ],
+        "heldout-memory-opt-out": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-secret": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-unknown-fact": [
+          true,
+          true,
+          true
+        ],
+        "heldout-mixed-detour-return": [
+          true,
+          true,
+          true
+        ],
+        "heldout-mixed-one-turn": [
+          true,
+          true,
+          true
+        ],
+        "heldout-multiplication": [
+          true,
+          true,
+          true
+        ],
+        "heldout-saved-not-live": [
+          true,
+          true,
+          true
+        ],
+        "heldout-saved-url": [
+          true,
+          true,
+          true
+        ],
+        "heldout-screenshot": [
+          true,
+          true,
+          true
+        ],
+        "heldout-seasons-explanation": [
+          true,
+          true,
+          true
+        ],
+        "heldout-spanish-planet": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    "gemma-4-e4b": {
+      "casesPerPass": 22,
+      "automatedPasses": [
+        16,
+        16,
+        16
+      ],
+      "errorTurns": [
+        0,
+        0,
+        0
+      ],
+      "allPassesSucceeded": 15,
+      "changedOutcome": 2,
+      "outcomes": {
+        "heldout-conversation-versus-vault": [
+          true,
+          true,
+          true
+        ],
+        "heldout-full-record-detail": [
+          false,
+          true,
+          true
+        ],
+        "heldout-german-triangle": [
+          true,
+          true,
+          true
+        ],
+        "heldout-gold-symbol": [
+          true,
+          true,
+          true
+        ],
+        "heldout-identity-with-user-facts": [
+          false,
+          false,
+          false
+        ],
+        "heldout-incremental-compaction": [
+          true,
+          true,
+          true
+        ],
+        "heldout-japan-capital": [
+          true,
+          true,
+          true
+        ],
+        "heldout-meeting-owner": [
+          true,
+          false,
+          false
+        ],
+        "heldout-memory-correction": [
+          false,
+          false,
+          false
+        ],
+        "heldout-memory-hypothetical": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-new-name": [
+          false,
+          false,
+          false
+        ],
+        "heldout-memory-opt-out": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-secret": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-unknown-fact": [
+          false,
+          false,
+          false
+        ],
+        "heldout-mixed-detour-return": [
+          true,
+          true,
+          true
+        ],
+        "heldout-mixed-one-turn": [
+          false,
+          false,
+          false
+        ],
+        "heldout-multiplication": [
+          true,
+          true,
+          true
+        ],
+        "heldout-saved-not-live": [
+          true,
+          true,
+          true
+        ],
+        "heldout-saved-url": [
+          true,
+          true,
+          true
+        ],
+        "heldout-screenshot": [
+          true,
+          true,
+          true
+        ],
+        "heldout-seasons-explanation": [
+          true,
+          true,
+          true
+        ],
+        "heldout-spanish-planet": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    "qwen-3.5-9b": {
+      "casesPerPass": 22,
+      "automatedPasses": [
+        16,
+        20,
+        19
+      ],
+      "errorTurns": [
+        1,
+        0,
+        0
+      ],
+      "allPassesSucceeded": 16,
+      "changedOutcome": 4,
+      "outcomes": {
+        "heldout-conversation-versus-vault": [
+          true,
+          true,
+          true
+        ],
+        "heldout-full-record-detail": [
+          false,
+          true,
+          false
+        ],
+        "heldout-german-triangle": [
+          true,
+          true,
+          true
+        ],
+        "heldout-gold-symbol": [
+          true,
+          true,
+          true
+        ],
+        "heldout-identity-with-user-facts": [
+          false,
+          true,
+          true
+        ],
+        "heldout-incremental-compaction": [
+          true,
+          true,
+          true
+        ],
+        "heldout-japan-capital": [
+          true,
+          true,
+          true
+        ],
+        "heldout-meeting-owner": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-correction": [
+          false,
+          false,
+          false
+        ],
+        "heldout-memory-hypothetical": [
+          false,
+          true,
+          true
+        ],
+        "heldout-memory-new-name": [
+          false,
+          false,
+          false
+        ],
+        "heldout-memory-opt-out": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-secret": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-unknown-fact": [
+          false,
+          true,
+          true
+        ],
+        "heldout-mixed-detour-return": [
+          true,
+          true,
+          true
+        ],
+        "heldout-mixed-one-turn": [
+          true,
+          true,
+          true
+        ],
+        "heldout-multiplication": [
+          true,
+          true,
+          true
+        ],
+        "heldout-saved-not-live": [
+          true,
+          true,
+          true
+        ],
+        "heldout-saved-url": [
+          true,
+          true,
+          true
+        ],
+        "heldout-screenshot": [
+          true,
+          true,
+          true
+        ],
+        "heldout-seasons-explanation": [
+          true,
+          true,
+          true
+        ],
+        "heldout-spanish-planet": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    "qwen-3.5-4b": {
+      "casesPerPass": 22,
+      "automatedPasses": [
+        16,
+        17,
+        17
+      ],
+      "errorTurns": [
+        0,
+        0,
+        0
+      ],
+      "allPassesSucceeded": 16,
+      "changedOutcome": 1,
+      "outcomes": {
+        "heldout-conversation-versus-vault": [
+          true,
+          true,
+          true
+        ],
+        "heldout-full-record-detail": [
+          false,
+          true,
+          true
+        ],
+        "heldout-german-triangle": [
+          true,
+          true,
+          true
+        ],
+        "heldout-gold-symbol": [
+          true,
+          true,
+          true
+        ],
+        "heldout-identity-with-user-facts": [
+          false,
+          false,
+          false
+        ],
+        "heldout-incremental-compaction": [
+          true,
+          true,
+          true
+        ],
+        "heldout-japan-capital": [
+          true,
+          true,
+          true
+        ],
+        "heldout-meeting-owner": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-correction": [
+          false,
+          false,
+          false
+        ],
+        "heldout-memory-hypothetical": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-new-name": [
+          false,
+          false,
+          false
+        ],
+        "heldout-memory-opt-out": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-secret": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-unknown-fact": [
+          false,
+          false,
+          false
+        ],
+        "heldout-mixed-detour-return": [
+          true,
+          true,
+          true
+        ],
+        "heldout-mixed-one-turn": [
+          false,
+          false,
+          false
+        ],
+        "heldout-multiplication": [
+          true,
+          true,
+          true
+        ],
+        "heldout-saved-not-live": [
+          true,
+          true,
+          true
+        ],
+        "heldout-saved-url": [
+          true,
+          true,
+          true
+        ],
+        "heldout-screenshot": [
+          true,
+          true,
+          true
+        ],
+        "heldout-seasons-explanation": [
+          true,
+          true,
+          true
+        ],
+        "heldout-spanish-planet": [
+          true,
+          true,
+          true
+        ]
+      }
+    },
+    "qwen-3.5-2b": {
+      "casesPerPass": 22,
+      "automatedPasses": [
+        11,
+        13,
+        11
+      ],
+      "errorTurns": [
+        0,
+        1,
+        0
+      ],
+      "allPassesSucceeded": 9,
+      "changedOutcome": 7,
+      "outcomes": {
+        "heldout-conversation-versus-vault": [
+          true,
+          true,
+          true
+        ],
+        "heldout-full-record-detail": [
+          false,
+          false,
+          true
+        ],
+        "heldout-german-triangle": [
+          false,
+          true,
+          false
+        ],
+        "heldout-gold-symbol": [
+          true,
+          true,
+          true
+        ],
+        "heldout-identity-with-user-facts": [
+          false,
+          false,
+          false
+        ],
+        "heldout-incremental-compaction": [
+          false,
+          false,
+          false
+        ],
+        "heldout-japan-capital": [
+          false,
+          true,
+          false
+        ],
+        "heldout-meeting-owner": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-correction": [
+          false,
+          false,
+          false
+        ],
+        "heldout-memory-hypothetical": [
+          true,
+          false,
+          true
+        ],
+        "heldout-memory-new-name": [
+          false,
+          false,
+          false
+        ],
+        "heldout-memory-opt-out": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-secret": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-unknown-fact": [
+          false,
+          false,
+          false
+        ],
+        "heldout-mixed-detour-return": [
+          false,
+          true,
+          false
+        ],
+        "heldout-mixed-one-turn": [
+          true,
+          true,
+          true
+        ],
+        "heldout-multiplication": [
+          true,
+          true,
+          true
+        ],
+        "heldout-saved-not-live": [
+          true,
+          true,
+          true
+        ],
+        "heldout-saved-url": [
+          false,
+          true,
+          false
+        ],
+        "heldout-screenshot": [
+          true,
+          true,
+          true
+        ],
+        "heldout-seasons-explanation": [
+          true,
+          false,
+          false
+        ],
+        "heldout-spanish-planet": [
+          false,
+          false,
+          false
+        ]
+      }
+    },
+    "apple": {
+      "casesPerPass": 22,
+      "automatedPasses": [
+        9,
+        9,
+        9
+      ],
+      "errorTurns": [
+        1,
+        1,
+        1
+      ],
+      "allPassesSucceeded": 9,
+      "changedOutcome": 0,
+      "outcomes": {
+        "heldout-conversation-versus-vault": [
+          true,
+          true,
+          true
+        ],
+        "heldout-full-record-detail": [
+          false,
+          false,
+          false
+        ],
+        "heldout-german-triangle": [
+          false,
+          false,
+          false
+        ],
+        "heldout-gold-symbol": [
+          false,
+          false,
+          false
+        ],
+        "heldout-identity-with-user-facts": [
+          false,
+          false,
+          false
+        ],
+        "heldout-incremental-compaction": [
+          false,
+          false,
+          false
+        ],
+        "heldout-japan-capital": [
+          false,
+          false,
+          false
+        ],
+        "heldout-meeting-owner": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-correction": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-hypothetical": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-new-name": [
+          false,
+          false,
+          false
+        ],
+        "heldout-memory-opt-out": [
+          false,
+          false,
+          false
+        ],
+        "heldout-memory-secret": [
+          true,
+          true,
+          true
+        ],
+        "heldout-memory-unknown-fact": [
+          true,
+          true,
+          true
+        ],
+        "heldout-mixed-detour-return": [
+          false,
+          false,
+          false
+        ],
+        "heldout-mixed-one-turn": [
+          true,
+          true,
+          true
+        ],
+        "heldout-multiplication": [
+          false,
+          false,
+          false
+        ],
+        "heldout-saved-not-live": [
+          true,
+          true,
+          true
+        ],
+        "heldout-saved-url": [
+          true,
+          true,
+          true
+        ],
+        "heldout-screenshot": [
+          false,
+          false,
+          false
+        ],
+        "heldout-seasons-explanation": [
+          false,
+          false,
+          false
+        ],
+        "heldout-spanish-planet": [
+          false,
+          false,
+          false
+        ]
+      }
+    }
+  }
+}

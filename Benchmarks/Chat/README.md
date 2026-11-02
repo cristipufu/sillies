@@ -9,10 +9,11 @@ All records, people and saved memories are synthetic. Native Swift workers run t
 a Python 3.11+ standard-library supervisor manages deadlines, receipts and scoring.
 There is no Python inference runtime, cloud judge or additional dependency.
 
-Read the [first seven-model comparison](../../docs/reports/local-chat-models-2026-11-01.md),
-including raw evidence, measured limitations and the next integration work.
-Read the [benchmark audit](../../docs/reports/chat-benchmark-audit-2026-11-02.md) before using those
-scores to select a default. The original checks had false positives and did not prove summary retention.
+Read the [model selection summary](../../docs/local-text-models.md#which-model-should-i-use)
+and the [reviewed release-build comparison](../../docs/reports/local-chat-models-2026-11-02.md).
+The [first comparison](../../docs/reports/local-chat-models-2026-11-01.md) and its
+[audit](../../docs/reports/chat-benchmark-audit-2026-11-02.md) remain available as historical evidence.
+The original checks had false positives and did not prove summary retention.
 
 `fixtures` validates every seeded database without loading a model and runs in `make check`.
 Screenshot fixtures include real tiny PNG attachments and synthetic OCR text, so the normal
@@ -21,7 +22,8 @@ Each inference case also runs the same preflight before admitting the model.
 
 ## What it covers
 
-The corpus has **52 scenarios, 71 tool-profile cases and 105 turns per model**. On November 2 the
+The corpus has **74 scenarios, 93 tool-profile cases and 134 turns per model**. The primary five-tool
+comparison contains all 74 scenarios and 107 turns. On November 2 the
 context fixtures were corrected: both the original fact and its correction now precede the
 compaction boundary, and scored turns check that the target fact is absent from recent raw messages.
 These corrected cases are a new corpus revision, not comparable rescoring of the original run.
@@ -97,6 +99,27 @@ New runs also freeze the full evaluator corpus, helper bundle resources (includi
 and the worker's bundled catalog. The bundled inference helper is required for this resource check.
 Do not run two writers against the same output directory, or rebuild/replace binaries during inference.
 
+Use release builds when comparing interactive latency. Build into a separate folder to leave a
+running app untouched, then pass the release worker explicitly:
+
+```sh
+source scripts/toolchain.sh
+make build BUILD_DIR=/tmp/sillies-eval-release
+chat_worker="$(swift build --configuration release --show-bin-path)/ChatModelBenchmark"
+python3 -B Benchmarks/Chat/benchmark.py run \
+  --worker "$chat_worker" \
+  --helper /tmp/sillies-eval-release/Sillies.app/Contents/Helpers/SilliesTextInference.app/Contents/MacOS/SilliesTextInference \
+  --models apple qwen-3.5-2b qwen-3.5-4b qwen-3.5-9b gemma-4-e4b ministral-3-8b gemma-4-26b-a4b \
+  --models-root /tmp/sillies-eval-models \
+  --output build/chat-benchmarks/release-comparison --max-seconds 180
+```
+
+Install each selected model first. Resume the same command until coverage is complete. For two
+additional extension passes, retain those binaries and settings, reverse the model order, choose a
+new output directory, and add `--tag heldout-2026-11-02 --repeats 2 --order-seed 104729`. Combining
+those passes with the extension cases in the full comparison gives three observations per scenario.
+The published report identifies its source commit; a changed app configuration is a new comparison.
+
 ## Read the results honestly
 
 The November 2 extension adds 22 previously unrun scenarios (29 turns), tagged
@@ -106,9 +129,20 @@ full-record retrieval. They are still authored by the implementing agent, not an
 
 The incremental context scenario appends archived messages between measured turns while retaining
 the actual previous checkpoint. Receipts record `compactionCalls`, `compactionSeconds` and timestamped
-`textEmissions`; a replayed backlog cannot pass merely because the final answer is right. The first
+`textEmissions`; excessive summarization can fail even when the final answer is right. Call bounds
+alone do not identify replay: inspect the recorded summary inputs to distinguish replay from
+processing additional old turns because a summary is verbose. The first
 turn includes backlog compaction; subsequent turns measure checkpoint reuse. Added history is
 synthetic fixture input, never an expected answer injected through the evaluator.
+The later `amber-61` correction can remain in recent context; this case does not prove that the new
+correction survives another compaction. Separate corrected-code cases place both the original fact
+and its correction beyond the recent-context boundary.
+
+The November 2 release comparison includes a full pass plus two additional passes of the 22-case
+extension in reversed model order. The extension was frozen before its first inference, but a
+diagnostic run exposed a general Vault body-reading defect before the final comparison. It is now
+regression material, not an untouched independent holdout. The primary pass has agent rubric reviews;
+the additional passes report automated outcome variability separately.
 
 A user-facing task score must state its denominator and whether it means automated checks or
 full-rubric review. Keep failures, privacy violations and unresolved reviews visible. Do not average
@@ -153,6 +187,20 @@ Publish an auditable compressed snapshot with `python3 Benchmarks/Chat/benchmark
 all case receipts and any semantic reviews; keep the full worker logs locally for diagnosis.
 Do not rank models with unequal coverage, or hide failed/timeout cases from the denominator.
 A failed compaction may fail a full case; subsequent turns still have explicit failure receipts.
+
+`python3 scripts/summarize-chat-benchmarks.py PRIMARY REPEATED --output measurements.json` derives the
+published comparison from complete run directories or exported `.json.gz` archives, without inference.
+It verifies matched binaries, installed model revisions, runtime, hardware and
+fixtures, rejects incomplete or unresolved primary reviews, and retains failed repeat outcomes.
+Its short-answer timing subset includes only reviewed, correct exact answers; it skips whitespace
+and measures their first answer-bearing text. This conditional subset is not an all-task latency score.
+
+For diagnostic reruns, `python3 scripts/recheck-chat-reviews.py OLD NEW MODEL` can reuse an existing judgment
+only when the frozen corpus and task evidence match. It compares questions, rubrics, replies,
+tool arguments/results, saved facts and provenance, source IDs, summaries, checks and compaction
+counts. Timing and generated conversation message IDs are excluded; changed task evidence requires
+a fresh review. Reused judgments carry their original evidence hash. Publish the source diagnostic
+archive alongside them, and never describe this as independent or blinded review.
 
 Audit the published baseline without loading models or rewriting any evidence:
 
@@ -212,5 +260,5 @@ Add a text provider through the [existing model guide](../../docs/contributing/t
 No model-specific benchmark switch or duplicate inference implementation is necessary.
 Keep the Swift worker independent of AppKit and model SDKs; architecture checks enforce this.
 
-Run `python3 -B -m unittest discover -s Tests -p 'test_chat_benchmark*.py'` and `make check`
+Run `python3 -B -m unittest discover -s Tests -p 'test_chat_*.py'` and `make check`
 after changing the harness. Use a new output directory for any changed corpus or implementation.

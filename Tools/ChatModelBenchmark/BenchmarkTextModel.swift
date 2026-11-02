@@ -19,15 +19,17 @@ struct BenchmarkTextModel: PreparedTextModel {
     guard request.operation == .generate else {
       return try await base.stream(request, receive: receive)
     }
+    try BenchmarkInferenceStage.started(request)
     let started = ContinuousClock.now
     let outcome: Result<TextGenerationOutput, any Error>
     do { outcome = .success(try await base.stream(request, receive: receive)) } catch {
       outcome = .failure(error)
     }
-    try await trace.record(
-      .init(
-        request: request, outcome: outcome,
-        seconds: BenchmarkTurnTrace.seconds(started.duration(to: .now))))
+    let generation = BenchmarkGeneration(
+      request: request, outcome: outcome,
+      seconds: BenchmarkTurnTrace.seconds(started.duration(to: .now)))
+    try await trace.record(generation)
+    try BenchmarkInferenceStage.finished(generation)
     return try outcome.get()
   }
   func stop() async { await base.stop() }

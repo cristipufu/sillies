@@ -4,7 +4,7 @@ import Foundation
 package struct TextGenerationFailure: Codable, Sendable, LocalizedError {
   package enum Reason: String, Codable, Sendable {
     case outputTokenLimit, rejectedToolCall, missingCompletion, responseSizeLimit
-    case streamMismatch, emptyDelta, emptyResponse
+    case streamMismatch, emptyDelta, emptyResponse, invalidReasoningBoundary
   }
   package struct ToolRejection: Codable, Sendable {
     package enum Reason: String, Codable, Sendable {

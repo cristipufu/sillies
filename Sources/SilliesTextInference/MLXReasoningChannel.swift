@@ -3,10 +3,12 @@ import MLXLMCommon
 /// Routes provider protocol channels before any text reaches IPC, storage or speech.
 struct MLXReasoningChannel {
   private var emitter: ReasoningEventEmitter?
+  private var boundary: ReasoningResponseBoundary?
   private(set) var content = ""
 
   init(configuration: ModelConfiguration, promptTail: String) {
     let config = Self.configuration(for: configuration)
+    boundary = config.map { ReasoningResponseBoundary(closingDelimiter: $0.endDelimiter) }
     emitter = config.map {
       ReasoningEventEmitter(
         config: $0,
@@ -24,22 +26,22 @@ struct MLXReasoningChannel {
       promptStrategy: .templateFlag(key: "enable_thinking", defaultOn: false))
   }
 
-  mutating func append(_ text: String) -> String {
+  mutating func append(_ text: String) throws -> String {
     guard let segments = emitter?.process(text) else { return text }
-    return route(segments)
+    return try route(segments)
   }
 
-  mutating func finish() -> String {
+  mutating func finish() throws -> String {
     guard let segments = emitter?.finalize() else { return "" }
-    return route(segments)
+    return try route(segments) + (boundary?.finish() ?? "")
   }
 
-  private mutating func route(_ segments: [ReasoningEventEmitter.Segment]) -> String {
+  private mutating func route(_ segments: [ReasoningEventEmitter.Segment]) throws -> String {
     var visible = ""
     for segment in segments {
       switch segment {
       case .reasoning(let text): content += text
-      case .response(let text): visible += text
+      case .response(let text): visible += try boundary?.append(text) ?? text
       }
     }
     return visible

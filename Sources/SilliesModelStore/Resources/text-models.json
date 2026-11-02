@@ -16,7 +16,8 @@
         "minimumMemoryGB": 16,
         "contextTokens": 4096,
         "languagesDescription": "Over 140 languages. Quality varies by language.",
-        "reasoning": null
+        "reasoning": null,
+        "conversationSampling": null
       },
       "artifacts": [
         {
@@ -79,7 +80,8 @@
         "minimumMemoryGB": 24,
         "contextTokens": 4096,
         "languagesDescription": "Over 140 languages. Quality varies by language.",
-        "reasoning": null
+        "reasoning": null,
+        "conversationSampling": null
       },
       "artifacts": [
         {
@@ -148,7 +150,8 @@
         "minimumMemoryGB": 32,
         "contextTokens": 4096,
         "languagesDescription": "Over 140 languages. Quality varies by language.",
-        "reasoning": null
+        "reasoning": null,
+        "conversationSampling": null
       },
       "artifacts": [
         {
@@ -223,7 +226,8 @@
         "minimumMemoryGB": 8,
         "contextTokens": 4096,
         "languagesDescription": "12 languages. Quality varies by language.",
-        "reasoning": "switchableThinkTags"
+        "reasoning": "switchableThinkTags",
+        "conversationSampling": null
       },
       "artifacts": [
         {
@@ -280,7 +284,8 @@
         "minimumMemoryGB": 16,
         "contextTokens": 4096,
         "languagesDescription": "12 languages. Quality varies by language.",
-        "reasoning": "switchableThinkTags"
+        "reasoning": "switchableThinkTags",
+        "conversationSampling": null
       },
       "artifacts": [
         {
@@ -337,7 +342,13 @@
         "minimumMemoryGB": 8,
         "contextTokens": 4096,
         "languagesDescription": "16 languages. Quality varies by language.",
-        "reasoning": "alwaysOnThinkTags"
+        "reasoning": "alwaysOnThinkTags",
+        "conversationSampling": {
+          "temperature": 0.1,
+          "topP": 1.0,
+          "topK": 50,
+          "repetitionPenalty": 1.1
+        }
       },
       "artifacts": [
         {
@@ -400,7 +411,13 @@
         "minimumMemoryGB": 32,
         "contextTokens": 4096,
         "languagesDescription": "16 languages. Quality varies by language.",
-        "reasoning": "alwaysOnThinkTags"
+        "reasoning": "alwaysOnThinkTags",
+        "conversationSampling": {
+          "temperature": 0.1,
+          "topP": 1.0,
+          "topK": 50,
+          "repetitionPenalty": 1.05
+        }
       },
       "artifacts": [
         {
@@ -475,7 +492,8 @@
         "minimumMemoryGB": 24,
         "contextTokens": 4096,
         "languagesDescription": "Dozens of languages; quality varies by language.",
-        "reasoning": null
+        "reasoning": null,
+        "conversationSampling": null
       },
       "artifacts": [
         {
@@ -544,7 +562,8 @@
         "minimumMemoryGB": 24,
         "contextTokens": 4096,
         "languagesDescription": "35 languages. Quality varies by language.",
-        "reasoning": null
+        "reasoning": null,
+        "conversationSampling": null
       },
       "artifacts": [
         {
@@ -619,7 +638,8 @@
         "minimumMemoryGB": 8,
         "contextTokens": 4096,
         "languagesDescription": "201 languages and dialects.",
-        "reasoning": null
+        "reasoning": null,
+        "conversationSampling": null
       },
       "artifacts": [
         {
@@ -676,7 +696,8 @@
         "minimumMemoryGB": 16,
         "contextTokens": 4096,
         "languagesDescription": "201 languages and dialects.",
-        "reasoning": null
+        "reasoning": null,
+        "conversationSampling": null
       },
       "artifacts": [
         {
@@ -733,7 +754,8 @@
         "minimumMemoryGB": 24,
         "contextTokens": 4096,
         "languagesDescription": "201 languages and dialects.",
-        "reasoning": null
+        "reasoning": null,
+        "conversationSampling": null
       },
       "artifacts": [
         {

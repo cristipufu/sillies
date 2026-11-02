@@ -18,7 +18,10 @@ struct MLXGenerationCollector {
 
   mutating func consume(_ event: Generation) throws -> String? {
     switch event {
-    case .chunk(let chunk): return try append(channel.append(chunk))
+    case .chunk(let chunk):
+      do { return try append(channel.append(chunk)) } catch is ReasoningResponseBoundary.Failure {
+        throw failure(.invalidReasoningBoundary)
+      }
     case .info(let info):
       metrics = .init(
         tokens: .init(

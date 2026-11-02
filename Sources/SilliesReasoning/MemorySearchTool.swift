@@ -18,7 +18,8 @@ struct MemorySearchTool: ConversationTool {
       ])
   }
   func call(arguments: Data) async throws -> ConversationToolOutput {
-    let args = try JSONDecoder().decode(ConversationSearchArguments.self, from: arguments)
+    let args = try ConversationToolArguments.decode(
+      ConversationSearchArguments.self, from: arguments)
     let facts = try await repository.memories(handle, query: args.query)
     struct Fact: Encodable {
       let memoryID: UUID

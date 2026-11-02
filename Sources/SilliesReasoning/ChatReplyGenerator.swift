@@ -24,7 +24,7 @@ enum ChatReplyGenerator {
     let messages = context.messages.flatMap { message in
       let evidence = TextMessage.exchanging(message.exchanges)
       return evidence + [
-        TextMessage(role: message.role == .user ? .user : .assistant, content: historyText(message))
+        TextMessage(role: message.role == .user ? .user : .assistant, content: message.text)
       ]
     }
     return TextGenerationRequest(
@@ -38,6 +38,7 @@ enum ChatReplyGenerator {
 
           Keep replies brief and speakable. Address the user as an adult. Personality changes your tone, not the facts.
           Use plain text without Markdown, stage directions or speaker labels.
+          \(deliveryInstructions(context.messages))
           \(memoryInstructions(context.memory))
           \(LocalReasoningService.languageInstructions(context.profile.languageIdentifier))
 
@@ -68,10 +69,11 @@ enum ChatReplyGenerator {
       """
   }
 
-  private static func historyText(_ message: ChatMessage) -> String {
-    guard message.completion == .interrupted else { return message.text }
-    let delivery = message.spokenText.map { "Completed spoken phrases: \($0)" } ?? ""
-    return message.text + "\n[This reply was interrupted, not completed. \(delivery)]"
+  private static func deliveryInstructions(_ messages: [ChatMessage]) -> String {
+    guard messages.contains(where: { $0.role == .companion && $0.completion == .interrupted })
+    else { return "" }
+    return
+      "Some earlier assistant replies were interrupted and may be incomplete or only partly spoken. Answer the latest request; do not assume an earlier response was finished."
   }
 
   private static func memoryInstructions(_ memory: ConversationMemory) -> String {

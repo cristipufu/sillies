@@ -18,4 +18,5 @@ public struct TextModelDescriptor: Codable, Equatable, Identifiable, Sendable {
   public let languagesDescription: String
   public let release: Release?
   public let reasoning: TextModelReasoning?
+  public let conversationSampling: TextModelSampling?
 }

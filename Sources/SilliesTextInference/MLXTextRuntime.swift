@@ -20,6 +20,7 @@ actor MLXTextRuntime {
     let generation = request.generation
     guard configuration.directory.isFileURL, (2_048...8_192).contains(configuration.contextTokens),
       (1...Self.maximumOutputTokens).contains(generation.maximumTokens),
+      configuration.conversationSampling?.isValid ?? true,
       generation.instructions.count
         + generation.messages.reduce(
           0, { $0 + $1.content.count + ($1.reasoningContent?.count ?? 0) })
@@ -59,11 +60,13 @@ actor MLXTextRuntime {
     guard input.text.tokens.size + outputTokens <= configuration.contextTokens else {
       throw TextModelError.contextLimit
     }
+    let sampling = generation.style == .conversation ? configuration.conversationSampling : nil
     var parameters = GenerateParameters(
       maxTokens: outputTokens, maxKVSize: configuration.contextTokens,
-      temperature: Float(generation.style.temperature),
-      topP: Float(generation.style.probabilityThreshold),
-      repetitionPenalty: generation.style.repetitionPenalty,
+      temperature: sampling?.temperature ?? Float(generation.style.temperature),
+      topP: sampling?.topP ?? Float(generation.style.probabilityThreshold),
+      topK: sampling?.topK ?? 0,
+      repetitionPenalty: sampling?.repetitionPenalty ?? generation.style.repetitionPenalty,
       repetitionContextSize: generation.style.repetitionContextSize)
     parameters.prefill = PrefillParameters(stepSize: 64)
     let promptTailTokens = Array(

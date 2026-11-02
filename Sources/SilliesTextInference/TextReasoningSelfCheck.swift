@@ -11,17 +11,19 @@ enum TextReasoningSelfCheck {
       let split = source.index(source.startIndex, offsetBy: offset)
       var channel = MLXReasoningChannel(configuration: gemma, promptTail: "")
       let text =
-        channel.append(String(source[..<split]))
+        try channel.append(String(source[..<split]))
         + channel.append(String(source[split...])) + channel.finish()
       try require(text == "Visible answer" && channel.content == "Private state")
     }
     var primed = MLXReasoningChannel(configuration: gemma, promptTail: "<|channel>thought\n")
-    try require(primed.append("unfinished private state") + primed.finish() == "")
+    try require(try primed.append("unfinished private state") + primed.finish() == "")
     var plain = MLXReasoningChannel(configuration: ModelConfiguration(id: "plain"), promptTail: "")
-    try require(plain.append("a < b, <think> is literal here") == "a < b, <think> is literal here")
+    try require(
+      try plain.append("a < b, <think> is literal here") == "a < b, <think> is literal here")
     try checkThinkTags()
     try checkAlwaysOnThinking()
     try checkToolContinuation()
+    try checkMalformedBoundary()
   }
 
   private static func checkAlwaysOnThinking() throws {
@@ -37,7 +39,7 @@ enum TextReasoningSelfCheck {
       let split = source.index(source.startIndex, offsetBy: offset)
       var channel = MLXReasoningChannel(configuration: model, promptTail: "assistant\n<think>")
       let text =
-        channel.append(String(source[..<split]))
+        try channel.append(String(source[..<split]))
         + channel.append(String(source[split...])) + channel.finish()
       try require(text == "Visible answer" && channel.content == "Private state")
     }
@@ -50,12 +52,32 @@ enum TextReasoningSelfCheck {
       let split = source.index(source.startIndex, offsetBy: offset)
       var channel = MLXReasoningChannel(configuration: model, promptTail: "")
       let text =
-        channel.append(String(source[..<split]))
+        try channel.append(String(source[..<split]))
         + channel.append(String(source[split...])) + channel.finish()
       try require(text == "FirstSecond" && channel.content == "Private stateMore private state")
     }
     var primed = MLXReasoningChannel(configuration: model, promptTail: "<think>\n")
-    try require(primed.append("private</think>Visible") + primed.finish() == "Visible")
+    try require(try primed.append("private</think>Visible") + primed.finish() == "Visible")
+  }
+
+  private static func checkMalformedBoundary() throws {
+    let model = ModelConfiguration(id: "fixture", reasoningConfig: .alwaysOnThinking)
+    let source = "Private state</think>Visible answer</think>Must never arrive"
+    for offset in 0...source.count {
+      let split = source.index(source.startIndex, offsetBy: offset)
+      var channel = MLXReasoningChannel(configuration: model, promptTail: "<think>")
+      var delivered = ""
+      do {
+        delivered += try channel.append(String(source[..<split]))
+        delivered += try channel.append(String(source[split...]))
+        delivered += try channel.finish()
+        throw Failure.expectation(line: #line)
+      } catch is ReasoningResponseBoundary.Failure {
+        try require(!delivered.contains("</think>") && !delivered.contains("Must never arrive"))
+      }
+    }
+    var partial = MLXReasoningChannel(configuration: model, promptTail: "")
+    try require(try partial.append("a < b and </") + partial.finish() == "a < b and </")
   }
 
   private static func checkToolContinuation() throws {

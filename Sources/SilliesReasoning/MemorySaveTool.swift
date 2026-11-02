@@ -42,7 +42,7 @@ struct MemorySaveTool: ConversationTool {
       ])
   }
   func call(arguments: Data) async throws -> ConversationToolOutput {
-    let args = try JSONDecoder().decode(Arguments.self, from: arguments)
+    let args = try ConversationToolArguments.decode(Arguments.self, from: arguments)
     guard statement.role == .user, !statement.text.isEmpty else {
       return .init(text: "Not saved: a current user statement is required.")
     }

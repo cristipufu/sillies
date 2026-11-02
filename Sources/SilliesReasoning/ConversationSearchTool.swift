@@ -17,7 +17,8 @@ struct ConversationSearchTool: ConversationTool {
     )
   }
   func call(arguments: Data) async throws -> ConversationToolOutput {
-    let args = try JSONDecoder().decode(ConversationSearchArguments.self, from: arguments)
+    let args = try ConversationToolArguments.decode(
+      ConversationSearchArguments.self, from: arguments)
     let matches = try await repository.search(
       .init(
         companionID: handle.companionID,

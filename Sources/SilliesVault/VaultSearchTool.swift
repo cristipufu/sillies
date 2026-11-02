@@ -28,7 +28,7 @@ package struct VaultSearchTool: ConversationTool {
       ])
   }
   package func call(arguments: Data) async throws -> ConversationToolOutput {
-    let args = try JSONDecoder().decode(Arguments.self, from: arguments)
+    let args = try ConversationToolArguments.decode(Arguments.self, from: arguments)
     let request = VaultSearchRequest(query: args.query, category: args.category)
     let matches = try await library.search(request)
     var sources: [ChatSource] = []

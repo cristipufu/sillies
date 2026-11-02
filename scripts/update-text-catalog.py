@@ -24,6 +24,7 @@ class ModelEntry:
     release_source: str
     license: str = "Apache 2.0"
     reasoning: str | None = None
+    conversation_sampling: dict | None = None
 
 
 # Settings preserves this order: families alphabetically, smaller downloads first within each family.
@@ -73,7 +74,9 @@ MODELS = [
         detail="Compact multilingual notes and writing.",
         languages="16 languages. Quality varies by language.",
         release_date="2026-08-04", release_source="https://www.liquid.ai/blog/lfm2-5-2-6b",
-        license="LFM Open License 1.0", reasoning="alwaysOnThinkTags"),
+        license="LFM Open License 1.0", reasoning="alwaysOnThinkTags",
+        # Publisher model card: https://huggingface.co/LiquidAI/LFM2.5-2.6B
+        conversation_sampling=dict(temperature=0.1, topP=1.0, topK=50, repetitionPenalty=1.1)),
     ModelEntry(
         identifier="lfm-2.5-24b-a2b", name="LFM2.5 24B A2B",
         repository="LiquidAI/LFM2.5-24B-A2B-MLX-4bit",
@@ -81,7 +84,9 @@ MODELS = [
         detail="Larger model for conversations and summaries. Requires more available memory.",
         languages="16 languages. Quality varies by language.",
         release_date="2026-10-13", release_source="https://www.liquid.ai/blog/lfm2-5-24b-a2b",
-        license="LFM Open License 1.0", reasoning="alwaysOnThinkTags"),
+        license="LFM Open License 1.0", reasoning="alwaysOnThinkTags",
+        # Publisher model card: https://huggingface.co/LiquidAI/LFM2.5-24B-A2B
+        conversation_sampling=dict(temperature=0.1, topP=1.0, topK=50, repetitionPenalty=1.05)),
     ModelEntry(
         identifier="ministral-3-8b", name="Ministral 3 8B",
         repository="mlx-community/Ministral-3-8B-Instruct-2512-4bit",
@@ -136,6 +141,7 @@ def descriptor(model):
     return dict(
         id=model.identifier, providerID="mlx", name=model.name, detail=model.detail,
         revision=model.revision, license=model.license, reasoning=model.reasoning,
+        conversationSampling=model.conversation_sampling,
         release=dict(date=model.release_date, sourceURL=model.release_source),
         sourceURL=f"https://huggingface.co/{model.repository}",
         minimumMemoryGB=model.memory_gb, contextTokens=4096,

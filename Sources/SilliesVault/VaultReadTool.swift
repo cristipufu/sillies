@@ -29,7 +29,7 @@ package struct VaultReadTool: ConversationTool {
       ])
   }
   package func call(arguments: Data) async throws -> ConversationToolOutput {
-    let args = try JSONDecoder().decode(Arguments.self, from: arguments)
+    let args = try ConversationToolArguments.decode(Arguments.self, from: arguments)
     guard let record = try await library.record(id: args.recordID) else {
       return .init(text: "The record is no longer available. It may have been deleted.")
     }

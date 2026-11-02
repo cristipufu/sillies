@@ -231,3 +231,22 @@ private actor RecoveryTool: ConversationTool {
   #expect(final == received.withLock { $0 })
   #expect(await generator.requests.allSatisfy { $0.conversationID == group })
 }
+
+@Test func interruptedDeliveryDoesNotImpersonateAssistantSpeechInHistory() {
+  let reply = ChatMessage(role: .companion, text: "Here is the first part.")
+    .withDelivery(.interrupted, spokenText: "Here is")
+  let context = ChatContext(
+    companionName: "Pogo", profile: .init(personality: "Curious"),
+    messages: [
+      .init(role: .user, text: "Explain"), reply, .init(role: .user, text: "Continue"),
+    ])
+  let request = ChatReplyGenerator.request(for: context, tools: [])
+  #expect(request.messages.map(\.content) == context.messages.map(\.text))
+  #expect(request.instructions.contains("were interrupted"))
+  #expect(!request.messages.contains { $0.content.contains("Completed spoken phrases") })
+  let complete = ChatContext(
+    companionName: "Pogo", profile: context.profile,
+    messages: [.init(role: .user, text: "Hello")])
+  #expect(
+    !ChatReplyGenerator.request(for: complete, tools: []).instructions.contains("were interrupted"))
+}

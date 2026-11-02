@@ -8,18 +8,23 @@ struct ConversationContextManager {
   private static let toolReserveTokens = 1_536
   private static let safetyTokens = 128
   private static let maximumMeasurementBytes = 20_000
-  private static let maximumBatchTurns = 4
   // Keep the persistent working set below the bounded history page, independently of model size.
   private static let maximumRecentTurns = 24
   let backend: any ConversationBackend
   let tools: [ConversationToolDefinition]
   let progress: @Sendable (ChatProgress) -> Void
 
+  private struct Reduction {
+    let context: ChatContext
+    let turnStarts: [Int]
+    let tokenBudget: Int
+  }
+
   func prepare(_ context: ChatContext, pressure: Pressure = .normal) async throws -> ChatContext {
     var memory = context.memory
-    var pending = context.messages[...]
+    var pending = context.messages
     if let id = memory.throughMessageID, let index = pending.firstIndex(where: { $0.id == id }) {
-      pending = pending.suffix(from: index + 1)
+      pending = Array(pending.suffix(from: index + 1))
     } else {
       memory = .init(
         openingStatement: context.messages.first(where: { $0.role == .user })?.text ?? "")
@@ -32,7 +37,7 @@ struct ConversationContextManager {
       try Task.checkCancellation()
       let working = ChatContext(
         companionName: context.companionName, profile: context.profile,
-        messages: Array(pending), memory: memory
+        messages: pending, memory: memory
       ).inTurn(context.turnID, session: context.sessionID).inHistory(context.historyHandle)
       let request = ChatReplyGenerator.request(for: working, tools: tools)
       let requiredTokens = try await requiredTokens(for: request)
@@ -60,12 +65,39 @@ struct ConversationContextManager {
       }
       if fits, pressure == .normal, starts.count <= Self.maximumRecentTurns { return working }
       progress(.compacting)
-      let next = starts[min(Self.maximumBatchTurns, starts.count - 1)]
+      let next = try await retainedStart(
+        for: .init(context: working, turnStarts: starts, tokenBudget: budget), pressure: pressure)
       let batch = Array(pending[..<next])
       memory = try await ConversationCompactor(backend: backend).compact(batch, into: memory)
       progress(.memory(memory))
-      pending = pending.suffix(from: next)
+      pending = Array(pending.suffix(from: next))
     }
+  }
+
+  /// Find the largest recent suffix that fits, then summarize its preceding complete turns once.
+  /// The compactor splits oversized source batches according to the provider's actual token capacity.
+  private func retainedStart(for reduction: Reduction, pressure: Pressure) async throws -> Int {
+    let starts = reduction.turnStarts
+    guard let currentTurn = starts.last else { throw TextModelError.contextLimit }
+    if pressure == .recovering { return currentTurn }
+    var lower = max(1, starts.count - Self.maximumRecentTurns)
+    var upper = starts.count - 1
+    while lower < upper {
+      try Task.checkCancellation()
+      let candidate = lower + (upper - lower) / 2
+      let context = reduction.context
+      let recent = ChatContext(
+        companionName: context.companionName, profile: context.profile,
+        messages: Array(context.messages[starts[candidate]...]), memory: context.memory
+      ).inTurn(context.turnID, session: context.sessionID).inHistory(context.historyHandle)
+      let request = ChatReplyGenerator.request(for: recent, tools: tools)
+      if let required = try await requiredTokens(for: request), required <= reduction.tokenBudget {
+        upper = candidate
+      } else {
+        lower = candidate + 1
+      }
+    }
+    return starts[lower]
   }
 
   private func requiredTokens(for request: TextGenerationRequest) async throws -> Int? {

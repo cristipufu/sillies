@@ -6,6 +6,7 @@ enum TextGenerationFailureSelfCheck {
   static func run() async throws {
     try tokenLimit()
     try rejectedCalls()
+    try invalidReasoningBoundary()
     var collector = makeCollector()
     do {
       _ = try await collector.finish(receive: { _ in })
@@ -55,6 +56,26 @@ enum TextGenerationFailureSelfCheck {
           !encoded.contains("synthetic-secret")
         else { throw failure }
       }
+    }
+  }
+
+  private static func invalidReasoningBoundary() throws {
+    var collector = MLXGenerationCollector(
+      style: .conversation,
+      channel: .init(
+        configuration: .init(id: "fixture", reasoningConfig: .alwaysOnThinking),
+        promptTail: "<think>"))
+    _ = try collector.consume(.chunk("private state</think>Hello"))
+    do {
+      _ = try collector.consume(.chunk("</think>unframed output"))
+      throw TextModelError.invalidResponse
+    } catch let failure as TextGenerationFailure {
+      guard failure.reason == .invalidReasoningBoundary,
+        failure.outputCounts?.responseBytes == "Hello".utf8.count,
+        failure.outputCounts?.reasoningBytes == "private state".utf8.count,
+        !String(decoding: try JSONEncoder().encode(failure), as: UTF8.self).contains(
+          "private state")
+      else { throw failure }
     }
   }
 

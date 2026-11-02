@@ -45,7 +45,13 @@ package actor ConversationToolbox {
     guard calls < Self.maximumCalls else { return try decline(call) }
     calls += 1
     progress(.usingTool(tool.activity))
-    let result = try await load(call, using: tool, key: key)
+    let result: ConversationToolOutput
+    do {
+      result = try await load(call, using: tool, key: key)
+    } catch let error as ConversationToolArguments.Failure {
+      return try recordExchange(
+        error.response(for: tool.definition, remainingCalls: remainingCalls), for: call)
+    }
     // A committed memory must remain visible even if cancellation arrives after its write.
     if let receipt = result.memoryReceipt { progress(.remembered(receipt)) }
     try Task.checkCancellation()

@@ -18,6 +18,7 @@ import SilliesTextModels
       do {
         try TextConversationSelfCheck.run()
         try TextReasoningSelfCheck.run()
+        try await TextGenerationFailureSelfCheck.run()
         try await TextInputSelfCheck.run()
       } catch {
         fputs("Native conversation check failed: \(error)\n", stderr)
@@ -71,6 +72,9 @@ import SilliesTextModels
       } catch TextModelError.contextLimit {
         response = TextInferenceResponse(
           failure: TextModelError.contextLimit.localizedDescription, code: .contextLimit)
+      } catch let failure as TextGenerationFailure {
+        response = TextInferenceResponse(
+          failure: failure.localizedDescription, generationFailure: failure)
       } catch {
         fputs("Local text inference failed: \(error.localizedDescription)\n", stderr)
         response = TextInferenceResponse(failure: error.localizedDescription)

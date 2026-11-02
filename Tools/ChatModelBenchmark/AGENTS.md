@@ -13,3 +13,7 @@
 - Separate objective tool/memory checks from lexical answer anchors and human semantic review. A matching
   word alone does not establish a correct answer. Never silently change expectations to make a model pass.
 - Keep app code independent of benchmark expectations. Use the same frozen cases for every compared model.
+- Treat a failed app task as an integration failure until investigated. Inspect delivered prompts and roles,
+  tool definitions/results, native parsing and stop reasons, context/output budgets, retrieval and persisted
+  state before attributing it to a model. Preserve unresolved causes explicitly. Use separate bounded,
+  controlled replays for changes; never repair scores with case-specific prompts or output filters.

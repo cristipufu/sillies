@@ -13,12 +13,20 @@ private struct TextStreamFixture {
     memoryLimitBytes: TextModelMemoryBudget.gibibyte)
   let request = TextGenerationRequest(instructions: "Reply", prompt: "Hello", maximumTokens: 50)
   init(finalText: String, pace: Pace = .immediate) throws {
+    try self.init(final: .init(output: .init(text: finalText)), pace: pace)
+  }
+  init(failure: TextGenerationFailure) throws {
+    try self.init(
+      final: .init(failure: failure.localizedDescription, generationFailure: failure),
+      pace: .immediate)
+  }
+  private init(final response: TextInferenceResponse, pace: Pace) throws {
     let pause = pace == .delayed ? "/bin/sleep 0.2" : ""
     let message = TextInferenceRequest(configuration: preparation, generation: request)
     let count = try JSONEncoder().encode(message).count + 4
     let first = try Self.frame(TextInferenceEvent.delta("Hello "))
     let second = try Self.frame(TextInferenceEvent.delta("Ștefan 👋🏽"))
-    let final = try Self.frame(TextInferenceEvent.finished(.init(output: .init(text: finalText))))
+    let final = try Self.frame(TextInferenceEvent.finished(response))
     let script = """
       #!/bin/sh
       /bin/dd bs=1 count=\(count) of=/dev/null 2>/dev/null
@@ -76,8 +84,29 @@ private struct TextStreamFixture {
   let fixture = try TextStreamFixture(finalText: "An unrelated answer")
   defer { fixture.remove() }
   let model = try await MLXTextModelProvider(executable: fixture.url).prepare(fixture.preparation)
-  await #expect(throws: TextModelError.self) {
+  await #expect(throws: TextGenerationFailure.self) {
     try await model.stream(fixture.request, receive: { _ in })
+  }
+  await model.stop()
+}
+
+@Test func textWorkerPreservesTheNativeFailureReasonAndTokenMeasurements() async throws {
+  let failure = TextGenerationFailure(
+    reason: .outputTokenLimit,
+    metrics: .init(
+      tokens: .init(processedPrompt: 800, cachedPrompt: 0, generated: 240),
+      timing: .init(prompt: 0.2, generation: 2)))
+  let fixture = try TextStreamFixture(failure: failure)
+  defer { fixture.remove() }
+  let model = try await MLXTextModelProvider(executable: fixture.url).prepare(fixture.preparation)
+  do {
+    _ = try await model.stream(fixture.request, receive: { _ in })
+    Issue.record("A token-limited native result must remain a failure")
+  } catch let received as TextGenerationFailure {
+    #expect(received.reason == .outputTokenLimit)
+    #expect(received.metrics?.generatedTokens == 240)
+    #expect(received.metrics?.processedPromptTokens == 800)
+    #expect(received.localizedDescription == TextModelError.invalidResponse.localizedDescription)
   }
   await model.stop()
 }

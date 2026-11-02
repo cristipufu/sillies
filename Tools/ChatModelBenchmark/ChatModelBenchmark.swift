@@ -24,6 +24,7 @@ import SilliesTextModels
   }
 
   private static func validate(_ plan: BenchmarkPlan) async throws {
+    try await BenchmarkDiagnosticsSelfCheck.run()
     var verified = Set<String>()
     for job in plan.jobs where verified.insert(job.scenario.id).inserted {
       let fixture = try await BenchmarkFixture.create(
@@ -42,7 +43,8 @@ import SilliesTextModels
     do {
       try await events.emit(.model, model.metadata)
       let runner = BenchmarkConversation(
-        backend: model.backend, events: events, workspace: URL(fileURLWithPath: plan.workspace))
+        backend: model.backend, inference: model.inference,
+        events: events, workspace: URL(fileURLWithPath: plan.workspace))
       for job in plan.jobs {
         // The supervisor admits one case at a time, so a batch can stop between cases without
         // discarding a partially evaluated conversation or unloading the model after every case.

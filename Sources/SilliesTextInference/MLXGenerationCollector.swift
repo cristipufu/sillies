@@ -20,24 +20,31 @@ struct MLXGenerationCollector {
     switch event {
     case .chunk(let chunk): return try append(channel.append(chunk))
     case .info(let info):
-      guard case .stop = info.stopReason else { throw TextModelError.invalidResponse }
       metrics = .init(
         tokens: .init(
           processedPrompt: info.promptTokenCount,
           cachedPrompt: info.cachedPromptTokenCount, generated: info.generationTokenCount),
         timing: .init(prompt: info.promptTime, generation: info.generateTime))
+      switch info.stopReason {
+      case .stop: break
+      case .length: throw TextGenerationFailure(reason: .outputTokenLimit, metrics: metrics)
+      case .cancelled: throw CancellationError()
+      }
     case .toolCall(let call):
       calls.append(
         .init(
           id: call.id ?? UUID().uuidString, name: call.function.name,
           arguments: try JSONEncoder().encode(call.function.arguments)))
-    case .rejectedToolCall: throw TextModelError.invalidResponse
+    case .rejectedToolCall(let rejection):
+      throw TextGenerationFailure(
+        reason: .rejectedToolCall, metrics: metrics,
+        toolRejection: .init(rejection))
     }
     return nil
   }
 
   mutating func finish(receive: @escaping TextDeltaSink) async throws -> TextGenerationOutput {
-    guard metrics != nil else { throw TextModelError.invalidResponse }
+    guard metrics != nil else { throw TextGenerationFailure(reason: .missingCompletion) }
     if let delta = try append(channel.finish()) { try await receive(delta) }
     if let delta = batch.flush() { try await receive(delta) }
     return .init(
@@ -48,7 +55,7 @@ struct MLXGenerationCollector {
   private mutating func append(_ delta: String) throws -> String? {
     text += delta
     guard text.utf8.count + channel.content.utf8.count <= TextInferenceWire.maximumMessageBytes / 2
-    else { throw TextModelError.invalidResponse }
+    else { throw TextGenerationFailure(reason: .responseSizeLimit, metrics: metrics) }
     if style == .conversation, TextRepetitionGuard.containsLoop(text) {
       throw TextModelError.repetitiveResponse
     }

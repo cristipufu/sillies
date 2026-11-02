@@ -11,6 +11,7 @@ struct BenchmarkConversation {
     let dialogue: BenchmarkDialogue
   }
   let backend: any ConversationBackend
+  let inference: BenchmarkInferenceTrace
   let events: BenchmarkEvents
   let workspace: URL
 
@@ -50,6 +51,7 @@ struct BenchmarkConversation {
     let trace = BenchmarkTurnTrace()
     let progress = BenchmarkProgress()
     let service = service(in: session, position: position, trace: trace)
+    await inference.beginTurn()
     let outcome: Result<ChatReply, any Error>
     do {
       let reply = try await service.streamReply(
@@ -66,7 +68,11 @@ struct BenchmarkConversation {
     }
     let facts = try await session.fixture.conversations.memories(session.fixture.handle, query: "")
     try await events.emit(
-      .turn, await trace.result(position: position, input: input, outcome: outcome, memories: facts)
+      .turn,
+      await trace.result(
+        position: position, input: input, outcome: outcome,
+        evidence: .init(
+          memories: facts, generations: inference.snapshot(), progress: progress.snapshot))
     )
   }
 

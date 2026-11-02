@@ -59,6 +59,7 @@ struct BenchmarkTurnResult: Encodable, Sendable {
   let compactionSeconds: Double
   let requests: [TextGenerationRequest]
   let inputTokens: [Int]
+  let generations: [BenchmarkGeneration]
   let compacted: Bool
   let summary: String
   let sources: [UUID]
@@ -66,6 +67,11 @@ struct BenchmarkTurnResult: Encodable, Sendable {
 }
 
 actor BenchmarkTurnTrace {
+  struct Evidence: Sendable {
+    let memories: [CompanionMemory]
+    let generations: [BenchmarkGeneration]
+    let progress: BenchmarkProgress.Snapshot
+  }
   private let start = ContinuousClock.now
   private var firstText: Double?
   private var compacted = false
@@ -97,9 +103,11 @@ actor BenchmarkTurnTrace {
 
   func result(
     position: BenchmarkPosition, input: String, outcome: Result<ChatReply, any Error>,
-    memories: [CompanionMemory]
+    evidence: Evidence
   ) -> BenchmarkTurnResult {
     let reply = try? outcome.get()
+    let memory = reply?.memory ?? evidence.progress.memory
+    let sources = reply?.sources ?? evidence.progress.sources
     let failure: String?
     switch outcome {
     case .success: failure = nil
@@ -111,8 +119,11 @@ actor BenchmarkTurnTrace {
       seconds: elapsed, firstTextSeconds: firstText,
       textEmissions: textEmissions, compactionCalls: compactionCalls,
       compactionSeconds: compactionSeconds, requests: requests,
-      inputTokens: inputTokens, compacted: compacted, summary: reply?.memory.summary ?? "",
-      sources: reply?.sources.map(\.id) ?? [],
-      memories: memories.map { .init(key: $0.key, value: $0.value, source: $0.sourceQuote) })
+      inputTokens: inputTokens, generations: evidence.generations,
+      compacted: compacted, summary: memory?.summary ?? "",
+      sources: sources.map(\.id),
+      memories: evidence.memories.map {
+        .init(key: $0.key, value: $0.value, source: $0.sourceQuote)
+      })
   }
 }

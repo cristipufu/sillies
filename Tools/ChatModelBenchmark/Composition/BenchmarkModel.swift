@@ -14,14 +14,16 @@ struct BenchmarkModel {
     let processors: Int
   }
   let backend: any ConversationBackend
+  let inference: BenchmarkInferenceTrace
   let metadata: Metadata
   let stop: @Sendable () async -> Void
 
   static func prepare(_ plan: BenchmarkPlan) async throws -> Self {
+    let inference = BenchmarkInferenceTrace()
     if plan.model == "apple" {
       let backend = AppleReasoningBackend()
       return .init(
-        backend: backend,
+        backend: backend, inference: inference,
         metadata: metadata(id: "apple", revision: "system-managed", backend: backend),
         stop: { await backend.stop() })
     }
@@ -37,11 +39,16 @@ struct BenchmarkModel {
       throw TextModelError.unavailable("Model is not installed: \(plan.model)")
     }
     let registry = try TextModelRegistry(
-      store: store, providers: [MLXTextModelProvider(executable: URL(fileURLWithPath: plan.helper))]
+      store: store,
+      providers: [
+        BenchmarkTextProvider(
+          base: MLXTextModelProvider(executable: URL(fileURLWithPath: plan.helper)),
+          trace: inference)
+      ]
     )
     let backend = DownloadedReasoningBackend(manifest: manifest, store: store, registry: registry)
     return .init(
-      backend: backend,
+      backend: backend, inference: inference,
       metadata: metadata(id: plan.model, revision: manifest.revision, backend: backend),
       stop: { await registry.stop() })
   }

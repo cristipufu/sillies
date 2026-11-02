@@ -45,7 +45,10 @@ Models are pinned in `Sources/SilliesModelStore/Resources/text-models.json`, inc
 
 The catalog also includes Nemotron 3.5 Bolt E4B, Gemma 4 12B, Granite 4.2 3B and 8B,
 and LFM2.5 2.6B and 24B A2B. Their integration and evaluation are in progress; the scores above
-remain the earlier seven-model comparison until the new runs have been reviewed.
+remain the earlier seven-model comparison until the new runs have been reviewed. The expanded
+comparison is currently paused for an [app-first failure investigation](reports/chat-integration-audit-2026-11-02.md):
+tool results, budget handling, context limits and native errors must be checked before attributing
+failed tasks to model capability.
 
 Ling 3.0 Tiny (`bailing_hybrid`) and Bonsai 2 (`prism_hadamard_qwen35`) remain candidates.
 The pinned native Swift runtime does not implement their architectures. Their downloadable

@@ -28,10 +28,10 @@ final class TextWorkerConnection: Sendable {
       }.value
       switch event {
       case .delta(let text):
-        guard !text.isEmpty,
-          text.utf8.count <= TextInferenceWire.maximumMessageBytes / 2 - receivedBytes
+        guard !text.isEmpty else { throw TextGenerationFailure(reason: .emptyDelta) }
+        guard text.utf8.count <= TextInferenceWire.maximumMessageBytes / 2 - receivedBytes
         else {
-          throw TextModelError.invalidResponse
+          throw TextGenerationFailure(reason: .responseSizeLimit)
         }
         receivedBytes += text.utf8.count
         receivedText += text
@@ -46,7 +46,7 @@ final class TextWorkerConnection: Sendable {
           receivedText.trimmingCharacters(in: .whitespacesAndNewlines)
             == output.text.trimmingCharacters(in: .whitespacesAndNewlines)
         else {
-          throw TextModelError.invalidResponse
+          throw TextGenerationFailure(reason: .streamMismatch)
         }
         return output
       }
@@ -55,11 +55,12 @@ final class TextWorkerConnection: Sendable {
 
   private func result(_ response: TextInferenceResponse) throws -> TextGenerationOutput {
     if response.failureCode == .contextLimit { throw TextModelError.contextLimit }
+    if let failure = response.generationFailure { throw failure }
     if let failure = response.failure { throw TextModelError.unavailable(failure) }
     guard let text = response.text,
       !text.isEmpty || !(response.calls ?? []).isEmpty || response.inputTokens != nil
     else {
-      throw TextModelError.invalidResponse
+      throw TextGenerationFailure(reason: .emptyResponse)
     }
     return .init(
       text: text, calls: response.calls ?? [], inputTokens: response.inputTokens,

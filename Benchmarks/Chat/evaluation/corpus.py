@@ -3,13 +3,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import random
 import re
 from pathlib import Path
 
 PROFILES = {"none": 0, "search": 1, "personal": 3, "app": 5, "expanded8": 8, "expanded12": 12}
 KINDS = {"reply_equals", "contains_any", "contains_all", "omits_all", "no_tools",
          "required_tools", "allowed_tools", "no_writes", "argument_equals", "memory_contains",
-         "memory_absent", "source_includes", "compacted"}
+         "memory_absent", "source_includes", "compacted", "retained_context_omits"}
 OWNER = {"id": "pogo", "name": "Pogo", "personality": "Warm, curious and upbeat."}
 IDENTIFIER = re.compile(r"[a-z][a-z0-9-]{0,90}\Z")
 
@@ -62,9 +63,15 @@ def validate(case: dict) -> dict:
     return case
 
 
-def jobs(cases: list[dict], repeats: int) -> list[dict]:
-    return [{"id": f"{case['id']}--{profile}--r{repeat}", "case": case, "profile": profile, "repeat": repeat}
-            for repeat in range(1, repeats + 1) for case in cases for profile in case["profiles"]]
+def jobs(cases: list[dict], repeats: int, order_seed: int | None = None) -> list[dict]:
+    result = []
+    for repeat in range(1, repeats + 1):
+        batch = [{"id": f"{case['id']}--{profile}--r{repeat}", "case": case, "profile": profile, "repeat": repeat}
+                 for case in cases for profile in case["profiles"]]
+        if order_seed is not None:
+            random.Random(order_seed + repeat).shuffle(batch)
+        result.extend(batch)
+    return result
 
 
 def worker_job(job: dict) -> dict:

@@ -2,6 +2,12 @@
 
 **First measured comparison · November 1, 2026 · seven models · 497 cases · 735 turns**
 
+> **Audit correction, November 2:** the recorded checks and metrics reproduce, but automated
+> passes do not establish full answer correctness. We found false passes in open-ended cases,
+> and all original context scenarios left the corrected fact in recent messages. The context
+> results do not prove summary retention. Read the [audit and corrections](chat-benchmark-audit-2026-11-02.md)
+> before interpreting this exploratory ranking. Original receipts and scores remain unchanged.
+
 Gemma 4 26B A4B is the strongest agent candidate in this run: it passed 46 of 52 primary
 scenarios and actually persisted all seven tested positive memory facts. It also exposed an
 inference-adapter defect: thought-channel delimiters reached the visible response in 26 of 78
@@ -165,7 +171,9 @@ successful turns; failure counts are reported separately. Initial turns may incl
 later turns reuse the model, and Apple's assets may already be warm. These are not controlled
 cold-start measurements or promises for other Macs.
 
-All models passed the three context scenarios. Each started with **32 prior turns, 64 messages
+All models passed the original checks in the three context scenarios. The subsequent audit found
+the corrected code and owner still present in raw recent messages, so this is **not evidence that
+the summary preserved those facts**. Each started with **32 prior turns, 64 messages
 and no compacted checkpoint**, causing three compaction generations before the answer. First
 text for that backlog recovery took 5.78–5.95 s for Apple, 5.12–12.48 s for Qwen 2B, 7.80–8.16 s
 for Qwen 4B, 13.88–14.09 s for Qwen 9B, 17.81–20.76 s for Gemma E4B, 11.50–12.01 s for
@@ -210,6 +218,7 @@ The archive contains binary, catalog and evaluator hashes; model revisions; nati
 executed tool calls and arguments; replies and errors; stored facts; source IDs; token/timing
 measurements; automated checks; and all 161 content reviews. Full event and worker logs remain
 in `build/chat-benchmarks/comparison-2026-11-01-v2` on the development Mac.
+The recorded requests are app-level backend inputs, not every framework-internal tool-loop round.
 
 All downloadable models used the catalog's pinned 4-bit artifacts, the app's 4096-token context
 configuration, a 240-token reply cap, temperature 0.7, top-p 0.9, repetition penalty 1.08 and

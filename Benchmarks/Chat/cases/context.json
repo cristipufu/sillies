@@ -24,6 +24,13 @@
             },
             {
               "kind": "no_writes"
+            },
+            {
+              "kind": "retained_context_omits",
+              "values": [
+                "violet-42",
+                "Mina"
+              ]
             }
           ]
         }
@@ -39,7 +46,7 @@
         },
         {
           "role": "user",
-          "text": "For workshop activity 2, we will keep the notes local and review the materials together."
+          "text": "The release code for our project is cedar-27. Mina owns the checklist."
         },
         {
           "role": "assistant",
@@ -55,7 +62,7 @@
         },
         {
           "role": "user",
-          "text": "For workshop activity 4, we will keep the notes local and review the materials together."
+          "text": "Correction: the release code is violet-42, replacing cedar-27. Mina still owns the checklist."
         },
         {
           "role": "assistant",
@@ -103,7 +110,7 @@
         },
         {
           "role": "user",
-          "text": "The release code for our project is cedar-27. Mina owns the checklist."
+          "text": "For workshop activity 2, we will keep the notes local and review the materials together."
         },
         {
           "role": "assistant",
@@ -175,7 +182,7 @@
         },
         {
           "role": "user",
-          "text": "Correction: the release code is violet-42, replacing cedar-27. Mina still owns the checklist."
+          "text": "For workshop activity 4, we will keep the notes local and review the materials together."
         },
         {
           "role": "assistant",
@@ -309,6 +316,13 @@
             },
             {
               "kind": "no_writes"
+            },
+            {
+              "kind": "retained_context_omits",
+              "values": [
+                "violet-42",
+                "Mina"
+              ]
             }
           ]
         }
@@ -324,7 +338,7 @@
         },
         {
           "role": "user",
-          "text": "For workshop activity 2, we will keep the notes local and review the materials together."
+          "text": "The release code for our project is cedar-27. Mina owns the checklist."
         },
         {
           "role": "assistant",
@@ -340,7 +354,7 @@
         },
         {
           "role": "user",
-          "text": "For workshop activity 4, we will keep the notes local and review the materials together."
+          "text": "Correction: the release code is violet-42, replacing cedar-27. Mina still owns the checklist."
         },
         {
           "role": "assistant",
@@ -388,7 +402,7 @@
         },
         {
           "role": "user",
-          "text": "The release code for our project is cedar-27. Mina owns the checklist."
+          "text": "For workshop activity 2, we will keep the notes local and review the materials together."
         },
         {
           "role": "assistant",
@@ -460,7 +474,7 @@
         },
         {
           "role": "user",
-          "text": "Correction: the release code is violet-42, replacing cedar-27. Mina still owns the checklist."
+          "text": "For workshop activity 4, we will keep the notes local and review the materials together."
         },
         {
           "role": "assistant",
@@ -609,6 +623,13 @@
             },
             {
               "kind": "no_writes"
+            },
+            {
+              "kind": "retained_context_omits",
+              "values": [
+                "violet-42",
+                "Mina"
+              ]
             }
           ]
         }
@@ -624,7 +645,7 @@
         },
         {
           "role": "user",
-          "text": "For workshop activity 2, we will keep the notes local and review the materials together."
+          "text": "The release code for our project is cedar-27. Mina owns the checklist."
         },
         {
           "role": "assistant",
@@ -640,7 +661,7 @@
         },
         {
           "role": "user",
-          "text": "For workshop activity 4, we will keep the notes local and review the materials together."
+          "text": "Correction: the release code is violet-42, replacing cedar-27. Mina still owns the checklist."
         },
         {
           "role": "assistant",
@@ -688,7 +709,7 @@
         },
         {
           "role": "user",
-          "text": "The release code for our project is cedar-27. Mina owns the checklist."
+          "text": "For workshop activity 2, we will keep the notes local and review the materials together."
         },
         {
           "role": "assistant",
@@ -760,7 +781,7 @@
         },
         {
           "role": "user",
-          "text": "Correction: the release code is violet-42, replacing cedar-27. Mina still owns the checklist."
+          "text": "For workshop activity 4, we will keep the notes local and review the materials together."
         },
         {
           "role": "assistant",

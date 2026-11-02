@@ -11,6 +11,7 @@ import time
 from pathlib import Path
 
 from .corpus import worker_job
+from . import evidence, receipts
 from .scoring import evaluate
 from .storage import record_model_metadata, write_json
 
@@ -78,18 +79,30 @@ class ModelBatch:
         self.model = model
         self.directory = options.output / model
         self.directory.mkdir(parents=True, exist_ok=True)
-        self.jobs = [job for job in jobs if not (self.directory / "cases" / f"{job['id']}.json").exists()]
+        self.jobs = []
+        for job in jobs:
+            path = self.directory / "cases" / f"{job['id']}.json"
+            if path.exists():
+                receipts.validate(json.loads(path.read_text()), job, model)
+            else:
+                self.jobs.append(job)
         self.deadline = deadline
         self.current: dict | None = None
         self.events: list[dict] = []
         self.case_deadline = float("inf")
         self.turn_deadline = time.monotonic() + options.startup_timeout
         self.seen_turns: set[int] = set()
+        self.active_turn: int | None = None
 
     def run(self) -> None:
         interrupted = 0
         while self.jobs and time.monotonic() < self.deadline and interrupted < 3:
-            failure = self._attempt()
+            try:
+                failure = self._attempt()
+            except KeyboardInterrupt:
+                if self.current:
+                    self._complete("Benchmark interrupted by operator; not a measured model failure")
+                raise
             if failure:
                 interrupted += 1
                 if self.current:
@@ -116,6 +129,7 @@ class ModelBatch:
 
     def _consume(self, worker: Worker) -> str | None:
         stopping = False
+        identified = False
         with (self.directory / "events.jsonl").open("a") as log:
             while True:
                 for event in worker.receive():
@@ -123,17 +137,30 @@ class ModelBatch:
                     log.flush()
                     kind, payload = event["event"], event["payload"]
                     if kind == "model":
+                        if identified or self.current is not None:
+                            raise ValueError("Duplicate model handshake")
+                        identified = True
                         record_model_metadata(self.directory / "model.json", payload)
-                        worker.admit()
+                        if time.monotonic() < self.deadline:
+                            worker.admit()
+                        else:
+                            stopping = True
+                            worker.finish()
+                            self.turn_deadline = time.monotonic() + 10
                     elif kind == "caseStarted":
-                        if self.current is not None or payload["id"] != self.jobs[0]["id"]:
+                        if stopping or not identified or not self.jobs or self.current is not None or payload["id"] != self.jobs[0]["id"]:
                             raise ValueError("Unexpected or duplicate case start")
                         self.current, self.events = self.jobs[0], [event]
                         self.seen_turns = set()
+                        self.active_turn = None
                         self.case_deadline = time.monotonic() + self.options.case_timeout
                         print(f"{self.model} · {self.current['id']}", flush=True)
                     elif kind == "caseFinished":
                         self._require_job(payload["job"])
+                        if payload.get("completedTurns") != len(self.seen_turns):
+                            raise ValueError("Worker completion count does not match received turns")
+                        if not payload.get("error") and (self.active_turn is not None or len(self.seen_turns) != len(self.current["case"]["turns"])):
+                            raise ValueError("Worker claimed success without completing every turn")
                         self.events.append(event)
                         self._complete(payload.get("error"))
                         if self.jobs and time.monotonic() < self.deadline:
@@ -149,11 +176,19 @@ class ModelBatch:
                         if not isinstance(index, int) or not 0 <= index < len(self.current["case"]["turns"]):
                             raise ValueError("Invalid turn index")
                         if kind == "turnStarted":
+                            if self.active_turn is not None or index != len(self.seen_turns):
+                                raise ValueError("Duplicate or out-of-order turn start")
+                            self.active_turn = index
                             self.turn_deadline = time.monotonic() + self.options.turn_timeout
+                        elif self.active_turn != index:
+                            raise ValueError("Result or tool event outside its active turn")
                         if kind == "turn":
                             if index in self.seen_turns:
                                 raise ValueError("Duplicate turn result")
                             self.seen_turns.add(index)
+                            self.active_turn = None
+                            if payload["input"] != self.current["case"]["turns"][index]["user"]:
+                                raise ValueError("Worker answered a different question")
                         self.events.append(event)
                     else:
                         raise ValueError(f"Unknown worker event: {kind}")
@@ -171,7 +206,7 @@ class ModelBatch:
             raise ValueError("Event does not belong to the current case")
 
     def _complete(self, failure: str | None) -> None:
-        result = evaluate(self.current, self.events, failure)
+        result = evidence.seal(evaluate(self.current, self.events, failure))
         result["model"] = self.model
         write_json(self.directory / "cases" / f"{self.current['id']}.json", result)
         print(f"  {'PASS' if result['passed'] else 'FAIL'} · {len(result['turns'])} turns", flush=True)

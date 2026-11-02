@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 from .corpus import PROFILES
-from . import reviews
+from . import receipts, reviews
 from .storage import write_json
 
 
@@ -40,10 +40,7 @@ def seconds(value: float | None) -> str:
 
 def generate(output: Path) -> dict:
     configuration = json.loads((output / "run.json").read_text())
-    all_results = {
-        model: [json.loads(path.read_text()) for path in sorted((output / model / "cases").glob("*.json"))]
-        for model in configuration["models"]
-    }
+    all_results = receipts.load(output, configuration)
     semantic_reviews = reviews.load(output, all_results)
     rows, summary = [], {"configuration": configuration, "models": {}}
     for model in configuration["models"]:
@@ -51,20 +48,26 @@ def generate(output: Path) -> dict:
         primary = [result for result in results if result["profile"] == "app"]
         stats = aggregate(primary)
         total = sum(job["profile"] == "app" for job in configuration["jobs"])
+        review = semantic_reviews[model]
         groups = {group: aggregate([result for result in primary if result["group"] == group])
                   for group in sorted({result["group"] for result in primary})}
         profiles = {profile: aggregate([result for result in results if result["profile"] == profile])
                     for profile in PROFILES if any(result["profile"] == profile for result in results)}
         summary["models"][model] = {"completed": len(results), "planned": len(configuration["jobs"]),
                                     "primary": stats, "groups": groups, "profiles": profiles,
-                                    "semanticReviews": semantic_reviews.get(model, {})}
-        rows.append(f"| {model} | {len(primary)}/{total} | {stats['passed']}/{len(primary)} | "
+                                    "semanticReviews": review,
+                                    "pendingPrimaryCases": total - len(primary),
+                                    "evidenceValidation": "recomputed" if configuration.get("cases") else "legacy-inventory-and-reply-hashes"}
+        rows.append(f"| {model} | {len(primary)}/{total} | {stats['passed']}/{total} | "
                     f"{ratio(stats['checks']['behavior'])} | {ratio(stats['checks']['exact_answer'])} | "
-                    f"{ratio(stats['checks']['lexical_anchor'])} | {seconds(stats['firstTextP50'])} / {seconds(stats['firstTextP95'])} | "
+                    f"{ratio(stats['checks']['lexical_anchor'])} | {review['primaryRubricReviewedTurns']}/{stats['turns']} | {seconds(stats['firstTextP50'])} / {seconds(stats['firstTextP95'])} | "
                     f"{seconds(stats['totalP50'])} | {stats['errors']} |")
-    lines = ["# Local Chat model evaluation", "", "Primary comparison: the app's five tools. All counts include failed and timed-out cases.", "",
-             "| Model | Coverage | Automated case checks | Behavior checks | Exact answers | Lexical anchors | First text p50 / p95 | Turn p50 | Failed turns |",
-             "| --- | --- | --- | --- | --- | --- | --- | --- | --- |", *rows, "",
+    lines = ["# Local Chat model evaluation", "", "Primary comparison: the app's five tools. Automated checks alone do not establish answer correctness or release readiness.", "",
+             "| Model | Completed/planned | Checks passed/planned | Behavior checks | Exact answers | Lexical anchors | Full rubric reviews/observed turns | First text p50 / p95 | Turn p50 | Failed turns |",
+             "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |", *rows, "",
+             "Missing cases remain pending in the planned denominator. Failed and timed-out cases remain failures; pending is not a measured failure.",
+             "Open-ended answers need full rubric review bound to the input, tool calls, saved state and reply. Unreviewed turns remain pending.",
+             "Earlier reply-only/content-only reviews remain separately visible in summary.json; they do not certify the full task rubric.",
              "Exact answers combine answer content and requested formatting. A correct full sentence can fail a name-only instruction.",
              "Lexical anchors are weak checks, not factual-accuracy scores. Review raw replies against their rubrics before recommending a model.",
              "Hash-validated semantic reviews, when provided, are counted separately in summary.json; unreviewed responses are not implicitly correct.",

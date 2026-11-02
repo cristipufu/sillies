@@ -51,6 +51,10 @@ def check_rule(rule: dict, turn: dict, tools: list[dict]) -> dict:
         passed = {value.casefold() for value in values} <= {value.casefold() for value in observed}
     elif kind == "compacted":
         passed, observed = bool(turn.get("compacted")), turn.get("compacted", False)
+    elif kind == "retained_context_omits":
+        requests = turn.get("requests", [])
+        observed = [message["content"] for message in requests[-1]["messages"]] if requests else []
+        passed = bool(requests) and all(value.casefold() not in text.casefold() for value in values for text in observed)
     else:
         raise ValueError(f"Unknown scoring rule: {kind}")
     # A failed generation can never pass a rule merely because its missing response omits a word.

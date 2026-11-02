@@ -22,6 +22,8 @@ Models are pinned in `Sources/SilliesModelStore/Resources/text-models.json`, inc
 - **[Seven-model Chat comparison and raw results](reports/local-chat-models-2026-11-01.md)** —
   general knowledge, Vault questions, mixed conversations, identities, memories, tools and latency.
 - **[Benchmark guide](../Benchmarks/Chat/README.md)** — cases, scoring, bounded runs and reproducibility.
+- **[Benchmark audit and corrections](reports/chat-benchmark-audit-2026-11-02.md)** — what the evidence
+  supports, false passes, corrected context cases and remaining validation gaps.
 
 The first comparison is exploratory: one pass on one Mac. Automated checks are not a complete
 answer-quality score. An audit found false passes in open-ended cases and found that the original

@@ -11,6 +11,8 @@ There is no Python inference runtime, cloud judge or additional dependency.
 
 Read the [first seven-model comparison](../../docs/reports/local-chat-models-2026-11-01.md),
 including raw evidence, measured limitations and the next integration work.
+Read the [benchmark audit](../../docs/reports/chat-benchmark-audit-2026-11-02.md) before using those
+scores to select a default. The original checks had false positives and did not prove summary retention.
 
 `fixtures` validates every seeded database without loading a model and runs in `make check`.
 Screenshot fixtures include real tiny PNG attachments and synthetic OCR text, so the normal
@@ -19,7 +21,10 @@ Each inference case also runs the same preflight before admitting the model.
 
 ## What it covers
 
-The initial corpus has **52 scenarios, 71 tool-profile cases and 105 turns per model**.
+The corpus has **52 scenarios, 71 tool-profile cases and 105 turns per model**. On November 2 the
+context fixtures were corrected: both the original fact and its correction now precede the
+compaction boundary, and scored turns check that the target fact is absent from recent raw messages.
+These corrected cases are a new corpus revision, not comparable rescoring of the original run.
 
 | Group | What can go wrong |
 | --- | --- |
@@ -61,6 +66,8 @@ its separate deadline. Defaults: 60 seconds per turn, 180 per case, 90 for worke
 The supervisor terminates the worker process group on a deadline, even if native inference ignores
 Swift cancellation. Temporary databases belong to the parent and are removed after a killed worker.
 Three interrupted workers stop that model's current batch. Missing models remain visibly pending.
+An operator interruption after case admission leaves an explicit receipt and is not silently retried.
+Keep it separate from model failures when interpreting an interrupted run.
 
 Downloads are explicit and use the existing verified catalog installer:
 
@@ -75,6 +82,9 @@ python3 Benchmarks/Chat/benchmark.py run \
 
 All catalog text models work through the same runner. Use `--tag smoke` for the short pilot,
 `--groups mixed-knowledge identity` for focused investigation, and `--repeats 3` for variability.
+`--order-seed` (default `0`) shuffles cases reproducibly within each repetition. Every compared model
+gets the same order; changing the seed requires a new run. This reduces fixed case-order effects,
+but does not control thermal conditions or cold starts. Rotate model order in separate replications.
 Choose these **before** starting a run. Corpus, evaluator, binaries, model list, deadlines and
 machine conditions are hashed/frozen; changed inputs require a new output folder. Machine metadata
 contains OS version/build, processor family, architecture, memory and logical processor count;
@@ -83,15 +93,21 @@ environment must also match the first worker before another case is admitted. Ap
 remain system-managed; an unchanged OS build cannot prove that Apple has not updated those assets.
 A documentation-only commit does not invalidate identical binaries. The initial source commit
 remains in the run metadata.
+New runs also freeze the full evaluator corpus, helper bundle resources (including Metal kernels)
+and the worker's bundled catalog. The bundled inference helper is required for this resource check.
+Do not run two writers against the same output directory, or rebuild/replace binaries during inference.
 
 ## Read the results honestly
 
 `report.md` and `summary.json` show coverage, group/profile breakdowns, errors and latency.
 Each `MODEL/cases/*.json` preserves the reply, partial output, actual executed tool calls and
-arguments, stored memories, retrieved IDs, compaction, native requests, token measurements and
+arguments, stored memories, retrieved IDs, compaction attempts, app-level backend requests, token measurements and
 the checks that passed or failed. `events.jsonl` also preserves progress up to a hard timeout.
 The tool wrapper records executed calls; duplicate-cache hits and calls rejected before execution
 are not counted as executed calls. Their resulting generation errors remain in the receipts.
+Backend requests are not a full dump of each framework's internal transcript/token stream or every
+tool-loop inference round. A compaction attempt alone does not prove a successful model summary;
+the production fallback can use literal excerpts. Inspect the retained context and final answer.
 
 Keep these measures separate:
 
@@ -103,9 +119,17 @@ Keep these measures separate:
   while contradicting it, hallucinating extra facts or repeating itself.
 - **Semantic review:** judge the raw reply against the case rubric. Store an array in
   `reviews.json` with `model`, `job`, zero-based `turn`, `responseHash`, `verdict`
-  (`pass`, `fail`, `uncertain`) and a short `note`. Reporting rejects stale or duplicate reviews.
-  Report selection and coverage; unreviewed answers are not implicitly correct. Agent review is
+  (`pass`, `fail`, `uncertain`), `evidenceHash`, `reviewer`, `scope: "rubric"` and a short `note`.
+  Copy both hashes from the turn receipt. Review the entire rubric, including calls and state,
+  source attribution and unsupported claims. Reporting rejects stale or duplicate reviews.
+  Existing reply-only/content-only reviews remain visible separately; they are not full-rubric passes.
+  Unreviewed and uncertain cases remain pending. Agent review is
   preliminary and should receive independent human review before release claims.
+
+An automated case pass is never a full-rubric pass by itself. The report shows both review coverage
+and planned-case denominators. Partial runs cannot become `5/5` leaderboards by omitting unfinished
+cases. New-schema reports and resumes recompute checks from the frozen corpus and reject altered,
+duplicate or unrelated receipts. Evidence hashes detect inconsistent edits, not deliberate forgery.
 
 Regenerate with `python3 Benchmarks/Chat/benchmark.py report --output PATH`.
 Publish an auditable compressed snapshot with `python3 Benchmarks/Chat/benchmark.py export
@@ -113,6 +137,19 @@ Publish an auditable compressed snapshot with `python3 Benchmarks/Chat/benchmark
 all case receipts and any semantic reviews; keep the full worker logs locally for diagnosis.
 Do not rank models with unequal coverage, or hide failed/timeout cases from the denominator.
 A failed compaction may fail a full case; subsequent turns still have explicit failure receipts.
+
+Audit the published baseline without loading models or rewriting any evidence:
+
+```sh
+python3 -B Benchmarks/Chat/benchmark.py audit \
+  --archive docs/reports/data/local-chat-models-2026-11-01.json.gz \
+  --corpus-snapshot docs/reports/data/local-chat-models-2026-11-01.corpus.json.gz \
+  --output build/chat-benchmarks/baseline-audit
+```
+
+New archives embed their frozen corpus and do not need `--corpus-snapshot`. Audit verifies receipt
+identity, questions/rubrics, hashes, checks and primary aggregate metrics. Reproducing those numbers
+does not prove the checks measure the intended behavior; that requires the rubric/fixture review.
 
 ### Timing and experimental limits
 
@@ -134,6 +171,20 @@ maximum possible capability. Keep the production configuration frozen during com
 put prompt/runtime experiments in separate runs. One corpus, few languages and synthetic data
 cannot establish universal factual accuracy, safety or quality on every Mac.
 
+## When to run which evaluation
+
+| Trigger | Required evidence |
+| --- | --- |
+| Harness, storage or protocol change | Deterministic supervisor/scorer tests, fixture preflight, archive audit; no model download required |
+| Prompt, tool, model revision or runtime change | Bounded real-model cases for the affected behavior and general/private topic switching; keep a frozen control |
+| Choosing a default model | Same full corpus/configuration for every candidate, at least three exploratory repeats, full rubric review and held-out tasks; report case-level variability |
+| Claiming speed improvements | Separate cold/warm runs, release build, controlled background work and more than one Mac; measure substantive answer and audible speech separately |
+
+Three repeats help reveal instability; they do not establish statistical significance or turn
+repeated templates into independent questions. Predeclare tasks, rubrics, model settings, review
+selection and release criteria before inference. Do not choose a pass threshold after seeing results.
+Use a separate held-out set after prompt tuning; this small corpus alone is a regression suite.
+
 ## Extend it
 
 Add a case to `cases/*.json`: unique ID, group, tool profiles, user turns, semantic rubrics and
@@ -145,5 +196,5 @@ Add a text provider through the [existing model guide](../../docs/contributing/t
 No model-specific benchmark switch or duplicate inference implementation is necessary.
 Keep the Swift worker independent of AppKit and model SDKs; architecture checks enforce this.
 
-Run `python3 -B -m unittest discover -s Tests -p 'test_chat_benchmark.py'` and `make check`
+Run `python3 -B -m unittest discover -s Tests -p 'test_chat_benchmark*.py'` and `make check`
 after changing the harness. Use a new output directory for any changed corpus or implementation.

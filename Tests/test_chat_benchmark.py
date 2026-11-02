@@ -9,7 +9,7 @@ from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "Benchmarks/Chat"))
-from evaluation import corpus, report, reviews, scoring
+from evaluation import corpus, evidence, report, reviews, scoring
 from evaluation.runner import ModelBatch
 from evaluation.storage import initialize, record_model_metadata
 
@@ -124,13 +124,14 @@ class ChatBenchmarkTests(unittest.TestCase):
     def test_semantic_reviews_reject_stale_responses_and_duplicate_votes(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)
-            results = {"apple": [{"job": "job", "turns": [{"responseHash": "current"}]}]}
+            turn = {"reply": "Pogo"}
+            results = {"apple": [{"job": "job", "profile": "app", "turns": [turn]}]}
             review = {"model": "apple", "job": "job", "turn": 0,
                       "responseHash": "old", "verdict": "pass", "note": "Factually correct"}
             (path / "reviews.json").write_text(json.dumps([review]))
             with self.assertRaises(ValueError):
                 reviews.load(path, results)
-            review["responseHash"] = "current"
+            review["responseHash"] = evidence.response_hash(turn)
             (path / "reviews.json").write_text(json.dumps([review]))
             self.assertEqual(reviews.load(path, results)["apple"]["pass"], 1)
             (path / "reviews.json").write_text(json.dumps([review, review]))

@@ -10,17 +10,18 @@ import tempfile
 import time
 from pathlib import Path
 
-from evaluation import archive, corpus, environment, report
+from evaluation import archive, audit, corpus, environment, report
 from evaluation.runner import ModelBatch
-from evaluation.storage import file_hash, initialize
+from evaluation.storage import file_hash, initialize, write_json
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
 def arguments():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("validate", "fixtures", "run", "report", "export"))
+    parser.add_argument("command", choices=("validate", "fixtures", "run", "report", "export", "audit"))
     parser.add_argument("--archive", type=Path)
+    parser.add_argument("--corpus-snapshot", type=Path)
     parser.add_argument("--corpus", type=Path, default=Path(__file__).parent / "cases")
     parser.add_argument("--output", type=Path, default=ROOT / "build/chat-benchmark")
     parser.add_argument("--worker", type=Path, default=ROOT / ".build/out/Products/Debug/ChatModelBenchmark")
@@ -30,6 +31,7 @@ def arguments():
     parser.add_argument("--groups", nargs="+")
     parser.add_argument("--tag")
     parser.add_argument("--repeats", type=int, default=1)
+    parser.add_argument("--order-seed", type=int, default=0)
     parser.add_argument("--max-seconds", type=float, default=180)
     parser.add_argument("--turn-timeout", type=float, default=60)
     parser.add_argument("--case-timeout", type=float, default=180)
@@ -44,6 +46,13 @@ def arguments():
 
 def main() -> None:
     options = arguments()
+    if options.command == "audit":
+        if options.archive is None:
+            raise ValueError("Audit requires --archive PATH.json.gz")
+        findings = audit.verify(options.archive, options.corpus_snapshot)
+        write_json(options.output / "audit.json", findings)
+        print(f"Audit: {options.output / 'audit.json'}; recorded evidence reproduced, not a quality certification.")
+        return
     if options.command in {"report", "export"}:
         report.generate(options.output)
         if options.command == "export":
@@ -58,7 +67,7 @@ def main() -> None:
         cases = [case for case in cases if options.tag in case.get("tags", [])]
     if not cases:
         raise ValueError("The selected corpus is empty")
-    jobs = corpus.jobs(cases, options.repeats)
+    jobs = corpus.jobs(cases, options.repeats, options.order_seed)
     print(f"{len(cases)} scenarios · {len(jobs)} model cases · {sum(len(job['case']['turns']) for job in jobs)} turns per model", flush=True)
     if options.command == "validate":
         return
@@ -75,13 +84,14 @@ def main() -> None:
     supported = {"apple"} | {manifest["model"]["id"] for manifest in catalog["manifests"]}
     if len(set(options.models)) != len(options.models) or not set(options.models) <= supported:
         raise ValueError("Choose unique model IDs from the bundled text catalog, or apple")
-    configuration = {"schema": 1, "corpusHash": corpus.digest(cases), "catalogHash": corpus.digest(catalog),
+    configuration = {"schema": 2, "cases": cases, "corpusHash": corpus.digest(cases), "catalogHash": corpus.digest(catalog),
                      "workerHash": file_hash(options.worker), "helperHash": file_hash(options.helper),
+                     "runtimeResources": environment.runtime_resources(options.worker, options.helper),
                      "evaluatorHash": corpus.digest({str(path.relative_to(Path(__file__).parent)): file_hash(path)
                                                      for path in sorted(Path(__file__).parent.rglob("*.py"))}),
                      "python": sys.version, "machine": environment.capture(),
                      "sourceCommit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
-                     "models": options.models, "repeats": options.repeats,
+                     "models": options.models, "repeats": options.repeats, "orderSeed": options.order_seed,
                      "turnTimeout": options.turn_timeout, "caseTimeout": options.case_timeout,
                      "startupTimeout": options.startup_timeout,
                      "jobs": [{"id": job["id"], "profile": job["profile"]} for job in jobs]}

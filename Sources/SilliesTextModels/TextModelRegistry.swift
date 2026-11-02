@@ -165,7 +165,7 @@ package actor TextModelRegistry {
         .init(
           directory: lease.directory, contextTokens: manifest.model.contextTokens,
           memoryLimitBytes: memoryLimit, reasoning: manifest.model.reasoning,
-          conversationSampling: manifest.model.conversationSampling))
+          sampling: manifest.model.sampling))
       if Task.isCancelled {
         await model.stop()
         throw CancellationError()

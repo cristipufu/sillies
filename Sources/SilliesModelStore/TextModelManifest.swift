@@ -11,7 +11,7 @@ package struct TextModelManifest: Codable, Equatable, ModelArtifactManifest {
     try validateArtifacts()
     guard !model.providerID.isEmpty, model.minimumMemoryGB > 0,
       (2_048...8_192).contains(model.contextTokens), model.sourceURL.scheme == "https",
-      model.conversationSampling?.isValid ?? true
+      model.sampling?.isValid ?? true
     else { throw ModelStoreError.invalidManifest }
     for artifact in artifacts {
       let reference = try HubModelReference(artifact.url)

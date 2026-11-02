@@ -7,7 +7,16 @@ import Testing
 private actor CompactionWorkBackend: ConversationBackend {
   nonisolated let contextWindowTokens = 4_096
   nonisolated let reasoningTokenReserve = 1_024
+  nonisolated let summaryReasoningReserve: Int
   private(set) var summaries: [TextGenerationRequest] = []
+
+  init(summaryReasoningReserve: Int = 1_024) {
+    self.summaryReasoningReserve = summaryReasoningReserve
+  }
+
+  nonisolated func reasoningTokenReserve(for style: TextGenerationStyle) -> Int {
+    style == .summary ? summaryReasoningReserve : reasoningTokenReserve
+  }
 
   func availabilityNotice(localeIdentifier: String?) -> String? { nil }
   func inputTokenCount(_ request: TextGenerationRequest) async throws -> Int {
@@ -20,6 +29,25 @@ private actor CompactionWorkBackend: ConversationBackend {
     return "The earlier conversation concerns a launch checklist."
   }
   func converse(_ request: TextGenerationRequest, tools: ConversationToolbox) -> String { "Ready" }
+}
+
+@Test func compactionAdmissionUsesTheSummaryTasksLargerReasoningAllowance() async throws {
+  let backend = CompactionWorkBackend(summaryReasoningReserve: 2_048)
+  let messages = (0..<24).flatMap { index in
+    [
+      ChatMessage(role: .user, text: "Detail \(index): " + String(repeating: "source ", count: 45)),
+      ChatMessage(role: .companion, text: "Understood."),
+    ]
+  }
+  _ = try await ConversationCompactor(backend: backend).compact(messages, into: .init())
+  let summaries = await backend.summaries
+  #expect(summaries.count > 1)
+  for summary in summaries {
+    let required =
+      try await backend.inputTokenCount(summary) + summary.maximumTokens
+      + backend.reasoningTokenReserve(for: summary.style)
+    #expect(required <= backend.contextWindowTokens)
+  }
 }
 
 @Test func compactionUsesAvailableSourceCapacityInsteadOfRepeatedSmallSummaryCalls() async throws {

@@ -1,6 +1,6 @@
 import Foundation
 
-/// Reviewed model defaults for conversational generation. Task-specific precise output stays greedy.
+/// Reviewed native sampling defaults. Task styles provide fallback values when a model has no preset.
 public struct TextModelSampling: Codable, Equatable, Sendable {
   public let temperature: Float
   public let topP: Float

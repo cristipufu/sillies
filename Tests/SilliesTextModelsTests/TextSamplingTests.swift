@@ -5,16 +5,26 @@ import Testing
 @testable import SilliesModelStore
 @testable import SilliesTextModels
 
-@Test func conversationSamplingSurvivesNativePreparationTransport() throws {
+@Test func mandatoryReasoningUsesTaskSpecificCapacityWithoutEnablingSwitchableReasoning() {
+  #expect(TextGenerationStyle.conversation.reasoningTokenReserve(.alwaysOnThinkTags) == 1_024)
+  #expect(TextGenerationStyle.precise.reasoningTokenReserve(.alwaysOnThinkTags) == 1_024)
+  #expect(TextGenerationStyle.summary.reasoningTokenReserve(.alwaysOnThinkTags) == 2_048)
+  for style in [TextGenerationStyle.precise, .conversation, .summary] {
+    #expect(style.reasoningTokenReserve(nil) == 0)
+    #expect(style.reasoningTokenReserve(.switchableThinkTags) == 0)
+  }
+}
+
+@Test func samplingSurvivesNativePreparationTransport() throws {
   let sampling = try JSONDecoder().decode(
     TextModelSampling.self,
     from: Data(#"{"temperature":0.1,"topP":1,"topK":50,"repetitionPenalty":1.05}"#.utf8))
   let preparation = TextModelPreparation(
     directory: URL(fileURLWithPath: "/fixture"), contextTokens: 4096, memoryLimitBytes: 1,
-    conversationSampling: sampling)
+    sampling: sampling)
   let restored = try JSONDecoder().decode(
     TextModelPreparation.self, from: JSONEncoder().encode(preparation))
-  #expect(restored.conversationSampling == sampling)
+  #expect(restored.sampling == sampling)
   #expect(sampling.isValid)
 }
 
@@ -31,7 +41,7 @@ func catalogRejectsInvalidSamplingBeforePreparingAModel(field: String, value: Do
     "temperature": 0.1, "topP": 1, "topK": 50, "repetitionPenalty": 1.05,
   ]
   sampling[field] = value
-  model["conversationSampling"] = sampling
+  model["sampling"] = sampling
   object["model"] = model
   let manifest = try JSONDecoder().decode(
     TextModelManifest.self, from: JSONSerialization.data(withJSONObject: object))

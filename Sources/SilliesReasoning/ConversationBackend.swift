@@ -5,6 +5,7 @@ import SilliesTextModels
 package protocol ConversationBackend: ReasoningBackend {
   var contextWindowTokens: Int { get }
   var reasoningTokenReserve: Int { get }
+  func reasoningTokenReserve(for style: TextGenerationStyle) -> Int
   func retain(for lifetime: TextModelLifetime) async
   func inputTokenCount(_ request: TextGenerationRequest) async throws -> Int
   func converse(_ request: TextGenerationRequest, tools: ConversationToolbox) async throws -> String
@@ -15,6 +16,9 @@ package protocol ConversationBackend: ReasoningBackend {
 }
 
 extension ConversationBackend {
+  package func reasoningTokenReserve(for _: TextGenerationStyle) -> Int {
+    reasoningTokenReserve
+  }
   package func retain(for lifetime: TextModelLifetime) async {}
   package func streamConversation(
     _ request: TextGenerationRequest, tools: ConversationToolbox,

@@ -14,7 +14,7 @@ struct ConversationCompactor {
     let request = summaryRequest(messages, memory: memory)
     if messages.count > 2,
       try await backend.inputTokenCount(request) + Self.outputTokens + Self.safetyTokens
-        + backend.reasoningTokenReserve
+        + backend.reasoningTokenReserve(for: request.style)
         > backend.contextWindowTokens
     {
       let starts = messages.indices.filter { messages[$0].role == .user }
@@ -28,7 +28,7 @@ struct ConversationCompactor {
     do {
       guard
         try await backend.inputTokenCount(request) + Self.outputTokens + Self.safetyTokens
-          + backend.reasoningTokenReserve
+          + backend.reasoningTokenReserve(for: request.style)
           <= backend.contextWindowTokens
       else {
         throw TextModelError.contextLimit
@@ -74,7 +74,7 @@ struct ConversationCompactor {
         \(history)
 
         Updated concise memory:
-        """, maximumTokens: Self.outputTokens, style: .precise)
+        """, maximumTokens: Self.outputTokens, style: .summary)
   }
 
   private func references(_ messages: [ChatMessage], memory: ConversationMemory)

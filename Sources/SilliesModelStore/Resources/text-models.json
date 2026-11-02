@@ -17,7 +17,7 @@
         "contextTokens": 4096,
         "languagesDescription": "Over 140 languages. Quality varies by language.",
         "reasoning": null,
-        "conversationSampling": null
+        "sampling": null
       },
       "artifacts": [
         {
@@ -81,7 +81,7 @@
         "contextTokens": 4096,
         "languagesDescription": "Over 140 languages. Quality varies by language.",
         "reasoning": null,
-        "conversationSampling": null
+        "sampling": null
       },
       "artifacts": [
         {
@@ -151,7 +151,7 @@
         "contextTokens": 4096,
         "languagesDescription": "Over 140 languages. Quality varies by language.",
         "reasoning": null,
-        "conversationSampling": null
+        "sampling": null
       },
       "artifacts": [
         {
@@ -227,7 +227,7 @@
         "contextTokens": 4096,
         "languagesDescription": "12 languages. Quality varies by language.",
         "reasoning": "switchableThinkTags",
-        "conversationSampling": null
+        "sampling": null
       },
       "artifacts": [
         {
@@ -285,7 +285,7 @@
         "contextTokens": 4096,
         "languagesDescription": "12 languages. Quality varies by language.",
         "reasoning": "switchableThinkTags",
-        "conversationSampling": null
+        "sampling": null
       },
       "artifacts": [
         {
@@ -343,7 +343,7 @@
         "contextTokens": 4096,
         "languagesDescription": "16 languages. Quality varies by language.",
         "reasoning": "alwaysOnThinkTags",
-        "conversationSampling": {
+        "sampling": {
           "temperature": 0.1,
           "topP": 1.0,
           "topK": 50,
@@ -412,7 +412,7 @@
         "contextTokens": 4096,
         "languagesDescription": "16 languages. Quality varies by language.",
         "reasoning": "alwaysOnThinkTags",
-        "conversationSampling": {
+        "sampling": {
           "temperature": 0.1,
           "topP": 1.0,
           "topK": 50,
@@ -493,7 +493,7 @@
         "contextTokens": 4096,
         "languagesDescription": "Dozens of languages; quality varies by language.",
         "reasoning": null,
-        "conversationSampling": null
+        "sampling": null
       },
       "artifacts": [
         {
@@ -563,7 +563,7 @@
         "contextTokens": 4096,
         "languagesDescription": "35 languages. Quality varies by language.",
         "reasoning": null,
-        "conversationSampling": null
+        "sampling": null
       },
       "artifacts": [
         {
@@ -639,7 +639,7 @@
         "contextTokens": 4096,
         "languagesDescription": "201 languages and dialects.",
         "reasoning": null,
-        "conversationSampling": null
+        "sampling": null
       },
       "artifacts": [
         {
@@ -697,7 +697,7 @@
         "contextTokens": 4096,
         "languagesDescription": "201 languages and dialects.",
         "reasoning": null,
-        "conversationSampling": null
+        "sampling": null
       },
       "artifacts": [
         {
@@ -755,7 +755,7 @@
         "contextTokens": 4096,
         "languagesDescription": "201 languages and dialects.",
         "reasoning": null,
-        "conversationSampling": null
+        "sampling": null
       },
       "artifacts": [
         {

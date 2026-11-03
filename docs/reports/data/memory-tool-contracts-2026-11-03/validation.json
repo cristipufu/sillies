@@ -1,0 +1,18 @@
+{
+  "baseCommit": "5a4c38f928916eec84007fd23455822d761b7fe9",
+  "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer make check BUILD_DIR=/tmp/sillies-memory-and-teams-check",
+  "exitCode": 0,
+  "nativeTests": 705,
+  "nativeRuns": 18,
+  "pythonTests": 92,
+  "targetedMemoryTests": 7,
+  "targetedVisibilityAndHUDTests": 10,
+  "presentation": "headless",
+  "guiChecks": "Not run: the user has an active meeting; the running app was preserved.",
+  "remainingLiveValidation": "Teams Listen/Participate with the corrected build, including covering/revealing its companion and controls with another app.",
+  "nativeBenchmarks": "Paused for the live meeting investigation. Preserve the interrupted held-out receipt; do not count it as a model failure.",
+  "runningAppPID": 23222,
+  "restarted": false,
+  "pushed": false,
+  "logSHA256": "79c07a1c654c87ded26a47df2a8721756233d06bfe3b7a6f4973e53ebe97a1d5"
+}

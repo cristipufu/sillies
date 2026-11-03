@@ -1,0 +1,14 @@
+{
+  "Sources/SilliesApp/App/CompanionInstance.swift": "fd92e984508aade5cf0dd82ba846c63f86c19cb5d9d9973ef1743c19fdaa15e5",
+  "Sources/SilliesApp/Platform/AGENTS.md": "12b5d0fa0609aeb8fe1963d04f016b6fb5890693f77f558aa8787179d708b6c7",
+  "Sources/SilliesApp/Platform/BoundWindowSnapshots.swift": "b9ed5a4761c154ab677ede3f2eea5f11815857f1302538dbc8d4878e9410101e",
+  "Sources/SilliesApp/UI/AGENTS.md": "519f04b2d213999db1b583f57987adab68542425b89e17938c5d0fc09798c0a8",
+  "Sources/SilliesApp/UI/CompanionHUDController.swift": "d0ec4bf5261f65df64aaee395fe12a6c6fe69c8193dda22ca03ffe2c41184518",
+  "Sources/SilliesReasoning/MemorySaveResponse.swift": "23fa06b195b89d7a5479f3283ce6da66982cdf646a2e212565e3be77f5e11075",
+  "Sources/SilliesReasoning/MemorySaveTool.swift": "553c97122721cacd818a564dab1705c8dfd2b091c76424a10fd57e3eaff1ee42",
+  "Tests/SilliesAppTests/AnimationExtensionTests.swift": "86bf1230bee3f5f05242bbb3a3fee320cf8723a2d7beaff1fb46ddd217be5171",
+  "Tests/SilliesAppTests/BoundWindowVisibilityTests.swift": "151e227adaec51b7242c6012e9a46ae97da89982170acdcc5785c9b3e5aa22b1",
+  "Tests/SilliesAppTests/MeetingSpeechBubbleTests.swift": "1119d87526eb77eedf10db43160deef87750d8c5dc84f6776635e1ab7937bfcd",
+  "Tests/SilliesAppTests/execution-modes.json": "54ffd991219825a1470ccbdec3d6a88cd6f20c608a25e1c6c97fa326f44fb57b",
+  "Tests/SilliesVaultTests/MemoryReplacementTests.swift": "7eba54b4f1243801e17a07489c2045c88adf140d9de382d42f6b5492b8073551"
+}

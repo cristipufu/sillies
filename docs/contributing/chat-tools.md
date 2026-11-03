@@ -125,6 +125,12 @@ transaction, retains its canonical topic key, and rejects stale, deleted or fore
 prevents a correction that names its target from creating another fact under a different key.
 The model still owns the semantic decision to correct a fact rather than create one; IDs do not
 prove that decision is appropriate. Evaluate actual resulting memories, including duplicate facts.
+Write results use `MemorySaveResponse`: `saved` includes the committed identity, revision, canonical
+key and value; `notSaved` includes a refusal reason. A reduced evidence budget retains the short
+`saved` acknowledgement, and recovery reuses the cached receipt rather than executing the write again.
+Never advise a model to retry a refused correction as a new fact. A conversational claim that a fact
+was saved is not proof of persistence, and valid provenance alone does not prove consent or factual
+entailment. Evaluate opt-outs, questions and corrections against both the reply and actual stored state.
 The host binds the original current
 user message and its ID as provenance, so model capitalization or punctuation cannot break a save.
 Memory search returns an explicitly user-attributed envelope, with original excerpts labeled as user

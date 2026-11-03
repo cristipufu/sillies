@@ -68,6 +68,95 @@ import Testing
   #expect(try await fixture.store.memories(fixture.handle, query: "").count == 1)
 }
 
+@Test func memoryWriteAcknowledgementsDescribeTheCommittedIdentityAndCanonicalFact() async throws {
+  let fixture = try await MemoryReplacementFixture()
+  defer { fixture.remove() }
+  let tool = MemorySaveTool(
+    repository: fixture.store, handle: fixture.handle, statement: fixture.correction)
+  let output = try await tool.call(
+    arguments: JSONEncoder().encode([
+      "key": "different_topic", "value": "Sam", "memoryID": fixture.original.saved.id.uuidString,
+      "revision": fixture.original.saved.revision.uuidString,
+    ]))
+  let committed = try #require(try await fixture.store.memories(fixture.handle, query: "").first)
+  let response = try JSONDecoder().decode(
+    MemoryWriteAcknowledgement.self, from: Data(output.text.utf8))
+  #expect(response.status == "saved")
+  #expect(response.reason == nil)
+  #expect(response.memory?.memoryID == committed.id)
+  #expect(response.memory?.revision == committed.revision)
+  #expect(response.memory?.key == committed.key)
+  #expect(response.memory?.value == committed.value)
+  #expect(committed.key == fixture.original.saved.key)
+  #expect(output.memoryReceipt?.saved == committed)
+  let brief = try JSONDecoder().decode(
+    MemoryWriteAcknowledgement.self, from: Data(output.briefText.utf8))
+  #expect(brief.status == "saved")
+  #expect(brief.reason == nil)
+  #expect(brief.memory == nil)
+}
+
+@Test func refusedMemoryCorrectionsAcknowledgeNoWriteAndKeepTheOriginal() async throws {
+  let fixture = try await MemoryReplacementFixture()
+  defer { fixture.remove() }
+  let tool = MemorySaveTool(
+    repository: fixture.store, handle: fixture.handle, statement: fixture.correction)
+  for (reference, reason) in [
+    (["memoryID": fixture.original.saved.id.uuidString], "invalidReplacementReference"),
+    (["memoryID": UUID().uuidString, "revision": UUID().uuidString], "replacementChanged"),
+  ] {
+    var arguments = reference
+    arguments["key"] = "name"
+    arguments["value"] = "Sam"
+    let output = try await tool.call(arguments: JSONEncoder().encode(arguments))
+    let response = try JSONDecoder().decode(
+      MemoryWriteAcknowledgement.self, from: Data(output.text.utf8))
+    #expect(response.status == "notSaved")
+    #expect(response.reason == reason)
+    #expect(response.memory == nil)
+    #expect(output.memoryReceipt == nil)
+  }
+  let memories = try await fixture.store.memories(fixture.handle, query: "")
+  #expect(memories == [fixture.original.saved])
+  #expect(try await fixture.store.recentMemoryChanges(fixture.handle).count == 1)
+}
+
+private struct MemoryWriteAcknowledgement: Decodable {
+  struct Memory: Decodable, Equatable {
+    let memoryID: UUID
+    let revision: UUID
+    let key: String
+    let value: String
+  }
+  let status: String
+  let memory: Memory?
+  let reason: String?
+}
+
+@Test func aSmallEvidenceBudgetKeepsTheSaveAcknowledgementWithoutRepeatingTheWrite() async throws {
+  let fixture = try await MemoryReplacementFixture()
+  defer { fixture.remove() }
+  let tool = MemorySaveTool(
+    repository: fixture.store, handle: fixture.handle, statement: fixture.correction)
+  let toolbox = try ConversationToolbox(tools: [tool], progress: { _ in })
+  try await toolbox.configure(
+    evidence: .init(totalTokens: 80, resultTokens: 80, measure: { $0.utf8.count }), maximumCalls: 4)
+  let call = ConversationToolCall(
+    id: "correct-name", name: "save_memory",
+    arguments: try JSONEncoder().encode([
+      "key": "name", "value": "Sam", "memoryID": fixture.original.saved.id.uuidString,
+      "revision": fixture.original.saved.revision.uuidString,
+    ]))
+  let answer = try await toolbox.invoke(call)
+  let response = try JSONDecoder().decode(MemoryWriteAcknowledgement.self, from: Data(answer.utf8))
+  #expect(response.status == "saved")
+  #expect(response.memory == nil)
+  #expect(try await fixture.store.memories(fixture.handle, query: "").first?.value == "Sam")
+  try await toolbox.beginRecovery()
+  #expect(try await toolbox.invoke(call) == answer)
+  #expect(try await fixture.store.recentMemoryChanges(fixture.handle).count == 2)
+}
+
 private struct MemoryReplacementFixture {
   let directory: URL
   let store: ConversationLibrary

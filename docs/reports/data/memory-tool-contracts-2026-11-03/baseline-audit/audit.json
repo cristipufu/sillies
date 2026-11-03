@@ -1,0 +1,178 @@
+{
+  "archiveSHA256": "d8b80eedf9344086bc89c4a16496df7fc99d328b9e1ed8e0d57126278ba0708e",
+  "corpusHash": "b60f54e17ae2f63a80cd8469038b472a63c54e95e32b776f4619e9b5ff4030e6",
+  "integrity": "recorded checks and primary metrics reproduced",
+  "meaning": "Integrity is not semantic correctness, statistical confidence or release readiness.",
+  "models": {
+    "apple": {
+      "completedCases": 8,
+      "plannedCases": 8,
+      "observedTurns": 14,
+      "primary": {
+        "cases": 8,
+        "passed": 3,
+        "turns": 14,
+        "errors": 0,
+        "checks": {
+          "behavior": {
+            "passed": 51,
+            "total": 58
+          },
+          "exact_answer": {
+            "passed": 2,
+            "total": 5
+          },
+          "lexical_anchor": {
+            "passed": 8,
+            "total": 8
+          }
+        },
+        "firstTextP50": 2.993756417,
+        "firstTextP95": 3.315367375,
+        "totalP50": 3.021938042,
+        "totalP95": 3.468551667
+      },
+      "reviews": {
+        "pass": 6,
+        "fail": 8,
+        "uncertain": 0,
+        "primaryTurns": 14,
+        "primaryReviewedTurns": 14,
+        "primaryRubricReviewedTurns": 14,
+        "legacyReplyOnlyReviews": 0,
+        "rubricCases": {
+          "pass": 2,
+          "fail": 6,
+          "pending": 0
+        }
+      },
+      "contextAnswerLeakage": [
+        {
+          "job": "bounded-archive-continuity--app--r1",
+          "turn": 1,
+          "answerAnchors": [
+            "amber-61"
+          ]
+        },
+        {
+          "job": "bounded-archive-continuity--app--r1",
+          "turn": 2,
+          "answerAnchors": [
+            "Mina"
+          ]
+        }
+      ]
+    },
+    "lfm-2.5-24b-a2b": {
+      "completedCases": 8,
+      "plannedCases": 8,
+      "observedTurns": 14,
+      "primary": {
+        "cases": 8,
+        "passed": 6,
+        "turns": 14,
+        "errors": 0,
+        "checks": {
+          "behavior": {
+            "passed": 55,
+            "total": 58
+          },
+          "exact_answer": {
+            "passed": 5,
+            "total": 5
+          },
+          "lexical_anchor": {
+            "passed": 8,
+            "total": 8
+          }
+        },
+        "firstTextP50": 5.551048875,
+        "firstTextP95": 18.369342583,
+        "totalP50": 5.5863475000000005,
+        "totalP95": 19.011046875
+      },
+      "reviews": {
+        "pass": 12,
+        "fail": 2,
+        "uncertain": 0,
+        "primaryTurns": 14,
+        "primaryReviewedTurns": 14,
+        "primaryRubricReviewedTurns": 14,
+        "legacyReplyOnlyReviews": 0,
+        "rubricCases": {
+          "pass": 6,
+          "fail": 2,
+          "pending": 0
+        }
+      },
+      "contextAnswerLeakage": [
+        {
+          "job": "bounded-archive-continuity--app--r1",
+          "turn": 1,
+          "answerAnchors": [
+            "amber-61"
+          ]
+        },
+        {
+          "job": "bounded-archive-continuity--app--r1",
+          "turn": 2,
+          "answerAnchors": [
+            "Mina"
+          ]
+        }
+      ]
+    },
+    "gemma-4-12b": {
+      "completedCases": 8,
+      "plannedCases": 8,
+      "observedTurns": 14,
+      "primary": {
+        "cases": 8,
+        "passed": 4,
+        "turns": 14,
+        "errors": 1,
+        "checks": {
+          "behavior": {
+            "passed": 53,
+            "total": 58
+          },
+          "exact_answer": {
+            "passed": 2,
+            "total": 5
+          },
+          "lexical_anchor": {
+            "passed": 8,
+            "total": 8
+          }
+        },
+        "firstTextP50": 18.855708333,
+        "firstTextP95": 22.184676166,
+        "totalP50": 19.286226166,
+        "totalP95": 23.174781
+      },
+      "reviews": {
+        "pass": 8,
+        "fail": 6,
+        "uncertain": 0,
+        "primaryTurns": 14,
+        "primaryReviewedTurns": 14,
+        "primaryRubricReviewedTurns": 14,
+        "legacyReplyOnlyReviews": 0,
+        "rubricCases": {
+          "pass": 3,
+          "fail": 5,
+          "pending": 0
+        }
+      },
+      "contextAnswerLeakage": [
+        {
+          "job": "bounded-archive-continuity--app--r1",
+          "turn": 1,
+          "answerAnchors": [
+            "amber-61"
+          ]
+        }
+      ]
+    }
+  }
+}

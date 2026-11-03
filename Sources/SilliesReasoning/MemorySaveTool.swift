@@ -44,7 +44,7 @@ struct MemorySaveTool: ConversationTool {
   func call(arguments: Data) async throws -> ConversationToolOutput {
     let args = try ConversationToolArguments.decode(Arguments.self, from: arguments)
     guard statement.role == .user, !statement.text.isEmpty else {
-      return .init(text: "Not saved: a current user statement is required.")
+      return try MemorySaveResponse.refused(.currentUserStatementRequired)
     }
     do {
       var write = MemoryWrite(
@@ -53,18 +53,11 @@ struct MemorySaveTool: ConversationTool {
         source: .init(messageID: statement.id, quote: statement.text), savedAt: Date())
       if let reference = try args.replacement() { write = write.replacing(reference) }
       let receipt = try await repository.remember(write)
-      return .init(text: "Memory saved. The app displays the fact and an Undo action.").remembering(
-        receipt)
+      return try MemorySaveResponse.saved(receipt)
     } catch ReferenceError.invalid {
-      return .init(
-        text:
-          "Not saved: a correction requires both the memoryID and revision from search_memories. Omit both for a new fact."
-      )
+      return try MemorySaveResponse.refused(.invalidReplacementReference)
     } catch MemoryMutationError.replacementChanged {
-      return .init(
-        text:
-          "Not saved: the referenced memory is unavailable or has changed. Search memories again before correcting it."
-      )
+      return try MemorySaveResponse.refused(.replacementChanged)
     }
   }
 }

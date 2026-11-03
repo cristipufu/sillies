@@ -1,0 +1,23 @@
+{
+  "makeCheck": {
+    "exitCode": 0,
+    "nativeTests": 695,
+    "checkedRuns": 18,
+    "pythonTests": 92,
+    "architectureFixtures": 87,
+    "presentation": "headless",
+    "modelFixtures": 74
+  },
+  "millionMessageSearch": {
+    "fixtureMessages": 1000000,
+    "writeAndPageSeconds": 0.0050125,
+    "cancellationSeconds": 0.007765584,
+    "readerReusableAfterCancellation": true,
+    "passed": true,
+    "observations": 1
+  },
+  "newRegressions": 5,
+  "nativeObservedTurns": 62,
+  "nativeReviewScope": "Implementation review; not independent human review",
+  "runningAppRestarted": false
+}

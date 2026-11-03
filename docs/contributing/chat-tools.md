@@ -23,8 +23,14 @@ An unmatched configured closing delimiter is rejected before that delimiter reac
 including when split across chunks. Earlier valid deltas can remain as an interrupted reply; do not
 silently replace already displayed or spoken text. This validates protocol framing, not answer truth.
 
-Conversation search excludes the current user message before ranking and limiting results. Vault
-search explicitly returns partial excerpts; read a record for details absent from the search result.
+Conversation search excludes the current user message before ranking and limiting results. It
+extracts query-relevant FTS snippets after ranking, rather than returning a message prefix. Its
+envelope identifies the conversation source, speakers, message order, dates, complete/partial
+messages, and whether more matches exist. Results are selected by relevance and presented in
+chronological order. Smaller context representations retain fewer complete result objects with
+honest coverage. A miss means no matches for those keywords, not that the archive is empty;
+another focused query may find a different part of a long message. Retrieval is lexical, not semantic.
+Vault search explicitly returns partial excerpts; read a record for details absent from the search result.
 Record reads rank bounded, overlapping passages by distinct query-term coverage. They report the
 actual character range and total captured-text length, including in shortened recovery results.
 The optional `offset` parameter continues at the returned `nextOffset`; omit it for a new query or

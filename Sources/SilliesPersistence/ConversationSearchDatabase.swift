@@ -3,6 +3,10 @@ import SilliesCore
 
 /// A read-only WAL connection. Ranking never occupies the writer's actor or blocks its commits.
 public final class ConversationSearchDatabase {
+  // FTS5's snippet limit is in indexed tokens, not model tokens; evidence admission measures
+  // the encoded result separately. Keep extraction after ranking the bounded identities.
+  private static let excerptTokens = 64
+  private static let textColumn = 2
   private let sql: VaultSQLConnection
   private let rows = ConversationRowDecoder()
 
@@ -45,18 +49,22 @@ public final class ConversationSearchDatabase {
         WHERE \(filter)
         ORDER BY relevance,m.sequence DESC LIMIT ?
       )
-      SELECT m.sequence,m.created,m.body,c.id,c.name FROM matches
+      SELECT m.sequence,m.created,m.body,c.id,c.name,
+        (SELECT snippet(conversation_search,\(Self.textColumn),'','','…',\(Self.excerptTokens))
+         FROM conversation_search WHERE rowid=m.sequence AND conversation_search MATCH ?)
+      FROM matches
       JOIN conversation_messages m ON m.sequence=matches.sequence
       JOIN conversations c ON c.id=m.owner
       ORDER BY matches.relevance,m.sequence DESC
       """,
-      values + [.integer(Int64(request.limit))]
+      values + [.integer(Int64(request.limit)), .text(expression)]
     ) { row in
       results.append(
         try .init(
           owner: .init(
             id: VaultSQLConnection.text(row, column: 3),
-            name: VaultSQLConnection.text(row, column: 4)), entry: rows.entry(row)))
+            name: VaultSQLConnection.text(row, column: 4)), entry: rows.entry(row),
+          excerpt: VaultSQLConnection.text(row, column: 5)))
     }
     return results
   }

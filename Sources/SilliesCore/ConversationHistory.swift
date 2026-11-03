@@ -167,9 +167,12 @@ public struct ConversationSearchRequest: Sendable {
 public struct ConversationSearchMatch: Identifiable, Sendable {
   public let owner: ConversationOwner
   public let entry: ConversationEntry
+  /// A query-relevant fragment of the original message. The complete entry remains available to UI.
+  public let excerpt: String
   public var id: UUID { entry.id }
-  public init(owner: ConversationOwner, entry: ConversationEntry) {
+  public init(owner: ConversationOwner, entry: ConversationEntry, excerpt: String) {
     self.owner = owner
     self.entry = entry
+    self.excerpt = excerpt
   }
 }

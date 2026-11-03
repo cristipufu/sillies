@@ -4,6 +4,8 @@ This target owns versioned SQLite records and safe filesystem operations and dep
 
 `VaultDatabase` commits body, bounded header, and FTS5 document changes in one transaction. Page reads must not decode bodies. Updates to missing records must not recreate them. Search and retention operate on indexed metadata without loading transcripts. Bind all external SQL values and check native counts/conversions.
 
+Conversation search ranks bounded message identities before extracting query-relevant FTS excerpts. Never substitute the opening of a matching message for its relevant evidence. Keep original entries separate from excerpts, preserve speaker and chronology, and test details beyond long prefixes. Excerpt extraction must not move body decoding into the unbounded ranking pass.
+
 Use atomic replacement for attachment writes and file-only unlink for deletion. Validate filenames before I/O; attachments cannot refer to the database or its sidecars. Never recursively delete a path obtained from saved metadata. The database cleanup journal records filenames before writing new bytes and removes retired files only after committed metadata no longer references them. On reopening, preserve referenced files and finish only journaled cleanup.
 
 `VaultWriteCoordinator` in the app owns per-ID coalescing and retains failed image payloads for Retry. Test missing/corrupt/unreadable storage, transaction rollback, attachment recovery, and deletion during background work. Run `make check`.

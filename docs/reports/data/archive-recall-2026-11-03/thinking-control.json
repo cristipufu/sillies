@@ -1,0 +1,9 @@
+{
+  "diagnosticOnly": true,
+  "sourceFile": "Sources/SilliesTextInference/MLXReasoningPolicy.swift",
+  "originalSHA256": "71dfdd542fc3f622121f4e84f0476b915ab99172535ef8411a71453a05b2b292",
+  "experimentalSource": "import MLXLMCommon\nimport SilliesTextModels\n\n/// Maps reviewed checkpoint capabilities to native prompt and channel conventions.\nstruct MLXReasoningPolicy {\n  let reasoning: TextModelPreparation.Reasoning?\n\n  var configuration: ReasoningConfig? {\n    switch reasoning {\n    case .alwaysOnThinkTags: .alwaysOnThinking\n    case .switchableThinkTags: .thinkTagsWithEnableThinking\n    case nil: nil\n    }\n  }\n\n  var templateContext: [String: any Sendable] {\n    switch reasoning {\n    case .alwaysOnThinkTags: [:]\n    case .switchableThinkTags: [\"enable_thinking\": false]\n    case nil: [\"enable_thinking\": true]\n    }\n  }\n}\n",
+  "model": "gemma-4-12b",
+  "conversationReasoningTokens": 512,
+  "note": "Same candidate worker and prompts; temporary helper enables native template thinking for the nil reasoning declaration. Only Gemma runs. Original helper source restored; installed model files untouched."
+}

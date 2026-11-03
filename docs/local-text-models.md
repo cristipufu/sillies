@@ -16,6 +16,8 @@ continuity remains uneven. These are integration results, not measurements on ea
 configuration. Automatic memory saving remains unreliable across several models.
 
 For continuing conversations, also read the [context, summary and identity follow-up](reports/continuity-review-2026-11-03.md).
+The [archive-recall investigation](reports/archive-recall-2026-11-03.md) fixes missing passages in
+conversation search and records the remaining tool-selection failures separately from retrieval.
 It reproduces Apple's difficulty correcting an earlier mistaken identity, reviews source attribution,
 and checks repeated checkpoint rollover separately from answer accuracy. Those controls do not replace
 the scored comparison below.

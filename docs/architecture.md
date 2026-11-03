@@ -92,6 +92,11 @@ without occupying the actor serving saves, pages and checkpoints. Scoped SQLite 
 observe task cancellation during execution; they are removed before returning or throwing. Clearing
 history invalidates pending search snapshots. This separates cancellation from write transactions,
 whose rollback must still run after task cancellation.
+Ranking selects bounded message identities first; a correlated FTS snippet read extracts the
+matching passage only for those results. `ConversationSearchEvidence` labels source, speaker,
+message order, ISO dates, partial excerpts and additional matches. Smaller evidence representations
+reduce the result count while preserving whole excerpts and their attribution, never clipping JSON.
+An empty query and a completed search with no matches are distinct outcomes.
 
 `ConversationCheckpointMaintenance` owns one coalescing producer, queueing identifiers rather than
 transcripts. It prepares one bounded source page and one summary per idle slice through

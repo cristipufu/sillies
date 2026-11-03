@@ -1,0 +1,16 @@
+{
+  "baseline-audit/audit.json": "6d7320a58baa96a30f78790d9a3ad53982ad036152546b216422abc29e6df21d",
+  "baseline.json.gz": "d36e0fd163ca26ce2b0d282b488ad9ca87dd19814c88e95cb10d2ddc805e1616",
+  "corpus.json.gz": "25af0fdb8ccee3b6da5a991dbd9ea6f32015a9898942dcdffa293f93ce685db0",
+  "final-audit/audit.json": "9d91c56788beed05980a3b89016005df5798bc8df00f121a6a2245984adf127e",
+  "final-source-hashes.json.gz": "2a109b483692458d5ba65ca8ee44059d2125ddc6a339499de6f1c84a5a68380e",
+  "final.json.gz": "8402f41ece7e4831e567a4e48b76ed3395e0ae7a4346b920ddfe703c207be7b9",
+  "retrieval-only-audit/audit.json": "157c591feab5dcbcd85e7d4db021376ee5a691b1269f600ea65e8449a55937f1",
+  "retrieval-only.json.gz": "164683ba2e5e5f9657ea293659fde4197bc282992358f9d10435b6bb9181ab3d",
+  "retrieval-source-hashes.json.gz": "3b7f368e5e09ee8151aef785e72767576137abc2c8fd38b6e71d706bcfcb1840",
+  "source-verification.json": "84f893ef04d5f60189c4b6af3d8ade74c7355eee7694391307926f460fa252c0",
+  "thinking-audit/audit.json": "6004f33f2e265be0519b641f67c4fd6f02a478bd14c505737ceeb77a9bbbab8d",
+  "thinking-control.json": "71a6dcdc123e5c2221056189323765963cea6e9ee8c5904e2c4bf6e05e7ec691",
+  "thinking.json.gz": "d63b0279abe2bc27eaa95ab3a5c94d87143d0775a9594fefa452032b9c41243a",
+  "validation.json": "327a9b8f369bdefdd71320102d1b7046f7ca73dc36c448f5a6ed4ed46925fdd7"
+}

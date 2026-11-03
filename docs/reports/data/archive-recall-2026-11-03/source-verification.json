@@ -1,0 +1,8 @@
+{
+  "baseCommit": "a83ee8383d053b1e4f69827b8f34cd3fe61282d5",
+  "nativeCandidateSourceReceipt": "final-source-hashes.json.gz",
+  "testedSourceChangesAfterNativeRun": {
+    "Sources/SilliesReasoning/ConversationSearchEvidence.swift": "475169fae73daa6accfa5dbdf2443f836030ea229977d5037ce575f7cef5d85c"
+  },
+  "explanation": "After native runs, ConversationSearchEvidence gained a 1600-byte escaped-JSON excerpt limit with explicit omission instead of sending oversized source text. No recorded native excerpt exceeds that limit. Default model settings and the experimental reasoning helper source were restored. Unit regressions and make check cover the final source."
+}

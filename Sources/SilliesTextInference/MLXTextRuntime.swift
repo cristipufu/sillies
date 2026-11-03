@@ -10,6 +10,12 @@ actor MLXTextRuntime {
   private static let cacheBytes = 128 * 1024 * 1024
   private var model: ModelContainer?
   private var directory: URL?
+  private var constraints = CheckpointGenerationConstraints.unconstrained
+  private let rejectionObserver: (@Sendable (RejectedToolCall) async -> Void)?
+
+  init(rejectionObserver: (@Sendable (RejectedToolCall) async -> Void)? = nil) {
+    self.rejectionObserver = rejectionObserver
+  }
 
   func generate(_ request: TextInferenceRequest, receive: @escaping TextDeltaSink) async throws
     -> TextGenerationOutput
@@ -69,11 +75,17 @@ actor MLXTextRuntime {
     var collector = await MLXGenerationCollector(
       style: generation.style,
       channel: .init(configuration: container.configuration, promptTail: promptTail))
-    let stream = try await container.generate(
-      input: input, parameters: parameters, tools: tools.isEmpty ? nil : tools)
+    let selectedParameters = parameters
+    let components = constraints.components
+    let stream = try await container.perform(nonSendable: input) { context, input in
+      try MLXLMCommon.generate(
+        input: input, parameters: selectedParameters, context: context, components: components,
+        tools: tools.isEmpty ? nil : tools)
+    }
     defer { Memory.clearCache() }
     for await event in stream {
       try Task.checkCancellation()
+      if case .rejectedToolCall(let rejection) = event { await rejectionObserver?(rejection) }
       if let delta = try collector.consume(event) { try await receive(delta) }
     }
     return try await collector.finish(receive: receive)
@@ -84,6 +96,7 @@ actor MLXTextRuntime {
     if directory == location, let model { return model }
     model = nil
     Memory.clearCache()
+    let loadedConstraints = try CheckpointGenerationConstraints.load(from: location)
     let loaded = try await LLMModelFactory.shared.loadContainer(
       from: location, using: LocalTokenizerLoader())
     await loaded.update {
@@ -93,6 +106,7 @@ actor MLXTextRuntime {
       }
     }
     directory = location
+    constraints = loadedConstraints
     model = loaded
     return loaded
   }

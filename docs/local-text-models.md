@@ -27,6 +27,9 @@ The [channel and memory decision follow-up](reports/channel-memory-followup-2026
 the interrupted evaluation, fixes a Gemma streaming marker leak, and measures an Apple-only planning
 experiment that was rejected. Additional inference strategies must earn their latency cost for each
 model; no classifier has been enabled globally.
+The [checkpoint-settings audit](reports/checkpoint-generation-settings-2026-11-03.md) identifies and
+fixes Gemma 12B's missing token-suppression requirement, with exact native replays and a review of
+all twelve downloadable text checkpoints. It does not replace the scored comparison below.
 
 | Model | Model release | Required Mac RAM | Download | Reviewed task score | Median first text |
 | --- | --- | --- | --- | --- | --- |

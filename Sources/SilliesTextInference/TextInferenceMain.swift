@@ -12,6 +12,16 @@ import SilliesTextModels
     if let library = Bundle.main.url(forResource: "mlx", withExtension: "metallib") {
       GPU.metallib = library
     }
+    if CommandLine.arguments.count == 3, CommandLine.arguments[1] == "--inspect-generation" {
+      do {
+        try await TextGenerationInspection.run(
+          requestURL: URL(fileURLWithPath: CommandLine.arguments[2]))
+      } catch {
+        fputs("Synthetic generation inspection failed: \(error)\n", stderr)
+        exit(EXIT_FAILURE)
+      }
+      return
+    }
     if CommandLine.arguments.count == 3, CommandLine.arguments[1] == "--inspect-tokenizer" {
       do {
         try await TextTokenizerInspection.run(
@@ -30,6 +40,8 @@ import SilliesTextModels
         try TextReasoningSelfCheck.run()
         try await TextChannelBoundarySelfCheck.run()
         try await TextGenerationFailureSelfCheck.run()
+        try TextGenerationConstraintsSelfCheck.run()
+        try TextRejectedToolSelfCheck.run()
         try await TextInputSelfCheck.run()
       } catch {
         fputs("Native conversation check failed: \(error)\n", stderr)

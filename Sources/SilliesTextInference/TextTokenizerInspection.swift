@@ -10,13 +10,9 @@ enum TextTokenizerInspection {
   }
 
   static func run(requestURL: URL) async throws {
-    let handle = try FileHandle(forReadingFrom: requestURL)
-    let data = try handle.read(upToCount: TextInferenceWire.maximumMessageBytes + 1) ?? Data()
-    try handle.close()
-    guard data.count <= TextInferenceWire.maximumMessageBytes else {
-      throw TextModelError.invalidResponse
-    }
-    let request = try JSONDecoder().decode(TextInferenceRequest.self, from: data)
+    let request = try TextInferenceJSON.read(
+      TextInferenceRequest.self, from: requestURL,
+      maximumBytes: TextInferenceWire.maximumMessageBytes)
     let tokenizer = try await LocalTokenizerLoader().load(from: request.configuration.directory)
     let tokens = try tokenizer.applyChatTemplate(
       messages: MLXConversationInput.templateMessages(request.generation),

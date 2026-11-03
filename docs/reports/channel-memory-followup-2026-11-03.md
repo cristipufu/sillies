@@ -99,6 +99,10 @@ receipts are retained and explicitly excluded. The subsequent run forwards the s
 preparation generations separately. None of this experimental classifier infrastructure is retained
 in production.
 
+Subsequent investigation [captured and resolved that rejected native call](checkpoint-generation-settings-2026-11-03.md):
+Gemma 12B generated an audio control token that its checkpoint explicitly suppresses. The original
+receipts remain unchanged; the later report preserves exact replays and the decoder fix separately.
+
 The architectural rule is **shared orchestration, model-specific measured strategy**. Existing
 context, sampling and native protocol profiles remain in force. An extra planning call should only
 be enabled for a selected profile after showing a useful correctness/latency trade-off on that model.

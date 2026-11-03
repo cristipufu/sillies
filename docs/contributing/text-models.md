@@ -47,6 +47,18 @@ repetition context. Publisher decoding recommendations are starting points, not 
 application scores. The generic adapter applies these settings without model-ID branches, and a
 feature can request less output than the task ceiling.
 
+Audit `generation_config.json` separately from task tuning. The native loader applies checkpoint
+EOS IDs and stop strings; `CheckpointGenerationConstraints` validates and applies `suppress_tokens`
+before sampling, after repetition penalties. IDs belong to that checkpoint's vocabulary, never a
+global model-name switch. Missing suppression metadata means no additional mask; malformed metadata
+fails preparation. The app profile deliberately selects temperature, top-p/top-k and penalties.
+Document why those choices differ from publisher defaults and measure any changes in the real loop.
+Do not assume every Transformers generation option is supported: review any newly declared forced
+tokens, beginning-only suppression, forbidden sequences or other constraints before adding a model
+or updating its revision. None of the twelve currently pinned text checkpoints declares these
+additional constraints. Test actual token selection and malformed configuration, not just decoded
+strings; repairing an invalid tool name after generation is not an equivalent implementation.
+
 `TextGenerationStyle.summary` identifies history compaction. Current LFM profiles reserve 2,048
 reasoning tokens for summaries and 1,024 for conversation and precise transformations. These values
 belong to those profiles; another checkpoint must declare its own reviewed allowances. Admission,

@@ -1,0 +1,146 @@
+{
+  "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer make check BUILD_DIR=/tmp/sillies-suppression-check",
+  "exitCode": 0,
+  "presentation": "headless",
+  "verifiedNativeTests": 707,
+  "verifiedRuns": 18,
+  "toolingTests": 92,
+  "nativeTestReceipt": [
+    {
+      "bundle": "SilliesAppTests",
+      "framework": "swift-testing",
+      "tests": 189,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesAudioTests",
+      "framework": "swift-testing",
+      "tests": 41,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesChatTests",
+      "framework": "swift-testing",
+      "tests": 26,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesCoreTests",
+      "framework": "swift-testing",
+      "tests": 154,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesDesignTests",
+      "framework": "swift-testing",
+      "tests": 5,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesFishSpeechTests",
+      "framework": "swift-testing",
+      "tests": 12,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesModelStoreTests",
+      "framework": "swift-testing",
+      "tests": 2,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesModelStoreTests",
+      "framework": "xctest",
+      "tests": 28
+    },
+    {
+      "bundle": "SilliesPersistenceTests",
+      "framework": "swift-testing",
+      "tests": 18,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesReasoningTests",
+      "framework": "swift-testing",
+      "tests": 58,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesSpeechTests",
+      "framework": "swift-testing",
+      "tests": 6,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesSpeechTests",
+      "framework": "xctest",
+      "tests": 27
+    },
+    {
+      "bundle": "SilliesTTSTests",
+      "framework": "swift-testing",
+      "tests": 22,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesTextModelsTests",
+      "framework": "swift-testing",
+      "tests": 33,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesTextModelsTests",
+      "framework": "xctest",
+      "tests": 1
+    },
+    {
+      "bundle": "SilliesVaultTests",
+      "framework": "swift-testing",
+      "tests": 63,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesVoicePlaybackTests",
+      "framework": "swift-testing",
+      "tests": 13,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesWritingTests",
+      "framework": "swift-testing",
+      "tests": 9,
+      "presentation": "headless"
+    }
+  ],
+  "logSHA256": "5bd893eee965acf50e66ae497c7364cfd3cdca5ecee8f075ed48f7b018772f4b",
+  "packagedHelperGPUAndProtocolChecks": "passed",
+  "inferenceParentLifecycleChecks": "passed",
+  "catalogValidation": "passed",
+  "localizationExtraction": "925 strings matched",
+  "visibleGUIValidation": "not run; no window changes",
+  "baseCommit": "eedb7010ff027b5cedbe5cb720e7d5f2379b0595",
+  "sources": {
+    "Sources/SilliesTextInference/CheckpointGenerationConstraints.swift": "833d287f1a367ca60bf211254893d07a65314154fab9863a72854bb068c9ddbd",
+    "Sources/SilliesTextInference/LocalTokenizer.swift": "b7e56679228988fa94e461b56a47167f39d5787b47dfe8b11bcca7dd7a7ec657",
+    "Sources/SilliesTextInference/MLXConversationInput.swift": "2eeebc9441134328fa5b983fb24074381194b306fd798704b6e8394b5557ab3f",
+    "Sources/SilliesTextInference/MLXGenerationCollector.swift": "9efa0e8c401007ce96b5a724bc6cdddba08aaeddb64b8318b8c31b4f3833149f",
+    "Sources/SilliesTextInference/MLXInputProcessor.swift": "f4309c459e7c4053e4e0b874be1d0319446d0023721189dc5e896e2db9f41b60",
+    "Sources/SilliesTextInference/MLXReasoningChannel.swift": "6c0d5b259c7fa7745d135c6ebd4f463e9407873a78900ca5c684f47c3c01a829",
+    "Sources/SilliesTextInference/MLXReasoningPolicy.swift": "71dfdd542fc3f622121f4e84f0476b915ab99172535ef8411a71453a05b2b292",
+    "Sources/SilliesTextInference/MLXSuppressedTokens.swift": "a408af316c9320ab2d49d44cf0f1e3c82c33ec428f80a2177a1c706b6207b8ca",
+    "Sources/SilliesTextInference/MLXTextRuntime.swift": "ded2e93ca8529e117d2e69b1dd58ea4ce589e1d600d5e96c43016e296dfc2286",
+    "Sources/SilliesTextInference/MLXToolRejection.swift": "8714d156b61f7fc1d45e3135982c170b643a802091d0b805752534afd393775b",
+    "Sources/SilliesTextInference/ReasoningResponseBoundary.swift": "b5caa0d42c3c4a1093cc97933b7b312ed51a73ac8add9fa1fb88cee8412c4d5c",
+    "Sources/SilliesTextInference/TextChannelBoundarySelfCheck.swift": "43cdd1fec07980bb58e58ba4a041d1523893cd918967860b7e60942aeb8fa60f",
+    "Sources/SilliesTextInference/TextConversationSelfCheck.swift": "8c1da8e30a1e25e75a1bbaefedc0de4343c133e9f77ed59a4796de042997874b",
+    "Sources/SilliesTextInference/TextGenerationConstraintsSelfCheck.swift": "85b3c7e2d7c4001dcc2c427236a054eec20925be148c71ec05fa8b2f6e429bf6",
+    "Sources/SilliesTextInference/TextGenerationFailureSelfCheck.swift": "fa591080382cb412262726b94762d18ad9fb57409fd34285495f3b2bf0ca3164",
+    "Sources/SilliesTextInference/TextGenerationInspection.swift": "3ea9a190b90fe5a14d78608277b058048f89ee985f38f7f7862cd17cf9ab5b04",
+    "Sources/SilliesTextInference/TextInferenceJSON.swift": "f64f11d403f741ad64843c9a825fe7ec3e4905390e0a362e091791fc1269f737",
+    "Sources/SilliesTextInference/TextInferenceMain.swift": "a37872fe59a65bc24506976662074a38d1942c4bfe1106da67711730b67caa86",
+    "Sources/SilliesTextInference/TextInputSelfCheck.swift": "3882db93e7e9ecd524ac1b0caf1b4a4c09e44a52e474c6cceea3aa7b14f2223e",
+    "Sources/SilliesTextInference/TextReasoningSelfCheck.swift": "5f240bea8fad71bc6fa3d70b0c580ddae5e0e1894b6ae56ca519610decb50e0a",
+    "Sources/SilliesTextInference/TextRejectedToolSelfCheck.swift": "f757b09f24f1a906730ff0f631f0475ed9c08b8edc68cbdf0ab90ac4c98c6ce0",
+    "Sources/SilliesTextInference/TextTokenizerInspection.swift": "2bc8fa8be0bf16f996041a8c2b63e7f284cf5e578749755b4a1514e72c9bde75"
+  }
+}

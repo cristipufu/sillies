@@ -21,10 +21,11 @@ import Testing
   ]
   let hud = CompanionHUDController(appearance: ThemeEnvironment())
   defer { hud.close() }
-  hud.companionWindowNumber = window.windowNumber
+  hud.companionWindow = window
   hud.model.audioSession = session
   let target = WindowTargetCandidate(
-    windowID: UInt32(window.windowNumber), processID: ProcessInfo.processInfo.processIdentifier,
+    windowID: try #require(window.windowServerID),
+    processID: ProcessInfo.processInfo.processIdentifier,
     appName: "Meeting", frame: window.frame)
   let state = CompanionBindingState.active(target: target, skill: .participate, startedAt: 0)
   let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)

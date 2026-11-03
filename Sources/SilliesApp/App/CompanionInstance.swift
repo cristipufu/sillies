@@ -459,7 +459,7 @@ final class CompanionInstance {
     }
     let visibleFrame = CompanionPanel.visibleFrame(for: panel.screen)
     hud.attachedWindowLayer = attachedWindowLayer
-    hud.companionWindowNumber = panel.windowNumber
+    hud.companionWindow = panel
     hud.update(
       state: bindingState, companionPoint: position, characterSize: view.characterSize,
       visibleFrame: visibleFrame)

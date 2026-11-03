@@ -8,6 +8,8 @@ Window AX queries belong to `AccessibilityWindowSource` and its isolated worker.
 
 `kCGWindowIsOnscreen` must explicitly be true before a window can be a visible target or occluder. CoreGraphics omits the key for ordered-out windows; treating omission as visible hides bound companions behind invisible backing windows. Keep this interpretation in `WindowServerSource.ParsedWindowEntry`, shared by tracking, targeting, and bound-window visibility.
 
+Use `optionOnScreenOnly` for front-to-back occlusion order. `optionAll` is an unordered inventory and may place background apps ahead of the visible target; use it only as a fallback to locate requested hidden windows. A missing snapshot is unavailable, not proof that the target closed. System surfaces at Dock level and above can report screen-sized transparent bounds with alpha 1; do not treat those rectangles as opaque application occluders. Keep reads bounded and on the existing metadata worker, with no per-companion queries.
+
 Example: add a minimize rule to `WindowTransitionObservation`/`WindowTransitionEvaluation`, test it with virtual timestamps, then exercise native minimize/restore in the app fixture. Do not add character-dependent branches to tracking or use metadata polling to drive drag frames.
 
 Run Core transition tests, `WindowTrackingScheduleTests`, window-candidate and visibility tests, the four `SmoothnessBudgetTests` paths, and `make check`. Native integration: `build/Sillies.app/Contents/MacOS/Sillies --window-test --without-accessibility`. Do not relax timing budgets to hide a regression.

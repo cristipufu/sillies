@@ -9,7 +9,6 @@
   "AnimationExtensionTests.swift": {
     "default": "headless",
     "tests": {
-      "companionHUDCachesLayoutSizeAcrossFrameAndAudioUpdates()": "gui",
       "customEventProducerRoutesEventsAndStopsWhenPaused()": "gui",
       "desktopModeCompanionsRemainInteractiveAndDraggable()": "gui",
       "pickedUpCompanionRendersUnclippedAboveFocusedWindow()": "gui"

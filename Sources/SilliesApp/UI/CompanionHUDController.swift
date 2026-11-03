@@ -61,7 +61,7 @@ final class CompanionHUDController {
   }
 
   var attachedWindowLayer = 0
-  var companionWindowNumber: Int?
+  weak var companionWindow: NSWindow?
   let model = CompanionHUDModel()
   private var panel: SkillFloatingPanel?
   private(set) lazy var speechBubble = MeetingSpeechBubbleController(appearance: appearance)
@@ -83,6 +83,24 @@ final class CompanionHUDController {
     state: CompanionBindingState, companionPoint: CGPoint, characterSize: Double,
     visibleFrame: CGRect
   ) {
+    prepare(
+      state: state, companionPoint: companionPoint, characterSize: characterSize,
+      visibleFrame: visibleFrame)
+    guard state.showsTaskHUD else { return }
+    if state.isBound, let companionWindowID = companionWindow?.windowServerID {
+      panel?.order(.above, relativeTo: Int(companionWindowID))
+    } else if panel?.isVisible != true {
+      panel?.orderFrontRegardless()
+    }
+    updateSpeechBubble(
+      companionPoint: companionPoint, characterSize: characterSize, visibleFrame: visibleFrame)
+  }
+
+  /// Updates content and geometry without ordering a window onto the screen.
+  func prepare(
+    state: CompanionBindingState, companionPoint: CGPoint, characterSize: Double,
+    visibleFrame: CGRect
+  ) {
     updateModel(state)
     guard state.showsTaskHUD else {
       hide()
@@ -95,19 +113,12 @@ final class CompanionHUDController {
       for: panelSize, companionPoint: companionPoint, characterSize: characterSize,
       visibleFrame: visibleFrame)
     if panel?.frame != frame { panel?.setFrame(frame, display: false) }
-    if state.isBound, let companionWindowNumber {
-      panel?.order(.above, relativeTo: companionWindowNumber)
-    } else if panel?.isVisible != true {
-      panel?.orderFrontRegardless()
-    }
-    updateSpeechBubble(
-      companionPoint: companionPoint, characterSize: characterSize, visibleFrame: visibleFrame)
   }
 
   private func updateSpeechBubble(
     companionPoint: CGPoint, characterSize: Double, visibleFrame: CGRect
   ) {
-    guard companionWindowNumber != nil, panel != nil else {
+    guard companionWindow != nil, panel != nil else {
       speechBubble.hide()
       return
     }
@@ -149,19 +160,23 @@ final class CompanionHUDController {
     let created = SkillFloatingPanel(
       contentRect: CGRect(origin: .zero, size: Self.fallbackSize),
       ignoresMouseEvents: false,
-      level: CompanionPanel.hudLevel(
-        forWindowLayer: state.boundTarget?.windowLayer ?? attachedWindowLayer))
+      level: panelLevel(for: state))
     created.contentViewController = host
     hostingController = host
     panel = created
   }
 
   private func updatePanelLevel(for state: CompanionBindingState) {
-    let targetHUDLevel = CompanionPanel.hudLevel(
-      forWindowLayer: state.boundTarget?.windowLayer ?? attachedWindowLayer)
+    let targetHUDLevel = panelLevel(for: state)
     if panel?.level != targetHUDLevel {
       panel?.level = targetHUDLevel
     }
+  }
+
+  private func panelLevel(for state: CompanionBindingState) -> NSWindow.Level {
+    companionWindow?.level
+      ?? CompanionPanel.hudLevel(
+        forWindowLayer: state.boundTarget?.windowLayer ?? attachedWindowLayer)
   }
 
   private func resolvePanelSize(for state: CompanionBindingState) -> CGSize {

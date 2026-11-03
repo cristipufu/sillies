@@ -310,7 +310,7 @@ private final class MockEventProducer: WorkspaceEventProducer {
       target: target, skill: .listen, startedAt: 10,
       statusDetail: "00:\(String(format: "%02d", frame % 60)) · Listening to Xcode…",
       audioLevel: Double(frame % 10) * 0.1)
-    hud.update(
+    hud.prepare(
       state: state,
       companionPoint: CGPoint(x: 300 + Double(frame), y: 700),
       characterSize: 64,
@@ -322,7 +322,7 @@ private final class MockEventProducer: WorkspaceEventProducer {
   let narrow = "00:12 · iiiiiiiiiiiiiiiiiii"
   let wide = "00:12 · WWWWWWWWWWWWWWWWWWW"
   #expect(narrow.count == wide.count)
-  hud.update(
+  hud.prepare(
     state: .active(
       target: target, skill: .listen, startedAt: 10, statusDetail: narrow, audioLevel: 0),
     companionPoint: CGPoint(x: 300, y: 700),
@@ -330,7 +330,7 @@ private final class MockEventProducer: WorkspaceEventProducer {
     visibleFrame: screen)
   let measurementsAfterNarrow = hud.layoutMeasurements
   let narrowWidth = try #require(hud.currentPanelSize?.width)
-  hud.update(
+  hud.prepare(
     state: .active(
       target: target, skill: .listen, startedAt: 10, statusDetail: wide, audioLevel: 0),
     companionPoint: CGPoint(x: 300, y: 700),

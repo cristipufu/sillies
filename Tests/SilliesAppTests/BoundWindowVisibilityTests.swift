@@ -4,6 +4,74 @@ import Testing
 
 @testable import SilliesApp
 
+@Test func boundVisibilityUsesOnScreenOrderInsteadOfTheUnorderedWindowInventory() throws {
+  let target = windowEntry(id: 1, frame: CGRect(x: 196, y: 158, width: 1113, height: 696))
+  let background = windowEntry(id: 2, frame: CGRect(x: 72, y: 87, width: 1289, height: 791))
+  var requests: [CGWindowListOption] = []
+  let snapshots = BoundWindowSnapshots.read(windowIDs: [1], primaryScreenTop: 982) { options in
+    requests.append(options)
+    return options.contains(.optionOnScreenOnly) ? [target, background] : [background, target]
+  }
+  #expect(snapshots[1]?.visibility == .visible)
+  #expect(requests == [[.optionOnScreenOnly, .excludeDesktopElements]])
+}
+
+@Test func boundVisibilityUsesTheInventoryOnlyToLocateHiddenWindows() throws {
+  let frame = CGRect(x: 100, y: 100, width: 600, height: 400)
+  let visible = windowEntry(id: 1, frame: frame)
+  let hidden = windowEntry(id: 2, frame: frame)
+  var requests: [CGWindowListOption] = []
+  let snapshots = BoundWindowSnapshots.read(windowIDs: [1, 2, 3], primaryScreenTop: 1000) {
+    options in
+    requests.append(options)
+    return options.contains(.optionOnScreenOnly) ? [visible] : [hidden, visible]
+  }
+  #expect(snapshots[1]?.visibility == .visible)
+  #expect(snapshots[2]?.visibility == .hidden)
+  #expect(snapshots[2]?.frame == CGRect(x: 100, y: 500, width: 600, height: 400))
+  #expect(snapshots[3] == nil)
+  #expect(requests == [[.optionOnScreenOnly, .excludeDesktopElements], [.excludeDesktopElements]])
+}
+
+@Test func boundVisibilityRetainsKnownWindowsWhenMetadataIsUnavailable() throws {
+  let visible = windowEntry(id: 1, frame: CGRect(x: 100, y: 100, width: 600, height: 400))
+  let unavailable = BoundWindowSnapshots.read(windowIDs: [1, 2], primaryScreenTop: 1000) { _ in nil
+  }
+  #expect(unavailable[1]?.visibility == .unavailable)
+  #expect(unavailable[2]?.visibility == .unavailable)
+  let partial = BoundWindowSnapshots.read(windowIDs: [1, 2], primaryScreenTop: 1000) { options in
+    options.contains(.optionOnScreenOnly) ? [visible] : nil
+  }
+  #expect(partial[1]?.visibility == .visible)
+  #expect(partial[2]?.visibility == .unavailable)
+  let empty = BoundWindowSnapshots.read(windowIDs: [], primaryScreenTop: 1000) { _ in
+    Issue.record("No windows were requested")
+    return nil
+  }
+  #expect(empty.isEmpty)
+}
+
+@Test(arguments: [CGWindowLevelKey.dockWindow, .statusWindow, .screenSaverWindow])
+func systemOverlayBoundsDoNotHideABoundCompanion(_ layer: CGWindowLevelKey) throws {
+  let target = windowEntry(id: 1, frame: CGRect(x: 100, y: 100, width: 600, height: 400))
+  var systemOverlay = windowEntry(id: 2, frame: CGRect(x: 0, y: 0, width: 1512, height: 982))
+  systemOverlay[kCGWindowLayer as String] = Int(CGWindowLevelForKey(layer))
+  let snapshots = BoundWindowSnapshots.resolve(
+    entries: [systemOverlay, target], windowIDs: [1], primaryScreenTop: 982)
+  #expect(snapshots[1]?.visibility == .visible)
+}
+
+@Test(arguments: [CGWindowLevelKey.floatingWindow, .modalPanelWindow])
+func applicationPanelsStillOccludeBoundWindows(_ layer: CGWindowLevelKey) throws {
+  let frame = CGRect(x: 100, y: 100, width: 600, height: 400)
+  let target = windowEntry(id: 1, frame: frame)
+  var covering = windowEntry(id: 2, frame: frame)
+  covering[kCGWindowLayer as String] = Int(CGWindowLevelForKey(layer))
+  let snapshots = BoundWindowSnapshots.resolve(
+    entries: [covering, target], windowIDs: [1], primaryScreenTop: 1000)
+  #expect(snapshots[1]?.visibility == .hidden)
+}
+
 @Test func boundWindowRemainsVisibleBehindAnOrderedOutWebView() throws {
   // Teams keeps an ordered-out WebView with the meeting window's exact bounds.
   // CGWindowList omits kCGWindowIsOnscreen for that hidden backing window.
@@ -56,6 +124,44 @@ func windowMetadataRequiresAnExplicitOnScreenFlag(_ onScreen: Bool?) throws {
   }
 }
 
+@Test @MainActor func companionHUDTracksTheCompanionLevelWithoutRecreatingItsWindow() throws {
+  _ = NSApplication.shared
+  let companion = NSPanel(
+    contentRect: CGRect(x: 200, y: 600, width: 64, height: 64), styleMask: [.borderless],
+    backing: .buffered, defer: false)
+  companion.isReleasedWhenClosed = false
+  defer { companion.close() }
+  let hud = CompanionHUDController(appearance: ThemeEnvironment())
+  defer { hud.close() }
+  hud.companionWindow = companion
+  let target = WindowTargetCandidate(
+    windowID: 1, processID: 123, appName: "Meeting",
+    frame: CGRect(x: 100, y: 100, width: 600, height: 400))
+  let state = CompanionBindingState.active(target: target, skill: .listen, startedAt: 0)
+  let levels: [NSWindow.Level] = [
+    .normal, .floating, CompanionPanel.normalOverlayLevel,
+    CompanionPanel.floatingOverlayLevel, .normal,
+  ]
+  var originalWindowNumber: Int?
+  for level in levels {
+    companion.level = level
+    hud.prepare(
+      state: state, companionPoint: companion.frame.origin, characterSize: 64,
+      visibleFrame: CGRect(x: 0, y: 0, width: 1440, height: 900))
+    let window = try #require(hud.windowNumber.flatMap { NSApp.window(withWindowNumber: $0) })
+    #expect(window.level == level)
+    #expect(!window.isVisible)
+    #expect(!window.canBecomeKey && !window.canBecomeMain)
+    if let originalWindowNumber {
+      #expect(window.windowNumber == originalWindowNumber)
+    } else {
+      originalWindowNumber = window.windowNumber
+    }
+  }
+  #expect(hud.layoutMeasurements == 1)
+  #expect(hud.model.state == state)
+}
+
 @Test @MainActor func boundCompanionAndHUDHideTogetherWithoutEndingTheirSkill() throws {
   _ = NSApplication.shared
   let window = NSWindow(
@@ -73,7 +179,8 @@ func windowMetadataRequiresAnExplicitOnScreenFlag(_ onScreen: Bool?) throws {
     transitions: TransitionLibrary(), appearance: ThemeEnvironment())
   defer { pet.closeAllPanels() }
   var target = WindowTargetCandidate(
-    windowID: UInt32(window.windowNumber), processID: ProcessInfo.processInfo.processIdentifier,
+    windowID: try #require(window.windowServerID),
+    processID: ProcessInfo.processInfo.processIdentifier,
     appName: "Meeting", frame: window.frame)
   pet.updateBinding(.active(target: target, skill: .listen, startedAt: 0))
   pet.place(at: CGPoint(x: 400, y: window.frame.maxY + 1))
@@ -83,7 +190,7 @@ func windowMetadataRequiresAnExplicitOnScreenFlag(_ onScreen: Bool?) throws {
   #expect(pet.panel.isVisible)
   #expect(pet.hud.isVisible)
   let hudWindow = try #require(pet.hud.windowNumber.flatMap { NSApp.window(withWindowNumber: $0) })
-  #expect(hudWindow.level == CompanionPanel.hudLevel(forWindowLayer: 0))
+  #expect(hudWindow.level == pet.panel.level)
   target.isVisible = false
   pet.updateBinding(.active(target: target, skill: .listen, startedAt: 0))
   pet.presentation.show(reducedMotion: true)

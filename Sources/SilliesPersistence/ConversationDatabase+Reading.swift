@@ -34,6 +34,7 @@ extension ConversationDatabase {
       values.append(.integer(try sequence(of: id, owner: owner)))
       order = "ASC"
     }
+    let rows = ConversationRowDecoder()
     var entries: [ConversationEntry] = []
     var bytes = 0
     var reachedByteLimit = false
@@ -48,7 +49,7 @@ extension ConversationDatabase {
         return
       }
       // One oversized row still makes cursor progress; its independent 1 MiB boundary applies.
-      entries.append(try entry(row))
+      entries.append(try rows.entry(row))
       bytes += size
       reachedByteLimit = bytes >= request.maximumBytes
     }
@@ -67,48 +68,6 @@ extension ConversationDatabase {
       } ?? false
     return .init(
       entries: entries, hasOlder: older, hasNewer: newer, isByteLimited: reachedByteLimit)
-  }
-
-  public func search(_ request: ConversationSearchRequest) throws -> [ConversationSearchMatch] {
-    guard let expression = VaultSearchTerms.expression(request.query, matching: .anyTerm) else {
-      return []
-    }
-    var filter = "conversation_search MATCH ?"
-    var values: [VaultSQLConnection.Value] = [.text(expression)]
-    if let owner = request.companionID {
-      filter += " AND m.owner=?"
-      values.append(.text(owner))
-    }
-    if let excluded = request.excludingMessageID {
-      filter += " AND m.id != ?"
-      values.append(.text(excluded.uuidString))
-    }
-    var results: [ConversationSearchMatch] = []
-    // Rank numeric message identities first. Bodies and owner names are fetched only for the
-    // bounded result set, not for every candidate that enters the ranking sort.
-    try sql.rows(
-      """
-      WITH matches AS MATERIALIZED (
-        SELECT m.sequence,bm25(conversation_search) AS relevance
-        FROM conversation_search
-        JOIN conversation_messages m ON m.sequence=conversation_search.rowid
-        WHERE \(filter)
-        ORDER BY relevance,m.sequence DESC LIMIT ?
-      )
-      SELECT m.sequence,m.created,m.body,c.id,c.name FROM matches
-      JOIN conversation_messages m ON m.sequence=matches.sequence
-      JOIN conversations c ON c.id=m.owner
-      ORDER BY matches.relevance,m.sequence DESC
-      """,
-      values + [.integer(Int64(request.limit))]
-    ) { row in
-      results.append(
-        try .init(
-          owner: .init(
-            id: VaultSQLConnection.text(row, column: 3),
-            name: VaultSQLConnection.text(row, column: 4)), entry: entry(row)))
-    }
-    return results
   }
 
   func sequence(of id: UUID, owner: String) throws -> Int64 {
@@ -140,17 +99,4 @@ extension ConversationDatabase {
     return headers
   }
 
-  private func entry(_ row: OpaquePointer) throws -> ConversationEntry {
-    guard sqlite3_column_bytes(row, 2) <= Self.maximumMessageBytes else {
-      throw ConversationStorageError.invalidData
-    }
-    var message = try decoder.decode(
-      ChatMessage.self, from: VaultSQLConnection.data(row, column: 2))
-    if message.completion == .streaming {
-      message = message.withDelivery(.interrupted, spokenText: message.spokenText)
-    }
-    return .init(
-      sequence: sqlite3_column_int64(row, 0), message: message,
-      createdAt: Date(timeIntervalSince1970: sqlite3_column_double(row, 1)))
-  }
 }

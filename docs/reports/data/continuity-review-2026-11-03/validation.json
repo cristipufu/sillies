@@ -1,0 +1,12 @@
+{
+  "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer make check BUILD_DIR=/tmp/sillies-continuity-review-check",
+  "exitCode": 0,
+  "nativeTests": 690,
+  "nativeRuns": 18,
+  "pythonTests": 92,
+  "presentation": "headless",
+  "initialFailure": "The first make check passed native tests, then localization extraction used the Command Line Tools SDK and could not find FoundationModelsMacros. The complete check passed with Xcode selected in the command environment. No global toolchain setting changed.",
+  "runningAppPID": 23222,
+  "pushed": false,
+  "restarted": false
+}

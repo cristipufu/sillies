@@ -1,0 +1,8 @@
+[
+  {
+    "bundle": "SilliesVaultTests",
+    "framework": "swift-testing",
+    "tests": 2,
+    "presentation": "headless"
+  }
+]

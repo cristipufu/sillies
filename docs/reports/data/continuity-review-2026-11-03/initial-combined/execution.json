@@ -1,0 +1,22 @@
+[
+  {
+    "model": "apple",
+    "exitCode": 0,
+    "seconds": 24.668362333031837
+  },
+  {
+    "model": "lfm-2.5-24b-a2b",
+    "exitCode": 1,
+    "seconds": 120.81869079201715
+  },
+  {
+    "model": "gemma-4-26b-a4b",
+    "exitCode": 0,
+    "seconds": 48.658949374977965
+  },
+  {
+    "model": "qwen-3.5-4b",
+    "exitCode": 0,
+    "seconds": 26.53311175003182
+  }
+]

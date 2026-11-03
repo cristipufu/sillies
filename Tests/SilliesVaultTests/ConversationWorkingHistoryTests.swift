@@ -74,7 +74,13 @@ func agentReadsABoundedArchiveWindowAndTheLatestDurableCheckpoint(
   let request = try #require(await backend.request)
   var expected = Array(messages.suffix(backend.conversationPolicy.history.recent.messageLimit))
   if expected.first?.role == .companion { expected.removeFirst() }
-  #expect(request.messages.map(\.content) == expected.map(\.text))
+  #expect(request.messages.dropFirst().map(\.content) == expected.dropFirst().map(\.text))
+  #expect(request.messages.count == expected.count)
+  #expect(request.messages.first?.content.hasSuffix(try #require(expected.first?.text)) == true)
+  if checkpoint == .saved {
+    #expect(request.messages.first?.content.contains(memory.summary) == true)
+    #expect(!request.instructions.contains(memory.summary))
+  }
   #expect(reply.memory.throughMessageID == memory.throughMessageID)
   #expect(reply.memory.summary == memory.summary)
 }

@@ -5,8 +5,13 @@ import SilliesPersistence
 /// Serial, lazy storage access. No UI actor or model runtime can own the database connection.
 package actor ConversationLibrary: ConversationRepository, CompanionMemoryRepository {
   private let directory: URL
+  private let searches: ConversationSearchWorker
   private var database: ConversationDatabase?
-  package init(directory: URL) { self.directory = directory }
+  private var searchGeneration = UUID()
+  package init(directory: URL) {
+    self.directory = directory
+    searches = ConversationSearchWorker(directory: directory)
+  }
 
   private func storage() throws -> ConversationDatabase {
     dispatchPrecondition(condition: .notOnQueue(.main))
@@ -32,13 +37,22 @@ package actor ConversationLibrary: ConversationRepository, CompanionMemoryReposi
     try Task.checkCancellation()
     return try storage().page(request)
   }
-  package func search(_ request: ConversationSearchRequest) throws -> [ConversationSearchMatch] {
+  package func search(_ request: ConversationSearchRequest) async throws
+    -> [ConversationSearchMatch]
+  {
     try Task.checkCancellation()
-    return try storage().search(request)
+    _ = try storage()
+    let generation = searchGeneration
+    let results = try await searches.search(request)
+    try Task.checkCancellation()
+    guard generation == searchGeneration else { throw ConversationStorageError.changed }
+    return results
   }
   package func conversations() throws -> [ConversationHeader] { try storage().conversations() }
   package func clear(_ handle: ConversationHandle) throws -> ConversationSnapshot {
-    try storage().clear(handle)
+    let snapshot = try storage().clear(handle)
+    searchGeneration = UUID()
+    return snapshot
   }
   package func memories(_ handle: ConversationHandle, query: String) throws -> [CompanionMemory] {
     try storage().memories(handle, query: query)

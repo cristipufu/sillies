@@ -1,0 +1,57 @@
+{
+  "phases": [
+    [
+      "apple",
+      "rollover",
+      "nativeRepeatedCheckpointRollover"
+    ],
+    [
+      "lfm-2.5-24b-a2b",
+      "rollover",
+      "nativeRepeatedCheckpointRollover"
+    ],
+    [
+      "gemma-4-26b-a4b",
+      "rollover",
+      "nativeRepeatedCheckpointRollover"
+    ],
+    [
+      "qwen-3.5-4b",
+      "rollover",
+      "nativeRepeatedCheckpointRollover"
+    ],
+    [
+      "ministral-3-8b",
+      "rollover",
+      "nativeRepeatedCheckpointRollover"
+    ],
+    [
+      "apple",
+      "summaries",
+      "nativeCheckpointSummaryProvenance"
+    ],
+    [
+      "lfm-2.5-24b-a2b",
+      "summaries",
+      "nativeCheckpointSummaryProvenance"
+    ],
+    [
+      "gemma-4-26b-a4b",
+      "summaries",
+      "nativeCheckpointSummaryProvenance"
+    ],
+    [
+      "qwen-3.5-4b",
+      "summaries",
+      "nativeCheckpointSummaryProvenance"
+    ]
+  ],
+  "deadlinePerPhaseSeconds": 120,
+  "sourceCommit": "5f5d30e509ec7f79499ec826f8caff9018faca09",
+  "dirty": true,
+  "hashes": {
+    ".build/out/Products/Debug/SilliesVaultTests.xctest/Contents/MacOS/SilliesVaultTests": "bd3a1d64866070955097b8c3222b0c29516f23a889005740a1e5e5a9273f2a35",
+    "/tmp/sillies-continuity-followup-frozen/SilliesTextInference.app/Contents/MacOS/SilliesTextInference": "dc685528156873d0e71af03c3b5b372d59a43c5fda6c195485edca9aa9b67d48"
+  },
+  "claim": "Separate bounded rollover and summary-quality controls; debug harness, existing release inference helper. Not a release latency benchmark or leaderboard."
+}

@@ -102,6 +102,14 @@ There is no intent-classification inference step before the normal reply.
 
 ## Context and continuity
 
+Keep developer instructions separate from generated context. `ConversationContextNotes` attaches
+bounded, explicitly fallible notes to the first retained user entry; it preserves the existing native
+role order and stored originals. This also supports templates such as Ministral's, which require
+alternating user/assistant roles. Never put a summary, original user excerpt or retrieved record title
+inside developer instructions. Test checkpoint changes against native continuation reuse. Summary
+sources retain separate human and assistant attribution; do not treat assistant claims as confirmed
+human facts. See the [continuity and attribution investigation](../reports/continuity-review-2026-11-03.md).
+
 `ConversationLibrary` owns the durable SQLite history. `ChatSession` holds at most 128 recent messages
 and a persisted `ConversationMemory`; `ConversationBrowser` pages older originals independently.
 `ConversationHistoryTools` creates companion-scoped tools per turn from injected repository protocols.

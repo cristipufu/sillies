@@ -1,0 +1,31 @@
+{
+  "scope": "Manual semantic review of the final five synthetic summary controls; not independent human review and not a leaderboard score.",
+  "apple": {
+    "no-facts": "No supported facts; correct.",
+    "no-facts-with-opening": "Same no-facts result after removing repeated opening input.",
+    "identity-correction": "Copies source JSON instead of summarizing; failed useful compression, do not call this a successful identity summary.",
+    "deadline-correction": "May 11; correct.",
+    "hypothetical": "Preserves hypothetical status but retains extraneous general weather information."
+  },
+  "lfm-2.5-24b-a2b": {
+    "no-facts": "Infers the human claimed to archive discussions 0–22. Unsupported interpretation of placeholders; do not mark fully factual.",
+    "no-facts-with-opening": "Concludes no facts to retain; accurate, unnecessarily verbose.",
+    "identity-correction": "Correctly attributes Alex to human and Pogo to assistant.",
+    "deadline-correction": "Correctly replaces May 9 with May 11.",
+    "hypothetical": "Says the human is considering a move and treats the question as unresolved. Stronger than an explicitly hypothetical inquiry with an answer; caution."
+  },
+  "gemma-4-26b-a4b": {
+    "no-facts": "Correct no-facts result.",
+    "no-facts-with-opening": "Correct no-facts result.",
+    "identity-correction": "Correct human and assistant names.",
+    "deadline-correction": "Correct May 11 deadline.",
+    "hypothetical": "Does not invent a personal plan; correct no-facts result."
+  },
+  "qwen-3.5-4b": {
+    "no-facts": "Correct no-facts result.",
+    "no-facts-with-opening": "Correct no-facts result.",
+    "identity-correction": "Correct human and assistant names.",
+    "deadline-correction": "Keeps May 11 deadline but invents that the correction happened on May 11. Not fully factual.",
+    "hypothetical": "Keeps the inquiry hypothetical; no invented personal plan."
+  }
+}

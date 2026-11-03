@@ -1,0 +1,107 @@
+[
+  {
+    "bundle": "SilliesAppTests",
+    "framework": "swift-testing",
+    "tests": 182,
+    "presentation": "headless"
+  },
+  {
+    "bundle": "SilliesAudioTests",
+    "framework": "swift-testing",
+    "tests": 41,
+    "presentation": "headless"
+  },
+  {
+    "bundle": "SilliesChatTests",
+    "framework": "swift-testing",
+    "tests": 26,
+    "presentation": "headless"
+  },
+  {
+    "bundle": "SilliesCoreTests",
+    "framework": "swift-testing",
+    "tests": 154,
+    "presentation": "headless"
+  },
+  {
+    "bundle": "SilliesDesignTests",
+    "framework": "swift-testing",
+    "tests": 5,
+    "presentation": "headless"
+  },
+  {
+    "bundle": "SilliesFishSpeechTests",
+    "framework": "swift-testing",
+    "tests": 12,
+    "presentation": "headless"
+  },
+  {
+    "bundle": "SilliesModelStoreTests",
+    "framework": "swift-testing",
+    "tests": 2,
+    "presentation": "headless"
+  },
+  {
+    "bundle": "SilliesModelStoreTests",
+    "framework": "xctest",
+    "tests": 28
+  },
+  {
+    "bundle": "SilliesPersistenceTests",
+    "framework": "swift-testing",
+    "tests": 18,
+    "presentation": "headless"
+  },
+  {
+    "bundle": "SilliesReasoningTests",
+    "framework": "swift-testing",
+    "tests": 56,
+    "presentation": "headless"
+  },
+  {
+    "bundle": "SilliesSpeechTests",
+    "framework": "swift-testing",
+    "tests": 6,
+    "presentation": "headless"
+  },
+  {
+    "bundle": "SilliesSpeechTests",
+    "framework": "xctest",
+    "tests": 27
+  },
+  {
+    "bundle": "SilliesTTSTests",
+    "framework": "swift-testing",
+    "tests": 22,
+    "presentation": "headless"
+  },
+  {
+    "bundle": "SilliesTextModelsTests",
+    "framework": "swift-testing",
+    "tests": 33,
+    "presentation": "headless"
+  },
+  {
+    "bundle": "SilliesTextModelsTests",
+    "framework": "xctest",
+    "tests": 1
+  },
+  {
+    "bundle": "SilliesVaultTests",
+    "framework": "swift-testing",
+    "tests": 55,
+    "presentation": "headless"
+  },
+  {
+    "bundle": "SilliesVoicePlaybackTests",
+    "framework": "swift-testing",
+    "tests": 13,
+    "presentation": "headless"
+  },
+  {
+    "bundle": "SilliesWritingTests",
+    "framework": "swift-testing",
+    "tests": 9,
+    "presentation": "headless"
+  }
+]

@@ -1,0 +1,106 @@
+{
+  "attribution-baseline.log.gz": {
+    "directory": "receipts/run-mmptvihn",
+    "verified": true
+  },
+  "attribution-boundary-experiment.log.gz": {
+    "directory": "receipts/run-wt8gry1l",
+    "verified": true
+  },
+  "attribution-concise-experiment.log.gz": {
+    "directory": "receipts/run-zg8w9hak",
+    "verified": true
+  },
+  "attribution-final.log.gz": {
+    "directory": "receipts/run-kd3x3lgl",
+    "verified": true
+  },
+  "attribution-roles-experiment.log.gz": {
+    "directory": "receipts/run-85bqs1xt",
+    "verified": true
+  },
+  "incremental-source/apple-rollover.log.gz": {
+    "directory": "receipts/run-wdr9cpgz",
+    "verified": true
+  },
+  "incremental-source/gemma-4-26b-a4b-summaries.log.gz": {
+    "directory": "receipts/run-a3p1sqgx",
+    "verified": true
+  },
+  "incremental-source/lfm-2.5-24b-a2b-summaries.log.gz": {
+    "directory": "receipts/run-3gnltwlz",
+    "verified": true
+  },
+  "incremental-source/qwen-3.5-4b-summaries.log.gz": {
+    "directory": "receipts/run-z3uhveki",
+    "verified": true
+  },
+  "initial-combined/apple.log.gz": {
+    "directory": "receipts/run-xf07oacs",
+    "verified": true
+  },
+  "initial-combined/gemma-4-26b-a4b.log.gz": {
+    "directory": "receipts/run-vtal45t7",
+    "verified": true
+  },
+  "initial-combined/lfm-2.5-24b-a2b.log.gz": {
+    "directory": "receipts/run-0lg20pfi",
+    "verified": false
+  },
+  "initial-combined/qwen-3.5-4b.log.gz": {
+    "directory": "receipts/run-5xvh1q_q",
+    "verified": true
+  },
+  "million-message-search.log.gz": {
+    "directory": "receipts/run-bx1i20zf",
+    "verified": true
+  },
+  "separate-phases/apple-rollover.log.gz": {
+    "directory": "receipts/run-mtbjnfit",
+    "verified": true
+  },
+  "separate-phases/apple-summaries.log.gz": {
+    "directory": "receipts/run-ghqllun_",
+    "verified": true
+  },
+  "separate-phases/gemma-4-26b-a4b-rollover.log.gz": {
+    "directory": "receipts/run-r6qhjngs",
+    "verified": true
+  },
+  "separate-phases/gemma-4-26b-a4b-summaries.log.gz": {
+    "directory": "receipts/run-9dqg4dzk",
+    "verified": true
+  },
+  "separate-phases/lfm-2.5-24b-a2b-rollover.log.gz": {
+    "directory": "receipts/run-72qs07hz",
+    "verified": true
+  },
+  "separate-phases/lfm-2.5-24b-a2b-summaries.log.gz": {
+    "directory": "receipts/run-u4rheaur",
+    "verified": true
+  },
+  "separate-phases/ministral-3-8b-rollover.log.gz": {
+    "directory": "receipts/run-lesya8mw",
+    "verified": true
+  },
+  "separate-phases/qwen-3.5-4b-rollover.log.gz": {
+    "directory": "receipts/run-n3dfdore",
+    "verified": true
+  },
+  "separate-phases/qwen-3.5-4b-summaries.log.gz": {
+    "directory": "receipts/run-4bppck1z",
+    "verified": true
+  },
+  "summary-baseline.log.gz": {
+    "directory": "receipts/run-yh7y3u1h",
+    "verified": true
+  },
+  "summary-final-apple.log.gz": {
+    "directory": "receipts/run-1ggx2rxl",
+    "verified": true
+  },
+  "summary-json-source-experiment.log.gz": {
+    "directory": "receipts/run-0x0oyb7b",
+    "verified": true
+  }
+}

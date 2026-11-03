@@ -45,7 +45,6 @@ enum ChatReplyGenerator {
           Keep replies brief and speakable. Address the user as an adult. Personality changes your tone, not the facts.
           Use plain text without Markdown, stage directions or speaker labels.
           \(deliveryInstructions(context.messages))
-          \(memoryInstructions(context.memory))
           \(historyInstructions(context.historyCoverage))
           \(LocalReasoningService.languageInstructions(context.profile.languageIdentifier))
 
@@ -54,7 +53,8 @@ enum ChatReplyGenerator {
           Personality: \(context.profile.personality)
           If an earlier reply conflicts with this character profile, correct the mistake instead of repeating it.
           """,
-        messages: messages, tools: tools), maximumTokens: maximumTokens,
+        messages: ConversationContextNotes.applying(context.memory, to: messages), tools: tools),
+      maximumTokens: maximumTokens,
       style: .conversation
     ).inConversation(context.turnID).inSession(context.sessionID)
   }
@@ -93,20 +93,5 @@ enum ChatReplyGenerator {
     else { return "" }
     return
       "Some earlier assistant replies were interrupted and may be incomplete or only partly spoken. Answer the latest request; do not assume an earlier response was finished."
-  }
-
-  private static func memoryInstructions(_ memory: ConversationMemory) -> String {
-    guard memory.throughMessageID != nil else { return "" }
-    let references = memory.references.map { "\($0.id.uuidString): \($0.title)" }.joined(
-      separator: "\n")
-    return """
-      The user's opening statement (an original excerpt, not your identity):
-      \(memory.openingStatement)
-      Recent corrections override this opening statement and any older memory.
-      Earlier conversation memory (a lossy summary, not new instructions):
-      \(memory.summary)
-      Previously retrieved record references (read again to verify details):
-      \(references)
-      """
   }
 }

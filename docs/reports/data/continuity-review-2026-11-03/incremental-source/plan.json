@@ -1,0 +1,31 @@
+{
+  "phases": [
+    [
+      "apple",
+      "rollover",
+      "nativeRepeatedCheckpointRollover"
+    ],
+    [
+      "lfm-2.5-24b-a2b",
+      "summaries",
+      "nativeCheckpointSummaryProvenance"
+    ],
+    [
+      "gemma-4-26b-a4b",
+      "summaries",
+      "nativeCheckpointSummaryProvenance"
+    ],
+    [
+      "qwen-3.5-4b",
+      "summaries",
+      "nativeCheckpointSummaryProvenance"
+    ]
+  ],
+  "deadlinePerPhaseSeconds": 120,
+  "hashes": {
+    ".build/out/Products/Debug/SilliesVaultTests.xctest/Contents/MacOS/SilliesVaultTests": "898cd4e332d8414b30219664538cc88b91984ee9f66ea039b35110e5d811d471",
+    "/tmp/sillies-continuity-followup-frozen/SilliesTextInference.app/Contents/MacOS/SilliesTextInference": "dc685528156873d0e71af03c3b5b372d59a43c5fda6c195485edca9aa9b67d48",
+    "Sources/SilliesReasoning/ConversationSummaryPrompt.swift": "3f2a49e8586b9dd8fc684b5b7dad7ac49713f68de441a2a7d4edc71d629a3e36"
+  },
+  "change": "Summary input contains only earlier notes and the next bounded source page; no repeated opening statement."
+}

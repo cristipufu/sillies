@@ -1,0 +1,26 @@
+[
+  {
+    "model": "apple",
+    "phase": "rollover",
+    "exitCode": 0,
+    "seconds": 8.995558499998879
+  },
+  {
+    "model": "lfm-2.5-24b-a2b",
+    "phase": "summaries",
+    "exitCode": 0,
+    "seconds": 71.70309983304469
+  },
+  {
+    "model": "gemma-4-26b-a4b",
+    "phase": "summaries",
+    "exitCode": 0,
+    "seconds": 21.0538964580046
+  },
+  {
+    "model": "qwen-3.5-4b",
+    "phase": "summaries",
+    "exitCode": 0,
+    "seconds": 12.250574416015297
+  }
+]

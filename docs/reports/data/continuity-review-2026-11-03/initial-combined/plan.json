@@ -1,0 +1,16 @@
+{
+  "models": [
+    "apple",
+    "lfm-2.5-24b-a2b",
+    "gemma-4-26b-a4b",
+    "qwen-3.5-4b"
+  ],
+  "tests": [
+    "nativeCheckpointSummaryProvenance",
+    "nativeRepeatedCheckpointRollover"
+  ],
+  "deadlinePerBundleSeconds": 120,
+  "sourceCommit": "5f5d30e509ec7f79499ec826f8caff9018faca09",
+  "dirty": true,
+  "claim": "Structural rollover plus manually reviewed synthetic summaries; not a leaderboard or release latency benchmark."
+}

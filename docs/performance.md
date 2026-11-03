@@ -8,6 +8,10 @@ The [stored Chat scale report](reports/stored-conversation-scale-2026-11-03.md) 
 100K/1M-message databases, new replies, history browsing, headless text selection and process-kill
 recovery. It includes the measured conversation-search improvement and a bounded reproduction command.
 
+The [continuity follow-up](reports/continuity-review-2026-11-03.md) separates native-model answer
+quality from context rollover and measures foreground writes during a cancellable million-message
+search. These controls do not establish factual reliability merely because inference completes.
+
 ## Implemented constraints
 
 - Native AppKit, SwiftUI, and Core Animation for companions; no web runtime or game engine.

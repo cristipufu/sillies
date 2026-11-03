@@ -80,6 +80,19 @@ does not evict recent verbatim turns that still fit. Apple token counting is ava
 with an estimate on older systems; MLX measurement runs in the isolated helper. Overflow retries once
 with minimal current context and the same cached tool operations, never an additional write quota.
 
+Generated checkpoint notes and original excerpts are source data, outside developer instructions.
+`ConversationContextNotes` adds them to the first retained user entry without inventing an assistant
+acknowledgement or breaking native role alternation. It does not change the stored originals. Token
+admission measures the complete contextualized request, and changing notes invalidates native session
+reuse through exact message comparison. `ConversationSummaryPrompt` encodes the human/assistant
+source roles separately; summaries remain fallible even when generation succeeds.
+
+`ConversationSearchWorker` owns a separate read-only WAL connection. Broad FTS ranking can run
+without occupying the actor serving saves, pages and checkpoints. Scoped SQLite progress callbacks
+observe task cancellation during execution; they are removed before returning or throwing. Clearing
+history invalidates pending search snapshots. This separates cancellation from write transactions,
+whose rollback must still run after task cancellation.
+
 `ConversationCheckpointMaintenance` owns one coalescing producer, queueing identifiers rather than
 transcripts. It prepares one bounded source page and one summary per idle slice through
 `ConversationCheckpointWorker` and `ConversationCompactor`. Interactive turn admission cancels and

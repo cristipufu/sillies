@@ -1,0 +1,56 @@
+[
+  {
+    "model": "apple",
+    "phase": "rollover",
+    "exitCode": 0,
+    "seconds": 21.117382708005607
+  },
+  {
+    "model": "lfm-2.5-24b-a2b",
+    "phase": "rollover",
+    "exitCode": 0,
+    "seconds": 50.30518608301645
+  },
+  {
+    "model": "gemma-4-26b-a4b",
+    "phase": "rollover",
+    "exitCode": 0,
+    "seconds": 26.23518033302389
+  },
+  {
+    "model": "qwen-3.5-4b",
+    "phase": "rollover",
+    "exitCode": 0,
+    "seconds": 16.279378500010353
+  },
+  {
+    "model": "ministral-3-8b",
+    "phase": "rollover",
+    "exitCode": 0,
+    "seconds": 23.687896084040403
+  },
+  {
+    "model": "apple",
+    "phase": "summaries",
+    "exitCode": 0,
+    "seconds": 11.95066916703945
+  },
+  {
+    "model": "lfm-2.5-24b-a2b",
+    "phase": "summaries",
+    "exitCode": 0,
+    "seconds": 65.7071224169922
+  },
+  {
+    "model": "gemma-4-26b-a4b",
+    "phase": "summaries",
+    "exitCode": 0,
+    "seconds": 20.24463895795634
+  },
+  {
+    "model": "qwen-3.5-4b",
+    "phase": "summaries",
+    "exitCode": 0,
+    "seconds": 12.018425292044412
+  }
+]

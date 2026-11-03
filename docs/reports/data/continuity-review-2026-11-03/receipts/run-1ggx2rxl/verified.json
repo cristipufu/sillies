@@ -1,0 +1,14 @@
+[
+  {
+    "bundle": "SilliesReasoningTests",
+    "framework": "swift-testing",
+    "tests": 1,
+    "presentation": "headless"
+  },
+  {
+    "bundle": "SilliesVaultTests",
+    "framework": "swift-testing",
+    "tests": 1,
+    "presentation": "headless"
+  }
+]

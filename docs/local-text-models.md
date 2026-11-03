@@ -15,6 +15,11 @@ models admitted on an 8 GB Mac, but its new median first text is 6.46 seconds an
 continuity remains uneven. These are integration results, not measurements on each RAM
 configuration. Automatic memory saving remains unreliable across several models.
 
+For continuing conversations, also read the [context, summary and identity follow-up](reports/continuity-review-2026-11-03.md).
+It reproduces Apple's difficulty correcting an earlier mistaken identity, reviews source attribution,
+and checks repeated checkpoint rollover separately from answer accuracy. Those controls do not replace
+the scored comparison below.
+
 | Model | Model release | Required Mac RAM | Download | Reviewed task score | Median first text |
 | --- | --- | --- | --- | --- | --- |
 | Gemma 4 26B A4B | [2026-04-02](https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/) | 32 GB | 15.37 GB | **97.3/100** (72/74) | 5.41 s |

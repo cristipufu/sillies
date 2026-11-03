@@ -3,6 +3,7 @@ import SQLite3
 
 /// Confined to its repository's worker. All statements bind input; no external SQL fragments.
 final class VaultSQLConnection {
+  enum Access { case readOnly, readWrite }
   enum Value {
     case text(String)
     case integer(Int64)
@@ -11,13 +12,16 @@ final class VaultSQLConnection {
     case null
   }
   private static let busyTimeoutMilliseconds: Int32 = 2_000
+  private static let cancellationInstructionInterval: Int32 = 1_000
   private static let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
   private let connection: OpaquePointer
 
-  init(url: URL) throws {
+  init(url: URL, access: Access = .readWrite) throws {
     var opened: OpaquePointer?
+    let flags =
+      access == .readOnly ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE
     let result = sqlite3_open_v2(
-      url.path, &opened, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX, nil)
+      url.path, &opened, flags | SQLITE_OPEN_FULLMUTEX, nil)
     guard result == SQLITE_OK, let opened else {
       if let opened { sqlite3_close(opened) }
       throw VaultStorageError(
@@ -27,6 +31,25 @@ final class VaultSQLConnection {
     sqlite3_busy_timeout(opened, Self.busyTimeoutMilliseconds)
   }
   deinit { sqlite3_close(connection) }
+
+  /// Scope interruption to reads; cancellation must never interrupt transaction rollback.
+  func cancellableRead<T>(_ read: () throws -> T) throws -> T {
+    try Task.checkCancellation()
+    sqlite3_progress_handler(
+      connection, Self.cancellationInstructionInterval,
+      { _ in
+        Task.isCancelled ? 1 : 0
+      }, nil)
+    defer { sqlite3_progress_handler(connection, 0, nil, nil) }
+    do {
+      let result = try read()
+      try Task.checkCancellation()
+      return result
+    } catch {
+      try Task.checkCancellation()
+      throw error
+    }
+  }
 
   func execute(_ sql: String, _ values: [Value] = []) throws {
     try rows(sql, values) { _ in }

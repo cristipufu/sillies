@@ -1,0 +1,10 @@
+Test receipts: /Users/cristian.pufu/Documents/GitHub/sillies-macos/build/test-results/run-g5kbnbrh
+Native presentation: 0 headless tests; 0 tests reserved for the other presentation mode.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test growingStoredHistoryKeepsRepliesPagingAndSearchBounded() started.
+STORED HISTORY 100000: 100 growing turns from 100000 messages; restore=0.00380075s; reply p50=0.002112167s p95=0.005548167s; older page max=0.002872458s; main actor max=0.005602917s; RSS delta=12615680; search seconds=["historyneedle0": 0.000299458, "absentuniquehistoryterm": 0.000226208, "historyneedle50000": 0.000130875, "project": 0.217978833, "résumé": 0.2653, "historyneedle99999": 0.000107958]
+✔ Test growingStoredHistoryKeepsRepliesPagingAndSearchBounded() passed after 0.885 seconds.
+✔ Test run with 1 test in 0 suites passed after 0.885 seconds.
+Verified completion of 1 selected tests across 1 runs.

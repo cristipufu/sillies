@@ -84,8 +84,22 @@ extension ConversationDatabase {
       values.append(.text(excluded.uuidString))
     }
     var results: [ConversationSearchMatch] = []
+    // Rank numeric message identities first. Bodies and owner names are fetched only for the
+    // bounded result set, not for every candidate that enters the ranking sort.
     try sql.rows(
-      "SELECT m.sequence,m.created,m.body,c.id,c.name FROM conversation_search JOIN conversation_messages m ON m.id=conversation_search.id JOIN conversations c ON c.id=m.owner WHERE \(filter) ORDER BY bm25(conversation_search),m.sequence DESC LIMIT ?",
+      """
+      WITH matches AS MATERIALIZED (
+        SELECT m.sequence,bm25(conversation_search) AS relevance
+        FROM conversation_search
+        JOIN conversation_messages m ON m.sequence=conversation_search.rowid
+        WHERE \(filter)
+        ORDER BY relevance,m.sequence DESC LIMIT ?
+      )
+      SELECT m.sequence,m.created,m.body,c.id,c.name FROM matches
+      JOIN conversation_messages m ON m.sequence=matches.sequence
+      JOIN conversations c ON c.id=m.owner
+      ORDER BY matches.relevance,m.sequence DESC
+      """,
       values + [.integer(Int64(request.limit))]
     ) { row in
       results.append(

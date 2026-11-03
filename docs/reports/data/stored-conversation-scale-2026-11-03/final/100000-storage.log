@@ -1,0 +1,10 @@
+Test receipts: /Users/cristian.pufu/Documents/GitHub/sillies-macos/build/test-results/run-e_xvk2c4
+Native presentation: 0 headless tests; 0 tests reserved for the other presentation mode.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test growingStoredHistoryKeepsRepliesPagingAndSearchBounded() started.
+STORED HISTORY 100000: 100 growing turns from 100000 messages; restore=0.007282833s; reply p50=0.001417833s p95=0.002725125s; older page max=0.00042225s; main actor max=2.6625e-05s; RSS delta=10518528; search seconds=["absentuniquehistoryterm": 0.000149458, "project": 0.14322, "résumé": 0.149276958, "historyneedle0": 0.000189667, "historyneedle50000": 9.975e-05, "historyneedle99999": 8.4292e-05]
+✔ Test growingStoredHistoryKeepsRepliesPagingAndSearchBounded() passed after 0.537 seconds.
+✔ Test run with 1 test in 0 suites passed after 0.537 seconds.
+Verified completion of 1 selected tests across 1 runs.

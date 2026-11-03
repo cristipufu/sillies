@@ -1,0 +1,275 @@
+{
+  "sqlite_version": "3.50.4",
+  "variants": [
+    {
+      "name": "uuid_join",
+      "sql": "SELECT m.sequence,m.created,m.body,c.id,c.name FROM conversation_search JOIN conversation_messages m ON m.id=conversation_search.id JOIN conversations c ON c.id=m.owner WHERE conversation_search MATCH ? AND m.owner=? ORDER BY bm25(conversation_search),m.sequence DESC LIMIT ?",
+      "plan": [
+        [
+          8,
+          0,
+          132,
+          "SCAN conversation_search VIRTUAL TABLE INDEX 0:M3"
+        ],
+        [
+          13,
+          0,
+          46,
+          "SEARCH m USING INDEX sqlite_autoindex_conversation_messages_1 (id=?)"
+        ],
+        [
+          21,
+          0,
+          46,
+          "SEARCH c USING INDEX sqlite_autoindex_conversations_1 (id=?)"
+        ],
+        [
+          43,
+          0,
+          0,
+          "USE TEMP B-TREE FOR ORDER BY"
+        ]
+      ],
+      "measurements": [
+        {
+          "query": "project",
+          "elapsed_seconds": 2.3770970000186935,
+          "result_sequences": [
+            1000000,
+            999999,
+            999998,
+            999997,
+            999996,
+            999995,
+            999994,
+            999993,
+            999992,
+            999991,
+            999990,
+            999989,
+            999988,
+            999987,
+            999986,
+            999985,
+            999984,
+            999983,
+            999982,
+            999981
+          ]
+        },
+        {
+          "query": "r\u00e9sum\u00e9",
+          "elapsed_seconds": 2.401762209017761,
+          "result_sequences": [
+            1000000,
+            999999,
+            999998,
+            999997,
+            999996,
+            999995,
+            999994,
+            999993,
+            999992,
+            999991,
+            999990,
+            999989,
+            999988,
+            999987,
+            999986,
+            999985,
+            999984,
+            999983,
+            999982,
+            999981
+          ]
+        }
+      ]
+    },
+    {
+      "name": "sequence_join",
+      "sql": "SELECT m.sequence,m.created,m.body,c.id,c.name FROM conversation_search JOIN conversation_messages m ON m.sequence=conversation_search.rowid JOIN conversations c ON c.id=m.owner WHERE conversation_search MATCH ? AND m.owner=? ORDER BY bm25(conversation_search),m.sequence DESC LIMIT ?",
+      "plan": [
+        [
+          7,
+          0,
+          132,
+          "SCAN conversation_search VIRTUAL TABLE INDEX 0:M3"
+        ],
+        [
+          12,
+          0,
+          45,
+          "SEARCH m USING INTEGER PRIMARY KEY (rowid=?)"
+        ],
+        [
+          17,
+          0,
+          46,
+          "SEARCH c USING INDEX sqlite_autoindex_conversations_1 (id=?)"
+        ],
+        [
+          39,
+          0,
+          0,
+          "USE TEMP B-TREE FOR ORDER BY"
+        ]
+      ],
+      "measurements": [
+        {
+          "query": "project",
+          "elapsed_seconds": 0.7696947089862078,
+          "result_sequences": [
+            1000000,
+            999999,
+            999998,
+            999997,
+            999996,
+            999995,
+            999994,
+            999993,
+            999992,
+            999991,
+            999990,
+            999989,
+            999988,
+            999987,
+            999986,
+            999985,
+            999984,
+            999983,
+            999982,
+            999981
+          ]
+        },
+        {
+          "query": "r\u00e9sum\u00e9",
+          "elapsed_seconds": 0.7685779169842135,
+          "result_sequences": [
+            1000000,
+            999999,
+            999998,
+            999997,
+            999996,
+            999995,
+            999994,
+            999993,
+            999992,
+            999991,
+            999990,
+            999989,
+            999988,
+            999987,
+            999986,
+            999985,
+            999984,
+            999983,
+            999982,
+            999981
+          ]
+        }
+      ]
+    },
+    {
+      "name": "rank_before_body",
+      "sql": "WITH matches AS MATERIALIZED (SELECT rowid,bm25(conversation_search) AS relevance FROM conversation_search WHERE conversation_search MATCH ? AND owner=? ORDER BY relevance,rowid DESC LIMIT ?) SELECT m.sequence,m.created,m.body,c.id,c.name FROM matches JOIN conversation_messages m ON m.sequence=matches.rowid JOIN conversations c ON c.id=m.owner ORDER BY matches.relevance,m.sequence DESC",
+      "plan": [
+        [
+          3,
+          0,
+          0,
+          "MATERIALIZE matches"
+        ],
+        [
+          8,
+          3,
+          132,
+          "SCAN conversation_search VIRTUAL TABLE INDEX 0:M3"
+        ],
+        [
+          29,
+          3,
+          0,
+          "USE TEMP B-TREE FOR ORDER BY"
+        ],
+        [
+          42,
+          0,
+          59,
+          "SCAN matches"
+        ],
+        [
+          44,
+          0,
+          45,
+          "SEARCH m USING INTEGER PRIMARY KEY (rowid=?)"
+        ],
+        [
+          47,
+          0,
+          46,
+          "SEARCH c USING INDEX sqlite_autoindex_conversations_1 (id=?)"
+        ],
+        [
+          68,
+          0,
+          0,
+          "USE TEMP B-TREE FOR LAST TERM OF ORDER BY"
+        ]
+      ],
+      "measurements": [
+        {
+          "query": "project",
+          "elapsed_seconds": 0.8628209169837646,
+          "result_sequences": [
+            1000000,
+            999999,
+            999998,
+            999997,
+            999996,
+            999995,
+            999994,
+            999993,
+            999992,
+            999991,
+            999990,
+            999989,
+            999988,
+            999987,
+            999986,
+            999985,
+            999984,
+            999983,
+            999982,
+            999981
+          ]
+        },
+        {
+          "query": "r\u00e9sum\u00e9",
+          "elapsed_seconds": 0.845080874976702,
+          "result_sequences": [
+            1000000,
+            999999,
+            999998,
+            999997,
+            999996,
+            999995,
+            999994,
+            999993,
+            999992,
+            999991,
+            999990,
+            999989,
+            999988,
+            999987,
+            999986,
+            999985,
+            999984,
+            999983,
+            999982,
+            999981
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "head": "cd18f9e992d9d29a33e1f09bc1d9c045f2912669",
+  "status": "M Makefile\n M Package.swift\n M Sources/SilliesApp/App/ChatWindowFixture.swift\n M Tests/SilliesAppTests/execution-modes.json\n M Tools/ArchitectureCheck/ArchitecturePolicy.swift\n M Tools/ArchitectureCheck/main.swift\n?? Tests/SilliesAppTests/StoredChatInterfaceTests.swift\n?? Tests/SilliesConversationTestSupport/\n?? Tests/SilliesVaultTests/StoredConversationExperienceTests.swift\n?? Tools/ConversationStorageProbe/\n?? scripts/check-conversation-scale.py",
+  "platform": "macOS-26.7.2-arm64-arm-64bit-Mach-O",
+  "counts": [
+    100000,
+    1000000
+  ],
+  "phases": [
+    {
+      "name": "100000-seed",
+      "command": [
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/.build/out/Products/Debug/ConversationStorageProbe",
+        "seed",
+        "/var/folders/bw/d4f08m8n2bv64tg2kl4h2rc80000gp/T/sillies-stored-100000-u3imslw2",
+        "100000"
+      ],
+      "log": "100000-seed.log",
+      "passed": true,
+      "elapsed_seconds": 5.281438416976016
+    },
+    {
+      "name": "100000-storage",
+      "command": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "-B",
+        "scripts/run-checked-tests.py",
+        "--bin-path",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/.build/out/Products/Debug",
+        "--framework",
+        "swift-testing",
+        "--timeout",
+        "120",
+        "--filter",
+        "SilliesVaultTests.growingStoredHistory.*"
+      ],
+      "log": "100000-storage.log",
+      "passed": true,
+      "elapsed_seconds": 3.6716393749811687
+    },
+    {
+      "name": "100000-interface",
+      "command": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "-B",
+        "scripts/run-checked-tests.py",
+        "--bin-path",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/.build/out/Products/Debug",
+        "--framework",
+        "swift-testing",
+        "--timeout",
+        "120",
+        "--filter",
+        "SilliesAppTests.storedChatPages.*"
+      ],
+      "log": "100000-interface.log",
+      "passed": true,
+      "elapsed_seconds": 3.081862249993719
+    },
+    {
+      "name": "100000-kill-writer",
+      "exit_code": -9,
+      "wal_bytes": 556232,
+      "log": "100000-kill-writer.log",
+      "passed": true
+    },
+    {
+      "name": "100000-recovery",
+      "command": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "-B",
+        "scripts/run-checked-tests.py",
+        "--bin-path",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/.build/out/Products/Debug",
+        "--framework",
+        "swift-testing",
+        "--timeout",
+        "120",
+        "--filter",
+        "SilliesVaultTests.killedWriter.*"
+      ],
+      "log": "100000-recovery.log",
+      "passed": true,
+      "elapsed_seconds": 2.573176375008188
+    },
+    {
+      "name": "1000000-seed",
+      "command": [
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/.build/out/Products/Debug/ConversationStorageProbe",
+        "seed",
+        "/var/folders/bw/d4f08m8n2bv64tg2kl4h2rc80000gp/T/sillies-stored-1000000-ror_i2lz",
+        "1000000"
+      ],
+      "log": "1000000-seed.log",
+      "passed": true,
+      "elapsed_seconds": 72.19998649999616
+    },
+    {
+      "name": "1000000-storage",
+      "command": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "-B",
+        "scripts/run-checked-tests.py",
+        "--bin-path",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/.build/out/Products/Debug",
+        "--framework",
+        "swift-testing",
+        "--timeout",
+        "120",
+        "--filter",
+        "SilliesVaultTests.growingStoredHistory.*"
+      ],
+      "log": "1000000-storage.log",
+      "elapsed_seconds": 12.478228666994255
+    }
+  ],
+  "probe_sha256": "ae854879207bb902aacfd4260578a0bdc174540cee373cf984d29a565add6ea5",
+  "databases": [
+    "/var/folders/bw/d4f08m8n2bv64tg2kl4h2rc80000gp/T/sillies-stored-100000-u3imslw2",
+    "/var/folders/bw/d4f08m8n2bv64tg2kl4h2rc80000gp/T/sillies-stored-1000000-ror_i2lz"
+  ]
+}

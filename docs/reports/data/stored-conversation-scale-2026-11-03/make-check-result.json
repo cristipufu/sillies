@@ -1,0 +1,8 @@
+{
+  "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer make check",
+  "exit_code": 0,
+  "selected_tests": 680,
+  "native_runs": 18,
+  "python_tests": 92,
+  "presentation": "headless"
+}

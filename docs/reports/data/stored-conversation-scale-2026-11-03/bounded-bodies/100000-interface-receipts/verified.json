@@ -1,0 +1,8 @@
+[
+  {
+    "bundle": "SilliesAppTests",
+    "framework": "swift-testing",
+    "tests": 1,
+    "presentation": "headless"
+  }
+]

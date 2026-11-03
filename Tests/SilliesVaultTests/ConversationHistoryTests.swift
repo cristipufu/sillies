@@ -66,6 +66,46 @@ import Testing
   #expect(try await store.search(.init(query: "Bucuresti")).isEmpty)
 }
 
+@Test func conversationSearchPreservesRelevanceScopeExclusionsAndRecency() async throws {
+  let fixture = ConversationFixture()
+  defer { fixture.remove() }
+  let store = ConversationLibrary(directory: fixture.directory)
+  let pogo = try await store.open(.init(id: "pogo", name: "Pogo"))
+  let bolt = try await store.open(.init(id: "bolt", name: "Bolt"))
+  let strongest = ChatMessage(role: .user, text: "quartz cerulean")
+  let older = ChatMessage(role: .user, text: "quartz")
+  let newer = ChatMessage(role: .user, text: "quartz")
+  let weaker = ChatMessage(role: .user, text: "quartz " + String(repeating: "other ", count: 50))
+  let otherOwner = ChatMessage(role: .user, text: "quartz cerulean")
+  try await store.save(
+    .init(
+      handle: pogo.handle, messages: [strongest, older, newer, weaker], checkpoint: .init(),
+      savedAt: fixture.date))
+  try await store.save(
+    .init(
+      handle: bolt.handle, messages: [otherOwner], checkpoint: .init(), savedAt: fixture.date))
+  let scoped = try await store.search(.init(companionID: "pogo", query: "quartz cerulean"))
+  #expect(scoped.map(\.entry.id) == [strongest.id, newer.id, older.id, weaker.id])
+  #expect(scoped.allSatisfy { $0.owner.id == "pogo" && $0.owner.name == "Pogo" })
+  let limited = try await store.search(
+    .init(companionID: "pogo", query: "quartz cerulean", limit: 2, excludingMessageID: strongest.id)
+  )
+  #expect(limited.map(\.entry.id) == [newer.id, older.id])
+  let global = try await store.search(.init(query: "quartz cerulean", limit: 2))
+  #expect(global.map(\.entry.id) == [otherOwner.id, strongest.id])
+  #expect(global.map(\.owner.id) == ["bolt", "pogo"])
+
+  try await store.save(
+    .init(
+      handle: pogo.handle, messages: [older.withText("marigold")], checkpoint: .init(),
+      removedMessageIDs: [newer.id], savedAt: fixture.date))
+  let edited = try await store.search(.init(companionID: "pogo", query: "marigold"))
+  #expect(edited.map(\.entry.id) == [older.id])
+  #expect(edited.first?.entry.message.text == "marigold")
+  let remaining = try await store.search(.init(companionID: "pogo", query: "quartz cerulean"))
+  #expect(remaining.map(\.entry.id) == [strongest.id, weaker.id])
+}
+
 @Test func conversationMemoriesRequireUserProvenanceAndUndoRestoresPreviousValue() async throws {
   let fixture = ConversationFixture()
   defer { fixture.remove() }

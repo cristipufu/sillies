@@ -1,0 +1,89 @@
+{
+  "sqlite_version": "3.51.0 2025-06-12 13:14:41 f0ca7bba1c5e232e5d279fad6338121ab55af0c8c68c84cdfb18ba5114dcaapl (64-bit)",
+  "variants": [
+    {
+      "name": "sequence_join",
+      "sql": "SELECT m.sequence,m.created,m.body,c.id,c.name FROM conversation_search JOIN conversation_messages m ON m.sequence=conversation_search.rowid JOIN conversations c ON c.id=m.owner WHERE conversation_search MATCH 'project' AND m.owner='scale-pogo' ORDER BY bm25(conversation_search),m.sequence DESC LIMIT 20",
+      "elapsed_seconds": 2.517052999988664,
+      "sequences": [
+        1000000,
+        999999,
+        999998,
+        999997,
+        999996,
+        999995,
+        999994,
+        999993,
+        999992,
+        999991,
+        999990,
+        999989,
+        999988,
+        999987,
+        999986,
+        999985,
+        999984,
+        999983,
+        999982,
+        999981
+      ],
+      "plan": "QUERY PLAN\n|--SCAN conversation_search VIRTUAL TABLE INDEX 0:M3\n|--SEARCH m USING INTEGER PRIMARY KEY (rowid=?)\n|--SEARCH c USING INDEX sqlite_autoindex_conversations_1 (id=?)\n`--USE TEMP B-TREE FOR ORDER BY\n"
+    },
+    {
+      "name": "fts_filter_then_bodies",
+      "sql": "WITH matches AS MATERIALIZED (SELECT rowid,bm25(conversation_search) AS relevance FROM conversation_search WHERE conversation_search MATCH 'project' AND owner='scale-pogo' ORDER BY relevance,rowid DESC LIMIT 20) SELECT m.sequence,m.created,m.body,c.id,c.name FROM matches JOIN conversation_messages m ON m.sequence=matches.rowid JOIN conversations c ON c.id=m.owner ORDER BY matches.relevance,m.sequence DESC",
+      "elapsed_seconds": 2.3050752079871017,
+      "sequences": [
+        1000000,
+        999999,
+        999998,
+        999997,
+        999996,
+        999995,
+        999994,
+        999993,
+        999992,
+        999991,
+        999990,
+        999989,
+        999988,
+        999987,
+        999986,
+        999985,
+        999984,
+        999983,
+        999982,
+        999981
+      ],
+      "plan": "QUERY PLAN\n|--MATERIALIZE matches\n|  |--SCAN conversation_search VIRTUAL TABLE INDEX 0:M3\n|  `--USE TEMP B-TREE FOR ORDER BY\n|--SCAN matches\n|--SEARCH m USING INTEGER PRIMARY KEY (rowid=?)\n|--SEARCH c USING INDEX sqlite_autoindex_conversations_1 (id=?)\n`--USE TEMP B-TREE FOR LAST TERM OF ORDER BY\n"
+    },
+    {
+      "name": "metadata_filter_then_bodies",
+      "sql": "WITH matches AS MATERIALIZED (SELECT m.sequence,bm25(conversation_search) AS relevance FROM conversation_search JOIN conversation_messages m ON m.sequence=conversation_search.rowid WHERE conversation_search MATCH 'project' AND m.owner='scale-pogo' ORDER BY relevance,m.sequence DESC LIMIT 20) SELECT m.sequence,m.created,m.body,c.id,c.name FROM matches JOIN conversation_messages m ON m.sequence=matches.sequence JOIN conversations c ON c.id=m.owner ORDER BY matches.relevance,m.sequence DESC",
+      "elapsed_seconds": 1.5726745839929208,
+      "sequences": [
+        1000000,
+        999999,
+        999998,
+        999997,
+        999996,
+        999995,
+        999994,
+        999993,
+        999992,
+        999991,
+        999990,
+        999989,
+        999988,
+        999987,
+        999986,
+        999985,
+        999984,
+        999983,
+        999982,
+        999981
+      ],
+      "plan": "QUERY PLAN\n|--MATERIALIZE matches\n|  |--SCAN conversation_search VIRTUAL TABLE INDEX 0:M3\n|  |--SEARCH m USING INTEGER PRIMARY KEY (rowid=?)\n|  `--USE TEMP B-TREE FOR ORDER BY\n|--SCAN matches\n|--SEARCH m USING INTEGER PRIMARY KEY (rowid=?)\n|--SEARCH c USING INDEX sqlite_autoindex_conversations_1 (id=?)\n`--USE TEMP B-TREE FOR LAST TERM OF ORDER BY\n"
+    }
+  ]
+}

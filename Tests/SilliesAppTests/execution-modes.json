@@ -62,6 +62,9 @@
       "chatStreamingBubbleUpdatesWithoutReplacingHistoryOrLosingSelection()": "gui"
     }
   },
+  "StoredChatInterfaceTests.swift": {
+    "default": "headless"
+  },
   "CommandTests.swift": {
     "default": "headless"
   },

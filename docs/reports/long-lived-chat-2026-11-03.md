@@ -9,6 +9,10 @@ Those experiments exposed repeated summaries on the reply path and 60-second bou
 Their historical results remain unchanged. This report is a focused engineering validation, not a
 replacement for the [full model leaderboard](../local-text-models.md).
 
+The [stored-history follow-up](stored-conversation-scale-2026-11-03.md) adds real 100K/1M SQLite
+histories, growing replies, headless Chat browsing and forced process recovery. It also records a
+common-term search bottleneck found at one million messages and its measured fix.
+
 ## What changed
 
 - The complete conversation remains in indexed SQLite storage. The UI and inference each use bounded

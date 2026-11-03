@@ -1,0 +1,22 @@
+Building for debugging...
+[Computing dependencies]
+[Using on-disk description]
+[1 / 1]
+[1 / 137] SilliesCore
+[2 / 8] ChatModelBenchmark-product
+[2 / 7] SilliesVaultTests-product
+[4 / 9] SilliesVaultTests-product
+[7 / 10] SilliesVaultTests-product
+[9 / 13] SilliesVaultTests-product
+warning: missing creator for mutated node: ('/Users/cristian.pufu/Documents/GitHub/sillies-macos/.build/out/Products/Debug/mlx-swift_Cmlx.bundle/Contents/MacOS')
+Build complete! (2,62 sec)
+Test receipts: /Users/cristian.pufu/Documents/GitHub/sillies-macos/build/test-results/run-d2ld6a6n
+Native presentation: 0 headless tests; 0 tests reserved for the other presentation mode.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test growingStoredHistoryKeepsRepliesPagingAndSearchBounded() started.
+STORED HISTORY 1000000: 100 growing turns from 1000200 messages; restore=0.002540416s; reply p50=0.001351833s p95=0.001630417s; older page max=0.000422167s; main actor max=9.3083e-05s; RSS delta=26968064; search seconds=["historyneedle500000": 8.5583e-05, "project": 1.589568833, "résumé": 1.540104125, "absentuniquehistoryterm": 0.000178125, "historyneedle999999": 8e-05, "historyneedle0": 0.000191292]
+✔ Test growingStoredHistoryKeepsRepliesPagingAndSearchBounded() passed after 3.372 seconds.
+✔ Test run with 1 test in 0 suites passed after 3.375 seconds.
+Verified completion of 1 selected tests across 1 runs.

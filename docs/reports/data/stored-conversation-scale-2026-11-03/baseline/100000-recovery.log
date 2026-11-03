@@ -1,0 +1,10 @@
+Test receipts: /Users/cristian.pufu/Documents/GitHub/sillies-macos/build/test-results/run-lokgzph9
+Native presentation: 0 headless tests; 0 tests reserved for the other presentation mode.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test killedWriterRestoresCommittedChatAndRollsBackPartialBodyAndIndexChanges() started.
+RECOVERY VERIFIED: committed messages, interrupted reply, spoken prefix, draft, reading position, checkpoint, original body/search index and a fresh write.
+✔ Test killedWriterRestoresCommittedChatAndRollsBackPartialBodyAndIndexChanges() passed after 0.010 seconds.
+✔ Test run with 1 test in 0 suites passed after 0.010 seconds.
+Verified completion of 1 selected tests across 1 runs.

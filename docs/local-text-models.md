@@ -78,6 +78,9 @@ MLX weights alone do not make them usable in Sillies; they are not offered as wo
 
 ## Benchmarks
 
+- **[Stored Chat: one million messages and restart recovery](reports/stored-conversation-scale-2026-11-03.md)** —
+  growing SQLite histories, browsing and selection during streaming, common-term search performance,
+  and recovery after killing a writer. These application checks use fake inference, not model scores.
 - **[Long-lived conversations: bounded replies and background checkpoints](reports/long-lived-chat-2026-11-03.md)** —
   synthetic scale, durable checkpoints, real-model interruption and archive-recall controls.
   These focused measurements do not replace the full-corpus leaderboard above.

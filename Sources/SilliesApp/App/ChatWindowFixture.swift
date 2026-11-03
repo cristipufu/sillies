@@ -20,13 +20,21 @@ import SilliesTTS
   }
 
   static func makeReadySession(conversation: any ConversationResponding) -> ChatSession {
+    makeReadySession(
+      conversation: conversation, history: .transient, owner: .init(id: "mochi", name: "Mochi"))
+  }
+
+  static func makeReadySession(
+    conversation: any ConversationResponding, history: ChatHistoryConfiguration,
+    owner: ConversationOwner
+  ) -> ChatSession {
     let session = ChatSession(
-      companionName: "Mochi", profile: .init(personality: "Warm and playful"),
+      companionName: owner.name, profile: .init(personality: "Warm and playful"),
       services: .init(
         captureFactory: { _, _ in UnavailableMicrophone() },
         loadLanguages: { .init(languages: []) },
         conversation: conversation, speech: SilentVoice(),
-        deliver: { MainRunLoopDelivery.perform($0) }, history: .transient), companionID: "mochi")
+        deliver: { MainRunLoopDelivery.perform($0) }, history: history), companionID: owner.id)
     session.spokenReplies = false
     return session
   }

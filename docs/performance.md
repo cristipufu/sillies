@@ -4,6 +4,10 @@ Current test modes: routine checks render offscreen. Live WindowServer/frame mea
 
 The [Fish S2 Pro profiling report](reports/fish-tts-profile-2026-11-01.md) separates model verification, first PCM, transformer execution, waveform decoding, and playback pacing, with reproducible diagnostics and measurement data. The [follow-up optimization report](reports/voice-optimization-2026-11-01.md) covers shared verification reuse and measured Fish improvements.
 
+The [stored Chat scale report](reports/stored-conversation-scale-2026-11-03.md) exercises real
+100K/1M-message databases, new replies, history browsing, headless text selection and process-kill
+recovery. It includes the measured conversation-search improvement and a bounded reproduction command.
+
 ## Implemented constraints
 
 - Native AppKit, SwiftUI, and Core Animation for companions; no web runtime or game engine.

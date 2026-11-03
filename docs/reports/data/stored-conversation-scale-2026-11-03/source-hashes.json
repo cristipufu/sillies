@@ -1,0 +1,14 @@
+{
+  "Package.swift": "6029302a519d2480f4afae8cff641309238afd1286ddb61dfb417be4d9307933",
+  "Sources/SilliesApp/App/ChatWindowFixture.swift": "351c740e40881a74cc2fda3574c26d3a87aa0cd6388b93670db40163b41ead11",
+  "Sources/SilliesPersistence/ConversationDatabase+Reading.swift": "c89f5312af857194843bee50205d2633dafbbe348364ddf67f6a40bc5129e6cc",
+  "Tests/SilliesAppTests/StoredChatInterfaceTests.swift": "5c46bf879b44344f45597ae2c40eab4ceec7aaac351267e745a1b5e9a6b2985e",
+  "Tests/SilliesConversationTestSupport/ConversationRecoveryFixture.swift": "440d560019474fbe5f270cd9b4adc5eeb13db9b5fb03353f3531e629d530c4a0",
+  "Tests/SilliesConversationTestSupport/ConversationScaleMetrics.swift": "7410cd8d1a0466f67e0f257223527a059c6d57556cb9f8b660faffe605dbc6e6",
+  "Tests/SilliesConversationTestSupport/InterruptedConversationTransaction.swift": "a5389f2d46805a67824a0aaa0abc183589f0e55fb9d92c836e9b0adc147a3905",
+  "Tests/SilliesConversationTestSupport/StoredConversationFixture.swift": "84358cb1a162e2283474a98b4b0f6a6972802fd4af3699171abeba78b012d226",
+  "Tests/SilliesVaultTests/ConversationHistoryTests.swift": "77635e1a4267168541b3fa84c0789c3ceb8af7bf613209c8d5562d07f6215ae4",
+  "Tests/SilliesVaultTests/StoredConversationExperienceTests.swift": "d90bc3d158d81e35e00853d783997859b13ec8ad9017fd4eda5c280d5e3e81d5",
+  "Tools/ConversationStorageProbe/ConversationStorageProbe.swift": "f276c9550ef257de718e84e9c0487d51c720020f9f67d6eed0c5fad510e7d664",
+  "scripts/check-conversation-scale.py": "6af57c2e35dc725fda9e8e8ea724772623c864686d2adbab32a9eaa6c35a9b7a"
+}

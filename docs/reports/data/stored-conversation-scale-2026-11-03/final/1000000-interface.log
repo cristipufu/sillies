@@ -1,0 +1,10 @@
+Test receipts: /Users/cristian.pufu/Documents/GitHub/sillies-macos/build/test-results/run-_pu5l5pd
+Native presentation: 1 headless tests; 0 tests reserved for the other presentation mode.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test storedChatPagesSearchesAndKeepsReadingStableDuringANewReply() started.
+HEADLESS CHAT 1000000: recent/older/search pages, preserved selection during streaming, recent-page return, draft, reading position and saved reply verified without showing a window.
+✔ Test storedChatPagesSearchesAndKeepsReadingStableDuringANewReply() passed after 0.196 seconds.
+✔ Test run with 1 test in 0 suites passed after 0.196 seconds.
+Verified completion of 1 selected tests across 1 runs.

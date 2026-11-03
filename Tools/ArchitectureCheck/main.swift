@@ -13,7 +13,10 @@ func run() throws -> Bool {
   let owners = try JSONDecoder().decode([String: String].self, from: Data(contentsOf: manifest))
   let policy = ArchitecturePolicy(uncheckedOwners: owners)
   var diagnostics: [ArchitectureDiagnostic] = []
-  for root in ["Sources", "Tools/ChatModelBenchmark"] {
+  for root in [
+    "Sources", "Tools/ChatModelBenchmark", "Tools/ConversationStorageProbe",
+    "Tests/SilliesConversationTestSupport",
+  ] {
     guard let files = FileManager.default.enumerator(atPath: root) else {
       fputs("Cannot enumerate \(root).\n", stderr)
       return false

@@ -24,7 +24,7 @@ race-check:
 	bash scripts/test-races.sh
 
 lint:
-	swift format lint --strict --recursive Package.swift Sources Tests Tools/ArchitectureCheck Tools/SpeechBenchmark Tools/TextModelBenchmark Tools/ChatModelBenchmark Tools/TTSBenchmark scripts/make-icon.swift scripts/native-test-host.swift scripts/native-test-presentation.swift
+	swift format lint --strict --recursive Package.swift Sources Tests Tools/ArchitectureCheck Tools/SpeechBenchmark Tools/TextModelBenchmark Tools/ChatModelBenchmark Tools/ConversationStorageProbe Tools/TTSBenchmark scripts/make-icon.swift scripts/native-test-host.swift scripts/native-test-presentation.swift
 	bash -n scripts/build-app.sh scripts/embed-sparkle.sh scripts/test.sh scripts/toolchain.sh scripts/check-main-thread.sh scripts/test-stress.sh scripts/test-races.sh scripts/test-downloaded-speech.sh
 	python3 -B -m unittest discover -s Tests -p 'test_*.py'
 	python3 -B scripts/theme-fallback.py --check

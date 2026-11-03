@@ -136,6 +136,12 @@ let package = Package(
       dependencies: [
         "SilliesCore", "SilliesModelStore", "SilliesTextModels", "SilliesReasoning", "SilliesVault",
       ], path: "Tools/ChatModelBenchmark", exclude: ["AGENTS.md"]),
+    .target(
+      name: "SilliesConversationTestSupport", dependencies: ["SilliesCore", "SilliesPersistence"],
+      path: "Tests/SilliesConversationTestSupport"),
+    .executableTarget(
+      name: "ConversationStorageProbe", dependencies: ["SilliesConversationTestSupport"],
+      path: "Tools/ConversationStorageProbe"),
     .executableTarget(
       name: "TTSBenchmark", dependencies: ["SilliesModelStore", "SilliesTTS", "SilliesInference"],
       path: "Tools/TTSBenchmark"),
@@ -165,7 +171,7 @@ let package = Package(
       name: "SilliesVaultTests",
       dependencies: [
         "SilliesVault", "SilliesCore", "SilliesPersistence", "SilliesReasoning",
-        "SilliesModelStore", "SilliesTextModels",
+        "SilliesModelStore", "SilliesTextModels", "SilliesConversationTestSupport",
       ]),
     .testTarget(
       name: "SilliesReasoningTests",
@@ -188,6 +194,7 @@ let package = Package(
     .testTarget(
       name: "SilliesAppTests",
       dependencies: [
+        "SilliesConversationTestSupport",
         "SilliesApp", "SilliesAudio", "SilliesAudioTestSupport", "SilliesCore",
         "SilliesPersistence",
         "SilliesReasoning",

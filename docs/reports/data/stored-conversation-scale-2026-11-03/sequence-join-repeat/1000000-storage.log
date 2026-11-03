@@ -1,0 +1,12 @@
+Test receipts: /Users/cristian.pufu/Documents/GitHub/sillies-macos/build/test-results/run-lac69ate
+Native presentation: 0 headless tests; 0 tests reserved for the other presentation mode.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test growingStoredHistoryKeepsRepliesPagingAndSearchBounded() started.
+✘ Test growingStoredHistoryKeepsRepliesPagingAndSearchBounded() recorded an issue at StoredConversationExperienceTests.swift:117:3: Expectation failed: timings.values.allSatisfy { $0 < 2 }
+↳ timings.values.allSatisfy { $0 < 2 } → <not evaluated>
+STORED HISTORY 1000000: 100 growing turns from 1000000 messages; restore=0.003869375s; reply p50=0.002508959s p95=0.008133208s; older page max=0.009608167s; main actor max=0.014341417s; RSS delta=27361280; search seconds=["project": 2.783003875, "résumé": 3.405840917, "absentuniquehistoryterm": 0.000666292, "historyneedle0": 0.000263959, "historyneedle500000": 0.000122375, "historyneedle999999": 0.000114625]
+✘ Test growingStoredHistoryKeepsRepliesPagingAndSearchBounded() failed after 6.958 seconds with 1 issue.
+✘ Test run with 1 test in 0 suites failed after 6.959 seconds with 1 issue.
+Test verification failed: Command '['/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec/swift/pm/swiftpm-testing-helper', '--test-bundle-path', '/Users/cristian.pufu/Documents/GitHub/sillies-macos/.build/out/Products/Debug/SilliesVaultTests.xctest/Contents/MacOS/SilliesVaultTests', '--testing-library', 'swift-testing', '--event-stream-version', '0', '--no-parallel', '--event-stream-output-path', '/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/test-results/run-lac69ate/SilliesVaultTests-swift.events.jsonl', '--filter', '^(?:SilliesVaultTests\\.growingStoredHistoryKeepsRepliesPagingAndSearchBounded\\(\\)/StoredConversationExperienceTests\\.swift:9:2)$']' returned non-zero exit status 1.. Receipts: /Users/cristian.pufu/Documents/GitHub/sillies-macos/build/test-results/run-lac69ate

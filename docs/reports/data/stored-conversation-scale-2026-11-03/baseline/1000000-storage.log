@@ -1,0 +1,12 @@
+Test receipts: /Users/cristian.pufu/Documents/GitHub/sillies-macos/build/test-results/run-9elbpy1v
+Native presentation: 0 headless tests; 0 tests reserved for the other presentation mode.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test growingStoredHistoryKeepsRepliesPagingAndSearchBounded() started.
+✘ Test growingStoredHistoryKeepsRepliesPagingAndSearchBounded() recorded an issue at StoredConversationExperienceTests.swift:112:3: Expectation failed: timings.values.allSatisfy { $0 < 2 }
+↳ timings.values.allSatisfy { $0 < 2 } → <not evaluated>
+STORED HISTORY 1000000: 100 growing turns; reply p50=0.001375833s p95=0.002594708s; older page max=0.000291834s; main actor max=0.000102958s; RSS delta=36323328; search seconds=["historyneedle999999": 9.9e-05, "résumé": 5.035933458, "historyneedle500000": 0.000102208, "project": 4.698590875, "absentuniquehistoryterm": 0.000183875, "historyneedle0": 0.000202292]
+✘ Test growingStoredHistoryKeepsRepliesPagingAndSearchBounded() failed after 9.985 seconds with 1 issue.
+✘ Test run with 1 test in 0 suites failed after 9.986 seconds with 1 issue.
+Test verification failed: Command '['/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec/swift/pm/swiftpm-testing-helper', '--test-bundle-path', '/Users/cristian.pufu/Documents/GitHub/sillies-macos/.build/out/Products/Debug/SilliesVaultTests.xctest/Contents/MacOS/SilliesVaultTests', '--testing-library', 'swift-testing', '--event-stream-version', '0', '--no-parallel', '--event-stream-output-path', '/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/test-results/run-9elbpy1v/SilliesVaultTests-swift.events.jsonl', '--filter', '^(?:SilliesVaultTests\\.growingStoredHistoryKeepsRepliesPagingAndSearchBounded\\(\\)/StoredConversationExperienceTests\\.swift:9:2)$']' returned non-zero exit status 1.. Receipts: /Users/cristian.pufu/Documents/GitHub/sillies-macos/build/test-results/run-9elbpy1v

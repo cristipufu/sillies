@@ -1,5 +1,9 @@
 # Memory tools: explicit outcomes and measured decision failures
 
+Follow-up: the [completed evaluation and channel fix](channel-memory-followup-2026-11-03.md) resolves
+the protocol issue and finishes the unrun cases below. This report and its interrupted snapshot remain
+the original historical record.
+
 Memory writes now acknowledge `saved` or `notSaved` explicitly. Successful responses describe the
 actual committed identity, revision, canonical key and value. Small evidence budgets retain a short
 success acknowledgement, and recovery reuses the existing write receipt. Refused corrections no

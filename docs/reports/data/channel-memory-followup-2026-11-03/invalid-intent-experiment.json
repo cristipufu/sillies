@@ -1,0 +1,4 @@
+{
+  "status": "invalid-experiment",
+  "reason": "The new tool-scope property was not forwarded by the benchmark wrapper, leaving every tool unrestricted. The first classifier run did not exercise the proposed capability selection. Its classifier timing was also mislabeled as compaction. Keep its raw receipts but exclude them from strategy comparisons."
+}

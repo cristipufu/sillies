@@ -28,6 +28,7 @@ import SilliesTextModels
       do {
         try TextConversationSelfCheck.run()
         try TextReasoningSelfCheck.run()
+        try await TextChannelBoundarySelfCheck.run()
         try await TextGenerationFailureSelfCheck.run()
         try await TextInputSelfCheck.run()
       } catch {

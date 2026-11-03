@@ -8,7 +8,12 @@ struct MLXReasoningChannel {
 
   init(configuration: ModelConfiguration, promptTail: String) {
     let config = Self.configuration(for: configuration)
-    boundary = config.map { ReasoningResponseBoundary(closingDelimiter: $0.endDelimiter) }
+    boundary = config.map {
+      // Gemma's opening control token and its channel name are separate tokens.
+      // A missing or unknown name must not turn protocol output into visible prose.
+      let opening = configuration.toolCallFormat == .gemma4 ? "<|channel>" : $0.startDelimiter
+      return ReasoningResponseBoundary(delimiters: [opening, $0.endDelimiter])
+    }
     emitter = config.map {
       ReasoningEventEmitter(
         config: $0,

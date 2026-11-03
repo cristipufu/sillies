@@ -19,9 +19,15 @@ a literal quoted protocol delimiter from a real channel boundary; do not claim t
 for examples that deliberately quote those reserved delimiters. Native tool framing still belongs to
 the SDK. Provider tests must cover split delimiters, primed/truncated reasoning, IPC propagation,
 tool-result continuity and removal from subsequent user turns.
-An unmatched configured closing delimiter is rejected before that delimiter reaches the text sink,
-including when split across chunks. Earlier valid deltas can remain as an interrupted reply; do not
-silently replace already displayed or spoken text. This validates protocol framing, not answer truth.
+Reserved channel markers that escape native parsing are rejected before reaching the text sink,
+including when split across chunks or completed at end-of-stream. Gemma's standalone `<|channel>`
+opener is reserved even when its `thought` label is missing or unrecognized. This is selected by the
+provider's declared protocol; plain-text providers do not apply another model's delimiters.
+An invalid-channel failure permits one retry only before any response text has been delivered.
+That retry may replay completed tool results with identical normalized arguments; it cannot execute
+new operations, including a memory write with changed arguments. Other generation failures are not
+automatically retried. Earlier valid deltas can remain as an interrupted reply; never silently replace
+already displayed or spoken text. This validates protocol framing, not answer truth.
 
 Conversation search excludes the current user message before ranking and limiting results. It
 extracts query-relevant FTS snippets after ranking, rather than returning a message prefix. Its
@@ -64,7 +70,9 @@ chose an appropriate fact: evaluate real persisted state, opt-outs and identity 
 
 `ConversationToolbox` owns each turn's allowed names, call budget, cached tool results (including writes), progress, and
 source references. Each attempt permits four calls and 12 KB of returned text; one context recovery
-attempt may reuse cached results in shorter form. Arguments are capped at 2 KB. Model-produced query
+attempt may reuse cached results in shorter form without resetting the execution allowance. Protocol
+recovery instead permits cached results only. Recovery is limited to one attempt per turn, shared
+across failure reasons. Arguments are capped at 2 KB. Model-produced query
 syntax never becomes SQL. Vault search quotes literal keywords, ranks matching terms through FTS,
 and returns at most five records. Screenshot search uses indexed OCR and metadata, not image vision.
 Search output distinguishes `returnedRecordCount` from `totalVaultRecords`, which counts the entire

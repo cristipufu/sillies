@@ -23,6 +23,10 @@ The [archive-recall investigation](reports/archive-recall-2026-11-03.md) fixes m
 conversation search and records the remaining tool-selection failures separately from retrieval.
 The [memory-tool follow-up](reports/memory-tool-contracts-2026-11-03.md) records explicit write outcomes,
 rejected prompt experiments and fresh-case results; automatic memory decisions remain imperfect.
+The [channel and memory decision follow-up](reports/channel-memory-followup-2026-11-03.md) completes
+the interrupted evaluation, fixes a Gemma streaming marker leak, and measures an Apple-only planning
+experiment that was rejected. Additional inference strategies must earn their latency cost for each
+model; no classifier has been enabled globally.
 
 | Model | Model release | Required Mac RAM | Download | Reviewed task score | Median first text |
 | --- | --- | --- | --- | --- | --- |

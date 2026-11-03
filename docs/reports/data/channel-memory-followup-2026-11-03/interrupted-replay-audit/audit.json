@@ -1,0 +1,52 @@
+{
+  "archiveSHA256": "7f5852125c4785ec1896009cc1655b7d776669486951c5fe17d0211badba010e",
+  "corpusHash": "7b22f62c5eaa403857a8747d8b26e61f68179d1c235739069e71809aff78d240",
+  "integrity": "recorded checks and primary metrics reproduced",
+  "meaning": "Integrity is not semantic correctness, statistical confidence or release readiness.",
+  "models": {
+    "lfm-2.5-24b-a2b": {
+      "completedCases": 1,
+      "plannedCases": 1,
+      "observedTurns": 1,
+      "primary": {
+        "cases": 1,
+        "passed": 0,
+        "turns": 1,
+        "errors": 0,
+        "checks": {
+          "behavior": {
+            "passed": 4,
+            "total": 5
+          },
+          "exact_answer": {
+            "passed": 0,
+            "total": 0
+          },
+          "lexical_anchor": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "firstTextP50": 22.269018375,
+        "firstTextP95": 22.269018375,
+        "totalP50": 22.350632625,
+        "totalP95": 22.350632625
+      },
+      "reviews": {
+        "pass": 0,
+        "fail": 1,
+        "uncertain": 0,
+        "primaryTurns": 1,
+        "primaryReviewedTurns": 1,
+        "primaryRubricReviewedTurns": 1,
+        "legacyReplyOnlyReviews": 0,
+        "rubricCases": {
+          "pass": 0,
+          "fail": 1,
+          "pending": 0
+        }
+      },
+      "contextAnswerLeakage": []
+    }
+  }
+}

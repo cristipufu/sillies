@@ -50,7 +50,11 @@ struct MLXGenerationCollector {
 
   mutating func finish(receive: @escaping TextDeltaSink) async throws -> TextGenerationOutput {
     guard metrics != nil else { throw failure(.missingCompletion) }
-    if let delta = try append(channel.finish()) { try await receive(delta) }
+    do {
+      if let delta = try append(channel.finish()) { try await receive(delta) }
+    } catch is ReasoningResponseBoundary.Failure {
+      throw failure(.invalidReasoningBoundary)
+    }
     if let delta = batch.flush() { try await receive(delta) }
     return .init(
       text: text.trimmingCharacters(in: .whitespacesAndNewlines), calls: calls, metrics: metrics,

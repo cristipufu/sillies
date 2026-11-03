@@ -13,7 +13,8 @@ package actor ConversationToolbox {
   private var calls = 0
   private var executions = 0
   private var declinedCalls = 0
-  private var recovering = false
+  private enum Recovery { case reducedContext, replayOnly }
+  private var recovery: Recovery?
   private var cached: [String: ConversationToolOutput] = [:]
 
   private var resultBytes = 0
@@ -41,8 +42,16 @@ package actor ConversationToolbox {
   }
 
   func beginRecovery() throws {
-    guard !recovering else { throw ToolFailure.budget }
-    recovering = true
+    try begin(.reducedContext)
+  }
+
+  func beginReplay() throws {
+    try begin(.replayOnly)
+  }
+
+  private func begin(_ mode: Recovery) throws {
+    guard recovery == nil else { throw ToolFailure.budget }
+    recovery = mode
     calls = 0
     declinedCalls = 0
     resultBytes = 0
@@ -58,6 +67,9 @@ package actor ConversationToolbox {
     calls += 1
     // Recovery can replay cached evidence, but cannot acquire a second execution allowance.
     if cached[key] == nil {
+      guard recovery != .replayOnly else {
+        return try await decline(call, reason: .recoveryReplayOnly)
+      }
       guard executions < callLimit else { return try await decline(call) }
       executions += 1
     }
@@ -87,15 +99,18 @@ package actor ConversationToolbox {
       resultTokens += selected.tokens
       text = selected.text
     } else {
-      text = recovering ? output.briefText : output.text
+      text = recovery == .reducedContext ? output.briefText : output.text
     }
     return try recordExchange(text, for: call)
   }
 
-  private func decline(_ call: ConversationToolCall) async throws -> String {
+  private func decline(
+    _ call: ConversationToolCall, reason: ToolNotExecutedResult.Reason = .turnToolLimitReached
+  ) async throws -> String {
     guard declinedCalls < callLimit else { throw ToolFailure.budget }
     declinedCalls += 1
-    let text = String(decoding: try JSONEncoder().encode(ToolLimitResult()), as: UTF8.self)
+    let text = String(
+      decoding: try JSONEncoder().encode(ToolNotExecutedResult(reason: reason)), as: UTF8.self)
     return try await recordOutput(.init(text: text), for: call)
   }
 
@@ -142,14 +157,6 @@ package actor ConversationToolbox {
     }
     progress(.sources(sources))
   }
-}
-
-private struct ToolLimitResult: Encodable {
-  let status = "notExecuted"
-  let reason = "turnToolLimitReached"
-  let remainingCalls = 0
-  let coverage =
-    "No operation was performed. The tool allowance for this turn is exhausted. Answer from the results already returned and state any missing evidence; do not request more tools."
 }
 
 private enum ToolFailure: LocalizedError {

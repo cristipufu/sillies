@@ -84,12 +84,19 @@ package actor LocalConversationService: ConversationResponding {
     do {
       text = try await ChatReplyGenerator.reply(
         to: working, backend: selected, tools: toolbox, receive: delivery.append)
-    } catch TextModelError.contextLimit {
-      guard await !delivery.hasOutput else { throw TextModelError.contextLimit }
-      // A backend can include hidden framing or a tool result that changes the budget.
-      // Retry once; tool results (including writes) are cached for this turn.
-      try await toolbox.beginRecovery()
-      working = try await manager.prepare(working, pressure: .recovering)
+    } catch {
+      guard let recovery = ConversationRecovery(error), await !delivery.hasOutput else {
+        throw error
+      }
+      try Task.checkCancellation()
+      // Retry once before publishing text. Protocol recovery replays completed operations only.
+      switch recovery {
+      case .reduceContext:
+        try await toolbox.beginRecovery()
+        working = try await manager.prepare(working, pressure: .recovering)
+      case .repeatGeneration:
+        try await toolbox.beginReplay()
+      }
       text = try await ChatReplyGenerator.reply(
         to: working, backend: selected, tools: toolbox, receive: delivery.append)
     }

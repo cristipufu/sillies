@@ -1,0 +1,37 @@
+{
+  "pairs": 10,
+  "p95Method": "nearest rank, ceil(0.95*n)",
+  "rebuilt": {
+    "firstTextMedian": 6.62204358301824,
+    "firstTextP95": 8.4531324589625,
+    "totalMedian": 6.670237229001941,
+    "totalP95": 8.528139874979388,
+    "exactAnswers": 10,
+    "cachedTokens": [
+      0
+    ],
+    "processedTokens": [
+      2048,
+      2049
+    ]
+  },
+  "retained": {
+    "firstTextMedian": 0.22422260450548492,
+    "firstTextP95": 0.4787597500253469,
+    "totalMedian": 0.2815016664681025,
+    "totalP95": 0.5405813750112429,
+    "exactAnswers": 10,
+    "cachedTokens": [
+      2026
+    ],
+    "processedTokens": [
+      22,
+      23
+    ]
+  },
+  "coldOpeningFirstTextSeconds": [
+    22.842094791994896,
+    7.114866583026014
+  ],
+  "devicePeakBytes": 5862666786
+}

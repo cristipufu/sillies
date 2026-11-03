@@ -167,9 +167,29 @@ suspending the environment releases its runtime and pressure monitor.
 
 The MLX input processor keeps one bounded, exact text tokenization to avoid repeating template work
 between context measurement and generation. Its key includes messages, tools and template context.
-Model reloads clear it. This does **not** reuse inference KV state: templates that rewrite historical
-messages can require a rewind unsupported by recurrent caches. Do not modify a model template merely
-to force a cache hit.
+Model reloads clear it. This tokenization cache is separate from inference KV state. A profile can
+opt into `runtime.conversationCache: "nativeSession"` after measured validation with the installed
+checkpoint. Granite 4.2 8B uses this path. Templates that rewrite historical messages can require a
+rewind unsupported by recurrent caches; never modify a model template merely to force a cache hit.
+
+The helper owns one native continuation, bounded by the same working context as the reply. Reuse
+requires an exact extension of session identity, instructions, tools and committed messages. The
+native SDK owns token-prefix reconciliation, including safe rebuilds. Measurement does not advance
+the conversation. Both the app render and the actual retained-session render receive token admission
+checks. Active private reasoning that the native structured-message API cannot faithfully represent
+uses the existing full-request path. Cancellation, generation errors, context rejection, edits,
+compaction, session end and model replacement discard affected state. Model eviction also releases it.
+Forward `PreparedTextModel.releaseConversation` through decorators; defer its worker control frame
+until any acknowledged stream has completed. Validate actual cached-token counts, tool continuation,
+invalidation and final streamed text, not just first-token timings.
+
+`runtime.chatTemplate` defaults to `checkpoint`. Ministral 3 uses the pinned, unchanged Mistral
+publisher template packaged by `NativeChatTemplate`, with its source revision and checksum beside
+the resource. It handles consecutive messages and interrupted tool turns through the publisher's
+normalization. Empty assistant placeholders carry no authored content and are omitted from this
+render; nonempty partial answers and tool results remain intact. Archive messages are never changed.
+Any new override needs publisher evidence, license attribution, packaged-helper checks and native
+conversation validation. It must not become a model-name switch or a response repair filter.
 
 Apple conversation sessions retain one exact completed continuation. Session identity, instructions,
 roles, tool schemas and committed history must match. Tool invocation uses the current turn's toolbox;

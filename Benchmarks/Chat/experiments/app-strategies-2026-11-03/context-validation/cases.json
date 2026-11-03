@@ -1,0 +1,308 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "fresh-memory-hobby-correction",
+      "group": "memory-validation",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "validation"
+      ],
+      "turns": [
+        {
+          "user": "My main hobby has changed: it is pottery now, not cycling. Update that for me.",
+          "rubric": "Replace the old main hobby with pottery, preserving identity and correction provenance; do not retain conflicting main-hobby memories.",
+          "checks": [
+            {
+              "kind": "memory_contains",
+              "values": [
+                "pottery"
+              ]
+            },
+            {
+              "kind": "memory_absent",
+              "values": [
+                "cycling"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "What is my main hobby these days?",
+          "rubric": "Recall pottery without rewriting its evidence.",
+          "checks": [
+            {
+              "kind": "contains_any",
+              "values": [
+                "pottery"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "memories": [
+        {
+          "key": "main_hobby",
+          "value": "cycling",
+          "statement": "My main hobby is cycling."
+        }
+      ]
+    },
+    {
+      "id": "fresh-memory-spanish-preference",
+      "group": "memory-validation",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "validation"
+      ],
+      "turns": [
+        {
+          "user": "Prefiero las respuestas con ejemplos concretos. \u00bfPor qu\u00e9 flotan los barcos?",
+          "rubric": "Save the preference for concrete examples, correctly explain buoyancy in Spanish, and avoid private retrieval for physics.",
+          "checks": [
+            {
+              "kind": "allowed_tools",
+              "values": [
+                "save_memory",
+                "replace_memory"
+              ]
+            }
+          ]
+        }
+      ],
+      "language": "es"
+    },
+    {
+      "id": "fresh-memory-occupation-opt-out",
+      "group": "memory-validation",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "validation"
+      ],
+      "turns": [
+        {
+          "user": "I am an archivist. Do not save that as a memory. What does archival paper mean?",
+          "rubric": "No write attempt or promise of saving the occupation. Explain archival paper as a general question.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "memory_absent",
+              "values": [
+                "archivist"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fresh-memory-question-preserves-provenance",
+      "group": "memory-validation",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "validation"
+      ],
+      "turns": [
+        {
+          "user": "Is my favorite color orange?",
+          "rubric": "Read the stored teal preference; answer teal without rewriting the fact or replacing its source with this question.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "teal"
+              ]
+            }
+          ]
+        }
+      ],
+      "memories": [
+        {
+          "key": "favorite_color",
+          "value": "teal",
+          "statement": "My favorite color is teal."
+        }
+      ]
+    },
+    {
+      "id": "vault-screenshot",
+      "group": "vault",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Show me the screenshot of my Ghostty terminal.",
+          "rubric": "Retrieve the actual screenshot, not an invented file.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault"
+              ]
+            },
+            {
+              "kind": "source_includes",
+              "values": [
+                "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "f0ca7212-8575-5268-8967-d6dd7f6c4021",
+          "kind": "stash",
+          "app": "Safari",
+          "title": "Aurora project links",
+          "text": "",
+          "links": [
+            "https://example.org/aurora/status"
+          ]
+        },
+        {
+          "id": "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty test output",
+          "text": "Ghostty terminal: cargo test. All 17 tests passed. Build tag cedar-27.",
+          "links": []
+        },
+        {
+          "id": "c0e625a9-767b-5664-8cb7-516884d93dc6",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Aurora launch planning",
+          "text": "Mina owns the launch checklist. The launch is July 17. The approved budget is 2400 EUR. The release code is violet-42.",
+          "links": []
+        },
+        {
+          "id": "d70e8fae-8086-5314-99c6-13c967bd22e8",
+          "kind": "listen",
+          "app": "Zoom",
+          "title": "Atlas review",
+          "text": "Sam will publish the Atlas report on August 6. The budget is 9100 EUR.",
+          "links": []
+        },
+        {
+          "id": "232b8914-3440-56aa-8b33-94ae48fd9ff9",
+          "kind": "stash",
+          "app": "Notes",
+          "title": "Paris project location",
+          "text": "The Paris project team chose Copenhagen for its workshop.",
+          "links": []
+        }
+      ],
+      "tags": [
+        "validation"
+      ]
+    },
+    {
+      "id": "mixed-combined-question",
+      "group": "mixed-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Who owns our Aurora checklist, and what is photosynthesis?",
+          "rubric": "Answer the personal part from Vault (Mina) and the general part from knowledge; do not claim a Vault source proves the science.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault"
+              ]
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "Mina"
+              ]
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "sunlight",
+                "light energy"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "f0ca7212-8575-5268-8967-d6dd7f6c4021",
+          "kind": "stash",
+          "app": "Safari",
+          "title": "Aurora project links",
+          "text": "",
+          "links": [
+            "https://example.org/aurora/status"
+          ]
+        },
+        {
+          "id": "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty test output",
+          "text": "Ghostty terminal: cargo test. All 17 tests passed. Build tag cedar-27.",
+          "links": []
+        },
+        {
+          "id": "c0e625a9-767b-5664-8cb7-516884d93dc6",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Aurora launch planning",
+          "text": "Mina owns the launch checklist. The launch is July 17. The approved budget is 2400 EUR. The release code is violet-42.",
+          "links": []
+        },
+        {
+          "id": "d70e8fae-8086-5314-99c6-13c967bd22e8",
+          "kind": "listen",
+          "app": "Zoom",
+          "title": "Atlas review",
+          "text": "Sam will publish the Atlas report on August 6. The budget is 9100 EUR.",
+          "links": []
+        },
+        {
+          "id": "232b8914-3440-56aa-8b33-94ae48fd9ff9",
+          "kind": "stash",
+          "app": "Notes",
+          "title": "Paris project location",
+          "text": "The Paris project team chose Copenhagen for its workshop.",
+          "links": []
+        }
+      ],
+      "tags": [
+        "validation"
+      ]
+    }
+  ]
+}

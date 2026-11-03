@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "registeredAt": "2026-11-03T20:07:44.829649+00:00",
+  "baselineCommit": "c49e499ff46f7789348b7b7cfad97b811682ddbd",
+  "models": [
+    "gemma-4-e4b",
+    "gemma-4-12b",
+    "gemma-4-26b-a4b",
+    "granite-4.2-3b",
+    "granite-4.2-8b",
+    "lfm-2.5-2.6b",
+    "lfm-2.5-24b-a2b",
+    "ministral-3-8b",
+    "nemotron-3.5-bolt-e4b",
+    "qwen-3.5-2b",
+    "qwen-3.5-4b",
+    "qwen-3.5-9b",
+    "apple"
+  ],
+  "development": [
+    "new-fact-with-general-question",
+    "question-is-not-a-correction",
+    "new-name-and-later-correction",
+    "third-party-quotation",
+    "opt-out-in-a-mixed-turn",
+    "missing-chat-source-with-known-vault-fact",
+    "knowledge-mountain",
+    "vault-links"
+  ],
+  "validation": [
+    "fresh-memory-hobby-correction",
+    "fresh-memory-spanish-preference",
+    "fresh-memory-occupation-opt-out",
+    "fresh-memory-question-preserves-provenance",
+    "mixed-combined-question",
+    "vault-screenshot"
+  ],
+  "corpusSHA256": "b9539253406bdc546a53d9c388881d46b9a1039db411020781e0e3777c1504be",
+  "candidates": [
+    "split-writes",
+    "memory-context",
+    "prompt-preparation"
+  ],
+  "nativeExecutionLimitSeconds": 3600,
+  "batchWallLimitSeconds": 180,
+  "turnTimeoutSeconds": 60,
+  "rules": [
+    "Freeze each candidate source and binary before inference. Use one original baseline; do not combine candidate changes during screening.",
+    "Run models sequentially, no concurrent builds or native model jobs; synthetic stores only. No app restart, model installation, commit or push.",
+    "One development pass per candidate/model; at most one implementation repair per candidate if evidence identifies an actual integration defect. No prompt tuning after screening.",
+    "Any unwanted write attempt, provenance corruption or false save acknowledgement rejects that candidate for that model. Stop it after the current bounded batch; retain all admitted outcomes.",
+    "Quality finalist needs at least two additional reviewed development task passes in the first screen, no lost baseline passes, and no critical failure. Then run two more development repetitions and one fresh validation comparison; require repeated gain and no new validation regression.",
+    "Performance candidate needs identical rendered prompts, preserved actual state, and measured preparation or prefill improvement; require warm matched native probes and completed-turn controls. Report cold separately. Candidate p50 must improve by at least 10 percent and 100ms on matched correct warm controls; p95 must not regress by more than 15 percent or 500ms, whichever is greater. Five distinct correct controls and two repeats in both arms are required for timing qualification.",
+    "No leaderboard changes from diagnostic subsets; semantic review of replies, sources and committed state, not lexical scores alone. Changing scoring rules after inference invalidates comparison.",
+    "Previously rejected separate memory-phase and Apple classifier approaches are not repeated; existing background checkpoints and published prefill choices remain unchanged.",
+    "Exact-prefix KV reuse is feasibility-audited; do not implement ad-hoc trimming of recurrent caches or change prompt penalty semantics merely for speed."
+  ]
+}

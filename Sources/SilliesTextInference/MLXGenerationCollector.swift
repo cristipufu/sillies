@@ -11,6 +11,7 @@ struct MLXGenerationCollector {
   private var calls: [TextGenerationOutput.Call] = []
   private var metrics: TextGenerationMetrics?
   private var batch = TextStreamBatch()
+  var hasPrivateReasoning: Bool { !channel.content.isEmpty }
 
   init(style: TextGenerationStyle, channel: MLXReasoningChannel) {
     self.style = style

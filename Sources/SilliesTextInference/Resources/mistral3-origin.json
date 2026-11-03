@@ -1,0 +1,7 @@
+{
+  "source": "https://huggingface.co/mistralai/Ministral-3-8B-Instruct-2512/resolve/5b26027e7b19eeb4b7352e1fed3926375dd2cb4d/chat_template.jinja",
+  "revision": "5b26027e7b19eeb4b7352e1fed3926375dd2cb4d",
+  "sha256": "74eeb55fd3341286ec3fd44e902b7120721acc81cd394e96b431f85e93a1ea56",
+  "license": "Apache-2.0",
+  "modifications": "None; original publisher template."
+}

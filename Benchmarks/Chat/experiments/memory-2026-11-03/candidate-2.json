@@ -1,0 +1,20 @@
+{
+  "slot": 2,
+  "name": "separate-memory-maintenance",
+  "registeredAt": "2026-11-03T19:11:04.306382+00:00",
+  "models": [
+    "gemma-4-12b",
+    "apple"
+  ],
+  "base": "c49e499ff46f7789348b7b7cfad97b811682ddbd",
+  "hypothesis": "A narrow memory-only native tool phase can notice explicit lasting assertions alongside unrelated questions and avoid confusing user identity with companion identity.",
+  "changes": [
+    "Only search_memories and save_memory are exposed to the preparation phase. It sees the latest original human message, uses baseline save contract, and has no general-question task.",
+    "The conversational phase receives committed write outcomes as labeled source data and read-only tools, preserving the original human message verbatim.",
+    "Both phases share the existing total call allowance by transferring the remaining allowance; preparation runs once, inside interactive admission, with cancellation and no detached work.",
+    "Per-model policy enables only Gemma 4 12B and Apple; all other providers retain integrated memory.",
+    "Baseline generation settings and write validation unchanged; candidate 1 is not combined."
+  ],
+  "predictedSignal": "Save mixed-turn preference and correct names; no write for questions, quotations or opt-outs; extra phase latency explicitly counted.",
+  "screen": "One frozen six-case development pass per model; reject critical violations; no reroll."
+}

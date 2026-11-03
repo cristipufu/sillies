@@ -52,6 +52,12 @@ class ChatBenchmarkTests(unittest.TestCase):
         self.assertFalse(scoring.check_rule({"kind": "memory_contains", "values": ["Alex"]}, response, [])["passed"])
         self.assertFalse(scoring.check_rule({"kind": "required_tools", "values": ["save_memory"]}, response, [])["passed"])
 
+    def test_no_writes_rejects_creation_and_replacement_attempts(self):
+        for name in ("save_memory", "replace_memory"):
+            with self.subTest(name=name):
+                calls = [{"name": name, "arguments": "{}", "result": '{"status":"notSaved"}'}]
+                self.assertFalse(scoring.check_rule({"kind": "no_writes"}, {"reply": "Done"}, calls)["passed"])
+
     def test_empty_vault_search_is_still_an_incorrect_tool_for_general_knowledge(self):
         tools = [{"name": "search_vault", "arguments": '{"query":"Everest","category":"all"}', "result": "[]"}]
         self.assertFalse(scoring.check_rule({"kind": "no_tools"}, {"reply": "Everest"}, tools)["passed"])

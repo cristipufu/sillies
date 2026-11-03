@@ -1,0 +1,96 @@
+{
+  "archiveSHA256": "15361d66bd7d5585565a3499bf50149e2303d730d81fe110714f213ba2ef5c6d",
+  "corpusHash": "22b2f4b42e7060c1da40a345aacf280099a2808f5d96e447321ce78b751a7404",
+  "integrity": "recorded checks and primary metrics reproduced",
+  "meaning": "Integrity is not semantic correctness, statistical confidence or release readiness.",
+  "models": {
+    "gemma-4-12b": {
+      "completedCases": 6,
+      "plannedCases": 6,
+      "observedTurns": 7,
+      "primary": {
+        "cases": 6,
+        "passed": 2,
+        "turns": 7,
+        "errors": 3,
+        "checks": {
+          "behavior": {
+            "passed": 18,
+            "total": 31
+          },
+          "exact_answer": {
+            "passed": 0,
+            "total": 0
+          },
+          "lexical_anchor": {
+            "passed": 3,
+            "total": 5
+          }
+        },
+        "firstTextP50": 10.914038541,
+        "firstTextP95": 15.26751,
+        "totalP50": 11.754315875,
+        "totalP95": 15.907519917
+      },
+      "reviews": {
+        "pass": 3,
+        "fail": 4,
+        "uncertain": 0,
+        "primaryTurns": 7,
+        "primaryReviewedTurns": 7,
+        "primaryRubricReviewedTurns": 7,
+        "legacyReplyOnlyReviews": 0,
+        "rubricCases": {
+          "pass": 2,
+          "fail": 4,
+          "pending": 0
+        }
+      },
+      "contextAnswerLeakage": []
+    },
+    "apple": {
+      "completedCases": 2,
+      "plannedCases": 6,
+      "observedTurns": 3,
+      "primary": {
+        "cases": 2,
+        "passed": 0,
+        "turns": 3,
+        "errors": 1,
+        "checks": {
+          "behavior": {
+            "passed": 7,
+            "total": 13
+          },
+          "exact_answer": {
+            "passed": 0,
+            "total": 0
+          },
+          "lexical_anchor": {
+            "passed": 1,
+            "total": 1
+          }
+        },
+        "firstTextP50": 3.799341542,
+        "firstTextP95": 4.350283583,
+        "totalP50": 4.456235,
+        "totalP95": 4.584608125
+      },
+      "reviews": {
+        "pass": 0,
+        "fail": 3,
+        "uncertain": 0,
+        "primaryTurns": 3,
+        "primaryReviewedTurns": 3,
+        "primaryRubricReviewedTurns": 3,
+        "legacyReplyOnlyReviews": 0,
+        "rubricCases": {
+          "pass": 0,
+          "fail": 2,
+          "pending": 0
+        }
+      },
+      "contextAnswerLeakage": []
+    }
+  }
+}

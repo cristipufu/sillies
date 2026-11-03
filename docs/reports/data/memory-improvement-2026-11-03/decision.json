@@ -1,0 +1,26 @@
+{
+  "finishedAt": "2026-11-03T19:42:21.484712+00:00",
+  "nativeExecutionSeconds": 852.8582986251567,
+  "nativeExecutionLimitSeconds": 3600,
+  "candidatesRun": [
+    1,
+    2,
+    4
+  ],
+  "skippedCandidate": 3,
+  "models": {
+    "apple": {
+      "status": "exhausted_without_qualifying_change",
+      "reason": "Two consecutive candidates without useful development signal; candidate 2 also has a fictional-person write attempt and correction provenance corruption."
+    },
+    "gemma-4-12b": {
+      "status": "exhausted_without_qualifying_change",
+      "reason": "Selected evidence-only finalist misses the same lasting-preference task in all three repeats, violating the no repeated scenario failure gate. No further candidate changes permitted after finalist evaluation."
+    }
+  },
+  "freshValidation": "unrun; finalist failed prerequisite repeatability gate",
+  "latencyControls": "unrun; no qualified latency result",
+  "productionStrategy": "unchanged c49e499",
+  "retainedChange": "benchmark-only receipt-acknowledgement latency instrumentation",
+  "note": "The final batch admitted both the second and third preference repeats before the batch result was reviewed; both failures are retained. All other remaining cases stop here."
+}

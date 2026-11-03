@@ -1,0 +1,11 @@
+{
+  "registeredAt": "2026-11-03T21:23:06.273599+00:00",
+  "model": "qwen-3.5-4b",
+  "basis": "Initial twelve-task screen improves 7/12 to 10/12, no lost passing task or critical write.",
+  "rules": [
+    "Same frozen workers, settings, twelve-task confirmation corpus and six-task validation corpus.",
+    "Two further repetitions in both arms and one validation comparison. All four jobs are admitted together in the final supervised 180-second batch; comparisons remain sequential.",
+    "The existing 3600-second execution cap and 60-second turn/120-second case limits remain unchanged. A deadline leaves explicit incomplete evidence and prevents promotion.",
+    "Validation is collected without intermediate tuning; it cannot override a failed repetition or critical outcome."
+  ]
+}

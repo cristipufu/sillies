@@ -1,0 +1,514 @@
+--- a/Sources/SilliesApp/App/Composition/ReasoningServices.swift
++++ b/Sources/SilliesApp/App/Composition/ReasoningServices.swift
+@@ -28,11 +28,12 @@
+   func makeConversation(
+     tools: [any ConversationTool],
+     history: any ConversationRepository,
++    memories: (any CompanionMemoryRepository)? = nil,
+     historyTools: @escaping @Sendable (ChatContext) -> [any ConversationTool] = { _ in [] }
+   ) -> any ConversationResponding {
+     LocalConversationService(
+       resolveBackend: { [models] in await models.backend() }, tools: tools, turns: turns,
+-      history: .init(repository: history, tools: historyTools))
++      history: .init(repository: history, memories: memories, tools: historyTools))
+   }
+ 
+   func makeVault(directory: URL? = nil) -> SessionVaultStore {
+--- a/Sources/SilliesApp/App/SilliesMain.swift
++++ b/Sources/SilliesApp/App/SilliesMain.swift
+@@ -245,7 +245,7 @@
+           VaultSearchTool(library: skills.vault.library),
+           VaultReadTool(library: skills.vault.library),
+         ],
+-        history: conversations,
++        history: conversations, memories: conversations,
+         historyTools: { context in
+           ConversationHistoryTools(conversations: conversations, memories: conversations).tools(
+             for: context)
+--- a/Sources/SilliesCore/ChatContext.swift
++++ b/Sources/SilliesCore/ChatContext.swift
+@@ -11,6 +11,7 @@
+   public let profile: CharacterChatProfile
+   public let messages: [ChatMessage]
+   public let memory: ConversationMemory
++  public private(set) var savedMemories: [CompanionMemory] = []
+   public private(set) var turnID = UUID()
+   public private(set) var sessionID: UUID?
+   public private(set) var historyHandle: ConversationHandle?
+@@ -24,6 +25,12 @@
+     self.profile = profile
+     self.messages = messages
+     self.memory = memory
++  }
++
++  public func withSavedMemories(_ memories: [CompanionMemory]) -> Self {
++    var copy = self
++    copy.savedMemories = memories
++    return copy
+   }
+ 
+   public func inTurn(_ id: UUID, session: UUID?) -> Self {
+--- a/Sources/SilliesReasoning/ChatReplyGenerator.swift
++++ b/Sources/SilliesReasoning/ChatReplyGenerator.swift
+@@ -7,7 +7,7 @@
+     to context: ChatContext, backend: any ConversationBackend, tools: ConversationToolbox,
+     receive: @escaping TextDeltaSink = { _ in }
+   ) async throws -> String {
+-    let request = request(
++    let request = try request(
+       for: context, tools: tools.definitions,
+       maximumTokens: backend.generationProfile.conversation.outputTokens)
+     try await tools.configure(
+@@ -25,7 +25,7 @@
+   static func request(
+     for context: ChatContext, tools: [ConversationToolDefinition], maximumTokens: Int
+   )
+-    -> TextGenerationRequest
++    throws -> TextGenerationRequest
+   {
+     let messages = context.messages.flatMap { message in
+       let evidence = TextMessage.exchanging(message.exchanges)
+@@ -54,7 +54,7 @@
+           Personality: \(context.profile.personality)
+           If an earlier reply conflicts with this character profile, correct the mistake instead of repeating it.
+           """,
+-        messages: ConversationContextNotes.applying(context.memory, to: messages), tools: tools),
++        messages: try ConversationMemoryEvidence.applying(context, to: messages), tools: tools),
+       maximumTokens: maximumTokens,
+       style: .conversation
+     ).inConversation(context.turnID).inSession(context.sessionID)
+--- a/Sources/SilliesReasoning/ConversationContextManager.swift
++++ b/Sources/SilliesReasoning/ConversationContextManager.swift
+@@ -28,7 +28,9 @@
+     let current = replacing(window, messages: [latest], memory: window.memory)
+     let currentTokens = window.messages.count == 1 ? measured : try await requiredTokens(current)
+     guard let currentTokens, currentTokens <= budget.admissionTokens else {
+-      guard window.memory != ConversationMemory() else { throw TextModelError.contextLimit }
++      guard window.memory != ConversationMemory() || !window.savedMemories.isEmpty else {
++        throw TextModelError.contextLimit
++      }
+       return try await minimal(window, latest: latest, capacity: budget.admissionTokens)
+     }
+     let starts = window.messages.indices.filter { window.messages[$0].role == .user }
+@@ -52,7 +54,7 @@
+   private func minimal(_ context: ChatContext, latest: ChatMessage, capacity: Int) async throws
+     -> ChatContext
+   {
+-    let minimal = replacing(context, messages: [latest], memory: .init())
++    let minimal = replacing(context, messages: [latest], memory: .init()).withSavedMemories([])
+     guard try await fits(minimal, within: capacity) else { throw TextModelError.contextLimit }
+     return minimal
+   }
+@@ -63,7 +65,7 @@
+ 
+   private func requiredTokens(_ context: ChatContext) async throws -> Int? {
+     try Task.checkCancellation()
+-    let request = ChatReplyGenerator.request(
++    let request = try ChatReplyGenerator.request(
+       for: context, tools: tools,
+       maximumTokens: backend.generationProfile.conversation.outputTokens)
+     let budget = ConversationBudget(backend: backend)
+@@ -78,6 +80,7 @@
+       companionName: context.companionName, profile: context.profile,
+       messages: messages, memory: memory
+     ).inTurn(context.turnID, session: context.sessionID).inHistory(context.historyHandle)
++      .withSavedMemories(context.savedMemories)
+       .coveringRecentWindow()
+   }
+ }
+--- a/Sources/SilliesReasoning/ConversationHistoryAccess.swift
++++ b/Sources/SilliesReasoning/ConversationHistoryAccess.swift
+@@ -3,13 +3,16 @@
+ /// Related history capabilities are injected together. Transient callers have no persistence owner.
+ package struct ConversationHistoryAccess: Sendable {
+   let repository: (any ConversationRepository)?
++  let memories: (any CompanionMemoryRepository)?
+   let tools: @Sendable (ChatContext) -> [any ConversationTool]
+ 
+   package init(
+     repository: (any ConversationRepository)?,
++    memories: (any CompanionMemoryRepository)? = nil,
+     tools: @escaping @Sendable (ChatContext) -> [any ConversationTool] = { _ in [] }
+   ) {
+     self.repository = repository
++    self.memories = memories
+     self.tools = tools
+   }
+ 
+--- a/Sources/SilliesReasoning/ConversationRecentWindow.swift
++++ b/Sources/SilliesReasoning/ConversationRecentWindow.swift
+@@ -30,6 +30,7 @@
+       companionName: context.companionName, profile: context.profile,
+       messages: selected, memory: context.memory
+     ).inTurn(context.turnID, session: context.sessionID).inHistory(context.historyHandle)
++      .withSavedMemories(context.savedMemories)
+     if selected.count != context.messages.count || context.historyCoverage == .recentWindow {
+       return result.coveringRecentWindow()
+     }
+--- a/Sources/SilliesReasoning/LocalConversationService.swift
++++ b/Sources/SilliesReasoning/LocalConversationService.swift
+@@ -78,7 +78,9 @@
+     } else {
+       source = context
+     }
+-    var working = try await manager.prepare(source)
++    let supplied = try await ConversationMemoryPreparation(repository: history.memories).prepare(
++      source)
++    var working = try await manager.prepare(supplied)
+     let text: String
+     let delivery = ConversationStreamDelivery(receive: receive)
+     do {
+--- a/Sources/SilliesReasoning/MemorySearchTool.swift
++++ b/Sources/SilliesReasoning/MemorySearchTool.swift
+@@ -2,8 +2,6 @@
+ import SilliesCore
+ 
+ struct MemorySearchTool: ConversationTool {
+-  private static let resultLimit = 4
+-  private static let statementCharacterLimit = 100
+   let repository: any CompanionMemoryRepository
+   let handle: ConversationHandle
+   let companionName: String
+@@ -21,32 +19,6 @@
+     let args = try ConversationToolArguments.decode(
+       ConversationSearchArguments.self, from: arguments)
+     let facts = try await repository.memories(handle, query: args.query)
+-    struct Fact: Encodable {
+-      let memoryID: UUID
+-      let revision: UUID
+-      let key: String
+-      let value: String
+-      let userStatement: String
+-    }
+-    struct Result: Encodable {
+-      let subject = "user"
+-      let attribution: String
+-      let facts: [Fact]
+-    }
+-    let results = facts.prefix(Self.resultLimit).map {
+-      Fact(
+-        memoryID: $0.id, revision: $0.revision,
+-        key: $0.key, value: $0.value,
+-        userStatement: String($0.sourceQuote.prefix(Self.statementCharacterLimit)))
+-    }
+-    let encoder = JSONEncoder()
+-    encoder.outputFormatting = [.sortedKeys]
+-    return .init(
+-      text: String(
+-        decoding: try encoder.encode(
+-          Result(
+-            attribution:
+-              "These facts describe the human chatting with \(companionName). They do not describe \(companionName).",
+-            facts: results)), as: UTF8.self))
++    return .init(text: try ConversationMemoryEvidence.encode(facts, companionName: companionName))
+   }
+ }
+--- a/Tests/SilliesReasoningTests/ConversationForegroundBudgetTests.swift
++++ b/Tests/SilliesReasoningTests/ConversationForegroundBudgetTests.swift
+@@ -72,7 +72,7 @@
+   #expect(context.memory == memory)
+   #expect(prepared.messages.last == history.last)
+   #expect(await backend.measurements <= 10)
+-  let request = ChatReplyGenerator.request(
++  let request = try ChatReplyGenerator.request(
+     for: prepared, tools: [], maximumTokens: backend.generationProfile.conversation.outputTokens)
+   #expect(try await ConversationBudget(backend: backend).admits(request))
+ }
+@@ -93,3 +93,22 @@
+   #expect(prepared.messages == [current])
+   #expect(context.messages[1].exchanges == [exchange])
+ }
++
++@Test func suppliedFactsAreBudgetedAndDroppedBeforeTheCurrentQuestion() async throws {
++  let current = ChatMessage(role: .user, text: "What is next?")
++  let facts = [
++    CompanionMemory(
++      replacing: nil,
++      fact: .init(key: "large", value: String(repeating: "old detail ", count: 10_000)),
++      source: .init(messageID: UUID(), quote: "An older statement."), savedAt: Date())
++  ]
++  let context = ChatContext(
++    companionName: "Pogo", profile: .init(personality: "Curious"), messages: [current]
++  )
++  .withSavedMemories(facts)
++  let prepared = try await ConversationContextManager(backend: ForegroundBudgetProbe(), tools: [])
++    .prepare(context)
++  #expect(prepared.messages == [current])
++  #expect(prepared.savedMemories.isEmpty)
++  #expect(context.savedMemories == facts)
++}
+--- a/Tests/SilliesReasoningTests/ConversationProtocolTests.swift
++++ b/Tests/SilliesReasoningTests/ConversationProtocolTests.swift
+@@ -237,7 +237,7 @@
+   #expect(await generator.requests.allSatisfy { $0.conversationID == group })
+ }
+ 
+-@Test func interruptedDeliveryDoesNotImpersonateAssistantSpeechInHistory() {
++@Test func interruptedDeliveryDoesNotImpersonateAssistantSpeechInHistory() throws {
+   let reply = ChatMessage(role: .companion, text: "Here is the first part.")
+     .withDelivery(.interrupted, spokenText: "Here is")
+   let context = ChatContext(
+@@ -245,7 +245,7 @@
+     messages: [
+       .init(role: .user, text: "Explain"), reply, .init(role: .user, text: "Continue"),
+     ])
+-  let request = ChatReplyGenerator.request(for: context, tools: [], maximumTokens: 240)
++  let request = try ChatReplyGenerator.request(for: context, tools: [], maximumTokens: 240)
+   #expect(request.messages.map(\.content) == context.messages.map(\.text))
+   #expect(request.instructions.contains("were interrupted"))
+   #expect(!request.messages.contains { $0.content.contains("Completed spoken phrases") })
+@@ -253,8 +253,9 @@
+     companionName: "Pogo", profile: context.profile,
+     messages: [.init(role: .user, text: "Hello")])
+   #expect(
+-    !ChatReplyGenerator.request(for: complete, tools: [], maximumTokens: 240).instructions.contains(
+-      "were interrupted"))
++    try !ChatReplyGenerator.request(for: complete, tools: [], maximumTokens: 240).instructions
++      .contains(
++        "were interrupted"))
+ }
+ 
+ @Test func terminalToolRoundPreservesPublishedTextWithoutRepeatingTheOperation() async throws {
+--- a/Tests/SilliesReasoningTests/ConversationSourceBoundaryTests.swift
++++ b/Tests/SilliesReasoningTests/ConversationSourceBoundaryTests.swift
+@@ -11,7 +11,7 @@
+   let context = ChatContext(
+     companionName: "Pogo", profile: .init(personality: "Curious"), messages: [question],
+     memory: .init(summary: source, throughMessageID: UUID(), openingStatement: "Original greeting"))
+-  let request = ChatReplyGenerator.request(for: context, tools: [], maximumTokens: 240)
++  let request = try ChatReplyGenerator.request(for: context, tools: [], maximumTokens: 240)
+   #expect(!request.instructions.contains(source))
+   #expect(!request.instructions.contains("Original greeting"))
+   #expect(request.messages.first?.role == .user)
+@@ -23,24 +23,24 @@
+   #expect(transcript.count == 1)
+ }
+ 
+-@Test func checkpointChangesInvalidateNativeContinuationEvenWhenInstructionsAreStable() {
++@Test func checkpointChangesInvalidateNativeContinuationEvenWhenInstructionsAreStable() throws {
+   let session = UUID()
+   let first = ChatMessage(role: .user, text: "Hello")
+   let answer = ChatMessage(role: .companion, text: "Hi")
+   let next = ChatMessage(role: .user, text: "Continue")
+-  func request(_ messages: [ChatMessage], summary: String) -> TextGenerationRequest {
+-    ChatReplyGenerator.request(
++  func request(_ messages: [ChatMessage], summary: String) throws -> TextGenerationRequest {
++    try ChatReplyGenerator.request(
+       for: .init(
+         companionName: "Pogo", profile: .init(personality: "Curious"), messages: messages,
+         memory: .init(summary: summary, throughMessageID: first.id)
+       ).inTurn(UUID(), session: session), tools: [], maximumTokens: 240)
+   }
+-  let original = request([first], summary: "Earlier notes")
++  let original = try request([first], summary: "Earlier notes")
+   let continuation = TextConversationContinuation(
+     request: original, response: .init(text: answer.text))
+-  let stable = request([first, answer, next], summary: "Earlier notes")
++  let stable = try request([first, answer, next], summary: "Earlier notes")
+   #expect(continuation.suffix(for: stable)?.map(\.content) == [next.text])
+-  let changed = request([first, answer, next], summary: "Updated notes")
++  let changed = try request([first, answer, next], summary: "Updated notes")
+   #expect(changed.instructions == original.instructions)
+   #expect(continuation.suffix(for: changed) == nil)
+ }
+--- a/Tests/SilliesVaultTests/AppleChatIntegrationTests.swift
++++ b/Tests/SilliesVaultTests/AppleChatIntegrationTests.swift
+@@ -36,7 +36,7 @@
+   ]
+   let first = ChatMessage(role: .user, text: "Which URLs did I save?")
+   let general = "Okay, tell me what's the tallest mountain in the world?"
+-  let request = comparisonRequest([first], tools: tools)
++  let request = try comparisonRequest([first], tools: tools)
+   let retained = try NativeChatComparison(seed: .instructions(request.instructions), tools: tools)
+   let saved = try await retained.ask(first.text, label: "native first retrieval")
+   let transcript = retained.session.transcript
+@@ -47,7 +47,7 @@
+       evidence: .init(sources: saved.sources, exchanges: saved.exchanges)),
+     .init(role: .user, text: general),
+   ]
+-  let canonicalRequest = comparisonRequest(messages, tools: tools)
++  let canonicalRequest = try comparisonRequest(messages, tools: tools)
+   let canonical = try AppleConversationTranscript.make(
+     canonicalRequest,
+     tools: retained.registered.map { .init(tool: $0) })
+@@ -82,9 +82,9 @@
+ }
+ 
+ private func comparisonRequest(_ messages: [ChatMessage], tools: [any ConversationTool])
+-  -> TextGenerationRequest
++  throws -> TextGenerationRequest
+ {
+-  ChatReplyGenerator.request(
++  try ChatReplyGenerator.request(
+     for: .init(
+       companionName: "Pogo",
+       profile: .init(personality: "Curious and upbeat"), messages: messages),
+@@ -173,7 +173,7 @@
+   let tools: [any ConversationTool] = [
+     VaultSearchTool(library: library), VaultReadTool(library: library),
+   ]
+-  let probe = ComparisonBackend(apple: backend, expected: comparisonRequest(messages, tools: tools))
++  let probe = try ComparisonBackend(apple: backend, expected: comparisonRequest(messages, tools: tools))
+   let service = LocalConversationService(
+     resolveBackend: { probe }, tools: tools, turns: .init())
+   let context = ChatContext(
+--- a/Tools/ChatModelBenchmark/BenchmarkConversation.swift
++++ b/Tools/ChatModelBenchmark/BenchmarkConversation.swift
+@@ -92,7 +92,7 @@
+       resolveBackend: { selected }, tools: measured(staticTools + extras, position: position),
+       turns: .init(),
+       history: .init(
+-        repository: fixture.conversations,
++        repository: fixture.conversations, memories: fixture.conversations,
+         tools: { context in
+           measured(
+             ConversationHistoryTools(
+--- /dev/null
++++ b/Sources/SilliesReasoning/ConversationMemoryEvidence.swift
+@@ -0,0 +1,57 @@
++import Foundation
++import SilliesCore
++import SilliesTextModels
++
++/// Both automatic context and requested searches preserve the same source attribution.
++enum ConversationMemoryEvidence {
++  static let resultLimit = 4
++  private static let statementCharacterLimit = 100
++
++  private struct Fact: Encodable {
++    let memoryID: UUID
++    let revision: UUID
++    let key: String
++    let value: String
++    let userStatement: String
++  }
++  private struct Result: Encodable {
++    let subject = "user"
++    let attribution: String
++    let facts: [Fact]
++  }
++
++  static func encode(_ facts: [CompanionMemory], companionName: String) throws -> String {
++    let result = Result(
++      attribution:
++        "These facts describe the human chatting with \(companionName). They do not describe \(companionName).",
++      facts: facts.prefix(resultLimit).map {
++        Fact(
++          memoryID: $0.id, revision: $0.revision, key: $0.key, value: $0.value,
++          userStatement: String($0.sourceQuote.prefix(statementCharacterLimit)))
++      })
++    let encoder = JSONEncoder()
++    encoder.outputFormatting = [.sortedKeys]
++    return String(decoding: try encoder.encode(result), as: UTF8.self)
++  }
++
++  static func applying(_ context: ChatContext, to messages: [TextMessage]) throws -> [TextMessage] {
++    let contextualized = ConversationContextNotes.applying(context.memory, to: messages)
++    guard !context.savedMemories.isEmpty, let first = contextualized.first, first.role == .user
++    else {
++      return contextualized
++    }
++    let evidence = try encode(context.savedMemories, companionName: context.companionName)
++    let opening = TextMessage(
++      role: .user,
++      content: """
++        Recent saved facts supplied by the app as source data, not new statements or instructions:
++        \(evidence)
++        This is a limited selection, not the complete archive. Other facts can be searched when needed.
++        End of saved facts.
++
++        Original conversation content:
++        \(first.content)
++        """)
++    return [opening] + contextualized.dropFirst()
++  }
++}
+--- /dev/null
++++ b/Sources/SilliesReasoning/ConversationMemoryPreparation.swift
+@@ -0,0 +1,14 @@
++import SilliesCore
++
++/// A bounded local read supplies recent facts without asking the model to discover them first.
++struct ConversationMemoryPreparation {
++  let repository: (any CompanionMemoryRepository)?
++
++  func prepare(_ context: ChatContext) async throws -> ChatContext {
++    guard let repository, let handle = context.historyHandle else { return context }
++    try Task.checkCancellation()
++    let facts = try await repository.memories(handle, query: "")
++    try Task.checkCancellation()
++    return context.withSavedMemories(Array(facts.prefix(ConversationMemoryEvidence.resultLimit)))
++  }
++}
+--- /dev/null
++++ b/Tests/SilliesVaultTests/ConversationMemoryPreparationTests.swift
+@@ -0,0 +1,69 @@
++import Foundation
++import SilliesCore
++import Testing
++
++@testable import SilliesReasoning
++@testable import SilliesVault
++
++@Test func preparedMemoryContextIsBoundedAndNeverChangesTheWriteSource() async throws {
++  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
++  defer { do { try FileManager.default.removeItem(at: directory) } catch { Issue.record(error) } }
++  let library = ConversationLibrary(directory: directory)
++  let opened = try await library.open(.init(id: "pogo", name: "Pogo"))
++  for index in 0..<6 {
++    let statement = ChatMessage(role: .user, text: "My preference \(index) is option \(index).")
++    try await library.save(
++      .init(handle: opened.handle, messages: [statement], checkpoint: .init(), savedAt: Date()))
++    _ = try await library.remember(
++      .init(
++        handle: opened.handle, fact: .init(key: "preference_\(index)", value: "option \(index)"),
++        source: .init(messageID: statement.id, quote: statement.text),
++        savedAt: Date(timeIntervalSince1970: Double(index))))
++  }
++  let current = ChatMessage(role: .user, text: "I prefer short replies.")
++  try await library.save(
++    .init(handle: opened.handle, messages: [current], checkpoint: .init(), savedAt: Date()))
++  let context = ChatContext(
++    companionName: "Pogo", profile: .init(personality: "Curious"), messages: [current]
++  )
++  .inHistory(opened.handle)
++  let prepared = try await ConversationMemoryPreparation(repository: library).prepare(context)
++  #expect(
++    prepared.savedMemories.map(\.key) == [
++      "preference_5", "preference_4", "preference_3", "preference_2",
++    ])
++  #expect(prepared.messages == context.messages)
++  #expect(context.savedMemories.isEmpty)
++  let request = try ChatReplyGenerator.request(for: prepared, tools: [], maximumTokens: 240)
++  #expect(request.instructions.contains("option 5") == false)
++  #expect(request.messages.first?.content.contains("option 5") == true)
++  #expect(request.messages.last?.content.hasSuffix(current.text) == true)
++  #expect(request.messages.count == 1)
++  let writer = try #require(
++    ConversationHistoryTools(conversations: library, memories: library)
++      .tools(for: prepared).first { $0.definition.name == "save_memory" })
++  _ = try await writer.call(arguments: Data(#"{"key":"reply_style","value":"short replies"}"#.utf8))
++  let saved = try #require(try await library.memories(opened.handle, query: "reply_style").first)
++  #expect(saved.sourceMessageID == current.id)
++  #expect(saved.sourceQuote == current.text)
++}
++
++@Test func memoryPreparationHonorsCancellationAndInvalidatedHandles() async throws {
++  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
++  defer { do { try FileManager.default.removeItem(at: directory) } catch { Issue.record(error) } }
++  let library = ConversationLibrary(directory: directory)
++  let opened = try await library.open(.init(id: "pogo", name: "Pogo"))
++  let context = ChatContext(
++    companionName: "Pogo", profile: .init(personality: "Curious"),
++    messages: [.init(role: .user, text: "Hello")]
++  ).inHistory(opened.handle)
++  let task = Task {
++    withUnsafeCurrentTask { $0?.cancel() }
++    return try await ConversationMemoryPreparation(repository: library).prepare(context)
++  }
++  await #expect(throws: CancellationError.self) { try await task.value }
++  _ = try await library.clear(opened.handle)
++  await #expect(throws: ConversationStorageError.self) {
++    try await ConversationMemoryPreparation(repository: library).prepare(context)
++  }
++}

@@ -1,0 +1,96 @@
+{
+  "archiveSHA256": "bed94d8a3f8d953c418f5bce79edf1f54dd4a58870062c2cc9c474cad1c48309",
+  "corpusHash": "22b2f4b42e7060c1da40a345aacf280099a2808f5d96e447321ce78b751a7404",
+  "integrity": "recorded checks and primary metrics reproduced",
+  "meaning": "Integrity is not semantic correctness, statistical confidence or release readiness.",
+  "models": {
+    "gemma-4-12b": {
+      "completedCases": 6,
+      "plannedCases": 6,
+      "observedTurns": 7,
+      "primary": {
+        "cases": 6,
+        "passed": 5,
+        "turns": 7,
+        "errors": 1,
+        "checks": {
+          "behavior": {
+            "passed": 27,
+            "total": 31
+          },
+          "exact_answer": {
+            "passed": 0,
+            "total": 0
+          },
+          "lexical_anchor": {
+            "passed": 4,
+            "total": 5
+          }
+        },
+        "firstTextP50": 11.529399,
+        "firstTextP95": 17.284409083,
+        "totalP50": 12.401504875,
+        "totalP95": 17.874636625
+      },
+      "reviews": {
+        "pass": 6,
+        "fail": 1,
+        "uncertain": 0,
+        "primaryTurns": 7,
+        "primaryReviewedTurns": 7,
+        "primaryRubricReviewedTurns": 7,
+        "legacyReplyOnlyReviews": 0,
+        "rubricCases": {
+          "pass": 5,
+          "fail": 1,
+          "pending": 0
+        }
+      },
+      "contextAnswerLeakage": []
+    },
+    "apple": {
+      "completedCases": 0,
+      "plannedCases": 6,
+      "observedTurns": 0,
+      "primary": {
+        "cases": 0,
+        "passed": 0,
+        "turns": 0,
+        "errors": 0,
+        "checks": {
+          "behavior": {
+            "passed": 0,
+            "total": 0
+          },
+          "exact_answer": {
+            "passed": 0,
+            "total": 0
+          },
+          "lexical_anchor": {
+            "passed": 0,
+            "total": 0
+          }
+        },
+        "firstTextP50": null,
+        "firstTextP95": null,
+        "totalP50": null,
+        "totalP95": null
+      },
+      "reviews": {
+        "pass": 0,
+        "fail": 0,
+        "uncertain": 0,
+        "primaryTurns": 0,
+        "primaryReviewedTurns": 0,
+        "primaryRubricReviewedTurns": 0,
+        "legacyReplyOnlyReviews": 0,
+        "rubricCases": {
+          "pass": 0,
+          "fail": 0,
+          "pending": 0
+        }
+      },
+      "contextAnswerLeakage": []
+    }
+  }
+}

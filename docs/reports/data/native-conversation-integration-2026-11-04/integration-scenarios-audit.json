@@ -1,0 +1,96 @@
+{
+  "archiveSHA256": "38fc81a476cba9e1d113138d701b6a232b6524e4fd1d86a1f42b104a7c5e0145",
+  "corpusHash": "2a6c6971c4fb532c52731405eac84bb3813ef4b1bdada384b42bf9c8c6f35529",
+  "integrity": "recorded checks and primary metrics reproduced",
+  "meaning": "Integrity is not semantic correctness, statistical confidence or release readiness.",
+  "models": {
+    "granite-4.2-8b": {
+      "completedCases": 8,
+      "plannedCases": 8,
+      "observedTurns": 9,
+      "primary": {
+        "cases": 8,
+        "passed": 6,
+        "turns": 9,
+        "errors": 0,
+        "checks": {
+          "behavior": {
+            "passed": 34,
+            "total": 37
+          },
+          "exact_answer": {
+            "passed": 1,
+            "total": 1
+          },
+          "lexical_anchor": {
+            "passed": 6,
+            "total": 6
+          }
+        },
+        "firstTextP50": 4.62544425,
+        "firstTextP95": 7.838030292,
+        "totalP50": 6.579725875,
+        "totalP95": 9.598931209
+      },
+      "reviews": {
+        "pass": 5,
+        "fail": 3,
+        "uncertain": 1,
+        "primaryTurns": 9,
+        "primaryReviewedTurns": 9,
+        "primaryRubricReviewedTurns": 9,
+        "legacyReplyOnlyReviews": 0,
+        "rubricCases": {
+          "pass": 5,
+          "fail": 2,
+          "pending": 1
+        }
+      },
+      "contextAnswerLeakage": []
+    },
+    "ministral-3-8b": {
+      "completedCases": 8,
+      "plannedCases": 8,
+      "observedTurns": 9,
+      "primary": {
+        "cases": 8,
+        "passed": 6,
+        "turns": 9,
+        "errors": 0,
+        "checks": {
+          "behavior": {
+            "passed": 34,
+            "total": 37
+          },
+          "exact_answer": {
+            "passed": 1,
+            "total": 1
+          },
+          "lexical_anchor": {
+            "passed": 6,
+            "total": 6
+          }
+        },
+        "firstTextP50": 4.135741125,
+        "firstTextP95": 8.475393,
+        "totalP50": 5.755884625,
+        "totalP95": 9.873298625
+      },
+      "reviews": {
+        "pass": 6,
+        "fail": 3,
+        "uncertain": 0,
+        "primaryTurns": 9,
+        "primaryReviewedTurns": 9,
+        "primaryRubricReviewedTurns": 9,
+        "legacyReplyOnlyReviews": 0,
+        "rubricCases": {
+          "pass": 6,
+          "fail": 2,
+          "pending": 0
+        }
+      },
+      "contextAnswerLeakage": []
+    }
+  }
+}

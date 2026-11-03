@@ -1,0 +1,1458 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "archived-name-owner",
+      "group": "memory-context",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "context-probe"
+      ],
+      "history": [
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 0."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 1."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 2."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 3."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 4."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 5."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 6."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 7."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 8."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 9."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 10."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 11."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 12."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 13."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 14."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 15."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 16."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 17."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 18."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 19."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 20."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 21."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 22."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 23."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 24."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 25."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 26."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 27."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 28."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 29."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 30."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 31."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 32."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 33."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 34."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 35."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 36."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 37."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 38."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 39."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        }
+      ],
+      "memories": [
+        {
+          "key": "name",
+          "value": "Leon",
+          "statement": "My name is Leon."
+        }
+      ],
+      "turns": [
+        {
+          "user": "What is my name, and what is yours?",
+          "rubric": "Find the saved human name Leon and keep companion identity Pogo separate. Preserve the original saved source.",
+          "checks": [
+            {
+              "kind": "contains_all",
+              "values": [
+                "Leon",
+                "Pogo"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "archived-birthday-question",
+      "group": "memory-context",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "context-probe"
+      ],
+      "history": [
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 0."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 1."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 2."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 3."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 4."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 5."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 6."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 7."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 8."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 9."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 10."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 11."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 12."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 13."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 14."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 15."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 16."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 17."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 18."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 19."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 20."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 21."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 22."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 23."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 24."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 25."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 26."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 27."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 28."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 29."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 30."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 31."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 32."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 33."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 34."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 35."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 36."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 37."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 38."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 39."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        }
+      ],
+      "memories": [
+        {
+          "key": "birthday",
+          "value": "August 21",
+          "statement": "My birthday is August 21."
+        }
+      ],
+      "turns": [
+        {
+          "user": "Is my birthday April 3?",
+          "rubric": "Retrieve the existing August 21 birthday, correct the question, and preserve the original fact and its provenance.",
+          "checks": [
+            {
+              "kind": "contains_all",
+              "values": [
+                "August",
+                "21"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "memory_contains",
+              "values": [
+                "August 21"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "archived-vault-only",
+      "group": "memory-context",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "context-probe"
+      ],
+      "history": [
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 0."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 1."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 2."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 3."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 4."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 5."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 6."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 7."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 8."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 9."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 10."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 11."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 12."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 13."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 14."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 15."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 16."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 17."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 18."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 19."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 20."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 21."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 22."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 23."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 24."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 25."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 26."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 27."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 28."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 29."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 30."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 31."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 32."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 33."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 34."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 35."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 36."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 37."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 38."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 39."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        }
+      ],
+      "memories": [
+        {
+          "key": "garden_gate_key_holder",
+          "value": "Valente",
+          "statement": "Valente has the garden gate key."
+        }
+      ],
+      "turns": [
+        {
+          "user": "Search only my saved meetings: who has the garden gate key?",
+          "rubric": "Search the empty Vault and report no meeting evidence. Do not answer from a saved personal memory or earlier chat, and do not claim all personal sources are empty.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault"
+              ]
+            },
+            {
+              "kind": "allowed_tools",
+              "values": [
+                "search_vault",
+                "read_vault_record"
+              ]
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "Valente"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "archived-memory-and-knowledge",
+      "group": "memory-context",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "context-probe"
+      ],
+      "history": [
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 0."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 1."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 2."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 3."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 4."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 5."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 6."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 7."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 8."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 9."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 10."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 11."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 12."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 13."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 14."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 15."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 16."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 17."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 18."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 19."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 20."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 21."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 22."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 23."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 24."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 25."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 26."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 27."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 28."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 29."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 30."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 31."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 32."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 33."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 34."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 35."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 36."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 37."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 38."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        },
+        {
+          "role": "user",
+          "text": "Let us move on to ordinary topic 39."
+        },
+        {
+          "role": "assistant",
+          "text": "All right, we can discuss that."
+        }
+      ],
+      "memories": [
+        {
+          "key": "home_city",
+          "value": "Braga",
+          "statement": "I live in Braga."
+        }
+      ],
+      "turns": [
+        {
+          "user": "Which city do I live in, and what is the tallest mountain above sea level?",
+          "rubric": "Recall Braga from saved evidence and answer Mount Everest from knowledge. Do not rewrite the memory or search the Vault for general knowledge.",
+          "checks": [
+            {
+              "kind": "contains_all",
+              "values": [
+                "Braga",
+                "Everest"
+              ]
+            },
+            {
+              "kind": "allowed_tools",
+              "values": [
+                "search_memories",
+                "search_conversation"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

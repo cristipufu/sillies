@@ -1,15 +1,21 @@
 import Foundation
 import MLXLMCommon
+import SilliesTextModels
 import Tokenizers
 
 struct LocalTokenizerLoader: TokenizerLoader {
+  let policy: TextModelPreparation.RuntimePolicy
+  init(policy: TextModelPreparation.RuntimePolicy = .standard) { self.policy = policy }
   func load(from directory: URL) async throws -> any MLXLMCommon.Tokenizer {
-    LocalTokenizer(base: try await AutoTokenizer.from(modelFolder: directory))
+    LocalTokenizer(
+      base: try await AutoTokenizer.from(modelFolder: directory),
+      template: try NativeChatTemplate.load(policy.chatTemplate))
   }
 }
 
 private struct LocalTokenizer: MLXLMCommon.Tokenizer {
   let base: any Tokenizers.Tokenizer
+  let template: String?
   var bosToken: String? { base.bosToken }
   var eosToken: String? { base.eosToken }
   var unknownToken: String? { base.unknownToken }
@@ -25,7 +31,21 @@ private struct LocalTokenizer: MLXLMCommon.Tokenizer {
     messages: [[String: any Sendable]], tools: [[String: any Sendable]]?,
     additionalContext: [String: any Sendable]?
   ) throws -> [Int] {
-    try base.applyChatTemplate(
+    if let template {
+      // Empty interrupted assistant placeholders have no model-authored content. The maintained
+      // vendor template handles same-speaker aggregation and interrupted tool-turn ordering.
+      let messages = messages.filter { message in
+        guard message["role"] as? String == "assistant",
+          let content = message["content"] as? String,
+          content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        else { return true }
+        return !(message["tool_calls"] as? [[String: any Sendable]] ?? []).isEmpty
+      }
+      return try base.applyChatTemplate(
+        messages: messages, chatTemplate: .literal(template), addGenerationPrompt: true,
+        truncation: false, maxLength: nil, tools: tools, additionalContext: additionalContext)
+    }
+    return try base.applyChatTemplate(
       messages: messages, tools: tools, additionalContext: additionalContext)
   }
 }

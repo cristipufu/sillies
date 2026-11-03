@@ -30,6 +30,23 @@ func modelProfileRejectsInvalidPrefillOverride(_ chunk: Int) throws {
   #expect(manifest.model.profile.prefill.chunkTokens == nil)
 }
 
+@Test func nativeRuntimeCapabilitiesAreExplicitAndRejectUnknownPolicies() throws {
+  let catalog = try TextModelCatalog.bundled()
+  let cached = catalog.manifests.filter {
+    $0.model.profile.runtimePolicy.conversationCache == .nativeSession
+  }
+  #expect(cached.map(\.modelID) == ["granite-4.2-8b"])
+  let normalized = catalog.manifests.filter {
+    $0.model.profile.runtimePolicy.chatTemplate == .mistral3
+  }
+  #expect(normalized.map(\.modelID) == ["ministral-3-8b"])
+  #expect(throws: (any Error).self) {
+    _ = try editedProfile {
+      $0["runtime"] = ["conversationCache": "guess", "chatTemplate": "checkpoint"]
+    }
+  }
+}
+
 @Test func modelProfileRequiresProvenanceAndFitsReasoningWithinCapacity() throws {
   let missingEvidence = try editedProfile {
     $0["evidence"] = ["sources": [], "runtimeRevision": "", "rationale": ""]

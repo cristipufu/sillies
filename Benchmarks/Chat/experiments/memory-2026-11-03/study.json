@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "registeredAt": "2026-11-03T18:55:22.508080+00:00",
+  "baselineCommit": "c49e499ff46f7789348b7b7cfad97b811682ddbd",
+  "models": [
+    "gemma-4-12b",
+    "apple"
+  ],
+  "corpusSHA256": "81bcef580c9222391e29048ee438461e31138f1abc7d597f2b9c8235d1e61ad7",
+  "planSHA256": "5424bc39f88f410e5b8a255b671aafba0ba1708ecd6514b57ca16486cff21931",
+  "developmentIDs": [
+    "new-fact-with-general-question",
+    "question-is-not-a-correction",
+    "new-name-and-later-correction",
+    "third-party-quotation",
+    "opt-out-in-a-mixed-turn",
+    "missing-chat-source-with-known-vault-fact"
+  ],
+  "validationIDs": [
+    "fresh-memory-preferred-name",
+    "fresh-memory-preference-with-knowledge",
+    "fresh-memory-hobby-correction",
+    "fresh-memory-spanish-preference",
+    "fresh-memory-mixed-language-fact",
+    "fresh-memory-two-durable-facts",
+    "fresh-memory-occupation-opt-out",
+    "fresh-memory-fictional-owner",
+    "fresh-memory-hypothetical-residence",
+    "fresh-memory-question-preserves-provenance",
+    "fresh-memory-temporary-secret",
+    "fresh-memory-german-opt-out"
+  ],
+  "controlIDs": [
+    "knowledge-mountain",
+    "knowledge-photosynthesis",
+    "vault-links",
+    "vault-screenshot",
+    "mixed-combined-question",
+    "mixed-empty-search-world"
+  ],
+  "candidateLimit": 4,
+  "nativeExecutionLimitSeconds": 3600,
+  "batchWallLimitSeconds": 180,
+  "turnTimeoutSeconds": 60,
+  "finalRepetitions": 3,
+  "timingRule": "First timestamped nonempty text emission that provides a correct requested fact, explanation, or committed-memory outcome; ignore greeting, thinking/search preamble and unsuccessful/incorrect replies. Review all task state. Fixed controls determine latency acceptance; cold starts separate. At least five distinct correct control scenarios and two completed correct repeats per scenario in both arms are required; otherwise timing is inconclusive.",
+  "criticalPolicy": "Any unwanted write attempt/mutation, provenance corruption, or false save claim rejects a candidate. Retain all observed failures; no adaptive reroll.",
+  "qualification": "Plan gates unchanged; best observed candidate is reported even if no candidate qualifies."
+}

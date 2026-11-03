@@ -1,0 +1,30 @@
+{
+  "registeredAt": "2026-11-03T22:04:13.692428+00:00",
+  "authorization": "User approved Granite cache integration, Ministral handling fix, and completion of Qwen frozen validation.",
+  "baselineCommit": "c49e499ff46f7789348b7b7cfad97b811682ddbd",
+  "nativeExecutionLimitSeconds": 900,
+  "batchWallLimitSeconds": 180,
+  "rules": [
+    "Native runs are sequential and do not overlap builds. No downloads, app restart, commit or push.",
+    "Qwen resumes only previously missing control confirmation and the six frozen validation cases for both arms. Frozen workers, helper, prompts, profiles and rubrics stay unchanged.",
+    "Previously recorded outcomes remain included. This supplemental execution budget is separate from the completed original study, whose archived evidence remains immutable.",
+    "Memory policy promotion requires completing both repeated comparisons, preserving every control pass, no critical write/provenance/identity failure, and no newly observed component regressions hidden by aggregate scores. Validation is reviewed from calls, persisted facts and full replies.",
+    "Granite native continuation uses the current production helper with acknowledged streaming. Ten matched synthetic follow-ups include input measurement; inspect actual cached-token metrics and outputs. Compare warm medians and p95, record loading separately.",
+    "Native controls cover changed history, tools, instructions, session identity, session end, context rejection and errors. Cancellation and pressure lifetime behavior receive deterministic regression tests.",
+    "Ministral replays the original failure and interrupted tool turns using the pinned unchanged publisher template; run the original diagnostic scenario set and inspect regressions before concluding integration readiness."
+  ],
+  "frozenQwenInputs": {
+    "/tmp/sillies-app-strategies-baseline/ChatModelBenchmark": "4ee77c93e61bfa6b855866102d7388d12081559558f875e6223aee6ae49dfe98",
+    "/tmp/sillies-app-strategies-memory-context/ChatModelBenchmark": "4fbe48c6837526f1edff3db71871d2c9f89b28aa5777f628fcb7e94c077ef2e4",
+    "/tmp/sillies-memory-study-baseline/SilliesTextInference.app/Contents/MacOS/SilliesTextInference": "ad52eb047825a8382cac8def866bdedfacbd0bab7e9036c5c8a335fb9636f901",
+    "Benchmarks/Chat/experiments/app-strategies-2026-11-03/study.json": "c417b7c2ca93d26f7e9bc7b50e2513375063c1bfc62ccff51d4d625ed6e8b85b",
+    "Benchmarks/Chat/experiments/app-strategies-2026-11-03/qwen-confirmation-registration.json": "3d677aa9106b5eed8eda6b3bf57c968fb93040cd2e6a08b8a4e795776d70e206",
+    "Benchmarks/Chat/experiments/app-strategies-2026-11-03/confirmation-registration.json": "bc13bdcbf447dc72177ca66af3ba4b479fc309301d50906d6f46322489190298",
+    "Benchmarks/Chat/experiments/app-strategies-2026-11-03/cache-probe.json": "8c4062ba35de108d3a1e840791f4db585078f726e2f2384a1b658f8496a71f0a",
+    "Benchmarks/Chat/experiments/app-strategies-2026-11-03/memory-context-amendment.json": "11bdec0f84b12af90eae364cbc7ae4a1e1100d877f00fb9b6d431082ee19ded8",
+    "Benchmarks/Chat/experiments/app-strategies-2026-11-03/context-probe/cases.json": "b6b31982f2d829337def537c2d4afe32f25a55ea8d1a47d352c1dd708f7ccedc",
+    "Benchmarks/Chat/experiments/app-strategies-2026-11-03/context-validation/cases.json": "690c24fcd08edfdd79cfbc54f684bc2cd4a2c16de121a6f42e0530efc76b7296",
+    "Benchmarks/Chat/experiments/app-strategies-2026-11-03/corpus/cases.json": "b9539253406bdc546a53d9c388881d46b9a1039db411020781e0e3777c1504be",
+    "Benchmarks/Chat/experiments/app-strategies-2026-11-03/confirmation/cases.json": "467ee8319c2ed95f1021457337b823dd4b4912d288fd5838e2e9e5026beea7e9"
+  }
+}

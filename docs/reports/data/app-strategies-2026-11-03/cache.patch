@@ -1,0 +1,192 @@
+--- /dev/null
++++ b/Sources/SilliesTextInference/TextChatCacheInspection.swift
+@@ -0,0 +1,170 @@
++import Foundation
++import MLX
++import MLXLLM
++import MLXLMCommon
++import SilliesTextModels
++
++/// Synthetic native-session feasibility probe. It never executes tools or accesses app history.
++enum TextChatCacheInspection {
++  private static let maximumQueries = 5
++  private static let maximumRepetitions = 2
++  private static let outputTokens = 96
++  private static let promptTailTokenCount = 64
++  private static let cacheBytes = 128 * 1024 * 1024
++  private struct Plan: Decodable {
++    let request: TextInferenceRequest
++    let opening: String
++    let queries: [String]
++    let repetitions: Int
++  }
++  private struct Sample: Encodable {
++    var text = ""
++    var seconds = 0.0
++    var firstTextSeconds: Double?
++    var promptTokens = 0
++    var cachedTokens = 0
++    var generationTokens = 0
++    var promptSeconds = 0.0
++    var stopReason = ""
++    var rejectedCalls = 0
++    var toolCalls = 0
++  }
++  private struct Pair: Encodable {
++    let repetition: Int
++    let query: String
++    let openingReply: Sample
++    let continued: Sample
++    let rebuilt: Sample
++  }
++
++  static func run(requestURL: URL) async throws {
++    let plan = try TextInferenceJSON.read(
++      Plan.self, from: requestURL,
++      maximumBytes: TextInferenceWire.maximumMessageBytes)
++    guard !plan.queries.isEmpty, plan.queries.count <= maximumQueries,
++      (1...maximumRepetitions).contains(plan.repetitions),
++      plan.opening.utf8.count < TextInferenceWire.maximumMessageBytes / 2,
++      plan.request.configuration.profile.isValid
++    else { throw TextModelError.invalidResponse }
++    let configuration = plan.request.configuration
++    guard configuration.directory.isFileURL, configuration.memoryLimitBytes > 0,
++      configuration.memoryLimitBytes
++        <= TextModelMemoryBudget.maximumAllocation(
++          physicalMemory: ProcessInfo.processInfo.physicalMemory)
++    else { throw TextModelError.invalidResponse }
++    Memory.memoryLimit = configuration.memoryLimitBytes
++    Memory.cacheLimit = cacheBytes
++    let container = try await LLMModelFactory.shared.loadContainer(
++      from: configuration.directory, using: LocalTokenizerLoader())
++    let policy = MLXReasoningPolicy(reasoning: configuration.reasoning)
++    await container.update {
++      if let reasoning = policy.configuration { $0.configuration.reasoningConfig = reasoning }
++    }
++    let components = try CheckpointGenerationConstraints.load(from: configuration.directory)
++      .components
++    let task = configuration.profile.generation.conversation
++    let sampling = task.sampling
++    var parameters = GenerateParameters(
++      maxTokens: outputTokens + task.reasoningTokens, maxKVSize: configuration.contextTokens,
++      temperature: sampling.temperature, topP: sampling.topP, topK: sampling.topK,
++      repetitionPenalty: sampling.repetitionPenalty,
++      repetitionContextSize: task.repetitionContextTokens)
++    parameters.prefill = PrefillParameters(stepSize: configuration.profile.prefill.chunkTokens)
++    let tools = MLXConversationInput.tools(plan.request.generation)
++    func session(history: [Chat.Message] = []) -> ChatSession {
++      ChatSession(
++        container, instructions: plan.request.generation.instructions, history: history,
++        generateParameters: parameters, components: components,
++        additionalContext: policy.templateContext, tools: tools.isEmpty ? nil : tools)
++    }
++    for repetition in 0..<plan.repetitions {
++      for (index, query) in plan.queries.enumerated() {
++        try Task.checkCancellation()
++        let retained = session()
++        let openingChannel = try await channel(
++          for: plan.opening, container: container, policy: policy, tools: tools)
++        let opening = try await measure(retained, prompt: plan.opening, channel: openingChannel)
++        let answerChannel = try await channel(
++          for: query, container: container, policy: policy, tools: tools)
++        let rebuilt = session(history: [.user(plan.opening), .assistant(opening.text)])
++        let continuationSample: Sample
++        let rebuiltSample: Sample
++        if (repetition + index).isMultiple(of: 2) {
++          continuationSample = try await measure(retained, prompt: query, channel: answerChannel)
++          rebuiltSample = try await measure(rebuilt, prompt: query, channel: answerChannel)
++        } else {
++          rebuiltSample = try await measure(rebuilt, prompt: query, channel: answerChannel)
++          continuationSample = try await measure(retained, prompt: query, channel: answerChannel)
++        }
++        try emit(
++          Pair(
++            repetition: repetition, query: query, openingReply: opening,
++            continued: continuationSample, rebuilt: rebuiltSample))
++        await retained.clear()
++        await rebuilt.clear()
++        Memory.clearCache()
++      }
++    }
++  }
++
++  private static func channel(
++    for prompt: String, container: ModelContainer,
++    policy: MLXReasoningPolicy, tools: [[String: any Sendable]]
++  ) async throws -> MLXReasoningChannel {
++    let input = try await container.prepare(
++      input: UserInput(
++        messages: [["role": "user", "content": prompt]], tools: tools.isEmpty ? nil : tools,
++        additionalContext: policy.templateContext))
++    let tail = await container.tokenizer.decode(
++      tokenIds: Array(input.text.tokens.asArray(Int.self).suffix(promptTailTokenCount)))
++    return await MLXReasoningChannel(configuration: container.configuration, promptTail: tail)
++  }
++
++  private static func measure(_ session: ChatSession, prompt: String, channel: MLXReasoningChannel)
++    async throws -> Sample
++  {
++    var channel = channel
++    let started = ContinuousClock.now
++    var sample = Sample()
++    for try await event in session.streamDetails(to: prompt) {
++      try Task.checkCancellation()
++      switch event {
++      case .chunk(let chunk):
++        let text = try channel.append(chunk)
++        if sample.firstTextSeconds == nil,
++          !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
++        {
++          sample.firstTextSeconds = seconds(since: started)
++        }
++        sample.text += text
++      case .info(let info):
++        sample.promptTokens = info.promptTokenCount
++        sample.cachedTokens = info.cachedPromptTokenCount
++        sample.generationTokens = info.generationTokenCount
++        sample.promptSeconds = info.promptTime
++        sample.stopReason = String(describing: info.stopReason)
++      case .toolCall: sample.toolCalls += 1
++      case .rejectedToolCall: sample.rejectedCalls += 1
++      }
++    }
++    let tail = try channel.finish()
++    if sample.firstTextSeconds == nil, !tail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
++    {
++      sample.firstTextSeconds = seconds(since: started)
++    }
++    sample.text += tail
++    await session.synchronize()
++    sample.seconds = seconds(since: started)
++    return sample
++  }
++
++  private static func emit(_ pair: Pair) throws {
++    let encoder = JSONEncoder()
++    encoder.outputFormatting = [.sortedKeys]
++    try FileHandle.standardOutput.write(contentsOf: encoder.encode(pair) + Data([10]))
++  }
++  private static func seconds(since start: ContinuousClock.Instant) -> Double {
++    let elapsed = start.duration(to: .now).components
++    return Double(elapsed.seconds) + Double(elapsed.attoseconds) / 1e18
++  }
++}
+--- a/Sources/SilliesTextInference/TextInferenceMain.swift
++++ b/Sources/SilliesTextInference/TextInferenceMain.swift
+@@ -11,6 +11,16 @@
+     defer { parentMonitor.cancel() }
+     if let library = Bundle.main.url(forResource: "mlx", withExtension: "metallib") {
+       GPU.metallib = library
++    }
++    if CommandLine.arguments.count == 3, CommandLine.arguments[1] == "--inspect-chat-cache" {
++      do {
++        try await TextChatCacheInspection.run(
++          requestURL: URL(fileURLWithPath: CommandLine.arguments[2]))
++      } catch {
++        fputs("Synthetic chat cache inspection failed: \(error)\n", stderr)
++        exit(EXIT_FAILURE)
++      }
++      return
+     }
+     if CommandLine.arguments.count == 3, CommandLine.arguments[1] == "--inspect-generation" {
+       do {

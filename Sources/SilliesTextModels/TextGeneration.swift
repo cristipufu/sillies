@@ -2,7 +2,7 @@ import Foundation
 import SilliesCore
 
 package struct TextGenerationRequest: Codable, Sendable {
-  package enum Operation: String, Codable, Sendable { case generate, measure }
+  package enum Operation: String, Codable, Sendable { case generate, measure, releaseSession }
   package private(set) var operation = Operation.generate
   package private(set) var conversationID: UUID?
   package private(set) var sessionID: UUID?
@@ -20,6 +20,11 @@ package struct TextGenerationRequest: Codable, Sendable {
     var result = self
     result.operation = .measure
     return result
+  }
+  package static func releasingSession(_ id: UUID) -> Self {
+    var request = Self(instructions: "", prompt: "", maximumTokens: 1).inSession(id)
+    request.operation = .releaseSession
+    return request
   }
   package let instructions: String
   package let messages: [TextMessage]
@@ -54,9 +59,11 @@ package protocol PreparedTextModel: Sendable {
   func stream(_ request: TextGenerationRequest, receive: @escaping TextDeltaSink) async throws
     -> TextGenerationOutput
   func stop() async
+  func releaseConversation(_ sessionID: UUID) async
 }
 
 extension PreparedTextModel {
+  package func releaseConversation(_ sessionID: UUID) async {}
   package func stream(_ request: TextGenerationRequest, receive: @escaping TextDeltaSink)
     async throws -> TextGenerationOutput
   {
@@ -77,8 +84,9 @@ package protocol TextModelProvider: Sendable {
   func prepare(_ configuration: TextModelPreparation) async throws -> any PreparedTextModel
 }
 
-package struct TextModelPreparation: Codable, Sendable {
+package struct TextModelPreparation: Codable, Equatable, Sendable {
   package typealias Reasoning = TextModelReasoning
+  package typealias RuntimePolicy = TextModelRuntimePolicy
   package let directory: URL
   package let profile: TextModelProfile
   package var contextTokens: Int { profile.context.workingTokens }

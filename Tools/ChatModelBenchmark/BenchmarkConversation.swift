@@ -48,8 +48,9 @@ struct BenchmarkConversation {
   {
     try await events.emit(.turnStarted, position)
     let context = try await session.dialogue.request(input)
-    let trace = BenchmarkTurnTrace()
-    let progress = BenchmarkProgress()
+    let start = ContinuousClock.now
+    let trace = BenchmarkTurnTrace(start: start)
+    let progress = BenchmarkProgress(start: start)
     let service = service(in: session, position: position, trace: trace)
     await inference.beginTurn()
     let outcome: Result<ChatReply, any Error>

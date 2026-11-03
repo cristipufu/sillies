@@ -1,0 +1,18 @@
+{
+  "slot": 1,
+  "name": "evidence-bearing-writes",
+  "registeredAt": "2026-11-03T19:04:21.359259+00:00",
+  "models": [
+    "gemma-4-12b",
+    "apple"
+  ],
+  "base": "c49e499ff46f7789348b7b7cfad97b811682ddbd",
+  "hypothesis": "Requiring an exact supporting span before generating the fact improves new-assertion attribution and prevents rewriting retrieved facts as new evidence. Literal membership is not semantic consent.",
+  "changes": [
+    "Required sourceQuote parameter first in save_memory schema, supporting only a latest-user assertion.",
+    "Validate nonblank exact substring of the original latest user message before mutation; persist that span.",
+    "No conversation prompt, sampling, budgets, source routing, or model-specific differences."
+  ],
+  "predictedSignal": "No birthday-question rewrite; save the mixed-turn preference without unwanted opt-out or quotation writes.",
+  "screen": "One frozen six-case development pass per model; critical failures reject, no reroll."
+}

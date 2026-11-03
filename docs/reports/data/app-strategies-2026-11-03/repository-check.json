@@ -1,0 +1,15 @@
+{
+  "recordedAt": "2026-11-03T21:36:38.724128+00:00",
+  "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer make check BUILD_DIR=/tmp/sillies-app-strategies-check",
+  "exitCode": 0,
+  "completionSource": "exec session 62877 completed with exit_code 0",
+  "commit": "c49e499ff46f7789348b7b7cfad97b811682ddbd",
+  "logSHA256": "ab2ee4dc74ed4dd1af5cac5a5e1952e110bcef4ecebf57fa281844754a4f7cb8",
+  "compressedLog": "repository-check.log.gz",
+  "pythonTests": 93,
+  "selectedSwiftTests": 707,
+  "swiftTestRuns": 18,
+  "validatedBenchmarkFixtures": 74,
+  "scope": "Final repository state after restoring experimental production sources; inherited benchmark timing instrumentation preserved.",
+  "warnings": "Existing Swift unnecessary-await and build/signature warnings are retained in the full log."
+}

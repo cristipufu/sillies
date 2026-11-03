@@ -28,6 +28,8 @@ public struct TextModelProfile: Codable, Equatable, Sendable {
   public let generation: TextGenerationProfile
   public let conversation: ConversationPolicy
   public let evidence: Evidence
+  public let runtime: TextModelRuntimePolicy?
+  public var runtimePolicy: TextModelRuntimePolicy { runtime ?? .standard }
 
   public var isValid: Bool {
     context.isValid && prefill.isValid && generation.isValid && conversation.isValid

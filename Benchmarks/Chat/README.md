@@ -161,6 +161,13 @@ admission limits; timing measured on one Mac is not a prediction for every Mac w
 Each `MODEL/cases/*.json` preserves the reply, partial output, actual executed tool calls and
 arguments, stored memories, retrieved IDs, compaction attempts, app-level backend requests, token measurements and
 the checks that passed or failed. `events.jsonl` also preserves progress up to a hard timeout.
+
+New workers record `memoryCommitSeconds`: elapsed time from the same turn start used for text
+timing until the app receives each successful memory-write receipt. Replayed receipts are counted
+once. This measures acknowledgement latency, not SQLite transaction duration; a missing field in
+an older receipt is unmeasured, while an empty array in a new receipt means no acknowledgement
+was observed. Always inspect the persisted facts separately, including when generation fails.
+
 The tool wrapper records executed calls; duplicate-cache hits and calls rejected before execution
 are not counted as executed calls. Their resulting generation errors remain in the receipts.
 Backend requests are not a full dump of each framework's internal transcript/token stream or every
@@ -283,3 +290,19 @@ date. Apple is system-managed; older runs without release metadata report “Not
 While downloads are arriving, use `--only-models ID ...` to schedule installed members of the
 comparison. Keep the full `--models` list unchanged on every resume. Unscheduled models retain their
 planned coverage and remain pending; they are never silently removed from the ranking denominator.
+
+## Bounded application-strategy experiments
+
+The [November 3 retry](../../docs/reports/app-strategies-2026-11-03.md) compares frozen controls
+with separate memory-write tools, bounded saved-fact context and native session-cache probes.
+Its [registration](experiments/app-strategies-2026-11-03/study.json) records model coverage,
+promotion rules and a hard native-execution budget. Protocol or persistence failures are
+distinguished from generated-answer failures. Small diagnostic subsets never replace the full
+model comparison. The `no_writes` check rejects both create and replacement attempts, including
+ones refused by storage.
+
+The [November 4 integration follow-up](../../docs/reports/native-conversation-integration-2026-11-04.md)
+validates Granite continuation through the production streaming helper, Ministral's publisher
+formatter, and the remaining frozen Qwen controls. Its separate
+[registration](experiments/native-integration-2026-11-04/study.json) preserves the original study's
+stopping point and immutable evidence. Manual rubric review still applies when lexical checks pass.

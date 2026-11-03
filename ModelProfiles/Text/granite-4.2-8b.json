@@ -72,6 +72,10 @@
       "https://huggingface.co/ibm-granite/granite-4.2-8b-q4-mlx"
     ],
     "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
-    "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained from the committed baseline. This checkpoint was not natively compared in the November 3 focused experiment. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+    "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained from the committed baseline. This checkpoint was not natively compared in the November 3 focused experiment. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md. Native continuation is enabled after the bounded application-strategy cache comparison, with one exact session and full native input admission. See docs/reports/native-conversation-integration-2026-11-04.md."
+  },
+  "runtime": {
+    "conversationCache": "nativeSession",
+    "chatTemplate": "checkpoint"
   }
 }

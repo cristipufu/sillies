@@ -3,6 +3,7 @@
 
 import argparse
 from dataclasses import dataclass
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -194,6 +195,16 @@ def audio_licenses(root):
     return "".join(sections)
 
 
+def template_licenses(root):
+    directory = root / "Sources/SilliesTextInference/Resources"
+    origin = json.loads((directory / "mistral3-origin.json").read_text())
+    digest = hashlib.sha256((directory / "mistral3.jinja").read_bytes()).hexdigest()
+    if digest != origin["sha256"]:
+        raise ValueError("The Mistral template differs from its reviewed publisher checksum")
+    template = f'## Mistral chat template\n\nThe text inference helper bundles the unchanged chat template from [mistralai/Ministral-3-8B-Instruct-2512]({origin["source"]}), revision {origin["revision"]}, under Apache 2.0. The adapter selects it for the pinned Ministral checkpoint to preserve the publisher\'s supported message normalization. Model weights remain optional downloads.\n\n'
+    return template + notice_section("Mistral chat template — Apache 2.0", root / "Resources/Licenses/Mistral-ChatTemplate-Apache-2.0.txt")
+
+
 def render(root):
     pins = resolved_packages(root)
     fish = "## Fish runtime references and model license\n\nThe Sillies Fish implementation was informed by Fish Audio's S2 Pro architecture and the MIT-licensed Swift reference at Blaizzy/mlx-audio-swift, revision d4fa7be1c2fef65ed13a4f73bd58e0a23a0ba307. Runtime code, bounds, ownership, and validation live in SilliesFishSpeech. The reference package is not a dependency.\n\n"
@@ -201,7 +212,7 @@ def render(root):
     fish += notice_section("Fish S2 Pro — model license", root / "Resources/Licenses/FishS2Pro-Research.txt")
     localization = "## Localization tooling and palette references\n\nThe JSON catalog workflow, shared interface translations, and palette conventions were adapted from [Strata Files](https://github.com/cristipufu/strata), under the MIT license. Sillies supplies its own product copy, validation, semantic roles, and native integration.\n\n"
     localization += notice_section("Strata Files — MIT attribution", root / "Resources/Licenses/Strata-Localization-MIT.txt")
-    return INTRODUCTION + model_inventory(root) + package_inventory(pins) + MAINTENANCE + package_licenses(root, pins) + audio_licenses(root) + fish + localization
+    return INTRODUCTION + model_inventory(root) + package_inventory(pins) + MAINTENANCE + package_licenses(root, pins) + audio_licenses(root) + fish + localization + template_licenses(root)
 
 
 def write_atomic(destination, content):

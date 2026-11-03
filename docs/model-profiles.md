@@ -11,6 +11,8 @@ embeds them in each model manifest. Algorithms consume the profile, never a mode
 | `context.maximumTokens` | Capacity declared by the pinned checkpoint's text configuration. It does not certify that the full capacity is practical on a particular Mac. |
 | `context.workingTokens` | Application working context, bounded by the checkpoint capacity. Its rationale distinguishes measured choices from retained baseline settings. |
 | `prefill.chunkTokens` | `null` delegates to the native runtime's model-selected default. An integer is a reviewed override, not a new global default. |
+| `runtime.conversationCache` | `disabled` by default. `nativeSession` opts a validated checkpoint into exact-history native continuation; the SDK decides whether its token/cache state can actually be reused. |
+| `runtime.chatTemplate` | `checkpoint` uses downloaded metadata. A reviewed adapter policy can select an unchanged, pinned publisher template shipped with attribution; it never rewrites downloaded files. |
 | `generation.conversation`, `summary`, `precise` | Task-specific answer and reasoning allowances, sampling, and repetition context. |
 | `conversation.safetyTokens` | Margin for provider framing and boundary measurement. |
 | `conversation.compaction` | Summary word target and space to leave after compaction for subsequent messages. |

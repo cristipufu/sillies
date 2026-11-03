@@ -103,10 +103,33 @@ private struct RetainedTextProvider: TextModelProvider {
 
 private actor RetainedTextProbe: PreparedTextModel {
   private(set) var stops = 0
+  private(set) var releasedConversations: [UUID] = []
   private(set) var preparedContexts: [Int] = []
   func prepared(contextTokens: Int) { preparedContexts.append(contextTokens) }
   func generate(_ request: TextGenerationRequest) async throws -> String { "Ready" }
   func stop() { stops += 1 }
+  func releaseConversation(_ sessionID: UUID) { releasedConversations.append(sessionID) }
+}
+
+@Test func endingOneConversationReleasesItsNativeStateWhileAnotherRetainsTheModel() async throws {
+  let fixture = try TextFixture()
+  defer { fixture.remove() }
+  let store = ModelStore(root: fixture.root, downloader: FixtureDownloader())
+  try await store.install(fixture.manifest) { _ in }
+  let model = RetainedTextProbe()
+  let registry = try TextModelRegistry(
+    store: store, providers: [RetainedTextProvider(model: model)], activity: InferenceActivity())
+  let first = TextModelLifetime()
+  let second = TextModelLifetime()
+  await registry.retain(for: first)
+  await registry.retain(for: second)
+  _ = try await registry.generate(fixture.request.inSession(first.id), using: fixture.manifest)
+  await first.end()
+  #expect(await model.releasedConversations == [first.id])
+  #expect(await model.stops == 0)
+  await second.end()
+  #expect(await model.releasedConversations == [first.id, second.id])
+  await registry.stop()
 }
 
 @Test func changingAProfileReleasesTheOldRuntimeWithoutRedownloadingItsWeights() async throws {

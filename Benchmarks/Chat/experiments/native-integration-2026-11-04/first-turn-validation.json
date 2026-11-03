@@ -1,0 +1,11 @@
+{
+  "registeredAt": "2026-11-03T22:33:49.169041+00:00",
+  "reason": "Granite's stochastic diagnostic reply identifies fictional Ivo but unnecessarily questions whether he is the narrator; record it as uncertain rather than repair the score. Inspect whether fresh native-session and raw generation use equivalent first-turn input/output.",
+  "cases": [
+    "third-party-quotation",
+    "knowledge-mountain",
+    "vault-links"
+  ],
+  "method": "One matched first-generation pair per case, original delivered request, temperature zero in both arms, all other settings unchanged. Compare text, semantic tool calls, processed token counts and absence of reuse. This is a diagnostic replay, never a replacement score or product sampling change.",
+  "budget": "Within the existing 900-second budget; no new budget or corpus tuning."
+}

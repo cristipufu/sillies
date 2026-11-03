@@ -30,6 +30,16 @@ model; no classifier has been enabled globally.
 The [checkpoint-settings audit](reports/checkpoint-generation-settings-2026-11-03.md) identifies and
 fixes Gemma 12B's missing token-suppression requirement, with exact native replays and a review of
 all twelve downloadable text checkpoints. It does not replace the scored comparison below.
+The [bounded automatic-memory experiments](reports/memory-improvement-2026-11-03.md) compare
+supporting quotes and separate memory preparation for Gemma 12B and Apple. Neither strategy met
+the acceptance criteria; no experimental strategy is enabled and the scores below are unchanged.
+The [app-only strategy retry](reports/app-strategies-2026-11-03.md) tests separate save/correct tools,
+bounded preloaded memories and native session-cache reuse. It includes model-specific outcomes
+and integration failures; its diagnostic subsets do not change the leaderboard below.
+The [native integration follow-up](reports/native-conversation-integration-2026-11-04.md) implements
+Granite 8B's measured conversation-cache improvement and fixes Ministral's interrupted-message
+formatting. It also completes Qwen 4B's frozen memory-policy validation; that policy remains disabled.
+Its warm-follow-up timings are separate from the whole-task measurements in this table.
 
 | Model | Model release | Required Mac RAM | Download | Reviewed task score | Median first text |
 | --- | --- | --- | --- | --- | --- |

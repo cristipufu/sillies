@@ -1,0 +1,16 @@
+{
+  "registeredAt": "2026-11-03T21:05:44.450073+00:00",
+  "models": [
+    "gemma-4-e4b"
+  ],
+  "basis": "Initial reviewed screen improved from 6/12 to 9/12 tasks with no lost passing task or critical write. Mixed-question mountain component regressed and is retained as a concern.",
+  "repeats": 2,
+  "corpusSHA256": "467ee8319c2ed95f1021457337b823dd4b4912d288fd5838e2e9e5026beea7e9",
+  "validationCorpus": "context-validation",
+  "rules": [
+    "Same frozen binaries and profiles; no tuning.",
+    "Two further repetitions of the same twelve scenarios, then six frozen validation scenarios if no repeat regression or critical failure.",
+    "Stop promotion if either repeat loses a previously passing matched task, lacks repeated gain, or has a critical write/provenance/acknowledgement failure.",
+    "Existing 3600-second native execution cap includes this confirmation."
+  ]
+}

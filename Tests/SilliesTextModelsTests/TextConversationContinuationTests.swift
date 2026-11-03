@@ -40,6 +40,20 @@ import Testing
   #expect(cached.suffix(for: changed) == nil)
 }
 
+@Test func conversationContinuationRequiresTheExactPrivateStateOfAnActiveToolTurn() {
+  let id = UUID()
+  let call = TextGenerationOutput.Call(id: "one", name: "search", arguments: Data("{}".utf8))
+  let first = request([.init(role: .user, content: "Find my notes")], session: id)
+  let response = TextGenerationOutput(text: "", calls: [call], reasoningContent: "Private state")
+  let cached = TextConversationContinuation(request: first, response: response)
+  let result = TextMessage.result("Saved notes", for: call)
+  let exact =
+    first.messages + [.calling([call], text: "", reasoningContent: "Private state"), result]
+  #expect(cached.suffix(for: request(exact, session: id)) == [result])
+  let missing = first.messages + [.calling([call], text: ""), result]
+  #expect(cached.suffix(for: request(missing, session: id)) == nil)
+}
+
 private func request(_ messages: [TextMessage], session: UUID?, instructions: String = "Be helpful")
   -> TextGenerationRequest
 {

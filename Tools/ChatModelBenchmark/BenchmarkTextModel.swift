@@ -1,3 +1,4 @@
+import Foundation
 import SilliesTextModels
 
 /// A diagnostic decorator; all inference and channel handling remain in the production provider.
@@ -33,4 +34,5 @@ struct BenchmarkTextModel: PreparedTextModel {
     return try outcome.get()
   }
   func stop() async { await base.stop() }
+  func releaseConversation(_ sessionID: UUID) async { await base.releaseConversation(sessionID) }
 }

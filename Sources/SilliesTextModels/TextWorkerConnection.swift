@@ -3,6 +3,7 @@ import SilliesInference
 
 /// Text-specific exchange over the shared, cancellable worker transport.
 final class TextWorkerConnection: Sendable {
+  private static let sessionReleaseTimeout: TimeInterval = 2
   private let responseTimeout: TimeInterval
   private let connection: InferenceWorkerConnection
 
@@ -14,7 +15,10 @@ final class TextWorkerConnection: Sendable {
   func stream(_ request: TextInferenceRequest, receive: @escaping TextDeltaSink) async throws
     -> TextGenerationOutput
   {
-    let deadline = InferenceDeadline(timeout: responseTimeout)
+    let timeout =
+      request.generation.operation == .releaseSession
+      ? min(responseTimeout, Self.sessionReleaseTimeout) : responseTimeout
+    let deadline = InferenceDeadline(timeout: timeout)
     try await Task.detached {
       try self.connection.send(request, timeout: deadline.remaining())
     }.value

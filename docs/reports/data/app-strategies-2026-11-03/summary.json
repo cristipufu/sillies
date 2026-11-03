@@ -1,0 +1,3129 @@
+{
+  "baselineCommit": "c49e499ff46f7789348b7b7cfad97b811682ddbd",
+  "runs": {
+    "baseline-confirmation": {
+      "gemma-4-e4b": {
+        "passes": 13,
+        "failures": 11,
+        "uncertain": 0,
+        "completed": 24,
+        "planned": 24,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-birthday-question--app--r2",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r2",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r2",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "knowledge-mountain--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r2",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "new-name-and-later-correction--app--r2",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r2",
+            "status": "fail",
+            "turns": 1
+          }
+        ]
+      }
+    },
+    "baseline-confirmation-qwen": {
+      "qwen-3.5-4b": {
+        "passes": 11,
+        "failures": 4,
+        "uncertain": 0,
+        "completed": 15,
+        "planned": 24,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-birthday-question--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      }
+    },
+    "baseline-context-probe": {
+      "gemma-4-e4b": {
+        "passes": 1,
+        "failures": 3,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "gemma-4-12b": {
+        "passes": 2,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "gemma-4-26b-a4b": {
+        "passes": 3,
+        "failures": 1,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "granite-4.2-3b": {
+        "passes": 1,
+        "failures": 3,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "granite-4.2-8b": {
+        "passes": 3,
+        "failures": 1,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "lfm-2.5-2.6b": {
+        "passes": 3,
+        "failures": 1,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "fail",
+            "turns": 1
+          }
+        ]
+      },
+      "lfm-2.5-24b-a2b": {
+        "passes": 4,
+        "failures": 0,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "ministral-3-8b": {
+        "passes": 2,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "nemotron-3.5-bolt-e4b": {
+        "passes": 1,
+        "failures": 3,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "qwen-3.5-2b": {
+        "passes": 0,
+        "failures": 0,
+        "uncertain": 0,
+        "completed": 0,
+        "planned": 4,
+        "cases": []
+      },
+      "qwen-3.5-4b": {
+        "passes": 1,
+        "failures": 3,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "qwen-3.5-9b": {
+        "passes": 0,
+        "failures": 0,
+        "uncertain": 0,
+        "completed": 0,
+        "planned": 4,
+        "cases": []
+      },
+      "apple": {
+        "passes": 1,
+        "failures": 3,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "fail",
+            "turns": 1
+          }
+        ]
+      }
+    },
+    "baseline-development": {
+      "gemma-4-e4b": {
+        "passes": 5,
+        "failures": 3,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "fail",
+            "turns": 1
+          }
+        ]
+      },
+      "gemma-4-12b": {
+        "passes": 6,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "pass",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "fail",
+            "turns": 1
+          }
+        ]
+      },
+      "gemma-4-26b-a4b": {
+        "passes": 7,
+        "failures": 1,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "pass",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "granite-4.2-3b": {
+        "passes": 5,
+        "failures": 3,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "granite-4.2-8b": {
+        "passes": 6,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "lfm-2.5-2.6b": {
+        "passes": 4,
+        "failures": 4,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "lfm-2.5-24b-a2b": {
+        "passes": 5,
+        "failures": 3,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "pass",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "ministral-3-8b": {
+        "passes": 5,
+        "failures": 3,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "nemotron-3.5-bolt-e4b": {
+        "passes": 6,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "qwen-3.5-2b": {
+        "passes": 3,
+        "failures": 5,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "qwen-3.5-4b": {
+        "passes": 6,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "qwen-3.5-9b": {
+        "passes": 6,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "apple": {
+        "passes": 2,
+        "failures": 6,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      }
+    },
+    "baseline-validation": {
+      "gemma-4-e4b": {
+        "passes": 2,
+        "failures": 4,
+        "uncertain": 0,
+        "completed": 6,
+        "planned": 6,
+        "cases": [
+          {
+            "job": "fresh-memory-hobby-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "fresh-memory-occupation-opt-out--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "fresh-memory-question-preserves-provenance--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "fresh-memory-spanish-preference--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "mixed-combined-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "vault-screenshot--app--r1",
+            "status": "fail",
+            "turns": 1
+          }
+        ]
+      }
+    },
+    "memory-context-confirmation": {
+      "gemma-4-e4b": {
+        "passes": 18,
+        "failures": 6,
+        "uncertain": 0,
+        "completed": 24,
+        "planned": 24,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-birthday-question--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r2",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "knowledge-mountain--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r2",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "new-name-and-later-correction--app--r2",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r2",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      }
+    },
+    "memory-context-confirmation-qwen": {
+      "qwen-3.5-4b": {
+        "passes": 20,
+        "failures": 4,
+        "uncertain": 0,
+        "completed": 24,
+        "planned": 24,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-birthday-question--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "knowledge-mountain--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r2",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "new-name-and-later-correction--app--r2",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r2",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r2",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      }
+    },
+    "memory-context-context-probe": {
+      "gemma-4-e4b": {
+        "passes": 3,
+        "failures": 1,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "gemma-4-12b": {
+        "passes": 2,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "fail",
+            "turns": 1
+          }
+        ]
+      },
+      "gemma-4-26b-a4b": {
+        "passes": 0,
+        "failures": 0,
+        "uncertain": 0,
+        "completed": 0,
+        "planned": 4,
+        "cases": []
+      },
+      "granite-4.2-3b": {
+        "passes": 2,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "fail",
+            "turns": 1
+          }
+        ]
+      },
+      "granite-4.2-8b": {
+        "passes": 3,
+        "failures": 1,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "fail",
+            "turns": 1
+          }
+        ]
+      },
+      "lfm-2.5-2.6b": {
+        "passes": 1,
+        "failures": 3,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "fail",
+            "turns": 1
+          }
+        ]
+      },
+      "lfm-2.5-24b-a2b": {
+        "passes": 3,
+        "failures": 1,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "fail",
+            "turns": 1
+          }
+        ]
+      },
+      "ministral-3-8b": {
+        "passes": 3,
+        "failures": 1,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "fail",
+            "turns": 1
+          }
+        ]
+      },
+      "nemotron-3.5-bolt-e4b": {
+        "passes": 3,
+        "failures": 1,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "fail",
+            "turns": 1
+          }
+        ]
+      },
+      "qwen-3.5-2b": {
+        "passes": 0,
+        "failures": 0,
+        "uncertain": 0,
+        "completed": 0,
+        "planned": 4,
+        "cases": []
+      },
+      "qwen-3.5-4b": {
+        "passes": 4,
+        "failures": 0,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "qwen-3.5-9b": {
+        "passes": 0,
+        "failures": 0,
+        "uncertain": 0,
+        "completed": 0,
+        "planned": 4,
+        "cases": []
+      },
+      "apple": {
+        "passes": 2,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 4,
+        "cases": [
+          {
+            "job": "archived-birthday-question--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-memory-and-knowledge--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "archived-name-owner--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "archived-vault-only--app--r1",
+            "status": "fail",
+            "turns": 1
+          }
+        ]
+      }
+    },
+    "memory-context-development": {
+      "gemma-4-e4b": {
+        "passes": 6,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "gemma-4-12b": {
+        "passes": 6,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "pass",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "fail",
+            "turns": 1
+          }
+        ]
+      },
+      "gemma-4-26b-a4b": {
+        "passes": 7,
+        "failures": 1,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "pass",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "granite-4.2-3b": {
+        "passes": 6,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "granite-4.2-8b": {
+        "passes": 6,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "lfm-2.5-2.6b": {
+        "passes": 4,
+        "failures": 4,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "lfm-2.5-24b-a2b": {
+        "passes": 5,
+        "failures": 3,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "pass",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "ministral-3-8b": {
+        "passes": 5,
+        "failures": 3,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "nemotron-3.5-bolt-e4b": {
+        "passes": 6,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "qwen-3.5-2b": {
+        "passes": 2,
+        "failures": 5,
+        "uncertain": 1,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "uncertain",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "fail",
+            "turns": 1
+          }
+        ]
+      },
+      "qwen-3.5-4b": {
+        "passes": 6,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "qwen-3.5-9b": {
+        "passes": 5,
+        "failures": 3,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "fail",
+            "turns": 1
+          }
+        ]
+      },
+      "apple": {
+        "passes": 2,
+        "failures": 6,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      }
+    },
+    "memory-context-validation": {
+      "gemma-4-e4b": {
+        "passes": 4,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 6,
+        "planned": 6,
+        "cases": [
+          {
+            "job": "fresh-memory-hobby-correction--app--r1",
+            "status": "pass",
+            "turns": 2
+          },
+          {
+            "job": "fresh-memory-occupation-opt-out--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "fresh-memory-question-preserves-provenance--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "fresh-memory-spanish-preference--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "mixed-combined-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "vault-screenshot--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      }
+    },
+    "split-writes-development": {
+      "gemma-4-e4b": {
+        "passes": 6,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "gemma-4-12b": {
+        "passes": 3,
+        "failures": 1,
+        "uncertain": 0,
+        "completed": 4,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "gemma-4-26b-a4b": {
+        "passes": 7,
+        "failures": 1,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "pass",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "granite-4.2-3b": {
+        "passes": 5,
+        "failures": 3,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "granite-4.2-8b": {
+        "passes": 6,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "lfm-2.5-2.6b": {
+        "passes": 4,
+        "failures": 4,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "lfm-2.5-24b-a2b": {
+        "passes": 6,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "pass",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "ministral-3-8b": {
+        "passes": 4,
+        "failures": 4,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "nemotron-3.5-bolt-e4b": {
+        "passes": 6,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "qwen-3.5-2b": {
+        "passes": 4,
+        "failures": 4,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "qwen-3.5-4b": {
+        "passes": 6,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "qwen-3.5-9b": {
+        "passes": 6,
+        "failures": 2,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      },
+      "apple": {
+        "passes": 2,
+        "failures": 6,
+        "uncertain": 0,
+        "completed": 8,
+        "planned": 8,
+        "cases": [
+          {
+            "job": "knowledge-mountain--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "missing-chat-source-with-known-vault-fact--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-fact-with-general-question--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "new-name-and-later-correction--app--r1",
+            "status": "fail",
+            "turns": 2
+          },
+          {
+            "job": "opt-out-in-a-mixed-turn--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "question-is-not-a-correction--app--r1",
+            "status": "pass",
+            "turns": 1
+          },
+          {
+            "job": "third-party-quotation--app--r1",
+            "status": "fail",
+            "turns": 1
+          },
+          {
+            "job": "vault-links--app--r1",
+            "status": "pass",
+            "turns": 1
+          }
+        ]
+      }
+    }
+  },
+  "cases": 491,
+  "turns": 538,
+  "manualReview": "Codex; not blinded or independent",
+  "executionSeconds": 3564.904753833136,
+  "limitSeconds": 3600,
+  "machine": {
+    "osVersion": "26.7.2",
+    "osBuild": "25G332",
+    "architecture": "arm64",
+    "processor": "Apple M4 Pro",
+    "memoryBytes": 51539607552,
+    "logicalProcessors": 14
+  }
+}

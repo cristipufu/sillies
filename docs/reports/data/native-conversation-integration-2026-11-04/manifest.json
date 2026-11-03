@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "baselineCommit": "c49e499ff46f7789348b7b7cfad97b811682ddbd",
+  "pathsRelativeTo": "repository root",
+  "files": {
+    "Benchmarks/Chat/experiments/native-integration-2026-11-04/first-turn-validation.json": {
+      "sha256": "83f4561c808f63a1bc19709452ef227b72d0283a93972c8f892d3449d75e81f6",
+      "bytes": 828
+    },
+    "Benchmarks/Chat/experiments/native-integration-2026-11-04/study.json": {
+      "sha256": "701ac3807736bb4e53e53b2ec3b9e3fc26cbad472ba254c6e28d2aac70eb75db",
+      "bytes": 3655
+    },
+    "docs/reports/data/native-conversation-integration-2026-11-04/README.md": {
+      "sha256": "63c333e8bc40b1ddc27c1df80922803eb92fe273cc2f4b9c813bd1f133506f5a",
+      "bytes": 2656
+    },
+    "docs/reports/data/native-conversation-integration-2026-11-04/baseline-confirmation-qwen-audit.json": {
+      "sha256": "a5b8e49093e072822bc54b4c9569615d9dc948f6b28f2fe962dda8d5656f786e",
+      "bytes": 1385
+    },
+    "docs/reports/data/native-conversation-integration-2026-11-04/baseline-confirmation-qwen.json.gz": {
+      "sha256": "fbac23ebf61c6cb782f7fc036111693c920bb80dfd45d897143f3e9ea215994c",
+      "bytes": 44124
+    },
+    "docs/reports/data/native-conversation-integration-2026-11-04/baseline-validation-qwen-audit.json": {
+      "sha256": "734bf837007c8f15cee8b881a10038d4128c841e6383a449b21ebd0d954a8eb7",
+      "bytes": 1372
+    },
+    "docs/reports/data/native-conversation-integration-2026-11-04/baseline-validation-qwen.json.gz": {
+      "sha256": "6ee86948e26977afa84f7215de6779af2c28a91e6823ea3fc4e410cd94443961",
+      "bytes": 19068
+    },
+    "docs/reports/data/native-conversation-integration-2026-11-04/execution.json.gz": {
+      "sha256": "d5f3d59603426841289b2669dcc6f63610cd6c1472a5fb0a4d94ae266c069d41",
+      "bytes": 20887
+    },
+    "docs/reports/data/native-conversation-integration-2026-11-04/final-source-overlay.json.gz": {
+      "sha256": "7101cb503099f8f678e57ad73ad67d58ee5231b9f60d85abfb35a5306bfbcfb1",
+      "bytes": 49084
+    },
+    "docs/reports/data/native-conversation-integration-2026-11-04/granite-pairs-summary.json": {
+      "sha256": "b69544113de414bf344a516c6da0dbaadbbeee4231493ec19afdf0a82c66d6fb",
+      "bytes": 762
+    },
+    "docs/reports/data/native-conversation-integration-2026-11-04/integration-binaries.json": {
+      "sha256": "f6a003de2c67a4b13906c251e894b118248582dc93da04420b276db03ca3bd0d",
+      "bytes": 337
+    },
+    "docs/reports/data/native-conversation-integration-2026-11-04/integration-scenarios-audit.json": {
+      "sha256": "d0c44d4bf25e88af234fe9084e39294f1f0710228fc718564b84f8d20ebd9622",
+      "bytes": 2389
+    },
+    "docs/reports/data/native-conversation-integration-2026-11-04/integration-scenarios.json.gz": {
+      "sha256": "38fc81a476cba9e1d113138d701b6a232b6524e4fd1d86a1f42b104a7c5e0145",
+      "bytes": 32625
+    },
+    "docs/reports/data/native-conversation-integration-2026-11-04/memory-context-confirmation-qwen-audit.json": {
+      "sha256": "0d8c3ceeb31100ac798251461be78f77f471c4536651333b26b654d8589a337d",
+      "bytes": 1387
+    },
+    "docs/reports/data/native-conversation-integration-2026-11-04/memory-context-confirmation-qwen.json.gz": {
+      "sha256": "ef85e633db35c563ded12c7f1253c296bf6631e2305d2d906fce04b2a62154b2",
+      "bytes": 41550
+    },
+    "docs/reports/data/native-conversation-integration-2026-11-04/memory-context-validation-qwen-audit.json": {
+      "sha256": "37e9e6c569560397c269074a37b09a6c7c28af6ef23aab6f481383a0e8d42915",
+      "bytes": 1372
+    },
+    "docs/reports/data/native-conversation-integration-2026-11-04/memory-context-validation-qwen.json.gz": {
+      "sha256": "45cfa6f6b0f3e83f9709653f6965cbdb787bdf44df1e2b6c3a523b3ed007fdbe",
+      "bytes": 18949
+    },
+    "docs/reports/data/native-conversation-integration-2026-11-04/native-probes.json.gz": {
+      "sha256": "d08c333d3c934ead7a318fc9dfb98ac69041c6e29c57565eabe0dfbd2fecca46",
+      "bytes": 13596
+    },
+    "docs/reports/data/native-conversation-integration-2026-11-04/repository-check.json": {
+      "sha256": "2790e1e2234d682a4279a3e4831313a8d416a3d22ec46f9e38bf32035cbb898a",
+      "bytes": 2780
+    },
+    "docs/reports/data/native-conversation-integration-2026-11-04/repository-check.log.gz": {
+      "sha256": "e9056346a8e9d47a3e33b7374c4492dc5005e01cb45f8a1d31db31b0241584a1",
+      "bytes": 30953
+    },
+    "docs/reports/native-conversation-integration-2026-11-04.md": {
+      "sha256": "236ceed6e8f0f387a78b2131c987d85ef9443c53a7c7ae0c7baf3bc7655177c9",
+      "bytes": 12096
+    }
+  }
+}

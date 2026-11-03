@@ -43,6 +43,7 @@ import SilliesTextModels
         try TextGenerationConstraintsSelfCheck.run()
         try TextRejectedToolSelfCheck.run()
         try await TextInputSelfCheck.run()
+        try await TextTemplateSelfCheck.run()
       } catch {
         fputs("Native conversation check failed: \(error)\n", stderr)
         exit(EXIT_FAILURE)

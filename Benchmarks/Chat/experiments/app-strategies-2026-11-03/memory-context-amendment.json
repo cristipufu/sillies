@@ -1,0 +1,14 @@
+{
+  "registeredAt": "2026-11-03T20:21:25.262220+00:00",
+  "beforeFirstMemoryContextInference": true,
+  "reason": "Seeded memories are also backed by original messages in the archive. Short cases can expose that original source in the normal recent window, so they do not by themselves test proactive retrieval. Add four controls with 80 intervening messages; do not alter or discard existing development results.",
+  "contextProbeSHA256": "b6b31982f2d829337def537c2d4afe32f25a55ea8d1a47d352c1dd708f7ccedc",
+  "validationSHA256": "690c24fcd08edfdd79cfbc54f684bc2cd4a2c16de121a6f42e0530efc76b7296",
+  "rules": [
+    "Compare original baseline and memory-context candidate on the same four extra cases and unchanged eight development cases. A finalist still requires at least two added reviewed passes, no lost baseline passes, and no critical violation, now across the 12-case screen.",
+    "Model-requested searches and app-supplied facts remain distinguishable in recorded requests. Existing no-private-tool rules prohibit model calls; proactive fact reads are an intentional experimental difference and included in end-to-end latency.",
+    "The context validation snapshot removes only the mandatory search_memories call for the color question, for both arms before either is run. The rubric still requires real evidence, a correct answer and unchanged provenance. Requiring a duplicate model search would invalidate testing preloaded evidence.",
+    "The prompt-preparation candidate is skipped: exact tokenization reuse already shipped with native evidence. Audit public MLX session-cache reuse on additional architectures instead; feasibility probes alone do not qualify a production optimization.",
+    "Preserve the study native budget and all rejection/replication criteria."
+  ]
+}

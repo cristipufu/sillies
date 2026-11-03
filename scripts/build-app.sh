@@ -39,6 +39,7 @@ install -m 755 "$binary_dir/SilliesTextInference" "$text_helper/Contents/MacOS/S
 cp Resources/TextInference-Info.plist "$text_helper/Contents/Info.plist"
 cp "$binary_dir/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib" "$text_helper/Contents/Resources/mlx.metallib"
 ditto "$binary_dir/swift-transformers_Hub.bundle" "$text_helper/Contents/Resources/swift-transformers_Hub.bundle"
+ditto "$binary_dir/Sillies_SilliesTextInference.bundle" "$text_helper/Contents/Resources/Sillies_SilliesTextInference.bundle"
 voice_helper="$app/Contents/Helpers/SilliesTTSInference.app"
 mkdir -p "$voice_helper/Contents/MacOS" "$voice_helper/Contents/Resources"
 install -m 755 "$binary_dir/SilliesTTSInference" "$voice_helper/Contents/MacOS/SilliesTTSInference"

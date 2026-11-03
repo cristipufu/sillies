@@ -70,7 +70,7 @@ let package = Package(
         .product(name: "MLXLLM", package: "mlx-swift-lm"),
         .product(name: "MLXLMCommon", package: "mlx-swift-lm"),
         .product(name: "Tokenizers", package: "swift-transformers"),
-      ]),
+      ], resources: [.copy("Resources")]),
     .target(name: "SilliesSpeech", dependencies: ["SilliesCore", "SilliesInference"]),
     .target(name: "SilliesModelValidation"),
     .target(name: "SilliesSpeechApple", dependencies: ["SilliesSpeech"]),

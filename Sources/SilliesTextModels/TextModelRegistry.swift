@@ -48,7 +48,10 @@ package actor TextModelRegistry {
     await lifetime.onEnd(owner: lifetimeOwner) { [weak self] in await self?.endLifetime(id) }
   }
 
-  private func endLifetime(_ id: UUID) { lifetimes[id] = nil }
+  private func endLifetime(_ id: UUID) async {
+    lifetimes[id] = nil
+    await loaded?.model.releaseConversation(id)
+  }
 
   package func setRetention(_ retention: Retention) async {
     self.retention = retention

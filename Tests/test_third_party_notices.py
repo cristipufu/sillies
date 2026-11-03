@@ -1,6 +1,7 @@
 """Offline regressions for the attribution inventory and upstream-text preservation."""
 
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -79,6 +80,25 @@ class ThirdPartyNoticesTests(unittest.TestCase):
         notices.write_atomic(destination, "Complete replacement\n")
         self.assertEqual(destination.read_text(), "Complete replacement\n")
         self.assertEqual({p.name for p in self.root.iterdir()}, {"Package.resolved", "notices.md"})
+
+    def test_vendored_template_must_match_its_reviewed_publisher_bytes(self):
+        directory = self.root / "Sources/SilliesTextInference/Resources"
+        directory.mkdir(parents=True)
+        template = directory / "mistral3.jinja"
+        template.write_bytes(b"Original template\n")
+        (directory / "mistral3-origin.json").write_text(json.dumps({
+            "sha256": hashlib.sha256(template.read_bytes()).hexdigest(),
+            "source": "https://example.org/reviewed-template", "revision": "pinned-revision",
+        }))
+        license_file = self.root / "Resources/Licenses/Mistral-ChatTemplate-Apache-2.0.txt"
+        license_file.parent.mkdir(parents=True)
+        license_file.write_text("Upstream license")
+        rendered = notices.template_licenses(self.root)
+        self.assertIn("pinned-revision", rendered)
+        self.assertIn("Upstream license", rendered)
+        template.write_bytes(b"A local protocol modification\n")
+        with self.assertRaisesRegex(ValueError, "publisher checksum"):
+            notices.template_licenses(self.root)
 
 
 if __name__ == "__main__":

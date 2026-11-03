@@ -1,0 +1,24 @@
+{
+  "slot": 4,
+  "name": "memory-phase-source-boundaries",
+  "registeredAt": "2026-11-03T19:22:02.508666+00:00",
+  "models": [
+    "gemma-4-12b"
+  ],
+  "base": "candidate-2",
+  "hypothesis": "Memory maintenance must see the human statement as quoted source data, not a direct conversational request; its internal tool calls must remain distinguishable from the answering agent's calls.",
+  "evidence": [
+    "Candidate 2 Gemma answered the tides question inside its memory-only phase despite complete delivered instructions.",
+    "Exact synthetic replay requested save_memory in the answer phase after a correction; historical memory-phase calls had been represented as prior answer-agent calls."
+  ],
+  "changes": [
+    "Wrap the original human statement in a labeled JSON source document for the memory phase; retain the original raw statement for write provenance.",
+    "Record a typed memoryPreparation origin on those exchanges; preserve them in the archive and benchmark but exclude them from the answer-agent native tool transcript.",
+    "Use the existing one-retry replay-only recovery inside the memory phase for protocol failures before any visible reply, without a second execution allowance.",
+    "Apple returns to integrated baseline policy; no further Apple tuning after two candidates without useful signal.",
+    "No sampling, token allowance, write schema or scenario-specific text changes."
+  ],
+  "predictedSignal": "Memory phase addresses the lasting assertion rather than answering the embedded question; name correction does not trigger an unavailable save in the answering phase; no new unauthorized writes.",
+  "screen": "One six-case Gemma development pass; rejection on critical failure; no reroll.",
+  "slot3": "Skipped: the observed limit occurred after an unnecessary lookup for a question in the failed preparation phase, not evidence that a correct required memory operation needs more budget."
+}

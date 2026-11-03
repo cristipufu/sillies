@@ -1,0 +1,24 @@
+{
+  "registeredAt": "2026-11-03T20:26:52.710935+00:00",
+  "models": [
+    "gemma-4-26b-a4b",
+    "granite-4.2-8b",
+    "lfm-2.5-24b-a2b",
+    "qwen-3.5-4b"
+  ],
+  "plans": {
+    "qwen-3.5-4b.json": "1526ec94c01d22a920bf15b465cfab21d9717f7fedda41e3dce27de343448638",
+    "gemma-4-26b-a4b.json": "d0c1f02e6e0ad971ed5e83708ca11aef736f469b4e6a12a0a693ec021517c798",
+    "lfm-2.5-24b-a2b.json": "bfee48e51136ade361f838cae26a65d1adeeb48fad60ec7710da66a6ccfd7490",
+    "granite-4.2-8b.json": "6b03a4659d17a028046c396b46072c07ecc2f3f00da3aaf4c4cfb5ad5f14978f"
+  },
+  "expected": [
+    "Maple",
+    "Selma",
+    "cobalt",
+    "42",
+    "Bridge"
+  ],
+  "controls": "Identical original app instructions and five tools, model profile and checkpoint restrictions; no tool is executed. One retained session and one rebuilt visible-history session per query; alternate arm order. Two repetitions of five distinct correct-answer checks. Cold opening time is separate. Cache token reuse and complete responses are recorded, not only wall latency.",
+  "limitations": "Public ChatSession may preserve private protocol state not reproducible from visible history; token-count agreement alone does not establish identical native prompts. These are feasibility diagnostics, not app promotion. No new provider policy follows from this probe."
+}

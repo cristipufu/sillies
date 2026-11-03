@@ -13,7 +13,10 @@ enum TextTokenizerInspection {
     let request = try TextInferenceJSON.read(
       TextInferenceRequest.self, from: requestURL,
       maximumBytes: TextInferenceWire.maximumMessageBytes)
-    let tokenizer = try await LocalTokenizerLoader().load(from: request.configuration.directory)
+    let tokenizer = try await LocalTokenizerLoader(
+      policy: request.configuration.profile.runtimePolicy
+    )
+    .load(from: request.configuration.directory)
     let tokens = try tokenizer.applyChatTemplate(
       messages: MLXConversationInput.templateMessages(request.generation),
       tools: request.generation.tools.isEmpty

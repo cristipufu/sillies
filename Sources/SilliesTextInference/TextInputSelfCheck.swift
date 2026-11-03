@@ -29,6 +29,11 @@ enum TextInputSelfCheck {
       _ = try await task.value
       throw TextModelError.invalidResponse
     } catch is CancellationError {}
+    let bounded = MLXBudgetedInputProcessor(base: processor, maximumTokens: 0)
+    do {
+      _ = try await bounded.prepare(input: input("One"))
+      throw TextModelError.invalidResponse
+    } catch TextModelError.contextLimit {}
   }
 }
 

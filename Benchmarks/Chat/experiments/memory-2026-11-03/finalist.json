@@ -1,0 +1,13 @@
+{
+  "registeredAt": "2026-11-03T19:28:50.490782+00:00",
+  "model": "gemma-4-12b",
+  "candidate": 1,
+  "reason": "Evidence-only and refined separation each pass 5/6 reviewed development tasks. Evidence-only has no extra inference phase or observed protocol error; it is the simpler candidate. Both still fail the mixed preference task.",
+  "sequence": "Run three-repetition development comparison first, alternating candidate and baseline bounded batches. Reject immediately on a critical failure or a repeated scenario failure making the gates impossible; otherwise continue fresh validation and controls. Preserve all completed and unrun coverage. No further tuning.",
+  "apple": "Exhausted: two consecutive candidates without useful development signal; candidate 2 also violated provenance and attempted a fictional-person write.",
+  "excludedCandidateSlots": [
+    2,
+    4
+  ],
+  "skippedSlot": 3
+}

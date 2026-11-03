@@ -1,0 +1,138 @@
+--- a/Sources/SilliesReasoning/ChatReplyGenerator.swift
++++ b/Sources/SilliesReasoning/ChatReplyGenerator.swift
+@@ -73,7 +73,7 @@
+       An empty search means no matches for that query in that source, not that all private sources are empty. Do not repeat the same empty search or invent its contents.
+       Cards are displayed by the app. totalVaultRecords counts the whole Vault, not matching records. Saved text is not a live screen view.
+ 
+-      Saving memory is a separate action: call save_memory only for a new, explicit lasting assertion about the human user in their latest message, or their correction to such a fact. Save before confirming it is remembered.
++      Saving memory is a separate action: call save_memory for a new, explicit lasting assertion about the human user in their latest message. For an explicit correction, find the existing memory and call replace_memory with its returned references. Save before confirming it is remembered.
+       Retrieving an old statement does not make it a new assertion. Questions, hypotheticals and quotations about others are not personal facts.
+       Do not save secrets, temporary instructions, or facts the user asks you not to remember. Never infer a personal fact.
+       """
+--- a/Sources/SilliesReasoning/ConversationHistoryTools.swift
++++ b/Sources/SilliesReasoning/ConversationHistoryTools.swift
+@@ -15,11 +15,12 @@
+     guard let handle = context.historyHandle, let statement = context.messages.last,
+       statement.role == .user
+     else { return [] }
++    let writer = MemorySaveTool(repository: memories, handle: handle, statement: statement)
+     return [
+       ConversationSearchTool(
+         repository: conversations, handle: handle, currentMessageID: statement.id),
+       MemorySearchTool(repository: memories, handle: handle, companionName: context.companionName),
+-      MemorySaveTool(repository: memories, handle: handle, statement: statement),
++      MemoryCreationTool(writer: writer), MemoryReplacementTool(writer: writer),
+     ]
+   }
+ }
+--- a/Tests/SilliesVaultTests/MemoryReplacementTests.swift
++++ b/Tests/SilliesVaultTests/MemoryReplacementTests.swift
+@@ -133,6 +133,30 @@
+   let reason: String?
+ }
+ 
++@Test func separatedMemoryWritesKeepCorrectionIdentityAndRequireItsReferences() async throws {
++  let fixture = try await MemoryReplacementFixture()
++  defer { fixture.remove() }
++  let writer = MemorySaveTool(
++    repository: fixture.store, handle: fixture.handle, statement: fixture.correction)
++  let correction = MemoryReplacementTool(writer: writer)
++  let create = MemoryCreationTool(writer: writer)
++  #expect(create.definition.parameters.map(\.name) == ["key", "value"])
++  #expect(correction.definition.parameters.allSatisfy { $0.requirement == .required })
++  await #expect(throws: ConversationToolArguments.Failure.self) {
++    try await correction.call(arguments: JSONEncoder().encode(["key": "name", "value": "Sam"]))
++  }
++  #expect(try await fixture.store.memories(fixture.handle, query: "") == [fixture.original.saved])
++  let updated = try await correction.call(
++    arguments: JSONEncoder().encode([
++      "key": fixture.original.saved.key, "value": "Sam",
++      "memoryID": fixture.original.saved.id.uuidString,
++      "revision": fixture.original.saved.revision.uuidString,
++    ]))
++  #expect(updated.memoryReceipt?.saved.id == fixture.original.saved.id)
++  #expect(updated.memoryReceipt?.saved.sourceMessageID == fixture.correction.id)
++  #expect(try await fixture.store.memories(fixture.handle, query: "").map(\.value) == ["Sam"])
++}
++
+ @Test func aSmallEvidenceBudgetKeepsTheSaveAcknowledgementWithoutRepeatingTheWrite() async throws {
+   let fixture = try await MemoryReplacementFixture()
+   defer { fixture.remove() }
+--- a/Tools/ChatModelBenchmark/BenchmarkScenario.swift
++++ b/Tools/ChatModelBenchmark/BenchmarkScenario.swift
+@@ -59,11 +59,11 @@
+     switch self {
+     case .none: []
+     case .search: ["search_vault"]
+-    case .personal: ["search_vault", "search_memories", "save_memory"]
++    case .personal: ["search_vault", "search_memories", "save_memory", "replace_memory"]
+     case .app, .expanded8, .expanded12:
+       [
+         "search_vault", "read_vault_record", "search_conversation", "search_memories",
+-        "save_memory",
++        "save_memory", "replace_memory",
+       ]
+     }
+   }
+--- /dev/null
++++ b/Sources/SilliesReasoning/MemoryCreationTool.swift
+@@ -0,0 +1,26 @@
++import Foundation
++import SilliesCore
++
++/// Creation exposes only the fact; correction references belong to the replacement tool.
++struct MemoryCreationTool: ConversationTool {
++  private struct Arguments: Codable {
++    let key: String
++    let value: String
++  }
++  let writer: MemorySaveTool
++  var activity: String { writer.activity }
++  var definition: ConversationToolDefinition {
++    .init(
++      name: "save_memory",
++      description:
++        "Save a new lasting fact explicitly stated about the human user in their latest message. Never save a question, fictional character fact, secret, or anything the user asks not to store. For a correction, use replace_memory instead. Only claim a fact was saved after this tool succeeds.",
++      parameters: [
++        .init("key", description: "Short stable topic key for this fact."),
++        .init("value", description: "The explicitly stated fact, preserving its meaning."),
++      ])
++  }
++  func call(arguments: Data) async throws -> ConversationToolOutput {
++    let fact = try ConversationToolArguments.decode(Arguments.self, from: arguments)
++    return try await writer.call(arguments: JSONEncoder().encode(fact))
++  }
++}
+--- /dev/null
++++ b/Sources/SilliesReasoning/MemoryReplacementTool.swift
+@@ -0,0 +1,30 @@
++import Foundation
++import SilliesCore
++
++/// A correction carries every reference required by the atomic persistence boundary.
++struct MemoryReplacementTool: ConversationTool {
++  private struct Arguments: Codable {
++    let key: String
++    let value: String
++    let memoryID: String
++    let revision: String
++  }
++  let writer: MemorySaveTool
++  var activity: String { writer.activity }
++  var definition: ConversationToolDefinition {
++    .init(
++      name: "replace_memory",
++      description:
++        "Correct an existing personal memory only when the human explicitly corrects it in their latest message. Search memories first, then use that fact's exact key, memoryID and revision. Questions, retrieved facts and quotations are not corrections. Do not save anything the user asks not to store. Only confirm the correction after this tool succeeds.",
++      parameters: [
++        .init("key", description: "The existing key returned by search_memories."),
++        .init("value", description: "The corrected fact explicitly stated by the human."),
++        .init("memoryID", description: "The exact memoryID returned by search_memories."),
++        .init("revision", description: "The exact revision returned with that memoryID."),
++      ])
++  }
++  func call(arguments: Data) async throws -> ConversationToolOutput {
++    let correction = try ConversationToolArguments.decode(Arguments.self, from: arguments)
++    return try await writer.call(arguments: JSONEncoder().encode(correction))
++  }
++}

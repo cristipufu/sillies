@@ -54,6 +54,7 @@ struct BenchmarkTurnResult: Encodable, Sendable {
   let error: String?
   let seconds: Double
   let firstTextSeconds: Double?
+  let memoryCommitSeconds: [Double]
   let textEmissions: [TextEmission]
   let compactionCalls: Int
   let compactionSeconds: Double
@@ -72,7 +73,8 @@ actor BenchmarkTurnTrace {
     let generations: [BenchmarkGeneration]
     let progress: BenchmarkProgress.Snapshot
   }
-  private let start = ContinuousClock.now
+  private let start: ContinuousClock.Instant
+  init(start: ContinuousClock.Instant = .now) { self.start = start }
   private var firstText: Double?
   private var compacted = false
   private var compactionCalls = 0
@@ -117,6 +119,7 @@ actor BenchmarkTurnTrace {
       position: position, input: input, reply: reply?.text, partialReply: streamedText,
       error: failure,
       seconds: elapsed, firstTextSeconds: firstText,
+      memoryCommitSeconds: evidence.progress.memoryCommitSeconds,
       textEmissions: textEmissions, compactionCalls: compactionCalls,
       compactionSeconds: compactionSeconds, requests: requests,
       inputTokens: inputTokens, generations: evidence.generations,

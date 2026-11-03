@@ -69,9 +69,14 @@
   "evidence": {
     "sources": [
       "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/config.json",
-      "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit"
+      "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit",
+      "https://huggingface.co/mistralai/Ministral-3-8B-Instruct-2512/resolve/5b26027e7b19eeb4b7352e1fed3926375dd2cb4d/chat_template.jinja"
     ],
     "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
-    "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained from the committed baseline. This checkpoint was not natively compared in the November 3 focused experiment. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+    "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained from the committed baseline. This checkpoint was not natively compared in the November 3 focused experiment. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md. The adapter uses the unchanged publisher template at 5b26027e to support same-speaker messages and interrupted tool turns. Token IDs, weights and decoding settings are unchanged. See docs/reports/native-conversation-integration-2026-11-04.md."
+  },
+  "runtime": {
+    "conversationCache": "disabled",
+    "chatTemplate": "mistral3"
   }
 }

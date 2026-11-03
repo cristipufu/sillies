@@ -33,7 +33,7 @@ def check_rule(rule: dict, turn: dict, tools: list[dict]) -> dict:
     elif kind == "allowed_tools":
         passed, observed = names <= set(values), sorted(names)
     elif kind == "no_writes":
-        passed, observed = "save_memory" not in names, sorted(names)
+        passed, observed = not names.intersection({"save_memory", "replace_memory"}), sorted(names)
     elif kind == "argument_equals":
         actual = []
         for tool in tools:

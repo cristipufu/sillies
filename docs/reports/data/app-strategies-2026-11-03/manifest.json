@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "baselineCommit": "c49e499ff46f7789348b7b7cfad97b811682ddbd",
+  "pathsRelativeTo": "repository root",
+  "files": {
+    "Benchmarks/Chat/experiments/app-strategies-2026-11-03/cache-probe.json": {
+      "sha256": "8c4062ba35de108d3a1e840791f4db585078f726e2f2384a1b658f8496a71f0a",
+      "bytes": 1322
+    },
+    "Benchmarks/Chat/experiments/app-strategies-2026-11-03/confirmation/cases.json": {
+      "sha256": "467ee8319c2ed95f1021457337b823dd4b4912d288fd5838e2e9e5026beea7e9",
+      "bytes": 47727
+    },
+    "Benchmarks/Chat/experiments/app-strategies-2026-11-03/confirmation-registration.json": {
+      "sha256": "bc13bdcbf447dc72177ca66af3ba4b479fc309301d50906d6f46322489190298",
+      "bytes": 881
+    },
+    "Benchmarks/Chat/experiments/app-strategies-2026-11-03/context-probe/cases.json": {
+      "sha256": "b6b31982f2d829337def537c2d4afe32f25a55ea8d1a47d352c1dd708f7ccedc",
+      "bytes": 37440
+    },
+    "Benchmarks/Chat/experiments/app-strategies-2026-11-03/context-validation/cases.json": {
+      "sha256": "690c24fcd08edfdd79cfbc54f684bc2cd4a2c16de121a6f42e0530efc76b7296",
+      "bytes": 8360
+    },
+    "Benchmarks/Chat/experiments/app-strategies-2026-11-03/corpus/cases.json": {
+      "sha256": "b9539253406bdc546a53d9c388881d46b9a1039db411020781e0e3777c1504be",
+      "bytes": 18780
+    },
+    "Benchmarks/Chat/experiments/app-strategies-2026-11-03/memory-context-amendment.json": {
+      "sha256": "11bdec0f84b12af90eae364cbc7ae4a1e1100d877f00fb9b6d431082ee19ded8",
+      "bytes": 1790
+    },
+    "Benchmarks/Chat/experiments/app-strategies-2026-11-03/qwen-confirmation-registration.json": {
+      "sha256": "3d677aa9106b5eed8eda6b3bf57c968fb93040cd2e6a08b8a4e795776d70e206",
+      "bytes": 788
+    },
+    "Benchmarks/Chat/experiments/app-strategies-2026-11-03/study.json": {
+      "sha256": "c417b7c2ca93d26f7e9bc7b50e2513375063c1bfc62ccff51d4d625ed6e8b85b",
+      "bytes": 3245
+    },
+    "docs/reports/app-strategies-2026-11-03.md": {
+      "sha256": "8de178b5f1e4d122e8d5015490faf7c6cebb65f4d27af9ca3e42e6c652685bfa",
+      "bytes": 19259
+    },
+    "docs/reports/app-strategies-plan-2026-11-03.md": {
+      "sha256": "f72ec44dd3e425ad7088dabb0e8170f5e10a3b875fb1eb2d15b7870fe6b3d845",
+      "bytes": 5341
+    },
+    "docs/reports/data/app-strategies-2026-11-03/README.md": {
+      "sha256": "80168f6c76c0ef673b8b28cfc6178e88cf7ef8f1458be138b2b9c8a6848499b9",
+      "bytes": 2470
+    },
+    "docs/reports/data/app-strategies-2026-11-03/baseline-confirmation-qwen.json.gz": {
+      "sha256": "57424276c21c750901aac21ddac2749b4bea76e9fdbb106a6e9751ce90582c4d",
+      "bytes": 35939
+    },
+    "docs/reports/data/app-strategies-2026-11-03/baseline-confirmation.json.gz": {
+      "sha256": "1aea45437cc39f75e72e6d3958ed6801523e5626c8ec9b451ebf34986e26a804",
+      "bytes": 38621
+    },
+    "docs/reports/data/app-strategies-2026-11-03/baseline-context-probe.json.gz": {
+      "sha256": "01d6ed7b3fc7bc7ace8bea2d40266a73dd28a9b5199a6c594bdd90104e5a58d9",
+      "bytes": 85343
+    },
+    "docs/reports/data/app-strategies-2026-11-03/baseline-development.json.gz": {
+      "sha256": "301cea94629fa2fd81925a48844ffe799d2682e02214cd8dc2f5acc0ea533aa8",
+      "bytes": 145119
+    },
+    "docs/reports/data/app-strategies-2026-11-03/baseline-sources.json.gz": {
+      "sha256": "be43aa4ea236477ce4ab0a9ed1d21696b7104cac3c4887c294a46ffc26427dad",
+      "bytes": 20931
+    },
+    "docs/reports/data/app-strategies-2026-11-03/baseline-validation.json.gz": {
+      "sha256": "c837a5faabfac0d288a1365f751525e4e3dc302440b23bc1fc1e754724c27a99",
+      "bytes": 17418
+    },
+    "docs/reports/data/app-strategies-2026-11-03/cache-sources.json.gz": {
+      "sha256": "a6e8c6a2b4cfd44960868681ea1d6f67089098759f76c876d3309f0f0ba30cd4",
+      "bytes": 3695
+    },
+    "docs/reports/data/app-strategies-2026-11-03/cache.patch": {
+      "sha256": "708e93db9299d95537226e967075bd38ac941862ed79071333318372cde75e5e",
+      "bytes": 8266
+    },
+    "docs/reports/data/app-strategies-2026-11-03/execution.json.gz": {
+      "sha256": "a638866a89b18af80c547d1c606aef043dd002212d4987ab6e8cd3ce3ede52ab",
+      "bytes": 26821
+    },
+    "docs/reports/data/app-strategies-2026-11-03/memory-context-confirmation-qwen.json.gz": {
+      "sha256": "ef85e633db35c563ded12c7f1253c296bf6631e2305d2d906fce04b2a62154b2",
+      "bytes": 41550
+    },
+    "docs/reports/data/app-strategies-2026-11-03/memory-context-confirmation.json.gz": {
+      "sha256": "3062be6f972c31c245e864652f55d5a40a55b8be151171456f77112ff369a57f",
+      "bytes": 38593
+    },
+    "docs/reports/data/app-strategies-2026-11-03/memory-context-context-probe.json.gz": {
+      "sha256": "db351131d11851167e2b2a5db502e6c32ce32b5d4e5f90085d8cb403cbf2440a",
+      "bytes": 72780
+    },
+    "docs/reports/data/app-strategies-2026-11-03/memory-context-development.json.gz": {
+      "sha256": "37a2ab6a9e40175333ac15503fa1b7308a39bc51d64205a9f0559acf19613478",
+      "bytes": 144140
+    },
+    "docs/reports/data/app-strategies-2026-11-03/memory-context-sources.json.gz": {
+      "sha256": "ad24d61606c55942043610dac8c9654f449975df0f36d35a50b26c3daaf5858e",
+      "bytes": 45471
+    },
+    "docs/reports/data/app-strategies-2026-11-03/memory-context-validation.json.gz": {
+      "sha256": "8bcb06602558157e127f084157ce35101741f85da418857c8332270aec2a24ae",
+      "bytes": 18564
+    },
+    "docs/reports/data/app-strategies-2026-11-03/memory-context.patch": {
+      "sha256": "6f0cf6f144d48da069b64b1c1cfdc5437edad4f2bad61455123d0a0a74e265e9",
+      "bytes": 23372
+    },
+    "docs/reports/data/app-strategies-2026-11-03/native-probes.json.gz": {
+      "sha256": "a8f73e4e7a663b1940ac4d08b7363b597f747784092b98a2fa07b86f3f2f9030",
+      "bytes": 11667
+    },
+    "docs/reports/data/app-strategies-2026-11-03/repository-check.json": {
+      "sha256": "20461a1c2940c4fa4080eb4ad8e56c68f219df2e622f15283f2f33d4bbd53c5f",
+      "bytes": 814
+    },
+    "docs/reports/data/app-strategies-2026-11-03/repository-check.log.gz": {
+      "sha256": "8060913304586b6a7492dec7d4361802c3fa7b6dc3b0eaa7707ee2bc91977202",
+      "bytes": 30676
+    },
+    "docs/reports/data/app-strategies-2026-11-03/split-writes-development.json.gz": {
+      "sha256": "ff72e8b20f55529e6f44c473d8fbb71369785fad8529ac58db26c8ce1a5574f2",
+      "bytes": 141353
+    },
+    "docs/reports/data/app-strategies-2026-11-03/split-writes-sources.json.gz": {
+      "sha256": "40a020aaa9e45bc5943904123c3b54888704da2d787b674beff532530245014c",
+      "bytes": 26711
+    },
+    "docs/reports/data/app-strategies-2026-11-03/split-writes.patch": {
+      "sha256": "4e27f575d22236c2dab6309d78d064de1d0767d8f0cb41cc2a58db73c1eb4ef1",
+      "bytes": 7218
+    },
+    "docs/reports/data/app-strategies-2026-11-03/summary.json": {
+      "sha256": "37ed62b00b7dab8e0172bb36a90673747cef91fb215c284d1d61262a37b8bd23",
+      "bytes": 79504
+    }
+  },
+  "integrityMeaning": "Hashes bind the retained evidence and frozen registrations. They do not certify semantic review or production readiness."
+}

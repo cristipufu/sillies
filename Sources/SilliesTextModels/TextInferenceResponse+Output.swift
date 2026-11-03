@@ -7,7 +7,7 @@ extension TextInferenceResponse {
     if let failure { throw TextModelError.unavailable(failure) }
     guard let text,
       !text.isEmpty || !(calls ?? []).isEmpty || inputTokens != nil
-        || completesToolContinuation(request)
+        || completesToolContinuation(request) || request.operation == .releaseSession
     else {
       throw TextGenerationFailure(reason: .emptyResponse, metrics: metrics)
     }

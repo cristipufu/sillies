@@ -1,0 +1,47 @@
+{
+  "case": "heldout-full-record-detail",
+  "model": "granite-4.2-3b",
+  "variant": "quality-tool-contract",
+  "job": "heldout-full-record-detail--app--r2",
+  "query": "Orchid deployment notes recovery identifier",
+  "characters": 4084,
+  "windowCharacters": 1600,
+  "stride": 800,
+  "windows": [
+    {
+      "offset": 0,
+      "matches": [
+        "orchid",
+        "deployment",
+        "notes"
+      ]
+    },
+    {
+      "offset": 800,
+      "matches": []
+    },
+    {
+      "offset": 1600,
+      "matches": []
+    },
+    {
+      "offset": 2400,
+      "matches": []
+    },
+    {
+      "offset": 3200,
+      "matches": [
+        "recovery",
+        "identifier"
+      ]
+    },
+    {
+      "offset": 4000,
+      "matches": [
+        "recovery",
+        "identifier"
+      ]
+    }
+  ],
+  "conclusion": "Equal weight per distinct query term favors three title words at the beginning over two requested-detail words near the end. The tool still reports partial coverage and nextOffset."
+}

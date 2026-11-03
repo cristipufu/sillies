@@ -41,7 +41,7 @@ final class TextWorkerConnection: Sendable {
             TextInferenceAcknowledgement(), timeout: deadline.remaining())
         }.value
       case .finished(let response):
-        let output = try result(response)
+        let output = try response.output(for: request.generation)
         guard
           receivedText.trimmingCharacters(in: .whitespacesAndNewlines)
             == output.text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -51,20 +51,6 @@ final class TextWorkerConnection: Sendable {
         return output
       }
     }
-  }
-
-  private func result(_ response: TextInferenceResponse) throws -> TextGenerationOutput {
-    if response.failureCode == .contextLimit { throw TextModelError.contextLimit }
-    if let failure = response.generationFailure { throw failure }
-    if let failure = response.failure { throw TextModelError.unavailable(failure) }
-    guard let text = response.text,
-      !text.isEmpty || !(response.calls ?? []).isEmpty || response.inputTokens != nil
-    else {
-      throw TextGenerationFailure(reason: .emptyResponse)
-    }
-    return .init(
-      text: text, calls: response.calls ?? [], inputTokens: response.inputTokens,
-      metrics: response.metrics, reasoningContent: response.reasoningContent)
   }
 
   func stop() { connection.stop() }

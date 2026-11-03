@@ -90,14 +90,16 @@ struct BenchmarkConversation {
     return LocalConversationService(
       resolveBackend: { selected }, tools: measured(staticTools + extras, position: position),
       turns: .init(),
-      historyTools: { context in
-        measured(
-          ConversationHistoryTools(
-            conversations: fixture.conversations, memories: fixture.conversations
-          )
-          .tools(for: context).filter { profile.names.contains($0.definition.name) },
-          position: position)
-      })
+      history: .init(
+        repository: fixture.conversations,
+        tools: { context in
+          measured(
+            ConversationHistoryTools(
+              conversations: fixture.conversations, memories: fixture.conversations
+            )
+            .tools(for: context).filter { profile.names.contains($0.definition.name) },
+            position: position)
+        }))
   }
 
   private func measured(_ tools: [any ConversationTool], position: BenchmarkPosition)

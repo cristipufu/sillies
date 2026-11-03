@@ -1,0 +1,14 @@
+{
+  "models": [
+    "apple",
+    "lfm-2.5-24b-a2b",
+    "gemma-4-12b"
+  ],
+  "repeats": 1,
+  "orderSeed": 314159,
+  "turnTimeout": 60,
+  "caseTimeout": 180,
+  "batchSeconds": 300,
+  "purpose": "Follow-up declared before inference. Same frozen 192-message, three-turn corpus and exact-answer checks. General tool contracts now distinguish prior conversations/shared plans from saved personal facts and explicitly direct missing prior-chat details to conversation search. No model-specific behavior or answer filters. Recent verbatim messages remain even when covered by a checkpoint. Review all turns, preserve baseline failures; no leaderboard substitution.",
+  "corpusSHA256": "7bb447af50ba7b3478de1c697424032ce9024f1e335c64155f69a7dcfba7e425"
+}

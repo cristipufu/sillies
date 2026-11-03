@@ -1,0 +1,122 @@
+{
+  "checkedAt": "2026-11-02T23:13:48.746181+00:00",
+  "checks": [
+    {
+      "name": "baseline native helper",
+      "command": [
+        "/tmp/sillies-lfm-v2-frozen/SilliesTextInference.app/Contents/MacOS/SilliesTextInference",
+        "--self-test"
+      ],
+      "exitCode": 0,
+      "seconds": 0.19959612502134405,
+      "output": "Text inference GPU, native conversation protocol and bundled kernels: passed\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "prefill native helper",
+      "command": [
+        "/tmp/sillies-loop-candidate-frozen/SilliesTextInference.app/Contents/MacOS/SilliesTextInference",
+        "--self-test"
+      ],
+      "exitCode": 0,
+      "seconds": 0.06034391699358821,
+      "output": "Text inference GPU, native conversation protocol and bundled kernels: passed\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "tail-prefill native helper",
+      "command": [
+        "/tmp/sillies-loop-tail-frozen/SilliesTextInference.app/Contents/MacOS/SilliesTextInference",
+        "--self-test"
+      ],
+      "exitCode": 0,
+      "seconds": 0.05628312501357868,
+      "output": "Text inference GPU, native conversation protocol and bundled kernels: passed\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "baseline synthetic fixtures",
+      "command": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "-B",
+        "Benchmarks/Chat/benchmark.py",
+        "fixtures",
+        "--corpus",
+        "build/chat-benchmarks/loop-experiments-2026-11-02/corpora/latency",
+        "--worker",
+        "/tmp/sillies-lfm-v2-frozen/ChatModelBenchmark",
+        "--helper",
+        "/tmp/sillies-lfm-v2-frozen/SilliesTextInference.app/Contents/MacOS/SilliesTextInference",
+        "--models-root",
+        "/private/tmp/sillies-extra-models"
+      ],
+      "exitCode": 0,
+      "seconds": 0.13648154100519605,
+      "output": "7 scenarios \u00b7 7 model cases \u00b7 11 turns per model\nValidated 7 synthetic scenario fixtures, including screenshot retrieval.\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "policy synthetic fixtures",
+      "command": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "-B",
+        "Benchmarks/Chat/benchmark.py",
+        "fixtures",
+        "--corpus",
+        "build/chat-benchmarks/loop-experiments-2026-11-02/corpora/quality",
+        "--worker",
+        "/tmp/sillies-loop-candidate-frozen/ChatModelBenchmark",
+        "--helper",
+        "/tmp/sillies-lfm-v2-frozen/SilliesTextInference.app/Contents/MacOS/SilliesTextInference",
+        "--models-root",
+        "/private/tmp/sillies-extra-models"
+      ],
+      "exitCode": 0,
+      "seconds": 0.36203891699551605,
+      "output": "13 scenarios \u00b7 13 model cases \u00b7 20 turns per model\nValidated 13 synthetic scenario fixtures, including screenshot retrieval.\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "tool-contract synthetic fixtures",
+      "command": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "-B",
+        "Benchmarks/Chat/benchmark.py",
+        "fixtures",
+        "--corpus",
+        "build/chat-benchmarks/loop-experiments-2026-11-02/corpora/quality",
+        "--worker",
+        "/tmp/sillies-loop-contract-frozen/ChatModelBenchmark",
+        "--helper",
+        "/tmp/sillies-lfm-v2-frozen/SilliesTextInference.app/Contents/MacOS/SilliesTextInference",
+        "--models-root",
+        "/private/tmp/sillies-extra-models"
+      ],
+      "exitCode": 0,
+      "seconds": 0.14240174999576993,
+      "output": "13 scenarios \u00b7 13 model cases \u00b7 20 turns per model\nValidated 13 synthetic scenario fixtures, including screenshot retrieval.\n",
+      "diagnostics": ""
+    },
+    {
+      "name": "summary synthetic fixtures",
+      "command": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "-B",
+        "Benchmarks/Chat/benchmark.py",
+        "fixtures",
+        "--corpus",
+        "build/chat-benchmarks/loop-experiments-2026-11-02/corpora/context",
+        "--worker",
+        "/tmp/sillies-loop-summary-frozen/ChatModelBenchmark",
+        "--helper",
+        "/tmp/sillies-lfm-v2-frozen/SilliesTextInference.app/Contents/MacOS/SilliesTextInference",
+        "--models-root",
+        "/private/tmp/sillies-extra-models"
+      ],
+      "exitCode": 0,
+      "seconds": 0.0937662500073202,
+      "output": "3 scenarios \u00b7 3 model cases \u00b7 5 turns per model\nValidated 3 synthetic scenario fixtures, including screenshot retrieval.\n",
+      "diagnostics": ""
+    }
+  ]
+}

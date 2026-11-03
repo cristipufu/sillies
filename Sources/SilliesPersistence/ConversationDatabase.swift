@@ -36,13 +36,21 @@ public final class ConversationDatabase {
   }
 
   public func save(_ update: ConversationUpdate) throws {
-    let checkpoint = try encode(update.checkpoint, maximumBytes: Self.maximumCheckpointBytes)
     try sql.transaction {
       try validate(update.handle)
+      var presentation = update.checkpoint
+      presentation.preserveContext(from: try savedCheckpoint(update.handle))
+      if !update.messages.isEmpty || !update.removedMessageIDs.isEmpty {
+        presentation.recordHistoryChange()
+      }
+      if try invalidatesMemory(update, memory: presentation.memory) {
+        presentation.replaceMemory(.init())
+      }
       for id in update.removedMessageIDs { try removeMessage(id, owner: update.handle.companionID) }
       for message in update.messages {
         try saveMessage(message, owner: update.handle.companionID, at: update.savedAt)
       }
+      let checkpoint = try encode(presentation, maximumBytes: Self.maximumCheckpointBytes)
       try sql.execute(
         "UPDATE conversations SET checkpoint=?,updated=MAX(updated,?) WHERE id=?",
         [

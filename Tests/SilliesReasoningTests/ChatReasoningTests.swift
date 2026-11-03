@@ -25,7 +25,12 @@ private let reportedChatContext = ChatContext(
 }
 
 private actor ChatBackendProbe: ConversationBackend {
-  nonisolated var reasoningTokenReserve: Int { 0 }
+  nonisolated let contextWindowTokens = 4_096
+  func inputTokenCount(_ request: TextGenerationRequest) throws -> Int {
+    try ConversationTokenEstimate.count(request)
+  }
+  nonisolated var conversationPolicy: ConversationPolicy { AppleConversationPolicy.conversation }
+  nonisolated var generationProfile: TextGenerationProfile { AppleConversationPolicy.generation }
   var style: TextGenerationStyle?
   func availabilityNotice(localeIdentifier: String?) -> String? { nil }
   func converse(_ request: TextGenerationRequest, tools: ConversationToolbox) async throws -> String

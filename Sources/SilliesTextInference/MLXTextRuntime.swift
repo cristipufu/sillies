@@ -6,8 +6,6 @@ import SilliesTextModels
 
 /// The helper alone imports MLX. A model fault or cancelled kernel cannot terminate the app.
 actor MLXTextRuntime {
-  private static let maximumOutputTokens = 1_400
-  private static let maximumPromptCharacters = 24_000
   private static let promptTailTokenCount = 64
   private static let cacheBytes = 128 * 1024 * 1024
   private var model: ModelContainer?
@@ -18,13 +16,9 @@ actor MLXTextRuntime {
   {
     let configuration = request.configuration
     let generation = request.generation
-    guard configuration.directory.isFileURL, (2_048...8_192).contains(configuration.contextTokens),
-      (1...Self.maximumOutputTokens).contains(generation.maximumTokens),
-      configuration.sampling?.isValid ?? true,
-      generation.instructions.count
-        + generation.messages.reduce(
-          0, { $0 + $1.content.count + ($1.reasoningContent?.count ?? 0) })
-        <= Self.maximumPromptCharacters
+    let task = generation.style.settings(in: configuration.profile.generation)
+    guard configuration.directory.isFileURL, configuration.profile.isValid,
+      let outputTokens = task.generationTokens(for: generation.maximumTokens)
     else { throw TextModelError.invalidResponse }
     guard configuration.memoryLimitBytes > 0,
       configuration.memoryLimitBytes
@@ -52,24 +46,23 @@ actor MLXTextRuntime {
       input: UserInput(
         messages: messages,
         tools: tools.isEmpty ? nil : tools,
-        additionalContext: MLXReasoningPolicy(preparation: configuration).templateContext))
+        additionalContext: MLXReasoningPolicy(reasoning: configuration.reasoning).templateContext))
     if generation.operation == .measure {
       return .init(text: "", inputTokens: input.text.tokens.size)
     }
-    let outputTokens =
-      generation.maximumTokens + generation.style.reasoningTokenReserve(configuration.reasoning)
-    guard input.text.tokens.size + outputTokens <= configuration.contextTokens else {
+    guard
+      outputTokens <= configuration.contextTokens
+        && input.text.tokens.size <= configuration.contextTokens - outputTokens
+    else {
       throw TextModelError.contextLimit
     }
-    let sampling = configuration.sampling
+    let sampling = task.sampling
     var parameters = GenerateParameters(
       maxTokens: outputTokens, maxKVSize: configuration.contextTokens,
-      temperature: sampling?.temperature ?? Float(generation.style.temperature),
-      topP: sampling?.topP ?? Float(generation.style.probabilityThreshold),
-      topK: sampling?.topK ?? 0,
-      repetitionPenalty: sampling?.repetitionPenalty ?? generation.style.repetitionPenalty,
-      repetitionContextSize: generation.style.repetitionContextSize)
-    parameters.prefill = PrefillParameters(stepSize: 64)
+      temperature: sampling.temperature, topP: sampling.topP, topK: sampling.topK,
+      repetitionPenalty: sampling.repetitionPenalty,
+      repetitionContextSize: task.repetitionContextTokens)
+    parameters.prefill = PrefillParameters(stepSize: configuration.profile.prefill.chunkTokens)
     let promptTailTokens = Array(
       input.text.tokens.asArray(Int.self).suffix(Self.promptTailTokenCount))
     let promptTail = await container.tokenizer.decode(tokenIds: promptTailTokens)
@@ -95,7 +88,7 @@ actor MLXTextRuntime {
       from: location, using: LocalTokenizerLoader())
     await loaded.update {
       $0.processor = MLXInputProcessor(base: $0.processor)
-      if let reasoning = MLXReasoningPolicy(preparation: preparation).configuration {
+      if let reasoning = MLXReasoningPolicy(reasoning: preparation.reasoning).configuration {
         $0.configuration.reasoningConfig = reasoning
       }
     }

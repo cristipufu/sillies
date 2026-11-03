@@ -4,6 +4,7 @@
 Add a reviewed model row here; only metadata and small support files are fetched.
 The inference provider interprets the model's own config and chat template.
 """
+import argparse
 from dataclasses import dataclass
 from datetime import date
 import hashlib
@@ -24,7 +25,6 @@ class ModelEntry:
     release_source: str
     license: str = "Apache 2.0"
     reasoning: str | None = None
-    sampling: dict | None = None
 
 
 # Settings preserves this order: families alphabetically, smaller downloads first within each family.
@@ -74,9 +74,7 @@ MODELS = [
         detail="Compact multilingual notes and writing.",
         languages="16 languages. Quality varies by language.",
         release_date="2026-08-04", release_source="https://www.liquid.ai/blog/lfm2-5-2-6b",
-        license="LFM Open License 1.0", reasoning="alwaysOnThinkTags",
-        # Publisher model card: https://huggingface.co/LiquidAI/LFM2.5-2.6B
-        sampling=dict(temperature=0.1, topP=1.0, topK=50, repetitionPenalty=1.1)),
+        license="LFM Open License 1.0", reasoning="alwaysOnThinkTags"),
     ModelEntry(
         identifier="lfm-2.5-24b-a2b", name="LFM2.5 24B A2B",
         repository="LiquidAI/LFM2.5-24B-A2B-MLX-4bit",
@@ -84,9 +82,7 @@ MODELS = [
         detail="Larger model for conversations and summaries. Requires more available memory.",
         languages="16 languages. Quality varies by language.",
         release_date="2026-10-13", release_source="https://www.liquid.ai/blog/lfm2-5-24b-a2b",
-        license="LFM Open License 1.0", reasoning="alwaysOnThinkTags",
-        # Publisher model card: https://huggingface.co/LiquidAI/LFM2.5-24B-A2B
-        sampling=dict(temperature=0.1, topP=1.0, topK=50, repetitionPenalty=1.05)),
+        license="LFM Open License 1.0", reasoning="alwaysOnThinkTags"),
     ModelEntry(
         identifier="ministral-3-8b", name="Ministral 3 8B",
         repository="mlx-community/Ministral-3-8B-Instruct-2512-4bit",
@@ -134,6 +130,19 @@ def read(url, maximum_bytes=10 * 1024 * 1024):
         raise ValueError(f"Metadata response exceeds {maximum_bytes} bytes")
     return data
 
+def profile(model):
+    root = Path(__file__).resolve().parents[1]
+    value = json.loads((root / "ModelProfiles/Text" / f"{model.identifier}.json").read_text())
+    config = f"https://huggingface.co/{model.repository}/resolve/{model.revision}/config.json"
+    if config not in value["evidence"]["sources"]:
+        raise ValueError(f"Profile must cite its exact checkpoint config: {model.identifier}")
+    pins = json.loads((root / "Package.resolved").read_text())["pins"]
+    runtime = next(pin["state"]["revision"] for pin in pins if pin["identity"] == "mlx-swift-lm")
+    if value["evidence"]["runtimeRevision"] != runtime:
+        raise ValueError(f"Profile needs review against the pinned runtime: {model.identifier}")
+    return value
+
+
 def descriptor(model):
     date.fromisoformat(model.release_date)
     if not model.release_source.startswith("https://"):
@@ -141,10 +150,10 @@ def descriptor(model):
     return dict(
         id=model.identifier, providerID="mlx", name=model.name, detail=model.detail,
         revision=model.revision, license=model.license, reasoning=model.reasoning,
-        sampling=model.sampling,
+        profile=profile(model),
         release=dict(date=model.release_date, sourceURL=model.release_source),
         sourceURL=f"https://huggingface.co/{model.repository}",
-        minimumMemoryGB=model.memory_gb, contextTokens=4096,
+        minimumMemoryGB=model.memory_gb,
         languagesDescription=model.languages)
 
 
@@ -176,8 +185,25 @@ def manifest(model):
         artifacts.append(artifact(model, entry))
     return dict(model=description, artifacts=artifacts)
 
+def refresh_descriptors(destination):
+    result = json.loads(destination.read_text())
+    existing = {entry["model"]["id"]: entry for entry in result["manifests"]}
+    if set(existing) != {row.identifier for row in MODELS}:
+        raise ValueError("Adding/removing models requires full manifest generation")
+    for row in MODELS:
+        entry = existing[row.identifier]
+        prefix = f"https://huggingface.co/{row.repository}/resolve/{row.revision}/"
+        if not all(artifact["url"].startswith(prefix) for artifact in entry["artifacts"]):
+            raise ValueError("A checkpoint change requires full manifest generation")
+        entry["model"] = descriptor(row)
+    return {"manifests": [existing[row.identifier] for row in MODELS]}
+
+
 if __name__ == "__main__":
-    result = {"manifests": [manifest(row) for row in MODELS]}
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--profiles-only", action="store_true", help="Refresh reviewed descriptors offline; keep pinned artifact identities")
+    options = parser.parse_args()
     destination = Path(__file__).resolve().parents[1] / "Sources/SilliesModelStore/Resources/text-models.json"
+    result = refresh_descriptors(destination) if options.profiles_only else {"manifests": [manifest(row) for row in MODELS]}
     destination.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n")
     print(f"Wrote {len(result['manifests'])} pinned model manifests")

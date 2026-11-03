@@ -1,0 +1,885 @@
+{
+  "cases": [
+    {
+      "id": "bounded-archive-continuity",
+      "group": "context",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "bounded-history-2026-11-03"
+      ],
+      "turns": [
+        {
+          "user": "What is our release code? Give just the code.",
+          "rubric": "Recall violet-42 from the complete stored history. Archive retrieval, recent context or an existing checkpoint are allowed; no foreground summary generation.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "violet-42"
+              ]
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            },
+            {
+              "kind": "compaction_calls_at_most",
+              "values": [
+                "0"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "What is our release code now? Give just the code.",
+          "rubric": "Apply the latest correction amber-61. Do not use the old code violet-42. No foreground summary generation.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "amber-61"
+              ]
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            },
+            {
+              "kind": "compaction_calls_at_most",
+              "values": [
+                "0"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "Who owns our checklist? Give just the name.",
+          "rubric": "Recall Mina as the checklist owner from stored history, using archive retrieval if omitted from recent context. No foreground summary generation.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Mina"
+              ]
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            },
+            {
+              "kind": "compaction_calls_at_most",
+              "values": [
+                "0"
+              ]
+            }
+          ]
+        }
+      ],
+      "history": [
+        {
+          "role": "user",
+          "text": "For workshop activity 1, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "The release code for our project is cedar-27. Mina owns the checklist."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 3, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "Correction: the release code is violet-42, replacing cedar-27. Mina still owns the checklist."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 5, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 6, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 7, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 8, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 9, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 2, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 11, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 12, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 13, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 14, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 15, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 16, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 17, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 18, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 4, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 20, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 21, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 22, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 23, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 24, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 25, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 26, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 27, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 28, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 29, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 30, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 31, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 32, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 33, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 34, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 35, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 36, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 37, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 38, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 39, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 40, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 41, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 42, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 43, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 44, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 45, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 46, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 47, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 48, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 49, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 50, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 51, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 52, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 53, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 54, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 55, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 56, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 57, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 58, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 59, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 60, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 61, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 62, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 63, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 64, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 65, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 66, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 67, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 68, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 69, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 70, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 71, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 72, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 73, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 74, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 75, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 76, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 77, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 78, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 79, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 80, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 81, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 82, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 83, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 84, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 85, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 86, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 87, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 88, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 89, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 90, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 91, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 92, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 93, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 94, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 95, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        },
+        {
+          "role": "user",
+          "text": "For workshop activity 96, we will keep the notes local and review the materials together. The workshop team will check the room layout, label the handouts, review the shared agenda, and pack the demonstration materials. We will document any remaining questions for the next session and keep the preparation notes in the local project folder."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood. I will keep that in mind for our workshop."
+        }
+      ],
+      "historyBatches": [
+        [],
+        [
+          {
+            "role": "user",
+            "text": "The new release code is amber-61, replacing violet-42."
+          },
+          {
+            "role": "assistant",
+            "text": "The release code has been updated."
+          }
+        ],
+        []
+      ]
+    }
+  ],
+  "version": 1
+}

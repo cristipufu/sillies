@@ -1,0 +1,11 @@
+Test receipts: /Users/cristian.pufu/Documents/GitHub/sillies-macos/build/test-results/run-ehpxvyjd
+Native presentation: 0 headless tests; 0 tests reserved for the other presentation mode.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test nativeLongHistoryAndCheckpointPreemption() started.
+NATIVE CONTINUITY apple: 10001 messages; reply=2.627954833 seconds; text=Hello there!
+NATIVE CONTINUITY apple: preemption=0.136730917 seconds; resumed reply=0.917141792 seconds; text=Hello there!
+✔ Test nativeLongHistoryAndCheckpointPreemption() passed after 4.432 seconds.
+✔ Test run with 1 test in 0 suites passed after 4.433 seconds.
+Verified completion of 1 selected tests across 1 runs.

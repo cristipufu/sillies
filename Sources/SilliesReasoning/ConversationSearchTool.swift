@@ -12,7 +12,7 @@ struct ConversationSearchTool: ConversationTool {
     .init(
       name: "search_conversation",
       description:
-        "Search earlier chats between this companion and the user. For saved meetings, screenshots or Stash items use search_vault instead.",
+        "Retrieve earlier messages, shared plans and decisions from this continuing conversation. Search here for prior chat details omitted from the current context. For saved meetings, screenshots or Stash items use search_vault instead.",
       parameters: [.init("query", description: "Short topic keywords from the earlier discussion.")]
     )
   }

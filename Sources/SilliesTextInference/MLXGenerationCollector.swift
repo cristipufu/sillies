@@ -1,4 +1,5 @@
 import Foundation
+import MLX
 import MLXLMCommon
 import SilliesTextModels
 
@@ -27,7 +28,8 @@ struct MLXGenerationCollector {
         tokens: .init(
           processedPrompt: info.promptTokenCount,
           cachedPrompt: info.cachedPromptTokenCount, generated: info.generationTokenCount),
-        timing: .init(prompt: info.promptTime, generation: info.generateTime))
+        timing: .init(prompt: info.promptTime, generation: info.generateTime),
+        peakDeviceMemoryBytes: Memory.peakMemory)
       switch info.stopReason {
       case .stop: break
       case .length: throw failure(.outputTokenLimit)

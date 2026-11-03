@@ -1,13 +1,16 @@
 import Foundation
+import SilliesCore
 import SilliesTextModels
 
+package enum ConversationToolResultBudgeting: String, Codable, Sendable {
+  case measured
+  case providerManaged
+}
+
 /// Native roles, tool execution and context measurement are explicit backend capabilities.
-package protocol ConversationBackend: ReasoningBackend {
-  var contextWindowTokens: Int { get }
-  var reasoningTokenReserve: Int { get }
-  func reasoningTokenReserve(for style: TextGenerationStyle) -> Int
+package protocol ConversationBackend: ReasoningBackend, ConversationBudgeting {
+  var toolResultBudgeting: ConversationToolResultBudgeting { get }
   func retain(for lifetime: TextModelLifetime) async
-  func inputTokenCount(_ request: TextGenerationRequest) async throws -> Int
   func converse(_ request: TextGenerationRequest, tools: ConversationToolbox) async throws -> String
   func streamConversation(
     _ request: TextGenerationRequest, tools: ConversationToolbox,
@@ -16,9 +19,7 @@ package protocol ConversationBackend: ReasoningBackend {
 }
 
 extension ConversationBackend {
-  package func reasoningTokenReserve(for _: TextGenerationStyle) -> Int {
-    reasoningTokenReserve
-  }
+  package var toolResultBudgeting: ConversationToolResultBudgeting { .measured }
   package func retain(for lifetime: TextModelLifetime) async {}
   package func streamConversation(
     _ request: TextGenerationRequest, tools: ConversationToolbox,
@@ -28,10 +29,7 @@ extension ConversationBackend {
     try await receive(text)
     return text
   }
-  package var contextWindowTokens: Int { 4_096 }
-  package func inputTokenCount(_ request: TextGenerationRequest) async throws -> Int {
-    try ConversationTokenEstimate.count(request)
-  }
+
 }
 
 /// Earlier Apple systems have no tokenizer API. The fallback deliberately overestimates typical text.

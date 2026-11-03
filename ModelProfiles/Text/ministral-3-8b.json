@@ -1,0 +1,77 @@
+{
+  "context": {
+    "maximumTokens": 262144,
+    "workingTokens": 4096
+  },
+  "prefill": {
+    "chunkTokens": null
+  },
+  "generation": {
+    "conversation": {
+      "outputTokens": 240,
+      "reasoningTokens": 0,
+      "sampling": {
+        "temperature": 0.7,
+        "topP": 0.9,
+        "topK": 0,
+        "repetitionPenalty": 1.08
+      },
+      "repetitionContextTokens": 64
+    },
+    "summary": {
+      "outputTokens": 320,
+      "reasoningTokens": 0,
+      "sampling": {
+        "temperature": 0,
+        "topP": 1,
+        "topK": 0,
+        "repetitionPenalty": null
+      },
+      "repetitionContextTokens": 64
+    },
+    "precise": {
+      "outputTokens": 1400,
+      "reasoningTokens": 0,
+      "sampling": {
+        "temperature": 0,
+        "topP": 1,
+        "topK": 0,
+        "repetitionPenalty": null
+      },
+      "repetitionContextTokens": 64
+    }
+  },
+  "conversation": {
+    "safetyTokens": 128,
+    "compaction": {
+      "summaryWords": 180,
+      "headroomTokens": 256
+    },
+    "tools": {
+      "maximumCalls": 4,
+      "reserveTokens": 1536,
+      "resultTokens": 768
+    },
+    "history": {
+      "recent": {
+        "messageLimit": 64,
+        "byteLimit": 32768
+      },
+      "checkpoint": {
+        "window": {
+          "messageLimit": 24,
+          "byteLimit": 12288
+        },
+        "minimumMessages": 12
+      }
+    }
+  },
+  "evidence": {
+    "sources": [
+      "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/config.json",
+      "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit"
+    ],
+    "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+    "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained from the committed baseline. This checkpoint was not natively compared in the November 3 focused experiment. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+  }
+}

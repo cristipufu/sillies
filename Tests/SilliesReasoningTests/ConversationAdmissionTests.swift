@@ -5,8 +5,10 @@ import Testing
 @testable import SilliesReasoning
 
 private actor AdmissionBackend: ConversationBackend {
+  nonisolated var conversationPolicy: ConversationPolicy { AppleConversationPolicy.conversation }
+  nonisolated let generationProfile = reasoningProfile(
+    conversationTokens: 1_024, summaryTokens: 1_024)
   nonisolated let contextWindowTokens = 4_096
-  nonisolated let reasoningTokenReserve = 1_024
   private let measuredInput: Int
   private(set) var measurements = 0
   init(measuredInput: Int) { self.measuredInput = measuredInput }
@@ -25,8 +27,7 @@ private actor AdmissionBackend: ConversationBackend {
 private func admissionManager(_ backend: AdmissionBackend) -> ConversationContextManager {
   .init(
     backend: backend,
-    tools: [.init(name: "lookup", description: "Search saved material", parameters: [])],
-    progress: { _ in })
+    tools: [.init(name: "lookup", description: "Search saved material", parameters: [])])
 }
 
 private func admissionContext() -> ChatContext {

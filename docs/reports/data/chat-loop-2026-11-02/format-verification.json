@@ -1,0 +1,27 @@
+[
+  {
+    "patch": "policy.patch",
+    "exitCode": 0,
+    "output": ""
+  },
+  {
+    "patch": "prefill.patch",
+    "exitCode": 0,
+    "output": ""
+  },
+  {
+    "patch": "tail-prefill.patch",
+    "exitCode": 0,
+    "output": ""
+  },
+  {
+    "patch": "tool-contract.patch",
+    "exitCode": 0,
+    "output": ""
+  },
+  {
+    "patch": "compaction-policy.patch",
+    "exitCode": 0,
+    "output": ""
+  }
+]

@@ -1,4 +1,5 @@
 import Foundation
+import SilliesModelStore
 import Synchronization
 import Testing
 
@@ -8,9 +9,7 @@ private struct TextStreamFixture {
   enum Pace { case immediate, delayed }
   let url = FileManager.default.temporaryDirectory.appendingPathComponent(
     "text-stream-worker-\(UUID())")
-  let preparation = TextModelPreparation(
-    directory: URL(fileURLWithPath: "/tmp/unused-stream-model"), contextTokens: 4_096,
-    memoryLimitBytes: TextModelMemoryBudget.gibibyte)
+  let preparation: TextModelPreparation
   let request = TextGenerationRequest(instructions: "Reply", prompt: "Hello", maximumTokens: 50)
   init(finalText: String, pace: Pace = .immediate) throws {
     try self.init(final: .init(output: .init(text: finalText)), pace: pace)
@@ -21,6 +20,11 @@ private struct TextStreamFixture {
       pace: .immediate)
   }
   private init(final response: TextInferenceResponse, pace: Pace) throws {
+    preparation = TextModelPreparation(
+      directory: URL(fileURLWithPath: "/tmp/unused-stream-model"),
+      profile: try TextModelCatalog.bundled().manifests[0].model.profile,
+      memoryLimitBytes: TextModelMemoryBudget.gibibyte)
+
     let pause = pace == .delayed ? "/bin/sleep 0.2" : ""
     let message = TextInferenceRequest(configuration: preparation, generation: request)
     let count = try JSONEncoder().encode(message).count + 4

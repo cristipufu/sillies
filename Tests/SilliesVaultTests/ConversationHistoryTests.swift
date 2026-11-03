@@ -15,9 +15,17 @@ import Testing
     draft: "Tomorrow I want to", language: "fr", readingMessageID: messages[150].id)
   try await store.save(
     .init(handle: opened.handle, messages: messages, checkpoint: checkpoint, savedAt: fixture.date))
+  let expectedMemory = try await store.checkpoint(opened.handle)
+  #expect(
+    try await store.advanceCheckpoint(
+      .init(
+        handle: opened.handle, expected: expectedMemory, replacement: checkpoint.memory)))
   let reopened = try await ConversationLibrary(directory: fixture.directory).open(
     .init(id: "pogo", name: "Pogo"))
-  #expect(reopened.checkpoint == checkpoint)
+  #expect(reopened.checkpoint.memory == checkpoint.memory)
+  #expect(reopened.checkpoint.draft == checkpoint.draft)
+  #expect(reopened.checkpoint.language == checkpoint.language)
+  #expect(reopened.checkpoint.readingMessageID == checkpoint.readingMessageID)
   #expect(reopened.page.entries.count == ConversationPageRequest.defaultLimit)
   #expect(reopened.page.entries.last?.message.text == "Thought 179")
   #expect(reopened.page.hasOlder)

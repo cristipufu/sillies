@@ -1,0 +1,770 @@
+{
+  "qwen-3.5-4b": {
+    "context": {
+      "maximumTokens": 262144,
+      "workingTokens": 4096
+    },
+    "prefill": {
+      "chunkTokens": null
+    },
+    "generation": {
+      "conversation": {
+        "outputTokens": 240,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0.7,
+          "topP": 0.9,
+          "topK": 0,
+          "repetitionPenalty": 1.08
+        },
+        "repetitionContextTokens": 64
+      },
+      "summary": {
+        "outputTokens": 320,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0,
+          "topP": 1,
+          "topK": 0,
+          "repetitionPenalty": null
+        },
+        "repetitionContextTokens": 64
+      },
+      "precise": {
+        "outputTokens": 1400,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0,
+          "topP": 1,
+          "topK": 0,
+          "repetitionPenalty": null
+        },
+        "repetitionContextTokens": 64
+      }
+    },
+    "conversation": {
+      "safetyTokens": 128,
+      "compaction": {
+        "summaryWords": 180,
+        "headroomTokens": 256
+      },
+      "tools": {
+        "maximumCalls": 4,
+        "reserveTokens": 1536,
+        "resultTokens": 768
+      }
+    },
+    "evidence": {
+      "sources": [
+        "https://huggingface.co/mlx-community/Qwen3.5-4B-MLX-4bit/resolve/32f3e8ecf65426fc3306969496342d504bfa13f3/config.json",
+        "https://huggingface.co/mlx-community/Qwen3.5-4B-MLX-4bit"
+      ],
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained from the committed baseline. This checkpoint was not natively compared in the November 3 focused experiment. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+    }
+  },
+  "gemma-4-26b-a4b": {
+    "context": {
+      "maximumTokens": 262144,
+      "workingTokens": 4096
+    },
+    "prefill": {
+      "chunkTokens": null
+    },
+    "generation": {
+      "conversation": {
+        "outputTokens": 240,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0.7,
+          "topP": 0.9,
+          "topK": 0,
+          "repetitionPenalty": 1.08
+        },
+        "repetitionContextTokens": 64
+      },
+      "summary": {
+        "outputTokens": 320,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0,
+          "topP": 1,
+          "topK": 0,
+          "repetitionPenalty": null
+        },
+        "repetitionContextTokens": 64
+      },
+      "precise": {
+        "outputTokens": 1400,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0,
+          "topP": 1,
+          "topK": 0,
+          "repetitionPenalty": null
+        },
+        "repetitionContextTokens": 64
+      }
+    },
+    "conversation": {
+      "safetyTokens": 128,
+      "compaction": {
+        "summaryWords": 180,
+        "headroomTokens": 256
+      },
+      "tools": {
+        "maximumCalls": 4,
+        "reserveTokens": 1536,
+        "resultTokens": 768
+      }
+    },
+    "evidence": {
+      "sources": [
+        "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit/resolve/0d77464eeb233a2da68ebf9d7dc4edaac7db956d/config.json",
+        "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit"
+      ],
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context retained after the November 3 4K/8K comparison: both passed 6/6 cases, but compacted follow-ups took about 3.3 seconds at 4K versus 8.8 seconds at 8K. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+    }
+  },
+  "granite-4.2-3b": {
+    "context": {
+      "maximumTokens": 131072,
+      "workingTokens": 4096
+    },
+    "prefill": {
+      "chunkTokens": null
+    },
+    "generation": {
+      "conversation": {
+        "outputTokens": 240,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0.7,
+          "topP": 0.9,
+          "topK": 0,
+          "repetitionPenalty": 1.08
+        },
+        "repetitionContextTokens": 64
+      },
+      "summary": {
+        "outputTokens": 320,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0,
+          "topP": 1,
+          "topK": 0,
+          "repetitionPenalty": null
+        },
+        "repetitionContextTokens": 64
+      },
+      "precise": {
+        "outputTokens": 1400,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0,
+          "topP": 1,
+          "topK": 0,
+          "repetitionPenalty": null
+        },
+        "repetitionContextTokens": 64
+      }
+    },
+    "conversation": {
+      "safetyTokens": 128,
+      "compaction": {
+        "summaryWords": 180,
+        "headroomTokens": 256
+      },
+      "tools": {
+        "maximumCalls": 4,
+        "reserveTokens": 1536,
+        "resultTokens": 768
+      }
+    },
+    "evidence": {
+      "sources": [
+        "https://huggingface.co/ibm-granite/granite-4.2-3b-q4-mlx/resolve/0c6f39b1827afd5eb2c1c3b13751929857434953/config.json",
+        "https://huggingface.co/ibm-granite/granite-4.2-3b-q4-mlx"
+      ],
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained. The November 3 focused comparison used this checkpoint; larger contexts were not tested for it. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+    }
+  },
+  "qwen-3.5-2b": {
+    "context": {
+      "maximumTokens": 262144,
+      "workingTokens": 4096
+    },
+    "prefill": {
+      "chunkTokens": null
+    },
+    "generation": {
+      "conversation": {
+        "outputTokens": 240,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0.7,
+          "topP": 0.9,
+          "topK": 0,
+          "repetitionPenalty": 1.08
+        },
+        "repetitionContextTokens": 64
+      },
+      "summary": {
+        "outputTokens": 320,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0,
+          "topP": 1,
+          "topK": 0,
+          "repetitionPenalty": null
+        },
+        "repetitionContextTokens": 64
+      },
+      "precise": {
+        "outputTokens": 1400,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0,
+          "topP": 1,
+          "topK": 0,
+          "repetitionPenalty": null
+        },
+        "repetitionContextTokens": 64
+      }
+    },
+    "conversation": {
+      "safetyTokens": 128,
+      "compaction": {
+        "summaryWords": 180,
+        "headroomTokens": 256
+      },
+      "tools": {
+        "maximumCalls": 4,
+        "reserveTokens": 1536,
+        "resultTokens": 768
+      }
+    },
+    "evidence": {
+      "sources": [
+        "https://huggingface.co/mlx-community/Qwen3.5-2B-4bit/resolve/674aaa7240b91e8012fcad5d791b7dfe5ba90207/config.json",
+        "https://huggingface.co/mlx-community/Qwen3.5-2B-4bit"
+      ],
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained. The November 3 focused comparison used this checkpoint; larger contexts were not tested for it. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+    }
+  },
+  "lfm-2.5-2.6b": {
+    "context": {
+      "maximumTokens": 131072,
+      "workingTokens": 4096
+    },
+    "prefill": {
+      "chunkTokens": null
+    },
+    "generation": {
+      "conversation": {
+        "outputTokens": 240,
+        "reasoningTokens": 1024,
+        "sampling": {
+          "temperature": 0.1,
+          "topP": 1.0,
+          "topK": 50,
+          "repetitionPenalty": 1.1
+        },
+        "repetitionContextTokens": 64
+      },
+      "summary": {
+        "outputTokens": 320,
+        "reasoningTokens": 2048,
+        "sampling": {
+          "temperature": 0.1,
+          "topP": 1.0,
+          "topK": 50,
+          "repetitionPenalty": 1.1
+        },
+        "repetitionContextTokens": 64
+      },
+      "precise": {
+        "outputTokens": 1400,
+        "reasoningTokens": 1024,
+        "sampling": {
+          "temperature": 0.1,
+          "topP": 1.0,
+          "topK": 50,
+          "repetitionPenalty": 1.1
+        },
+        "repetitionContextTokens": 64
+      }
+    },
+    "conversation": {
+      "safetyTokens": 128,
+      "compaction": {
+        "summaryWords": 180,
+        "headroomTokens": 256
+      },
+      "tools": {
+        "maximumCalls": 4,
+        "reserveTokens": 1536,
+        "resultTokens": 768
+      }
+    },
+    "evidence": {
+      "sources": [
+        "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit/resolve/04efa23776ce61ec34ec95ec34c859854c89542b/config.json",
+        "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit"
+      ],
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained from the committed baseline. This checkpoint was not natively compared in the November 3 focused experiment. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+    }
+  },
+  "lfm-2.5-24b-a2b": {
+    "context": {
+      "maximumTokens": 131072,
+      "workingTokens": 8192
+    },
+    "prefill": {
+      "chunkTokens": null
+    },
+    "generation": {
+      "conversation": {
+        "outputTokens": 240,
+        "reasoningTokens": 1024,
+        "sampling": {
+          "temperature": 0.1,
+          "topP": 1.0,
+          "topK": 50,
+          "repetitionPenalty": 1.05
+        },
+        "repetitionContextTokens": 64
+      },
+      "summary": {
+        "outputTokens": 320,
+        "reasoningTokens": 2048,
+        "sampling": {
+          "temperature": 0.1,
+          "topP": 1.0,
+          "topK": 50,
+          "repetitionPenalty": 1.05
+        },
+        "repetitionContextTokens": 64
+      },
+      "precise": {
+        "outputTokens": 1400,
+        "reasoningTokens": 1024,
+        "sampling": {
+          "temperature": 0.1,
+          "topP": 1.0,
+          "topK": 50,
+          "repetitionPenalty": 1.05
+        },
+        "repetitionContextTokens": 64
+      }
+    },
+    "conversation": {
+      "safetyTokens": 128,
+      "compaction": {
+        "summaryWords": 180,
+        "headroomTokens": 256
+      },
+      "tools": {
+        "maximumCalls": 4,
+        "reserveTokens": 1536,
+        "resultTokens": 768
+      }
+    },
+    "evidence": {
+      "sources": [
+        "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit/resolve/667408d494bde191c2cb9dd4f4549827816b9275/config.json",
+        "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit"
+      ],
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "rationale": "Native checkpoint capacity comes from pinned config.json. 8K working context selected from the November 3 comparison: 192-message continuity was correct and avoided expensive summaries, with about 31 MiB additional peak MLX allocation. A larger forced-compaction case still exceeded the 60-second turn deadline; this is not a long-history latency guarantee. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+    }
+  },
+  "ministral-3-8b": {
+    "context": {
+      "maximumTokens": 262144,
+      "workingTokens": 4096
+    },
+    "prefill": {
+      "chunkTokens": null
+    },
+    "generation": {
+      "conversation": {
+        "outputTokens": 240,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0.7,
+          "topP": 0.9,
+          "topK": 0,
+          "repetitionPenalty": 1.08
+        },
+        "repetitionContextTokens": 64
+      },
+      "summary": {
+        "outputTokens": 320,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0,
+          "topP": 1,
+          "topK": 0,
+          "repetitionPenalty": null
+        },
+        "repetitionContextTokens": 64
+      },
+      "precise": {
+        "outputTokens": 1400,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0,
+          "topP": 1,
+          "topK": 0,
+          "repetitionPenalty": null
+        },
+        "repetitionContextTokens": 64
+      }
+    },
+    "conversation": {
+      "safetyTokens": 128,
+      "compaction": {
+        "summaryWords": 180,
+        "headroomTokens": 256
+      },
+      "tools": {
+        "maximumCalls": 4,
+        "reserveTokens": 1536,
+        "resultTokens": 768
+      }
+    },
+    "evidence": {
+      "sources": [
+        "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit/resolve/182f003f01daa75f9de0f2c4d379722fd0bc1c61/config.json",
+        "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit"
+      ],
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained from the committed baseline. This checkpoint was not natively compared in the November 3 focused experiment. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+    }
+  },
+  "granite-4.2-8b": {
+    "context": {
+      "maximumTokens": 131072,
+      "workingTokens": 4096
+    },
+    "prefill": {
+      "chunkTokens": null
+    },
+    "generation": {
+      "conversation": {
+        "outputTokens": 240,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0.7,
+          "topP": 0.9,
+          "topK": 0,
+          "repetitionPenalty": 1.08
+        },
+        "repetitionContextTokens": 64
+      },
+      "summary": {
+        "outputTokens": 320,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0,
+          "topP": 1,
+          "topK": 0,
+          "repetitionPenalty": null
+        },
+        "repetitionContextTokens": 64
+      },
+      "precise": {
+        "outputTokens": 1400,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0,
+          "topP": 1,
+          "topK": 0,
+          "repetitionPenalty": null
+        },
+        "repetitionContextTokens": 64
+      }
+    },
+    "conversation": {
+      "safetyTokens": 128,
+      "compaction": {
+        "summaryWords": 180,
+        "headroomTokens": 256
+      },
+      "tools": {
+        "maximumCalls": 4,
+        "reserveTokens": 1536,
+        "resultTokens": 768
+      }
+    },
+    "evidence": {
+      "sources": [
+        "https://huggingface.co/ibm-granite/granite-4.2-8b-q4-mlx/resolve/9047f073e46c527f70dade07bb55b1700d728e36/config.json",
+        "https://huggingface.co/ibm-granite/granite-4.2-8b-q4-mlx"
+      ],
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained from the committed baseline. This checkpoint was not natively compared in the November 3 focused experiment. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+    }
+  },
+  "qwen-3.5-9b": {
+    "context": {
+      "maximumTokens": 262144,
+      "workingTokens": 4096
+    },
+    "prefill": {
+      "chunkTokens": null
+    },
+    "generation": {
+      "conversation": {
+        "outputTokens": 240,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0.7,
+          "topP": 0.9,
+          "topK": 0,
+          "repetitionPenalty": 1.08
+        },
+        "repetitionContextTokens": 64
+      },
+      "summary": {
+        "outputTokens": 320,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0,
+          "topP": 1,
+          "topK": 0,
+          "repetitionPenalty": null
+        },
+        "repetitionContextTokens": 64
+      },
+      "precise": {
+        "outputTokens": 1400,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0,
+          "topP": 1,
+          "topK": 0,
+          "repetitionPenalty": null
+        },
+        "repetitionContextTokens": 64
+      }
+    },
+    "conversation": {
+      "safetyTokens": 128,
+      "compaction": {
+        "summaryWords": 180,
+        "headroomTokens": 256
+      },
+      "tools": {
+        "maximumCalls": 4,
+        "reserveTokens": 1536,
+        "resultTokens": 768
+      }
+    },
+    "evidence": {
+      "sources": [
+        "https://huggingface.co/mlx-community/Qwen3.5-9B-MLX-4bit/resolve/938d8919941c6e7efd3c7150eff7fe9d12afa631/config.json",
+        "https://huggingface.co/mlx-community/Qwen3.5-9B-MLX-4bit"
+      ],
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained from the committed baseline. This checkpoint was not natively compared in the November 3 focused experiment. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+    }
+  },
+  "gemma-4-12b": {
+    "context": {
+      "maximumTokens": 262144,
+      "workingTokens": 8192
+    },
+    "prefill": {
+      "chunkTokens": null
+    },
+    "generation": {
+      "conversation": {
+        "outputTokens": 240,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0.7,
+          "topP": 0.9,
+          "topK": 0,
+          "repetitionPenalty": 1.08
+        },
+        "repetitionContextTokens": 64
+      },
+      "summary": {
+        "outputTokens": 320,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0,
+          "topP": 1,
+          "topK": 0,
+          "repetitionPenalty": null
+        },
+        "repetitionContextTokens": 64
+      },
+      "precise": {
+        "outputTokens": 1400,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0,
+          "topP": 1,
+          "topK": 0,
+          "repetitionPenalty": null
+        },
+        "repetitionContextTokens": 64
+      }
+    },
+    "conversation": {
+      "safetyTokens": 128,
+      "compaction": {
+        "summaryWords": 180,
+        "headroomTokens": 256
+      },
+      "tools": {
+        "maximumCalls": 4,
+        "reserveTokens": 1536,
+        "resultTokens": 768
+      }
+    },
+    "evidence": {
+      "sources": [
+        "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit/resolve/73bcf09092aa277861d5a191b989b666f7f32e8f/config.json",
+        "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit"
+      ],
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "rationale": "Native checkpoint capacity comes from pinned config.json. 8K working context selected from the November 3 comparison: five long-history recall turns completed correctly, whereas the 4K cases reached their deadlines. A larger forced-compaction case still exceeded the 60-second turn deadline; compaction latency remains unresolved. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+    }
+  },
+  "nemotron-3.5-bolt-e4b": {
+    "context": {
+      "maximumTokens": 65536,
+      "workingTokens": 4096
+    },
+    "prefill": {
+      "chunkTokens": null
+    },
+    "generation": {
+      "conversation": {
+        "outputTokens": 240,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0.7,
+          "topP": 0.9,
+          "topK": 0,
+          "repetitionPenalty": 1.08
+        },
+        "repetitionContextTokens": 64
+      },
+      "summary": {
+        "outputTokens": 320,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0,
+          "topP": 1,
+          "topK": 0,
+          "repetitionPenalty": null
+        },
+        "repetitionContextTokens": 64
+      },
+      "precise": {
+        "outputTokens": 1400,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0,
+          "topP": 1,
+          "topK": 0,
+          "repetitionPenalty": null
+        },
+        "repetitionContextTokens": 64
+      }
+    },
+    "conversation": {
+      "safetyTokens": 128,
+      "compaction": {
+        "summaryWords": 180,
+        "headroomTokens": 256
+      },
+      "tools": {
+        "maximumCalls": 4,
+        "reserveTokens": 1536,
+        "resultTokens": 768
+      }
+    },
+    "evidence": {
+      "sources": [
+        "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit/resolve/0c204a16b6b186d1434e70f5fc2ca2e30984a006/config.json",
+        "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit"
+      ],
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained. The November 3 focused comparison used this checkpoint; larger contexts were not tested for it. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+    }
+  },
+  "gemma-4-e4b": {
+    "context": {
+      "maximumTokens": 131072,
+      "workingTokens": 4096
+    },
+    "prefill": {
+      "chunkTokens": null
+    },
+    "generation": {
+      "conversation": {
+        "outputTokens": 240,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0.7,
+          "topP": 0.9,
+          "topK": 0,
+          "repetitionPenalty": 1.08
+        },
+        "repetitionContextTokens": 64
+      },
+      "summary": {
+        "outputTokens": 320,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0,
+          "topP": 1,
+          "topK": 0,
+          "repetitionPenalty": null
+        },
+        "repetitionContextTokens": 64
+      },
+      "precise": {
+        "outputTokens": 1400,
+        "reasoningTokens": 0,
+        "sampling": {
+          "temperature": 0,
+          "topP": 1,
+          "topK": 0,
+          "repetitionPenalty": null
+        },
+        "repetitionContextTokens": 64
+      }
+    },
+    "conversation": {
+      "safetyTokens": 128,
+      "compaction": {
+        "summaryWords": 180,
+        "headroomTokens": 256
+      },
+      "tools": {
+        "maximumCalls": 4,
+        "reserveTokens": 1536,
+        "resultTokens": 768
+      }
+    },
+    "evidence": {
+      "sources": [
+        "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit/resolve/475b9088d29754a3379866cf5aeb6b41acd313c2/config.json",
+        "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit"
+      ],
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained. The November 3 focused comparison used this checkpoint; larger contexts were not tested for it. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+    }
+  }
+}

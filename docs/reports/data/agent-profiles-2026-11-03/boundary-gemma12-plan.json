@@ -1,0 +1,12 @@
+{
+  "models": [
+    "gemma-4-12b"
+  ],
+  "cases": [
+    "boundary-incremental-compaction"
+  ],
+  "repeats": 1,
+  "orderSeed": 271828,
+  "batchSeconds": 600,
+  "purpose": "Declared before this run. Reuse the exact 8K-boundary continuity case to check Gemma 12B before adopting its larger context. Includes the original compaction, correction and owner requirements; no new expected outputs or scoring changes."
+}

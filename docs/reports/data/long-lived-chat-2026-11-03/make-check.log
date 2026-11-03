@@ -1,0 +1,1939 @@
+swift format lint --strict --recursive Package.swift Sources Tests Tools/ArchitectureCheck Tools/SpeechBenchmark Tools/TextModelBenchmark Tools/ChatModelBenchmark Tools/TTSBenchmark scripts/make-icon.swift scripts/native-test-host.swift scripts/native-test-presentation.swift
+bash -n scripts/build-app.sh scripts/embed-sparkle.sh scripts/test.sh scripts/toolchain.sh scripts/check-main-thread.sh scripts/test-stress.sh scripts/test-races.sh scripts/test-downloaded-speech.sh
+python3 -B -m unittest discover -s Tests -p 'test_*.py'
+.......apple · sample-case--app--r1
+  FAIL · 1 turns
+..apple · sample-case--app--r1
+  FAIL · 1 turns
+.............  FAIL · 1 turns
+..apple · sample-case--app--r1
+  FAIL · 1 turns
+apple · sample-case--app--r1
+  FAIL · 1 turns
+....................................................................
+----------------------------------------------------------------------
+Ran 92 tests in 4.785s
+
+OK
+python3 -B scripts/theme-fallback.py --check
+python3 -B scripts/localize.py check --all --complete
+No problems.
+bash scripts/check-main-thread.sh
+Package boundaries: 18 regression fixtures passed.
+Architecture checker: 87 regression fixtures passed.
+Localization: 11 syntax fixtures passed.
+Theme colors: 25 syntax fixtures passed.
+bash scripts/test.sh
+Building for debugging...
+[Computing dependencies]
+[Using on-disk description]
+[1 / 291] SilliesVoicePlaybackTests-product
+[39 / 258] Cmlx
+warning: missing creator for mutated node: ('/Users/cristian.pufu/Documents/GitHub/sillies-macos/.build/out/Products/Debug/mlx-swift_Cmlx.bundle/Contents/MacOS')
+[59 / 282] Crypto
+[62 / 284] RealModule
+[70 / 298] SilliesFileSystem
+[76 / 319] LuxTtsG2pResources
+[91 / 301] WindowMetadataProtocol
+[99 / 298] SilliesInference
+[114 / 323] OrderedCollections
+[133 / 332] SilliesCore
+[139 / 332] SilliesCore
+[139 / 332] ArgmaxCore
+[150 / 336] ArgmaxCore
+[154 / 336] ArgmaxCore
+[161 / 346] SilliesCore
+[164 / 360] SilliesFileSystem
+[168 / 365] InternalCollectionsUtilities
+[174 / 374] SilliesSpeech
+[178 / 374] SilliesInference
+[184 / 380] yyjson
+[190 / 395] SilliesCore-product
+[194 / 398] SilliesWindowMetadata-product
+[196 / 398] ArgmaxCore
+[198 / 398] SilliesWindowMetadata-product
+[202 / 400] SilliesPersistence
+[208 / 418] SilliesPersistence
+[215 / 428] SilliesPersistence
+[229 / 457] WhisperKit
+[238 / 451] WhisperKit
+[244 / 462] WhisperKit
+[251 / 459] SilliesSpeech
+[257 / 459] SilliesSpeech
+[259 / 459] WhisperKit
+[263 / 456] WhisperKit
+[266 / 456] SilliesSpeech
+[272 / 469] FluidAudio
+[276 / 483] SilliesModelStore
+[284 / 495] SilliesSpeech
+[288 / 495] SilliesModelStore
+[296 / 491] MLX
+[304 / 498] MLX
+[307 / 498] SilliesModelStore
+[309 / 498] MLX
+[317 / 498] SilliesCoreTests-product
+[319 / 498] FluidAudio
+[322 / 498] FluidAudio
+[326 / 501] SilliesCoreTests-product
+[329 / 501] FluidAudio
+[330 / 501] FluidAudio
+[332 / 503] SilliesTextModels
+[335 / 518] SilliesSpeechWhisper
+[336 / 530] SilliesTTS
+[336 / 530] FluidAudio
+[343 / 524] SilliesTTS
+[349 / 532] MLXNN
+[350 / 536] FluidAudio
+[358 / 540] MLXNN
+[362 / 539] SilliesAudio
+[367 / 554] SilliesTextModelsTests-product
+[369 / 559] SilliesTextModels
+[372 / 559] SilliesTextModels
+[374 / 559] SilliesTextModels
+[384 / 552] SilliesTTS
+[391 / 558] SilliesSpeechWhisper
+[395 / 558] SilliesSpeechWhisper
+[399 / 558] SilliesSpeechApple
+[406 / 558] SilliesTTS
+[417 / 567] SilliesSpeechWhisper
+[419 / 567] SilliesSpeechApple
+[423 / 567] OrderedCollections
+[429 / 609] SilliesReasoning
+[434 / 609] SilliesAudio
+[434 / 609] TTSKit
+[441 / 608] SilliesModelStoreTests-product
+[445 / 608] SilliesSpeechWhisper
+[447 / 608] MLXNN
+[448 / 608] MLXNN
+[450 / 608] MLXNN
+[453 / 608] MLXNN
+[459 / 612] SilliesVoicePlayback
+[460 / 612] SilliesTTSTests-product
+[467 / 605] SilliesVoicePlayback
+[471 / 605] SilliesAudioTestSupport
+[477 / 599] MLXNN
+[480 / 607]
+[486 / 609] SilliesModelStoreTests-product
+[491 / 610] SilliesPersistenceTests-product
+[495 / 618] SilliesSpeechNemotron
+[503 / 621] MLXOptimizers
+[513 / 636] SilliesTextModelsTests-product
+[520 / 636] SilliesSpeechTests-product
+[529 / 637] SilliesDiarizationNemotron
+[536 / 637] SilliesReasoning
+[543 / 651] SilliesTTSTests-product
+[552 / 656] SilliesSpeechTests-product
+[560 / 672] SilliesAudioTests-product
+[564 / 672] Hub
+[571 / 674] Hub
+[574 / 684] MLXLMCommon
+[580 / 683] SilliesChat
+[586 / 684] SilliesReasoning
+[604 / 695] Hub
+[609 / 696] TextModelBenchmark-product
+[611 / 696] TextModelBenchmark-product
+[612 / 698] TextModelBenchmark-product
+[627 / 729] SilliesChat
+[632 / 754] Tokenizers
+[640 / 751] SilliesVault
+[642 / 751] Tokenizers
+[647 / 751] Tokenizers
+[657 / 770] MLXLMCommon
+[665 / 771] ChatModelBenchmark-product
+[669 / 771] SilliesChat
+[676 / 768] SilliesWriting
+[681 / 768] SilliesChat
+[691 / 765] SilliesApp
+[695 / 765] MLXLMCommon
+[699 / 765] SilliesReasoningTests-product
+[702 / 765] SilliesReasoningTests-product
+[706 / 761] MLXLMCommon
+[709 / 763] SilliesWriting
+[717 / 773] SilliesReasoningTests-product
+[723 / 776] SilliesVaultTests-product
+[723 / 776] MLXLMCommon
+[727 / 775] MLXLMCommon
+[728 / 775] MLXLLM
+[728 / 775] SilliesApp
+[728 / 775] ChatModelBenchmark-product
+[731 / 778] ChatModelBenchmark-product
+[742 / 790] SilliesWritingTests-product
+[743 / 807]
+/Users/cristian.pufu/Documents/GitHub/sillies-macos/Tests/SilliesVaultTests/ConversationMaintenanceTests.swift:23:15: warning: no 'async' operations occur within 'await' expression [#UnnecessaryEffectMarker]
+21 |     schedule: .init(idleDelay: .milliseconds(5), sliceDeadline: .seconds(10)))
+22 |   await maintenance.retain(for: lifetime)
+23 |   let began = await backend.started.stream
+   |               `- warning: no 'async' operations occur within 'await' expression [#UnnecessaryEffectMarker]
+24 |   await maintenance.enqueue(context)
+25 |   for await _ in began { break }
+
+/Users/cristian.pufu/Documents/GitHub/sillies-macos/Tests/SilliesVaultTests/ConversationMaintenanceTests.swift:60:15: warning: no 'async' operations occur within 'await' expression [#UnnecessaryEffectMarker]
+58 |     schedule: .init(idleDelay: .zero, sliceDeadline: .milliseconds(250)))
+59 |   await maintenance.retain(for: lifetime)
+60 |   let began = await backend.started.stream
+   |               `- warning: no 'async' operations occur within 'await' expression [#UnnecessaryEffectMarker]
+61 |   await maintenance.enqueue(context)
+62 |   for await _ in began { break }
+
+[#UnnecessaryEffectMarker]: <https://docs.swift.org/compiler/documentation/diagnostics/unnecessary-effect-marker>
+[744 / 810] SilliesVaultTests-product
+[748 / 810] SilliesFishSpeech
+[750 / 810] SilliesFishSpeech
+[752 / 813] SilliesVaultTests-product
+/Users/cristian.pufu/Documents/GitHub/sillies-macos/Tests/SilliesVaultTests/ConversationCheckpointPersistenceTests.swift:115:17: warning: no 'async' operations occur within 'await' expression [#UnnecessaryEffectMarker]
+113 |   }
+114 |   let blocked = ContinuityBackend(.waiting)
+115 |   let started = await blocked.started.stream
+    |                 `- warning: no 'async' operations occur within 'await' expression [#UnnecessaryEffectMarker]
+116 |   let task = Task {
+117 |     try await ConversationCheckpointWorker(repository: store, backend: blocked).advance(job)
+
+[#UnnecessaryEffectMarker]: <https://docs.swift.org/compiler/documentation/diagnostics/unnecessary-effect-marker>
+[761 / 811] SilliesVaultTests-product
+[766 / 826] SilliesFishSpeech
+[769 / 826] SilliesWritingTests-product
+/Users/cristian.pufu/Documents/GitHub/sillies-macos/Tests/SilliesVaultTests/NativeConversationContinuityTests.swift:40:17: warning: no 'async' operations occur within 'await' expression [#UnnecessaryEffectMarker]
+ 38 |       schedule: .init(idleDelay: .zero, sliceDeadline: .seconds(30)))
+ 39 |     await maintenance.retain(for: lifetime)
+ 40 |     let began = await backend.started.stream
+    |                 `- warning: no 'async' operations occur within 'await' expression [#UnnecessaryEffectMarker]
+ 41 |     await maintenance.enqueue(context)
+ 42 |     for await _ in began { break }
+
+[#UnnecessaryEffectMarker]: <https://docs.swift.org/compiler/documentation/diagnostics/unnecessary-effect-marker>
+[777 / 827] MLXLLM
+[781 / 842] Sillies-product
+[786 / 842] SilliesVaultTests-product
+[788 / 843] SilliesVaultTests-product
+[789 / 843] Sillies-product
+[792 / 843] Sillies-product
+[796 / 839] Sillies-product
+[799 / 839] Sillies-product
+[799 / 839] SilliesChatTests-product
+[800 / 839] SilliesApp
+[802 / 840] Sillies-product
+[803 / 840] Sillies-product
+[806 / 840] MLXLLM
+[808 / 846] SilliesChatTests-product
+[810 / 843] SilliesChatTests-product
+[813 / 844] MLXLLM
+[814 / 844] MLXLLM
+[814 / 844] Sillies-product
+[818 / 847] SilliesTTSInference-product
+[819 / 847] ChatModelBenchmark-product
+[822 / 847] SilliesChatTests-product
+[827 / 862] SilliesTextInference-product
+[831 / 872] SilliesTextInference-product
+[835 / 872] SilliesTextInference-product
+[838 / 872] Sillies-product
+[843 / 872] SilliesTTSInference-product
+[848 / 872] SilliesTTSInference-product
+[855 / 871] SilliesVoicePlaybackTests-product
+[858 / 872] SilliesTTSInference-product
+[869 / 881] Sillies-product
+[871 / 884] SilliesFishSpeechTests-product
+[874 / 886] SilliesTextInference-product
+[875 / 888] SilliesTextInference-product
+[878 / 888] Sillies-product
+[878 / 888] SilliesFishSpeechTests-product
+[880 / 889] SilliesFishSpeechTests-product
+[883 / 893] SilliesTTSInference-product
+[884 / 893] Sillies-product
+[886 / 895] Sillies-product
+[888 / 895] SilliesAppTests-product
+[889 / 895] SilliesAppTests-product
+[891 / 897] SilliesAppTests-product
+[893 / 897] SilliesAppTests-product
+[895 / 897] SilliesAppTests-product
+[897 / 899] SilliesAppTests-product
+Build complete! (34,00 sec)
+Test receipts: /Users/cristian.pufu/Documents/GitHub/sillies-macos/build/test-results/run-l5og_vju
+Native presentation: 181 headless tests; 63 tests reserved for the other presentation mode.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test interruptedWindowFeedbackDoesNotJumpToItsUnreachedTarget() started.
+✔ Test interruptedWindowFeedbackDoesNotJumpToItsUnreachedTarget() passed after 0.004 seconds.
+◇ Test unchangedBehaviorKeepsItsClipUntilPoseMotionPolicyOrResetChanges() started.
+✔ Test unchangedBehaviorKeepsItsClipUntilPoseMotionPolicyOrResetChanges() passed after 0.001 seconds.
+◇ Test smoothnessBudgetRejectsOneStallAndMissingMeasurements() started.
+✔ Test smoothnessBudgetRejectsOneStallAndMissingMeasurements() passed after 0.009 seconds.
+◇ Test fullCrewBudgetRequiresOptInAndStillRejectsAFrameStall() started.
+✔ Test fullCrewBudgetRequiresOptInAndStillRejectsAFrameStall() passed after 0.001 seconds.
+◇ Test characterOverridesDoNotChangeOtherCharacters() started.
+✔ Test characterOverridesDoNotChangeOtherCharacters() passed after 0.001 seconds.
+◇ Test poseVariantsResolveBeforeCharacterSpecificClips() started.
+✔ Test poseVariantsResolveBeforeCharacterSpecificClips() passed after 0.001 seconds.
+◇ Test behaviorChangesPreserveIndependentPresentationTransitions() started.
+✔ Test behaviorChangesPreserveIndependentPresentationTransitions() passed after 0.002 seconds.
+◇ Test behaviorChangesPreserveWindowInertiaButStoppingClearsIt() started.
+✔ Test behaviorChangesPreserveWindowInertiaButStoppingClearsIt() passed after 0.001 seconds.
+◇ Test customTransitionsAndNewCharactersValidateWithoutControllerChanges() started.
+✔ Test customTransitionsAndNewCharactersValidateWithoutControllerChanges() passed after 0.002 seconds.
+◇ Test customReducedMotionExpressionAppliesWhenReducedMotionIsActive() started.
+✔ Test customReducedMotionExpressionAppliesWhenReducedMotionIsActive() passed after 0.001 seconds.
+◇ Test sessionVaultPersistsAndReloadsRecords() started.
+✔ Test sessionVaultPersistsAndReloadsRecords() passed after 0.032 seconds.
+◇ Test skillCoordinatorManagesLifecycleAndPocketStash() started.
+✔ Test skillCoordinatorManagesLifecycleAndPocketStash() passed after 0.007 seconds.
+Vault rollback failed: VaultStorageError(message: "cannot rollback - no transaction is active")
+◇ Test builtinSkillAnimationsApplyInNormalAndReducedMotion() started.
+✔ Test builtinSkillAnimationsApplyInNormalAndReducedMotion() passed after 0.001 seconds.
+◇ Test sessionVaultPreparesImagesAsynchronouslyWithoutBlockingViews() started.
+✔ Test sessionVaultPreparesImagesAsynchronouslyWithoutBlockingViews() passed after 0.011 seconds.
+◇ Test stashingDuringActiveSkillPreservesActiveSessionAndSavesBoth() started.
+✔ Test stashingDuringActiveSkillPreservesActiveSessionAndSavesBoth() passed after 0.001 seconds.
+◇ Test staleMetadataReplyDoesNotDismissANewlySelectedSkill() started.
+Vault rollback failed: VaultStorageError(message: "cannot rollback - no transaction is active")
+✔ Test staleMetadataReplyDoesNotDismissANewlySelectedSkill() passed after 0.015 seconds.
+◇ Test sessionVaultDownsamplesPreviewsAndEnforcesByteBudget() started.
+✔ Test sessionVaultDownsamplesPreviewsAndEnforcesByteBudget() passed after 0.469 seconds.
+◇ Test listenAndStashSummarizeOnBackgroundWorkerAndResumeAcrossRelaunch() started.
+✔ Test listenAndStashSummarizeOnBackgroundWorkerAndResumeAcrossRelaunch() passed after 1.234 seconds.
+◇ Test asyncCopyImageDoesNotOverwriteNewerPasteboardContents() started.
+✔ Test asyncCopyImageDoesNotOverwriteNewerPasteboardContents() passed after 0.035 seconds.
+◇ Test increasedContrastUsesNativeWindowAndSelectionColors() started.
+✔ Test increasedContrastUsesNativeWindowAndSelectionColors() passed after 0.001 seconds.
+◇ Test themesKeepNativeTextSelectionAndTranscriptReadingPosition() started.
+✔ Test themesKeepNativeTextSelectionAndTranscriptReadingPosition() passed after 0.027 seconds.
+◇ Test hostedTranscriptRecolorsWithoutReplacingOrRescrollingText() started.
+✔ Test hostedTranscriptRecolorsWithoutReplacingOrRescrollingText() passed after 0.093 seconds.
+◇ Test everyBundledThemeFitsChatAndAppearanceSettingsInBothModes() started.
+✔ Test everyBundledThemeFitsChatAndAppearanceSettingsInBothModes() passed after 0.310 seconds.
+◇ Test independentThemeEnvironmentsKeepWindowsAndEditorsIsolated() started.
+✔ Test independentThemeEnvironmentsKeepWindowsAndEditorsIsolated() passed after 0.189 seconds.
+◇ Test iconRenderingOnlyReadsCacheAndDuplicateLoadsAreCoalesced() started.
+✔ Test iconRenderingOnlyReadsCacheAndDuplicateLoadsAreCoalesced() passed after 0.005 seconds.
+◇ Test unavailableIconsAreCachedWithoutRepeatedLaunchServicesRequests() started.
+✔ Test unavailableIconsAreCachedWithoutRepeatedLaunchServicesRequests() passed after 0.021 seconds.
+◇ Test cancelledIconLoadsCannotUpdateViewsAfterPause() started.
+✔ Test cancelledIconLoadsCannotUpdateViewsAfterPause() passed after 0.008 seconds.
+◇ Test hitTestingProtectsDecorationsAndUpdatesChangingStrokeGeometry() started.
+✔ Test hitTestingProtectsDecorationsAndUpdatesChangingStrokeGeometry() passed after 0.001 seconds.
+◇ Test blockedUIKeepsOnlyLatestProgressAndOneScheduledDelivery() started.
+AUDIO DELIVERY STRESS: 100000 updates in 0.032670958 seconds; peak pending 1, scheduled deliveries 1.
+✔ Test blockedUIKeepsOnlyLatestProgressAndOneScheduledDelivery() passed after 0.032 seconds.
+◇ Test progressCoalescingPreservesLifecycleOrderingAndStopDuringDelivery() started.
+✔ Test progressCoalescingPreservesLifecycleOrderingAndStopDuringDelivery() passed after 0.001 seconds.
+◇ Test cancelledDeliveryReleasesSessionWithoutDrainingTheMainRunLoop() started.
+✔ Test cancelledDeliveryReleasesSessionWithoutDrainingTheMainRunLoop() passed after 0.008 seconds.
+➜ Test sustainedAudioEncodingKeepsTranscriptScrollingResponsive() skipped.
+◇ Test audioModesCaptureTheIntendedSources() started.
+✔ Test audioModesCaptureTheIntendedSources() passed after 0.001 seconds.
+◇ Test audioSkillsStartWithoutOpeningTheTranscriptWindow(_:) started.
+◇ Test case passing 1 argument kind → .listen to audioSkillsStartWithoutOpeningTheTranscriptWindow(_:) started.
+◇ Test case passing 1 argument kind → .participate to audioSkillsStartWithoutOpeningTheTranscriptWindow(_:) started.
+◇ Test case passing 1 argument kind → .record to audioSkillsStartWithoutOpeningTheTranscriptWindow(_:) started.
+✔ Test audioSkillsStartWithoutOpeningTheTranscriptWindow(_:) with 3 test cases passed after 0.148 seconds.
+◇ Test microphoneSessionSurvivesMetadataTicksAndFlushesAsynchronously() started.
+✔ Test microphoneSessionSurvivesMetadataTicksAndFlushesAsynchronously() passed after 0.039 seconds.
+◇ Test microphoneFinishCompletesInsideTerminationModalRunLoop() started.
+✔ Test microphoneFinishCompletesInsideTerminationModalRunLoop() passed after 0.054 seconds.
+◇ Test recordingWriterClosesAPlayableAACFile() started.
+✔ Test recordingWriterClosesAPlayableAACFile() passed after 0.035 seconds.
+◇ Test hiddenMeetingWindowKeepsCaptureAndBindingUntilItReturns() started.
+✔ Test hiddenMeetingWindowKeepsCaptureAndBindingUntilItReturns() passed after 0.045 seconds.
+◇ Test boundWindowRemainsVisibleBehindAnOrderedOutWebView() started.
+✔ Test boundWindowRemainsVisibleBehindAnOrderedOutWebView() passed after 0.001 seconds.
+◇ Test windowMetadataRequiresAnExplicitOnScreenFlag(_:) started.
+◇ Test case passing 1 argument onScreen → true to windowMetadataRequiresAnExplicitOnScreenFlag(_:) started.
+◇ Test case passing 1 argument onScreen → false to windowMetadataRequiresAnExplicitOnScreenFlag(_:) started.
+◇ Test case passing 1 argument onScreen → nil to windowMetadataRequiresAnExplicitOnScreenFlag(_:) started.
+✔ Test windowMetadataRequiresAnExplicitOnScreenFlag(_:) with 3 test cases passed after 0.001 seconds.
+◇ Test boundWindowMetadataDistinguishesCoveringFromBackgroundWindows() started.
+✔ Test boundWindowMetadataDistinguishesCoveringFromBackgroundWindows() passed after 0.001 seconds.
+◇ Test bundledCrewHasTwelveDistinctValidatedCharacters() started.
+✔ Test bundledCrewHasTwelveDistinctValidatedCharacters() passed after 0.002 seconds.
+◇ Test everyCharacterReactionSupportsEveryPoseAndReducedMotion() started.
+✔ Test everyCharacterReactionSupportsEveryPoseAndReducedMotion() passed after 0.258 seconds.
+◇ Test signatureDecorationsDoNotBecomePickupTargets() started.
+✔ Test signatureDecorationsDoNotBecomePickupTargets() passed after 0.001 seconds.
+◇ Test boltDisplayAndAntennaResetWhenInterruptedOrStopped() started.
+✔ Test boltDisplayAndAntennaResetWhenInterruptedOrStopped() passed after 0.001 seconds.
+◇ Test newcomerClipsPreserveWindowInertiaAndFixedGrips() started.
+✔ Test newcomerClipsPreserveWindowInertiaAndFixedGrips() passed after 0.001 seconds.
+◇ Test addingCatalogEntriesPreservesSavedCrewSelection() started.
+✔ Test addingCatalogEntriesPreservesSavedCrewSelection() passed after 0.007 seconds.
+◇ Test chatReturnSendsButShiftReturnAndInputCompositionDoNot() started.
+✔ Test chatReturnSendsButShiftReturnAndInputCompositionDoNot() passed after 0.008 seconds.
+◇ Test emptyAndShortSavedChatsFitWithoutHistoryNavigation() started.
+✔ Test emptyAndShortSavedChatsFitWithoutHistoryNavigation() passed after 0.033 seconds.
+◇ Test chatExplainsMissingTextModelsBeforeTheFirstMessage() started.
+✔ Test chatExplainsMissingTextModelsBeforeTheFirstMessage() passed after 0.016 seconds.
+◇ Test chatFailureKeepsTheConversationAndComposerVisible() started.
+✔ Test chatFailureKeepsTheConversationAndComposerVisible() passed after 0.036 seconds.
+◇ Test voiceSettingsUseTheSharedSettingsLayout() started.
+✔ Test voiceSettingsUseTheSharedSettingsLayout() passed after 0.060 seconds.
+◇ Test speechArtworkReturnsToRestAfterInvalidLevelsAndInterruption() started.
+✔ Test speechArtworkReturnsToRestAfterInvalidLevelsAndInterruption() passed after 0.001 seconds.
+◇ Test chatVaultResultsFitTheSharedChatWindow() started.
+✔ Test chatVaultResultsFitTheSharedChatWindow() passed after 0.074 seconds.
+◇ Test chatSaveDeliversTheFullTranscriptDuringModalTermination() started.
+✔ Test chatSaveDeliversTheFullTranscriptDuringModalTermination() passed after 0.017 seconds.
+◇ Test streamedMessageUpdatesPreserveSelectionAcrossUnicodeBoundaries() started.
+✔ Test streamedMessageUpdatesPreserveSelectionAcrossUnicodeBoundaries() passed after 0.001 seconds.
+◇ Test latestActionClearsSelectionOnceThenAllowsNewSelections() started.
+✔ Test latestActionClearsSelectionOnceThenAllowsNewSelections() passed after 0.001 seconds.
+◇ Test chatSizingDoesNotRelayoutTheDisplayedTextForSpeculativeWidths() started.
+✔ Test chatSizingDoesNotRelayoutTheDisplayedTextForSpeculativeWidths() passed after 0.001 seconds.
+◇ Test chatMessageTextKeepsItsMeasuredHeightWhileStreamingWithoutFocus() started.
+✔ Test chatMessageTextKeepsItsMeasuredHeightWhileStreamingWithoutFocus() passed after 0.006 seconds.
+◇ Test chatMessageTypographyFitsTheSharedWindowInBothThemes() started.
+✔ Test chatMessageTypographyFitsTheSharedWindowInBothThemes() passed after 0.045 seconds.
+◇ Test conversationAttachedBubbleFitsBothModesWithoutNativePresentation() started.
+✔ Test conversationAttachedBubbleFitsBothModesWithoutNativePresentation() passed after 0.143 seconds.
+◇ Test everyWheelSkillHasExactlyOneCommandRoute() started.
+✔ Test everyWheelSkillHasExactlyOneCommandRoute() passed after 0.001 seconds.
+◇ Test chatCommandOpensAndReopensTheConversationWithoutAWindowTarget() started.
+✔ Test chatCommandOpensAndReopensTheConversationWithoutAWindowTarget() passed after 0.034 seconds.
+◇ Test suspendedShortcutsStayRegisteredAndStopReleasesThem() started.
+✔ Test suspendedShortcutsStayRegisteredAndStopReleasesThem() passed after 0.003 seconds.
+◇ Test everyShortcutHasOneDiscoverableGroupAndAnExplanation() started.
+✔ Test everyShortcutHasOneDiscoverableGroupAndAnExplanation() passed after 0.001 seconds.
+◇ Test commandShortcutsRejectCollisionsAndPreserveSavedBindings() started.
+✔ Test commandShortcutsRejectCollisionsAndPreserveSavedBindings() passed after 0.002 seconds.
+◇ Test loginSettingsReflectSystemApprovalInsteadOfAssumingSuccess() started.
+✔ Test loginSettingsReflectSystemApprovalInsteadOfAssumingSuccess() passed after 0.001 seconds.
+◇ Test commandsDiscardTargetsAfterFocusChangesOrCancellation() started.
+✔ Test commandsDiscardTargetsAfterFocusChangesOrCancellation() passed after 0.007 seconds.
+◇ Test chatNativeBubbleRetainsTransparencyAcrossThemeUpdates() started.
+✔ Test chatNativeBubbleRetainsTransparencyAcrossThemeUpdates() passed after 0.027 seconds.
+◇ Test radialMenuIgnoresGapsDismissesOutsideAndStopsMonitoring() started.
+✔ Test radialMenuIgnoresGapsDismissesOutsideAndStopsMonitoring() passed after 0.006 seconds.
+◇ Test skillOverlayKeepsItsAnchorWhenTransparentPaddingCrossesTheScreenEdge() started.
+✔ Test skillOverlayKeepsItsAnchorWhenTransparentPaddingCrossesTheScreenEdge() passed after 0.001 seconds.
+◇ Test radialMenuTracksRenderedButtonsAfterItsPanelMoves() started.
+✔ Test radialMenuTracksRenderedButtonsAfterItsPanelMoves() passed after 0.005 seconds.
+◇ Test directActionsUseTheSharedOrbitalArtworkInBothAppearances() started.
+✔ Test directActionsUseTheSharedOrbitalArtworkInBothAppearances() passed after 0.017 seconds.
+◇ Test pawPanelHasItsFinalSizeBeforePopoverPresentation() started.
+✔ Test pawPanelHasItsFinalSizeBeforePopoverPresentation() passed after 0.055 seconds.
+◇ Test conversationAcceptsHostGeometryWhileKeepingItsPerchDuringOwnWindowFocus() started.
+✔ Test conversationAcceptsHostGeometryWhileKeepingItsPerchDuringOwnWindowFocus() passed after 0.011 seconds.
+◇ Test chatFollowsCompanionImmediatelyAndKeepsHostedContent() started.
+Could not resume Vault notes: VaultStorageError(message: "disk I/O error")
+✔ Test chatFollowsCompanionImmediatelyAndKeepsHostedContent() passed after 0.026 seconds.
+◇ Test bubbleTailMovesNativelyWithoutPublishingDragSamplesToSwiftUI() started.
+✔ Test bubbleTailMovesNativelyWithoutPublishingDragSamplesToSwiftUI() passed after 0.002 seconds.
+◇ Test sidePerchChangesKeepTheChatComposerAndSelection() started.
+✔ Test sidePerchChangesKeepTheChatComposerAndSelection() passed after 0.046 seconds.
+◇ Test chatOutsideClicksWaitForReleaseAndKeepHostDragsOpen() started.
+✔ Test chatOutsideClicksWaitForReleaseAndKeepHostDragsOpen() passed after 0.006 seconds.
+◇ Test chatOwnControlsAndMenusDoNotDismissIt() started.
+✔ Test chatOwnControlsAndMenusDoNotDismissIt() passed after 0.001 seconds.
+◇ Test outsideChatDismissalUsesTheSessionClosePathAndKeepsDraft() started.
+✔ Test outsideChatDismissalUsesTheSessionClosePathAndKeepsDraft() passed after 0.007 seconds.
+◇ Test dictationInsertsFinalTextOnceAndIgnoresLateCleanup() started.
+✔ Test dictationInsertsFinalTextOnceAndIgnoresLateCleanup() passed after 0.811 seconds.
+◇ Test dictationKeepsResultsWhenFocusChanges() started.
+✔ Test dictationKeepsResultsWhenFocusChanges() passed after 0.038 seconds.
+◇ Test dictationReleaseBeforePreparationNeverStartsCapture() started.
+✔ Test dictationReleaseBeforePreparationNeverStartsCapture() passed after 0.059 seconds.
+◇ Test clipboardPastePreservesRepresentationsAndNewerCopies() started.
+✔ Test clipboardPastePreservesRepresentationsAndNewerCopies() passed after 0.003 seconds.
+◇ Test suspendedDictationPreservesFinalSpeechWithoutInserting() started.
+✔ Test suspendedDictationPreservesFinalSpeechWithoutInserting() passed after 0.011 seconds.
+◇ Test selectionCommandsRecoverEditedTextWhenInsertionFails() started.
+✔ Test selectionCommandsRecoverEditedTextWhenInsertionFails() passed after 0.009 seconds.
+◇ Test cancelingSelectionCommandsRejectsLateModelOutput() started.
+✔ Test cancelingSelectionCommandsRejectsLateModelOutput() passed after 0.032 seconds.
+◇ Test dictationPermissionRecoveryUsesTheSameActionAsCaptureAndKeepsWords() started.
+✔ Test dictationPermissionRecoveryUsesTheSameActionAsCaptureAndKeepsWords() passed after 0.061 seconds.
+◇ Test slowTargetMetadataLeavesTheMainActorResponsiveAndCoalescesMovement() started.
+✔ Test slowTargetMetadataLeavesTheMainActorResponsiveAndCoalescesMovement() passed after 0.012 seconds.
+◇ Test stoppingTargetingDiscardsLateRepliesFromThePreviousDrag() started.
+✔ Test stoppingTargetingDiscardsLateRepliesFromThePreviousDrag() passed after 0.008 seconds.
+◇ Test targetingSkipsOurOverlaysAndNonDocumentWindows() started.
+✔ Test targetingSkipsOurOverlaysAndNonDocumentWindows() passed after 0.007 seconds.
+◇ Test releaseValidationDoesNotStartAnUnrequestedMetadataLookup() started.
+✔ Test releaseValidationDoesNotStartAnUnrequestedMetadataLookup() passed after 0.001 seconds.
+◇ Test actualMetadataWorkerNeverBlocksTheMainThread() started.
+✔ Test actualMetadataWorkerNeverBlocksTheMainThread() passed after 0.003 seconds.
+◇ Test dragOverlaysArePreparedHiddenAndReusedAcrossGestures() started.
+✔ Test dragOverlaysArePreparedHiddenAndReusedAcrossGestures() passed after 0.016 seconds.
+◇ Test releaseValidationCapturesTheWindowBeforeTheStackChanges() started.
+✔ Test releaseValidationCapturesTheWindowBeforeTheStackChanges() passed after 0.001 seconds.
+◇ Test tinyPointerUpdatesDoNotFloodWindowServerWithHitTests() started.
+✔ Test tinyPointerUpdatesDoNotFloodWindowServerWithHitTests() passed after 0.001 seconds.
+◇ Test floatingForeignWindowsLikeBrowserPictureInPictureAreTrackableBelowCompanionOverlays() started.
+✔ Test floatingForeignWindowsLikeBrowserPictureInPictureAreTrackableBelowCompanionOverlays() passed after 0.001 seconds.
+◇ Test windowStackHitTestingUsesCachedRectanglesWithoutRepeatedDiscovery() started.
+✔ Test windowStackHitTestingUsesCachedRectanglesWithoutRepeatedDiscovery() passed after 0.005 seconds.
+◇ Test windowStackDiscoveryStopsAndCannotReappearAfterPause() started.
+✔ Test windowStackDiscoveryStopsAndCannotReappearAfterPause() passed after 0.006 seconds.
+◇ Test targetedGeometryRemainsNewerThanAnInFlightStackSnapshot() started.
+✔ Test targetedGeometryRemainsNewerThanAnInFlightStackSnapshot() passed after 0.003 seconds.
+◇ Test rapidWindowStackInvalidationsCoalesceToOneFollowup() started.
+✔ Test rapidWindowStackInvalidationsCoalesceToOneFollowup() passed after 0.010 seconds.
+◇ Test smoothnessDiagnosticsDescribeTheSlowestFrameAndKeepPathsSeparate() started.
+✔ Test smoothnessDiagnosticsDescribeTheSlowestFrameAndKeepPathsSeparate() passed after 0.001 seconds.
+◇ Test languageSelectionPersistsWithoutChangingRecognitionOrRestartingSessions() started.
+✔ Test languageSelectionPersistsWithoutChangingRecognitionOrRestartingSessions() passed after 0.015 seconds.
+◇ Test languageRestartKeepsOwnershipWhenCancelledLoadFinishesLate() started.
+✔ Test languageRestartKeepsOwnershipWhenCancelledLoadFinishesLate() passed after 0.003 seconds.
+◇ Test transcriptKeepsSelectionAndScrollPositionWhileReading() started.
+2026-11-03 10:23:44.018 SilliesNativeTestHost[38116:21234617] Make a symbolic breakpoint at NSTextLayoutManagerBreakOnNilContentManager to catch this in the debugger.
+✔ Test transcriptKeepsSelectionAndScrollPositionWhileReading() passed after 0.025 seconds.
+◇ Test selectingSpeechPausesUpdatesAndReturningToBottomResumesThem() started.
+✔ Test selectingSpeechPausesUpdatesAndReturningToBottomResumesThem() passed after 0.012 seconds.
+◇ Test liveTranscriptStaysAtTheBottomWhenResized() started.
+✔ Test liveTranscriptStaysAtTheBottomWhenResized() passed after 0.021 seconds.
+◇ Test scrollingAwayPausesLiveFollowingAndStopsWithTheView() started.
+✔ Test scrollingAwayPausesLiveFollowingAndStopsWithTheView() passed after 0.013 seconds.
+◇ Test audioUIUpdatesCoalesceProgressAndPreserveLifecycleOrder() started.
+✔ Test audioUIUpdatesCoalesceProgressAndPreserveLifecycleOrder() passed after 0.005 seconds.
+➜ Test localNotesHonorTheSelectedLanguage() skipped.
+➜ Test localSpeechHandlesFrequentCallbacksWithoutLosingAudio() skipped.
+➜ Test prepareDownloadedSpeechModelForIntegration() skipped.
+◇ Test listenNeverPresentsMeetingSuggestions() started.
+✔ Test listenNeverPresentsMeetingSuggestions() passed after 0.001 seconds.
+➜ Test nativeModelUpdateValidatesBeforeActivationAndCanRollBack() skipped.
+◇ Test nativeWindowIdentityPreservesValidBoundaryValues(_:) started.
+◇ Test case passing 1 argument number → 1 to nativeWindowIdentityPreservesValidBoundaryValues(_:) started.
+◇ Test case passing 1 argument number → 4294967295 to nativeWindowIdentityPreservesValidBoundaryValues(_:) started.
+✔ Test nativeWindowIdentityPreservesValidBoundaryValues(_:) with 2 test cases passed after 0.008 seconds.
+◇ Test parakeetPreservesShortSpeechAndPadsOnlyDecoderContext(_:) started.
+◇ Test case passing 1 argument count → 1 to parakeetPreservesShortSpeechAndPadsOnlyDecoderContext(_:) started.
+◇ Test case passing 1 argument count → 160 to parakeetPreservesShortSpeechAndPadsOnlyDecoderContext(_:) started.
+◇ Test case passing 1 argument count → 4799 to parakeetPreservesShortSpeechAndPadsOnlyDecoderContext(_:) started.
+◇ Test case passing 1 argument count → 4800 to parakeetPreservesShortSpeechAndPadsOnlyDecoderContext(_:) started.
+◇ Test case passing 1 argument count → 16000 to parakeetPreservesShortSpeechAndPadsOnlyDecoderContext(_:) started.
+✔ Test parakeetPreservesShortSpeechAndPadsOnlyDecoderContext(_:) with 5 test cases passed after 0.001 seconds.
+◇ Test parakeetForwardsLanguageHints(_:) started.
+◇ Test case passing 1 argument identifier → "ro" to parakeetForwardsLanguageHints(_:) started.
+◇ Test case passing 1 argument identifier → "ro_RO" to parakeetForwardsLanguageHints(_:) started.
+◇ Test case passing 1 argument identifier → "en" to parakeetForwardsLanguageHints(_:) started.
+◇ Test case passing 1 argument identifier → "en-US" to parakeetForwardsLanguageHints(_:) started.
+✔ Test parakeetForwardsLanguageHints(_:) with 4 test cases passed after 0.001 seconds.
+◇ Test parakeetCatalogOffersRealHintsForEveryAdvertisedLanguage() started.
+✔ Test parakeetCatalogOffersRealHintsForEveryAdvertisedLanguage() passed after 0.002 seconds.
+◇ Test shortParakeetFinalWindowCompletesWithoutLosingSpeechOrExtendingTime() started.
+✔ Test shortParakeetFinalWindowCompletesWithoutLosingSpeechOrExtendingTime() passed after 0.001 seconds.
+◇ Test playfulCatalogResolvesEveryCharacterAndSceneClip() started.
+✔ Test playfulCatalogResolvesEveryCharacterAndSceneClip() passed after 0.029 seconds.
+◇ Test playfulTugKeepsBothHandsOnTheRopeForEveryCharacter() started.
+✔ Test playfulTugKeepsBothHandsOnTheRopeForEveryCharacter() passed after 0.005 seconds.
+◇ Test playfulPropRestoresTrackingExclusionAfterRestart() started.
+✔ Test playfulPropRestoresTrackingExclusionAfterRestart() passed after 0.001 seconds.
+◇ Test exportReadmePreviewCandidates() started.
+✔ Test exportReadmePreviewCandidates() passed after 0.001 seconds.
+◇ Test sessionRecoveryTargetsTheDeniedPermission() started.
+✔ Test sessionRecoveryTargetsTheDeniedPermission() passed after 0.001 seconds.
+◇ Test permissionFailureSurvivesLivePresentationAndVaultSave(_:) started.
+◇ Test case passing 1 argument recovery → .openMicrophoneSettings to permissionFailureSurvivesLivePresentationAndVaultSave(_:) started.
+◇ Test case passing 1 argument recovery → .openScreenRecordingSettings to permissionFailureSurvivesLivePresentationAndVaultSave(_:) started.
+✔ Test permissionFailureSurvivesLivePresentationAndVaultSave(_:) with 2 test cases passed after 0.028 seconds.
+◇ Test vaultSavesExtractedHighlightsAlongsidePartialTranscriptFailures() started.
+✔ Test vaultSavesExtractedHighlightsAlongsidePartialTranscriptFailures() passed after 0.007 seconds.
+◇ Test vaultSelectionStaysAdjacentWhenDeletingFilteredRecords() started.
+✔ Test vaultSelectionStaysAdjacentWhenDeletingFilteredRecords() passed after 0.129 seconds.
+◇ Test stashSaveRevealsNewRecordAndUndoPreservesOtherRecords() started.
+✔ Test stashSaveRevealsNewRecordAndUndoPreservesOtherRecords() passed after 0.005 seconds.
+◇ Test everySettingsDestinationFitsTheResizableWindowWithoutLosingNavigation() started.
+✔ Test everySettingsDestinationFitsTheResizableWindowWithoutLosingNavigation() passed after 0.593 seconds.
+◇ Test downloadableModelSettingsFitTheSettingsWidth() started.
+✔ Test downloadableModelSettingsFitTheSettingsWidth() passed after 0.037 seconds.
+◇ Test sessionAndVaultInterfacesRenderWithMeetingAndRecordingContent() started.
+✔ Test sessionAndVaultInterfacesRenderWithMeetingAndRecordingContent() passed after 0.337 seconds.
+◇ Test downloadedSpeechProvidersHonorLanguageAvailabilityAndCancellation() started.
+✔ Test downloadedSpeechProvidersHonorLanguageAvailabilityAndCancellation() passed after 0.002 seconds.
+◇ Test speechRegistryRejectsDuplicateProvidersAndDelegatesSystemLanguageDiscovery() started.
+✔ Test speechRegistryRejectsDuplicateProvidersAndDelegatesSystemLanguageDiscovery() passed after 0.001 seconds.
+◇ Test speechRuntimeSharesPreparationAndCancellationDoesNotStopAnotherConsumer() started.
+✔ Test speechRuntimeSharesPreparationAndCancellationDoesNotStopAnotherConsumer() passed after 0.105 seconds.
+◇ Test downloadableSpeechDefaultsToAutomaticWithoutChangingAppleLanguage() started.
+✔ Test downloadableSpeechDefaultsToAutomaticWithoutChangingAppleLanguage() passed after 0.003 seconds.
+◇ Test textAccessRejectsInProcessAXBeforeItCanCallAppKitOnAWorker() started.
+✔ Test textAccessRejectsInProcessAXBeforeItCanCallAppKitOnAWorker() passed after 0.001 seconds.
+◇ Test insertionRevalidatesAfterPreparingClipboardAndRestoresOnFailure() started.
+✔ Test insertionRevalidatesAfterPreparingClipboardAndRestoresOnFailure() passed after 0.001 seconds.
+◇ Test nativeInsertionNeverFallsThroughToAnotherPaste() started.
+✔ Test nativeInsertionNeverFallsThroughToAnotherPaste() passed after 0.001 seconds.
+◇ Test clipboardFallbackRejectsCommandSeparatorsAndPastesOnlyOnce() started.
+✔ Test clipboardFallbackRejectsCommandSeparatorsAndPastesOnlyOnce() passed after 0.104 seconds.
+◇ Test utilityWindowNotificationsLeaveTheTrackedWindowUnchanged() started.
+✔ Test utilityWindowNotificationsLeaveTheTrackedWindowUnchanged() passed after 0.006 seconds.
+◇ Test vaultProtectionFromStaleDetailPreservesNewNotes() started.
+✔ Test vaultProtectionFromStaleDetailPreservesNewNotes() passed after 0.018 seconds.
+◇ Test vaultRegenerationPreservesSpeakerEditsAndRejectsSupersededResults() started.
+✔ Test vaultRegenerationPreservesSpeakerEditsAndRejectsSupersededResults() passed after 0.012 seconds.
+◇ Test vaultScreenshotRetryRejectsThePreviousGeneration() started.
+✔ Test vaultScreenshotRetryRejectsThePreviousGeneration() passed after 0.009 seconds.
+◇ Test vaultDetailSelectionRejectsLateResultsAndReleasesContentOnClose() started.
+✔ Test vaultDetailSelectionRejectsLateResultsAndReleasesContentOnClose() passed after 0.013 seconds.
+◇ Test vaultDetailFailureKeepsSelectionAndCanRetry() started.
+Vault detail failed: Error Domain=NSCocoaErrorDomain Code=257 "The file couldn’t be opened because you don’t have permission to view it."
+✔ Test vaultDetailFailureKeepsSelectionAndCanRetry() passed after 0.006 seconds.
+◇ Test vaultShowMoreReadsOnlyTheNextPageAndUnrelatedEditsKeepDetailStable() started.
+✔ Test vaultShowMoreReadsOnlyTheNextPageAndUnrelatedEditsKeepDetailStable() passed after 0.095 seconds.
+◇ Test incrementalNotesRefreshUpdatesSearchMembershipAndSelectedDetails() started.
+✔ Test incrementalNotesRefreshUpdatesSearchMembershipAndSelectedDetails() passed after 0.143 seconds.
+◇ Test backgroundRefreshesStaySelectiveAfterJournalRotation() started.
+✔ Test backgroundRefreshesStaySelectiveAfterJournalRotation() passed after 0.122 seconds.
+◇ Test vaultLoadingMergesEarlyChangesWithoutOverwritingSavedSessions() started.
+✔ Test vaultLoadingMergesEarlyChangesWithoutOverwritingSavedSessions() passed after 0.005 seconds.
+◇ Test quittingBeforeVaultLoadFinishesFlushesInTheModalRunLoop() started.
+✔ Test quittingBeforeVaultLoadFinishesFlushesInTheModalRunLoop() passed after 0.014 seconds.
+◇ Test vaultLoadingSearchToleratesRepeatedRecordIdentifiers() started.
+✔ Test vaultLoadingSearchToleratesRepeatedRecordIdentifiers() passed after 0.005 seconds.
+◇ Test vaultPreservesCorruptMetadataAndMergesPendingChangesAfterRecovery() started.
+Vault open failed: VaultStorageError(message: "file is not a database")
+Vault open failed: VaultStorageError(message: "file is not a database")
+✔ Test vaultPreservesCorruptMetadataAndMergesPendingChangesAfterRecovery() passed after 0.006 seconds.
+◇ Test deliberateStashesSurviveHistoryLimitAndRelaunch() started.
+✔ Test deliberateStashesSurviveHistoryLimitAndRelaunch() passed after 0.041 seconds.
+◇ Test vaultReportsUnwritableStorageInsteadOfAcknowledgingASave() started.
+Vault open failed: Error Domain=NSCocoaErrorDomain Code=516 "The file “72BF66ED-72E9-46AC-B7A5-68D5E07FF7C5” couldn’t be saved in the folder “T” because a file with the same name already exists." UserInfo={NSFilePath=/var/folders/bw/d4f08m8n2bv64tg2kl4h2rc80000gp/T/72BF66ED-72E9-46AC-B7A5-68D5E07FF7C5, NSURL=file:///var/folders/bw/d4f08m8n2bv64tg2kl4h2rc80000gp/T/72BF66ED-72E9-46AC-B7A5-68D5E07FF7C5, NSUnderlyingError=0xb445ec990 {Error Domain=NSPOSIXErrorDomain Code=17 "File exists"}}
+✔ Test vaultReportsUnwritableStorageInsteadOfAcknowledgingASave() passed after 0.001 seconds.
+◇ Test quittingFlushesFieldEditsWhileOnlyTheModalRunLoopIsPumping() started.
+✔ Test quittingFlushesFieldEditsWhileOnlyTheModalRunLoopIsPumping() passed after 0.018 seconds.
+◇ Test backgroundOCRSeesWorkAddedDuringAnEmptyQueueRead() started.
+✔ Test backgroundOCRSeesWorkAddedDuringAnEmptyQueueRead() passed after 0.005 seconds.
+◇ Test backgroundOCRNeverOverlapsOrPublishesCanceledWork() started.
+✔ Test backgroundOCRNeverOverlapsOrPublishesCanceledWork() passed after 0.009 seconds.
+◇ Test fieldEditRevalidatesWhenAnotherWriteArrivesDuringItsRead() started.
+✔ Test fieldEditRevalidatesWhenAnotherWriteArrivesDuringItsRead() passed after 0.006 seconds.
+◇ Test vaultWriteBurstCoalescesToTheLatestSnapshot() started.
+✔ Test vaultWriteBurstCoalescesToTheLatestSnapshot() passed after 0.003 seconds.
+◇ Test vaultWriteBurstDuringAnActiveCommitRetainsOnlyTheNewestPendingSnapshot() started.
+✔ Test vaultWriteBurstDuringAnActiveCommitRetainsOnlyTheNewestPendingSnapshot() passed after 0.004 seconds.
+◇ Test vaultRetryResavesTheOriginalScreenshotBeforeClearingItsError() started.
+Could not save the complete capture: The file “D2D056FA-1D4D-4F78-9BF7-BB817FF8EF6D.png” couldn’t be saved in the folder “98FA48C1-A53F-4F06-8F19-861A4C5407B9”.
+✔ Test vaultRetryResavesTheOriginalScreenshotBeforeClearingItsError() passed after 0.007 seconds.
+◇ Test vaultDeletionRemainsVisibleWhileItsCommitIsInFlight() started.
+✔ Test vaultDeletionRemainsVisibleWhileItsCommitIsInFlight() passed after 0.001 seconds.
+◇ Test whisperPromptAlignmentKeepsGeneratedRowsAndDoesNotChangeTheSource() started.
+✔ Test whisperPromptAlignmentKeepsGeneratedRowsAndDoesNotChangeTheSource() passed after 0.001 seconds.
+◇ Test whisperDictionaryTokensAreReusedWithoutChangingTokenBoundaries() started.
+✔ Test whisperDictionaryTokensAreReusedWithoutChangingTokenBoundaries() passed after 0.001 seconds.
+◇ Test metadataProcessRecoversAfterItsPipeCloses() started.
+Window metadata read failed: The window metadata helper closed its connection.
+✔ Test metadataProcessRecoversAfterItsPipeCloses() passed after 0.110 seconds.
+◇ Test metadataResponseRejectsOversizedOrIncompleteHeadersBeforeAllocating() started.
+✔ Test metadataResponseRejectsOversizedOrIncompleteHeadersBeforeAllocating() passed after 0.001 seconds.
+◇ Test metadataSnapshotPreservesCaptureTimeAndDistinguishesEmptyFromMalformed() started.
+✔ Test metadataSnapshotPreservesCaptureTimeAndDistinguishesEmptyFromMalformed() passed after 0.001 seconds.
+◇ Test roleCacheRejectsLateRefreshAndPreservesVerifiedSnapshotOnTimeout() started.
+✔ Test roleCacheRejectsLateRefreshAndPreservesVerifiedSnapshotOnTimeout() passed after 0.001 seconds.
+◇ Test candidateCacheDistinguishesMissingFromRejectedAndDoesNotExtendFrameFreshness() started.
+✔ Test candidateCacheDistinguishesMissingFromRejectedAndDoesNotExtendFrameFreshness() passed after 0.001 seconds.
+◇ Test metadataCacheSupportsConcurrentReadersAndWriters() started.
+✔ Test metadataCacheSupportsConcurrentReadersAndWriters() passed after 0.001 seconds.
+◇ Test trackingScheduleReplacesCallbacksAndStopsAllProducerSlots() started.
+✔ Test trackingScheduleReplacesCallbacksAndStopsAllProducerSlots() passed after 0.024 seconds.
+◇ Test trackingScheduleCancelsDiscoveriesWithoutCancellingSettlement() started.
+✔ Test trackingScheduleCancelsDiscoveriesWithoutCancellingSettlement() passed after 0.012 seconds.
+◇ Test workspaceNotificationsDeliverNativeGeometrySynchronouslyAndStopCompletely() started.
+✔ Test workspaceNotificationsDeliverNativeGeometrySynchronouslyAndStopCompletely() passed after 0.001 seconds.
+◇ Test workspaceFocusSequencesPreserveContinuityAcrossRapidApplicationSwitches() started.
+✔ Test workspaceFocusSequencesPreserveContinuityAcrossRapidApplicationSwitches() passed after 0.005 seconds.
+◇ Test writingHistoryFlushReportsFailureAndRetryDuringModalTermination() started.
+Writing history: Error Domain=NSCocoaErrorDomain Code=512 "The file “history.json” couldn’t be saved in the folder “2FF1D86E-5DAE-4A03-A2A8-208292AFA5DE”." UserInfo={NSFilePath=/var/folders/bw/d4f08m8n2bv64tg2kl4h2rc80000gp/T/2FF1D86E-5DAE-4A03-A2A8-208292AFA5DE/history.json, NSURL=file:///var/folders/bw/d4f08m8n2bv64tg2kl4h2rc80000gp/T/2FF1D86E-5DAE-4A03-A2A8-208292AFA5DE/history.json, NSUnderlyingError=0xb445ed3e0 {Error Domain=NSPOSIXErrorDomain Code=21 "Is a directory"}}
+✔ Test writingHistoryFlushReportsFailureAndRetryDuringModalTermination() passed after 0.023 seconds.
+◇ Test writingHistoryMergesEarlyResultsAndNeverOverwritesCorruptStorage() started.
+Writing history: DecodingError.dataCorrupted: Data was corrupted. Debug description: The given data was not valid JSON.. Underlying error: Error Domain=NSCocoaErrorDomain Code=3840 "Unexpected character 'b' around line 1, column 1." UserInfo={NSJSONSerializationErrorIndex=0, NSDebugDescription=Unexpected character 'b' around line 1, column 1.}
+✔ Test writingHistoryMergesEarlyResultsAndNeverOverwritesCorruptStorage() passed after 0.002 seconds.
+◇ Test writingRecoveryRemainsBoundedAndSeparateFromMeetings() started.
+✔ Test writingRecoveryRemainsBoundedAndSeparateFromMeetings() passed after 0.001 seconds.
+◇ Test writingHistoryRetryPersistsLatestTextAfterAWriteFailure() started.
+Writing history: Error Domain=NSCocoaErrorDomain Code=512 "The file “history.json” couldn’t be saved in the folder “250BB3AA-6456-4980-8A5E-EC2B311521FC”." UserInfo={NSFilePath=/var/folders/bw/d4f08m8n2bv64tg2kl4h2rc80000gp/T/250BB3AA-6456-4980-8A5E-EC2B311521FC/history.json, NSURL=file:///var/folders/bw/d4f08m8n2bv64tg2kl4h2rc80000gp/T/250BB3AA-6456-4980-8A5E-EC2B311521FC/history.json, NSUnderlyingError=0xb445ec990 {Error Domain=NSPOSIXErrorDomain Code=21 "Is a directory"}}
+Writing history: Error Domain=NSCocoaErrorDomain Code=512 "The file “history.json” couldn’t be saved in the folder “250BB3AA-6456-4980-8A5E-EC2B311521FC”." UserInfo={NSFilePath=/var/folders/bw/d4f08m8n2bv64tg2kl4h2rc80000gp/T/250BB3AA-6456-4980-8A5E-EC2B311521FC/history.json, NSURL=file:///var/folders/bw/d4f08m8n2bv64tg2kl4h2rc80000gp/T/250BB3AA-6456-4980-8A5E-EC2B311521FC/history.json, NSUnderlyingError=0xb445ed3e0 {Error Domain=NSPOSIXErrorDomain Code=21 "Is a directory"}}
+✔ Test writingHistoryRetryPersistsLatestTextAfterAWriteFailure() passed after 0.002 seconds.
+◇ Test writingHistoryRetryPreservesCorruptFilesAndPendingText() started.
+Writing history: DecodingError.dataCorrupted: Data was corrupted. Debug description: The given data was not valid JSON.. Underlying error: Error Domain=NSCocoaErrorDomain Code=3840 "Unexpected character 'o' in expected null value around line 1, column 2." UserInfo={NSJSONSerializationErrorIndex=1, NSDebugDescription=Unexpected character 'o' in expected null value around line 1, column 2.}
+Writing history: DecodingError.dataCorrupted: Data was corrupted. Debug description: The given data was not valid JSON.. Underlying error: Error Domain=NSCocoaErrorDomain Code=3840 "Unexpected character 'o' in expected null value around line 1, column 2." UserInfo={NSJSONSerializationErrorIndex=1, NSDebugDescription=Unexpected character 'o' in expected null value around line 1, column 2.}
+✔ Test writingHistoryRetryPreservesCorruptFilesAndPendingText() passed after 0.001 seconds.
+◇ Test writingLibraryWindowsFitTheirMinimumSizesInBothAppearances() started.
+✔ Test writingLibraryWindowsFitTheirMinimumSizesInBothAppearances() passed after 0.132 seconds.
+✔ Test run with 181 tests in 0 suites passed after 7.343 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test captureQueueDrainsRapidMeetingCallbacksWithoutDroppingSamples() started.
+✔ Test captureQueueDrainsRapidMeetingCallbacksWithoutDroppingSamples() passed after 0.008 seconds.
+◇ Test captureQueueReportsSustainedOverloadOnceAndRemainsBounded() started.
+✔ Test captureQueueReportsSustainedOverloadOnceAndRemainsBounded() passed after 0.004 seconds.
+◇ Test captureQueueConcurrentProducersAndStopLeaveNoRetainedPackets() started.
+✔ Test captureQueueConcurrentProducersAndStopLeaveNoRetainedPackets() passed after 0.010 seconds.
+◇ Test repeatedAudioOverloadReleasesAllRetainedBuffersAndQueuedWork() started.
+AUDIO RESOURCE STRESS: 100000 callbacks across 20 lifecycles in 0.0963845 seconds; peak retained PCM bytes 786432; no pending packets after drain.
+✔ Test repeatedAudioOverloadReleasesAllRetainedBuffersAndQueuedWork() passed after 0.096 seconds.
+◇ Test highChannelCountAudioHitsByteLimitBeforeDurationOrCallbackLimits() started.
+✔ Test highChannelCountAudioHitsByteLimitBeforeDurationOrCallbackLimits() passed after 0.002 seconds.
+◇ Test audioCaptureSequenceRepeatedStartPauseResumeAndFinishPreservesOneSession() started.
+✔ Test audioCaptureSequenceRepeatedStartPauseResumeAndFinishPreservesOneSession() passed after 0.003 seconds.
+◇ Test audioCaptureSequenceFailureRejectsResumeLanguageChangesAndLateStart() started.
+Audio session failed: Input permission was revoked
+✔ Test audioCaptureSequenceFailureRejectsResumeLanguageChangesAndLateStart() passed after 0.001 seconds.
+◇ Test audioCaptureSequenceShutdownDuringPermissionPreparationRejectsLateCapture() started.
+✔ Test audioCaptureSequenceShutdownDuringPermissionPreparationRejectsLateCapture() passed after 0.001 seconds.
+◇ Test audioCaptureSequenceFinishRetainsWorkAndReleasesOwnerAfterDraining() started.
+✔ Test audioCaptureSequenceFinishRetainsWorkAndReleasesOwnerAfterDraining() passed after 0.001 seconds.
+◇ Test audioCaptureSequenceFinalizationDeadlinePreservesResultAndIgnoresLateStops() started.
+✔ Test audioCaptureSequenceFinalizationDeadlinePreservesResultAndIgnoresLateStops() passed after 0.001 seconds.
+◇ Test audioCaptureSequenceShutdownBeforeStartNeverRequestsDevices() started.
+✔ Test audioCaptureSequenceShutdownBeforeStartNeverRequestsDevices() passed after 0.001 seconds.
+◇ Test audioCaptureSequencePreservesTypedStartupFailureThroughFinalization() started.
+Audio session failed: Microphone access is required. Enable Sillies in microphone settings, then start a new session.
+✔ Test audioCaptureSequencePreservesTypedStartupFailureThroughFinalization() passed after 0.001 seconds.
+◇ Test transcriptionFailurePreservesRecordingAndAvailableTranscript() started.
+✔ Test transcriptionFailurePreservesRecordingAndAvailableTranscript() passed after 0.001 seconds.
+◇ Test diarizationPreparationFailurePreservesRecordingAndTheSavedNotice() started.
+Speaker detection preparation failed: Fixture speaker model failure
+✔ Test diarizationPreparationFailurePreservesRecordingAndTheSavedNotice() passed after 0.001 seconds.
+◇ Test applicationAudioPermissionRecoveryUsesNativeErrorIdentity() started.
+✔ Test applicationAudioPermissionRecoveryUsesNativeErrorIdentity() passed after 0.001 seconds.
+◇ Test voiceConversationRejectsEchoAcrossAcousticDelays(delay:) started.
+◇ Test case passing 1 argument delay → 0.0 to voiceConversationRejectsEchoAcrossAcousticDelays(delay:) started.
+◇ Test case passing 1 argument delay → 0.001 to voiceConversationRejectsEchoAcrossAcousticDelays(delay:) started.
+◇ Test case passing 1 argument delay → 0.005 to voiceConversationRejectsEchoAcrossAcousticDelays(delay:) started.
+◇ Test case passing 1 argument delay → 0.02 to voiceConversationRejectsEchoAcrossAcousticDelays(delay:) started.
+◇ Test case passing 1 argument delay → 0.05 to voiceConversationRejectsEchoAcrossAcousticDelays(delay:) started.
+◇ Test case passing 1 argument delay → 0.15 to voiceConversationRejectsEchoAcrossAcousticDelays(delay:) started.
+✔ Test voiceConversationRejectsEchoAcrossAcousticDelays(delay:) with 6 test cases passed after 1.160 seconds.
+◇ Test voiceConversationStillAcceptsRealSpeechDuringPlayback(nearStart:) started.
+◇ Test case passing 1 argument nearStart → 0.25 to voiceConversationStillAcceptsRealSpeechDuringPlayback(nearStart:) started.
+◇ Test case passing 1 argument nearStart → 3.0 to voiceConversationStillAcceptsRealSpeechDuringPlayback(nearStart:) started.
+✔ Test voiceConversationStillAcceptsRealSpeechDuringPlayback(nearStart:) with 2 test cases passed after 0.389 seconds.
+◇ Test voiceConversationResamplesDeviceQuantaWithoutSelfInterruption(devices:nearStart:) started.
+◇ Test case passing 2 arguments devices → EchoDevicePair(render: SilliesAudioTests.EchoDevicePair.Stream(rate: 48000, frames: 512), capture: SilliesAudioTests.EchoDevicePair.Stream(rate: 48000, frames: 4800)), nearStart → nil to voiceConversationResamplesDeviceQuantaWithoutSelfInterruption(devices:nearStart:) started.
+◇ Test case passing 2 arguments devices → EchoDevicePair(render: SilliesAudioTests.EchoDevicePair.Stream(rate: 48000, frames: 512), capture: SilliesAudioTests.EchoDevicePair.Stream(rate: 48000, frames: 4800)), nearStart → 3.0 to voiceConversationResamplesDeviceQuantaWithoutSelfInterruption(devices:nearStart:) started.
+◇ Test case passing 2 arguments devices → EchoDevicePair(render: SilliesAudioTests.EchoDevicePair.Stream(rate: 44100, frames: 512), capture: SilliesAudioTests.EchoDevicePair.Stream(rate: 48000, frames: 1024)), nearStart → nil to voiceConversationResamplesDeviceQuantaWithoutSelfInterruption(devices:nearStart:) started.
+◇ Test case passing 2 arguments devices → EchoDevicePair(render: SilliesAudioTests.EchoDevicePair.Stream(rate: 44100, frames: 512), capture: SilliesAudioTests.EchoDevicePair.Stream(rate: 48000, frames: 1024)), nearStart → 3.0 to voiceConversationResamplesDeviceQuantaWithoutSelfInterruption(devices:nearStart:) started.
+◇ Test case passing 2 arguments devices → EchoDevicePair(render: SilliesAudioTests.EchoDevicePair.Stream(rate: 48000, frames: 128), capture: SilliesAudioTests.EchoDevicePair.Stream(rate: 44100, frames: 4096)), nearStart → nil to voiceConversationResamplesDeviceQuantaWithoutSelfInterruption(devices:nearStart:) started.
+◇ Test case passing 2 arguments devices → EchoDevicePair(render: SilliesAudioTests.EchoDevicePair.Stream(rate: 48000, frames: 128), capture: SilliesAudioTests.EchoDevicePair.Stream(rate: 44100, frames: 4096)), nearStart → 3.0 to voiceConversationResamplesDeviceQuantaWithoutSelfInterruption(devices:nearStart:) started.
+◇ Test case passing 2 arguments devices → EchoDevicePair(render: SilliesAudioTests.EchoDevicePair.Stream(rate: 16000, frames: 256), capture: SilliesAudioTests.EchoDevicePair.Stream(rate: 48000, frames: 512)), nearStart → nil to voiceConversationResamplesDeviceQuantaWithoutSelfInterruption(devices:nearStart:) started.
+◇ Test case passing 2 arguments devices → EchoDevicePair(render: SilliesAudioTests.EchoDevicePair.Stream(rate: 16000, frames: 256), capture: SilliesAudioTests.EchoDevicePair.Stream(rate: 48000, frames: 512)), nearStart → 3.0 to voiceConversationResamplesDeviceQuantaWithoutSelfInterruption(devices:nearStart:) started.
+◇ Test case passing 2 arguments devices → EchoDevicePair(render: SilliesAudioTests.EchoDevicePair.Stream(rate: 96000, frames: 1024), capture: SilliesAudioTests.EchoDevicePair.Stream(rate: 48000, frames: 4096)), nearStart → nil to voiceConversationResamplesDeviceQuantaWithoutSelfInterruption(devices:nearStart:) started.
+◇ Test case passing 2 arguments devices → EchoDevicePair(render: SilliesAudioTests.EchoDevicePair.Stream(rate: 96000, frames: 1024), capture: SilliesAudioTests.EchoDevicePair.Stream(rate: 48000, frames: 4096)), nearStart → 3.0 to voiceConversationResamplesDeviceQuantaWithoutSelfInterruption(devices:nearStart:) started.
+◇ Test case passing 2 arguments devices → EchoDevicePair(render: SilliesAudioTests.EchoDevicePair.Stream(rate: 48000, frames: 512), capture: SilliesAudioTests.EchoDevicePair.Stream(rate: 8000, frames: 256)), nearStart → nil to voiceConversationResamplesDeviceQuantaWithoutSelfInterruption(devices:nearStart:) started.
+◇ Test case passing 2 arguments devices → EchoDevicePair(render: SilliesAudioTests.EchoDevicePair.Stream(rate: 48000, frames: 512), capture: SilliesAudioTests.EchoDevicePair.Stream(rate: 8000, frames: 256)), nearStart → 3.0 to voiceConversationResamplesDeviceQuantaWithoutSelfInterruption(devices:nearStart:) started.
+✔ Test voiceConversationResamplesDeviceQuantaWithoutSelfInterruption(devices:nearStart:) with 12 test cases passed after 3.001 seconds.
+◇ Test meetingResamplingKeepsSamplesContiguousAcrossVariableInputBlocks(rate:) started.
+◇ Test case passing 1 argument rate → 8000.0 to meetingResamplingKeepsSamplesContiguousAcrossVariableInputBlocks(rate:) started.
+◇ Test case passing 1 argument rate → 16000.0 to meetingResamplingKeepsSamplesContiguousAcrossVariableInputBlocks(rate:) started.
+◇ Test case passing 1 argument rate → 22050.0 to meetingResamplingKeepsSamplesContiguousAcrossVariableInputBlocks(rate:) started.
+◇ Test case passing 1 argument rate → 24000.0 to meetingResamplingKeepsSamplesContiguousAcrossVariableInputBlocks(rate:) started.
+◇ Test case passing 1 argument rate → 44100.0 to meetingResamplingKeepsSamplesContiguousAcrossVariableInputBlocks(rate:) started.
+◇ Test case passing 1 argument rate → 48000.0 to meetingResamplingKeepsSamplesContiguousAcrossVariableInputBlocks(rate:) started.
+◇ Test case passing 1 argument rate → 96000.0 to meetingResamplingKeepsSamplesContiguousAcrossVariableInputBlocks(rate:) started.
+✔ Test meetingResamplingKeepsSamplesContiguousAcrossVariableInputBlocks(rate:) with 7 test cases passed after 0.004 seconds.
+◇ Test meetingResamplingStartsANewSegmentAfterGapsAndFormatChanges() started.
+✔ Test meetingResamplingStartsANewSegmentAfterGapsAndFormatChanges() passed after 0.001 seconds.
+◇ Test echoCancellerReducesDelayedSpeakerEchoAndPreservesDoubleTalk() started.
+AEC: echo reduction 20.83193689370292 dB; simultaneous near speech energy ratio 0.5474498775377017
+AEC: near speech correlation 0.8283098217522056
+✔ Test echoCancellerReducesDelayedSpeakerEchoAndPreservesDoubleTalk() passed after 0.911 seconds.
+◇ Test diarizationKeepsTextVisibleWhileWaitingAndPreservesItOnFailure() started.
+✔ Test diarizationKeepsTextVisibleWhileWaitingAndPreservesItOnFailure() passed after 0.001 seconds.
+◇ Test duplicateRecognizerFinishCannotCompleteAnotherSourcesDrain() started.
+✔ Test duplicateRecognizerFinishCannotCompleteAnotherSourcesDrain() passed after 0.001 seconds.
+◇ Test recognizerTimeoutCancelsAllSourcesAndIgnoresLateCompletions() started.
+✔ Test recognizerTimeoutCancelsAllSourcesAndIgnoresLateCompletions() passed after 0.001 seconds.
+◇ Test cancellationRejectsRecognizerPreparedAfterSessionEnded() started.
+✔ Test cancellationRejectsRecognizerPreparedAfterSessionEnded() passed after 0.001 seconds.
+◇ Test partialRecognizerPreparationFailureReleasesAlreadyCreatedChannels() started.
+✔ Test partialRecognizerPreparationFailureReleasesAlreadyCreatedChannels() passed after 0.001 seconds.
+◇ Test speechChunksPreserveSamplesFromTinyStereoCallbacks() started.
+✔ Test speechChunksPreserveSamplesFromTinyStereoCallbacks() passed after 0.010 seconds.
+◇ Test languageSelectionUsesInstalledRememberedOrMatchingDeviceLanguage() started.
+✔ Test languageSelectionUsesInstalledRememberedOrMatchingDeviceLanguage() passed after 0.001 seconds.
+◇ Test languageSwitchPreservesBothDraftsAndBuffersNewSpeech() started.
+✔ Test languageSwitchPreservesBothDraftsAndBuffersNewSpeech() passed after 0.001 seconds.
+◇ Test finishingDuringLanguageDrainCompletesOnceAndPreservesDrafts() started.
+✔ Test finishingDuringLanguageDrainCompletesOnceAndPreservesDrafts() passed after 0.001 seconds.
+◇ Test endingDuringSpeechPreparationCancelsWithoutWaitingForTheModel() started.
+✔ Test endingDuringSpeechPreparationCancelsWithoutWaitingForTheModel() passed after 0.025 seconds.
+◇ Test diarizationReceivesLanguageSwitchAudioExactlyOnce() started.
+✔ Test diarizationReceivesLanguageSwitchAudioExactlyOnce() passed after 0.002 seconds.
+➜ Test voiceConversationEchoReferenceSuppressesPlaybackAndDetectsInterruption() skipped.
+◇ Test voiceConversationFlushesHeldAudioAtStop() started.
+✔ Test voiceConversationFlushesHeldAudioAtStop() passed after 0.002 seconds.
+◇ Test voiceConversationWaitsForMicrophoneWhenOutputHasHighLatency() started.
+✔ Test voiceConversationWaitsForMicrophoneWhenOutputHasHighLatency() passed after 0.004 seconds.
+◇ Test voiceConversationStopsDeviceBeforeRecognizerDrainAndKeepsDetachedWordsSeparate() started.
+✔ Test voiceConversationStopsDeviceBeforeRecognizerDrainAndKeepsDetachedWordsSeparate() passed after 0.028 seconds.
+◇ Test voiceConversationFinalizationDeadlineKeepsDraftAndRejectsLateCallbacks() started.
+✔ Test voiceConversationFinalizationDeadlineKeepsDraftAndRejectsLateCallbacks() passed after 0.053 seconds.
+◇ Test voiceConversationDeviceFailureRetainsTypedRecoveryAndStopsCapture() started.
+✔ Test voiceConversationDeviceFailureRetainsTypedRecoveryAndStopsCapture() passed after 0.013 seconds.
+◇ Test voicePlaybackReferenceIsBoundedAndIgnoresStoppedAndInvalidInput(sampleCount:) started.
+◇ Test case passing 1 argument sampleCount → 128 to voicePlaybackReferenceIsBoundedAndIgnoresStoppedAndInvalidInput(sampleCount:) started.
+◇ Test case passing 1 argument sampleCount → 512 to voicePlaybackReferenceIsBoundedAndIgnoresStoppedAndInvalidInput(sampleCount:) started.
+◇ Test case passing 1 argument sampleCount → 4800 to voicePlaybackReferenceIsBoundedAndIgnoresStoppedAndInvalidInput(sampleCount:) started.
+✔ Test voicePlaybackReferenceIsBoundedAndIgnoresStoppedAndInvalidInput(sampleCount:) with 3 test cases passed after 0.015 seconds.
+◇ Test voiceConversationWarmsWithoutReservingRecognitionDuringInitialSilence() started.
+✔ Test voiceConversationWarmsWithoutReservingRecognitionDuringInitialSilence() passed after 0.025 seconds.
+◇ Test voiceConversationCancelledDuringWarmupNeverStartsTheMicrophoneLate() started.
+✔ Test voiceConversationCancelledDuringWarmupNeverStartsTheMicrophoneLate() passed after 0.025 seconds.
+✔ Test run with 41 tests in 0 suites passed after 5.807 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test conversationHistoryRetainsFailedWritesAndRetriesTheLatestDraft() started.
+Conversation history failed: invalidData
+✔ Test conversationHistoryRetainsFailedWritesAndRetriesTheLatestDraft() passed after 0.003 seconds.
+◇ Test chatFinishPreservesFinalWordsBeforeSaving(_:) started.
+◇ Test case passing 1 argument timing → .listening to chatFinishPreservesFinalWordsBeforeSaving(_:) started.
+◇ Test case passing 1 argument timing → .finalizing to chatFinishPreservesFinalWordsBeforeSaving(_:) started.
+✔ Test chatFinishPreservesFinalWordsBeforeSaving(_:) with 2 test cases passed after 0.025 seconds.
+◇ Test chatVoiceSetupIsOptionalAndDoesNotStartPlayback() started.
+✔ Test chatVoiceSetupIsOptionalAndDoesNotStartPlayback() passed after 0.001 seconds.
+◇ Test chatHistoryNavigationTracksRestorationTrimmingAndClearing() started.
+✔ Test chatHistoryNavigationTracksRestorationTrimmingAndClearing() passed after 0.006 seconds.
+◇ Test chatPreservesRomanianAndReplyWhenVoiceFails() started.
+✔ Test chatPreservesRomanianAndReplyWhenVoiceFails() passed after 0.005 seconds.
+◇ Test firstSpokenTurnSurvivesGenerationFailureAndCanBeRetried() started.
+✔ Test firstSpokenTurnSurvivesGenerationFailureAndCanBeRetried() passed after 0.017 seconds.
+◇ Test chatRejectsLateReplyAfterFinish() started.
+✔ Test chatRejectsLateReplyAfterFinish() passed after 0.031 seconds.
+◇ Test chatVoiceConversationAutomaticallySendsFinalizedWordsAndKeepsListening() started.
+✔ Test chatVoiceConversationAutomaticallySendsFinalizedWordsAndKeepsListening() passed after 0.025 seconds.
+◇ Test chatRetainsFullHistoryAndSpokenChunksStayBounded() started.
+✔ Test chatRetainsFullHistoryAndSpokenChunksStayBounded() passed after 0.001 seconds.
+◇ Test chatSpeechInterruptsPlaybackWithoutRestartingMicrophone() started.
+✔ Test chatSpeechInterruptsPlaybackWithoutRestartingMicrophone() passed after 0.025 seconds.
+◇ Test chatContinuesPastOneHundredMessagesAndCarriesMemoryBetweenTurns() started.
+✔ Test chatContinuesPastOneHundredMessagesAndCarriesMemoryBetweenTurns() passed after 0.376 seconds.
+◇ Test chatKeepsFoundVaultCardsWhenTheFinalAnswerFails() started.
+✔ Test chatKeepsFoundVaultCardsWhenTheFinalAnswerFails() passed after 0.006 seconds.
+◇ Test chatShowsAndSpeaksTheFirstPhraseBeforeTextGenerationFinishes() started.
+✔ Test chatShowsAndSpeaksTheFirstPhraseBeforeTextGenerationFinishes() passed after 0.011 seconds.
+◇ Test streamedVoiceFailureDoesNotDiscardOrStopTheTextBranch() started.
+✔ Test streamedVoiceFailureDoesNotDiscardOrStopTheTextBranch() passed after 0.012 seconds.
+◇ Test interruptingAStreamPreservesItsPartialReplyAndRejectsLateText() started.
+✔ Test interruptingAStreamPreservesItsPartialReplyAndRejectsLateText() passed after 0.028 seconds.
+◇ Test modelFailureAfterPartialOutputIsRecoverableWithoutAutomaticReplay() started.
+✔ Test modelFailureAfterPartialOutputIsRecoverableWithoutAutomaticReplay() passed after 0.026 seconds.
+◇ Test vaultCardsKeepOneMessageOwnerAcrossStreamingAndLaterReplies() started.
+✔ Test vaultCardsKeepOneMessageOwnerAcrossStreamingAndLaterReplies() passed after 0.040 seconds.
+◇ Test lateVaultCardsRemainRetryableAndCannotLeakIntoANewTurn() started.
+✔ Test lateVaultCardsRemainRetryableAndCannotLeakIntoANewTurn() passed after 0.012 seconds.
+◇ Test conversationTalkKeepsTypedDraftWhenMicrophoneStops() started.
+✔ Test conversationTalkKeepsTypedDraftWhenMicrophoneStops() passed after 0.013 seconds.
+◇ Test conversationSwitchToChatCancelsDelayedTalkStartup() started.
+✔ Test conversationSwitchToChatCancelsDelayedTalkStartup() passed after 0.010 seconds.
+◇ Test chatStartsVoicePreparationBeforeACompletePhraseExists() started.
+✔ Test chatStartsVoicePreparationBeforeACompletePhraseExists() passed after 0.001 seconds.
+◇ Test chatReleasesAnOpeningPhraseDuringSlowUnpunctuatedGeneration() started.
+✔ Test chatReleasesAnOpeningPhraseDuringSlowUnpunctuatedGeneration() passed after 0.024 seconds.
+◇ Test chatCancellationStopsTheOpeningDeadlineWithoutLateSpeech() started.
+✔ Test chatCancellationStopsTheOpeningDeadlineWithoutLateSpeech() passed after 0.056 seconds.
+◇ Test chatAudioTimingWaitsForAudibleDeviceOutput() started.
+✔ Test chatAudioTimingWaitsForAudibleDeviceOutput() passed after 0.001 seconds.
+◇ Test conversationWriteAcknowledgementPreservesEditsArrivingDuringSave() started.
+✔ Test conversationWriteAcknowledgementPreservesEditsArrivingDuringSave() passed after 0.001 seconds.
+◇ Test conversationRemovedMessageCannotReturnFromAnEarlierAcknowledgement() started.
+✔ Test conversationRemovedMessageCannotReturnFromAnEarlierAcknowledgement() passed after 0.001 seconds.
+✔ Test run with 26 tests in 0 suites passed after 0.768 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test movingAWindowPreservesDistinctCompanionSlots() started.
+✔ Test movingAWindowPreservesDistinctCompanionSlots() passed after 0.001 seconds.
+◇ Test returningCompanionUsesItsPickupSlotWhenTheWindowChanges() started.
+✔ Test returningCompanionUsesItsPickupSlotWhenTheWindowChanges() passed after 0.001 seconds.
+◇ Test minimizingTransitionSurvivesAppSwitchWithoutAcceptingAnUnstableCandidate() started.
+✔ Test minimizingTransitionSurvivesAppSwitchWithoutAcceptingAnUnstableCandidate() passed after 0.001 seconds.
+◇ Test tinyAudioCallbacksDoNotExhaustTheCaptureBudgetPrematurely() started.
+✔ Test tinyAudioCallbacksDoNotExhaustTheCaptureBudgetPrematurely() passed after 0.002 seconds.
+◇ Test audioAdmissionRejectsInvalidDurationsWithoutConsumingCapacity() started.
+✔ Test audioAdmissionRejectsInvalidDurationsWithoutConsumingCapacity() passed after 0.001 seconds.
+◇ Test audioLifecycleEventSequencesPreserveActiveDurationAndNeverRestartFinishedSessions() started.
+✔ Test audioLifecycleEventSequencesPreserveActiveDurationAndNeverRestartFinishedSessions() passed after 0.020 seconds.
+◇ Test audioLifecycleFailureFreezesPausedDurationAndPreservesTheOriginalError() started.
+✔ Test audioLifecycleFailureFreezesPausedDurationAndPreservesTheOriginalError() passed after 0.001 seconds.
+◇ Test audioLifecycleFinishIsIdempotentBeforeStartAndDuringPreparation() started.
+✔ Test audioLifecycleFinishIsIdempotentBeforeStartAndDuringPreparation() passed after 0.001 seconds.
+◇ Test wallContextSelectsClimbingWithoutCharacterSpecificEngineCode() started.
+✔ Test wallContextSelectsClimbingWithoutCharacterSpecificEngineCode() passed after 0.001 seconds.
+◇ Test charactersWithoutWallOverridesKeepTheirNormalAmbientBehavior() started.
+✔ Test charactersWithoutWallOverridesKeepTheirNormalAmbientBehavior() passed after 0.001 seconds.
+◇ Test eventRoutesOnlyMatchingReactions() started.
+✔ Test eventRoutesOnlyMatchingReactions() passed after 0.001 seconds.
+◇ Test highPriorityReactionCannotBeInterruptedByAmbientActivity() started.
+✔ Test highPriorityReactionCannotBeInterruptedByAmbientActivity() passed after 0.001 seconds.
+◇ Test reactionCooldownSurvivesStateExpiration() started.
+✔ Test reactionCooldownSurvivesStateExpiration() passed after 0.001 seconds.
+◇ Test reactionsChooseHighestEligiblePriority() started.
+✔ Test reactionsChooseHighestEligiblePriority() passed after 0.001 seconds.
+◇ Test noAmbientCandidateStillProducesFutureDeadline() started.
+✔ Test noAmbientCandidateStillProducesFutureDeadline() passed after 0.001 seconds.
+◇ Test idleCharactersSleepAndWakeOnReturn() started.
+✔ Test idleCharactersSleepAndWakeOnReturn() passed after 0.001 seconds.
+◇ Test sameSeedProducesSameWeightedSequence() started.
+✔ Test sameSeedProducesSameWeightedSequence() passed after 0.001 seconds.
+◇ Test calmModeExtendsAmbientRestWithoutSlowingReactions() started.
+✔ Test calmModeExtendsAmbientRestWithoutSlowingReactions() passed after 0.001 seconds.
+◇ Test customEventAndAnimationIdentifiersRoundTrip() started.
+✔ Test customEventAndAnimationIdentifiersRoundTrip() passed after 0.001 seconds.
+◇ Test bundledCharacterPacksAreValidAndDistinct() started.
+✔ Test bundledCharacterPacksAreValidAndDistinct() passed after 0.005 seconds.
+◇ Test invalidPacksFailBeforeRendering() started.
+✔ Test invalidPacksFailBeforeRendering() passed after 0.001 seconds.
+◇ Test sustainedSkillUsesPackClipAndReturnsAfterPickup() started.
+✔ Test sustainedSkillUsesPackClipAndReturnsAfterPickup() passed after 0.001 seconds.
+◇ Test oldPacksDecodeWithDefaultEntryAndExitTransitions() started.
+✔ Test oldPacksDecodeWithDefaultEntryAndExitTransitions() passed after 0.001 seconds.
+◇ Test partialOverridesInheritEntryForReattachmentAndDefaultExit() started.
+✔ Test partialOverridesInheritEntryForReattachmentAndDefaultExit() passed after 0.001 seconds.
+◇ Test transitionDurationsAreBoundedAndFinite() started.
+✔ Test transitionDurationsAreBoundedAndFinite() passed after 0.001 seconds.
+◇ Test emptyRadialMenusHaveNoTargetsIncludingInvalidNegativeCounts() started.
+✔ Test emptyRadialMenusHaveNoTargetsIncludingInvalidNegativeCounts() passed after 0.001 seconds.
+◇ Test companionActionsOrbitTheMascotAndStayInsideDisplayEdges() started.
+✔ Test companionActionsOrbitTheMascotAndStayInsideDisplayEdges() passed after 0.001 seconds.
+◇ Test radialMenuTransparentGapsAndCornersPassInputThrough() started.
+✔ Test radialMenuTransparentGapsAndCornersPassInputThrough() passed after 0.001 seconds.
+◇ Test companionMenuStaysCompactWhenTheUsualArcJustMissesTheDisplayEdge() started.
+✔ Test companionMenuStaysCompactWhenTheUsualArcJustMissesTheDisplayEdge() passed after 0.001 seconds.
+◇ Test conversationControlsBelongInTheBubbleWhileRecordingKeepsItsHUD() started.
+✔ Test conversationControlsBelongInTheBubbleWhileRecordingKeepsItsHUD() passed after 0.001 seconds.
+◇ Suite "CompanionSkill" started.
+◇ Test "Radial skill menu places every available skill and hit-tests bubbles" started.
+✔ Test "Radial skill menu places every available skill and hit-tests bubbles" passed after 0.001 seconds.
+◇ Test "Radial skill menu flips downward near the top screen edge" started.
+✔ Test "Radial skill menu flips downward near the top screen edge" passed after 0.001 seconds.
+◇ Test "SessionSummarizer extracts summary bullets and action items" started.
+✔ Test "SessionSummarizer extracts summary bullets and action items" passed after 0.001 seconds.
+◇ Test "SessionSummarizer returns fallback when text is empty" started.
+✔ Test "SessionSummarizer returns fallback when text is empty" passed after 0.001 seconds.
+◇ Test "SessionRecord formats markdown and duration" started.
+✔ Test "SessionRecord formats markdown and duration" passed after 0.002 seconds.
+◇ Test "SessionSummarizer bounds work on large transcripts and preserves late action items" started.
+✔ Test "SessionSummarizer bounds work on large transcripts and preserves late action items" passed after 0.083 seconds.
+◇ Test "SessionSummarizer bounds chunks and output size on 800 KB delimiter-free input" started.
+✔ Test "SessionSummarizer bounds chunks and output size on 800 KB delimiter-free input" passed after 2.960 seconds.
+◇ Test "SessionSummarizer preserves action phrases split across the 240-character boundary" started.
+✔ Test "SessionSummarizer preserves action phrases split across the 240-character boundary" passed after 0.001 seconds.
+◇ Test "DropReturnPlan geometry distinguishes perch adjustments from window drops" started.
+✔ Test "DropReturnPlan geometry distinguishes perch adjustments from window drops" passed after 0.001 seconds.
+✔ Suite "CompanionSkill" passed after 3.050 seconds.
+◇ Test nativePanelBoundsExcludeTheFocusedWindowOnEveryEdge() started.
+✔ Test nativePanelBoundsExcludeTheFocusedWindowOnEveryEdge() passed after 0.001 seconds.
+◇ Test detachedPickupKeepsTheFullCanvasAndExactContact() started.
+✔ Test detachedPickupKeepsTheFullCanvasAndExactContact() passed after 0.001 seconds.
+◇ Test returningFromInsideTheDocumentNeverCreatesAnInputWindowOverIt() started.
+✔ Test returningFromInsideTheDocumentNeverCreatesAnInputWindowOverIt() passed after 0.001 seconds.
+◇ Test conversationBubbleStaysOnScreenAndTailTracksMascot() started.
+✔ Test conversationBubbleStaysOnScreenAndTailTracksMascot() passed after 0.001 seconds.
+◇ Test sideConversationTailsFaceTheMascotAndPreserveContentDimensions() started.
+✔ Test sideConversationTailsFaceTheMascotAndPreserveContentDimensions() passed after 0.001 seconds.
+◇ Test resizingOrMovingAHostToTheTopSelectsASideTail() started.
+✔ Test resizingOrMovingAHostToTheTopSelectsASideTail() passed after 0.001 seconds.
+◇ Test conversationOutlineHasATailOnlyOnItsSelectedEdge(_:) started.
+◇ Test case passing 1 argument tail → .top to conversationOutlineHasATailOnlyOnItsSelectedEdge(_:) started.
+◇ Test case passing 1 argument tail → .bottom to conversationOutlineHasATailOnlyOnItsSelectedEdge(_:) started.
+◇ Test case passing 1 argument tail → .left to conversationOutlineHasATailOnlyOnItsSelectedEdge(_:) started.
+◇ Test case passing 1 argument tail → .right to conversationOutlineHasATailOnlyOnItsSelectedEdge(_:) started.
+✔ Test conversationOutlineHasATailOnlyOnItsSelectedEdge(_:) with 4 test cases passed after 0.001 seconds.
+◇ Test bubbleOutlineWaitsForUsableNativeBounds() started.
+✔ Test bubbleOutlineWaitsForUsableNativeBounds() passed after 0.001 seconds.
+◇ Test emptyAndFullyVisibleChatsHaveNoNavigationControls() started.
+✔ Test emptyAndFullyVisibleChatsHaveNoNavigationControls() passed after 0.001 seconds.
+◇ Test historyNavigationDistinguishesLoadedMessagesFromUnloadedPages() started.
+✔ Test historyNavigationDistinguishesLoadedMessagesFromUnloadedPages() passed after 0.001 seconds.
+◇ Test personalDictionaryPreservesRomanianBoundariesAndDoesNotCascade() started.
+✔ Test personalDictionaryPreservesRomanianBoundariesAndDoesNotCascade() passed after 0.001 seconds.
+◇ Test cleanupRejectsChangedNumbersNamesAndIdentifiers() started.
+✔ Test cleanupRejectsChangedNumbersNamesAndIdentifiers() passed after 0.001 seconds.
+◇ Test shorteningCanDropOrdinarySentenceOpenersButPreservesNamedEntities() started.
+✔ Test shorteningCanDropOrdinarySentenceOpenersButPreservesNamedEntities() passed after 0.001 seconds.
+◇ Test releasingAboveFallsToThePickupSlotWithABoundedDuration() started.
+✔ Test releasingAboveFallsToThePickupSlotWithABoundedDuration() passed after 0.001 seconds.
+◇ Test releasingBelowOrChoosingAnySkillRelocates() started.
+✔ Test releasingBelowOrChoosingAnySkillRelocates() passed after 0.001 seconds.
+◇ Test releaseDirectionUsesPickupHeightWhenTheWindowHasMoved() started.
+✔ Test releaseDirectionUsesPickupHeightWhenTheWindowHasMoved() passed after 0.001 seconds.
+◇ Test shortAndVeryLongFallsStayFastAndFinite() started.
+✔ Test shortAndVeryLongFallsStayFastAndFinite() passed after 0.001 seconds.
+◇ Test fallingMotionAcceleratesAndClampsExactlyToThePerch() started.
+✔ Test fallingMotionAcceleratesAndClampsExactlyToThePerch() passed after 0.001 seconds.
+◇ Test meetingFramesPairCaptureTimesDespiteReversedCallbackOrder() started.
+✔ Test meetingFramesPairCaptureTimesDespiteReversedCallbackOrder() passed after 0.001 seconds.
+◇ Test meetingTimelinePadsGapsAndFlushesEveryFinalSample() started.
+✔ Test meetingTimelinePadsGapsAndFlushesEveryFinalSample() passed after 0.001 seconds.
+◇ Test meetingTimelineRejectsUnboundedClockJumps() started.
+✔ Test meetingTimelineRejectsUnboundedClockJumps() passed after 0.001 seconds.
+◇ Test meetingTimelinePreservesSamplesAfterAnUtteranceFlush() started.
+✔ Test meetingTimelinePreservesSamplesAfterAnUtteranceFlush() passed after 0.001 seconds.
+◇ Test skillWheelContainsOnlyWindowActionsAndKeepsEveryTargetSeparated() started.
+✔ Test skillWheelContainsOnlyWindowActionsAndKeepsEveryTargetSeparated() passed after 0.001 seconds.
+◇ Test meetingSuggestionsNeedEvidenceAndRespectQuietInterval() started.
+✔ Test meetingSuggestionsNeedEvidenceAndRespectQuietInterval() passed after 0.001 seconds.
+◇ Test sessionPreservesSelectedLanguageForNotesAfterRelaunch() started.
+✔ Test sessionPreservesSelectedLanguageForNotesAfterRelaunch() passed after 0.001 seconds.
+◇ Test meetingSuggestionsContinueAfterHistoryFillsAndFitTheSpeechBubble() started.
+✔ Test meetingSuggestionsContinueAfterHistoryFillsAndFitTheSpeechBubble() passed after 0.001 seconds.
+◇ Test accessibilityCoordinatesHandleDisplayAboveAndLeftOfPrimary() started.
+✔ Test accessibilityCoordinatesHandleDisplayAboveAndLeftOfPrimary() passed after 0.001 seconds.
+◇ Test surfaceKeepsCharactersAwayFromMenuBarAndWindowCorners() started.
+✔ Test surfaceKeepsCharactersAwayFromMenuBarAndWindowCorners() passed after 0.001 seconds.
+◇ Test missingAndOffscreenWindowsUseSafeDesktopSurface() started.
+✔ Test missingAndOffscreenWindowsUseSafeDesktopSurface() passed after 0.001 seconds.
+◇ Test tallWindowsUseOutsideSidesInsteadOfPushingCharactersIntoContent() started.
+✔ Test tallWindowsUseOutsideSidesInsteadOfPushingCharactersIntoContent() passed after 0.001 seconds.
+◇ Test screenFillingWindowDoesNotCreateAnInteriorOrDesktopPerch() started.
+✔ Test screenFillingWindowDoesNotCreateAnInteriorOrDesktopPerch() passed after 0.001 seconds.
+◇ Test sideHopsTravelAwayFromWindow() started.
+✔ Test sideHopsTravelAwayFromWindow() passed after 0.001 seconds.
+◇ Test normalizedAnchorsFollowWindowResize() started.
+✔ Test normalizedAnchorsFollowWindowResize() passed after 0.001 seconds.
+◇ Test unavailablePerchesPreserveDistinctFallbackSlots() started.
+✔ Test unavailablePerchesPreserveDistinctFallbackSlots() passed after 0.001 seconds.
+◇ Test motionIsIndependentOfFrameSamplingAndClampsEndpoints() started.
+✔ Test motionIsIndependentOfFrameSamplingAndClampsEndpoints() passed after 0.001 seconds.
+◇ Test eventThrottlesAreIndependentByKind() started.
+✔ Test eventThrottlesAreIndependentByKind() passed after 0.001 seconds.
+◇ Test strollPlanDetectsEdgeArrivalAndBoundaryPositions() started.
+✔ Test strollPlanDetectsEdgeArrivalAndBoundaryPositions() passed after 0.001 seconds.
+◇ Test windowMotionFeedbackClampsLeanAndStretch() started.
+✔ Test windowMotionFeedbackClampsLeanAndStretch() passed after 0.001 seconds.
+◇ Test neighborProximitySupportsMultipleCompanionsAndVerticalEdges() started.
+✔ Test neighborProximitySupportsMultipleCompanionsAndVerticalEdges() passed after 0.001 seconds.
+◇ Test outsideClickWaitsForReleaseAndNeverClosesAfterADrag() started.
+✔ Test outsideClickWaitsForReleaseAndNeverClosesAfterADrag() passed after 0.001 seconds.
+◇ Test unoccupiedStoppingSpotsStayWhereTheyWereRequested() started.
+✔ Test unoccupiedStoppingSpotsStayWhereTheyWereRequested() passed after 0.001 seconds.
+◇ Test overlappingStopsMoveToTheNearestFreeSpotWithAGap() started.
+✔ Test overlappingStopsMoveToTheNearestFreeSpotWithAGap() passed after 0.001 seconds.
+◇ Test verticalClimbersReserveSeparateStopsOnEitherSide() started.
+✔ Test verticalClimbersReserveSeparateStopsOnEitherSide() passed after 0.001 seconds.
+◇ Test reservationsUseEachCompanionsActualPresentationSize() started.
+✔ Test reservationsUseEachCompanionsActualPresentationSize() passed after 0.001 seconds.
+◇ Test unrelatedEdgesDoNotReserveEachOthersSpace() started.
+✔ Test unrelatedEdgesDoNotReserveEachOthersSpace() passed after 0.001 seconds.
+◇ Test insufficientSpaceWaitsInsteadOfCreatingAnOverlappingStop() started.
+✔ Test insufficientSpaceWaitsInsteadOfCreatingAnOverlappingStop() passed after 0.001 seconds.
+◇ Test pathsCanCrossAnOccupiedSpotWhenTheDestinationIsFree() started.
+✔ Test pathsCanCrossAnOccupiedSpotWhenTheDestinationIsFree() passed after 0.001 seconds.
+◇ Test fourCompanionsKeepDistinctDestinationsAcrossManyIndependentWalks() started.
+✔ Test fourCompanionsKeepDistinctDestinationsAcrossManyIndependentWalks() passed after 0.022 seconds.
+◇ Test greetingsStillTriggerBeforeBodiesWouldOverlap() started.
+✔ Test greetingsStillTriggerBeforeBodiesWouldOverlap() passed after 0.001 seconds.
+◇ Test aCrowdedCrewUsesAllAvailableRoomBeforeAnyoneWaits() started.
+✔ Test aCrowdedCrewUsesAllAvailableRoomBeforeAnyoneWaits() passed after 0.001 seconds.
+◇ Test overcrowdedGroupsWaitOnlyForTheExcessCompanions() started.
+✔ Test overcrowdedGroupsWaitOnlyForTheExcessCompanions() passed after 0.001 seconds.
+◇ Test playfulCornerTravelRequiresACompatibleGripAndLanding() started.
+✔ Test playfulCornerTravelRequiresACompatibleGripAndLanding() passed after 0.001 seconds.
+◇ Test playfulCornerLoweringRequiresALedgeAndFinishesOnTheBorder() started.
+✔ Test playfulCornerLoweringRequiresALedgeAndFinishesOnTheBorder() passed after 0.001 seconds.
+◇ Test playfulGlidingPanelKeepsItsLocalRigSteadyAndStaysOutsideTheWindow() started.
+✔ Test playfulGlidingPanelKeepsItsLocalRigSteadyAndStaysOutsideTheWindow() passed after 0.001 seconds.
+◇ Test playfulSceneTimelineSharesPhaseBoundariesAndCancellation() started.
+✔ Test playfulSceneTimelineSharesPhaseBoundariesAndCancellation() passed after 0.001 seconds.
+◇ Test playfulScenesRespectCooldownAndResumeWithoutAnImmediateBurst() started.
+✔ Test playfulScenesRespectCooldownAndResumeWithoutAnImmediateBurst() passed after 0.001 seconds.
+◇ Test playfulScenesRejectCrowdedStagesAndDifferentWindows() started.
+✔ Test playfulScenesRejectCrowdedStagesAndDifferentWindows() passed after 0.001 seconds.
+◇ Test playfulSceneAvoidsBusyCompanionsThatCannotJoinTheCast() started.
+✔ Test playfulSceneAvoidsBusyCompanionsThatCannotJoinTheCast() passed after 0.001 seconds.
+◇ Test playfulScenePlanningSupportsSizesAndNegativeScreenOrigins(size:) started.
+◇ Test case passing 1 argument size → 48.0 to playfulScenePlanningSupportsSizesAndNegativeScreenOrigins(size:) started.
+◇ Test case passing 1 argument size → 64.0 to playfulScenePlanningSupportsSizesAndNegativeScreenOrigins(size:) started.
+◇ Test case passing 1 argument size → 112.0 to playfulScenePlanningSupportsSizesAndNegativeScreenOrigins(size:) started.
+✔ Test playfulScenePlanningSupportsSizesAndNegativeScreenOrigins(size:) with 3 test cases passed after 0.002 seconds.
+◇ Test playfulPlaneTravelsFarWithoutAnOversizedPanel(size:) started.
+◇ Test case passing 1 argument size → 48.0 to playfulPlaneTravelsFarWithoutAnOversizedPanel(size:) started.
+◇ Test case passing 1 argument size → 64.0 to playfulPlaneTravelsFarWithoutAnOversizedPanel(size:) started.
+◇ Test case passing 1 argument size → 112.0 to playfulPlaneTravelsFarWithoutAnOversizedPanel(size:) started.
+✔ Test playfulPlaneTravelsFarWithoutAnOversizedPanel(size:) with 3 test cases passed after 0.002 seconds.
+◇ Test sidePosesAttachByRaisedHandsInsteadOfRotatingFeetToTheWall() started.
+✔ Test sidePosesAttachByRaisedHandsInsteadOfRotatingFeetToTheWall() passed after 0.001 seconds.
+◇ Test pointerDragHasNoFilteringOrAccumulatedReversalLag() started.
+✔ Test pointerDragHasNoFilteringOrAccumulatedReversalLag() passed after 0.001 seconds.
+◇ Test pointerResizeTracksEachEdgeAndCornerImmediately() started.
+✔ Test pointerResizeTracksEachEdgeAndCornerImmediately() passed after 0.001 seconds.
+◇ Test gestureRejectsDocumentDragsAndBoundsMinimumResize() started.
+✔ Test gestureRejectsDocumentDragsAndBoundsMinimumResize() passed after 0.001 seconds.
+◇ Test oldMetadataValidatesButDoesNotPullNewPointerPositionBack() started.
+✔ Test oldMetadataValidatesButDoesNotPullNewPointerPositionBack() passed after 0.001 seconds.
+◇ Test optionResizeKeepsWindowCenterFixed() started.
+✔ Test optionResizeKeepsWindowCenterFixed() passed after 0.001 seconds.
+◇ Test ordinarySessionContentNeverRequestsPermissionRecovery() started.
+✔ Test ordinarySessionContentNeverRequestsPermissionRecovery() passed after 0.001 seconds.
+◇ Test failureRecoveryIsIndependentOfMessageWording() started.
+✔ Test failureRecoveryIsIndependentOfMessageWording() passed after 0.001 seconds.
+◇ Test futureFailureIdentifiersSurviveWithoutOfferingAnUnsupportedAction(_:_:) started.
+◇ Test case passing 2 arguments json → "{"category":"futureDeviceError","message":"Keep this diagnostic","recovery":"openMicrophoneSettings"}", category → .unknown to futureFailureIdentifiersSurviveWithoutOfferingAnUnsupportedAction(_:_:) started.
+◇ Test case passing 2 arguments json → "{"category":"permissionDenied","message":"Keep this diagnostic","recovery":"openFutureSettings"}", category → .permissionDenied to futureFailureIdentifiersSurviveWithoutOfferingAnUnsupportedAction(_:_:) started.
+◇ Test case passing 2 arguments json → "{"category":"futureDeviceError","message":"Keep this diagnostic","recovery":"openFutureSettings"}", category → .unknown to futureFailureIdentifiersSurviveWithoutOfferingAnUnsupportedAction(_:_:) started.
+✔ Test futureFailureIdentifiersSurviveWithoutOfferingAnUnsupportedAction(_:_:) with 3 test cases passed after 0.001 seconds.
+◇ Test malformedFailuresStillRejectInvalidData(_:) started.
+◇ Test case passing 1 argument json → "{"category":123,"message":"Wrong category type"}" to malformedFailuresStillRejectInvalidData(_:) started.
+◇ Test case passing 1 argument json → "{"category":"future","recovery":"future"}" to malformedFailuresStillRejectInvalidData(_:) started.
+◇ Test case passing 1 argument json → "{"category":"future","message":"Wrong recovery type","recovery":[]}" to malformedFailuresStillRejectInvalidData(_:) started.
+✔ Test malformedFailuresStillRejectInvalidData(_:) with 3 test cases passed after 0.001 seconds.
+◇ Test transcriptionProvenanceRoundTripsAndLegacyRecordsRemainReadable() started.
+✔ Test transcriptionProvenanceRoundTripsAndLegacyRecordsRemainReadable() passed after 0.001 seconds.
+◇ Test sessionMarkdownPreservesAllExportSectionsAndTheirOrder() started.
+✔ Test sessionMarkdownPreservesAllExportSectionsAndTheirOrder() passed after 0.001 seconds.
+◇ Test sessionMarkdownOmitsAbsentSections() started.
+✔ Test sessionMarkdownOmitsAbsentSections() passed after 0.001 seconds.
+◇ Test extractedHighlightsAreIdentifiedInSavedRecordsAndExports() started.
+✔ Test extractedHighlightsAreIdentifiedInSavedRecordsAndExports() passed after 0.001 seconds.
+◇ Test recordSearchHonorsKindAndFindsAccentedTextInSessionContent() started.
+✔ Test recordSearchHonorsKindAndFindsAccentedTextInSessionContent() passed after 0.001 seconds.
+◇ Test speakerNamesAreScopedToTheirSourceAndPreserveSpokenWords() started.
+✔ Test speakerNamesAreScopedToTheirSourceAndPreserveSpokenWords() passed after 0.001 seconds.
+◇ Test vaultRetentionKeepsEverythingByDefaultAndProtectsImportantRecords() started.
+✔ Test vaultRetentionKeepsEverythingByDefaultAndProtectsImportantRecords() passed after 0.001 seconds.
+◇ Test speakerActivityDistinguishesTurnsFromOverlappingSpeech() started.
+✔ Test speakerActivityDistinguishesTurnsFromOverlappingSpeech() passed after 0.001 seconds.
+◇ Test speakerActivityRetainsBoundedHistoryAcrossEightVirtualHours() started.
+✔ Test speakerActivityRetainsBoundedHistoryAcrossEightVirtualHours() passed after 0.104 seconds.
+◇ Test malformedSpeakerActivityDoesNotCorruptExistingIdentity() started.
+✔ Test malformedSpeakerActivityDoesNotCorruptExistingIdentity() passed after 0.001 seconds.
+◇ Test spokenOpeningUsesAShorterBoundaryWithoutLosingTheRestOfTheSentence() started.
+✔ Test spokenOpeningUsesAShorterBoundaryWithoutLosingTheRestOfTheSentence() passed after 0.001 seconds.
+◇ Test spokenOpeningWaitsForLongIdentifiersWithoutSplittingThemEarly() started.
+✔ Test spokenOpeningWaitsForLongIdentifiersWithoutSplittingThemEarly() passed after 0.001 seconds.
+◇ Test spokenOpeningDeadlinePreservesPartialWordsNumbersAndUnicode() started.
+✔ Test spokenOpeningDeadlinePreservesPartialWordsNumbersAndUnicode() passed after 0.001 seconds.
+◇ Test spokenPhrasesPreserveDecimalsAbbreviationsAndUnicodeAcrossTokenBoundaries() started.
+✔ Test spokenPhrasesPreserveDecimalsAbbreviationsAndUnicodeAcrossTokenBoundaries() passed after 0.001 seconds.
+◇ Test spokenPhrasesStayBoundedEvenWhenOneDeltaContainsAnEntireLongSentence() started.
+✔ Test spokenPhrasesStayBoundedEvenWhenOneDeltaContainsAnEntireLongSentence() passed after 0.001 seconds.
+◇ Test spokenPhrasesWaitForSentenceLookaheadAndFlushTheLastFragment() started.
+✔ Test spokenPhrasesWaitForSentenceLookaheadAndFlushTheLastFragment() passed after 0.001 seconds.
+◇ Test suggestionBubbleFitsScreenAndPointsTowardCompanion() started.
+✔ Test suggestionBubbleFitsScreenAndPointsTowardCompanion() passed after 0.001 seconds.
+◇ Test suggestionBubbleClampsMeasuredSizeToSmallScreens() started.
+✔ Test suggestionBubbleClampsMeasuredSizeToSmallScreens() passed after 0.001 seconds.
+◇ Test transcriptParagraphEditsReproduceLiteralText(_:_:) started.
+◇ Test case passing 2 arguments previous → "", current → "First
+Second" to transcriptParagraphEditsReproduceLiteralText(_:_:) started.
+◇ Test case passing 2 arguments previous → "First
+Second", current → "" to transcriptParagraphEditsReproduceLiteralText(_:_:) started.
+◇ Test case passing 2 arguments previous → "First
+", current → "First
+Last
+" to transcriptParagraphEditsReproduceLiteralText(_:_:) started.
+◇ Test case passing 2 arguments previous → "First
+Second
+Third", current → "Second
+Third
+Fourth" to transcriptParagraphEditsReproduceLiteralText(_:_:) started.
+◇ Test case passing 2 arguments previous → "A
+
+B
+", current → "
+B
+C" to transcriptParagraphEditsReproduceLiteralText(_:_:) started.
+◇ Test case passing 2 arguments previous → "Repeated
+Repeated
+Last", current → "Repeated
+Last
+Repeated" to transcriptParagraphEditsReproduceLiteralText(_:_:) started.
+◇ Test case passing 2 arguments previous → "🐈‍⬛ old
+Café
+End", current → "🐈‍⬛ new
+Café
+End" to transcriptParagraphEditsReproduceLiteralText(_:_:) started.
+✔ Test transcriptParagraphEditsReproduceLiteralText(_:_:) with 7 test cases passed after 0.001 seconds.
+◇ Test rollingTranscriptEditsPreserveUnchangedParagraphs() started.
+✔ Test rollingTranscriptEditsPreserveUnchangedParagraphs() passed after 0.001 seconds.
+◇ Test adjacentSpeechRangesSurviveFloatingPointRounding() started.
+✔ Test adjacentSpeechRangesSurviveFloatingPointRounding() passed after 0.001 seconds.
+◇ Test transcriptPreviewMatchesFullHistoryWithLateRevisionsAndLanguageMarkers() started.
+✔ Test transcriptPreviewMatchesFullHistoryWithLateRevisionsAndLanguageMarkers() passed after 0.006 seconds.
+◇ Test longSessionTranscriptPublicationStaysWithinItsWorkerBudget() started.
+✔ Test longSessionTranscriptPublicationStaysWithinItsWorkerBudget() passed after 0.033 seconds.
+◇ Test singleMeetingStreamRevisionsKeepDisjointPhrasesAndStableOrder() started.
+✔ Test singleMeetingStreamRevisionsKeepDisjointPhrasesAndStableOrder() passed after 0.001 seconds.
+◇ Test transcriptUsesSpeechTimeInsteadOfCompletionTimeAcrossSources() started.
+✔ Test transcriptUsesSpeechTimeInsteadOfCompletionTimeAcrossSources() passed after 0.001 seconds.
+◇ Test finalizationWatermarkPreservesUnchangedEarlierResults() started.
+✔ Test finalizationWatermarkPreservesUnchangedEarlierResults() passed after 0.001 seconds.
+◇ Test transcriptPreviewIncludesTheBoundaryNewlineAndOrdersSimultaneousMarkers() started.
+✔ Test transcriptPreviewIncludesTheBoundaryNewlineAndOrdersSimultaneousMarkers() passed after 0.001 seconds.
+◇ Test transcriptPreviewBoundsOversizedDraftsWithoutLosingSavedText() started.
+✔ Test transcriptPreviewBoundsOversizedDraftsWithoutLosingSavedText() passed after 0.013 seconds.
+◇ Test voiceTurnEndpointWaitsForSpeechAndToleratesNaturalPauses() started.
+✔ Test voiceTurnEndpointWaitsForSpeechAndToleratesNaturalPauses() passed after 0.001 seconds.
+◇ Test voiceTurnEndpointIgnoresClicksAndInvalidDurations() started.
+✔ Test voiceTurnEndpointIgnoresClicksAndInvalidDurations() passed after 0.001 seconds.
+◇ Test windowCoverageRequiresTheWholeWindowToBeCovered() started.
+✔ Test windowCoverageRequiresTheWholeWindowToBeCovered() passed after 0.001 seconds.
+◇ Test toolbarContentDragNeverInventsWindowMovement() started.
+✔ Test toolbarContentDragNeverInventsWindowMovement() passed after 0.001 seconds.
+◇ Test actualMovementEnablesImmediatePointerAttachment() started.
+✔ Test actualMovementEnablesImmediatePointerAttachment() passed after 0.001 seconds.
+◇ Test repeatedSamplesKeepTimeBasedHistoryForDelayedMetadata() started.
+✔ Test repeatedSamplesKeepTimeBasedHistoryForDelayedMetadata() passed after 0.001 seconds.
+◇ Test constrainedDragFallsBackWithoutEndingTheLiveSession() started.
+✔ Test constrainedDragFallsBackWithoutEndingTheLiveSession() passed after 0.001 seconds.
+◇ Test firstPixelOfBottomResizeDoesNotBecomeAWindowMove() started.
+✔ Test firstPixelOfBottomResizeDoesNotBecomeAWindowMove() passed after 0.001 seconds.
+◇ Test unifiedToolbarHeaderDepthSupportsPointerGestureAndReanchorsAfterDragThreshold() started.
+✔ Test unifiedToolbarHeaderDepthSupportsPointerGestureAndReanchorsAfterDragThreshold() passed after 0.001 seconds.
+◇ Test highVelocityWindowDragInterpolatesSubframeSamplesAndResumesFromConstraint() started.
+✔ Test highVelocityWindowDragInterpolatesSubframeSamplesAndResumesFromConstraint() passed after 0.001 seconds.
+◇ Test feedbackRetargetingContinuesFromTheCurrentPose() started.
+✔ Test feedbackRetargetingContinuesFromTheCurrentPose() passed after 0.001 seconds.
+◇ Test settlingCanBeInterruptedWithoutJumpingToTheRestPose() started.
+✔ Test settlingCanBeInterruptedWithoutJumpingToTheRestPose() passed after 0.001 seconds.
+◇ Test backgroundContentDoesNotDisableCompanionPlay() started.
+✔ Test backgroundContentDoesNotDisableCompanionPlay() passed after 0.001 seconds.
+◇ Test customHeaderAndResizeBordersKeepWindowInputPriority() started.
+✔ Test customHeaderAndResizeBordersKeepWindowInputPriority() passed after 0.001 seconds.
+◇ Test manipulationScopeCannotInheritQueuedApplicationDiscovery() started.
+✔ Test manipulationScopeCannotInheritQueuedApplicationDiscovery() passed after 0.001 seconds.
+◇ Test minimizeWaitsForOriginThenAcceptsStableReplacementUsingVirtualTime() started.
+✔ Test minimizeWaitsForOriginThenAcceptsStableReplacementUsingVirtualTime() passed after 0.001 seconds.
+◇ Test geometryTransitionSettlesAndCannotRemainHiddenIndefinitely() started.
+✔ Test geometryTransitionSettlesAndCannotRemainHiddenIndefinitely() passed after 0.001 seconds.
+✔ Test run with 154 tests in 1 suite passed after 3.298 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test themeContributionsAreDiscoveredAndInvalidFilesFailRecoverably() started.
+✔ Test themeContributionsAreDiscoveredAndInvalidFilesFailRecoverably() passed after 0.023 seconds.
+◇ Test languageMetadataRejectsDuplicateUnsafeAndOversizedContributions() started.
+✔ Test languageMetadataRejectsDuplicateUnsafeAndOversizedContributions() passed after 0.004 seconds.
+◇ Test allBundledThemesHaveReadableCompletePalettes() started.
+✔ Test allBundledThemesHaveReadableCompletePalettes() passed after 0.001 seconds.
+◇ Test themeColorsRejectMalformedValuesInsteadOfCrashing() started.
+✔ Test themeColorsRejectMalformedValuesInsteadOfCrashing() passed after 0.001 seconds.
+◇ Test themeSchemaRejectsUnreadableMissingAndUnknownRoles() started.
+✔ Test themeSchemaRejectsUnreadableMissingAndUnknownRoles() passed after 0.001 seconds.
+✔ Test run with 5 tests in 0 suites passed after 0.030 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite FishRuntimeTests started.
+◇ Test rejectsUnsupportedArchitectureBeforeAllocatingTensors() started.
+✔ Test rejectsUnsupportedArchitectureBeforeAllocatingTensors() passed after 0.007 seconds.
+◇ Test malformedTensorDimensionsThrowBeforeCallingMLX() started.
+✔ Test malformedTensorDimensionsThrowBeforeCallingMLX() passed after 0.010 seconds.
+◇ Test affineProjectionAndOutputSelectionPreserveRows() started.
+✔ Test affineProjectionAndOutputSelectionPreserveRows() passed after 0.008 seconds.
+◇ Test causalConvolutionNeverReadsFutureSamples() started.
+✔ Test causalConvolutionNeverReadsFutureSamples() passed after 0.001 seconds.
+◇ Test rotaryPairsPreserveNormAndRejectContextOverflow() started.
+✔ Test rotaryPairsPreserveNormAndRejectContextOverflow() passed after 0.006 seconds.
+◇ Test audioDecoderRejectsUnboundedOrIncompleteFrames() started.
+✔ Test audioDecoderRejectsUnboundedOrIncompleteFrames() passed after 0.001 seconds.
+◇ Test compiledSpeechRotaryMatchesIndependentRoundedPairReference() started.
+✔ Test compiledSpeechRotaryMatchesIndependentRoundedPairReference() passed after 0.017 seconds.
+◇ Test profilingReportsInclusiveStagesAndResetsBetweenRequests() started.
+✔ Test profilingReportsInclusiveStagesAndResetsBetweenRequests() passed after 0.001 seconds.
+◇ Test disabledProfilingDoesNotReadTheClockOrChangeTheResult() started.
+✔ Test disabledProfilingDoesNotReadTheClockOrChangeTheResult() passed after 0.001 seconds.
+◇ Test streamingConvolutionMatchesIndependentCausalReferenceAcrossDilatedBoundaries() started.
+✔ Test streamingConvolutionMatchesIndependentCausalReferenceAcrossDilatedBoundaries() passed after 0.006 seconds.
+◇ Test streamingUpsamplingMatchesIndependentTransposedConvolution() started.
+✔ Test streamingUpsamplingMatchesIndependentTransposedConvolution() passed after 0.005 seconds.
+◇ Test streamingCodecAttentionMatchesWholeSequenceAcrossSlidingWindowBoundary() started.
+✔ Test streamingCodecAttentionMatchesWholeSequenceAcrossSlidingWindowBoundary() passed after 0.352 seconds.
+✔ Suite FishRuntimeTests passed after 0.419 seconds.
+✔ Test run with 12 tests in 1 suite passed after 0.419 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test derivedArtifactsReuseOnlyMatchingInputsAndIntactOutput() started.
+Derived model cache metadata is invalid; rebuilding: The data couldn’t be read because it isn’t in the correct format.
+✔ Test derivedArtifactsReuseOnlyMatchingInputsAndIntactOutput() passed after 0.010 seconds.
+◇ Test derivedArtifactsRejectSymlinksAndOversizeConversions() started.
+✔ Test derivedArtifactsRejectSymlinksAndOversizeConversions() passed after 0.001 seconds.
+✔ Test run with 2 tests in 0 suites passed after 0.012 seconds.
+Test Suite 'Selected tests' started at 2026-11-03 10:23:58.546.
+Test Suite 'SilliesModelStoreTests.xctest' started at 2026-11-03 10:23:58.552.
+Test Suite 'ModelArtifactVerifierTests' started at 2026-11-03 10:23:58.552.
+Test Case '-[SilliesModelStoreTests.ModelArtifactVerifierTests testCachedEvidenceCannotAuthorizeSymbolicLinksOrWrongSizes]' started.
+Test Case '-[SilliesModelStoreTests.ModelArtifactVerifierTests testCachedEvidenceCannotAuthorizeSymbolicLinksOrWrongSizes]' passed (0.003 seconds).
+Test Case '-[SilliesModelStoreTests.ModelArtifactVerifierTests testCancellationIsObservedEvenWhenFileWasAlreadyVerified]' started.
+Test Case '-[SilliesModelStoreTests.ModelArtifactVerifierTests testCancellationIsObservedEvenWhenFileWasAlreadyVerified]' passed (0.001 seconds).
+Test Case '-[SilliesModelStoreTests.ModelArtifactVerifierTests testChangedOrReplacedFilesDuringHashingNeverBecomeVerified]' started.
+Test Case '-[SilliesModelStoreTests.ModelArtifactVerifierTests testChangedOrReplacedFilesDuringHashingNeverBecomeVerified]' passed (0.001 seconds).
+Test Case '-[SilliesModelStoreTests.ModelArtifactVerifierTests testExpectedDigestIsPartOfVerificationEvidence]' started.
+Test Case '-[SilliesModelStoreTests.ModelArtifactVerifierTests testExpectedDigestIsPartOfVerificationEvidence]' passed (0.001 seconds).
+Test Case '-[SilliesModelStoreTests.ModelArtifactVerifierTests testSameSizeCorruptionCannotHideByRestoringModificationTime]' started.
+Test Case '-[SilliesModelStoreTests.ModelArtifactVerifierTests testSameSizeCorruptionCannotHideByRestoringModificationTime]' passed (0.001 seconds).
+Test Case '-[SilliesModelStoreTests.ModelArtifactVerifierTests testUnchangedFileReusesEvidenceButReplacementAndNewVerifierRehash]' started.
+Test Case '-[SilliesModelStoreTests.ModelArtifactVerifierTests testUnchangedFileReusesEvidenceButReplacementAndNewVerifierRehash]' passed (0.001 seconds).
+Test Suite 'ModelArtifactVerifierTests' passed at 2026-11-03 10:23:58.562.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.009 (0.009) seconds
+Test Suite 'ModelDownloadClientTests' started at 2026-11-03 10:23:58.562.
+Test Case '-[SilliesModelStoreTests.ModelDownloadClientTests testCancellationBeforeStartingPreservesExistingResumeData]' started.
+Test Case '-[SilliesModelStoreTests.ModelDownloadClientTests testCancellationBeforeStartingPreservesExistingResumeData]' passed (0.001 seconds).
+Test Case '-[SilliesModelStoreTests.ModelDownloadClientTests testOversizedTransferFailsWithoutPublishingOversizedProgress]' started.
+Test Case '-[SilliesModelStoreTests.ModelDownloadClientTests testOversizedTransferFailsWithoutPublishingOversizedProgress]' passed (0.041 seconds).
+Test Case '-[SilliesModelStoreTests.ModelDownloadClientTests testPauseProducesResumeDataAndResumeCompletes]' started.
+Test Case '-[SilliesModelStoreTests.ModelDownloadClientTests testPauseProducesResumeDataAndResumeCompletes]' passed (0.417 seconds).
+Test Case '-[SilliesModelStoreTests.ModelDownloadClientTests testRealTransferReportsIntermediateBytesAndRetainsTheFile]' started.
+Test Case '-[SilliesModelStoreTests.ModelDownloadClientTests testRealTransferReportsIntermediateBytesAndRetainsTheFile]' passed (0.453 seconds).
+Test Suite 'ModelDownloadClientTests' passed at 2026-11-03 10:23:59.474.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.911 (0.912) seconds
+Test Suite 'ModelStoreTests' started at 2026-11-03 10:23:59.474.
+Test Case '-[SilliesModelStoreTests.ModelStoreTests testBundledCatalogIsPinnedAndIncludesRomanian]' started.
+Test Case '-[SilliesModelStoreTests.ModelStoreTests testBundledCatalogIsPinnedAndIncludesRomanian]' passed (0.007 seconds).
+Test Case '-[SilliesModelStoreTests.ModelStoreTests testCancellationNeverPublishesAnIncompleteModel]' started.
+Test Case '-[SilliesModelStoreTests.ModelStoreTests testCancellationNeverPublishesAnIncompleteModel]' passed (0.030 seconds).
+Test Case '-[SilliesModelStoreTests.ModelStoreTests testCorruptDownloadNeverBecomesInstalledAndRetryWorks]' started.
+Speech model storage: The downloaded file weights.bin could not be verified. Retry the download.
+Test Case '-[SilliesModelStoreTests.ModelStoreTests testCorruptDownloadNeverBecomesInstalledAndRetryWorks]' passed (0.014 seconds).
+Test Case '-[SilliesModelStoreTests.ModelStoreTests testEachArtifactStartsDownloadingBeforeVerificationAndKeepsAggregateProgress]' started.
+Test Case '-[SilliesModelStoreTests.ModelStoreTests testEachArtifactStartsDownloadingBeforeVerificationAndKeepsAggregateProgress]' passed (0.010 seconds).
+Test Case '-[SilliesModelStoreTests.ModelStoreTests testInstallationVerificationIsReusedByFirstAndRepeatedAcquisitions]' started.
+Test Case '-[SilliesModelStoreTests.ModelStoreTests testInstallationVerificationIsReusedByFirstAndRepeatedAcquisitions]' passed (0.010 seconds).
+Test Case '-[SilliesModelStoreTests.ModelStoreTests testReplacementAndRemovalPublishOnlyCompleteInstallations]' started.
+Test Case '-[SilliesModelStoreTests.ModelStoreTests testReplacementAndRemovalPublishOnlyCompleteInstallations]' passed (0.011 seconds).
+Test Case '-[SilliesModelStoreTests.ModelStoreTests testTamperedInstallationFailsVerificationBeforeInference]' started.
+Test Case '-[SilliesModelStoreTests.ModelStoreTests testTamperedInstallationFailsVerificationBeforeInference]' passed (0.010 seconds).
+Test Case '-[SilliesModelStoreTests.ModelStoreTests testTraversalAndSymbolicLinksCannotEscapeStore]' started.
+Test Case '-[SilliesModelStoreTests.ModelStoreTests testTraversalAndSymbolicLinksCannotEscapeStore]' passed (0.002 seconds).
+Test Case '-[SilliesModelStoreTests.ModelStoreTests testVerifiedInstallationIsOfflineAndLeaseProtectsRemoval]' started.
+Test Case '-[SilliesModelStoreTests.ModelStoreTests testVerifiedInstallationIsOfflineAndLeaseProtectsRemoval]' passed (0.009 seconds).
+Test Suite 'ModelStoreTests' passed at 2026-11-03 10:23:59.578.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.103 (0.104) seconds
+Test Suite 'ModelUpdateCheckerTests' started at 2026-11-03 10:23:59.578.
+Test Case '-[SilliesModelStoreTests.ModelUpdateCheckerTests testAbsentModelsAreNotQueried]' started.
+Test Case '-[SilliesModelStoreTests.ModelUpdateCheckerTests testAbsentModelsAreNotQueried]' passed (0.003 seconds).
+Test Case '-[SilliesModelStoreTests.ModelUpdateCheckerTests testDailySchedulePersistsAcrossRestartAndManualChecksBypassIt]' started.
+Test Case '-[SilliesModelStoreTests.ModelUpdateCheckerTests testDailySchedulePersistsAcrossRestartAndManualChecksBypassIt]' passed (0.013 seconds).
+Test Case '-[SilliesModelStoreTests.ModelUpdateCheckerTests testOfflineCheckPreservesCandidateAndNeverChangesInstalledModel]' started.
+Speech model storage: The operation couldn’t be completed. (NSURLErrorDomain error -1009.)
+Test Case '-[SilliesModelStoreTests.ModelUpdateCheckerTests testOfflineCheckPreservesCandidateAndNeverChangesInstalledModel]' passed (0.012 seconds).
+Test Suite 'ModelUpdateCheckerTests' passed at 2026-11-03 10:23:59.606.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.028 (0.029) seconds
+Test Suite 'ModelUpdateDiscoveryTests' started at 2026-11-03 10:23:59.606.
+Test Case '-[SilliesModelStoreTests.ModelUpdateDiscoveryTests testChangedWeightsAndNewBundleSupportFilesArePinnedAndVerified]' started.
+Test Case '-[SilliesModelStoreTests.ModelUpdateDiscoveryTests testChangedWeightsAndNewBundleSupportFilesArePinnedAndVerified]' passed (0.002 seconds).
+Test Case '-[SilliesModelStoreTests.ModelUpdateDiscoveryTests testIndependentTokenizerUpdateChangesTheCombinedRevision]' started.
+Test Case '-[SilliesModelStoreTests.ModelUpdateDiscoveryTests testIndependentTokenizerUpdateChangesTheCombinedRevision]' passed (0.002 seconds).
+Test Case '-[SilliesModelStoreTests.ModelUpdateDiscoveryTests testMissingRequiredFileRequiresAppUpdate]' started.
+Test Case '-[SilliesModelStoreTests.ModelUpdateDiscoveryTests testMissingRequiredFileRequiresAppUpdate]' passed (0.002 seconds).
+Test Case '-[SilliesModelStoreTests.ModelUpdateDiscoveryTests testReadmeOnlyRevisionDoesNotOfferAnUpdate]' started.
+Test Case '-[SilliesModelStoreTests.ModelUpdateDiscoveryTests testReadmeOnlyRevisionDoesNotOfferAnUpdate]' passed (0.002 seconds).
+Test Suite 'ModelUpdateDiscoveryTests' passed at 2026-11-03 10:23:59.614.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.008 (0.008) seconds
+Test Suite 'ModelVersionTests' started at 2026-11-03 10:23:59.614.
+Test Case '-[SilliesModelStoreTests.ModelVersionTests testAnActiveSessionPreventsActivationAndRollback]' started.
+Test Case '-[SilliesModelStoreTests.ModelVersionTests testAnActiveSessionPreventsActivationAndRollback]' passed (0.013 seconds).
+Test Case '-[SilliesModelStoreTests.ModelVersionTests testStagingDoesNotSwitchCurrentVersionAndActivationSurvivesRestart]' started.
+Test Case '-[SilliesModelStoreTests.ModelVersionTests testStagingDoesNotSwitchCurrentVersionAndActivationSurvivesRestart]' passed (0.015 seconds).
+Test Suite 'ModelVersionTests' passed at 2026-11-03 10:23:59.642.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.028 (0.028) seconds
+Test Suite 'SilliesModelStoreTests.xctest' passed at 2026-11-03 10:23:59.642.
+	 Executed 28 tests, with 0 failures (0 unexpected) in 1.087 (1.090) seconds
+Test Suite 'Selected tests' passed at 2026-11-03 10:23:59.642.
+	 Executed 28 tests, with 0 failures (0 unexpected) in 1.087 (1.096) seconds
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test recordRepositoryPreservesFrozenHistoricalFields(_:) started.
+◇ Test case passing 1 argument fixture → "legacy-basic" to recordRepositoryPreservesFrozenHistoricalFields(_:) started.
+◇ Test case passing 1 argument fixture → "legacy-audio-permissions" to recordRepositoryPreservesFrozenHistoricalFields(_:) started.
+◇ Test case passing 1 argument fixture → "future-failures" to recordRepositoryPreservesFrozenHistoricalFields(_:) started.
+✔ Test recordRepositoryPreservesFrozenHistoricalFields(_:) with 3 test cases passed after 0.035 seconds.
+◇ Test frozenLegacyRecordsDefaultMissingFieldsWithoutInferringPermissionsFromContent() started.
+✔ Test frozenLegacyRecordsDefaultMissingFieldsWithoutInferringPermissionsFromContent() passed after 0.001 seconds.
+◇ Test frozenLegacyPermissionErrorsMigrateOnlyRecognizedFailureMarkers() started.
+✔ Test frozenLegacyPermissionErrorsMigrateOnlyRecognizedFailureMarkers() passed after 0.001 seconds.
+◇ Test futureSessionFailuresKeepTheirContentWithoutPermissionActions() started.
+✔ Test futureSessionFailuresKeepTheirContentWithoutPermissionActions() passed after 0.001 seconds.
+◇ Test failedVaultIndexCommitPreservesReferencedAttachmentsAndCanRetry() started.
+✔ Test failedVaultIndexCommitPreservesReferencedAttachmentsAndCanRetry() passed after 0.006 seconds.
+◇ Test vaultStartupFinishesOnlyJournaledUnreferencedAttachmentCleanup() started.
+✔ Test vaultStartupFinishesOnlyJournaledUnreferencedAttachmentCleanup() passed after 0.006 seconds.
+◇ Test failedRecordUpdateRollsBackSearchAlongWithItsBody() started.
+✔ Test failedRecordUpdateRollsBackSearchAlongWithItsBody() passed after 0.004 seconds.
+◇ Test vaultMissingUpdateInvalidatesOptimisticDetailsWithoutResurrectingData() started.
+✔ Test vaultMissingUpdateInvalidatesOptimisticDetailsWithoutResurrectingData() passed after 0.003 seconds.
+◇ Test recordRepositoryStoresVersionedRecordsIndividually() started.
+✔ Test recordRepositoryStoresVersionedRecordsIndividually() passed after 0.003 seconds.
+◇ Test recordRepositoryDistinguishesCorruptionFromMissingStorage() started.
+✔ Test recordRepositoryDistinguishesCorruptionFromMissingStorage() passed after 0.001 seconds.
+◇ Test vaultCursorSurvivesInsertionDeletionAndSubsecondTies() started.
+✔ Test vaultCursorSurvivesInsertionDeletionAndSubsecondTies() passed after 0.004 seconds.
+◇ Test unsafeAttachmentNamesCannotChangeVaultOrParentContents() started.
+✔ Test unsafeAttachmentNamesCannotChangeVaultOrParentContents() passed after 0.001 seconds.
+◇ Test attachmentRemovalUnlinksSymlinksWithoutRemovingTheirTarget() started.
+✔ Test attachmentRemovalUnlinksSymlinksWithoutRemovingTheirTarget() passed after 0.001 seconds.
+◇ Test repositoryRejectsUnsafeDecodedAttachmentsWithoutReplacingMetadata() started.
+✔ Test repositoryRejectsUnsafeDecodedAttachmentsWithoutReplacingMetadata() passed after 0.005 seconds.
+◇ Test fullTextIndexFindsLateRomanianWordsAndRemovesDeletedRecords() started.
+✔ Test fullTextIndexFindsLateRomanianWordsAndRemovesDeletedRecords() passed after 0.012 seconds.
+◇ Test markdownExportIncludesValidatedAttachmentsAndSpeakerNames() started.
+✔ Test markdownExportIncludesValidatedAttachmentsAndSpeakerNames() passed after 0.002 seconds.
+◇ Test writingHistoryDistinguishesMissingAndCorruptFiles() started.
+✔ Test writingHistoryDistinguishesMissingAndCorruptFiles() passed after 0.005 seconds.
+✔ Test run with 17 tests in 0 suites passed after 0.096 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test appleSessionReuseRequiresCommittedHistoryAndEndsWithItsOwner() started.
+✔ Test appleSessionReuseRequiresCommittedHistoryAndEndsWithItsOwner() passed after 0.001 seconds.
+◇ Test appleSessionFailureAndPressureNeverReuseMutableState() started.
+✔ Test appleSessionFailureAndPressureNeverReuseMutableState() passed after 0.001 seconds.
+◇ Test appleRetainedToolsUseCurrentTurnAndPreserveCommittedNativeToolHistory() started.
+✔ Test appleRetainedToolsUseCurrentTurnAndPreserveCommittedNativeToolHistory() passed after 0.001 seconds.
+◇ Test appleToolConversationsUseDeterministicSampling() started.
+✔ Test appleToolConversationsUseDeterministicSampling() passed after 0.001 seconds.
+◇ Test appleInternalGenerationErrorExplainsRecoveryWithoutExposingDiagnostics() started.
+Apple text generation failed: FoundationModels.LanguageModelSession.GenerationError(-1) → com.apple.tokengeneration(10)
+✔ Test appleInternalGenerationErrorExplainsRecoveryWithoutExposingDiagnostics() passed after 0.003 seconds.
+◇ Test appleFailureTranslationPreservesCancellationContextAndDocumentedErrors() started.
+✔ Test appleFailureTranslationPreservesCancellationContextAndDocumentedErrors() passed after 0.001 seconds.
+◇ Test appleFailureDiagnosticsBoundUnderlyingErrorTrees() started.
+✔ Test appleFailureDiagnosticsBoundUnderlyingErrorTrees() passed after 0.001 seconds.
+◇ Test chatRejectsReportedLoopAndRequestsConversationSampling() started.
+✔ Test chatRejectsReportedLoopAndRequestsConversationSampling() passed after 0.001 seconds.
+➜ Test appleChatHandlesTheReportedConversationWithoutRepeating() skipped.
+◇ Test toolReserveDoesNotRejectASingleTurnThatFitsWithGenerationAndSafety(inputTokens:) started.
+◇ Test case passing 1 argument inputTokens → 1623 to toolReserveDoesNotRejectASingleTurnThatFitsWithGenerationAndSafety(inputTokens:) started.
+◇ Test case passing 1 argument inputTokens → 2704 to toolReserveDoesNotRejectASingleTurnThatFitsWithGenerationAndSafety(inputTokens:) started.
+✔ Test toolReserveDoesNotRejectASingleTurnThatFitsWithGenerationAndSafety(inputTokens:) with 2 test cases passed after 0.001 seconds.
+◇ Test admissionRetainsSafetyAndRejectsInvalidlyLargeMeasuredCounts(inputTokens:) started.
+◇ Test case passing 1 argument inputTokens → -1 to admissionRetainsSafetyAndRejectsInvalidlyLargeMeasuredCounts(inputTokens:) started.
+◇ Test case passing 1 argument inputTokens → 2705 to admissionRetainsSafetyAndRejectsInvalidlyLargeMeasuredCounts(inputTokens:) started.
+◇ Test case passing 1 argument inputTokens → 9223372036854775807 to admissionRetainsSafetyAndRejectsInvalidlyLargeMeasuredCounts(inputTokens:) started.
+✔ Test admissionRetainsSafetyAndRejectsInvalidlyLargeMeasuredCounts(inputTokens:) with 3 test cases passed after 0.001 seconds.
+◇ Test compactionAdmissionUsesTheSummaryTasksLargerReasoningAllowance() started.
+✔ Test compactionAdmissionUsesTheSummaryTasksLargerReasoningAllowance() passed after 0.001 seconds.
+◇ Test foregroundPreparationNeverStartsCheckpointGeneration() started.
+✔ Test foregroundPreparationNeverStartsCheckpointGeneration() passed after 0.001 seconds.
+◇ Test chatAdmissionReservesSpaceForMandatoryReasoning() started.
+✔ Test chatAdmissionReservesSpaceForMandatoryReasoning() passed after 0.001 seconds.
+◇ Test chatBoundsHundredsOfTurnsWithoutSummarizingOrDeletingOriginalHistory() started.
+✔ Test chatBoundsHundredsOfTurnsWithoutSummarizingOrDeletingOriginalHistory() passed after 0.002 seconds.
+◇ Test chatUsesSavedMemoryAndReferencesWithoutInvokingAnUnavailableSummarizer() started.
+✔ Test chatUsesSavedMemoryAndReferencesWithoutInvokingAnUnavailableSummarizer() passed after 0.001 seconds.
+◇ Test chatRecoversOnceFromProviderContextOverflowWithoutDuplicatingTheUserTurn() started.
+✔ Test chatRecoversOnceFromProviderContextOverflowWithoutDuplicatingTheUserTurn() passed after 0.001 seconds.
+◇ Test chatCancellationDuringMeasurementDoesNotPublishMemoryOrAnAnswer() started.
+✔ Test chatCancellationDuringMeasurementDoesNotPublishMemoryOrAnAnswer() passed after 0.001 seconds.
+◇ Test contextOverflowAfterStreamingStartsNeverRegeneratesTheAlreadySpokenPrefix() started.
+✔ Test contextOverflowAfterStreamingStartsNeverRegeneratesTheAlreadySpokenPrefix() passed after 0.001 seconds.
+◇ Test nativeToolBudgetingDoesNotInterruptAnActiveProviderWithTokenMeasurement() started.
+✔ Test nativeToolBudgetingDoesNotInterruptAnActiveProviderWithTokenMeasurement() passed after 0.001 seconds.
+◇ Test toolEvidenceUsesCompleteRepresentationsWithinTheTurnBudget() started.
+✔ Test toolEvidenceUsesCompleteRepresentationsWithinTheTurnBudget() passed after 0.001 seconds.
+◇ Test toolBudgetRefusesAnImpossibleResultWithoutReturningBrokenJSON() started.
+✔ Test toolBudgetRefusesAnImpossibleResultWithoutReturningBrokenJSON() passed after 0.001 seconds.
+◇ Test toolEvidenceMeasurementPropagatesCancellation() started.
+✔ Test toolEvidenceMeasurementPropagatesCancellation() passed after 0.001 seconds.
+◇ Test omissionNoticeStillRespectsTheIndividualResultAllowance() started.
+✔ Test omissionNoticeStillRespectsTheIndividualResultAllowance() passed after 0.001 seconds.
+◇ Test foregroundWorkIsBoundedIndependentlyOfConversationAge(messageCount:) started.
+◇ Test case passing 1 argument messageCount → 100 to foregroundWorkIsBoundedIndependentlyOfConversationAge(messageCount:) started.
+◇ Test case passing 1 argument messageCount → 10000 to foregroundWorkIsBoundedIndependentlyOfConversationAge(messageCount:) started.
+◇ Test case passing 1 argument messageCount → 100000 to foregroundWorkIsBoundedIndependentlyOfConversationAge(messageCount:) started.
+✔ Test foregroundWorkIsBoundedIndependentlyOfConversationAge(messageCount:) with 3 test cases passed after 0.052 seconds.
+◇ Test aCompletedCheckpointDoesNotEvictVerbatimRecentContext() started.
+✔ Test aCompletedCheckpointDoesNotEvictVerbatimRecentContext() passed after 0.001 seconds.
+◇ Test largeStoredMemoryIsNotRewrittenWhenOnlyTheNewestTurnFits() started.
+✔ Test largeStoredMemoryIsNotRewrittenWhenOnlyTheNewestTurnFits() passed after 0.001 seconds.
+◇ Test oversizedHistoricalToolEvidenceCannotDisplaceTheLatestQuestion() started.
+✔ Test oversizedHistoricalToolEvidenceCannotDisplaceTheLatestQuestion() passed after 0.001 seconds.
+◇ Test nativeToolSchemasPreserveOptionalContinuationParameters() started.
+✔ Test nativeToolSchemasPreserveOptionalContinuationParameters() passed after 0.001 seconds.
+◇ Test chatKeepsRolesAndSendsTheLatestQuestionExactlyOnce() started.
+✔ Test chatKeepsRolesAndSendsTheLatestQuestionExactlyOnce() passed after 0.001 seconds.
+◇ Test downloadedChatReturnsToolResultsWithMatchingCallIDs() started.
+✔ Test downloadedChatReturnsToolResultsWithMatchingCallIDs() passed after 0.001 seconds.
+◇ Test toolCallsStayBoundedAndUnknownNamesCannotReachTheStore() started.
+✔ Test toolCallsStayBoundedAndUnknownNamesCannotReachTheStore() passed after 0.001 seconds.
+◇ Test nativeHistoryRetainsToolResults() started.
+✔ Test nativeHistoryRetainsToolResults() passed after 0.001 seconds.
+◇ Test toolArgumentsRejectNonObjectsWithoutCrossingTheNativeJSONBoundary() started.
+✔ Test toolArgumentsRejectNonObjectsWithoutCrossingTheNativeJSONBoundary() passed after 0.001 seconds.
+◇ Test contextRecoveryReusesToolResultsWithoutRepeatingStorageReads() started.
+✔ Test contextRecoveryReusesToolResultsWithoutRepeatingStorageReads() passed after 0.001 seconds.
+◇ Test streamedToolArgumentsStayOutOfTheUserFacingResponse() started.
+✔ Test streamedToolArgumentsStayOutOfTheUserFacingResponse() passed after 0.001 seconds.
+◇ Test interruptedDeliveryDoesNotImpersonateAssistantSpeechInHistory() started.
+✔ Test interruptedDeliveryDoesNotImpersonateAssistantSpeechInHistory() passed after 0.001 seconds.
+◇ Test terminalToolRoundPreservesPublishedTextWithoutRepeatingTheOperation() started.
+✔ Test terminalToolRoundPreservesPublishedTextWithoutRepeatingTheOperation() passed after 0.001 seconds.
+◇ Test contextRecoveryReplaysEvidenceWithoutResettingTheExecutionAllowance() started.
+✔ Test contextRecoveryReplaysEvidenceWithoutResettingTheExecutionAllowance() passed after 0.001 seconds.
+◇ Test invalidToolArgumentsReturnCorrectableEvidenceBeforeAnyStorageAccess(arguments:parameter:) started.
+◇ Test case passing 2 arguments arguments → "{"recordID":"00000000-0000-0000-0000-000000000001"}", parameter → "query" to invalidToolArgumentsReturnCorrectableEvidenceBeforeAnyStorageAccess(arguments:parameter:) started.
+◇ Test case passing 2 arguments arguments → "{"recordID":"not-a-record-id","query":"checklist"}", parameter → "recordID" to invalidToolArgumentsReturnCorrectableEvidenceBeforeAnyStorageAccess(arguments:parameter:) started.
+✔ Test invalidToolArgumentsReturnCorrectableEvidenceBeforeAnyStorageAccess(arguments:parameter:) with 2 test cases passed after 0.001 seconds.
+◇ Test argumentCorrectionAttemptsConsumeTheExistingToolBudget() started.
+✔ Test argumentCorrectionAttemptsConsumeTheExistingToolBudget() passed after 0.001 seconds.
+◇ Test argumentRecoveryNeverMislabelsCorruptStorageAsBadModelArguments() started.
+✔ Test argumentRecoveryNeverMislabelsCorruptStorageAsBadModelArguments() passed after 0.001 seconds.
+◇ Test argumentRecoveryPreservesCancellation() started.
+✔ Test argumentRecoveryPreservesCancellation() passed after 0.001 seconds.
+◇ Test answerOnlyRoundCannotExecuteAnUnadvertisedToolCall() started.
+✔ Test answerOnlyRoundCannotExecuteAnUnadvertisedToolCall() passed after 0.001 seconds.
+◇ Test refusedCompletionCallReceivesItsResultBeforeOneFinalAnswerAttempt() started.
+✔ Test refusedCompletionCallReceivesItsResultBeforeOneFinalAnswerAttempt() passed after 0.001 seconds.
+◇ Test toolBudgetEndsWithAnAnswerRoundAndPreservesEveryCallResult(batchSize:) started.
+◇ Test case passing 1 argument batchSize → 1 to toolBudgetEndsWithAnAnswerRoundAndPreservesEveryCallResult(batchSize:) started.
+◇ Test case passing 1 argument batchSize → 6 to toolBudgetEndsWithAnAnswerRoundAndPreservesEveryCallResult(batchSize:) started.
+✔ Test toolBudgetEndsWithAnAnswerRoundAndPreservesEveryCallResult(batchSize:) with 2 test cases passed after 0.001 seconds.
+◇ Test nativeToolInvocationsReceiveABoundedLimitResultWithoutExecutingExtraCalls() started.
+✔ Test nativeToolInvocationsReceiveABoundedLimitResultWithoutExecutingExtraCalls() passed after 0.001 seconds.
+◇ Test multilingualNotesUseSelectedBackendAndRetainOnlySourceBackedActions() started.
+✔ Test multilingualNotesUseSelectedBackendAndRetainOnlySourceBackedActions() passed after 0.004 seconds.
+◇ Test invalidDownloadedOutputFallsBackWithoutReplacingTheSourceWithInventedNotes() started.
+Local notes failed: The data couldn’t be read because it isn’t in the correct format.
+✔ Test invalidDownloadedOutputFallsBackWithoutReplacingTheSourceWithInventedNotes() passed after 0.001 seconds.
+◇ Test reasoningJSONAcceptsOnlyAnObjectAndRejectsThinkingOrTruncatedOutput() started.
+✔ Test reasoningJSONAcceptsOnlyAnObjectAndRejectsThinkingOrTruncatedOutput() passed after 0.001 seconds.
+◇ Test cancelledReasoningWaitersDoNotBlockFollowingWriting() started.
+✔ Test cancelledReasoningWaitersDoNotBlockFollowingWriting() passed after 0.001 seconds.
+◇ Test reasoningOwnersResolveTheirOwnInjectedBackendWithoutSharedState() started.
+✔ Test reasoningOwnersResolveTheirOwnInjectedBackendWithoutSharedState() passed after 0.001 seconds.
+✔ Test run with 52 tests in 0 suites passed after 0.080 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test explicitLanguageChoicesSurviveProviderChangesWithoutSilentlyChangingLanguage() started.
+✔ Test explicitLanguageChoicesSurviveProviderChangesWithoutSilentlyChangingLanguage() passed after 0.002 seconds.
+◇ Test automaticChoiceUsesDeviceLanguageWhenTheProviderDoesNotOfferDetection() started.
+✔ Test automaticChoiceUsesDeviceLanguageWhenTheProviderDoesNotOfferDetection() passed after 0.001 seconds.
+◇ Test incrementalSpeechDecodesEachNewSampleOnceAndRestartsAtOverlapBoundaries() started.
+✔ Test incrementalSpeechDecodesEachNewSampleOnceAndRestartsAtOverlapBoundaries() passed after 0.001 seconds.
+◇ Test incrementalSpeechStartsFreshAfterFinalizationAndStandaloneValidation() started.
+✔ Test incrementalSpeechStartsFreshAfterFinalizationAndStandaloneValidation() passed after 0.001 seconds.
+◇ Test streamingCadenceProducesEarlyPartialsAndKeepsAudioBounded() started.
+✔ Test streamingCadenceProducesEarlyPartialsAndKeepsAudioBounded() passed after 0.031 seconds.
+◇ Test finalWindowReuseRequiresIdenticalAudioPositionAndACompleteWindowEngine() started.
+✔ Test finalWindowReuseRequiresIdenticalAudioPositionAndACompleteWindowEngine() passed after 0.001 seconds.
+✔ Test run with 6 tests in 0 suites passed after 0.035 seconds.
+Test Suite 'Selected tests' started at 2026-11-03 10:24:00.643.
+Test Suite 'SilliesSpeechTests.xctest' started at 2026-11-03 10:24:00.649.
+Test Suite 'SpeakerAttributionTests' started at 2026-11-03 10:24:00.649.
+Test Case '-[SilliesSpeechTests.SpeakerAttributionTests testDraftCannotFinalizeTextBeforeItsSpeakerLabelsArrive]' started.
+Test Case '-[SilliesSpeechTests.SpeakerAttributionTests testDraftCannotFinalizeTextBeforeItsSpeakerLabelsArrive]' passed (0.000 seconds).
+Test Case '-[SilliesSpeechTests.SpeakerAttributionTests testInvalidWordTimingPreservesEveryWord]' started.
+Test Case '-[SilliesSpeechTests.SpeakerAttributionTests testInvalidWordTimingPreservesEveryWord]' passed (0.000 seconds).
+Test Case '-[SilliesSpeechTests.SpeakerAttributionTests testPartiallyTimedTextIsPreservedVerbatim]' started.
+Test Case '-[SilliesSpeechTests.SpeakerAttributionTests testPartiallyTimedTextIsPreservedVerbatim]' passed (0.000 seconds).
+Test Case '-[SilliesSpeechTests.SpeakerAttributionTests testWordTimesSplitSpeakerTurnsWithoutLosingPunctuationOrFinalization]' started.
+Test Case '-[SilliesSpeechTests.SpeakerAttributionTests testWordTimesSplitSpeakerTurnsWithoutLosingPunctuationOrFinalization]' passed (0.000 seconds).
+Test Suite 'SpeakerAttributionTests' passed at 2026-11-03 10:24:00.650.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'SpeechEnginePoolTests' started at 2026-11-03 10:24:00.650.
+Test Case '-[SilliesSpeechTests.SpeechEnginePoolTests testCancellationWaitsForNativeCallBeforeResetAndReuse]' started.
+Test Case '-[SilliesSpeechTests.SpeechEnginePoolTests testCancellationWaitsForNativeCallBeforeResetAndReuse]' passed (0.001 seconds).
+Test Case '-[SilliesSpeechTests.SpeechEnginePoolTests testCompletedTurnsReuseResetEngineAndKeepLanguagesSeparate]' started.
+Test Case '-[SilliesSpeechTests.SpeechEnginePoolTests testCompletedTurnsReuseResetEngineAndKeepLanguagesSeparate]' passed (0.000 seconds).
+Test Case '-[SilliesSpeechTests.SpeechEnginePoolTests testFailedEngineIsDiscardedAndReleaseIsIdempotent]' started.
+Test Case '-[SilliesSpeechTests.SpeechEnginePoolTests testFailedEngineIsDiscardedAndReleaseIsIdempotent]' passed (0.000 seconds).
+Test Case '-[SilliesSpeechTests.SpeechEnginePoolTests testIdlePoolIsBounded]' started.
+Test Case '-[SilliesSpeechTests.SpeechEnginePoolTests testIdlePoolIsBounded]' passed (0.000 seconds).
+Test Case '-[SilliesSpeechTests.SpeechEnginePoolTests testSimultaneousSourcesNeverLeaseTheSameEngine]' started.
+Test Case '-[SilliesSpeechTests.SpeechEnginePoolTests testSimultaneousSourcesNeverLeaseTheSameEngine]' passed (0.000 seconds).
+Test Case '-[SilliesSpeechTests.SpeechEnginePoolTests testSpeechPriorityMatchesInteractiveIntent]' started.
+Test Case '-[SilliesSpeechTests.SpeechEnginePoolTests testSpeechPriorityMatchesInteractiveIntent]' passed (0.000 seconds).
+Test Suite 'SpeechEnginePoolTests' passed at 2026-11-03 10:24:00.652.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'SpeechSchedulerTests' started at 2026-11-03 10:24:00.652.
+Test Case '-[SilliesSpeechTests.SpeechSchedulerTests testCancelledQueuedWorkDoesNotReachEngine]' started.
+Test Case '-[SilliesSpeechTests.SpeechSchedulerTests testCancelledQueuedWorkDoesNotReachEngine]' passed (0.035 seconds).
+Test Case '-[SilliesSpeechTests.SpeechSchedulerTests testInteractiveInferenceRunsWithUserInitiatedPriority]' started.
+Test Case '-[SilliesSpeechTests.SpeechSchedulerTests testInteractiveInferenceRunsWithUserInitiatedPriority]' passed (0.035 seconds).
+Test Case '-[SilliesSpeechTests.SpeechSchedulerTests testTwoSourcesShareWeightsWithoutOverlappingPredictions]' started.
+Test Case '-[SilliesSpeechTests.SpeechSchedulerTests testTwoSourcesShareWeightsWithoutOverlappingPredictions]' passed (0.068 seconds).
+Test Suite 'SpeechSchedulerTests' passed at 2026-11-03 10:24:00.791.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.139 (0.139) seconds
+Test Suite 'SpeechWindowTests' started at 2026-11-03 10:24:00.791.
+Test Case '-[SilliesSpeechTests.SpeechWindowTests testEmptyFinalClearsDraftAndAdvancesTime]' started.
+Test Case '-[SilliesSpeechTests.SpeechWindowTests testEmptyFinalClearsDraftAndAdvancesTime]' passed (0.000 seconds).
+Test Case '-[SilliesSpeechTests.SpeechWindowTests testShortFirstWordIsNotDiscarded]' started.
+Test Case '-[SilliesSpeechTests.SpeechWindowTests testShortFirstWordIsNotDiscarded]' passed (0.000 seconds).
+Test Case '-[SilliesSpeechTests.SpeechWindowTests testSilenceStaysBoundedAcrossEightVirtualHours]' started.
+Test Case '-[SilliesSpeechTests.SpeechWindowTests testSilenceStaysBoundedAcrossEightVirtualHours]' passed (0.070 seconds).
+Test Case '-[SilliesSpeechTests.SpeechWindowTests testSlowInferenceRejectsOverflowWithoutGrowingBuffer]' started.
+Test Case '-[SilliesSpeechTests.SpeechWindowTests testSlowInferenceRejectsOverflowWithoutGrowingBuffer]' passed (0.001 seconds).
+Test Case '-[SilliesSpeechTests.SpeechWindowTests testSpeechBoundarySurvivesNewSpeechArrivingDuringInference]' started.
+Test Case '-[SilliesSpeechTests.SpeechWindowTests testSpeechBoundarySurvivesNewSpeechArrivingDuringInference]' passed (0.000 seconds).
+Test Case '-[SilliesSpeechTests.SpeechWindowTests testWindowBoundaryPreservesUncommittedWordsAndRepeatedSpeech]' started.
+Test Case '-[SilliesSpeechTests.SpeechWindowTests testWindowBoundaryPreservesUncommittedWordsAndRepeatedSpeech]' passed (0.000 seconds).
+Test Case '-[SilliesSpeechTests.SpeechWindowTests testWordAttachmentsPreservePunctuationAndHyphens]' started.
+Test Case '-[SilliesSpeechTests.SpeechWindowTests testWordAttachmentsPreservePunctuationAndHyphens]' passed (0.000 seconds).
+Test Case '-[SilliesSpeechTests.SpeechWindowTests testZeroDurationOpeningWordSurvivesDraftAndFinalWithoutRepeatingOverlap]' started.
+Test Case '-[SilliesSpeechTests.SpeechWindowTests testZeroDurationOpeningWordSurvivesDraftAndFinalWithoutRepeatingOverlap]' passed (0.000 seconds).
+Test Suite 'SpeechWindowTests' passed at 2026-11-03 10:24:00.863.
+	 Executed 8 tests, with 0 failures (0 unexpected) in 0.072 (0.072) seconds
+Test Suite 'SpeechWorkerExecutorTests' started at 2026-11-03 10:24:00.864.
+Test Case '-[SilliesSpeechTests.SpeechWorkerExecutorTests testInteractiveModelJobsKeepTheirPriorityOnTheIsolatedWorker]' started.
+Test Case '-[SilliesSpeechTests.SpeechWorkerExecutorTests testInteractiveModelJobsKeepTheirPriorityOnTheIsolatedWorker]' passed (0.000 seconds).
+Test Case '-[SilliesSpeechTests.SpeechWorkerExecutorTests testReleasingTheLastUIReferenceDestroysModelOnWorker]' started.
+Test Case '-[SilliesSpeechTests.SpeechWorkerExecutorTests testReleasingTheLastUIReferenceDestroysModelOnWorker]' passed (0.000 seconds).
+Test Suite 'SpeechWorkerExecutorTests' passed at 2026-11-03 10:24:00.864.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'StreamingDiarizationTests' started at 2026-11-03 10:24:00.864.
+Test Case '-[SilliesSpeechTests.StreamingDiarizationTests testFinishDrainsOnWorkerAndCancelRejectsLateAudio]' started.
+Test Case '-[SilliesSpeechTests.StreamingDiarizationTests testFinishDrainsOnWorkerAndCancelRejectsLateAudio]' passed (0.000 seconds).
+Test Case '-[SilliesSpeechTests.StreamingDiarizationTests testOverloadReportsOnceAndAllowsReentrantCancellation]' started.
+Test Case '-[SilliesSpeechTests.StreamingDiarizationTests testOverloadReportsOnceAndAllowsReentrantCancellation]' passed (0.000 seconds).
+Test Suite 'StreamingDiarizationTests' passed at 2026-11-03 10:24:00.865.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'WindowSpeechChannelTests' started at 2026-11-03 10:24:00.865.
+Test Case '-[SilliesSpeechTests.WindowSpeechChannelTests testFailureDuringFinalDrainIsReportedBeforeCompletion]' started.
+Test Case '-[SilliesSpeechTests.WindowSpeechChannelTests testFailureDuringFinalDrainIsReportedBeforeCompletion]' passed (0.002 seconds).
+Test Case '-[SilliesSpeechTests.WindowSpeechChannelTests testUnchangedFinalWindowReusesOnlyEnginesThatDeclareCompleteDrafts]' started.
+Test Case '-[SilliesSpeechTests.WindowSpeechChannelTests testUnchangedFinalWindowReusesOnlyEnginesThatDeclareCompleteDrafts]' passed (0.008 seconds).
+Test Suite 'WindowSpeechChannelTests' passed at 2026-11-03 10:24:00.875.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.010 (0.010) seconds
+Test Suite 'SilliesSpeechTests.xctest' passed at 2026-11-03 10:24:00.875.
+	 Executed 27 tests, with 0 failures (0 unexpected) in 0.225 (0.227) seconds
+Test Suite 'Selected tests' passed at 2026-11-03 10:24:00.875.
+	 Executed 27 tests, with 0 failures (0 unexpected) in 0.225 (0.233) seconds
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test speechTextStartWaitersFinishOnEmptyOutputAndCancellation() started.
+✔ Test speechTextStartWaitersFinishOnEmptyOutputAndCancellation() passed after 0.001 seconds.
+◇ Test speechTextStreamDrainsInOrderAfterProducerFinishes() started.
+✔ Test speechTextStreamDrainsInOrderAfterProducerFinishes() passed after 0.001 seconds.
+◇ Test cancellingSpeechConsumerReleasesSuspendedReadAndDiscardsQueuedWork() started.
+✔ Test cancellingSpeechConsumerReleasesSuspendedReadAndDiscardsQueuedWork() passed after 0.001 seconds.
+◇ Test speechQueueBoundsTotalReplyEvenIfConsumerKeepsUp() started.
+✔ Test speechQueueBoundsTotalReplyEvenIfConsumerKeepsUp() passed after 0.001 seconds.
+◇ Test finishingSpeechStreamUnblocksAWaitingConsumer() started.
+✔ Test finishingSpeechStreamUnblocksAWaitingConsumer() passed after 0.001 seconds.
+◇ Test voicePreparationNeverPreemptsTextAndDefersWhenModelsCannotOverlap() started.
+✔ Test voicePreparationNeverPreemptsTextAndDefersWhenModelsCannotOverlap() passed after 0.001 seconds.
+◇ Test voicePreparationYieldsToNewInteractiveText() started.
+✔ Test voicePreparationYieldsToNewInteractiveText() passed after 0.003 seconds.
+◇ Test voicePreparationSurvivesACompetingRequestWhileItsReplyIsStillGenerating() started.
+✔ Test voicePreparationSurvivesACompetingRequestWhileItsReplyIsStillGenerating() passed after 0.001 seconds.
+◇ Test sameTurnTextAndVoiceOverlapWithoutCancellingEitherBranch() started.
+✔ Test sameTurnTextAndVoiceOverlapWithoutCancellingEitherBranch() passed after 0.001 seconds.
+◇ Test oversizedVoiceWaitsForTextCompletionWithoutDiscardingItsOutput() started.
+✔ Test oversizedVoiceWaitsForTextCompletionWithoutDiscardingItsOutput() passed after 0.002 seconds.
+◇ Test cancelledVoiceAdmissionDoesNotLeaveASchedulerReservation() started.
+✔ Test cancelledVoiceAdmissionDoesNotLeaveASchedulerReservation() passed after 0.002 seconds.
+◇ Test cachedModelsAreEvictedBeforeLoadingAnIncompatiblePeer() started.
+✔ Test cachedModelsAreEvictedBeforeLoadingAnIncompatiblePeer() passed after 0.001 seconds.
+◇ Test voiceCatalogPinsEveryRuntimeResource() started.
+✔ Test voiceCatalogPinsEveryRuntimeResource() passed after 0.019 seconds.
+◇ Test speechAudioRejectsInvalidNativeInputs() started.
+✔ Test speechAudioRejectsInvalidNativeInputs() passed after 0.001 seconds.
+◇ Test voiceWorkerExitIsRecoverable() started.
+✔ Test voiceWorkerExitIsRecoverable() passed after 0.019 seconds.
+◇ Test voicePreemptsTextAndMicrophonePreemptsVoice() started.
+✔ Test voicePreemptsTextAndMicrophonePreemptsVoice() passed after 0.011 seconds.
+◇ Test voiceWarmupReleasesInferenceAdmissionOnSuccessAndFailure() started.
+✔ Test voiceWarmupReleasesInferenceAdmissionOnSuccessAndFailure() passed after 0.001 seconds.
+◇ Test cancellingStalledVoiceWorkerReleasesTheProcessPromptly(operation:) started.
+◇ Test case passing 1 argument operation → .preparation to cancellingStalledVoiceWorkerReleasesTheProcessPromptly(operation:) started.
+◇ Test case passing 1 argument operation → .synthesis to cancellingStalledVoiceWorkerReleasesTheProcessPromptly(operation:) started.
+✔ Test cancellingStalledVoiceWorkerReleasesTheProcessPromptly(operation:) with 2 test cases passed after 0.217 seconds.
+◇ Test voicePreparationReusesTheInstalledRuntimeAcrossTurns(providerID:) started.
+◇ Test case passing 1 argument providerID → "kokoro" to voicePreparationReusesTheInstalledRuntimeAcrossTurns(providerID:) started.
+◇ Test case passing 1 argument providerID → "pocket-tts" to voicePreparationReusesTheInstalledRuntimeAcrossTurns(providerID:) started.
+◇ Test case passing 1 argument providerID → "qwen3-tts" to voicePreparationReusesTheInstalledRuntimeAcrossTurns(providerID:) started.
+◇ Test case passing 1 argument providerID → "fish-speech" to voicePreparationReusesTheInstalledRuntimeAcrossTurns(providerID:) started.
+✔ Test voicePreparationReusesTheInstalledRuntimeAcrossTurns(providerID:) with 4 test cases passed after 0.013 seconds.
+◇ Test voiceConversationRetentionEndsAndMemoryPressureCanEvictIt() started.
+✔ Test voiceConversationRetentionEndsAndMemoryPressureCanEvictIt() passed after 0.114 seconds.
+◇ Test voicePreparationDefersWithoutLoadingWhenTextNeedsTheMemoryBudget() started.
+✔ Test voicePreparationDefersWithoutLoadingWhenTextNeedsTheMemoryBudget() passed after 0.002 seconds.
+◇ Test voicePreparationPreemptionDefersAndLeavesTheRegistryUsable() started.
+✔ Test voicePreparationPreemptionDefersAndLeavesTheRegistryUsable() passed after 0.008 seconds.
+✔ Test run with 22 tests in 0 suites passed after 0.417 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test conversationContinuationRequiresExactSessionHistoryAndInstructions() started.
+✔ Test conversationContinuationRequiresExactSessionHistoryAndInstructions() passed after 0.001 seconds.
+◇ Test conversationContinuationPreservesToolIdentityAndRejectsChangedSchemas() started.
+✔ Test conversationContinuationPreservesToolIdentityAndRejectsChangedSchemas() passed after 0.001 seconds.
+◇ Test textModelMemoryAdmissionSupportsLargeWeightsWithoutConsumingTheWholeMac() started.
+✔ Test textModelMemoryAdmissionSupportsLargeWeightsWithoutConsumingTheWholeMac() passed after 0.003 seconds.
+◇ Test textModelMemoryAdmissionRejectsMalformedAndOverflowingSizes() started.
+✔ Test textModelMemoryAdmissionRejectsMalformedAndOverflowingSizes() passed after 0.001 seconds.
+◇ Test modelProfileRejectsInvalidWorkingCapacity(_:) started.
+◇ Test case passing 1 argument capacity → 0 to modelProfileRejectsInvalidWorkingCapacity(_:) started.
+◇ Test case passing 1 argument capacity → -1 to modelProfileRejectsInvalidWorkingCapacity(_:) started.
+◇ Test case passing 1 argument capacity → 9223372036854775807 to modelProfileRejectsInvalidWorkingCapacity(_:) started.
+✔ Test modelProfileRejectsInvalidWorkingCapacity(_:) with 3 test cases passed after 0.011 seconds.
+◇ Test modelProfileRejectsInvalidPrefillOverride(_:) started.
+◇ Test case passing 1 argument chunk → 0 to modelProfileRejectsInvalidPrefillOverride(_:) started.
+◇ Test case passing 1 argument chunk → -64 to modelProfileRejectsInvalidPrefillOverride(_:) started.
+✔ Test modelProfileRejectsInvalidPrefillOverride(_:) with 2 test cases passed after 0.005 seconds.
+◇ Test modelProfilePreservesRuntimeSelectedPrefillAndAllowsReviewedLargerContexts() started.
+✔ Test modelProfilePreservesRuntimeSelectedPrefillAndAllowsReviewedLargerContexts() passed after 0.002 seconds.
+◇ Test modelProfileRequiresProvenanceAndFitsReasoningWithinCapacity() started.
+✔ Test modelProfileRequiresProvenanceAndFitsReasoningWithinCapacity() passed after 0.004 seconds.
+◇ Test modelTaskAllowanceCapsRequestsWithoutChangingSmallerFeatureBudgets() started.
+✔ Test modelTaskAllowanceCapsRequestsWithoutChangingSmallerFeatureBudgets() passed after 0.001 seconds.
+◇ Test speechPreemptsTextAndResumesWithoutOverlappingInference() started.
+✔ Test speechPreemptsTextAndResumesWithoutOverlappingInference() passed after 0.027 seconds.
+◇ Test cancelledTextReleasesItsLeaseAndDoesNotRestart() started.
+✔ Test cancelledTextReleasesItsLeaseAndDoesNotRestart() passed after 0.016 seconds.
+◇ Test missingModelsNeverDownloadImplicitlyAndDuplicateProvidersAreRejected() started.
+✔ Test missingModelsNeverDownloadImplicitlyAndDuplicateProvidersAreRejected() passed after 0.003 seconds.
+◇ Test suspendedTextCannotStartWork() started.
+✔ Test suspendedTextCannotStartWork() passed after 0.002 seconds.
+◇ Test activeConversationRetainsTextUntilItEndsAndPressureCanEvictIt() started.
+✔ Test activeConversationRetainsTextUntilItEndsAndPressureCanEvictIt() passed after 0.095 seconds.
+◇ Test changingAProfileReleasesTheOldRuntimeWithoutRedownloadingItsWeights() started.
+✔ Test changingAProfileReleasesTheOldRuntimeWithoutRedownloadingItsWeights() passed after 0.014 seconds.
+◇ Test preemptedTextStreamNeverAutomaticallyReplaysADeliveredPrefix() started.
+✔ Test preemptedTextStreamNeverAutomaticallyReplaysADeliveredPrefix() passed after 0.016 seconds.
+◇ Test generatedTextRejectsConsecutiveLoopsWithoutMatchingSpecificWords() started.
+✔ Test generatedTextRejectsConsecutiveLoopsWithoutMatchingSpecificWords() passed after 0.004 seconds.
+◇ Test mandatoryReasoningUsesTheSelectedModelsTaskCapacity() started.
+✔ Test mandatoryReasoningUsesTheSelectedModelsTaskCapacity() passed after 0.002 seconds.
+◇ Test selectedModelProfileSurvivesNativePreparationTransport() started.
+✔ Test selectedModelProfileSurvivesNativePreparationTransport() passed after 0.002 seconds.
+◇ Test catalogRejectsInvalidSamplingBeforePreparingAModel(field:value:) started.
+◇ Test case passing 2 arguments field → "temperature", value → -0.1 to catalogRejectsInvalidSamplingBeforePreparingAModel(field:value:) started.
+◇ Test case passing 2 arguments field → "temperature", value → 3.0 to catalogRejectsInvalidSamplingBeforePreparingAModel(field:value:) started.
+◇ Test case passing 2 arguments field → "topP", value → 0.0 to catalogRejectsInvalidSamplingBeforePreparingAModel(field:value:) started.
+◇ Test case passing 2 arguments field → "topP", value → 2.0 to catalogRejectsInvalidSamplingBeforePreparingAModel(field:value:) started.
+◇ Test case passing 2 arguments field → "topK", value → -1.0 to catalogRejectsInvalidSamplingBeforePreparingAModel(field:value:) started.
+◇ Test case passing 2 arguments field → "topK", value → 100000.0 to catalogRejectsInvalidSamplingBeforePreparingAModel(field:value:) started.
+◇ Test case passing 2 arguments field → "repetitionPenalty", value → 0.0 to catalogRejectsInvalidSamplingBeforePreparingAModel(field:value:) started.
+◇ Test case passing 2 arguments field → "repetitionPenalty", value → 3.0 to catalogRejectsInvalidSamplingBeforePreparingAModel(field:value:) started.
+✔ Test catalogRejectsInvalidSamplingBeforePreparingAModel(field:value:) with 8 test cases passed after 0.020 seconds.
+◇ Test streamDeadlineIsNotRenewedByEveryNewToken() started.
+✔ Test streamDeadlineIsNotRenewedByEveryNewToken() passed after 0.307 seconds.
+◇ Test textWorkerStreamsAcknowledgedDeltasBeforeReturningItsFinalResult() started.
+✔ Test textWorkerStreamsAcknowledgedDeltasBeforeReturningItsFinalResult() passed after 0.060 seconds.
+◇ Test textWorkerRejectsAFinalResultThatRewritesAlreadyDeliveredText() started.
+✔ Test textWorkerRejectsAFinalResultThatRewritesAlreadyDeliveredText() passed after 0.041 seconds.
+◇ Test textWorkerPreservesTheNativeFailureReasonAndTokenMeasurements() started.
+✔ Test textWorkerPreservesTheNativeFailureReasonAndTokenMeasurements() passed after 0.043 seconds.
+◇ Test cumulativeSnapshotsOnlyDeliverNewUnicodeText() started.
+✔ Test cumulativeSnapshotsOnlyDeliverNewUnicodeText() passed after 0.001 seconds.
+◇ Test textSnapshotsRejectOversizedInputBeforeCopyingIt() started.
+✔ Test textSnapshotsRejectOversizedInputBeforeCopyingIt() passed after 0.001 seconds.
+◇ Test textEventsRoundTripWithoutConflatingToolArgumentsWithText() started.
+✔ Test textEventsRoundTripWithoutConflatingToolArgumentsWithText() passed after 0.001 seconds.
+◇ Test completedEmptyToolContinuationReachesTheConversationOwner() started.
+✔ Test completedEmptyToolContinuationReachesTheConversationOwner() passed after 0.001 seconds.
+◇ Test emptyInitialResponseIsStillAnErrorAndRetainsItsNativeMeasurements() started.
+✔ Test emptyInitialResponseIsStillAnErrorAndRetainsItsNativeMeasurements() passed after 0.001 seconds.
+◇ Test missingOrTruncatedToolCompletionCannotBecomeSuccessful() started.
+✔ Test missingOrTruncatedToolCompletionCannotBecomeSuccessful() passed after 0.001 seconds.
+◇ Test workerExitIsRecoverableAndRequestsRemainBounded() started.
+✔ Test workerExitIsRecoverableAndRequestsRemainBounded() passed after 0.017 seconds.
+◇ Test truncatedAndOversizedFramesAreRejectedBeforeAllocation() started.
+✔ Test truncatedAndOversizedFramesAreRejectedBeforeAllocation() passed after 0.001 seconds.
+◇ Test cancellingAnUnresponsiveWorkerReleasesTheCallerAndProcess(attempt:) started.
+◇ Test case passing 1 argument attempt → 0 to cancellingAnUnresponsiveWorkerReleasesTheCallerAndProcess(attempt:) started.
+◇ Test case passing 1 argument attempt → 1 to cancellingAnUnresponsiveWorkerReleasesTheCallerAndProcess(attempt:) started.
+◇ Test case passing 1 argument attempt → 2 to cancellingAnUnresponsiveWorkerReleasesTheCallerAndProcess(attempt:) started.
+◇ Test case passing 1 argument attempt → 3 to cancellingAnUnresponsiveWorkerReleasesTheCallerAndProcess(attempt:) started.
+◇ Test case passing 1 argument attempt → 4 to cancellingAnUnresponsiveWorkerReleasesTheCallerAndProcess(attempt:) started.
+◇ Test case passing 1 argument attempt → 5 to cancellingAnUnresponsiveWorkerReleasesTheCallerAndProcess(attempt:) started.
+◇ Test case passing 1 argument attempt → 6 to cancellingAnUnresponsiveWorkerReleasesTheCallerAndProcess(attempt:) started.
+◇ Test case passing 1 argument attempt → 7 to cancellingAnUnresponsiveWorkerReleasesTheCallerAndProcess(attempt:) started.
+◇ Test case passing 1 argument attempt → 8 to cancellingAnUnresponsiveWorkerReleasesTheCallerAndProcess(attempt:) started.
+◇ Test case passing 1 argument attempt → 9 to cancellingAnUnresponsiveWorkerReleasesTheCallerAndProcess(attempt:) started.
+◇ Test case passing 1 argument attempt → 10 to cancellingAnUnresponsiveWorkerReleasesTheCallerAndProcess(attempt:) started.
+◇ Test case passing 1 argument attempt → 11 to cancellingAnUnresponsiveWorkerReleasesTheCallerAndProcess(attempt:) started.
+✔ Test cancellingAnUnresponsiveWorkerReleasesTheCallerAndProcess(attempt:) with 12 test cases passed after 1.382 seconds.
+✔ Test run with 33 tests in 0 suites passed after 2.093 seconds.
+Test Suite 'Selected tests' started at 2026-11-03 10:24:04.096.
+Test Suite 'SilliesTextModelsTests.xctest' started at 2026-11-03 10:24:04.102.
+Test Suite 'TextModelCatalogTests' started at 2026-11-03 10:24:04.102.
+Test Case '-[SilliesTextModelsTests.TextModelCatalogTests testModelsUsePinnedArtifacts]' started.
+Test Case '-[SilliesTextModelsTests.TextModelCatalogTests testModelsUsePinnedArtifacts]' passed (0.007 seconds).
+Test Suite 'TextModelCatalogTests' passed at 2026-11-03 10:24:04.109.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.007 (0.007) seconds
+Test Suite 'SilliesTextModelsTests.xctest' passed at 2026-11-03 10:24:04.109.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.007 (0.007) seconds
+Test Suite 'Selected tests' passed at 2026-11-03 10:24:04.109.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.007 (0.013) seconds
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+➜ Test appleNativeAndApplicationTranscriptsUseIdenticalChatInputs(_:) skipped.
+◇ Test checkpointWriteSurvivesStalePresentationSavesAndRestart() started.
+✔ Test checkpointWriteSurvivesStalePresentationSavesAndRestart() passed after 0.019 seconds.
+◇ Test transcriptMutationAndClearRejectInFlightCheckpointResults() started.
+✔ Test transcriptMutationAndClearRejectInFlightCheckpointResults() passed after 0.009 seconds.
+◇ Test checkpointSlicesResumeTheirCursorWithoutReplayingOlderHistory() started.
+✔ Test checkpointSlicesResumeTheirCursorWithoutReplayingOlderHistory() passed after 0.029 seconds.
+◇ Test failedOrCancelledSummaryNeverAdvancesItsCheckpoint() started.
+✔ Test failedOrCancelledSummaryNeverAdvancesItsCheckpoint() passed after 0.006 seconds.
+◇ Test longMessagesCanAdvanceAByteLimitedCheckpointBelowItsCountThreshold() started.
+✔ Test longMessagesCanAdvanceAByteLimitedCheckpointBelowItsCountThreshold() passed after 0.010 seconds.
+◇ Test conversationHistoryResumesDraftAndEvidenceWithoutLoadingTheArchive() started.
+✔ Test conversationHistoryResumesDraftAndEvidenceWithoutLoadingTheArchive() passed after 0.011 seconds.
+◇ Test conversationClearingInvalidatesLateWritesAndSearch() started.
+✔ Test conversationClearingInvalidatesLateWritesAndSearch() passed after 0.014 seconds.
+◇ Test conversationMemoriesRequireUserProvenanceAndUndoRestoresPreviousValue() started.
+✔ Test conversationMemoriesRequireUserProvenanceAndUndoRestoresPreviousValue() passed after 0.007 seconds.
+◇ Test memorySourcesKeepLongUserMessagesAndLargeUndoReceiptsReadable() started.
+✔ Test memorySourcesKeepLongUserMessagesAndLargeUndoReceiptsReadable() passed after 0.011 seconds.
+◇ Test interactiveReplyPreemptsCheckpointAndLifetimeEndStopsTheProducer() started.
+CONTINUITY PREEMPTION: 0.002086166 seconds
+✔ Test interactiveReplyPreemptsCheckpointAndLifetimeEndStopsTheProducer() passed after 0.048 seconds.
+◇ Test checkpointDeadlineLeavesArchiveAndMemoryRecoverable() started.
+Conversation checkpoint deferred: exceeded
+✔ Test checkpointDeadlineLeavesArchiveAndMemoryRecoverable() passed after 0.376 seconds.
+◇ Test queuedCheckpointRequestsCoalesceAndCannotRestartAfterClosing() started.
+✔ Test queuedCheckpointRequestsCoalesceAndCannotRestartAfterClosing() passed after 0.046 seconds.
+◇ Test largeArchiveKeepsReplyReadsMemoryAndMainActorWorkBounded() started.
+CONTINUITY SCALE: 10001 records, 50 replies; reply p50=0.001016166 seconds, p95=0.001209792 seconds; main actor max=1.9458e-05 seconds; resident delta=360448 bytes; max page=8016 bytes
+✔ Test largeArchiveKeepsReplyReadsMemoryAndMainActorWorkBounded() passed after 0.400 seconds.
+◇ Test byteBoundedPagesPreserveCursorProgressWithOversizedRecords() started.
+✔ Test byteBoundedPagesPreserveCursorProgressWithOversizedRecords() passed after 0.008 seconds.
+◇ Test conversationToolsScopeWritesToCurrentUserAndRecoveryDoesNotRepeatThem() started.
+✔ Test conversationToolsScopeWritesToCurrentUserAndRecoveryDoesNotRepeatThem() passed after 0.008 seconds.
+◇ Test memoryToolsBindOriginalUserEvidenceWithoutModelTranscription() started.
+✔ Test memoryToolsBindOriginalUserEvidenceWithoutModelTranscription() passed after 0.007 seconds.
+➜ Test appleConversationFiveToolQualityCheck() skipped.
+➜ Test appleChatSavesAndRecallsAnOriginalUserStatement() skipped.
+➜ Test appleChatKeepsItsIdentitySeparateFromUserMemories(_:) skipped.
+➜ Test appleChatKeepsItsIdentityAfterRetrievingUserMemories() skipped.
+➜ Test appleChatCorrectsAnEarlierMistakenIdentityUsingItsProfile() skipped.
+➜ Test appleChatRechecksPreviouslyMisattributedMemoryResults() skipped.
+◇ Test agentReadsABoundedArchiveWindowAndTheLatestDurableCheckpoint(checkpoint:) started.
+◇ Test case passing 1 argument checkpoint → .absent to agentReadsABoundedArchiveWindowAndTheLatestDurableCheckpoint(checkpoint:) started.
+◇ Test case passing 1 argument checkpoint → .saved to agentReadsABoundedArchiveWindowAndTheLatestDurableCheckpoint(checkpoint:) started.
+✔ Test agentReadsABoundedArchiveWindowAndTheLatestDurableCheckpoint(checkpoint:) with 2 test cases passed after 0.021 seconds.
+◇ Test memoryReplacementPreservesIdentityAndRejectsStaleOrDeletedTargets() started.
+✔ Test memoryReplacementPreservesIdentityAndRejectsStaleOrDeletedTargets() passed after 0.004 seconds.
+◇ Test memoryReplacementToolRequiresValidPairedReferencesAndCompanionOwnership() started.
+✔ Test memoryReplacementToolRequiresValidPairedReferencesAndCompanionOwnership() passed after 0.004 seconds.
+➜ Test nativeLongHistoryAndCheckpointPreemption() skipped.
+◇ Test vaultInvalidationTracksChangedRecordsAndFallsBackAfterBoundedHistory() started.
+✔ Test vaultInvalidationTracksChangedRecordsAndFallsBackAfterBoundedHistory() passed after 0.001 seconds.
+◇ Test vaultRecordReadsPreferCapturedBodiesOverMatchingTitles() started.
+✔ Test vaultRecordReadsPreferCapturedBodiesOverMatchingTitles() passed after 0.012 seconds.
+◇ Test vaultToolsFindScreenshotsSavedURLsAndLateMeetingTopics() started.
+✔ Test vaultToolsFindScreenshotsSavedURLsAndLateMeetingTopics() passed after 0.016 seconds.
+➜ Test appleChatUsesNativeVaultToolsForTheRequestedRecordTypes() skipped.
+➜ Test appleChatAnswersBoltsFirstSpokenGreeting() skipped.
+➜ Test appleChatAnswersGeneralKnowledgeAfterAVaultConversation() skipped.
+➜ Test downloadedChatAnswersGeneralKnowledgeAndReturnsToEarlierVaultResults() skipped.
+◇ Test vaultSearchReportsTotalSeparatelyFromItsBoundedResultsWithoutLoadingBodies() started.
+✔ Test vaultSearchReportsTotalSeparatelyFromItsBoundedResultsWithoutLoadingBodies() passed after 0.005 seconds.
+◇ Test emptyVaultSearchReportsACompletedQueryWithoutSuggestingANonexistentRecordRead() started.
+✔ Test emptyVaultSearchReportsACompletedQueryWithoutSuggestingANonexistentRecordRead() passed after 0.004 seconds.
+◇ Test largeVaultPagesDoNotLoadBodiesAndReopenKeepsSearchIndex() started.
+✔ Test largeVaultPagesDoNotLoadBodiesAndReopenKeepsSearchIndex() passed after 0.242 seconds.
+◇ Test oversizedVaultBodiesAreReturnedWithoutGrowingTheCache() started.
+✔ Test oversizedVaultBodiesAreReturnedWithoutGrowingTheCache() passed after 0.004 seconds.
+◇ Test vaultListingKeepsItsCursorWhenLiveChangesMoveTheLoadedRange() started.
+✔ Test vaultListingKeepsItsCursorWhenLiveChangesMoveTheLoadedRange() passed after 0.001 seconds.
+◇ Test aCompoundRecordQuestionReturnsSeparateRelevantPassagesWithTheirOwnCoverage() started.
+✔ Test aCompoundRecordQuestionReturnsSeparateRelevantPassagesWithTheirOwnCoverage() passed after 0.001 seconds.
+◇ Test vaultPassagePrioritizesRequestedDetailOverAlreadyResolvedTitle(_:) started.
+◇ Test case passing 1 argument query → "Cedar deployment notes recovery identifier" to vaultPassagePrioritizesRequestedDetailOverAlreadyResolvedTitle(_:) started.
+◇ Test case passing 1 argument query → "CEDAR deployment notes, recovery identifier?" to vaultPassagePrioritizesRequestedDetailOverAlreadyResolvedTitle(_:) started.
+◇ Test case passing 1 argument query → "identifier recovery Cedar deployment notes" to vaultPassagePrioritizesRequestedDetailOverAlreadyResolvedTitle(_:) started.
+✔ Test vaultPassagePrioritizesRequestedDetailOverAlreadyResolvedTitle(_:) with 3 test cases passed after 0.002 seconds.
+◇ Test titleOnlyPassageQueriesRemainUsefulAndTermsMatchWholeWords() started.
+✔ Test titleOnlyPassageQueriesRemainUsefulAndTermsMatchWholeWords() passed after 0.001 seconds.
+◇ Test vaultPassagesRankAllQueryTermsAcrossTheCapturedText(_:) started.
+◇ Test case passing 1 argument query → "release recovery" to vaultPassagesRankAllQueryTermsAcrossTheCapturedText(_:) started.
+◇ Test case passing 1 argument query → "recovery release" to vaultPassagesRankAllQueryTermsAcrossTheCapturedText(_:) started.
+◇ Test case passing 1 argument query → "RELEASE release recovery" to vaultPassagesRankAllQueryTermsAcrossTheCapturedText(_:) started.
+✔ Test vaultPassagesRankAllQueryTermsAcrossTheCapturedText(_:) with 3 test cases passed after 0.006 seconds.
+◇ Test vaultPassageContinuationPreservesUnicodeWithoutGapsOrDuplicates() started.
+✔ Test vaultPassageContinuationPreservesUnicodeWithoutGapsOrDuplicates() passed after 0.001 seconds.
+◇ Test vaultRecordReadReportsActualFullAndRecoveryPassageCoverage() started.
+✔ Test vaultRecordReadReportsActualFullAndRecoveryPassageCoverage() passed after 0.005 seconds.
+◇ Test cancelledVaultNotesCannotReplaceANewerRequestForTheSameRecord() started.
+✔ Test cancelledVaultNotesCannotReplaceANewerRequestForTheSameRecord() passed after 0.004 seconds.
+◇ Test thousandsOfPendingNotesAdmitOnlyOneProducerAndStopWithoutStartingTheRest() started.
+✔ Test thousandsOfPendingNotesAdmitOnlyOneProducerAndStopWithoutStartingTheRest() passed after 0.008 seconds.
+✔ Test run with 47 tests in 0 suites passed after 1.370 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test playbackAudibilitySkipsLeadingSilenceAndReportsOnlyTheFirstRenderedSample() started.
+✔ Test playbackAudibilitySkipsLeadingSilenceAndReportsOnlyTheFirstRenderedSample() passed after 0.001 seconds.
+◇ Test playbackPreparesBeforePCMAndCancellationDiscardsThePreparedDevice() started.
+✔ Test playbackPreparesBeforePCMAndCancellationDiscardsThePreparedDevice() passed after 0.001 seconds.
+◇ Test playbackAudibleTimingUsesTheDeviceAndRejectsPreviousPlaybackCallbacks() started.
+✔ Test playbackAudibleTimingUsesTheDeviceAndRejectsPreviousPlaybackCallbacks() passed after 0.001 seconds.
+◇ Test playbackBackpressureStopsProducersUntilSamplesPlay() started.
+✔ Test playbackBackpressureStopsProducersUntilSamplesPlay() passed after 0.036 seconds.
+◇ Test playbackCancellationReleasesWaitersAndIgnoresOldDeviceCallbacks() started.
+✔ Test playbackCancellationReleasesWaitersAndIgnoresOldDeviceCallbacks() passed after 0.050 seconds.
+➜ Test playbackRenderReferenceUsesTheDeviceClockAndStopsWithOutput() skipped.
+➜ Test playbackEchoReferenceIncludesUtterancesShorterThanATapBatch() skipped.
+◇ Test spokenPhraseCompletionWaitsForHardwareAndIgnoresDuplicateCallbacks() started.
+✔ Test spokenPhraseCompletionWaitsForHardwareAndIgnoresDuplicateCallbacks() passed after 0.027 seconds.
+◇ Test playbackDeviceChangeReleasesWaitersWithoutMarkingUnheardTextAsSpoken() started.
+✔ Test playbackDeviceChangeReleasesWaitersWithoutMarkingUnheardTextAsSpoken() passed after 0.001 seconds.
+◇ Test playbackWatchdogRecoversWhenADeviceNeverCompletesItsBuffer() started.
+✔ Test playbackWatchdogRecoversWhenADeviceNeverCompletesItsBuffer() passed after 0.035 seconds.
+◇ Test playbackReferenceCopiesTheMonoVoiceFromNativeOutputLayouts(interleaved:) started.
+◇ Test case passing 1 argument interleaved → true to playbackReferenceCopiesTheMonoVoiceFromNativeOutputLayouts(interleaved:) started.
+◇ Test case passing 1 argument interleaved → false to playbackReferenceCopiesTheMonoVoiceFromNativeOutputLayouts(interleaved:) started.
+✔ Test playbackReferenceCopiesTheMonoVoiceFromNativeOutputLayouts(interleaved:) with 2 test cases passed after 0.001 seconds.
+◇ Test playbackReferenceOnlyPublishesCompletedRendersAndHonorsNativeSilence() started.
+✔ Test playbackReferenceOnlyPublishesCompletedRendersAndHonorsNativeSilence() passed after 0.001 seconds.
+◇ Test playbackReferenceRejectsIncompleteAndOversizedNativeBuffers() started.
+✔ Test playbackReferenceRejectsIncompleteAndOversizedNativeBuffers() passed after 0.001 seconds.
+✔ Test run with 13 tests in 0 suites passed after 0.153 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test dictationFinalizationDrainsOnceAndRespectsExplicitCancellation(_:) started.
+◇ Test case passing 1 argument intent → .cancel to dictationFinalizationDrainsOnceAndRespectsExplicitCancellation(_:) started.
+◇ Test case passing 1 argument intent → .suspend to dictationFinalizationDrainsOnceAndRespectsExplicitCancellation(_:) started.
+✔ Test dictationFinalizationDrainsOnceAndRespectsExplicitCancellation(_:) with 2 test cases passed after 0.029 seconds.
+◇ Test dictationLateInsertionCannotPublishResultOrLatencyIntoTheNextRun() started.
+✔ Test dictationLateInsertionCannotPublishResultOrLatencyIntoTheNextRun() passed after 0.025 seconds.
+◇ Test dictationUsesTheOutputStyleChosenAtSessionStart() started.
+✔ Test dictationUsesTheOutputStyleChosenAtSessionStart() passed after 0.011 seconds.
+◇ Test dictationQuitPreservesFinalizedAudioBeforeItsDeliveryTaskCanRun() started.
+✔ Test dictationQuitPreservesFinalizedAudioBeforeItsDeliveryTaskCanRun() passed after 0.006 seconds.
+◇ Test dictationRestartRejectsLateDestinationSuccessAndFailure(_:) started.
+◇ Test case passing 1 argument outcome → .success to dictationRestartRejectsLateDestinationSuccessAndFailure(_:) started.
+◇ Test case passing 1 argument outcome → .permission to dictationRestartRejectsLateDestinationSuccessAndFailure(_:) started.
+◇ Test case passing 1 argument outcome → .unsupported to dictationRestartRejectsLateDestinationSuccessAndFailure(_:) started.
+✔ Test dictationRestartRejectsLateDestinationSuccessAndFailure(_:) with 3 test cases passed after 0.055 seconds.
+◇ Test dictationRestartRejectsLateLanguageDiscovery(succeeds:) started.
+◇ Test case passing 1 argument succeeds → true to dictationRestartRejectsLateLanguageDiscovery(succeeds:) started.
+◇ Test case passing 1 argument succeeds → false to dictationRestartRejectsLateLanguageDiscovery(succeeds:) started.
+✔ Test dictationRestartRejectsLateLanguageDiscovery(succeeds:) with 2 test cases passed after 0.038 seconds.
+◇ Test dictationRestartRejectsDelayedCleanupAndKeepsItsOwnSettings() started.
+✔ Test dictationRestartRejectsDelayedCleanupAndKeepsItsOwnSettings() passed after 0.024 seconds.
+◇ Test isolatedDictationRecoversFinalSpeechBeforeTerminationFlush() started.
+✔ Test isolatedDictationRecoversFinalSpeechBeforeTerminationFlush() passed after 0.006 seconds.
+◇ Test isolatedSelectionFailurePreservesOriginalAndNeverInserts() started.
+✔ Test isolatedSelectionFailurePreservesOriginalAndNeverInserts() passed after 0.006 seconds.
+✔ Test run with 9 tests in 0 suites passed after 0.205 seconds.
+Verified completion of 676 selected tests across 18 runs.
+SILLIES_BUILD_DIRECTORY="/Users/cristian.pufu/Documents/GitHub/sillies-macos/build" bash scripts/build-app.sh debug
+Building for debugging...
+[Computing dependencies]
+[Using on-disk description]
+[1 / 167] ChatModelBenchmark-product
+warning: missing creator for mutated node: ('/Users/cristian.pufu/Documents/GitHub/sillies-macos/.build/out/Products/Debug/mlx-swift_Cmlx.bundle/Contents/MacOS')
+[9 / 137]
+[9 / 38] CEchoCancellation
+Build complete! (1,59 sec)
+Third-party notices match all resolved packages and model catalogs.
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/install_name_tool: warning: changes being made to the file will invalidate the code signature in: /Users/cristian.pufu/Documents/GitHub/sillies-macos/build/Sillies.app/Contents/MacOS/Sillies
+No problems.
+en,cs,da,de,es,fr,hu,it,ja,ko,nb,nl,pl,pt-BR,pt-PT,ro,ru,sv,tr,uk,zh-Hans,zh-Hant
+No problems.
+en,cs,da,de,es,fr,hu,it,ja,ko,nb,nl,pl,pt-BR,pt-PT,ro,ru,sv,tr,uk,zh-Hans,zh-Hant
+No problems.
+en,cs,da,de,es,fr,hu,it,ja,ko,nb,nl,pl,pt-BR,pt-PT,ro,ru,sv,tr,uk,zh-Hans,zh-Hant
+/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/Sillies.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate: replacing existing signature
+/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/Sillies.app/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app: replacing existing signature
+/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/Sillies.app/Contents/Frameworks/Sparkle.framework: replacing existing signature
+/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/Sillies.app/Contents/Helpers/SilliesTextInference.app: replacing existing signature
+/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/Sillies.app/Contents/Helpers/SilliesTTSInference.app: replacing existing signature
+/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/Sillies.app/Contents/Helpers/SilliesWindowMetadata: replacing existing signature
+/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/Sillies.app: replacing existing signature
+Built /Users/cristian.pufu/Documents/GitHub/sillies-macos/build/Sillies.app (debug, signed Developer ID)
+python3 -B Benchmarks/Chat/benchmark.py fixtures
+74 scenarios · 93 model cases · 134 turns per model
+Validated 74 synthetic scenario fixtures, including screenshot retrieval.
+python3 -B scripts/localize.py extract --check
+Building to find every string (a minute or two)…
+English catalog matches 925 source strings.
+build/Sillies.app/Contents/Helpers/SilliesTextInference.app/Contents/MacOS/SilliesTextInference --self-test
+Text inference GPU, native conversation protocol and bundled kernels: passed
+build/Sillies.app/Contents/Helpers/SilliesTTSInference.app/Contents/MacOS/SilliesTTSInference --self-test
+Native TTS helper and GPU: available (Kokoro, Pocket TTS, Qwen3-TTS, Fish S2 Pro)
+python3 -B scripts/test-inference-parent-exit.py "build/Sillies.app/Contents/Helpers/SilliesTTSInference.app/Contents/MacOS/SilliesTTSInference"
+INFERENCE PARENT EXIT CHECK PASSED: orphaned helper exits with stdin still open
+python3 -B scripts/test-inference-parent-exit.py "build/Sillies.app/Contents/Helpers/SilliesTextInference.app/Contents/MacOS/SilliesTextInference"
+INFERENCE PARENT EXIT CHECK PASSED: orphaned helper exits with stdin still open
+build/Sillies.app/Contents/MacOS/Sillies --validate-catalog
+Validated 12 character packs, all animation references, 4 downloadable speech models, 12 downloadable text models, and 5 downloadable voice models.

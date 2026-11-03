@@ -35,11 +35,14 @@ package struct VaultReadTool: ConversationTool {
     }
     try Task.checkCancellation()
     do {
-      let passage = try VaultRecordPassage.select(
+      let passages = try VaultRecordPassage.selectRelated(
         in: record, query: args.query, offset: args.offset)
+      guard let passage = passages.first else {
+        throw VaultRecordPassage.SelectionError.invalidOffset
+      }
       let source = try ChatSource(
         header: .init(record), excerpt: passage.text, links: VaultToolContent.links(in: record))
-      return try VaultToolContent.readOutput(source, passage: passage)
+      return try VaultToolContent.readOutput(source, passages: passages)
     } catch VaultRecordPassage.SelectionError.invalidOffset {
       return .init(
         text:

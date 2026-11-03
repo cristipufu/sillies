@@ -78,6 +78,16 @@ MLX weights alone do not make them usable in Sillies; they are not offered as wo
 
 ## Benchmarks
 
+- **[Long-lived conversations: bounded replies and background checkpoints](reports/long-lived-chat-2026-11-03.md)** —
+  synthetic scale, durable checkpoints, real-model interruption and archive-recall controls.
+  These focused measurements do not replace the full-corpus leaderboard above.
+- **[Per-model profiles and agent-loop engineering](reports/agent-profiles-2026-11-03.md)** —
+  fresh baseline/candidate comparisons, context-capacity experiments and remaining failures.
+  These focused results do not replace the full-corpus scores above. See the
+  [profile and budget contracts](model-profiles.md) for contributor guidance.
+- **[Chat loop experiments: speed, retrieval and compaction](reports/chat-loop-experiments-2026-11-02.md)** —
+  controlled diagnostic comparisons with gains, regressions and raw evidence; these subset results
+  do not replace the leaderboard above or change the app's defaults.
 - **[LFM integration fixes and full rerun](reports/lfm-chat-rerun-2026-11-02.md)** —
   updated scores for both LFMs, diagnostic controls, latency trade-offs and remaining failures.
 - **[Reviewed thirteen-model comparison and raw results](reports/corrected-local-chat-models-2026-11-02.md)** —

@@ -1,0 +1,18 @@
+{
+  "scope": "Native lifecycle control; summary quality observations are separate from its executable persistence/cancellation assertions. No scoring substitution into recall benchmarks.",
+  "source": "ConversationContinuityFixture.seed: 24 alternating messages containing only Archived discussion N.",
+  "reviews": {
+    "apple": {
+      "quality": "fail",
+      "note": "Unsupported claims include twelve months of activity, discussion frequency and user intent. Source placeholder messages do not support these."
+    },
+    "lfm-2.5-24b-a2b": {
+      "quality": "pass",
+      "note": "Correctly states that placeholder discussion references contain no explicit facts, preferences, commitments or questions."
+    },
+    "gemma-4-12b": {
+      "quality": "uncertain",
+      "note": "Summarizes numbered messages and absence of open questions, but characterizes assistant placeholders as acknowledgements/archiving. The fixture does not directly assert those actions."
+    }
+  }
+}

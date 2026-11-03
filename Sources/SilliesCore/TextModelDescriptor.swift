@@ -14,9 +14,9 @@ public struct TextModelDescriptor: Codable, Equatable, Identifiable, Sendable {
   public let license: String
   public let sourceURL: URL
   public let minimumMemoryGB: Int
-  public let contextTokens: Int
+  public let profile: TextModelProfile
+  public var contextTokens: Int { profile.context.workingTokens }
   public let languagesDescription: String
   public let release: Release?
   public let reasoning: TextModelReasoning?
-  public let sampling: TextModelSampling?
 }

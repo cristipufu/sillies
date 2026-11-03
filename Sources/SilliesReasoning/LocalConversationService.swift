@@ -5,22 +5,28 @@ package actor LocalConversationService: ConversationResponding {
   private let backend: @Sendable () async -> any ReasoningBackend
   private let tools: [any ConversationTool]
   private let turns: ReasoningTurnGate
-  private let historyTools: @Sendable (ChatContext) -> [any ConversationTool]
+  private let history: ConversationHistoryAccess
+  private let maintenance: ConversationCheckpointMaintenance?
 
   package init(
     resolveBackend: @escaping @Sendable () async -> any ReasoningBackend,
     tools: [any ConversationTool], turns: ReasoningTurnGate,
-    historyTools: @escaping @Sendable (ChatContext) -> [any ConversationTool] = { _ in [] }
+    history: ConversationHistoryAccess = .transient
   ) {
     backend = resolveBackend
     self.tools = tools
     self.turns = turns
-    self.historyTools = historyTools
+    self.history = history
+    maintenance = history.repository.map {
+      ConversationCheckpointMaintenance(
+        repository: $0, resolveBackend: resolveBackend, turns: turns)
+    }
   }
   package func availabilityNotice(localeIdentifier: String?) async -> String? {
     await backend().availabilityNotice(localeIdentifier: localeIdentifier)
   }
   package func retain(for lifetime: TextModelLifetime) async {
+    await maintenance?.retain(for: lifetime)
     let selected = await backend()
     await (selected as? any ConversationBackend)?.retain(for: lifetime)
   }
@@ -44,12 +50,35 @@ package actor LocalConversationService: ConversationResponding {
       throw TextModelError.toolsUnavailable
     }
     try await turns.acquire(.interactive)
-    defer { Task { await turns.release() } }
+    do {
+      let reply = try await respond(
+        to: context, backend: selected, progress: progress, receive: receive)
+      await turns.release()
+      await maintenance?.enqueue(context)
+      return reply
+    } catch {
+      await turns.release()
+      await maintenance?.enqueue(context)
+      throw error
+    }
+  }
+
+  private func respond(
+    to context: ChatContext, backend selected: any ConversationBackend,
+    progress: @escaping @Sendable (ChatProgress) -> Void, receive: @escaping ConversationTextSink
+  ) async throws -> ChatReply {
     try Task.checkCancellation()
-    let toolbox = try ConversationToolbox(tools: tools + historyTools(context), progress: progress)
-    let manager = ConversationContextManager(
-      backend: selected, tools: toolbox.definitions, progress: progress)
-    var working = try await manager.prepare(context)
+    let toolbox = try ConversationToolbox(tools: tools + history.tools(context), progress: progress)
+    let manager = ConversationContextManager(backend: selected, tools: toolbox.definitions)
+    let source: ChatContext
+    if let repository = history.repository, context.historyHandle != nil {
+      source = try await ConversationHistoryPreparation(
+        repository: repository, limit: selected.conversationPolicy.history.recent
+      ).prepare(context)
+    } else {
+      source = context
+    }
+    var working = try await manager.prepare(source)
     let text: String
     let delivery = ConversationStreamDelivery(receive: receive)
     do {
@@ -60,22 +89,13 @@ package actor LocalConversationService: ConversationResponding {
       // A backend can include hidden framing or a tool result that changes the budget.
       // Retry once; tool results (including writes) are cached for this turn.
       try await toolbox.beginRecovery()
-      working = try await manager.prepare(
-        contextWithMemory(context, working.memory), pressure: .recovering)
+      working = try await manager.prepare(working, pressure: .recovering)
       text = try await ChatReplyGenerator.reply(
         to: working, backend: selected, tools: toolbox, receive: delivery.append)
     }
     try Task.checkCancellation()
     return await ChatReply(
-      text: text, sources: toolbox.sources, exchanges: toolbox.exchanges, memory: working.memory)
+      text: text, sources: toolbox.sources, exchanges: toolbox.exchanges, memory: source.memory)
   }
 
-  private func contextWithMemory(_ context: ChatContext, _ memory: ConversationMemory)
-    -> ChatContext
-  {
-    .init(
-      companionName: context.companionName, profile: context.profile, messages: context.messages,
-      memory: memory
-    ).inTurn(context.turnID, session: context.sessionID).inHistory(context.historyHandle)
-  }
 }

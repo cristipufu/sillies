@@ -1,0 +1,11 @@
+Test receipts: /Users/cristian.pufu/Documents/GitHub/sillies-macos/build/test-results/run-0xdo61ao
+Native presentation: 0 headless tests; 0 tests reserved for the other presentation mode.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test nativeLongHistoryAndCheckpointPreemption() started.
+NATIVE CONTINUITY gemma-4-12b: 10001 messages; reply=9.739669708 seconds; text=Hello there!
+NATIVE CONTINUITY gemma-4-12b: preemption=0.106457292 seconds; resumed reply=5.481506916 seconds; text=Hello there!
+✔ Test nativeLongHistoryAndCheckpointPreemption() passed after 16.044 seconds.
+✔ Test run with 1 test in 0 suites passed after 16.044 seconds.
+Verified completion of 1 selected tests across 1 runs.

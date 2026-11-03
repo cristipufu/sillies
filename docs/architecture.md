@@ -58,7 +58,7 @@ Vault pagination uses a stable `(createdAt, id)` cursor. Show more reads one fol
 
 `SilliesChat` owns conversation state and joins utterance finalization with microphone teardown. It receives `ConversationCapture`, language discovery, `ConversationResponding`, and `ChatSpeechOutput` capabilities; it imports no UI or inference SDK. `ConversationActivity` adapts its visible Chat/Talk activation to the skill lifecycle; closing it does not create a Vault recording. `ConversationSessions` caches sessions by installed companion identity so failed saves remain recoverable. Character JSON supplies personality and preferred voices. The messenger UI uses native selectable text, preserves reading/selection during replies, and shares application theme and typed failure notices. Return-to-send respects input-method composition.
 
-`LocalConversationService` receives `ConversationBackend` and `ConversationTool` capabilities. Apple and MLX adapters preserve native roles and call/result IDs. `ConversationToolbox` bounds tool execution and emits actual source references; `VaultSearchTool` and `VaultReadTool` own local retrieval in `SilliesVault`. Ranked FTS search reads headers and snippets without decoding every record. Source cards and image caching remain in the app UI. Tools have no write, shell, or network capability.
+`LocalConversationService` receives `ConversationBackend` and `ConversationTool` capabilities. Apple and MLX adapters preserve native roles and call/result IDs. `ConversationToolbox` bounds tool execution and emits actual source references; `VaultSearchTool` and `VaultReadTool` own local retrieval in `SilliesVault`. Ranked FTS search reads headers and snippets without decoding every record. Source cards and image caching remain in the app UI. Vault retrieval tools are read-only; the separate memory tool can persist user facts with verified provenance. No tool has shell or network capability.
 
 Chat supplies a shared inference lifetime to text and voice registries. Closed lifetimes unregister explicitly; memory pressure can evict retained models. Apple text retains one completed native session, including its tool transcript, with tool invocation rebound to the current turn. Continuation requires the exact committed dialogue and tool exchanges; errors, memory pressure, changed history, tools or instructions invalidate reuse. Downloaded text keeps a bounded exact input-tokenization cache; it does not assume that a model's KV state can rewind.
 
@@ -72,7 +72,31 @@ including host-window moves and resizes. Native menus and attached sheets belong
 explicit closure. Mouse-only monitors stop on close, session replacement, and switching to Talk; no focus-loss
 observer or window polling drives dismissal.
 
-`ConversationContextManager` measures model input, reserves reply/tool space, and compacts older complete turns through `ConversationCompactor`. `ConversationLibrary` retains individual messages in SQLite; `ChatSession` holds a bounded recent page and scoped memory; a compacted-through message ID prevents summarizing old turns repeatedly. Apple token counting is available from macOS 26.4, with an estimate on older systems; MLX measurement runs in the isolated helper. Overflow retries once with stronger compaction and shorter cached tool results. Cancellation is turn-scoped. Summarization failure uses attributed source excerpts without discarding the visible chat. `ChatHistory` coalesces edits by message ID and persists them through the repository actor. Acknowledgements preserve newer edits. Final flush delivery uses the modal-safe run loop; unsaved failures cancel termination. `ConversationBrowser` pages older messages without replacing the context used for inference. Clear/Forget/Undo invalidate stale generations and summarized context. Memory tools accept a fact key and value; the host attaches the original current user message as provenance instead of requiring the model to reproduce a quote. Storage verifies the user source, and visible receipts allow Undo. Models decide which explicit facts qualify; tool choice remains a model-quality concern. See [Chat tools and context](contributing/chat-tools.md).
+`ConversationLibrary` retains individual messages in SQLite; `ChatSession` holds a bounded recent page.
+`ConversationHistoryPreparation` reads one durable checkpoint and one profile-bounded page ending
+at the current query. `ConversationContextManager` receives measurement-only `ConversationBudgeting`:
+it can select a fitting suffix of complete turns, but cannot generate summaries. The checkpoint cursor
+does not evict recent verbatim turns that still fit. Apple token counting is available from macOS 26.4,
+with an estimate on older systems; MLX measurement runs in the isolated helper. Overflow retries once
+with minimal current context and the same cached tool operations, never an additional write quota.
+
+`ConversationCheckpointMaintenance` owns one coalescing producer, queueing identifiers rather than
+transcripts. It prepares one bounded source page and one summary per idle slice through
+`ConversationCheckpointWorker` and `ConversationCompactor`. Interactive turn admission cancels and
+joins active checkpoint inference. Count and byte limits both trigger eligible batches; deadlines and
+Chat lifetimes stop work explicitly. Source generation/revision comparison prevents stale checkpoint
+writes, and UI saves preserve the latest persisted memory. Failure leaves the previous checkpoint
+and full archive intact; search tools can retrieve older facts when recent context or the summary
+omits them. See [model profiles and budgets](model-profiles.md#long-lived-conversations).
+
+`ChatHistory` coalesces edits by message ID and persists them through the repository actor.
+Acknowledgements preserve newer edits. Final flush delivery uses the modal-safe run loop; unsaved
+failures cancel termination. `ConversationBrowser` pages older messages without replacing the context
+used for inference. Clear/Forget/Undo invalidate stale generations and summarized context. Memory tools
+accept a fact key and value; the host attaches the original current user message as provenance instead
+of requiring the model to reproduce a quote. Storage verifies the user source, and visible receipts
+allow Undo. Models decide which explicit facts qualify; tool choice remains a model-quality concern.
+See [Chat tools and context](contributing/chat-tools.md).
 
 `ChatTurnOperation` joins cancellable text and speech branches. Native text deltas reach a bounded
 phrase assembler and a coalesced UI presentation; whole history arrays are not rebuilt per token.

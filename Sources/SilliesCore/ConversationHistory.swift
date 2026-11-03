@@ -25,6 +25,19 @@ public struct ConversationCheckpoint: Codable, Equatable, Sendable {
   public var draft: String
   public var language: String?
   public var readingMessageID: UUID?
+  public private(set) var contextRevision: UUID?
+  public var memorySnapshot: ConversationMemorySnapshot {
+    .init(memory: memory, revision: contextRevision)
+  }
+  public mutating func preserveContext(from saved: Self) {
+    memory = saved.memory
+    contextRevision = saved.contextRevision
+  }
+  public mutating func recordHistoryChange() { contextRevision = UUID() }
+  public mutating func replaceMemory(_ replacement: ConversationMemory) {
+    memory = replacement
+    contextRevision = UUID()
+  }
   public init(
     memory: ConversationMemory = .init(), draft: String = "", language: String? = nil,
     readingMessageID: UUID? = nil
@@ -79,10 +92,14 @@ public struct ConversationPage: Sendable {
   public let entries: [ConversationEntry]
   public let hasOlder: Bool
   public let hasNewer: Bool
-  public init(entries: [ConversationEntry], hasOlder: Bool, hasNewer: Bool) {
+  public let isByteLimited: Bool
+  public init(
+    entries: [ConversationEntry], hasOlder: Bool, hasNewer: Bool, isByteLimited: Bool = false
+  ) {
     self.entries = entries
     self.hasOlder = hasOlder
     self.hasNewer = hasNewer
+    self.isByteLimited = isByteLimited
   }
 }
 
@@ -91,20 +108,26 @@ public struct ConversationPageRequest: Sendable {
     case latest
     case before(Int64)
     case beforeMessage(UUID)
+    case throughMessage(UUID)
+    case between(after: UUID?, before: UUID)
     case after(Int64)
     case around(UUID)
   }
   public static let defaultLimit = 60
   public static let maximumLimit = 128
+  public static let maximumPageBytes = 256 * 1_024
   public let handle: ConversationHandle
   public let position: Position
   public let limit: Int
+  public let maximumBytes: Int
   public init(
-    handle: ConversationHandle, position: Position = .latest, limit: Int = defaultLimit
+    handle: ConversationHandle, position: Position = .latest, limit: Int = defaultLimit,
+    maximumBytes: Int = maximumPageBytes
   ) {
     self.handle = handle
     self.position = position
     self.limit = max(1, min(limit, Self.maximumLimit))
+    self.maximumBytes = max(1, min(maximumBytes, Self.maximumPageBytes))
   }
 }
 

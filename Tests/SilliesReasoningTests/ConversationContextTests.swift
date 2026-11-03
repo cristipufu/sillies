@@ -7,25 +7,28 @@ import Testing
 @testable import SilliesReasoning
 
 private actor ContextBackend: ConversationBackend {
-  enum Behavior { case succeeds, summaryFailure, overflowOnce, cancelSummary }
+  nonisolated var conversationPolicy: ConversationPolicy { AppleConversationPolicy.conversation }
+  nonisolated let generationProfile: TextGenerationProfile
+  enum Behavior { case succeeds, summaryFailure, overflowOnce, cancelMeasurement }
   let behavior: Behavior
   nonisolated let contextWindowTokens = 1_400
-  nonisolated let reasoningTokenReserve: Int
   var summaries: [TextGenerationRequest] = []
   var replies: [TextGenerationRequest] = []
   init(_ behavior: Behavior = .succeeds, reasoningTokenReserve: Int = 0) {
     self.behavior = behavior
-    self.reasoningTokenReserve = reasoningTokenReserve
+    generationProfile = reasoningProfile(
+      conversationTokens: reasoningTokenReserve, summaryTokens: reasoningTokenReserve)
   }
   func availabilityNotice(localeIdentifier: String?) -> String? { nil }
   func inputTokenCount(_ request: TextGenerationRequest) async throws -> Int {
-    (request.instructions.utf8.count + request.messages.reduce(0) { $0 + $1.content.utf8.count })
+    if behavior == .cancelMeasurement { throw CancellationError() }
+    return
+      (request.instructions.utf8.count + request.messages.reduce(0) { $0 + $1.content.utf8.count })
       / 4 + 64
   }
   func generate(_ request: TextGenerationRequest, format: ReasoningFormat) throws -> String {
     summaries.append(request)
     if behavior == .summaryFailure { throw TextModelError.unavailable("Fixture summary failure") }
-    if behavior == .cancelSummary { throw CancellationError() }
     return "The user is Ada, prefers concise answers, and is planning the Aurora rollout."
   }
   func converse(_ request: TextGenerationRequest, tools: ConversationToolbox) throws -> String {
@@ -56,7 +59,7 @@ private func context(_ messages: [ChatMessage], memory: ConversationMemory = .in
     memory: memory)
 }
 
-@Test func chatCompactionReservesSpaceForMandatoryReasoning() async throws {
+@Test func chatAdmissionReservesSpaceForMandatoryReasoning() async throws {
   let backend = ContextBackend(reasoningTokenReserve: 256)
   let service = LocalConversationService(resolveBackend: { backend }, tools: [], turns: .init())
   _ = try await service.reply(to: context(longHistory(turns: 10)))
@@ -71,15 +74,15 @@ private func context(_ messages: [ChatMessage], memory: ConversationMemory = .in
   }
 }
 
-@Test func chatCompactsHundredsOfTurnsWithoutDroppingVisibleHistory() async throws {
+@Test func chatBoundsHundredsOfTurnsWithoutSummarizingOrDeletingOriginalHistory() async throws {
   let backend = ContextBackend()
   let service = LocalConversationService(resolveBackend: { backend }, tools: [], turns: .init())
   let history = longHistory(turns: 250)
   let reply = try await service.reply(to: context(history))
   let final = try #require(await backend.replies.last)
   #expect(history.count == 501)
-  #expect(reply.memory.summary.contains("Ada"))
-  #expect(reply.memory.throughMessageID != nil)
+  #expect(reply.memory == ConversationMemory())
+  #expect(await backend.summaries.isEmpty)
   #expect(final.messages.last?.content == history.last?.text)
   #expect(final.messages.filter { $0.content == history.last?.text }.count == 1)
   #expect(final.messages.first?.role == .user)
@@ -98,7 +101,7 @@ private func context(_ messages: [ChatMessage], memory: ConversationMemory = .in
   #expect(await backend.summaries.count <= before + 1)
 }
 
-@Test func chatCompactionKeepsToolReferencesAndSurvivesSummaryFailure() async throws {
+@Test func chatUsesSavedMemoryAndReferencesWithoutInvokingAnUnavailableSummarizer() async throws {
   let backend = ContextBackend(.summaryFailure)
   let header = SessionRecordHeader(
     SessionRecord(
@@ -109,7 +112,11 @@ private func context(_ messages: [ChatMessage], memory: ConversationMemory = .in
   history[1] = .init(
     role: .companion, text: "Found the meeting", evidence: .init(sources: [source]))
   let service = LocalConversationService(resolveBackend: { backend }, tools: [], turns: .init())
-  let reply = try await service.reply(to: context(history))
+  let memory = ConversationMemory(
+    summary: "Ada owns the migration.", throughMessageID: history[1].id,
+    references: [.init(id: source.id, title: source.title)])
+  let reply = try await service.reply(to: context(history, memory: memory))
+  #expect(await backend.summaries.isEmpty)
   #expect(reply.memory.references.map(\.id) == [source.id])
   #expect(reply.memory.summary.contains("Ada"))
   #expect(reply.memory.summary.count <= ConversationMemory.maximumSummaryCharacters)
@@ -126,11 +133,12 @@ private func context(_ messages: [ChatMessage], memory: ConversationMemory = .in
   #expect(requests.count == 2)
   #expect(requests.last?.messages.count == 1)
   #expect(requests.last?.messages.last?.content == history.last?.text)
-  #expect(reply.memory.throughMessageID == history.dropLast().last?.id)
+  #expect(reply.memory == ConversationMemory())
+  #expect(await backend.summaries.isEmpty)
 }
 
-@Test func chatCancellationDuringCompactionDoesNotPublishMemoryOrAnAnswer() async throws {
-  let backend = ContextBackend(.cancelSummary)
+@Test func chatCancellationDuringMeasurementDoesNotPublishMemoryOrAnAnswer() async throws {
+  let backend = ContextBackend(.cancelMeasurement)
   let updates = Mutex<[ConversationMemory]>([])
   let service = LocalConversationService(resolveBackend: { backend }, tools: [], turns: .init())
   await #expect(throws: CancellationError.self) {
@@ -142,45 +150,9 @@ private func context(_ messages: [ChatMessage], memory: ConversationMemory = .in
   #expect(await backend.replies.isEmpty)
 }
 
-@Test(.enabled(if: ProcessInfo.processInfo.environment["SILLIES_CHAT_MODEL_CHECK"] == "1"))
-func appleChatCompactsNativeHistoryAndRecallsEarlierUserFacts() async throws {
-  let backend = AppleReasoningBackend()
-  try #require(await backend.availabilityNotice(localeIdentifier: "en") == nil)
-  var history: [ChatMessage] = [
-    .init(
-      role: .user, text: "My name is Ada. Our project is called Aurora. I prefer concise answers."),
-    .init(role: .companion, text: "I'll keep that in mind, Ada."),
-  ]
-  for index in 0..<24 {
-    history += [
-      .init(
-        role: .user,
-        text: "Planning step \(index): "
-          + String(
-            repeating:
-              "We should review the proposal and ask the team for feedback before deciding on the schedule. ",
-            count: 10)),
-      .init(
-        role: .companion,
-        text: "Let's review the proposal, gather feedback, then agree on a schedule."),
-    ]
-  }
-  history.append(.init(role: .user, text: "What's my name and what is our project called?"))
-  let service = LocalConversationService(resolveBackend: { backend }, tools: [], turns: .init())
-  let reply = try await service.reply(to: context(history)) { update in
-    if case .memory(let value) = update { print("MEMORY UPDATE: \(value.summary.prefix(250))") }
-  }
-  print(
-    "NATIVE CAPACITY: \(backend.contextWindowTokens). COMPACTION: \(reply.memory.summary); REPLY: \(reply.text)"
-  )
-  #expect(reply.memory.throughMessageID != nil)
-  #expect(reply.text.contains("Ada"))
-  #expect(reply.text.contains("Aurora"))
-  #expect(history.count == 51)
-}
-
 private actor PartiallyDeliveredOverflow: ConversationBackend {
-  nonisolated var reasoningTokenReserve: Int { 0 }
+  nonisolated var conversationPolicy: ConversationPolicy { AppleConversationPolicy.conversation }
+  nonisolated var generationProfile: TextGenerationProfile { AppleConversationPolicy.generation }
   nonisolated let contextWindowTokens = 8_192
   var calls = 0
   func availabilityNotice(localeIdentifier: String?) -> String? { nil }

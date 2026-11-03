@@ -1,8 +1,13 @@
 import FoundationModels
+import SilliesCore
 import SilliesTextModels
 
 extension AppleReasoningBackend: ConversationBackend {
-  package var reasoningTokenReserve: Int { 0 }
+  // Counting tokens inside an active native tool turn causes substantial continuation overhead.
+  // The framework owns admission; structured byte bounds and one context recovery remain active.
+  package var toolResultBudgeting: ConversationToolResultBudgeting { .providerManaged }
+  package var conversationPolicy: ConversationPolicy { AppleConversationPolicy.conversation }
+  package var generationProfile: TextGenerationProfile { AppleConversationPolicy.generation }
   package func retain(for lifetime: TextModelLifetime) async {
     await conversations.retain(for: lifetime)
   }

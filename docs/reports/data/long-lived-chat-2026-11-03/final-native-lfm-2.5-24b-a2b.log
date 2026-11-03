@@ -1,0 +1,14 @@
+Test receipts: /Users/cristian.pufu/Documents/GitHub/sillies-macos/build/test-results/run-mfv9ijvd
+Native presentation: 0 headless tests; 0 tests reserved for the other presentation mode.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test nativeLongHistoryAndCheckpointPreemption() started.
+NATIVE CONTINUITY lfm-2.5-24b-a2b: 10001 messages; reply=13.968710332999999 seconds; text=Hello! It's nice to meet you.
+NATIVE CONTINUITY lfm-2.5-24b-a2b: preemption=0.1368805 seconds; resumed reply=4.315179042 seconds; text=Hey there!
+NATIVE CONTINUITY lfm-2.5-24b-a2b: persisted checkpoint=21.151448457999997 seconds; summary=User facts: The provided archived discussion references (0–23) contain no explicit facts, preferences, corrections, commitments, or unresolved questions; no new information was supplied in this turn.
+Decisions: None.
+Open questions: None.
+✔ Test nativeLongHistoryAndCheckpointPreemption() passed after 40.302 seconds.
+✔ Test run with 1 test in 0 suites passed after 40.302 seconds.
+Verified completion of 1 selected tests across 1 runs.

@@ -5,7 +5,7 @@ import SilliesCore
 struct VaultRecordPassage {
   static let maximumCharacters = 1_600
   private static let windowStride = maximumCharacters / 2
-  private static let maximumQueryTerms = 8
+  private static let maximumPassages = 3
 
   struct Coverage: Encodable {
     let startOffset: Int
@@ -30,6 +30,28 @@ struct VaultRecordPassage {
   let text: String
   let coverage: Coverage
 
+  static func selectRelated(in record: SessionRecord, query: String, offset: Int? = nil) throws
+    -> [Self]
+  {
+    let first = try select(in: record, query: query, offset: offset)
+    guard offset == nil else { return [first] }
+    let body = capturedText(in: record)
+    let terms = VaultPassageQuery(query: query, title: record.windowTitle ?? record.appName)
+    var selected = [first]
+    while selected.count < maximumPassages {
+      try Task.checkCancellation()
+      let missing = terms.missingDetails(in: selected.map(\.text))
+      guard !missing.isEmpty else { break }
+      let remaining = VaultPassageQuery(query: missing.sorted().joined(separator: " "), title: "")
+      let next = try bestPassage(in: body, query: remaining, count: body.count)
+      guard remaining.score(next.text).details > 0,
+        !selected.contains(where: { $0.coverage.startOffset == next.coverage.startOffset })
+      else { break }
+      selected.append(next)
+    }
+    return selected
+  }
+
   static func select(in record: SessionRecord, query: String, offset: Int? = nil) throws -> Self {
     try Task.checkCancellation()
     let body = capturedText(in: record)
@@ -39,6 +61,7 @@ struct VaultRecordPassage {
       let start = body.index(body.startIndex, offsetBy: offset)
       return passage(in: body, from: start, offset: offset, count: count)
     }
+    let query = VaultPassageQuery(query: query, title: record.windowTitle ?? record.appName)
     return try bestPassage(in: body, query: query, count: count)
   }
 
@@ -51,22 +74,23 @@ struct VaultRecordPassage {
         totalCharacters: coverage.totalCharacters))
   }
 
-  private static func bestPassage(in body: String, query: String, count: Int) throws -> Self {
-    let terms = queryTerms(query)
+  private static func bestPassage(in body: String, query: VaultPassageQuery, count: Int) throws
+    -> Self
+  {
     var best = passage(in: body, from: body.startIndex, offset: 0, count: count)
-    guard !terms.isEmpty, count > maximumCharacters else { return best }
-    var bestScore = score(best.text, terms: terms)
+    guard !query.all.isEmpty, count > maximumCharacters else { return best }
+    var bestScore = query.score(best.text)
     var offset = windowStride
     var start = body.index(body.startIndex, offsetBy: windowStride)
     while start < body.endIndex {
       try Task.checkCancellation()
       let candidate = passage(in: body, from: start, offset: offset, count: count)
-      let candidateScore = score(candidate.text, terms: terms)
+      let candidateScore = query.score(candidate.text)
       if candidateScore > bestScore {
         best = candidate
         bestScore = candidateScore
       }
-      guard bestScore < terms.count,
+      guard bestScore.total < query.all.count,
         let next = body.index(start, offsetBy: windowStride, limitedBy: body.endIndex)
       else { break }
       start = next
@@ -82,24 +106,6 @@ struct VaultRecordPassage {
     return .init(
       text: text,
       coverage: .init(startOffset: offset, endOffset: offset + text.count, totalCharacters: count))
-  }
-
-  private static func score(_ text: String, terms: [String]) -> Int {
-    terms.reduce(0) {
-      $0 + (text.range(of: $1, options: [.caseInsensitive, .diacriticInsensitive]) == nil ? 0 : 1)
-    }
-  }
-
-  private static func queryTerms(_ query: String) -> [String] {
-    var seen: Set<String> = []
-    var terms: [String] = []
-    for word in query.split(whereSeparator: \.isWhitespace) {
-      let term = String(word).folding(
-        options: [.caseInsensitive, .diacriticInsensitive], locale: nil)
-      if seen.insert(term).inserted { terms.append(term) }
-      if terms.count == maximumQueryTerms { break }
-    }
-    return terms
   }
 
   private static func capturedText(in record: SessionRecord) -> String {

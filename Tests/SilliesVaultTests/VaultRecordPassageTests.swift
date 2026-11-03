@@ -4,6 +4,50 @@ import Testing
 
 @testable import SilliesVault
 
+@Test func aCompoundRecordQuestionReturnsSeparateRelevantPassagesWithTheirOwnCoverage() throws {
+  let body =
+    "Budget approved: 900 credits. " + String(repeating: "Unrelated notes. ", count: 240)
+    + "The deadline is Friday."
+  let passages = try VaultRecordPassage.selectRelated(
+    in: passageRecord(body), query: "budget deadline")
+  #expect(passages.count == 2)
+  #expect(passages.map(\.text).contains { $0.contains("900 credits") })
+  #expect(passages.map(\.text).contains { $0.contains("Friday") })
+  for passage in passages {
+    #expect(
+      passage.text
+        == String(body.dropFirst(passage.coverage.startOffset).prefix(passage.text.count)))
+    #expect(passage.coverage.endOffset - passage.coverage.startOffset == passage.text.count)
+  }
+}
+
+@Test(arguments: [
+  "Cedar deployment notes recovery identifier", "CEDAR deployment notes, recovery identifier?",
+  "identifier recovery Cedar deployment notes",
+])
+func vaultPassagePrioritizesRequestedDetailOverAlreadyResolvedTitle(_ query: String) throws {
+  let title = "Cedar deployment notes"
+  let body =
+    title + ". " + String(repeating: "Packaging review. ", count: 230)
+    + "The recovery identifier is moss-28."
+  let record = SessionRecord(
+    kind: .listen,
+    origin: .init(
+      characterID: "pogo", characterName: "Pogo",
+      source: .init(appName: "Meeting", windowTitle: title)),
+    content: .init(text: .init(transcript: body)))
+  let passage = try VaultRecordPassage.select(in: record, query: query)
+  #expect(passage.text.contains("moss-28"))
+  #expect(passage.coverage.startOffset > 0)
+}
+
+@Test func titleOnlyPassageQueriesRemainUsefulAndTermsMatchWholeWords() throws {
+  let query = VaultPassageQuery(query: "release", title: "Release")
+  #expect(query.score("release notes") > query.score("prerelease notes"))
+  let accented = VaultPassageQuery(query: "ȘEDINȚĂ, decizie?", title: "Ședință")
+  #expect(accented.score("decizie confirmată") > accented.score("Ședință, ședință"))
+}
+
 @Test(arguments: ["release recovery", "recovery release", "RELEASE release recovery"])
 func vaultPassagesRankAllQueryTermsAcrossTheCapturedText(_ query: String) throws {
   let body =

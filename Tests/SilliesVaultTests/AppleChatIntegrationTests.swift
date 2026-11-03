@@ -88,7 +88,7 @@ private func comparisonRequest(_ messages: [ChatMessage], tools: [any Conversati
     for: .init(
       companionName: "Pogo",
       profile: .init(personality: "Curious and upbeat"), messages: messages),
-    tools: tools.map(\.definition))
+    tools: tools.map(\.definition), maximumTokens: 240)
 }
 
 private struct NativeChatComparison {
@@ -188,7 +188,9 @@ private func compareApplicationConversation(library: VaultLibrary, messages: [Ch
 }
 
 private struct ComparisonBackend: ConversationBackend {
-  var reasoningTokenReserve: Int { apple.reasoningTokenReserve }
+  var contextWindowTokens: Int { apple.contextWindowTokens }
+  var conversationPolicy: ConversationPolicy { apple.conversationPolicy }
+  var generationProfile: TextGenerationProfile { apple.generationProfile }
   let apple: AppleReasoningBackend
   let expected: TextGenerationRequest
   func availabilityNotice(localeIdentifier: String?) async -> String? {

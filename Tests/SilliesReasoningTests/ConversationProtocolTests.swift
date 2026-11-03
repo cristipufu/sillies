@@ -26,7 +26,12 @@ import Testing
 }
 
 private actor ConversationProbe: ConversationBackend {
-  nonisolated var reasoningTokenReserve: Int { 0 }
+  nonisolated let contextWindowTokens = 4_096
+  func inputTokenCount(_ request: TextGenerationRequest) throws -> Int {
+    try ConversationTokenEstimate.count(request)
+  }
+  nonisolated var conversationPolicy: ConversationPolicy { AppleConversationPolicy.conversation }
+  nonisolated var generationProfile: TextGenerationProfile { AppleConversationPolicy.generation }
   var request: TextGenerationRequest?
   func availabilityNotice(localeIdentifier: String?) -> String? { nil }
   func generate(_ request: TextGenerationRequest, format: ReasoningFormat) throws -> String {
@@ -240,7 +245,7 @@ private actor RecoveryTool: ConversationTool {
     messages: [
       .init(role: .user, text: "Explain"), reply, .init(role: .user, text: "Continue"),
     ])
-  let request = ChatReplyGenerator.request(for: context, tools: [])
+  let request = ChatReplyGenerator.request(for: context, tools: [], maximumTokens: 240)
   #expect(request.messages.map(\.content) == context.messages.map(\.text))
   #expect(request.instructions.contains("were interrupted"))
   #expect(!request.messages.contains { $0.content.contains("Completed spoken phrases") })
@@ -248,5 +253,47 @@ private actor RecoveryTool: ConversationTool {
     companionName: "Pogo", profile: context.profile,
     messages: [.init(role: .user, text: "Hello")])
   #expect(
-    !ChatReplyGenerator.request(for: complete, tools: []).instructions.contains("were interrupted"))
+    !ChatReplyGenerator.request(for: complete, tools: [], maximumTokens: 240).instructions.contains(
+      "were interrupted"))
+}
+
+@Test func terminalToolRoundPreservesPublishedTextWithoutRepeatingTheOperation() async throws {
+  let tool = SearchProbe()
+  let toolbox = try ConversationToolbox(tools: [tool], progress: { _ in })
+  let call = ConversationToolCall(id: "complete", name: "search", arguments: Data("{}".utf8))
+  let generator = GenerationProbe(call: call)
+  let received = Mutex("")
+  let request = TextGenerationRequest(
+    conversation: .init(
+      instructions: "Chat", messages: [.init(role: .user, content: "Remember that")],
+      tools: [tool.definition]), maximumTokens: 240, style: .conversation)
+  let result = try await ConversationToolLoop.run(
+    request, tools: toolbox, receive: { delta in received.withLock { $0 += delta } },
+    generate: { request, receive in
+      let output = await generator.generate(request)
+      let text = output.calls.isEmpty ? "" : "Thanks, I'll remember that."
+      if !text.isEmpty { try await receive(text) }
+      return .init(text: text, calls: output.calls)
+    })
+  #expect(result == "Thanks, I'll remember that.")
+  #expect(received.withLock { $0.trimmingCharacters(in: .whitespacesAndNewlines) } == result)
+  #expect(await tool.calls == 1)
+  #expect(await generator.requests.count == 2)
+}
+
+@Test func contextRecoveryReplaysEvidenceWithoutResettingTheExecutionAllowance() async throws {
+  let tool = RecoveryTool()
+  let toolbox = try ConversationToolbox(tools: [tool], progress: { _ in })
+  for index in 0..<ConversationToolbox.maximumCalls {
+    _ = try await toolbox.invoke(
+      .init(id: "\(index)", name: "read", arguments: Data("{\"page\":\(index)}".utf8)))
+  }
+  try await toolbox.beginRecovery()
+  let cached = try await toolbox.invoke(
+    .init(id: "replay", name: "read", arguments: Data("{\"page\":0}".utf8)))
+  #expect(cached == "A short passage")
+  let refused = try await toolbox.invoke(
+    .init(id: "extra", name: "read", arguments: Data("{\"page\":99}".utf8)))
+  #expect(refused.contains("turnToolLimitReached"))
+  #expect(await tool.calls == ConversationToolbox.maximumCalls)
 }

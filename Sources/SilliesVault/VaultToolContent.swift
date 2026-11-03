@@ -52,12 +52,18 @@ enum VaultToolContent {
   }
 
   private struct RecordRead: Encodable {
+    struct AdditionalPassage: Encodable {
+      let excerpt: String
+      let coverage: VaultRecordPassage.Coverage
+    }
     let record: RecordPassage
     let coverage: VaultRecordPassage.Coverage
     let guidance: String
-    init(source: ChatSource, passage: VaultRecordPassage) {
+    let additionalPassages: [AdditionalPassage]
+    init(source: ChatSource, passage: VaultRecordPassage, additional: [VaultRecordPassage] = []) {
       record = RecordPassage(source, excerptLimit: passage.text.count)
       coverage = passage.coverage
+      additionalPassages = additional.map { .init(excerpt: $0.text, coverage: $0.coverage) }
       guidance =
         coverage.isComplete
         ? "The complete captured text is included."
@@ -84,13 +90,19 @@ enum VaultToolContent {
     encoder.outputFormatting = .sortedKeys
     return String(decoding: try encoder.encode(value), as: UTF8.self)
   }
-  static func readOutput(_ source: ChatSource, passage: VaultRecordPassage) throws
+  static func readOutput(_ source: ChatSource, passages: [VaultRecordPassage]) throws
     -> ConversationToolOutput
   {
-    try .init(
-      text: encoded(RecordRead(source: source, passage: passage)), sources: [source],
+    guard let passage = passages.first else {
+      throw VaultRecordPassage.SelectionError.invalidOffset
+    }
+    return try .init(
+      text: encoded(
+        RecordRead(source: source, passage: passage, additional: Array(passages.dropFirst()))),
+      sources: [source],
       briefText: encoded(
-        RecordRead(source: source, passage: passage.prefix(briefExcerptCharacters))))
+        RecordRead(source: source, passage: passage.prefix(briefExcerptCharacters))),
+      alternatives: [encoded(RecordRead(source: source, passage: passage))])
   }
   static func links(in record: SessionRecord) throws -> [URL] {
     let text = String(

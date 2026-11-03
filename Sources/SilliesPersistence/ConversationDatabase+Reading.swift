@@ -17,6 +17,14 @@ extension ConversationDatabase {
     case .beforeMessage(let id):
       predicate += " AND sequence<?"
       values.append(.integer(try sequence(of: id, owner: owner)))
+    case .throughMessage(let id):
+      predicate += " AND sequence<=?"
+      values.append(.integer(try sequence(of: id, owner: owner)))
+    case .between(let after, let before):
+      predicate += " AND sequence>? AND sequence<?"
+      values.append(.integer(try after.map { try sequence(of: $0, owner: owner) } ?? 0))
+      values.append(.integer(try sequence(of: before, owner: owner)))
+      order = "ASC"
     case .after(let sequence):
       predicate += " AND sequence>?"
       values.append(.integer(sequence))
@@ -27,10 +35,23 @@ extension ConversationDatabase {
       order = "ASC"
     }
     var entries: [ConversationEntry] = []
+    var bytes = 0
+    var reachedByteLimit = false
     try sql.rows(
       "SELECT sequence,created,body FROM conversation_messages WHERE \(predicate) ORDER BY sequence \(order) LIMIT ?",
       values + [.integer(Int64(request.limit))]
-    ) { entries.append(try entry($0)) }
+    ) { row in
+      guard !reachedByteLimit else { return }
+      let size = Int(sqlite3_column_bytes(row, 2))
+      guard size <= request.maximumBytes - bytes || entries.isEmpty else {
+        reachedByteLimit = true
+        return
+      }
+      // One oversized row still makes cursor progress; its independent 1 MiB boundary applies.
+      entries.append(try entry(row))
+      bytes += size
+      reachedByteLimit = bytes >= request.maximumBytes
+    }
     if order == "DESC" { entries.reverse() }
     let older =
       try entries.first.map { first in
@@ -44,7 +65,8 @@ extension ConversationDatabase {
           "SELECT EXISTS(SELECT 1 FROM conversation_messages WHERE owner=? AND sequence>?)",
           [.text(owner), .integer(last.sequence)]) != 0
       } ?? false
-    return .init(entries: entries, hasOlder: older, hasNewer: newer)
+    return .init(
+      entries: entries, hasOlder: older, hasNewer: newer, isByteLimited: reachedByteLimit)
   }
 
   public func search(_ request: ConversationSearchRequest) throws -> [ConversationSearchMatch] {
@@ -75,7 +97,7 @@ extension ConversationDatabase {
     return results
   }
 
-  private func sequence(of id: UUID, owner: String) throws -> Int64 {
+  func sequence(of id: UUID, owner: String) throws -> Int64 {
     let value = try sql.integer(
       "SELECT sequence FROM conversation_messages WHERE owner=? AND id=?",
       [.text(owner), .text(id.uuidString)])

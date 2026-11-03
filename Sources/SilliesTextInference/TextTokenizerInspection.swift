@@ -22,7 +22,8 @@ enum TextTokenizerInspection {
       messages: MLXConversationInput.templateMessages(request.generation),
       tools: request.generation.tools.isEmpty
         ? nil : MLXConversationInput.tools(request.generation),
-      additionalContext: MLXReasoningPolicy(preparation: request.configuration).templateContext)
+      additionalContext: MLXReasoningPolicy(reasoning: request.configuration.reasoning)
+        .templateContext)
     let inspection = Inspection(
       tokenCount: tokens.count, renderedPrompt: tokenizer.decode(tokenIds: tokens))
     let encoder = JSONEncoder()

@@ -1,0 +1,14 @@
+[
+  {
+    "model": "apple",
+    "exitCode": 0
+  },
+  {
+    "model": "lfm-2.5-24b-a2b",
+    "exitCode": 0
+  },
+  {
+    "model": "gemma-4-12b",
+    "exitCode": 0
+  }
+]

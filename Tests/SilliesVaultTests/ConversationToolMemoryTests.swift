@@ -202,9 +202,11 @@ private func appleConversationCheck(
   let service = LocalConversationService(
     resolveBackend: { backend },
     tools: [VaultSearchTool(library: vault), VaultReadTool(library: vault)], turns: .init(),
-    historyTools: { context in
-      ConversationHistoryTools(conversations: library, memories: library).tools(for: context)
-    })
+    history: .init(
+      repository: library,
+      tools: { context in
+        ConversationHistoryTools(conversations: library, memories: library).tools(for: context)
+      }))
   let lifetime = TextModelLifetime()
   await service.retain(for: lifetime)
   defer { Task { await lifetime.end() } }

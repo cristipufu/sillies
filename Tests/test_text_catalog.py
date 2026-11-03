@@ -33,6 +33,21 @@ class TextCatalogTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             catalog.descriptor(dataclasses.replace(model, release_date="2026-02-30"))
 
+    def test_each_model_owns_a_profile_and_checkpoint_changes_require_review(self):
+        profiles = {path.stem for path in (ROOT / "ModelProfiles/Text").glob("*.json")}
+        self.assertEqual(profiles, {model.identifier for model in catalog.MODELS})
+        for model in catalog.MODELS:
+            with self.subTest(model=model.identifier):
+                with self.assertRaisesRegex(ValueError, "exact checkpoint"):
+                    catalog.profile(dataclasses.replace(model, revision="0" * 40))
+
+    def test_profile_refresh_is_offline_and_preserves_downloads(self):
+        path = ROOT / "Sources/SilliesModelStore/Resources/text-models.json"
+        original = json.loads(path.read_text())
+        with patch.object(catalog, "read", side_effect=AssertionError("Must stay offline")):
+            refreshed = catalog.refresh_descriptors(path)
+        self.assertEqual(refreshed, original)
+
     def test_large_tokenizer_without_lfs_is_bounded_and_hashed(self):
         data = b"x" * (2 * 1024 * 1024)
         entry = {"rfilename": "tokenizer.json", "size": len(data)}

@@ -1,0 +1,25 @@
+{
+  "models": [
+    "lfm-2.5-24b-a2b",
+    "gemma-4-26b-a4b",
+    "gemma-4-12b"
+  ],
+  "workingContexts": [
+    4096,
+    8192
+  ],
+  "repeats": 1,
+  "cases": [
+    "heldout-full-record-detail",
+    "heldout-memory-new-name",
+    "heldout-memory-opt-out",
+    "capacity-context-owner",
+    "capacity-context-corrected-code",
+    "capacity-heldout-incremental-compaction"
+  ],
+  "turnTimeout": 60,
+  "caseTimeout": 180,
+  "orderSeed": 161803,
+  "purpose": "Frozen before inference. Isolate working context in final candidate; test continuity across 192 archived messages plus current conversation. Source facts and rubric reused from exposed regressions. No comparison to published leaderboard. These new cases accept retained raw history as valid recall; compaction count is measured, not required by the quality score. Original regression cases and checks stay unchanged.",
+  "buildNote": "No capacity inference ran on the original prepared executables. Both sizes will use the post-review build, including combined reasoning/answer replacement reservation and final protocol fixes. Binary/catalog hashes will be recorded before inference."
+}

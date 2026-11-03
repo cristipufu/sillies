@@ -5,6 +5,8 @@ public protocol ConversationRepository: Sendable {
   func open(_ owner: ConversationOwner) async throws -> ConversationSnapshot
   func save(_ update: ConversationUpdate) async throws
   func page(_ request: ConversationPageRequest) async throws -> ConversationPage
+  func checkpoint(_ handle: ConversationHandle) async throws -> ConversationMemorySnapshot
+  func advanceCheckpoint(_ update: ConversationMemoryUpdate) async throws -> Bool
   func search(_ request: ConversationSearchRequest) async throws -> [ConversationSearchMatch]
   func conversations() async throws -> [ConversationHeader]
   func clear(_ handle: ConversationHandle) async throws -> ConversationSnapshot

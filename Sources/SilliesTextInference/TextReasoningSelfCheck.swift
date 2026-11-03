@@ -27,10 +27,7 @@ enum TextReasoningSelfCheck {
   }
 
   private static func checkAlwaysOnThinking() throws {
-    let policy = MLXReasoningPolicy(
-      preparation: .init(
-        directory: URL(fileURLWithPath: "/fixture"), contextTokens: 4096, memoryLimitBytes: 1,
-        reasoning: .alwaysOnThinkTags))
+    let policy = MLXReasoningPolicy(reasoning: .alwaysOnThinkTags)
     try require(policy.templateContext.isEmpty)
     try require(policy.configuration?.promptStrategy == .alwaysOn)
     let model = ModelConfiguration(id: "fixture", reasoningConfig: policy.configuration)

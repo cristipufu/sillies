@@ -1,0 +1,34 @@
+{
+  "baselineCommit": "1070a01",
+  "models": [
+    "apple",
+    "qwen-3.5-2b",
+    "nemotron-3.5-bolt-e4b",
+    "gemma-4-e4b",
+    "granite-4.2-3b",
+    "gemma-4-26b-a4b",
+    "lfm-2.5-24b-a2b",
+    "gemma-4-12b"
+  ],
+  "cases": [
+    "knowledge-mountain",
+    "mixed-combined-question",
+    "mixed-back-reference-after-detour",
+    "vault-links",
+    "heldout-full-record-detail",
+    "heldout-memory-new-name",
+    "heldout-memory-opt-out",
+    "heldout-memory-secret",
+    "heldout-identity-with-user-facts",
+    "context-owner",
+    "context-corrected-code",
+    "heldout-incremental-compaction"
+  ],
+  "repeats": 2,
+  "orderSeed": 271828,
+  "turnTimeout": 60,
+  "caseTimeout": 180,
+  "startupTimeout": 90,
+  "batchSeconds": 600,
+  "limitations": "Previously exposed regression cases, one Mac, no sampling seed; fresh runs of frozen baseline and candidate on identical cases. No replacement for the full published leaderboard or independent quality certification."
+}

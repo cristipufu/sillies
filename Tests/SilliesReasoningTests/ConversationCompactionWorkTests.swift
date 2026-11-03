@@ -5,17 +5,18 @@ import Testing
 @testable import SilliesReasoning
 
 private actor CompactionWorkBackend: ConversationBackend {
+  nonisolated var conversationPolicy: ConversationPolicy {
+    .init(
+      safetyTokens: 128, compaction: .init(summaryWords: 180, headroomTokens: 128),
+      tools: .init(maximumCalls: 4, reserveTokens: 1_024, resultTokens: 768))
+  }
+  nonisolated let generationProfile: TextGenerationProfile
   nonisolated let contextWindowTokens = 4_096
-  nonisolated let reasoningTokenReserve = 1_024
-  nonisolated let summaryReasoningReserve: Int
   private(set) var summaries: [TextGenerationRequest] = []
 
   init(summaryReasoningReserve: Int = 1_024) {
-    self.summaryReasoningReserve = summaryReasoningReserve
-  }
-
-  nonisolated func reasoningTokenReserve(for style: TextGenerationStyle) -> Int {
-    style == .summary ? summaryReasoningReserve : reasoningTokenReserve
+    generationProfile = reasoningProfile(
+      conversationTokens: 1_024, summaryTokens: summaryReasoningReserve)
   }
 
   func availabilityNotice(localeIdentifier: String?) -> String? { nil }
@@ -39,9 +40,11 @@ private actor CompactionWorkBackend: ConversationBackend {
       ChatMessage(role: .companion, text: "Understood."),
     ]
   }
-  _ = try await ConversationCompactor(backend: backend).compact(messages, into: .init())
+  let checkpoint = try #require(
+    try await ConversationCompactor(backend: backend).compact(messages, into: .init()))
+  #expect(checkpoint.throughMessageID != messages.last?.id)
   let summaries = await backend.summaries
-  #expect(summaries.count > 1)
+  #expect(summaries.count == 1)
   for summary in summaries {
     let required =
       try await backend.inputTokenCount(summary) + summary.maximumTokens
@@ -50,7 +53,7 @@ private actor CompactionWorkBackend: ConversationBackend {
   }
 }
 
-@Test func compactionUsesAvailableSourceCapacityInsteadOfRepeatedSmallSummaryCalls() async throws {
+@Test func foregroundPreparationNeverStartsCheckpointGeneration() async throws {
   let backend = CompactionWorkBackend()
   let history = (0..<40).flatMap { index in
     [
@@ -64,22 +67,18 @@ private actor CompactionWorkBackend: ConversationBackend {
     companionName: "Pogo", profile: .init(personality: "Curious"), messages: history + [question])
   let tools = [ConversationToolDefinition(name: "search", description: "Search", parameters: [])]
   let prepared = try await ConversationContextManager(
-    backend: backend, tools: tools, progress: { _ in }
+    backend: backend, tools: tools
   ).prepare(original)
 
-  let summaries = await backend.summaries
-  #expect(!summaries.isEmpty)
-  #expect(summaries.count <= 2)
-  #expect(summaries.first?.prompt.contains("Turn 0:") == true)
-  #expect(summaries.allSatisfy { !$0.prompt.contains(question.text) })
+  #expect(await backend.summaries.isEmpty)
   #expect(prepared.messages.last?.id == question.id)
   #expect(prepared.messages.first?.role == .user)
-  #expect(prepared.messages.count > 1)
   #expect(original.messages.count == history.count + 1)
-  for summary in summaries {
-    #expect(
-      try await backend.inputTokenCount(summary) + summary.maximumTokens
-        + backend.reasoningTokenReserve
-        <= backend.contextWindowTokens)
-  }
+  #expect(
+    try await backend.inputTokenCount(
+      ChatReplyGenerator.request(
+        for: prepared, tools: tools,
+        maximumTokens: backend.generationProfile.conversation.outputTokens))
+      + backend.generationProfile.conversation.outputTokens + backend.reasoningTokenReserve
+      <= backend.contextWindowTokens)
 }

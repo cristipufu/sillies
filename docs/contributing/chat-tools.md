@@ -124,10 +124,12 @@ make successful changes visible and undoable. Clear/Forget/Undo rotate the stora
 for the reply and tool results. Apple uses its tokenizer on macOS 26.4 or later; earlier systems use
 an estimate. Downloaded models use the installed tokenizer in the helper.
 
-When necessary, `ConversationCompactor` summarizes older complete turns in bounded batches.
-The largest recent suffix that fits remains verbatim; its preceding turns are compacted together rather than in
-fixed four-turn chunks. Oversized source batches split at complete user-turn boundaries according
-to measured token capacity, including the summary task's reasoning reserve. A short,
+Reply preparation reads one checkpoint and one bounded recent page. It selects a fitting suffix of
+complete turns without summarizing or walking old history. `ConversationCheckpointMaintenance`
+prepares older checkpoints separately during idle time; each cancellable slice reads one bounded
+page and generates at most one summary. Interactive inference preempts it. Source batches split at
+complete user-turn boundaries according to measured token capacity, including the summary task's
+reasoning reserve. Generation/revision checks reject stale writes after edits or resets. A short,
 attributed opening statement is retained separately; later corrections take precedence. Recent
 turns retain native roles and tool exchanges. The summarizer is a separate text task: attributed old turns are source data, not an active
 conversation to continue. The summary keeps attributed facts, preferences,
@@ -136,11 +138,13 @@ remain separate from generated memory. The original history remains visible and 
 there is no 100-message stop. History, summaries and personal memories persist per companion and are never shared across mascots.
 
 Summaries are lossy. This is continuity, not perfect recall of every sentence. If summarization
-fails, a bounded attributed excerpt preserves some continuity and the full transcript remains
-intact. Cancellation retains an already visible partial reply, marked as interrupted, together with the
+fails, the previous checkpoint and full transcript remain intact. The reply can use recent context,
+saved memories and `search_conversation` for older evidence. Cancellation retains an already visible
+partial reply, marked as interrupted, together with the
 prefix of fully played phrases. Interruption metadata belongs in instructions, not annotations appended
-to assistant speech in model history. A context overflow before text delivery triggers one stronger
-compaction attempt; after delivery it must not replay the reply. Repeated failure stays recoverable, with the user's message and found cards
+to assistant speech in model history. A context overflow before text delivery triggers one retry
+with minimal current context and cached tool results; after delivery it must not replay the reply.
+Repeated failure stays recoverable, with the user's message and found cards
 available. An individual message still has the composer limit and can exceed a model's token budget
 with unusual tokenization. No model-size policy can guarantee that arbitrary input always fits.
 

@@ -1,0 +1,6 @@
+{"toolCount":0,"style":"summary","maximumTokens":320,"event":"generationStarted","messageCount":1}
+{"metrics":{"peakDeviceMemoryBytes":14085079732,"cachedPromptTokens":0,"generationSeconds":22.562214016914368,"generatedTokens":2209,"promptSeconds":6.10357403755188,"processedPromptTokens":3735},"style":"summary","seconds":28.689630042,"messageCount":1,"toolCount":0,"event":"generationFinished","maximumTokens":320}
+{"event":"generationStarted","maximumTokens":320,"style":"summary","toolCount":0,"messageCount":1}
+{"metrics":{"peakDeviceMemoryBytes":14085079732,"cachedPromptTokens":0,"generationSeconds":15.213150978088379,"generatedTokens":1520,"promptSeconds":3.5163029432296753,"processedPromptTokens":2822},"style":"summary","seconds":18.761381458,"messageCount":1,"toolCount":0,"event":"generationFinished","maximumTokens":320}
+{"event":"generationStarted","maximumTokens":240,"style":"conversation","toolCount":5,"messageCount":45}
+{"metrics":{"peakDeviceMemoryBytes":14097675548,"cachedPromptTokens":0,"generationSeconds":0.5710279941558838,"generatedTokens":57,"promptSeconds":4.169475197792053,"processedPromptTokens":3398},"style":"conversation","seconds":4.744797666,"messageCount":45,"toolCount":5,"event":"generationFinished","maximumTokens":240}

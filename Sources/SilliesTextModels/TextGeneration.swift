@@ -78,20 +78,20 @@ package protocol TextModelProvider: Sendable {
 }
 
 package struct TextModelPreparation: Codable, Sendable {
+  package typealias Reasoning = TextModelReasoning
   package let directory: URL
-  package let contextTokens: Int
+  package let profile: TextModelProfile
+  package var contextTokens: Int { profile.context.workingTokens }
   package let memoryLimitBytes: Int
   package let reasoning: TextModelReasoning?
-  package let sampling: TextModelSampling?
   package init(
-    directory: URL, contextTokens: Int, memoryLimitBytes: Int,
-    reasoning: TextModelReasoning? = nil, sampling: TextModelSampling? = nil
+    directory: URL, profile: TextModelProfile, memoryLimitBytes: Int,
+    reasoning: TextModelReasoning? = nil
   ) {
     self.directory = directory
-    self.contextTokens = contextTokens
+    self.profile = profile
     self.memoryLimitBytes = memoryLimitBytes
     self.reasoning = reasoning
-    self.sampling = sampling
   }
 }
 

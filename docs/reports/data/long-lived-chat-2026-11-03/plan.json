@@ -1,0 +1,13 @@
+{
+  "models": [
+    "apple",
+    "lfm-2.5-24b-a2b",
+    "gemma-4-12b"
+  ],
+  "repeats": 1,
+  "orderSeed": 314159,
+  "turnTimeout": 60,
+  "caseTimeout": 180,
+  "batchSeconds": 300,
+  "purpose": "Declared before inference. The same 192-message source history, questions and factual answers as boundary-incremental-compaction. New architecture uses bounded recent context plus archive tools; require zero foreground summaries instead of the earlier path-specific mandatory-compaction assertion. No scores are substituted into the old corpus or leaderboard. One three-turn case per model, inspect every reply and tool trace. Background native preemption is tested separately; this worker does not start maintenance."
+}

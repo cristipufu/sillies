@@ -1,0 +1,27 @@
+{
+  "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer make check",
+  "exitCode": 0,
+  "swiftTests": 665,
+  "swiftTestRuns": 18,
+  "pythonTests": 92,
+  "logSHA256": "db78a3a2444d8e39757a2e792d23ecb296a71c527b3a4eb2b7d8af01ac3fa626",
+  "sourceManifest": "source-files-selected.json",
+  "profiles": "selected-profiles.json",
+  "nativeChecks": [
+    "text inference GPU and conversation protocol",
+    "TTS helper and GPU",
+    "TTS and text orphaned-helper exit",
+    "application model/character catalog"
+  ],
+  "benchmarkFixtureScenarios": 74,
+  "localizedSourceStrings": 925,
+  "presentation": "headless; no GUI presentation suite or running-app restart",
+  "localLog": "build/chat-benchmarks/agent-profiles-2026-11-03/checks-selected-profiles.log",
+  "releaseBuild": {
+    "exitCode": 0,
+    "path": "/tmp/sillies-agent-profile-release-final/Sillies.app",
+    "logSHA256": "6e0a08b86879b7a39add1f3ecfbc4c2049d8229a2a6005d08ee039c017f85bcc",
+    "executableSHA256": "113d5811db61bd2a3ec907231eef88fbe74d129f20933744c308165cca11dbf4",
+    "catalogsMatchSelectedProfiles": true
+  }
+}

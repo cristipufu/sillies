@@ -7,11 +7,13 @@ package actor ReasoningTurnGate {
   enum Priority { case background, interactive }
   private struct Waiter {
     let id: UUID
+    let priority: Priority
     let continuation: CheckedContinuation<Void, Error>
   }
   private static let maximumWaiters = 8
   private var occupied = false
   private var waiters: [Waiter] = []
+  private var cancelBackground: (@Sendable () -> Void)?
 
   func tryAcquire() -> Bool {
     guard !occupied else { return false }
@@ -24,15 +26,43 @@ package actor ReasoningTurnGate {
       try Task.checkCancellation()
       if tryAcquire() { return }
       guard waiters.count < Self.maximumWaiters else { throw TextModelError.busy }
+      if priority == .interactive { cancelBackground?() }
       try await withCheckedThrowingContinuation { continuation in
-        let waiter = Waiter(id: id, continuation: continuation)
+        let waiter = Waiter(id: id, priority: priority, continuation: continuation)
         switch priority {
-        case .interactive: waiters.insert(waiter, at: 0)
+        case .interactive:
+          let index = waiters.firstIndex(where: { $0.priority == .background }) ?? waiters.endIndex
+          waiters.insert(waiter, at: index)
         case .background: waiters.append(waiter)
         }
       }
+      // Cancellation can race with release after this waiter has already been granted ownership.
+      if Task.isCancelled {
+        release()
+        throw CancellationError()
+      }
     } onCancel: {
       Task { await self.cancel(id) }
+    }
+  }
+  func performCheckpoint<Value: Sendable>(
+    _ operation: @escaping @Sendable () async throws -> Value
+  ) async throws -> Value {
+    try await acquire(.background)
+    let work = Task {
+      try Task.checkCancellation()
+      return try await operation()
+    }
+    cancelBackground = { work.cancel() }
+    if waiters.contains(where: { $0.priority == .interactive }) { work.cancel() }
+    defer {
+      cancelBackground = nil
+      release()
+    }
+    return try await withTaskCancellationHandler {
+      try await work.value
+    } onCancel: {
+      work.cancel()
     }
   }
   func release() {

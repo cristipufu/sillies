@@ -23,12 +23,15 @@ package struct TextGenerationMetrics: Codable, Sendable {
   package let generatedTokens: Int
   package let promptSeconds: Double
   package let generationSeconds: Double
+  /// MLX active-allocation high-water mark for this helper lifetime; not whole-process RSS.
+  package let peakDeviceMemoryBytes: Int?
 
-  package init(tokens: Tokens, timing: Timing) {
+  package init(tokens: Tokens, timing: Timing, peakDeviceMemoryBytes: Int? = nil) {
     processedPromptTokens = tokens.processedPrompt
     cachedPromptTokens = tokens.cachedPrompt
     generatedTokens = tokens.generated
     promptSeconds = timing.prompt
     generationSeconds = timing.generation
+    self.peakDeviceMemoryBytes = peakDeviceMemoryBytes
   }
 }

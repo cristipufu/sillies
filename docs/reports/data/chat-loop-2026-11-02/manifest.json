@@ -1,0 +1,116 @@
+{
+  "compaction-analysis.json": {
+    "sha256": "fb4d629feb8a4f6c30bf2d303bc7c4b38211352a68504f86bf9e293486d7171a",
+    "bytes": 2174
+  },
+  "context-context.json.gz": {
+    "sha256": "4e840383e1a1e3b93118f83796199619c20b8b95d034e2423954513e3fe590d1",
+    "bytes": 42272,
+    "integrity": "recorded checks and primary metrics reproduced",
+    "corpusHash": "50f3792dd703567d9eb7175e3c7d8e6bce43e519f6934bff09441bd7b1eb0328",
+    "completedCases": 18,
+    "plannedCases": 18,
+    "turns": 30
+  },
+  "continuity-baseline.json.gz": {
+    "sha256": "fa2b766ba6d3ae16fc3d6990697c4a3b9c6d9a0c491b6b4d834f1ab41a36846f",
+    "bytes": 60445,
+    "integrity": "recorded checks and primary metrics reproduced",
+    "corpusHash": "50f3792dd703567d9eb7175e3c7d8e6bce43e519f6934bff09441bd7b1eb0328",
+    "completedCases": 30,
+    "plannedCases": 30,
+    "turns": 50
+  },
+  "continuity-summary.json.gz": {
+    "sha256": "3868b4934cc48e79de6be431a3605a3ce35c307c137945ae53a4bf0e49bb94f6",
+    "bytes": 70032,
+    "integrity": "recorded checks and primary metrics reproduced",
+    "corpusHash": "50f3792dd703567d9eb7175e3c7d8e6bce43e519f6934bff09441bd7b1eb0328",
+    "completedCases": 30,
+    "plannedCases": 30,
+    "turns": 50
+  },
+  "controls.json.gz": {
+    "sha256": "56bada65724d8db2e8980f86073e4c4f367d0c6af6ccbf99efeaecc95c8e5aa5",
+    "bytes": 34338
+  },
+  "format-verification.json": {
+    "sha256": "34b357a036f873f8a68d957a9ee91168dc2e676a910cb271fe9a8fff26062f25",
+    "bytes": 398
+  },
+  "latency-baseline.json.gz": {
+    "sha256": "4aa632b716b3f865238fe0dae8bddaf2bc002756663dd7e70d91ae272a1dd984",
+    "bytes": 93095,
+    "integrity": "recorded checks and primary metrics reproduced",
+    "corpusHash": "26d6d4e59395c3efd3b11ac96bad617ad937a045325606d6e867f7e3a87e0994",
+    "completedCases": 42,
+    "plannedCases": 42,
+    "turns": 66
+  },
+  "latency-prefill.json.gz": {
+    "sha256": "dba5c08156c837fe74f19aa80e1ca40fc038e87792266f52209f22553c6b541d",
+    "bytes": 89468,
+    "integrity": "recorded checks and primary metrics reproduced",
+    "corpusHash": "26d6d4e59395c3efd3b11ac96bad617ad937a045325606d6e867f7e3a87e0994",
+    "completedCases": 42,
+    "plannedCases": 42,
+    "turns": 66
+  },
+  "latency-tail-prefill.json.gz": {
+    "sha256": "b18cf703f85c4abb5dc584b5069890484e7e0ca22a182337d3d61b2f60716556",
+    "bytes": 92178,
+    "integrity": "recorded checks and primary metrics reproduced",
+    "corpusHash": "26d6d4e59395c3efd3b11ac96bad617ad937a045325606d6e867f7e3a87e0994",
+    "completedCases": 42,
+    "plannedCases": 42,
+    "turns": 66
+  },
+  "measurements.json": {
+    "sha256": "9bae5cfb68fbc959f681c5d6b4bf8e79715a41493fd3cf1e7ae3a85dadde637d",
+    "bytes": 327882
+  },
+  "passage-analysis.json": {
+    "sha256": "20fea475cad85f0505925b3369c8518b3a63883b86e3cd34f7b35f36c1ef9ee3",
+    "bytes": 987
+  },
+  "quality-baseline.json.gz": {
+    "sha256": "b3f09d9b61cb46e0565dea563357a8501eb84962097623ead844f2e3ecbfc5e1",
+    "bytes": 170335,
+    "integrity": "recorded checks and primary metrics reproduced",
+    "corpusHash": "af7f4417b094272ea27500d2c81845228734893e6471f754aa1df28fb8bb11ef",
+    "completedCases": 130,
+    "plannedCases": 130,
+    "turns": 200
+  },
+  "quality-policy.json.gz": {
+    "sha256": "f7e62a593ca322402d4e2bab798ebf81d99f7c36c83b081e9f77468c41452a29",
+    "bytes": 176121,
+    "integrity": "recorded checks and primary metrics reproduced",
+    "corpusHash": "af7f4417b094272ea27500d2c81845228734893e6471f754aa1df28fb8bb11ef",
+    "completedCases": 130,
+    "plannedCases": 130,
+    "turns": 200
+  },
+  "quality-sampling.json.gz": {
+    "sha256": "6cc749115fb59160bfd8609bc60367a9f40d8123b90bd0266d6ce1331af40d5a",
+    "bytes": 114869,
+    "integrity": "recorded checks and primary metrics reproduced",
+    "corpusHash": "af7f4417b094272ea27500d2c81845228734893e6471f754aa1df28fb8bb11ef",
+    "completedCases": 78,
+    "plannedCases": 78,
+    "turns": 120
+  },
+  "quality-tool-contract.json.gz": {
+    "sha256": "3ebb46faa0a03456ac1d4607d32bea6f59170725db3597a07c8b7f6023723d63",
+    "bytes": 165683,
+    "integrity": "recorded checks and primary metrics reproduced",
+    "corpusHash": "af7f4417b094272ea27500d2c81845228734893e6471f754aa1df28fb8bb11ef",
+    "completedCases": 130,
+    "plannedCases": 130,
+    "turns": 200
+  },
+  "verification.json": {
+    "sha256": "0fd05ae473f5e2f22c8059368bc870926c06a159ffeddb926a0d4eaec4e0c880",
+    "bytes": 4594
+  }
+}

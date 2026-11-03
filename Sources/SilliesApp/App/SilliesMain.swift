@@ -245,6 +245,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
           VaultSearchTool(library: skills.vault.library),
           VaultReadTool(library: skills.vault.library),
         ],
+        history: conversations,
         historyTools: { context in
           ConversationHistoryTools(conversations: conversations, memories: conversations).tools(
             for: context)

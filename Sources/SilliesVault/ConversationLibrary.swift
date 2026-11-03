@@ -20,6 +20,14 @@ package actor ConversationLibrary: ConversationRepository, CompanionMemoryReposi
     try storage().open(owner)
   }
   package func save(_ update: ConversationUpdate) throws { try storage().save(update) }
+  package func checkpoint(_ handle: ConversationHandle) throws -> ConversationMemorySnapshot {
+    try Task.checkCancellation()
+    return try storage().checkpoint(handle)
+  }
+  package func advanceCheckpoint(_ update: ConversationMemoryUpdate) throws -> Bool {
+    try Task.checkCancellation()
+    return try storage().advanceCheckpoint(update)
+  }
   package func page(_ request: ConversationPageRequest) throws -> ConversationPage {
     try Task.checkCancellation()
     return try storage().page(request)

@@ -1,4 +1,5 @@
 import Foundation
+import SilliesCore
 import SilliesModelStore
 import SilliesReasoning
 import SilliesTextModels
@@ -10,6 +11,10 @@ struct BenchmarkModel {
     let contextTokens: Int
     let reasoningTokenReserve: Int
     let summaryReasoningTokenReserve: Int
+    let profile: TextModelProfile?
+    let generation: TextGenerationProfile
+    let conversation: ConversationPolicy
+    let toolResultBudgeting: ConversationToolResultBudgeting
     let operatingSystem: String
     let memoryBytes: UInt64
     let processors: Int
@@ -50,17 +55,24 @@ struct BenchmarkModel {
     let backend = DownloadedReasoningBackend(manifest: manifest, store: store, registry: registry)
     return .init(
       backend: backend, inference: inference,
-      metadata: metadata(id: plan.model, revision: manifest.revision, backend: backend),
+      metadata: metadata(
+        id: plan.model, revision: manifest.revision, backend: backend,
+        profile: manifest.model.profile),
       stop: { await registry.stop() })
   }
 
-  private static func metadata(id: String, revision: String, backend: any ConversationBackend)
+  private static func metadata(
+    id: String, revision: String, backend: any ConversationBackend, profile: TextModelProfile? = nil
+  )
     -> Metadata
   {
     .init(
       id: id, revision: revision, contextTokens: backend.contextWindowTokens,
       reasoningTokenReserve: backend.reasoningTokenReserve,
       summaryReasoningTokenReserve: backend.reasoningTokenReserve(for: .summary),
+      profile: profile, generation: backend.generationProfile,
+      conversation: backend.conversationPolicy,
+      toolResultBudgeting: backend.toolResultBudgeting,
       operatingSystem: ProcessInfo.processInfo.operatingSystemVersionString,
       memoryBytes: ProcessInfo.processInfo.physicalMemory,
       processors: ProcessInfo.processInfo.activeProcessorCount)

@@ -1,0 +1,26 @@
+Test receipts: /Users/cristian.pufu/Documents/GitHub/sillies-macos/build/test-results/run-h8jsawr1
+Native presentation: 0 headless tests; 0 tests reserved for the other presentation mode.
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test nativeLongHistoryAndCheckpointPreemption() started.
+NATIVE CONTINUITY apple: 10001 messages; reply=1.552126417 seconds; text=Hello!
+NATIVE CONTINUITY apple: preemption=0.084361625 seconds; resumed reply=0.851719208 seconds; text=Hello!
+NATIVE CONTINUITY apple: persisted checkpoint=2.042296666 seconds; summary=User facts:
+
+*   User has participated in 24 discussions.
+*   User has been active for 12 months.
+*   User has a high level of engagement, with an average of 2.5 discussions per month.
+
+Decision:
+
+*   User has decided to continue participating in discussions.
+
+Open questions:
+
+*   User is interested in learning more about the topic of the discussion.
+*   User is unsure about the next steps in the discussion.
+*   User is looking for feedback on their contributions.
+✔ Test nativeLongHistoryAndCheckpointPreemption() passed after 5.199 seconds.
+✔ Test run with 1 test in 0 suites passed after 5.199 seconds.
+Verified completion of 1 selected tests across 1 runs.

@@ -1,0 +1,77 @@
+{
+  "context": {
+    "maximumTokens": 131072,
+    "workingTokens": 4096
+  },
+  "prefill": {
+    "chunkTokens": null
+  },
+  "generation": {
+    "conversation": {
+      "outputTokens": 240,
+      "reasoningTokens": 1024,
+      "sampling": {
+        "temperature": 0.1,
+        "topP": 1.0,
+        "topK": 50,
+        "repetitionPenalty": 1.1
+      },
+      "repetitionContextTokens": 64
+    },
+    "summary": {
+      "outputTokens": 320,
+      "reasoningTokens": 2048,
+      "sampling": {
+        "temperature": 0.1,
+        "topP": 1.0,
+        "topK": 50,
+        "repetitionPenalty": 1.1
+      },
+      "repetitionContextTokens": 64
+    },
+    "precise": {
+      "outputTokens": 1400,
+      "reasoningTokens": 1024,
+      "sampling": {
+        "temperature": 0.1,
+        "topP": 1.0,
+        "topK": 50,
+        "repetitionPenalty": 1.1
+      },
+      "repetitionContextTokens": 64
+    }
+  },
+  "conversation": {
+    "safetyTokens": 128,
+    "compaction": {
+      "summaryWords": 180,
+      "headroomTokens": 256
+    },
+    "tools": {
+      "maximumCalls": 4,
+      "reserveTokens": 1536,
+      "resultTokens": 768
+    },
+    "history": {
+      "recent": {
+        "messageLimit": 64,
+        "byteLimit": 32768
+      },
+      "checkpoint": {
+        "window": {
+          "messageLimit": 24,
+          "byteLimit": 12288
+        },
+        "minimumMessages": 12
+      }
+    }
+  },
+  "evidence": {
+    "sources": [
+      "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit/resolve/04efa23776ce61ec34ec95ec34c859854c89542b/config.json",
+      "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit"
+    ],
+    "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+    "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained from the committed baseline. This checkpoint was not natively compared in the November 3 focused experiment. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+  }
+}

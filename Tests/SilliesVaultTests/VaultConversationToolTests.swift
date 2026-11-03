@@ -122,7 +122,8 @@ func appleChatUsesNativeVaultToolsForTheRequestedRecordTypes() async throws {
 }
 
 private struct LoggedAppleBackend: ConversationBackend {
-  var reasoningTokenReserve: Int { apple.reasoningTokenReserve }
+  var conversationPolicy: ConversationPolicy { apple.conversationPolicy }
+  var generationProfile: TextGenerationProfile { apple.generationProfile }
   private let apple = AppleReasoningBackend()
   var contextWindowTokens: Int { apple.contextWindowTokens }
   func inputTokenCount(_ request: TextGenerationRequest) async throws -> Int {

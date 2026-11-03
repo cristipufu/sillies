@@ -40,6 +40,10 @@ private actor HistoryStorageProbe: ConversationRepository, CompanionMemoryReposi
     guard writesAllowed else { throw ConversationStorageError.invalidData }
     saved.append(update)
   }
+  func checkpoint(_ handle: ConversationHandle) -> ConversationMemorySnapshot {
+    snapshot.checkpoint.memorySnapshot
+  }
+  func advanceCheckpoint(_ update: ConversationMemoryUpdate) -> Bool { false }
   func page(_ request: ConversationPageRequest) -> ConversationPage { snapshot.page }
   func search(_ request: ConversationSearchRequest) -> [ConversationSearchMatch] { [] }
   func conversations() -> [ConversationHeader] { [] }

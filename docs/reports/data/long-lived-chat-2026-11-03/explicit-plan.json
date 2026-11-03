@@ -1,0 +1,9 @@
+{
+  "models": [
+    "gemma-4-12b"
+  ],
+  "repeats": 1,
+  "turnTimeout": 60,
+  "caseTimeout": 90,
+  "purpose": "Declared before inference after reviewing the failed implicit-lookup controls. Determine whether the same frozen app/helper can retrieve an archived fact when the user explicitly requests conversation search. Do not use this diagnostic as a replacement pass for a failed original case."
+}

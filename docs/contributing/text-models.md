@@ -9,6 +9,9 @@ can use the catalog and installer; a new runtime needs a separate adapter.
 1. Confirm that the pinned MLX runtime supports the architecture, quantization, tokenizer, and chat
    template. Review the upstream license and device requirements. Do not load remote executable code.
 2. Add its pinned repository/revision and display/hardware metadata to `scripts/update-text-catalog.py`.
+   Add its execution profile to `ModelProfiles/Text/<model-id>.json`; see
+   [model profiles and agent budgets](../model-profiles.md). Profiles must cite the pinned checkpoint
+   configuration and the exact MLX runtime revision. A runtime update requires reviewing the profiles.
    Generate `Sources/SilliesModelStore/Resources/text-models.json`. Review all required files, hashes,
    byte lengths, per-model license, original release date and its primary source, and total download size.
    A conversion upload date is not a model release date. These dates are frozen in benchmark runs.
@@ -39,16 +42,23 @@ optional catalog `reasoning` policy: `switchableThinkTags` or `alwaysOnThinkTags
 reasoning receives a bounded token reserve shared by inference and context compaction. Do not
 force-close a private channel or classify visible output with model-name heuristics. Validate
 native tool continuation, hidden-channel streaming, and compaction with the actual checkpoint.
-The optional `sampling` preset carries reviewed temperature, top-p, top-k and repetition penalty
-values from the publisher; the native adapter applies it without a model-ID switch. Models without
-a preset retain the task's default sampling. Check both conversation and precise generation before
-publishing a preset. A publisher recommendation is a starting point, not proof of better app scores.
+Each task in `profile.generation` owns its output ceiling, reasoning capacity, sampling, and
+repetition context. Publisher decoding recommendations are starting points, not proof of better
+application scores. The generic adapter applies these settings without model-ID branches, and a
+feature can request less output than the task ceiling.
 
-`TextGenerationStyle.summary` identifies history compaction. Always-reasoning models reserve 2,048
-additional generation tokens for that task and 1,024 for ordinary replies and precise transformations, in addition
-to the requested output allowance. Admission, summary splitting and native generation use the same
-policy within the existing context limit and deadline. Reasoning and visible output share the native
-generation ceiling; these are capacity allowances, not independently enforced channel quotas.
+`TextGenerationStyle.summary` identifies history compaction. Current LFM profiles reserve 2,048
+reasoning tokens for summaries and 1,024 for conversation and precise transformations. These values
+belong to those profiles; another checkpoint must declare its own reviewed allowances. Admission,
+summary splitting and native generation use the same task policy within the existing deadline.
+Reasoning and visible output share the native generation ceiling; they are capacity allowances,
+not independently enforced channel quotas.
+Declare `conversation.history.recent` and `conversation.history.checkpoint` explicitly, including
+message and byte limits. These bound repository reads before token admission. Foreground preparation
+must only measure and select recent context; never add summary generation or a backlog walk there.
+Checkpoint work runs in cancellable background slices under the shared turn gate. Verify that the
+new provider promptly cancels actual native inference, not merely its Swift caller, before claiming
+interactive preemption. See [long-lived conversations](../model-profiles.md#long-lived-conversations).
 Text-model revisions currently ship with the app;
 the speech-model update mechanism does not discover text-model updates.
 
@@ -73,7 +83,9 @@ not change audio capture, transcript rendering, character behavior, or window tr
 ## Native conversations and tools
 
 For Chat, also implement the `ConversationBackend` capability with native message roles, tool calls,
-and token measurement. The helper must distinguish generation from measurement and preserve typed
+and token measurement. Declare the tool-result budgeting capability: downloaded runtimes measure
+results between rounds; Apple delegates active-round admission to its framework to avoid native
+continuation overhead. The helper must distinguish generation from measurement and preserve typed
 context-limit errors over IPC. Do not encode history into a single user message. Verify the model's
 actual tool format with the pinned runtime. See [Chat tools and context](chat-tools.md).
 
@@ -117,8 +129,22 @@ initial and a reused helper, reporting first-text and total latency separately. 
 `SILLIES_TEXT_HELPER` to the packaged executable when validating a built app. This mode uses a
 synthetic greeting, no user records, and does not download weights.
 
+The opt-in `nativeLongHistoryAndCheckpointPreemption` test seeds 10,000 synthetic archived messages,
+answers with the real backend, interrupts a live checkpoint and measures the next reply. Set
+`SILLIES_CONTINUITY_MODEL` to `apple` or a catalog model ID. Downloaded models also require
+`SILLIES_CONTINUITY_MODEL_ROOT` and `SILLIES_CONTINUITY_HELPER` pointing to existing weights and the
+packaged release helper. Run it through `scripts/test.sh` (or the checked runner after building tests),
+with an external deadline. It does not download weights or touch app preferences. Separate this
+native cancellation control from ordinary deterministic scale tests and semantic recall evaluations.
+
 See [runtime ownership and limits](../local-text-models.md) and [the development contract](../../AGENTS.md).
 For audio-to-text, use the [speech-model guide](speech-models.md).
+
+Changing only a reviewed execution profile does not require contacting Hugging Face or downloading
+weights. Run `python3 scripts/update-text-catalog.py --profiles-only` to refresh the bundled descriptors.
+The command refuses changed checkpoint identities. Catalog tests prevent the generated settings from
+drifting from their reviewed sources. Native preparation carries the same profile used by Chat's
+budgeting; do not reintroduce fixed context/prefill/summary limits in an adapter or feature.
 
 ## Runtime and conversation reuse
 
@@ -135,7 +161,7 @@ to force a cache hit.
 
 Apple conversation sessions retain one exact completed continuation. Session identity, instructions,
 roles, tool schemas and committed history must match. Tool invocation uses the current turn's toolbox;
-a turn with tool exchanges is rebuilt from canonical history next time. Cancellation, errors, context
+matching continuations preserve the framework's native transcript, including tool exchanges. Cancellation, errors, context
 compaction, edits, session end and memory pressure invalidate reuse. Native sessions never own Vault
 storage or a long-lived turn budget. The bounded `TextModelBenchmark apple-context` and `tokens` modes
 measure session and input preparation separately; neither downloads models.

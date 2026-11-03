@@ -13,7 +13,8 @@ enum ConversationToolLoop {
   ) async throws -> String {
     var messages = request.messages
     var portions: [String] = []
-    for _ in 0..<(ConversationToolbox.maximumCalls + maximumCompletionRounds) {
+    let maximumRounds = await tools.maximumCallsForTurn + maximumCompletionRounds
+    for _ in 0..<maximumRounds {
       try Task.checkCancellation()
       let round = ConversationStreamDelivery(receive: receive)
       let remainingCalls = await tools.remainingCalls

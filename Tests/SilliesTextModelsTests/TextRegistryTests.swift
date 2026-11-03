@@ -96,14 +96,48 @@ private struct RetainedTextProvider: TextModelProvider {
   let id = "mlx"
   let model: RetainedTextProbe
   func prepare(_ configuration: TextModelPreparation) async throws -> any PreparedTextModel {
-    model
+    await model.prepared(contextTokens: configuration.contextTokens)
+    return model
   }
 }
 
 private actor RetainedTextProbe: PreparedTextModel {
   private(set) var stops = 0
+  private(set) var preparedContexts: [Int] = []
+  func prepared(contextTokens: Int) { preparedContexts.append(contextTokens) }
   func generate(_ request: TextGenerationRequest) async throws -> String { "Ready" }
   func stop() { stops += 1 }
+}
+
+@Test func changingAProfileReleasesTheOldRuntimeWithoutRedownloadingItsWeights() async throws {
+  let fixture = try TextFixture()
+  defer { fixture.remove() }
+  let store = ModelStore(root: fixture.root, downloader: FixtureDownloader())
+  try await store.install(fixture.manifest) { _ in }
+  var encoded = try #require(
+    JSONSerialization.jsonObject(with: JSONEncoder().encode(fixture.manifest)) as? [String: Any])
+  var descriptor = try #require(encoded["model"] as? [String: Any])
+  var profile = try #require(descriptor["profile"] as? [String: Any])
+  var context = try #require(profile["context"] as? [String: Any])
+  let updatedCapacity = fixture.manifest.model.contextTokens + 1_024
+  context["workingTokens"] = updatedCapacity
+  profile["context"] = context
+  descriptor["profile"] = profile
+  encoded["model"] = descriptor
+  let changed = try JSONDecoder().decode(
+    TextModelManifest.self, from: JSONSerialization.data(withJSONObject: encoded))
+  try changed.validate()
+  let model = RetainedTextProbe()
+  let registry = try TextModelRegistry(
+    store: store, providers: [RetainedTextProvider(model: model)], activity: InferenceActivity())
+  _ = try await registry.generate(fixture.request, using: fixture.manifest)
+  _ = try await registry.generate(fixture.request, using: fixture.manifest)
+  #expect(await model.preparedContexts.count == 1)
+  _ = try await registry.generate(fixture.request, using: changed)
+  #expect(await model.preparedContexts == [fixture.manifest.model.contextTokens, updatedCapacity])
+  #expect(await model.stops == 1)
+  await registry.stop()
+  try await store.remove(changed)
 }
 
 private struct ProbeProvider: TextModelProvider {

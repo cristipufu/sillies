@@ -1,4 +1,5 @@
 import Foundation
+import SilliesCore
 import SilliesInference
 import SilliesModelStore
 
@@ -8,6 +9,8 @@ package actor TextModelRegistry {
     let residencyID = UUID()
     let id: String
     let revision: String
+    let profile: TextModelProfile
+    let reasoning: TextModelReasoning?
     let model: any PreparedTextModel
     let lease: InstalledModelLease
   }
@@ -142,7 +145,9 @@ package actor TextModelRegistry {
   }
 
   private func prepare(_ manifest: TextModelManifest) async throws -> any PreparedTextModel {
-    if let loaded, loaded.id == manifest.modelID, loaded.revision == manifest.revision {
+    if let loaded, loaded.id == manifest.modelID, loaded.revision == manifest.revision,
+      loaded.profile == manifest.model.profile, loaded.reasoning == manifest.model.reasoning
+    {
       return loaded.model
     }
     await releaseLoadedModel()
@@ -163,15 +168,15 @@ package actor TextModelRegistry {
     do {
       let model = try await provider.prepare(
         .init(
-          directory: lease.directory, contextTokens: manifest.model.contextTokens,
-          memoryLimitBytes: memoryLimit, reasoning: manifest.model.reasoning,
-          sampling: manifest.model.sampling))
+          directory: lease.directory, profile: manifest.model.profile,
+          memoryLimitBytes: memoryLimit, reasoning: manifest.model.reasoning))
       if Task.isCancelled {
         await model.stop()
         throw CancellationError()
       }
       let resident = Loaded(
-        id: manifest.modelID, revision: manifest.revision, model: model, lease: lease)
+        id: manifest.modelID, revision: manifest.revision, profile: manifest.model.profile,
+        reasoning: manifest.model.reasoning, model: model, lease: lease)
       loaded = resident
       let residencyID = resident.residencyID
       await activity.rememberTextModel(

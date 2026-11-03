@@ -1,0 +1,12 @@
+{
+  "models": [
+    "lfm-2.5-24b-a2b"
+  ],
+  "cases": [
+    "boundary-incremental-compaction"
+  ],
+  "repeats": 1,
+  "orderSeed": 271828,
+  "batchSeconds": 600,
+  "purpose": "Post-review 8192-token boundary verification, declared before inference. 192 archived messages with expanded neutral workshop discussion, plus correction/follow-up. Original compaction and retained-context checks remain. Not a new leaderboard."
+}

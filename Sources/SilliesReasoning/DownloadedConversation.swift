@@ -1,3 +1,4 @@
+import SilliesCore
 import SilliesTextModels
 
 extension DownloadedReasoningBackend: ConversationBackend {
@@ -5,10 +6,8 @@ extension DownloadedReasoningBackend: ConversationBackend {
     await registry.retain(for: lifetime)
   }
   package var contextWindowTokens: Int { manifest.model.contextTokens }
-  package var reasoningTokenReserve: Int { manifest.model.reasoning?.tokenReserve ?? 0 }
-  package func reasoningTokenReserve(for style: TextGenerationStyle) -> Int {
-    style.reasoningTokenReserve(manifest.model.reasoning)
-  }
+  package var conversationPolicy: ConversationPolicy { manifest.model.profile.conversation }
+  package var generationProfile: TextGenerationProfile { manifest.model.profile.generation }
   package func inputTokenCount(_ request: TextGenerationRequest) async throws -> Int {
     let output = try await registry.complete(request.measuringTokens(), using: manifest)
     guard let count = output.inputTokens, count >= 0 else { throw TextModelError.invalidResponse }
@@ -25,7 +24,11 @@ extension DownloadedReasoningBackend: ConversationBackend {
   ) async throws -> String {
     try await ConversationToolLoop.run(request, tools: tools, receive: receive) {
       generation, sink in
-      try await registry.stream(generation, using: manifest, receive: sink)
+      let budget = ConversationBudget(backend: self)
+      guard try await budget.requiredTokens(generation) <= budget.admissionTokens else {
+        throw TextModelError.contextLimit
+      }
+      return try await registry.stream(generation, using: manifest, receive: sink)
     }
   }
 }

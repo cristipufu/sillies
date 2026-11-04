@@ -13,6 +13,25 @@ enum TextGenerationInspection {
     let failure: TextGenerationFailure?
     let error: String?
     let rejection: RejectedToolCall?
+    let preparation: [TextPreparationTiming]
+    let firstTextSeconds: Double?
+  }
+
+  private actor Timings {
+    var preparation: [TextPreparationTiming] = []
+    var firstTextSeconds: Double?
+    var started = ContinuousClock.now
+    func begin() {
+      preparation = []
+      firstTextSeconds = nil
+      started = .now
+    }
+    func record(_ value: TextPreparationTiming) { preparation.append(value) }
+    func receive(_ delta: String) {
+      if firstTextSeconds == nil, !delta.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        firstTextSeconds = TextGenerationInspection.seconds(since: started)
+      }
+    }
   }
 
   private actor Rejections {
@@ -32,25 +51,31 @@ enum TextGenerationInspection {
       throw TextModelError.invalidResponse
     }
     let rejected = Rejections()
-    let runtime = MLXTextRuntime(rejectionObserver: { await rejected.record($0) })
+    let timings = Timings()
+    let runtime = MLXTextRuntime(
+      rejectionObserver: { await rejected.record($0) },
+      timingObserver: { await timings.record($0) })
     for (index, request) in requests.enumerated() {
       let started = ContinuousClock.now
+      await timings.begin()
       let result: Result
       do {
-        let generated = try await runtime.generate(request, receive: { _ in })
+        let generated = try await runtime.generate(request, receive: { await timings.receive($0) })
         let visible = TextGenerationOutput(
           text: generated.text, calls: generated.calls, inputTokens: generated.inputTokens,
           metrics: generated.metrics)
         result = .init(
           index: index, seconds: seconds(since: started), output: visible, failure: nil,
-          error: nil, rejection: await rejected.take())
+          error: nil, rejection: await rejected.take(), preparation: await timings.preparation,
+          firstTextSeconds: await timings.firstTextSeconds)
       } catch is CancellationError {
         throw CancellationError()
       } catch {
         result = .init(
           index: index, seconds: seconds(since: started), output: nil,
           failure: error as? TextGenerationFailure, error: String(describing: error),
-          rejection: await rejected.take())
+          rejection: await rejected.take(), preparation: await timings.preparation,
+          firstTextSeconds: await timings.firstTextSeconds)
       }
       let encoder = JSONEncoder()
       encoder.outputFormatting = [.sortedKeys]

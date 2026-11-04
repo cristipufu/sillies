@@ -1,0 +1,21 @@
+{
+  "Benchmarks/Chat/experiments/cache-memory-2026-11-04/corpus/cases.json": "6e5aab0702441fde84f949d2259354ae705cf824e3a014d1672ce089d9cb7347",
+  "Benchmarks/Chat/experiments/cache-memory-2026-11-04/study.json": "45af1cd07752cb63c8974a3a6c6d5ec50ca2511d8cd6b16ea6070f0654ec241d",
+  "docs/reports/cache-memory-2026-11-04.md": "8ee4e72c3f58e9a37e8d92dde67514a13c97f74b24b4a129a25479897006b2c3",
+  "docs/reports/data/cache-memory-2026-11-04/README.md": "1dc28e6b88e633ba341dc2c74c5e5cb9af0859146d81c0fb0c8160521ea335bb",
+  "docs/reports/data/cache-memory-2026-11-04/app-baseline-granite-4.2-3b-audit.json": "fedef957e35b974ed4ad231021913ab4d9060994cd4438e0882f2184c3eaa467",
+  "docs/reports/data/cache-memory-2026-11-04/app-baseline-granite-4.2-3b.json.gz": "03b459dfce00e9a504e905828256829d65d8505c823c0e83fc23334cea2e1064",
+  "docs/reports/data/cache-memory-2026-11-04/app-baseline-ministral-3-8b-audit.json": "49168c16bab3b134d1758ea336da1b5c16d37a4383fd9a1b0b74ac65e815912e",
+  "docs/reports/data/cache-memory-2026-11-04/app-baseline-ministral-3-8b.json.gz": "953d37ac6de6b120deca2a892f03f96a260ca6014a0a749055dbe098e9aab0ac",
+  "docs/reports/data/cache-memory-2026-11-04/app-candidate-granite-4.2-3b-audit.json": "0e3338d7cb951f4ee27611b84b9375260a1d404291f41c0cd808e8f1639fe581",
+  "docs/reports/data/cache-memory-2026-11-04/app-candidate-granite-4.2-3b.json.gz": "6b313b0356705e142c29bde7da0b272cbcb4fb9296d0e229392dacd4e244ba98",
+  "docs/reports/data/cache-memory-2026-11-04/app-candidate-ministral-3-8b-audit.json": "3ba2bf08eabffd49c11041d2f5487081a0ee0faedfae8b822d39a8764c44f0cf",
+  "docs/reports/data/cache-memory-2026-11-04/app-candidate-ministral-3-8b.json.gz": "771ce6e899cf7a08b6bf94ff9a4255a72fae366155abf0af135519761f7f8a65",
+  "docs/reports/data/cache-memory-2026-11-04/binaries.json": "bf2c415f7c602b419c02c674bcf8bef4aed7406daa20925791c684fb776ffbc8",
+  "docs/reports/data/cache-memory-2026-11-04/execution.json.gz": "870b0629a9dc77b6234440dbc33d8c3cdcc0370b1a77aff6b5d35d96eff8bb75",
+  "docs/reports/data/cache-memory-2026-11-04/native-probes.json.gz": "83cef1b38b65f3f4680f45207501505badca4d6a8cc41b1b410d7cd5dace1181",
+  "docs/reports/data/cache-memory-2026-11-04/repository-check.json": "452684945baf84a83a57b2ab3ed203651367200e7b375047e0e175597ea8ac8e",
+  "docs/reports/data/cache-memory-2026-11-04/repository-check.log.gz": "23bbfa636c43efe5dc8edd2256c548c302414ddf565b80f488ba6e236fec3684",
+  "docs/reports/data/cache-memory-2026-11-04/source-overlay.json.gz": "72d011423f4102bfa292a6defdc3a1ed6f27e695b2f68657d9880ad9b1ce7e52",
+  "docs/reports/data/cache-memory-2026-11-04/targeted-check.log.gz": "0c6d6f6d45c57273df623bf612dbc2930c88ec34e6ef927235cca681f3449bf5"
+}

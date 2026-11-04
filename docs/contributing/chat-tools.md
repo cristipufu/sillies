@@ -127,8 +127,10 @@ human facts. See the [continuity and attribution investigation](../reports/conti
 `ConversationLibrary` owns the durable SQLite history. `ChatSession` holds at most 128 recent messages
 and a persisted `ConversationMemory`; `ConversationBrowser` pages older originals independently.
 `ConversationHistoryTools` creates companion-scoped tools per turn from injected repository protocols.
-`save_memory` asks for the fact’s key and value. Corrections can also supply the exact `memoryID`
-and `revision` returned by `search_memories`. Storage resolves that identity inside the write
+`save_memory` asks for the fact’s key and value. Corrections must supply the exact `memoryID`
+and `revision` returned by `search_memories`. A request without a reference creates a new topic;
+if the canonical key already exists, it returns `notSaved` with recovery instructions. Even an
+identical value cannot replace its original provenance through a creation request. Storage resolves that identity inside the write
 transaction, retains its canonical topic key, and rejects stale, deleted or foreign targets. This
 prevents a correction that names its target from creating another fact under a different key.
 The model still owns the semantic decision to correct a fact rather than create one; IDs do not
@@ -213,3 +215,10 @@ To run the same bounded evaluation against an already installed downloaded model
 `SILLIES_DOWNLOADED_CHAT_MODEL_CHECK=1`, `SILLIES_CHAT_MODEL_STORE`, `SILLIES_CHAT_MODEL_ID`, and
 `SILLIES_TEXT_HELPER`, then run `bash scripts/test.sh --filter downloadedChatAnswersGeneralKnowledge`.
 This check does not download weights or read the user's Vault.
+
+Saved facts have no fixed lifetime count cap. `CompanionMemoryQuery` bounds results before decoding
+bodies; nonempty queries rank FTS relevance before recency on the independent read-only search
+worker. Empty queries return recent facts. The model sees at most four search results.
+`ChatMemoryBrowser` holds one 40-fact page with stable timestamp/identity cursors and rejects late
+reads after refresh, cancellation or dismissal. SQLite schema 2 adds the browsing index through an
+atomic version-1 upgrade; original facts and receipts remain unchanged.

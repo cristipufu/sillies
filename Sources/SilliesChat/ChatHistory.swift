@@ -17,7 +17,7 @@ package final class ChatHistory {
   package private(set) var checkpoint = ConversationCheckpoint()
   package private(set) var isLoaded: Bool
   package private(set) var failure: String?
-  package private(set) var rememberedFacts: [CompanionMemory] = []
+  package let memories: ChatMemoryBrowser
   package private(set) var memoryReceipts: [MemoryReceipt] = []
   @ObservationIgnored private var buffer = ConversationWriteBuffer()
   @ObservationIgnored private var write: Write?
@@ -27,6 +27,7 @@ package final class ChatHistory {
 
   package init(configuration: ChatHistoryConfiguration) {
     self.configuration = configuration
+    memories = ChatMemoryBrowser(repository: configuration.memories)
     isLoaded = configuration.conversations == nil
   }
 
@@ -46,6 +47,7 @@ package final class ChatHistory {
   }
 
   package func restore(_ snapshot: ConversationSnapshot) {
+    memories.invalidate()
     handle = snapshot.handle
     checkpoint = snapshot.checkpoint
     buffer = .init()
@@ -98,6 +100,7 @@ package final class ChatHistory {
     completion: @escaping @MainActor @Sendable () -> Void
   ) {
     stopped = true
+    memories.invalidate()
     autosave?.cancel()
     autosave = nil
     guard let repository = configuration.conversations, let handle, isLoaded else {
@@ -135,16 +138,14 @@ package final class ChatHistory {
 
   package func refreshMemories() async throws {
     guard let repository = configuration.memories, let handle else { return }
-    let facts = try await repository.memories(handle, query: "")
+    try await memories.refresh(handle)
     let receipts = try await repository.recentMemoryChanges(handle)
     guard self.handle == handle else { return }
-    rememberedFacts = facts
     memoryReceipts = receipts
   }
 
   package func receivedMemory(_ receipt: MemoryReceipt) {
-    rememberedFacts.removeAll { $0.id == receipt.saved.id }
-    rememberedFacts.insert(receipt.saved, at: 0)
+    memories.received(receipt)
     memoryReceipts.removeAll { $0.id == receipt.id }
     memoryReceipts.insert(receipt, at: 0)
     memoryReceipts = Array(memoryReceipts.prefix(Self.maximumMemoryReceipts))

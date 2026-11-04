@@ -4,7 +4,7 @@ import SilliesCore
 /// Append/update individual messages. Opening or saving never decodes the whole conversation.
 public final class ConversationDatabase {
   public static let filename = "conversations.sqlite"
-  static let schemaVersion = 1
+  static let schemaVersion = 2
   static let maximumMessageBytes = 1_024 * 1_024
   static let maximumCheckpointBytes = 64 * 1_024
   private static let directoryPermissions = 0o700
@@ -148,6 +148,10 @@ public final class ConversationDatabase {
   private func prepareSchema() throws {
     let version = try sql.integer("PRAGMA user_version")
     guard version <= Self.schemaVersion else { throw ConversationStorageError.unsupportedVersion }
+    if version == 1 {
+      try sql.transaction { try prepareMemoryPaging() }
+      return
+    }
     guard version == 0 else { return }
     try sql.transaction {
       try sql.execute(
@@ -172,6 +176,13 @@ public final class ConversationDatabase {
       try sql.execute(
         "CREATE VIRTUAL TABLE memory_search USING fts5(id UNINDEXED,text,tokenize='unicode61 remove_diacritics 2')"
       )
+      try prepareMemoryPaging()
     }
+  }
+
+  private func prepareMemoryPaging() throws {
+    try sql.execute(
+      "CREATE INDEX companion_memories_recent ON companion_memories(owner,updated DESC,id DESC)")
+    try sql.execute("PRAGMA user_version=2")
   }
 }

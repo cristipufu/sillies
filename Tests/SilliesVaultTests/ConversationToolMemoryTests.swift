@@ -28,11 +28,17 @@ import Testing
   try await toolbox.beginRecovery()
   _ = try await toolbox.invoke(call)
   #expect(try await library.recentMemoryChanges(opened.handle).count == 1)
-  let saved = try #require(try await library.memories(opened.handle, query: "").first)
+  let saved = try #require(
+    try await library.memories(
+      .init(handle: opened.handle, text: "", limit: CompanionMemoryQuery.maximumResults)
+    ).first)
   #expect(saved.sourceMessageID == current.id)
   #expect(saved.sourceQuote == current.text)
   let bolt = try await library.open(.init(id: "bolt", name: "Bolt"))
-  #expect(try await library.memories(bolt.handle, query: "").isEmpty)
+  #expect(
+    try await library.memories(
+      .init(handle: bolt.handle, text: "", limit: CompanionMemoryQuery.maximumResults)
+    ).isEmpty)
   let found = try await toolbox.invoke(
     .init(id: "search", name: "search_conversation", arguments: Data(#"{"query":"birthday"}"#.utf8))
   )
@@ -63,7 +69,10 @@ import Testing
       "key", "value",
     ])
   _ = try await save.call(arguments: Data(#"{"key":"name","value":"Alex"}"#.utf8))
-  let fact = try #require(try await library.memories(opened.handle, query: "name").first)
+  let fact = try #require(
+    try await library.memories(
+      .init(handle: opened.handle, text: "name", limit: CompanionMemoryQuery.maximumResults)
+    ).first)
   #expect(fact.sourceQuote == "i'm Alex")
   #expect(fact.sourceMessageID == statement.id)
   let search = try #require(tools.first { $0.definition.name == "search_memories" })
@@ -242,7 +251,8 @@ private func appleConversationCheck(
       throw error
     }
   }
-  let memories = try await library.memories(opened.handle, query: "")
+  let memories = try await library.memories(
+    .init(handle: opened.handle, text: "", limit: CompanionMemoryQuery.maximumResults))
   print("FIVE-TOOL MEMORIES | \(memories.map(\.value))")
   return .init(memories: memories, replies: replies)
 }

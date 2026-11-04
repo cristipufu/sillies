@@ -20,7 +20,8 @@ struct MemorySearchTool: ConversationTool {
   func call(arguments: Data) async throws -> ConversationToolOutput {
     let args = try ConversationToolArguments.decode(
       ConversationSearchArguments.self, from: arguments)
-    let facts = try await repository.memories(handle, query: args.query)
+    let facts = try await repository.memories(
+      .init(handle: handle, text: args.query, limit: Self.resultLimit))
     struct Fact: Encodable {
       let memoryID: UUID
       let revision: UUID

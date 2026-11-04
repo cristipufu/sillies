@@ -73,7 +73,7 @@ public struct MemoryWrite: Sendable {
   }
 }
 
-public enum MemoryMutationError: Error { case replacementChanged }
+public enum MemoryMutationError: Error { case keyAlreadyExists, replacementChanged }
 
 public struct MemoryReceipt: Codable, Equatable, Identifiable, Sendable {
   public let handle: ConversationHandle
@@ -91,7 +91,8 @@ public struct MemoryReceipt: Codable, Equatable, Identifiable, Sendable {
 }
 
 public protocol CompanionMemoryRepository: Sendable {
-  func memories(_ handle: ConversationHandle, query: String) async throws -> [CompanionMemory]
+  func memories(_ query: CompanionMemoryQuery) async throws -> [CompanionMemory]
+  func memoryPage(_ request: CompanionMemoryPageRequest) async throws -> CompanionMemoryPage
   func remember(_ request: MemoryWrite) async throws -> MemoryReceipt
   func forget(_ handle: ConversationHandle, id: UUID) async throws -> ConversationSnapshot
   func undoMemory(_ handle: ConversationHandle, receiptID: UUID) async throws

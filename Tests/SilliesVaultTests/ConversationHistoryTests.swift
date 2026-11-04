@@ -118,15 +118,19 @@ import Testing
     .init(
       handle: opened.handle, messages: [first, correction, assistant], checkpoint: .init(),
       savedAt: fixture.date))
-  _ = try await store.remember(
+  let original = try await store.remember(
     .init(
       handle: opened.handle, fact: .init(key: "name", value: "Alex"),
       source: .init(messageID: first.id, quote: first.text), savedAt: fixture.date))
   let changed = try await store.remember(
     .init(
       handle: opened.handle, fact: .init(key: "name", value: "Sam"),
-      source: .init(messageID: correction.id, quote: correction.text), savedAt: fixture.date))
-  #expect(try await store.memories(opened.handle, query: "Sam").first?.value == "Sam")
+      source: .init(messageID: correction.id, quote: correction.text), savedAt: fixture.date
+    ).replacing(original.saved.reference))
+  #expect(
+    try await store.memories(
+      .init(handle: opened.handle, text: "Sam", limit: CompanionMemoryQuery.maximumResults)
+    ).first?.value == "Sam")
   await #expect(throws: ConversationStorageError.self) {
     try await store.remember(
       .init(
@@ -134,11 +138,20 @@ import Testing
         source: .init(messageID: assistant.id, quote: assistant.text), savedAt: fixture.date))
   }
   let undone = try await store.undoMemory(opened.handle, receiptID: changed.id)
-  #expect(try await store.memories(undone.handle, query: "").first?.value == "Alex")
+  #expect(
+    try await store.memories(
+      .init(handle: undone.handle, text: "", limit: CompanionMemoryQuery.maximumResults)
+    ).first?.value == "Alex")
   #expect(undone.handle != opened.handle)
-  let fact = try #require(try await store.memories(undone.handle, query: "").first)
+  let fact = try #require(
+    try await store.memories(
+      .init(handle: undone.handle, text: "", limit: CompanionMemoryQuery.maximumResults)
+    ).first)
   let forgotten = try await store.forget(undone.handle, id: fact.id)
-  #expect(try await store.memories(forgotten.handle, query: "").isEmpty)
+  #expect(
+    try await store.memories(
+      .init(handle: forgotten.handle, text: "", limit: CompanionMemoryQuery.maximumResults)
+    ).isEmpty)
   #expect(try await store.recentMemoryChanges(forgotten.handle).isEmpty)
   #expect(forgotten.checkpoint.memory.summary.isEmpty)
 }
@@ -166,14 +179,15 @@ private struct ConversationFixture {
     .init(
       handle: opened.handle, messages: [first, correction], checkpoint: .init(),
       savedAt: fixture.date))
-  _ = try await store.remember(
+  let original = try await store.remember(
     .init(
       handle: opened.handle, fact: .init(key: "name", value: "Alex"),
       source: .init(messageID: first.id, quote: first.text), savedAt: fixture.date))
   let updated = try await store.remember(
     .init(
       handle: opened.handle, fact: .init(key: "name", value: "Sam"),
-      source: .init(messageID: correction.id, quote: correction.text), savedAt: fixture.date))
+      source: .init(messageID: correction.id, quote: correction.text), savedAt: fixture.date
+    ).replacing(original.saved.reference))
   #expect(try JSONEncoder().encode(updated).count > 32_768)
   let reopened = ConversationLibrary(directory: fixture.directory)
   let receipts = try await reopened.recentMemoryChanges(opened.handle)
@@ -181,5 +195,7 @@ private struct ConversationFixture {
   #expect(receipts.first?.saved.sourceQuote == correction.text)
   let snapshot = try await reopened.undoMemory(opened.handle, receiptID: updated.id)
   #expect(
-    try await reopened.memories(snapshot.handle, query: "name").first?.sourceQuote == first.text)
+    try await reopened.memories(
+      .init(handle: snapshot.handle, text: "name", limit: CompanionMemoryQuery.maximumResults)
+    ).first?.sourceQuote == first.text)
 }

@@ -1,0 +1,1940 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "new-fact-with-general-question",
+      "group": "tool-decisions",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "I prefer concise answers. What causes ocean tides?",
+          "rubric": "Save the explicitly stated preference, explain gravitational effects of Moon and Sun without private read tools.",
+          "checks": [
+            {
+              "kind": "allowed_tools",
+              "values": [
+                "save_memory",
+                "replace_memory"
+              ]
+            },
+            {
+              "kind": "memory_contains",
+              "values": [
+                "concise"
+              ]
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "Moon",
+                "moon"
+              ]
+            }
+          ]
+        }
+      ],
+      "tags": [
+        "cache-memory-validation"
+      ]
+    },
+    {
+      "id": "question-is-not-a-correction",
+      "group": "tool-decisions",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Is my birthday April 7?",
+          "rubric": "Consult the saved birthday and explain June 18. A question must not overwrite the saved fact.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "memory_contains",
+              "values": [
+                "June 18"
+              ]
+            },
+            {
+              "kind": "contains_all",
+              "values": [
+                "June",
+                "18"
+              ]
+            }
+          ]
+        }
+      ],
+      "memories": [
+        {
+          "key": "birthday",
+          "value": "June 18",
+          "statement": "My birthday is June 18."
+        }
+      ],
+      "tags": [
+        "cache-memory-validation"
+      ]
+    },
+    {
+      "id": "new-name-and-later-correction",
+      "group": "tool-decisions",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Please call me Maren.",
+          "rubric": "Save Maren as the human name.",
+          "checks": [
+            {
+              "kind": "memory_contains",
+              "values": [
+                "Maren"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "Actually, please use Lior instead of Maren.",
+          "rubric": "Correct the saved name to Lior, preserving identity and removing obsolete Maren from the persisted fact.",
+          "checks": [
+            {
+              "kind": "memory_contains",
+              "values": [
+                "Lior"
+              ]
+            },
+            {
+              "kind": "memory_absent",
+              "values": [
+                "Maren"
+              ]
+            }
+          ]
+        }
+      ],
+      "tags": [
+        "cache-memory-validation"
+      ]
+    },
+    {
+      "id": "third-party-quotation",
+      "group": "tool-decisions",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "In a novel, the narrator says \"My name is Ivo\". Who is speaking in that sentence?",
+          "rubric": "The quoted narrator speaks; do not save Ivo as the human name.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "narrator",
+                "character"
+              ]
+            }
+          ]
+        }
+      ],
+      "tags": [
+        "cache-memory-validation"
+      ]
+    },
+    {
+      "id": "missing-chat-source-with-known-vault-fact",
+      "group": "tool-decisions",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Search only our earlier chat: who has the garden gate key?",
+          "rubric": "Report no chat evidence. Do not search the Vault even though a matching saved meeting exists.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_conversation"
+              ]
+            },
+            {
+              "kind": "allowed_tools",
+              "values": [
+                "search_conversation"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "Nadia"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "20000000-0000-0000-0000-000000000001",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Garden meeting",
+          "text": "Nadia has the garden gate key.",
+          "links": []
+        }
+      ],
+      "tags": [
+        "cache-memory-validation"
+      ]
+    },
+    {
+      "id": "knowledge-mountain",
+      "group": "general-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "What is the tallest mountain above sea level on Earth? Reply only with its name.",
+          "rubric": "Correct world knowledge, without consulting personal records.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Mount Everest",
+                "Everest"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "f0ca7212-8575-5268-8967-d6dd7f6c4021",
+          "kind": "stash",
+          "app": "Safari",
+          "title": "Aurora project links",
+          "text": "",
+          "links": [
+            "https://example.org/aurora/status"
+          ]
+        },
+        {
+          "id": "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty test output",
+          "text": "Ghostty terminal: cargo test. All 17 tests passed. Build tag cedar-27.",
+          "links": []
+        },
+        {
+          "id": "c0e625a9-767b-5664-8cb7-516884d93dc6",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Aurora launch planning",
+          "text": "Mina owns the launch checklist. The launch is July 17. The approved budget is 2400 EUR. The release code is violet-42.",
+          "links": []
+        },
+        {
+          "id": "d70e8fae-8086-5314-99c6-13c967bd22e8",
+          "kind": "listen",
+          "app": "Zoom",
+          "title": "Atlas review",
+          "text": "Sam will publish the Atlas report on August 6. The budget is 9100 EUR.",
+          "links": []
+        },
+        {
+          "id": "232b8914-3440-56aa-8b33-94ae48fd9ff9",
+          "kind": "stash",
+          "app": "Notes",
+          "title": "Paris project location",
+          "text": "The Paris project team chose Copenhagen for its workshop.",
+          "links": []
+        }
+      ],
+      "tags": [
+        "cache-memory-validation"
+      ]
+    },
+    {
+      "id": "vault-links",
+      "group": "vault",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Which URLs did I save?",
+          "rubric": "Find and return the exact saved Aurora URL.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault"
+              ]
+            },
+            {
+              "kind": "argument_equals",
+              "values": [
+                "links"
+              ],
+              "tool": "search_vault",
+              "field": "category"
+            },
+            {
+              "kind": "source_includes",
+              "values": [
+                "f0ca7212-8575-5268-8967-d6dd7f6c4021"
+              ]
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "https://example.org/aurora/status"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "f0ca7212-8575-5268-8967-d6dd7f6c4021",
+          "kind": "stash",
+          "app": "Safari",
+          "title": "Aurora project links",
+          "text": "",
+          "links": [
+            "https://example.org/aurora/status"
+          ]
+        },
+        {
+          "id": "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty test output",
+          "text": "Ghostty terminal: cargo test. All 17 tests passed. Build tag cedar-27.",
+          "links": []
+        },
+        {
+          "id": "c0e625a9-767b-5664-8cb7-516884d93dc6",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Aurora launch planning",
+          "text": "Mina owns the launch checklist. The launch is July 17. The approved budget is 2400 EUR. The release code is violet-42.",
+          "links": []
+        },
+        {
+          "id": "d70e8fae-8086-5314-99c6-13c967bd22e8",
+          "kind": "listen",
+          "app": "Zoom",
+          "title": "Atlas review",
+          "text": "Sam will publish the Atlas report on August 6. The budget is 9100 EUR.",
+          "links": []
+        },
+        {
+          "id": "232b8914-3440-56aa-8b33-94ae48fd9ff9",
+          "kind": "stash",
+          "app": "Notes",
+          "title": "Paris project location",
+          "text": "The Paris project team chose Copenhagen for its workshop.",
+          "links": []
+        }
+      ],
+      "tags": [
+        "cache-memory-validation"
+      ]
+    },
+    {
+      "id": "many-memories-recall",
+      "group": "memory-scale",
+      "profiles": [
+        "app"
+      ],
+      "memories": [
+        {
+          "key": "delivery_project",
+          "value": "The Zephyr project courier is Mina.",
+          "statement": "For my Zephyr project, Mina is the courier."
+        },
+        {
+          "key": "packing_0",
+          "value": "Courier packing label number 0.",
+          "statement": "For shipment 0, the courier uses packing label 0."
+        },
+        {
+          "key": "packing_1",
+          "value": "Courier packing label number 1.",
+          "statement": "For shipment 1, the courier uses packing label 1."
+        },
+        {
+          "key": "packing_2",
+          "value": "Courier packing label number 2.",
+          "statement": "For shipment 2, the courier uses packing label 2."
+        },
+        {
+          "key": "packing_3",
+          "value": "Courier packing label number 3.",
+          "statement": "For shipment 3, the courier uses packing label 3."
+        },
+        {
+          "key": "packing_4",
+          "value": "Courier packing label number 4.",
+          "statement": "For shipment 4, the courier uses packing label 4."
+        },
+        {
+          "key": "packing_5",
+          "value": "Courier packing label number 5.",
+          "statement": "For shipment 5, the courier uses packing label 5."
+        },
+        {
+          "key": "packing_6",
+          "value": "Courier packing label number 6.",
+          "statement": "For shipment 6, the courier uses packing label 6."
+        },
+        {
+          "key": "packing_7",
+          "value": "Courier packing label number 7.",
+          "statement": "For shipment 7, the courier uses packing label 7."
+        },
+        {
+          "key": "packing_8",
+          "value": "Courier packing label number 8.",
+          "statement": "For shipment 8, the courier uses packing label 8."
+        },
+        {
+          "key": "packing_9",
+          "value": "Courier packing label number 9.",
+          "statement": "For shipment 9, the courier uses packing label 9."
+        },
+        {
+          "key": "packing_10",
+          "value": "Courier packing label number 10.",
+          "statement": "For shipment 10, the courier uses packing label 10."
+        },
+        {
+          "key": "packing_11",
+          "value": "Courier packing label number 11.",
+          "statement": "For shipment 11, the courier uses packing label 11."
+        },
+        {
+          "key": "packing_12",
+          "value": "Courier packing label number 12.",
+          "statement": "For shipment 12, the courier uses packing label 12."
+        },
+        {
+          "key": "packing_13",
+          "value": "Courier packing label number 13.",
+          "statement": "For shipment 13, the courier uses packing label 13."
+        },
+        {
+          "key": "packing_14",
+          "value": "Courier packing label number 14.",
+          "statement": "For shipment 14, the courier uses packing label 14."
+        },
+        {
+          "key": "packing_15",
+          "value": "Courier packing label number 15.",
+          "statement": "For shipment 15, the courier uses packing label 15."
+        },
+        {
+          "key": "packing_16",
+          "value": "Courier packing label number 16.",
+          "statement": "For shipment 16, the courier uses packing label 16."
+        },
+        {
+          "key": "packing_17",
+          "value": "Courier packing label number 17.",
+          "statement": "For shipment 17, the courier uses packing label 17."
+        },
+        {
+          "key": "packing_18",
+          "value": "Courier packing label number 18.",
+          "statement": "For shipment 18, the courier uses packing label 18."
+        },
+        {
+          "key": "packing_19",
+          "value": "Courier packing label number 19.",
+          "statement": "For shipment 19, the courier uses packing label 19."
+        },
+        {
+          "key": "packing_20",
+          "value": "Courier packing label number 20.",
+          "statement": "For shipment 20, the courier uses packing label 20."
+        },
+        {
+          "key": "packing_21",
+          "value": "Courier packing label number 21.",
+          "statement": "For shipment 21, the courier uses packing label 21."
+        },
+        {
+          "key": "packing_22",
+          "value": "Courier packing label number 22.",
+          "statement": "For shipment 22, the courier uses packing label 22."
+        },
+        {
+          "key": "packing_23",
+          "value": "Courier packing label number 23.",
+          "statement": "For shipment 23, the courier uses packing label 23."
+        },
+        {
+          "key": "packing_24",
+          "value": "Courier packing label number 24.",
+          "statement": "For shipment 24, the courier uses packing label 24."
+        },
+        {
+          "key": "packing_25",
+          "value": "Courier packing label number 25.",
+          "statement": "For shipment 25, the courier uses packing label 25."
+        },
+        {
+          "key": "packing_26",
+          "value": "Courier packing label number 26.",
+          "statement": "For shipment 26, the courier uses packing label 26."
+        },
+        {
+          "key": "packing_27",
+          "value": "Courier packing label number 27.",
+          "statement": "For shipment 27, the courier uses packing label 27."
+        },
+        {
+          "key": "packing_28",
+          "value": "Courier packing label number 28.",
+          "statement": "For shipment 28, the courier uses packing label 28."
+        },
+        {
+          "key": "packing_29",
+          "value": "Courier packing label number 29.",
+          "statement": "For shipment 29, the courier uses packing label 29."
+        },
+        {
+          "key": "packing_30",
+          "value": "Courier packing label number 30.",
+          "statement": "For shipment 30, the courier uses packing label 30."
+        },
+        {
+          "key": "packing_31",
+          "value": "Courier packing label number 31.",
+          "statement": "For shipment 31, the courier uses packing label 31."
+        },
+        {
+          "key": "packing_32",
+          "value": "Courier packing label number 32.",
+          "statement": "For shipment 32, the courier uses packing label 32."
+        },
+        {
+          "key": "packing_33",
+          "value": "Courier packing label number 33.",
+          "statement": "For shipment 33, the courier uses packing label 33."
+        },
+        {
+          "key": "packing_34",
+          "value": "Courier packing label number 34.",
+          "statement": "For shipment 34, the courier uses packing label 34."
+        },
+        {
+          "key": "packing_35",
+          "value": "Courier packing label number 35.",
+          "statement": "For shipment 35, the courier uses packing label 35."
+        },
+        {
+          "key": "packing_36",
+          "value": "Courier packing label number 36.",
+          "statement": "For shipment 36, the courier uses packing label 36."
+        },
+        {
+          "key": "packing_37",
+          "value": "Courier packing label number 37.",
+          "statement": "For shipment 37, the courier uses packing label 37."
+        },
+        {
+          "key": "packing_38",
+          "value": "Courier packing label number 38.",
+          "statement": "For shipment 38, the courier uses packing label 38."
+        },
+        {
+          "key": "packing_39",
+          "value": "Courier packing label number 39.",
+          "statement": "For shipment 39, the courier uses packing label 39."
+        },
+        {
+          "key": "packing_40",
+          "value": "Courier packing label number 40.",
+          "statement": "For shipment 40, the courier uses packing label 40."
+        },
+        {
+          "key": "packing_41",
+          "value": "Courier packing label number 41.",
+          "statement": "For shipment 41, the courier uses packing label 41."
+        },
+        {
+          "key": "packing_42",
+          "value": "Courier packing label number 42.",
+          "statement": "For shipment 42, the courier uses packing label 42."
+        },
+        {
+          "key": "packing_43",
+          "value": "Courier packing label number 43.",
+          "statement": "For shipment 43, the courier uses packing label 43."
+        },
+        {
+          "key": "packing_44",
+          "value": "Courier packing label number 44.",
+          "statement": "For shipment 44, the courier uses packing label 44."
+        },
+        {
+          "key": "packing_45",
+          "value": "Courier packing label number 45.",
+          "statement": "For shipment 45, the courier uses packing label 45."
+        },
+        {
+          "key": "packing_46",
+          "value": "Courier packing label number 46.",
+          "statement": "For shipment 46, the courier uses packing label 46."
+        },
+        {
+          "key": "packing_47",
+          "value": "Courier packing label number 47.",
+          "statement": "For shipment 47, the courier uses packing label 47."
+        },
+        {
+          "key": "packing_48",
+          "value": "Courier packing label number 48.",
+          "statement": "For shipment 48, the courier uses packing label 48."
+        },
+        {
+          "key": "packing_49",
+          "value": "Courier packing label number 49.",
+          "statement": "For shipment 49, the courier uses packing label 49."
+        },
+        {
+          "key": "packing_50",
+          "value": "Courier packing label number 50.",
+          "statement": "For shipment 50, the courier uses packing label 50."
+        },
+        {
+          "key": "packing_51",
+          "value": "Courier packing label number 51.",
+          "statement": "For shipment 51, the courier uses packing label 51."
+        },
+        {
+          "key": "packing_52",
+          "value": "Courier packing label number 52.",
+          "statement": "For shipment 52, the courier uses packing label 52."
+        },
+        {
+          "key": "packing_53",
+          "value": "Courier packing label number 53.",
+          "statement": "For shipment 53, the courier uses packing label 53."
+        },
+        {
+          "key": "packing_54",
+          "value": "Courier packing label number 54.",
+          "statement": "For shipment 54, the courier uses packing label 54."
+        },
+        {
+          "key": "packing_55",
+          "value": "Courier packing label number 55.",
+          "statement": "For shipment 55, the courier uses packing label 55."
+        },
+        {
+          "key": "packing_56",
+          "value": "Courier packing label number 56.",
+          "statement": "For shipment 56, the courier uses packing label 56."
+        },
+        {
+          "key": "packing_57",
+          "value": "Courier packing label number 57.",
+          "statement": "For shipment 57, the courier uses packing label 57."
+        },
+        {
+          "key": "packing_58",
+          "value": "Courier packing label number 58.",
+          "statement": "For shipment 58, the courier uses packing label 58."
+        },
+        {
+          "key": "packing_59",
+          "value": "Courier packing label number 59.",
+          "statement": "For shipment 59, the courier uses packing label 59."
+        },
+        {
+          "key": "packing_60",
+          "value": "Courier packing label number 60.",
+          "statement": "For shipment 60, the courier uses packing label 60."
+        },
+        {
+          "key": "packing_61",
+          "value": "Courier packing label number 61.",
+          "statement": "For shipment 61, the courier uses packing label 61."
+        },
+        {
+          "key": "packing_62",
+          "value": "Courier packing label number 62.",
+          "statement": "For shipment 62, the courier uses packing label 62."
+        },
+        {
+          "key": "packing_63",
+          "value": "Courier packing label number 63.",
+          "statement": "For shipment 63, the courier uses packing label 63."
+        },
+        {
+          "key": "packing_64",
+          "value": "Courier packing label number 64.",
+          "statement": "For shipment 64, the courier uses packing label 64."
+        },
+        {
+          "key": "packing_65",
+          "value": "Courier packing label number 65.",
+          "statement": "For shipment 65, the courier uses packing label 65."
+        },
+        {
+          "key": "packing_66",
+          "value": "Courier packing label number 66.",
+          "statement": "For shipment 66, the courier uses packing label 66."
+        },
+        {
+          "key": "packing_67",
+          "value": "Courier packing label number 67.",
+          "statement": "For shipment 67, the courier uses packing label 67."
+        },
+        {
+          "key": "packing_68",
+          "value": "Courier packing label number 68.",
+          "statement": "For shipment 68, the courier uses packing label 68."
+        },
+        {
+          "key": "packing_69",
+          "value": "Courier packing label number 69.",
+          "statement": "For shipment 69, the courier uses packing label 69."
+        },
+        {
+          "key": "packing_70",
+          "value": "Courier packing label number 70.",
+          "statement": "For shipment 70, the courier uses packing label 70."
+        },
+        {
+          "key": "packing_71",
+          "value": "Courier packing label number 71.",
+          "statement": "For shipment 71, the courier uses packing label 71."
+        },
+        {
+          "key": "packing_72",
+          "value": "Courier packing label number 72.",
+          "statement": "For shipment 72, the courier uses packing label 72."
+        },
+        {
+          "key": "packing_73",
+          "value": "Courier packing label number 73.",
+          "statement": "For shipment 73, the courier uses packing label 73."
+        },
+        {
+          "key": "packing_74",
+          "value": "Courier packing label number 74.",
+          "statement": "For shipment 74, the courier uses packing label 74."
+        },
+        {
+          "key": "packing_75",
+          "value": "Courier packing label number 75.",
+          "statement": "For shipment 75, the courier uses packing label 75."
+        },
+        {
+          "key": "packing_76",
+          "value": "Courier packing label number 76.",
+          "statement": "For shipment 76, the courier uses packing label 76."
+        },
+        {
+          "key": "packing_77",
+          "value": "Courier packing label number 77.",
+          "statement": "For shipment 77, the courier uses packing label 77."
+        },
+        {
+          "key": "packing_78",
+          "value": "Courier packing label number 78.",
+          "statement": "For shipment 78, the courier uses packing label 78."
+        },
+        {
+          "key": "packing_79",
+          "value": "Courier packing label number 79.",
+          "statement": "For shipment 79, the courier uses packing label 79."
+        },
+        {
+          "key": "packing_80",
+          "value": "Courier packing label number 80.",
+          "statement": "For shipment 80, the courier uses packing label 80."
+        },
+        {
+          "key": "packing_81",
+          "value": "Courier packing label number 81.",
+          "statement": "For shipment 81, the courier uses packing label 81."
+        },
+        {
+          "key": "packing_82",
+          "value": "Courier packing label number 82.",
+          "statement": "For shipment 82, the courier uses packing label 82."
+        },
+        {
+          "key": "packing_83",
+          "value": "Courier packing label number 83.",
+          "statement": "For shipment 83, the courier uses packing label 83."
+        },
+        {
+          "key": "packing_84",
+          "value": "Courier packing label number 84.",
+          "statement": "For shipment 84, the courier uses packing label 84."
+        },
+        {
+          "key": "packing_85",
+          "value": "Courier packing label number 85.",
+          "statement": "For shipment 85, the courier uses packing label 85."
+        },
+        {
+          "key": "packing_86",
+          "value": "Courier packing label number 86.",
+          "statement": "For shipment 86, the courier uses packing label 86."
+        },
+        {
+          "key": "packing_87",
+          "value": "Courier packing label number 87.",
+          "statement": "For shipment 87, the courier uses packing label 87."
+        },
+        {
+          "key": "packing_88",
+          "value": "Courier packing label number 88.",
+          "statement": "For shipment 88, the courier uses packing label 88."
+        },
+        {
+          "key": "packing_89",
+          "value": "Courier packing label number 89.",
+          "statement": "For shipment 89, the courier uses packing label 89."
+        },
+        {
+          "key": "packing_90",
+          "value": "Courier packing label number 90.",
+          "statement": "For shipment 90, the courier uses packing label 90."
+        },
+        {
+          "key": "packing_91",
+          "value": "Courier packing label number 91.",
+          "statement": "For shipment 91, the courier uses packing label 91."
+        },
+        {
+          "key": "packing_92",
+          "value": "Courier packing label number 92.",
+          "statement": "For shipment 92, the courier uses packing label 92."
+        },
+        {
+          "key": "packing_93",
+          "value": "Courier packing label number 93.",
+          "statement": "For shipment 93, the courier uses packing label 93."
+        },
+        {
+          "key": "packing_94",
+          "value": "Courier packing label number 94.",
+          "statement": "For shipment 94, the courier uses packing label 94."
+        },
+        {
+          "key": "packing_95",
+          "value": "Courier packing label number 95.",
+          "statement": "For shipment 95, the courier uses packing label 95."
+        }
+      ],
+      "turns": [
+        {
+          "user": "Who is the courier for my Zephyr project?",
+          "rubric": "Retrieve saved Zephyr project details and answer Mina. Never use an unrelated packing label as the answer; no new writes.",
+          "checks": [
+            {
+              "kind": "contains_all",
+              "values": [
+                "Mina"
+              ]
+            },
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_memories"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "tags": [
+        "cache-memory-validation"
+      ]
+    },
+    {
+      "id": "many-memories-correction",
+      "group": "memory-scale",
+      "profiles": [
+        "app"
+      ],
+      "memories": [
+        {
+          "key": "delivery_project",
+          "value": "The Zephyr project courier is Mina.",
+          "statement": "For my Zephyr project, Mina is the courier."
+        },
+        {
+          "key": "packing_0",
+          "value": "Courier packing label number 0.",
+          "statement": "For shipment 0, the courier uses packing label 0."
+        },
+        {
+          "key": "packing_1",
+          "value": "Courier packing label number 1.",
+          "statement": "For shipment 1, the courier uses packing label 1."
+        },
+        {
+          "key": "packing_2",
+          "value": "Courier packing label number 2.",
+          "statement": "For shipment 2, the courier uses packing label 2."
+        },
+        {
+          "key": "packing_3",
+          "value": "Courier packing label number 3.",
+          "statement": "For shipment 3, the courier uses packing label 3."
+        },
+        {
+          "key": "packing_4",
+          "value": "Courier packing label number 4.",
+          "statement": "For shipment 4, the courier uses packing label 4."
+        },
+        {
+          "key": "packing_5",
+          "value": "Courier packing label number 5.",
+          "statement": "For shipment 5, the courier uses packing label 5."
+        },
+        {
+          "key": "packing_6",
+          "value": "Courier packing label number 6.",
+          "statement": "For shipment 6, the courier uses packing label 6."
+        },
+        {
+          "key": "packing_7",
+          "value": "Courier packing label number 7.",
+          "statement": "For shipment 7, the courier uses packing label 7."
+        },
+        {
+          "key": "packing_8",
+          "value": "Courier packing label number 8.",
+          "statement": "For shipment 8, the courier uses packing label 8."
+        },
+        {
+          "key": "packing_9",
+          "value": "Courier packing label number 9.",
+          "statement": "For shipment 9, the courier uses packing label 9."
+        },
+        {
+          "key": "packing_10",
+          "value": "Courier packing label number 10.",
+          "statement": "For shipment 10, the courier uses packing label 10."
+        },
+        {
+          "key": "packing_11",
+          "value": "Courier packing label number 11.",
+          "statement": "For shipment 11, the courier uses packing label 11."
+        },
+        {
+          "key": "packing_12",
+          "value": "Courier packing label number 12.",
+          "statement": "For shipment 12, the courier uses packing label 12."
+        },
+        {
+          "key": "packing_13",
+          "value": "Courier packing label number 13.",
+          "statement": "For shipment 13, the courier uses packing label 13."
+        },
+        {
+          "key": "packing_14",
+          "value": "Courier packing label number 14.",
+          "statement": "For shipment 14, the courier uses packing label 14."
+        },
+        {
+          "key": "packing_15",
+          "value": "Courier packing label number 15.",
+          "statement": "For shipment 15, the courier uses packing label 15."
+        },
+        {
+          "key": "packing_16",
+          "value": "Courier packing label number 16.",
+          "statement": "For shipment 16, the courier uses packing label 16."
+        },
+        {
+          "key": "packing_17",
+          "value": "Courier packing label number 17.",
+          "statement": "For shipment 17, the courier uses packing label 17."
+        },
+        {
+          "key": "packing_18",
+          "value": "Courier packing label number 18.",
+          "statement": "For shipment 18, the courier uses packing label 18."
+        },
+        {
+          "key": "packing_19",
+          "value": "Courier packing label number 19.",
+          "statement": "For shipment 19, the courier uses packing label 19."
+        },
+        {
+          "key": "packing_20",
+          "value": "Courier packing label number 20.",
+          "statement": "For shipment 20, the courier uses packing label 20."
+        },
+        {
+          "key": "packing_21",
+          "value": "Courier packing label number 21.",
+          "statement": "For shipment 21, the courier uses packing label 21."
+        },
+        {
+          "key": "packing_22",
+          "value": "Courier packing label number 22.",
+          "statement": "For shipment 22, the courier uses packing label 22."
+        },
+        {
+          "key": "packing_23",
+          "value": "Courier packing label number 23.",
+          "statement": "For shipment 23, the courier uses packing label 23."
+        },
+        {
+          "key": "packing_24",
+          "value": "Courier packing label number 24.",
+          "statement": "For shipment 24, the courier uses packing label 24."
+        },
+        {
+          "key": "packing_25",
+          "value": "Courier packing label number 25.",
+          "statement": "For shipment 25, the courier uses packing label 25."
+        },
+        {
+          "key": "packing_26",
+          "value": "Courier packing label number 26.",
+          "statement": "For shipment 26, the courier uses packing label 26."
+        },
+        {
+          "key": "packing_27",
+          "value": "Courier packing label number 27.",
+          "statement": "For shipment 27, the courier uses packing label 27."
+        },
+        {
+          "key": "packing_28",
+          "value": "Courier packing label number 28.",
+          "statement": "For shipment 28, the courier uses packing label 28."
+        },
+        {
+          "key": "packing_29",
+          "value": "Courier packing label number 29.",
+          "statement": "For shipment 29, the courier uses packing label 29."
+        },
+        {
+          "key": "packing_30",
+          "value": "Courier packing label number 30.",
+          "statement": "For shipment 30, the courier uses packing label 30."
+        },
+        {
+          "key": "packing_31",
+          "value": "Courier packing label number 31.",
+          "statement": "For shipment 31, the courier uses packing label 31."
+        },
+        {
+          "key": "packing_32",
+          "value": "Courier packing label number 32.",
+          "statement": "For shipment 32, the courier uses packing label 32."
+        },
+        {
+          "key": "packing_33",
+          "value": "Courier packing label number 33.",
+          "statement": "For shipment 33, the courier uses packing label 33."
+        },
+        {
+          "key": "packing_34",
+          "value": "Courier packing label number 34.",
+          "statement": "For shipment 34, the courier uses packing label 34."
+        },
+        {
+          "key": "packing_35",
+          "value": "Courier packing label number 35.",
+          "statement": "For shipment 35, the courier uses packing label 35."
+        },
+        {
+          "key": "packing_36",
+          "value": "Courier packing label number 36.",
+          "statement": "For shipment 36, the courier uses packing label 36."
+        },
+        {
+          "key": "packing_37",
+          "value": "Courier packing label number 37.",
+          "statement": "For shipment 37, the courier uses packing label 37."
+        },
+        {
+          "key": "packing_38",
+          "value": "Courier packing label number 38.",
+          "statement": "For shipment 38, the courier uses packing label 38."
+        },
+        {
+          "key": "packing_39",
+          "value": "Courier packing label number 39.",
+          "statement": "For shipment 39, the courier uses packing label 39."
+        },
+        {
+          "key": "packing_40",
+          "value": "Courier packing label number 40.",
+          "statement": "For shipment 40, the courier uses packing label 40."
+        },
+        {
+          "key": "packing_41",
+          "value": "Courier packing label number 41.",
+          "statement": "For shipment 41, the courier uses packing label 41."
+        },
+        {
+          "key": "packing_42",
+          "value": "Courier packing label number 42.",
+          "statement": "For shipment 42, the courier uses packing label 42."
+        },
+        {
+          "key": "packing_43",
+          "value": "Courier packing label number 43.",
+          "statement": "For shipment 43, the courier uses packing label 43."
+        },
+        {
+          "key": "packing_44",
+          "value": "Courier packing label number 44.",
+          "statement": "For shipment 44, the courier uses packing label 44."
+        },
+        {
+          "key": "packing_45",
+          "value": "Courier packing label number 45.",
+          "statement": "For shipment 45, the courier uses packing label 45."
+        },
+        {
+          "key": "packing_46",
+          "value": "Courier packing label number 46.",
+          "statement": "For shipment 46, the courier uses packing label 46."
+        },
+        {
+          "key": "packing_47",
+          "value": "Courier packing label number 47.",
+          "statement": "For shipment 47, the courier uses packing label 47."
+        },
+        {
+          "key": "packing_48",
+          "value": "Courier packing label number 48.",
+          "statement": "For shipment 48, the courier uses packing label 48."
+        },
+        {
+          "key": "packing_49",
+          "value": "Courier packing label number 49.",
+          "statement": "For shipment 49, the courier uses packing label 49."
+        },
+        {
+          "key": "packing_50",
+          "value": "Courier packing label number 50.",
+          "statement": "For shipment 50, the courier uses packing label 50."
+        },
+        {
+          "key": "packing_51",
+          "value": "Courier packing label number 51.",
+          "statement": "For shipment 51, the courier uses packing label 51."
+        },
+        {
+          "key": "packing_52",
+          "value": "Courier packing label number 52.",
+          "statement": "For shipment 52, the courier uses packing label 52."
+        },
+        {
+          "key": "packing_53",
+          "value": "Courier packing label number 53.",
+          "statement": "For shipment 53, the courier uses packing label 53."
+        },
+        {
+          "key": "packing_54",
+          "value": "Courier packing label number 54.",
+          "statement": "For shipment 54, the courier uses packing label 54."
+        },
+        {
+          "key": "packing_55",
+          "value": "Courier packing label number 55.",
+          "statement": "For shipment 55, the courier uses packing label 55."
+        },
+        {
+          "key": "packing_56",
+          "value": "Courier packing label number 56.",
+          "statement": "For shipment 56, the courier uses packing label 56."
+        },
+        {
+          "key": "packing_57",
+          "value": "Courier packing label number 57.",
+          "statement": "For shipment 57, the courier uses packing label 57."
+        },
+        {
+          "key": "packing_58",
+          "value": "Courier packing label number 58.",
+          "statement": "For shipment 58, the courier uses packing label 58."
+        },
+        {
+          "key": "packing_59",
+          "value": "Courier packing label number 59.",
+          "statement": "For shipment 59, the courier uses packing label 59."
+        },
+        {
+          "key": "packing_60",
+          "value": "Courier packing label number 60.",
+          "statement": "For shipment 60, the courier uses packing label 60."
+        },
+        {
+          "key": "packing_61",
+          "value": "Courier packing label number 61.",
+          "statement": "For shipment 61, the courier uses packing label 61."
+        },
+        {
+          "key": "packing_62",
+          "value": "Courier packing label number 62.",
+          "statement": "For shipment 62, the courier uses packing label 62."
+        },
+        {
+          "key": "packing_63",
+          "value": "Courier packing label number 63.",
+          "statement": "For shipment 63, the courier uses packing label 63."
+        },
+        {
+          "key": "packing_64",
+          "value": "Courier packing label number 64.",
+          "statement": "For shipment 64, the courier uses packing label 64."
+        },
+        {
+          "key": "packing_65",
+          "value": "Courier packing label number 65.",
+          "statement": "For shipment 65, the courier uses packing label 65."
+        },
+        {
+          "key": "packing_66",
+          "value": "Courier packing label number 66.",
+          "statement": "For shipment 66, the courier uses packing label 66."
+        },
+        {
+          "key": "packing_67",
+          "value": "Courier packing label number 67.",
+          "statement": "For shipment 67, the courier uses packing label 67."
+        },
+        {
+          "key": "packing_68",
+          "value": "Courier packing label number 68.",
+          "statement": "For shipment 68, the courier uses packing label 68."
+        },
+        {
+          "key": "packing_69",
+          "value": "Courier packing label number 69.",
+          "statement": "For shipment 69, the courier uses packing label 69."
+        },
+        {
+          "key": "packing_70",
+          "value": "Courier packing label number 70.",
+          "statement": "For shipment 70, the courier uses packing label 70."
+        },
+        {
+          "key": "packing_71",
+          "value": "Courier packing label number 71.",
+          "statement": "For shipment 71, the courier uses packing label 71."
+        },
+        {
+          "key": "packing_72",
+          "value": "Courier packing label number 72.",
+          "statement": "For shipment 72, the courier uses packing label 72."
+        },
+        {
+          "key": "packing_73",
+          "value": "Courier packing label number 73.",
+          "statement": "For shipment 73, the courier uses packing label 73."
+        },
+        {
+          "key": "packing_74",
+          "value": "Courier packing label number 74.",
+          "statement": "For shipment 74, the courier uses packing label 74."
+        },
+        {
+          "key": "packing_75",
+          "value": "Courier packing label number 75.",
+          "statement": "For shipment 75, the courier uses packing label 75."
+        },
+        {
+          "key": "packing_76",
+          "value": "Courier packing label number 76.",
+          "statement": "For shipment 76, the courier uses packing label 76."
+        },
+        {
+          "key": "packing_77",
+          "value": "Courier packing label number 77.",
+          "statement": "For shipment 77, the courier uses packing label 77."
+        },
+        {
+          "key": "packing_78",
+          "value": "Courier packing label number 78.",
+          "statement": "For shipment 78, the courier uses packing label 78."
+        },
+        {
+          "key": "packing_79",
+          "value": "Courier packing label number 79.",
+          "statement": "For shipment 79, the courier uses packing label 79."
+        },
+        {
+          "key": "packing_80",
+          "value": "Courier packing label number 80.",
+          "statement": "For shipment 80, the courier uses packing label 80."
+        },
+        {
+          "key": "packing_81",
+          "value": "Courier packing label number 81.",
+          "statement": "For shipment 81, the courier uses packing label 81."
+        },
+        {
+          "key": "packing_82",
+          "value": "Courier packing label number 82.",
+          "statement": "For shipment 82, the courier uses packing label 82."
+        },
+        {
+          "key": "packing_83",
+          "value": "Courier packing label number 83.",
+          "statement": "For shipment 83, the courier uses packing label 83."
+        },
+        {
+          "key": "packing_84",
+          "value": "Courier packing label number 84.",
+          "statement": "For shipment 84, the courier uses packing label 84."
+        },
+        {
+          "key": "packing_85",
+          "value": "Courier packing label number 85.",
+          "statement": "For shipment 85, the courier uses packing label 85."
+        },
+        {
+          "key": "packing_86",
+          "value": "Courier packing label number 86.",
+          "statement": "For shipment 86, the courier uses packing label 86."
+        },
+        {
+          "key": "packing_87",
+          "value": "Courier packing label number 87.",
+          "statement": "For shipment 87, the courier uses packing label 87."
+        },
+        {
+          "key": "packing_88",
+          "value": "Courier packing label number 88.",
+          "statement": "For shipment 88, the courier uses packing label 88."
+        },
+        {
+          "key": "packing_89",
+          "value": "Courier packing label number 89.",
+          "statement": "For shipment 89, the courier uses packing label 89."
+        },
+        {
+          "key": "packing_90",
+          "value": "Courier packing label number 90.",
+          "statement": "For shipment 90, the courier uses packing label 90."
+        },
+        {
+          "key": "packing_91",
+          "value": "Courier packing label number 91.",
+          "statement": "For shipment 91, the courier uses packing label 91."
+        },
+        {
+          "key": "packing_92",
+          "value": "Courier packing label number 92.",
+          "statement": "For shipment 92, the courier uses packing label 92."
+        },
+        {
+          "key": "packing_93",
+          "value": "Courier packing label number 93.",
+          "statement": "For shipment 93, the courier uses packing label 93."
+        },
+        {
+          "key": "packing_94",
+          "value": "Courier packing label number 94.",
+          "statement": "For shipment 94, the courier uses packing label 94."
+        },
+        {
+          "key": "packing_95",
+          "value": "Courier packing label number 95.",
+          "statement": "For shipment 95, the courier uses packing label 95."
+        }
+      ],
+      "turns": [
+        {
+          "user": "The courier for my Zephyr project is now Ivo, replacing Mina. Please update that saved fact.",
+          "rubric": "Search the stored project fact and correct that same identity to Ivo with current source evidence. Exactly one delivery-project fact remains; no unrelated packing facts change. Do not claim persistence without a successful write.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_memories",
+                "save_memory"
+              ]
+            },
+            {
+              "kind": "memory_contains",
+              "values": [
+                "Ivo"
+              ]
+            },
+            {
+              "kind": "contains_all",
+              "values": [
+                "Ivo"
+              ]
+            }
+          ]
+        }
+      ],
+      "tags": [
+        "cache-memory-validation"
+      ]
+    },
+    {
+      "id": "many-memories-mixed",
+      "group": "memory-scale",
+      "profiles": [
+        "app"
+      ],
+      "memories": [
+        {
+          "key": "delivery_project",
+          "value": "The Zephyr project courier is Mina.",
+          "statement": "For my Zephyr project, Mina is the courier."
+        },
+        {
+          "key": "packing_0",
+          "value": "Courier packing label number 0.",
+          "statement": "For shipment 0, the courier uses packing label 0."
+        },
+        {
+          "key": "packing_1",
+          "value": "Courier packing label number 1.",
+          "statement": "For shipment 1, the courier uses packing label 1."
+        },
+        {
+          "key": "packing_2",
+          "value": "Courier packing label number 2.",
+          "statement": "For shipment 2, the courier uses packing label 2."
+        },
+        {
+          "key": "packing_3",
+          "value": "Courier packing label number 3.",
+          "statement": "For shipment 3, the courier uses packing label 3."
+        },
+        {
+          "key": "packing_4",
+          "value": "Courier packing label number 4.",
+          "statement": "For shipment 4, the courier uses packing label 4."
+        },
+        {
+          "key": "packing_5",
+          "value": "Courier packing label number 5.",
+          "statement": "For shipment 5, the courier uses packing label 5."
+        },
+        {
+          "key": "packing_6",
+          "value": "Courier packing label number 6.",
+          "statement": "For shipment 6, the courier uses packing label 6."
+        },
+        {
+          "key": "packing_7",
+          "value": "Courier packing label number 7.",
+          "statement": "For shipment 7, the courier uses packing label 7."
+        },
+        {
+          "key": "packing_8",
+          "value": "Courier packing label number 8.",
+          "statement": "For shipment 8, the courier uses packing label 8."
+        },
+        {
+          "key": "packing_9",
+          "value": "Courier packing label number 9.",
+          "statement": "For shipment 9, the courier uses packing label 9."
+        },
+        {
+          "key": "packing_10",
+          "value": "Courier packing label number 10.",
+          "statement": "For shipment 10, the courier uses packing label 10."
+        },
+        {
+          "key": "packing_11",
+          "value": "Courier packing label number 11.",
+          "statement": "For shipment 11, the courier uses packing label 11."
+        },
+        {
+          "key": "packing_12",
+          "value": "Courier packing label number 12.",
+          "statement": "For shipment 12, the courier uses packing label 12."
+        },
+        {
+          "key": "packing_13",
+          "value": "Courier packing label number 13.",
+          "statement": "For shipment 13, the courier uses packing label 13."
+        },
+        {
+          "key": "packing_14",
+          "value": "Courier packing label number 14.",
+          "statement": "For shipment 14, the courier uses packing label 14."
+        },
+        {
+          "key": "packing_15",
+          "value": "Courier packing label number 15.",
+          "statement": "For shipment 15, the courier uses packing label 15."
+        },
+        {
+          "key": "packing_16",
+          "value": "Courier packing label number 16.",
+          "statement": "For shipment 16, the courier uses packing label 16."
+        },
+        {
+          "key": "packing_17",
+          "value": "Courier packing label number 17.",
+          "statement": "For shipment 17, the courier uses packing label 17."
+        },
+        {
+          "key": "packing_18",
+          "value": "Courier packing label number 18.",
+          "statement": "For shipment 18, the courier uses packing label 18."
+        },
+        {
+          "key": "packing_19",
+          "value": "Courier packing label number 19.",
+          "statement": "For shipment 19, the courier uses packing label 19."
+        },
+        {
+          "key": "packing_20",
+          "value": "Courier packing label number 20.",
+          "statement": "For shipment 20, the courier uses packing label 20."
+        },
+        {
+          "key": "packing_21",
+          "value": "Courier packing label number 21.",
+          "statement": "For shipment 21, the courier uses packing label 21."
+        },
+        {
+          "key": "packing_22",
+          "value": "Courier packing label number 22.",
+          "statement": "For shipment 22, the courier uses packing label 22."
+        },
+        {
+          "key": "packing_23",
+          "value": "Courier packing label number 23.",
+          "statement": "For shipment 23, the courier uses packing label 23."
+        },
+        {
+          "key": "packing_24",
+          "value": "Courier packing label number 24.",
+          "statement": "For shipment 24, the courier uses packing label 24."
+        },
+        {
+          "key": "packing_25",
+          "value": "Courier packing label number 25.",
+          "statement": "For shipment 25, the courier uses packing label 25."
+        },
+        {
+          "key": "packing_26",
+          "value": "Courier packing label number 26.",
+          "statement": "For shipment 26, the courier uses packing label 26."
+        },
+        {
+          "key": "packing_27",
+          "value": "Courier packing label number 27.",
+          "statement": "For shipment 27, the courier uses packing label 27."
+        },
+        {
+          "key": "packing_28",
+          "value": "Courier packing label number 28.",
+          "statement": "For shipment 28, the courier uses packing label 28."
+        },
+        {
+          "key": "packing_29",
+          "value": "Courier packing label number 29.",
+          "statement": "For shipment 29, the courier uses packing label 29."
+        },
+        {
+          "key": "packing_30",
+          "value": "Courier packing label number 30.",
+          "statement": "For shipment 30, the courier uses packing label 30."
+        },
+        {
+          "key": "packing_31",
+          "value": "Courier packing label number 31.",
+          "statement": "For shipment 31, the courier uses packing label 31."
+        },
+        {
+          "key": "packing_32",
+          "value": "Courier packing label number 32.",
+          "statement": "For shipment 32, the courier uses packing label 32."
+        },
+        {
+          "key": "packing_33",
+          "value": "Courier packing label number 33.",
+          "statement": "For shipment 33, the courier uses packing label 33."
+        },
+        {
+          "key": "packing_34",
+          "value": "Courier packing label number 34.",
+          "statement": "For shipment 34, the courier uses packing label 34."
+        },
+        {
+          "key": "packing_35",
+          "value": "Courier packing label number 35.",
+          "statement": "For shipment 35, the courier uses packing label 35."
+        },
+        {
+          "key": "packing_36",
+          "value": "Courier packing label number 36.",
+          "statement": "For shipment 36, the courier uses packing label 36."
+        },
+        {
+          "key": "packing_37",
+          "value": "Courier packing label number 37.",
+          "statement": "For shipment 37, the courier uses packing label 37."
+        },
+        {
+          "key": "packing_38",
+          "value": "Courier packing label number 38.",
+          "statement": "For shipment 38, the courier uses packing label 38."
+        },
+        {
+          "key": "packing_39",
+          "value": "Courier packing label number 39.",
+          "statement": "For shipment 39, the courier uses packing label 39."
+        },
+        {
+          "key": "packing_40",
+          "value": "Courier packing label number 40.",
+          "statement": "For shipment 40, the courier uses packing label 40."
+        },
+        {
+          "key": "packing_41",
+          "value": "Courier packing label number 41.",
+          "statement": "For shipment 41, the courier uses packing label 41."
+        },
+        {
+          "key": "packing_42",
+          "value": "Courier packing label number 42.",
+          "statement": "For shipment 42, the courier uses packing label 42."
+        },
+        {
+          "key": "packing_43",
+          "value": "Courier packing label number 43.",
+          "statement": "For shipment 43, the courier uses packing label 43."
+        },
+        {
+          "key": "packing_44",
+          "value": "Courier packing label number 44.",
+          "statement": "For shipment 44, the courier uses packing label 44."
+        },
+        {
+          "key": "packing_45",
+          "value": "Courier packing label number 45.",
+          "statement": "For shipment 45, the courier uses packing label 45."
+        },
+        {
+          "key": "packing_46",
+          "value": "Courier packing label number 46.",
+          "statement": "For shipment 46, the courier uses packing label 46."
+        },
+        {
+          "key": "packing_47",
+          "value": "Courier packing label number 47.",
+          "statement": "For shipment 47, the courier uses packing label 47."
+        },
+        {
+          "key": "packing_48",
+          "value": "Courier packing label number 48.",
+          "statement": "For shipment 48, the courier uses packing label 48."
+        },
+        {
+          "key": "packing_49",
+          "value": "Courier packing label number 49.",
+          "statement": "For shipment 49, the courier uses packing label 49."
+        },
+        {
+          "key": "packing_50",
+          "value": "Courier packing label number 50.",
+          "statement": "For shipment 50, the courier uses packing label 50."
+        },
+        {
+          "key": "packing_51",
+          "value": "Courier packing label number 51.",
+          "statement": "For shipment 51, the courier uses packing label 51."
+        },
+        {
+          "key": "packing_52",
+          "value": "Courier packing label number 52.",
+          "statement": "For shipment 52, the courier uses packing label 52."
+        },
+        {
+          "key": "packing_53",
+          "value": "Courier packing label number 53.",
+          "statement": "For shipment 53, the courier uses packing label 53."
+        },
+        {
+          "key": "packing_54",
+          "value": "Courier packing label number 54.",
+          "statement": "For shipment 54, the courier uses packing label 54."
+        },
+        {
+          "key": "packing_55",
+          "value": "Courier packing label number 55.",
+          "statement": "For shipment 55, the courier uses packing label 55."
+        },
+        {
+          "key": "packing_56",
+          "value": "Courier packing label number 56.",
+          "statement": "For shipment 56, the courier uses packing label 56."
+        },
+        {
+          "key": "packing_57",
+          "value": "Courier packing label number 57.",
+          "statement": "For shipment 57, the courier uses packing label 57."
+        },
+        {
+          "key": "packing_58",
+          "value": "Courier packing label number 58.",
+          "statement": "For shipment 58, the courier uses packing label 58."
+        },
+        {
+          "key": "packing_59",
+          "value": "Courier packing label number 59.",
+          "statement": "For shipment 59, the courier uses packing label 59."
+        },
+        {
+          "key": "packing_60",
+          "value": "Courier packing label number 60.",
+          "statement": "For shipment 60, the courier uses packing label 60."
+        },
+        {
+          "key": "packing_61",
+          "value": "Courier packing label number 61.",
+          "statement": "For shipment 61, the courier uses packing label 61."
+        },
+        {
+          "key": "packing_62",
+          "value": "Courier packing label number 62.",
+          "statement": "For shipment 62, the courier uses packing label 62."
+        },
+        {
+          "key": "packing_63",
+          "value": "Courier packing label number 63.",
+          "statement": "For shipment 63, the courier uses packing label 63."
+        },
+        {
+          "key": "packing_64",
+          "value": "Courier packing label number 64.",
+          "statement": "For shipment 64, the courier uses packing label 64."
+        },
+        {
+          "key": "packing_65",
+          "value": "Courier packing label number 65.",
+          "statement": "For shipment 65, the courier uses packing label 65."
+        },
+        {
+          "key": "packing_66",
+          "value": "Courier packing label number 66.",
+          "statement": "For shipment 66, the courier uses packing label 66."
+        },
+        {
+          "key": "packing_67",
+          "value": "Courier packing label number 67.",
+          "statement": "For shipment 67, the courier uses packing label 67."
+        },
+        {
+          "key": "packing_68",
+          "value": "Courier packing label number 68.",
+          "statement": "For shipment 68, the courier uses packing label 68."
+        },
+        {
+          "key": "packing_69",
+          "value": "Courier packing label number 69.",
+          "statement": "For shipment 69, the courier uses packing label 69."
+        },
+        {
+          "key": "packing_70",
+          "value": "Courier packing label number 70.",
+          "statement": "For shipment 70, the courier uses packing label 70."
+        },
+        {
+          "key": "packing_71",
+          "value": "Courier packing label number 71.",
+          "statement": "For shipment 71, the courier uses packing label 71."
+        },
+        {
+          "key": "packing_72",
+          "value": "Courier packing label number 72.",
+          "statement": "For shipment 72, the courier uses packing label 72."
+        },
+        {
+          "key": "packing_73",
+          "value": "Courier packing label number 73.",
+          "statement": "For shipment 73, the courier uses packing label 73."
+        },
+        {
+          "key": "packing_74",
+          "value": "Courier packing label number 74.",
+          "statement": "For shipment 74, the courier uses packing label 74."
+        },
+        {
+          "key": "packing_75",
+          "value": "Courier packing label number 75.",
+          "statement": "For shipment 75, the courier uses packing label 75."
+        },
+        {
+          "key": "packing_76",
+          "value": "Courier packing label number 76.",
+          "statement": "For shipment 76, the courier uses packing label 76."
+        },
+        {
+          "key": "packing_77",
+          "value": "Courier packing label number 77.",
+          "statement": "For shipment 77, the courier uses packing label 77."
+        },
+        {
+          "key": "packing_78",
+          "value": "Courier packing label number 78.",
+          "statement": "For shipment 78, the courier uses packing label 78."
+        },
+        {
+          "key": "packing_79",
+          "value": "Courier packing label number 79.",
+          "statement": "For shipment 79, the courier uses packing label 79."
+        },
+        {
+          "key": "packing_80",
+          "value": "Courier packing label number 80.",
+          "statement": "For shipment 80, the courier uses packing label 80."
+        },
+        {
+          "key": "packing_81",
+          "value": "Courier packing label number 81.",
+          "statement": "For shipment 81, the courier uses packing label 81."
+        },
+        {
+          "key": "packing_82",
+          "value": "Courier packing label number 82.",
+          "statement": "For shipment 82, the courier uses packing label 82."
+        },
+        {
+          "key": "packing_83",
+          "value": "Courier packing label number 83.",
+          "statement": "For shipment 83, the courier uses packing label 83."
+        },
+        {
+          "key": "packing_84",
+          "value": "Courier packing label number 84.",
+          "statement": "For shipment 84, the courier uses packing label 84."
+        },
+        {
+          "key": "packing_85",
+          "value": "Courier packing label number 85.",
+          "statement": "For shipment 85, the courier uses packing label 85."
+        },
+        {
+          "key": "packing_86",
+          "value": "Courier packing label number 86.",
+          "statement": "For shipment 86, the courier uses packing label 86."
+        },
+        {
+          "key": "packing_87",
+          "value": "Courier packing label number 87.",
+          "statement": "For shipment 87, the courier uses packing label 87."
+        },
+        {
+          "key": "packing_88",
+          "value": "Courier packing label number 88.",
+          "statement": "For shipment 88, the courier uses packing label 88."
+        },
+        {
+          "key": "packing_89",
+          "value": "Courier packing label number 89.",
+          "statement": "For shipment 89, the courier uses packing label 89."
+        },
+        {
+          "key": "packing_90",
+          "value": "Courier packing label number 90.",
+          "statement": "For shipment 90, the courier uses packing label 90."
+        },
+        {
+          "key": "packing_91",
+          "value": "Courier packing label number 91.",
+          "statement": "For shipment 91, the courier uses packing label 91."
+        },
+        {
+          "key": "packing_92",
+          "value": "Courier packing label number 92.",
+          "statement": "For shipment 92, the courier uses packing label 92."
+        },
+        {
+          "key": "packing_93",
+          "value": "Courier packing label number 93.",
+          "statement": "For shipment 93, the courier uses packing label 93."
+        },
+        {
+          "key": "packing_94",
+          "value": "Courier packing label number 94.",
+          "statement": "For shipment 94, the courier uses packing label 94."
+        },
+        {
+          "key": "packing_95",
+          "value": "Courier packing label number 95.",
+          "statement": "For shipment 95, the courier uses packing label 95."
+        }
+      ],
+      "turns": [
+        {
+          "user": "Who is the courier for my Zephyr project, and what causes ocean tides?",
+          "rubric": "Retrieve Mina as courier; explain tides from the Moon and Sun gravitational effects. Do not treat general knowledge as missing private evidence. No new memory writes.",
+          "checks": [
+            {
+              "kind": "contains_all",
+              "values": [
+                "Mina"
+              ]
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "Moon",
+                "moon"
+              ]
+            },
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_memories"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "tags": [
+        "cache-memory-validation"
+      ]
+    }
+  ]
+}

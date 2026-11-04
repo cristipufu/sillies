@@ -35,7 +35,7 @@ func modelProfileRejectsInvalidPrefillOverride(_ chunk: Int) throws {
   let cached = catalog.manifests.filter {
     $0.model.profile.runtimePolicy.conversationCache == .nativeSession
   }
-  #expect(cached.map(\.modelID) == ["granite-4.2-8b"])
+  #expect(cached.map(\.modelID) == ["granite-4.2-3b", "granite-4.2-8b", "ministral-3-8b"])
   let normalized = catalog.manifests.filter {
     $0.model.profile.runtimePolicy.chatTemplate == .mistral3
   }

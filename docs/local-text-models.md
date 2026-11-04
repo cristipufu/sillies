@@ -215,3 +215,7 @@ The helper also accepts `--check-tokenizer /path/to/pinned-local-files` for a sm
 Model quality cases belong in `Tools/TextModelBenchmark/TextQualityFixtures.swift`, not in provider-specific production heuristics. The benchmark checks required facts and prints every output for semantic review. Runtime schema/evidence checks cannot guarantee that a generated summary is factually correct.
 
 Earlier summarization smoke checks on an M4 Pro with 48 GB (debug build): all six pinned tokenizers/templates passed the multilingual round-trip check. Full-weight Qwen3.5 4B runs took roughly 12–23 seconds for the first request including hash verification/loading, then 1–1.4 seconds per short warm request. Qwen3.5 2B took about 3.6 seconds for the first request and 0.7–0.9 seconds for subsequent short requests. Both preserved the monolingual fixture facts but changed a weekday in the mixed-language fixture, which the quality check reports as a failure. No production weekday workaround is used. All six downloads subsequently received the full-weight **Chat** evaluation linked above. That comparison does not certify their meeting summaries, and these earlier timings are not a current cross-model comparison.
+
+For the subsequent cache, first-message latency and memory-storage investigation, see the
+[cache and memory report](reports/cache-memory-2026-11-04.md). These targeted checks do not replace
+the full-task comparison above.

@@ -1,0 +1,15 @@
+{
+  "initialBuilds": {
+    "/tmp/sillies-cache-memory-worker/ChatModelBenchmark": "dfbee314ed0bda1e78ee9864ada7473fdfedea7de89171a412f9ed8a81a34495",
+    "/tmp/sillies-native-integration-worker/ChatModelBenchmark": "5d5d003b5f55dcb6a476a2734629d4f08831a9d0f9d2ee687356b142c052cc91",
+    "/tmp/sillies-cache-memory-release/Sillies.app/Contents/Helpers/SilliesTextInference.app/Contents/MacOS/SilliesTextInference": "8762be6cdeb6a6417cfd034f436ed38159f9bc2dce3493e3d812e3fc0055ffae",
+    "/tmp/sillies-native-integration-release/Sillies.app/Contents/Helpers/SilliesTextInference.app/Contents/MacOS/SilliesTextInference": "ebb8e85dd88e390ea4b0473585a28debd3c00771a26f89cbb248e27b05e6d6b3"
+  },
+  "executedBuilds": {
+    "/tmp/sillies-cache-memory-worker/ChatModelBenchmark": "3fbbfa33b736c15e33499483cbee7ee1d562ec27f68264c6c6005f1c6efcb4fe",
+    "/tmp/sillies-native-integration-worker/ChatModelBenchmark": "5d5d003b5f55dcb6a476a2734629d4f08831a9d0f9d2ee687356b142c052cc91",
+    "/tmp/sillies-cache-memory-release/Sillies.app/Contents/Helpers/SilliesTextInference.app/Contents/MacOS/SilliesTextInference": "8762be6cdeb6a6417cfd034f436ed38159f9bc2dce3493e3d812e3fc0055ffae",
+    "/tmp/sillies-native-integration-release/Sillies.app/Contents/Helpers/SilliesTextInference.app/Contents/MacOS/SilliesTextInference": "ebb8e85dd88e390ea4b0473585a28debd3c00771a26f89cbb248e27b05e6d6b3"
+  },
+  "note": "The candidate worker was rebuilt after shared memory-row decoding and scoped memory-search invalidation, before any candidate app case ran. Initial candidate-worker hash is retained as unused-build provenance. The helper binary did not change."
+}

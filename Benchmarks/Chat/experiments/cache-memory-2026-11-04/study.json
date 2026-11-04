@@ -1,0 +1,56 @@
+{
+  "baseCommit": "8716a94528ffb8d40b8c8db40c214b3c96eb5d90",
+  "nativeBudgetSeconds": 1200,
+  "batchDeadlineSeconds": 170,
+  "perTurnDeadlineSeconds": 60,
+  "execution": "Sequential native runs; no overlapping build/load tests, no downloads, synthetic data only; keep failed runs.",
+  "cache": {
+    "models": [
+      "granite-4.2-3b",
+      "ministral-3-8b"
+    ],
+    "pairsPerModel": 10,
+    "repetitions": 2,
+    "method": "Five frozen follow-ups, alternate retained/rebuilt order, temperature zero for protocol/correctness comparison. Identical requests apart from session identity; measurement precedes generation. Validate changed history/tools/instructions, ended session, app tool follow-up and fresh raw/native equivalence before promotion.",
+    "promotion": "All paired exact answers correct; reused tokens in each retained follow-up; median first text improves at least 20%; lifecycle controls pass. App tasks must have no unexplained regression.",
+    "stop": "At most one root-cause correction and one confirmation if integration fails. No prompt tuning."
+  },
+  "firstMessage": {
+    "models": [
+      "granite-4.2-3b",
+      "granite-4.2-8b",
+      "ministral-3-8b"
+    ],
+    "repetitions": 2,
+    "method": "Instrument content-free preparation stages, include acknowledged IPC first text. Cold means a new helper process, not an empty OS file cache. Tokenizer overlaps native weight loading; do not subtract nested timing as pure weight cost.",
+    "promotion": "Only remove demonstrated redundant work or safely prepare under non-preemptive admission; preserve teardown, foreground priority and memory-pressure behavior."
+  },
+  "memory": {
+    "sizes": [
+      200,
+      1000,
+      10000
+    ],
+    "method": "Synthetic relevant older facts plus newer partial-match distractors, other owners, corrections, restarts, no-result queries, delete/undo. Compare frozen recency SQL with relevance ranking; measure top-four evidence recall and query latency separately from model task scores.",
+    "writeContract": "Creation must not overwrite an existing topic. Replacement requires current identity/revision; preserve source, reject stale/cross-owner/deleted references, keep undo correct. Same-value create must not replace provenance.",
+    "nativeValidation": "Bounded saved-fact recall, general/private mixed question and correction replays on promising cache profiles; raw tool evidence and persisted state determine success, not lexical answer alone."
+  },
+  "limits": "No full leaderboard rerun; no new default memory preload; no runtime dependency changes; local results are not cross-hardware guarantees.",
+  "appValidation": {
+    "corpusSHA256": "6e5aab0702441fde84f949d2259354ae705cf824e3a014d1672ce089d9cb7347",
+    "cases": 10,
+    "repetitions": 1,
+    "note": "Frozen full-rubric diagnostic comparison, not a leaderboard or statistical quality estimate. Same cases for both models and arms. Cache equivalence is separately deterministic."
+  },
+  "firstTurnDiagnostics": {
+    "cases": [
+      "knowledge-mountain",
+      "third-party-quotation",
+      "many-memories-mixed",
+      "vault-links",
+      "question-is-not-a-correction"
+    ],
+    "reason": "The Granite candidate omitted read tools on two baseline-passing cases; both were fresh turns with zero cached tokens. Add exact raw/native temperature-zero pairs to investigate API/prompt integration without rescoring stochastic tasks.",
+    "changes": "No tuning of model instructions, sampling in the app, cases or rubrics."
+  }
+}

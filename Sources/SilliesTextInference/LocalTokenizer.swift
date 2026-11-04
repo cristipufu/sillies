@@ -5,11 +5,21 @@ import Tokenizers
 
 struct LocalTokenizerLoader: TokenizerLoader {
   let policy: TextModelPreparation.RuntimePolicy
-  init(policy: TextModelPreparation.RuntimePolicy = .standard) { self.policy = policy }
+  let timingObserver: TextPreparationTiming.Observer?
+  init(
+    policy: TextModelPreparation.RuntimePolicy = .standard,
+    timingObserver: TextPreparationTiming.Observer? = nil
+  ) {
+    self.policy = policy
+    self.timingObserver = timingObserver
+  }
   func load(from directory: URL) async throws -> any MLXLMCommon.Tokenizer {
-    LocalTokenizer(
+    let started = ContinuousClock.now
+    let tokenizer = LocalTokenizer(
       base: try await AutoTokenizer.from(modelFolder: directory),
       template: try NativeChatTemplate.load(policy.chatTemplate))
+    await timingObserver?(.init(.tokenizerSetup, since: started))
+    return tokenizer
   }
 }
 

@@ -8,6 +8,7 @@ package actor ConversationLibrary: ConversationRepository, CompanionMemoryReposi
   private let searches: ConversationSearchWorker
   private var database: ConversationDatabase?
   private var searchGeneration = UUID()
+  private var memorySearchGeneration = UUID()
   package init(directory: URL) {
     self.directory = directory
     searches = ConversationSearchWorker(directory: directory)
@@ -52,21 +53,38 @@ package actor ConversationLibrary: ConversationRepository, CompanionMemoryReposi
   package func clear(_ handle: ConversationHandle) throws -> ConversationSnapshot {
     let snapshot = try storage().clear(handle)
     searchGeneration = UUID()
+    memorySearchGeneration = UUID()
     return snapshot
   }
-  package func memories(_ handle: ConversationHandle, query: String) throws -> [CompanionMemory] {
-    try storage().memories(handle, query: query)
+  package func memories(_ query: CompanionMemoryQuery) async throws -> [CompanionMemory] {
+    try Task.checkCancellation()
+    _ = try storage()
+    let generation = memorySearchGeneration
+    let result = try await searches.memories(query)
+    try Task.checkCancellation()
+    guard generation == memorySearchGeneration else { throw ConversationStorageError.changed }
+    return result
+  }
+  package func memoryPage(_ request: CompanionMemoryPageRequest) throws -> CompanionMemoryPage {
+    try Task.checkCancellation()
+    return try storage().memoryPage(request)
   }
   package func remember(_ request: MemoryWrite) throws -> MemoryReceipt {
-    try storage().remember(request)
+    let receipt = try storage().remember(request)
+    memorySearchGeneration = UUID()
+    return receipt
   }
   package func forget(_ handle: ConversationHandle, id: UUID) throws -> ConversationSnapshot {
-    try storage().forget(handle, id: id)
+    let snapshot = try storage().forget(handle, id: id)
+    memorySearchGeneration = UUID()
+    return snapshot
   }
   package func undoMemory(_ handle: ConversationHandle, receiptID: UUID) throws
     -> ConversationSnapshot
   {
-    try storage().undoMemory(handle, receiptID: receiptID)
+    let snapshot = try storage().undoMemory(handle, receiptID: receiptID)
+    memorySearchGeneration = UUID()
+    return snapshot
   }
   package func recentMemoryChanges(_ handle: ConversationHandle) throws -> [MemoryReceipt] {
     try storage().recentMemoryChanges(handle)

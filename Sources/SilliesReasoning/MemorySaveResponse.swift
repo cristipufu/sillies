@@ -7,6 +7,7 @@ struct MemorySaveResponse: Encodable {
   enum Refusal: String, Encodable {
     case currentUserStatementRequired
     case invalidReplacementReference
+    case keyAlreadyExists
     case replacementChanged
   }
   struct SavedMemory: Encodable {
@@ -26,6 +27,25 @@ struct MemorySaveResponse: Encodable {
   let status: Status
   let memory: SavedMemory?
   let reason: Refusal?
+  var recovery: String? {
+    guard let reason else { return nil }
+    switch reason {
+    case .currentUserStatementRequired: return "No current user statement is available to save."
+    case .invalidReplacementReference, .keyAlreadyExists, .replacementChanged:
+      return
+        "No memory was changed. Search memories for this topic. If the user is correcting it, retry with the returned memoryID and revision. If the value is unchanged, keep the existing memory."
+    }
+  }
+
+  private enum CodingKeys: String, CodingKey { case status, memory, reason, recovery }
+
+  func encode(to encoder: any Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(status, forKey: .status)
+    try container.encodeIfPresent(memory, forKey: .memory)
+    try container.encodeIfPresent(reason, forKey: .reason)
+    try container.encodeIfPresent(recovery, forKey: .recovery)
+  }
 
   static func saved(_ receipt: MemoryReceipt) throws -> ConversationToolOutput {
     let full = Self(status: .saved, memory: .init(receipt.saved), reason: nil)

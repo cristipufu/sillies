@@ -48,7 +48,10 @@ private actor HistoryStorageProbe: ConversationRepository, CompanionMemoryReposi
   func search(_ request: ConversationSearchRequest) -> [ConversationSearchMatch] { [] }
   func conversations() -> [ConversationHeader] { [] }
   func clear(_ handle: ConversationHandle) -> ConversationSnapshot { snapshot }
-  func memories(_ handle: ConversationHandle, query: String) -> [CompanionMemory] { [] }
+  func memories(_ query: CompanionMemoryQuery) -> [CompanionMemory] { [] }
+  func memoryPage(_ request: CompanionMemoryPageRequest) -> CompanionMemoryPage {
+    .init(facts: [], next: nil)
+  }
   func remember(_ request: MemoryWrite) throws -> MemoryReceipt {
     throw ConversationStorageError.invalidData
   }

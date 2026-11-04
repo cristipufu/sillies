@@ -67,7 +67,8 @@ struct BenchmarkConversation {
         trace.streamedText, progress: progress.snapshot)
       outcome = .failure(error)
     }
-    let facts = try await session.fixture.conversations.memories(session.fixture.handle, query: "")
+    let facts = try await session.fixture.conversations.memories(
+      .init(handle: session.fixture.handle, text: "", limit: CompanionMemoryQuery.maximumResults))
     try await events.emit(
       .turn,
       await trace.result(

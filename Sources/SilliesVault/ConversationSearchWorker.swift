@@ -14,6 +14,11 @@ actor ConversationSearchWorker {
     return try storage().search(request)
   }
 
+  func memories(_ query: CompanionMemoryQuery) throws -> [CompanionMemory] {
+    try Task.checkCancellation()
+    return try storage().memories(query)
+  }
+
   private func storage() throws -> ConversationSearchDatabase {
     if let database { return database }
     let opened = try ConversationSearchDatabase(directory: directory)

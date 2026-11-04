@@ -15,9 +15,14 @@ actor MLXTextRuntime {
   private var active = false
   private var constraints = CheckpointGenerationConstraints.unconstrained
   private let rejectionObserver: (@Sendable (RejectedToolCall) async -> Void)?
+  private let timingObserver: TextPreparationTiming.Observer?
 
-  init(rejectionObserver: (@Sendable (RejectedToolCall) async -> Void)? = nil) {
+  init(
+    rejectionObserver: (@Sendable (RejectedToolCall) async -> Void)? = nil,
+    timingObserver: TextPreparationTiming.Observer? = nil
+  ) {
     self.rejectionObserver = rejectionObserver
+    self.timingObserver = timingObserver
   }
 
   func generate(_ request: TextInferenceRequest, receive: @escaping TextDeltaSink) async throws
@@ -49,8 +54,12 @@ actor MLXTextRuntime {
     let plan = try MLXGenerationPlan(request)
     Memory.cacheLimit = Self.cacheBytes
     Memory.memoryLimit = request.configuration.memoryLimitBytes
+    let loadStart = ContinuousClock.now
     let container = try await load(request.configuration)
+    await timingObserver?(.init(.modelLoad, since: loadStart))
+    let inputStart = ContinuousClock.now
     let input = try await prepareInput(plan, using: container)
+    await timingObserver?(.init(.inputPreparation, since: inputStart))
     if request.generation.operation == .measure {
       return .init(text: "", inputTokens: input.text.tokens.size)
     }
@@ -136,7 +145,9 @@ actor MLXTextRuntime {
     Memory.clearCache()
     let loadedConstraints = try CheckpointGenerationConstraints.load(from: location)
     let loaded = try await LLMModelFactory.shared.loadContainer(
-      from: location, using: LocalTokenizerLoader(policy: preparation.profile.runtimePolicy))
+      from: location,
+      using: LocalTokenizerLoader(
+        policy: preparation.profile.runtimePolicy, timingObserver: timingObserver))
     let processor = await MLXInputProcessor(base: loaded.processor)
     await loaded.update {
       $0.processor = processor

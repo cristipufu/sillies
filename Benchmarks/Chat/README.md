@@ -306,3 +306,7 @@ validates Granite continuation through the production streaming helper, Ministra
 formatter, and the remaining frozen Qwen controls. Its separate
 [registration](experiments/native-integration-2026-11-04/study.json) preserves the original study's
 stopping point and immutable evidence. Manual rubric review still applies when lexical checks pass.
+
+The [cache and memory follow-up](../../docs/reports/cache-memory-2026-11-04.md) extends native
+cache checks to Granite 3B and Ministral, separates first-message preparation spans, and tests
+ranked retrieval and revision-safe writes with up to 10,000 synthetic saved facts.

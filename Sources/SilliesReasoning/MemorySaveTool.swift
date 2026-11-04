@@ -25,7 +25,7 @@ struct MemorySaveTool: ConversationTool {
     .init(
       name: "save_memory",
       description:
-        "Remember a lasting fact explicitly stated about the human user. Never save a question, fictional character fact, secret, or anything the user asks not to store. For a correction, search_memories first and pass the returned memoryID and revision to replace that fact. Only claim a fact was saved after this tool succeeds.",
+        "Create a lasting fact explicitly stated about the human user. An existing topic cannot be overwritten without its reference. For a correction, search_memories first and pass the returned memoryID and revision to replace that fact. Never save a question, fictional character fact, secret, or anything the user asks not to store. Only claim a fact was saved after this tool succeeds.",
       parameters: [
         .init("key", description: "Short stable topic key for this fact, reused for corrections."),
         .init("value", description: "The explicitly stated fact, preserving its meaning."),
@@ -56,6 +56,8 @@ struct MemorySaveTool: ConversationTool {
       return try MemorySaveResponse.saved(receipt)
     } catch ReferenceError.invalid {
       return try MemorySaveResponse.refused(.invalidReplacementReference)
+    } catch MemoryMutationError.keyAlreadyExists {
+      return try MemorySaveResponse.refused(.keyAlreadyExists)
     } catch MemoryMutationError.replacementChanged {
       return try MemorySaveResponse.refused(.replacementChanged)
     }

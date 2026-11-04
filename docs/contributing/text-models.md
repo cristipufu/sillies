@@ -169,8 +169,8 @@ The MLX input processor keeps one bounded, exact text tokenization to avoid repe
 between context measurement and generation. Its key includes messages, tools and template context.
 Model reloads clear it. This tokenization cache is separate from inference KV state. A profile can
 opt into `runtime.conversationCache: "nativeSession"` after measured validation with the installed
-checkpoint. Granite 4.2 8B uses this path. Templates that rewrite historical messages can require a
-rewind unsupported by recurrent caches; never modify a model template merely to force a cache hit.
+checkpoint. Granite 4.2 3B/8B and Ministral 3 8B use this path. Templates that rewrite historical
+messages can require a rewind unsupported by recurrent caches; never modify a model template merely to force a cache hit.
 
 The helper owns one native continuation, bounded by the same working context as the reply. Reuse
 requires an exact extension of session identity, instructions, tools and committed messages. The

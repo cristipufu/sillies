@@ -11,3 +11,9 @@ Use atomic replacement for attachment writes and file-only unlink for deletion. 
 `VaultWriteCoordinator` in the app owns per-ID coalescing and retains failed image payloads for Retry. Test missing/corrupt/unreadable storage, transaction rollback, attachment recovery, and deletion during background work. Run `make check`.
 
 Fixed JSON examples in `Tests/SilliesPersistenceTests/Fixtures` exercise individual record codecs. They do not imply support for importing an old archive. Do not regenerate them with the current encoder; preserve unknown failure diagnostics and reject malformed fields.
+
+Saved-memory creation must not overwrite an existing canonical topic. Replacements resolve the
+current identity and revision inside the write transaction; preserve original provenance on refusals.
+Memory ranking belongs on the independent read-only search connection and selects bounded identities
+before decoding bodies. Stored fact count must not become a prompt or UI array size: use
+`CompanionMemoryQuery` for bounded retrieval and cursor pages for browsing.

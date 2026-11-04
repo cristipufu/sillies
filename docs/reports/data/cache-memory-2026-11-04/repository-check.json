@@ -1,0 +1,118 @@
+{
+  "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer make check BUILD_DIR=/tmp/sillies-cache-memory-check",
+  "exitCode": 0,
+  "selectedSwiftTests": 722,
+  "pythonTests": 94,
+  "presentation": "headless",
+  "testReceipt": [
+    {
+      "bundle": "SilliesAppTests",
+      "framework": "swift-testing",
+      "tests": 189,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesAudioTests",
+      "framework": "swift-testing",
+      "tests": 41,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesChatTests",
+      "framework": "swift-testing",
+      "tests": 29,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesCoreTests",
+      "framework": "swift-testing",
+      "tests": 154,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesDesignTests",
+      "framework": "swift-testing",
+      "tests": 5,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesFishSpeechTests",
+      "framework": "swift-testing",
+      "tests": 12,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesModelStoreTests",
+      "framework": "swift-testing",
+      "tests": 2,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesModelStoreTests",
+      "framework": "xctest",
+      "tests": 28
+    },
+    {
+      "bundle": "SilliesPersistenceTests",
+      "framework": "swift-testing",
+      "tests": 21,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesReasoningTests",
+      "framework": "swift-testing",
+      "tests": 58,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesSpeechTests",
+      "framework": "swift-testing",
+      "tests": 6,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesSpeechTests",
+      "framework": "xctest",
+      "tests": 27
+    },
+    {
+      "bundle": "SilliesTTSTests",
+      "framework": "swift-testing",
+      "tests": 22,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesTextModelsTests",
+      "framework": "swift-testing",
+      "tests": 40,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesTextModelsTests",
+      "framework": "xctest",
+      "tests": 1
+    },
+    {
+      "bundle": "SilliesVaultTests",
+      "framework": "swift-testing",
+      "tests": 65,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesVoicePlaybackTests",
+      "framework": "swift-testing",
+      "tests": 13,
+      "presentation": "headless"
+    },
+    {
+      "bundle": "SilliesWritingTests",
+      "framework": "swift-testing",
+      "tests": 9,
+      "presentation": "headless"
+    }
+  ],
+  "standaloneExtractionAttempt": {
+    "result": "failed",
+    "reason": "The separate command lacked DEVELOPER_DIR and selected a toolchain without FoundationModels macro plugins. The complete check above uses Xcode and passes extraction."
+  }
+}

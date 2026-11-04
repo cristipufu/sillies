@@ -7,7 +7,7 @@ public final class ConversationSearchDatabase {
   // the encoded result separately. Keep extraction after ranking the bounded identities.
   private static let excerptTokens = 64
   private static let textColumn = 2
-  private let sql: VaultSQLConnection
+  let sql: VaultSQLConnection
   private let rows = ConversationRowDecoder()
 
   public init(directory: URL) throws {

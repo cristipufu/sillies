@@ -10,7 +10,8 @@ import Testing
   defer { fixture.remove() }
   let update = fixture.update.replacing(fixture.original.saved.reference)
   let changed = try await fixture.store.remember(update)
-  let memories = try await fixture.store.memories(fixture.handle, query: "")
+  let memories = try await fixture.store.memories(
+    .init(handle: fixture.handle, text: "", limit: CompanionMemoryQuery.maximumResults))
   #expect(memories.count == 1)
   #expect(changed.saved.id == fixture.original.saved.id)
   #expect(changed.saved.key == "name")
@@ -21,7 +22,10 @@ import Testing
   #expect(try await fixture.store.recentMemoryChanges(fixture.handle).count == 2)
 
   let undone = try await fixture.store.undoMemory(fixture.handle, receiptID: changed.id)
-  let restored = try #require(try await fixture.store.memories(undone.handle, query: "").first)
+  let restored = try #require(
+    try await fixture.store.memories(
+      .init(handle: undone.handle, text: "", limit: CompanionMemoryQuery.maximumResults)
+    ).first)
   #expect(restored == fixture.original.saved)
   let forgotten = try await fixture.store.forget(undone.handle, id: restored.id)
   let late = MemoryWrite(
@@ -29,7 +33,10 @@ import Testing
     savedAt: fixture.update.savedAt
   ).replacing(restored.reference)
   await #expect(throws: MemoryMutationError.self) { try await fixture.store.remember(late) }
-  #expect(try await fixture.store.memories(forgotten.handle, query: "").isEmpty)
+  #expect(
+    try await fixture.store.memories(
+      .init(handle: forgotten.handle, text: "", limit: CompanionMemoryQuery.maximumResults)
+    ).isEmpty)
   #expect(try await fixture.store.recentMemoryChanges(forgotten.handle).isEmpty)
 }
 
@@ -48,7 +55,10 @@ import Testing
     args["value"] = "Sam"
     let result = try await tool.call(arguments: JSONEncoder().encode(args))
     #expect(result.memoryReceipt == nil)
-    #expect(try await fixture.store.memories(fixture.handle, query: "").first?.value == "Alex")
+    #expect(
+      try await fixture.store.memories(
+        .init(handle: fixture.handle, text: "", limit: CompanionMemoryQuery.maximumResults)
+      ).first?.value == "Alex")
   }
   let arguments = try JSONEncoder().encode([
     "key": "user_name", "value": "Sam", "memoryID": fixture.original.saved.id.uuidString,
@@ -61,11 +71,17 @@ import Testing
   let foreign = MemorySaveTool(
     repository: fixture.store, handle: other.handle, statement: otherStatement)
   #expect(try await foreign.call(arguments: arguments).memoryReceipt == nil)
-  #expect(try await fixture.store.memories(other.handle, query: "").isEmpty)
+  #expect(
+    try await fixture.store.memories(
+      .init(handle: other.handle, text: "", limit: CompanionMemoryQuery.maximumResults)
+    ).isEmpty)
   let result = try await tool.call(arguments: arguments)
   #expect(result.memoryReceipt?.saved.key == "name")
   #expect(result.memoryReceipt?.saved.value == "Sam")
-  #expect(try await fixture.store.memories(fixture.handle, query: "").count == 1)
+  #expect(
+    try await fixture.store.memories(
+      .init(handle: fixture.handle, text: "", limit: CompanionMemoryQuery.maximumResults)
+    ).count == 1)
 }
 
 @Test func memoryWriteAcknowledgementsDescribeTheCommittedIdentityAndCanonicalFact() async throws {
@@ -78,7 +94,10 @@ import Testing
       "key": "different_topic", "value": "Sam", "memoryID": fixture.original.saved.id.uuidString,
       "revision": fixture.original.saved.revision.uuidString,
     ]))
-  let committed = try #require(try await fixture.store.memories(fixture.handle, query: "").first)
+  let committed = try #require(
+    try await fixture.store.memories(
+      .init(handle: fixture.handle, text: "", limit: CompanionMemoryQuery.maximumResults)
+    ).first)
   let response = try JSONDecoder().decode(
     MemoryWriteAcknowledgement.self, from: Data(output.text.utf8))
   #expect(response.status == "saved")
@@ -116,7 +135,8 @@ import Testing
     #expect(response.memory == nil)
     #expect(output.memoryReceipt == nil)
   }
-  let memories = try await fixture.store.memories(fixture.handle, query: "")
+  let memories = try await fixture.store.memories(
+    .init(handle: fixture.handle, text: "", limit: CompanionMemoryQuery.maximumResults))
   #expect(memories == [fixture.original.saved])
   #expect(try await fixture.store.recentMemoryChanges(fixture.handle).count == 1)
 }
@@ -151,7 +171,10 @@ private struct MemoryWriteAcknowledgement: Decodable {
   let response = try JSONDecoder().decode(MemoryWriteAcknowledgement.self, from: Data(answer.utf8))
   #expect(response.status == "saved")
   #expect(response.memory == nil)
-  #expect(try await fixture.store.memories(fixture.handle, query: "").first?.value == "Sam")
+  #expect(
+    try await fixture.store.memories(
+      .init(handle: fixture.handle, text: "", limit: CompanionMemoryQuery.maximumResults)
+    ).first?.value == "Sam")
   try await toolbox.beginRecovery()
   #expect(try await toolbox.invoke(call) == answer)
   #expect(try await fixture.store.recentMemoryChanges(fixture.handle).count == 2)
@@ -185,4 +208,51 @@ private struct MemoryReplacementFixture {
   func remove() {
     do { try FileManager.default.removeItem(at: directory) } catch { Issue.record(error) }
   }
+}
+
+@Test func memoryCreationCannotOverwriteAStoredTopicOrItsProvenance() async throws {
+  let fixture = try await MemoryReplacementFixture()
+  defer { fixture.remove() }
+  let tool = MemorySaveTool(
+    repository: fixture.store, handle: fixture.handle, statement: fixture.correction)
+  for value in ["Alex", "Sam"] {
+    let output = try await tool.call(
+      arguments: JSONEncoder().encode(["key": " Name ", "value": value]))
+    let acknowledgement = try JSONDecoder().decode(
+      MemoryWriteAcknowledgement.self, from: Data(output.text.utf8))
+    #expect(acknowledgement.status == "notSaved")
+    #expect(acknowledgement.reason == "keyAlreadyExists")
+    #expect(output.memoryReceipt == nil)
+    #expect(output.text.contains("search") || output.text.contains("Search"))
+  }
+  #expect(
+    try await fixture.store.memories(.init(handle: fixture.handle, text: ""))
+      == [fixture.original.saved])
+  #expect(try await fixture.store.recentMemoryChanges(fixture.handle) == [fixture.original])
+}
+
+@Test func competingMemoryCorrectionsCommitOnlyOneRevision() async throws {
+  let fixture = try await MemoryReplacementFixture()
+  defer { fixture.remove() }
+  let write = fixture.update.replacing(fixture.original.saved.reference)
+  let successes = await withTaskGroup(of: Bool.self) { group in
+    for _ in 0..<2 {
+      group.addTask {
+        do {
+          _ = try await fixture.store.remember(write)
+          return true
+        } catch MemoryMutationError.replacementChanged {
+          return false
+        } catch {
+          Issue.record(error)
+          return false
+        }
+      }
+    }
+    var committed = 0
+    for await succeeded in group { if succeeded { committed += 1 } }
+    return committed
+  }
+  #expect(successes == 1)
+  #expect(try await fixture.store.recentMemoryChanges(fixture.handle).count == 2)
 }

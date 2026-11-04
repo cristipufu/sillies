@@ -113,7 +113,10 @@ failures cancel termination. `ConversationBrowser` pages older messages without 
 used for inference. Clear/Forget/Undo invalidate stale generations and summarized context. Memory tools
 accept a fact key and value; the host attaches the original current user message as provenance instead
 of requiring the model to reproduce a quote. Storage verifies the user source, and visible receipts
-allow Undo. Models decide which explicit facts qualify; tool choice remains a model-quality concern.
+allow Undo. A new-topic write never overwrites an existing key: corrections require a current
+identity and revision. Saved facts are ranked on the independent read-only search worker before
+bounded body decoding; `ChatMemoryBrowser` retains one 40-fact page. Storage has no 200-fact cap.
+Models decide which explicit facts qualify; tool choice remains a model-quality concern.
 See [Chat tools and context](contributing/chat-tools.md).
 
 `ChatTurnOperation` joins cancellable text and speech branches. Native text deltas reach a bounded

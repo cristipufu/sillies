@@ -2,36 +2,11 @@ import Foundation
 import SilliesCore
 
 extension ConversationDatabase {
-  private static let maximumMemoryPayloadBytes = 32_768
+  static let maximumMemoryPayloadBytes = 32_768
   private static let maximumMemoryReceiptBytes = maximumMemoryPayloadBytes * 2 + 1_024
   private static let maximumMemoryKeyCharacters = 80
   private static let maximumMemoryValueCharacters = 500
-  private static let maximumMemoryCount = 200
   private static let maximumRecentMemoryChanges = 40
-
-  public func memories(_ handle: ConversationHandle, query: String) throws -> [CompanionMemory] {
-    try validate(handle)
-    var result: [CompanionMemory] = []
-    var predicate = "owner=?"
-    var values: [VaultSQLConnection.Value] = [.text(handle.companionID)]
-    if !query.isEmpty {
-      guard let expression = VaultSearchTerms.expression(query, matching: .anyTerm) else {
-        return []
-      }
-      predicate += " AND id IN (SELECT id FROM memory_search WHERE memory_search MATCH ?)"
-      values.append(.text(expression))
-    }
-    try sql.rows(
-      "SELECT body FROM companion_memories WHERE \(predicate) ORDER BY updated DESC LIMIT ?",
-      values + [.integer(Int64(Self.maximumMemoryCount))]
-    ) { row in
-      result.append(
-        try decoder.decode(
-          CompanionMemory.self,
-          from: VaultSQLConnection.data(row, maximumBytes: Self.maximumMemoryPayloadBytes)))
-    }
-    return result
-  }
 
   public func remember(_ request: MemoryWrite) throws -> MemoryReceipt {
     try sql.transaction {
@@ -42,15 +17,6 @@ extension ConversationDatabase {
         !request.value.isEmpty, request.value.count <= Self.maximumMemoryValueCharacters
       else { throw ConversationStorageError.invalidData }
       let previous = try previousMemory(for: request, key: key)
-      if previous == nil {
-        guard
-          try sql.integer(
-            "SELECT COUNT(*) FROM companion_memories WHERE owner=?",
-            [.text(request.handle.companionID)]) < Self.maximumMemoryCount
-        else {
-          throw ConversationStorageError.invalidData
-        }
-      }
       let saved = CompanionMemory(
         replacing: previous, fact: .init(key: previous?.key ?? key, value: request.value),
         source: request.source, savedAt: request.savedAt)
@@ -154,7 +120,10 @@ extension ConversationDatabase {
 
   private func previousMemory(for request: MemoryWrite, key: String) throws -> CompanionMemory? {
     guard let target = request.replacement else {
-      return try memory(owner: request.handle.companionID, identity: .key(key))
+      guard try memory(owner: request.handle.companionID, identity: .key(key)) == nil else {
+        throw MemoryMutationError.keyAlreadyExists
+      }
+      return nil
     }
     guard let previous = try memory(owner: request.handle.companionID, identity: .id(target.id)),
       previous.revision == target.revision

@@ -32,6 +32,7 @@ lint:
 	bash scripts/check-main-thread.sh
 
 check: lint test debug
+	$$(swift build --show-bin-path)/TTSBenchmark --self-test
 	python3 -B Benchmarks/Chat/benchmark.py fixtures
 	python3 -B scripts/localize.py extract --check
 	$(BUILD_DIR)/Sillies.app/Contents/Helpers/SilliesTextInference.app/Contents/MacOS/SilliesTextInference --self-test

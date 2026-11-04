@@ -161,7 +161,8 @@ let package = Package(
       name: "ConversationStorageProbe", dependencies: ["SilliesConversationTestSupport"],
       path: "Tools/ConversationStorageProbe"),
     .executableTarget(
-      name: "TTSBenchmark", dependencies: ["SilliesModelStore", "SilliesTTS", "SilliesInference"],
+      name: "TTSBenchmark",
+      dependencies: ["SilliesModelStore", "SilliesTTS", "SilliesInference", "SilliesTextModels"],
       path: "Tools/TTSBenchmark"),
     .testTarget(
       name: "SilliesWritingTests",

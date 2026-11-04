@@ -12,19 +12,19 @@ actor ChatTurnStream {
   private var text = ""
   private var phrases = SpokenPhraseBuffer()
   private var speechStopped = false
-  private var lastPresented = ""
-  private var lastPresentation = ContinuousClock.now
+  private var lastSubmitted = ""
+  private var lastSubmission = ContinuousClock.now
   private var openingDeadline: Task<Void, Never>?
   private var openingDeadlineReached = false
   private var reportedPhrase = false
-  private let receive: @Sendable (String) async -> Void
+  private let presentation: ChatTextPresentation
   private let milestone: @Sendable (SpeechDeliveryMilestone) -> Void
   init(
     receive: @escaping @Sendable (String) async -> Void,
     milestone: @escaping @Sendable (SpeechDeliveryMilestone) -> Void = { _ in },
     openingPhraseDelay: Duration = ChatTurnStream.defaultOpeningPhraseDelay
   ) {
-    self.receive = receive
+    presentation = ChatTextPresentation(receive: receive)
     self.milestone = milestone
     self.openingPhraseDelay = openingPhraseDelay
   }
@@ -45,12 +45,12 @@ actor ChatTurnStream {
     var ready = phrases.append(delta)
     if openingDeadlineReached { ready += phrases.flushOpeningPhrase() }
     if phrases.hasOpeningPhrase { cancelOpeningDeadline() } else { armOpeningDeadline() }
-    if lastPresented.isEmpty || !ready.isEmpty
-      || lastPresentation.duration(to: .now) >= Self.presentationInterval
+    try await enqueue(ready)
+    if lastSubmitted.isEmpty || !ready.isEmpty
+      || lastSubmission.duration(to: .now) >= Self.presentationInterval
     {
       await publish()
     }
-    try await enqueue(ready)
   }
 
   func finish(_ completedText: String) async throws {
@@ -65,15 +65,17 @@ actor ChatTurnStream {
           localized:
             "The local text model returned an incomplete response. Your source is unchanged."))
     }
-    await publish()
     try await enqueue(phrases.finish())
     await speech.finish()
+    await publish()
+    await presentation.finish()
   }
   func cancel() async {
     cancelOpeningDeadline()
-    await publish()
     speechStopped = true
     await speech.cancel()
+    await publish()
+    await presentation.finish()
   }
   func stopSpeech() async {
     cancelOpeningDeadline()
@@ -96,10 +98,10 @@ actor ChatTurnStream {
     }
   }
   private func publish() async {
-    guard text != lastPresented else { return }
-    lastPresented = text
-    lastPresentation = .now
-    await receive(text)
+    guard text != lastSubmitted else { return }
+    lastSubmitted = text
+    lastSubmission = .now
+    await presentation.submit(text)
   }
 
   private func armOpeningDeadline() {

@@ -83,24 +83,28 @@ final class FishCodeGenerator {
   private func generateFrame(semanticCode: Int32, hidden: MLXArray) throws -> [Int32] {
     try profile.measure(.fastPrefill) {
       fast.reset()
-      let prefill = try fast.apply(hidden)
-      eval(prefill)
+      // Only the attention caches feed the first codebook. The unused final layer output
+      // need not execute; its dependencies materialize with the complete frame below.
+      _ = try fast.apply(hidden)
     }
-    var codes = [semanticCode]
-    var previous = semanticCode
+    var previous = MLXArray([semanticCode]).reshaped(1, 1)
+    var codes = [previous]
     for _ in 1..<FishConfiguration.codebookCount {
       let output = try profile.tensor(.fastForward) {
         let embedded = try weights.embedding(
-          MLXArray([previous]).reshaped(1, 1), at: "model.fast_embeddings")
+          previous, at: "model.fast_embeddings")
         return try fast.apply(embedded)
       }
       let logits = try profile.tensor(.fastLogits) {
         try weights.linear(output, at: "model.fast_output").reshaped(1, -1)
       }
-      previous = try profile.measure(.fastSampling) { try FishSampling.sample(logits) }
+      previous = try profile.tensor(.fastSampling) { try FishSampling.sampleTensor(logits) }
       codes.append(previous)
     }
-    return codes
+    let frame = concatenated(codes, axis: 1)
+    profile.measure(.fastEvaluation) { eval(frame) }
+    try Task.checkCancellation()
+    return frame.asArray(Int32.self)
   }
 
   private func audioEmbedding(_ frame: [Int32]) throws -> MLXArray {

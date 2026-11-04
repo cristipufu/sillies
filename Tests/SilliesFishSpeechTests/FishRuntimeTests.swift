@@ -44,6 +44,40 @@ import Testing
     }
   }
 
+  @Test func dependentSamplingPreservesChoicesWhenMaterializedOncePerFrame() throws {
+    let vocabulary = 64
+    let logits = sin(arange(vocabulary * vocabulary).asType(.float32) * 0.173)
+      .reshaped(vocabulary, vocabulary)
+    for seed: UInt64 in [11, 29, 123] {
+      MLXRandom.seed(seed)
+      var previous: Int32 = 3
+      var expected = [previous]
+      for _ in 1..<FishConfiguration.codebookCount {
+        previous = try FishSampling.sample(logits[Int(previous)].reshaped(1, -1))
+        expected.append(previous)
+      }
+      MLXRandom.seed(seed)
+      var token = MLXArray([Int32(3)]).reshaped(1, 1)
+      var deferred = [token]
+      for _ in 1..<FishConfiguration.codebookCount {
+        token = try FishSampling.sampleTensor(take(logits, token, axis: 0).reshaped(1, -1))
+        deferred.append(token)
+      }
+      #expect(concatenated(deferred, axis: 1).asArray(Int32.self) == expected)
+    }
+    #expect(throws: FishError.self) {
+      try FishSampling.sampleTensor(MLXArray.ones([2, vocabulary]))
+    }
+  }
+
+  @Test func deferredSamplingHonorsCancellationBeforeBuildingAnotherStep() async {
+    let task = Task {
+      withUnsafeCurrentTask { $0?.cancel() }
+      _ = try FishSampling.sampleTensor(MLXArray.ones([1, 64]))
+    }
+    await #expect(throws: CancellationError.self) { try await task.value }
+  }
+
   @Test func affineProjectionAndOutputSelectionPreserveRows() throws {
     let weights = FishWeights(tensors: [
       "projection.weight": MLXArray([Float(1), 2, 3, 4, 5, 6]).reshaped(3, 2),

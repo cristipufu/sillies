@@ -57,3 +57,42 @@ import Testing
   delivery.received(.milestone(.audibleOutput(ProcessInfo.processInfo.systemUptime)))
   #expect(delivery.snapshot.firstAudio != nil)
 }
+
+@Test func readySpeechDoesNotWaitForBlockedTextPresentation() async throws {
+  let (entered, entry) = AsyncStream<Void>.makeStream()
+  let (released, release) = AsyncStream<Void>.makeStream()
+  let phraseReady = Mutex(false)
+  let stream = ChatTurnStream(
+    receive: { _ in
+      entry.yield(())
+      for await _ in released { break }
+    }, milestone: { _ in phraseReady.withLock { $0 = true } })
+  let text = "This complete sentence is ready to speak. "
+  let append = Task { try await stream.append(text) }
+  for await _ in entered { break }
+  // The renderer is deliberately suspended, not delayed by an arbitrary test sleep.
+  #expect(phraseReady.withLock { $0 })
+  release.yield(())
+  try await append.value
+  try await stream.finish(text)
+  #expect(try await stream.speech.next() == text.trimmingCharacters(in: .whitespaces))
+  #expect(try await stream.speech.next() == nil)
+}
+
+@Test func cancellationDiscardsSpeechWhileTextPresentationIsSuspended() async throws {
+  let (entered, entry) = AsyncStream<Void>.makeStream()
+  let (released, release) = AsyncStream<Void>.makeStream()
+  let stream = ChatTurnStream(
+    receive: { _ in
+      entry.yield(())
+      for await _ in released { break }
+    }, openingPhraseDelay: .seconds(60))
+  let append = Task { try await stream.append("An unfinished phrase") }
+  for await _ in entered { break }
+  let cancellation = Task { await stream.cancel() }
+  await #expect(throws: CancellationError.self) { try await stream.speech.next() }
+  release.yield(())
+  await cancellation.value
+  try await append.value
+  await #expect(throws: CancellationError.self) { try await stream.speech.next() }
+}

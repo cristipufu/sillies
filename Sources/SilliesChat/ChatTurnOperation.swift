@@ -56,17 +56,17 @@ struct ChatTurnOperation: Sendable {
         try Task.checkCancellation()
         return Result(reply: reply, voice: voiceResult)
       } catch {
-        await stream.cancel()
         voice.cancel()
         await services.speech.stop(id: context.turnID)
+        await stream.cancel()
         _ = await voice.value
         throw error
       }
     } onCancel: {
       voice.cancel()
       Task {
-        await stream.cancel()
         await services.speech.stop(id: context.turnID)
+        await stream.cancel()
       }
     }
   }

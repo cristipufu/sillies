@@ -1,19 +1,21 @@
+import CryptoKit
 import Foundation
 import SilliesTTS
 
 /// A silent sink with an optional playback-rate queue; it never opens an audio device.
 actor VoiceProfileSamples {
   enum Delivery: String, Codable { case drain, paced }
-  struct Chunk: Codable {
+  struct Chunk: Codable, Sendable {
     let arrived: TimeInterval
     let accepted: TimeInterval
     let samples: Int
   }
-  struct Report: Codable {
+  struct Report: Codable, Sendable {
     let startedAt: TimeInterval
     let elapsedSeconds: TimeInterval
     let sampleRate: Int
     let sampleCount: Int
+    let pcmSHA256: String
     let firstNonSilentPCM: TimeInterval?
     let leadingSilentSamples: Int?
     let simulatedPlaybackGapSeconds: TimeInterval
@@ -23,18 +25,22 @@ actor VoiceProfileSamples {
   private static let maximumQueueSeconds: TimeInterval = 0.75
   private static let minimumSignal: Float = 0.001
   private let delivery: Delivery
-  private let started = ProcessInfo.processInfo.systemUptime
+  private let started: TimeInterval
   private let audio = SampleCollector()
   private var chunks: [Chunk] = []
   private var sampleRate = 0
   private var sampleCount = 0
+  private var digest = SHA256()
   private var firstNonSilent: TimeInterval?
   private var leadingSilentSamples: Int?
   private var playbackEnd: TimeInterval?
   private var gapSeconds: TimeInterval = 0
   private var waitSeconds: TimeInterval = 0
 
-  init(delivery: Delivery) { self.delivery = delivery }
+  init(delivery: Delivery, startedAt: TimeInterval = ProcessInfo.processInfo.systemUptime) {
+    self.delivery = delivery
+    started = startedAt
+  }
 
   func append(_ pcm: SynthesizedAudio) async throws {
     let arrived = elapsed()
@@ -55,6 +61,8 @@ actor VoiceProfileSamples {
     }
     sampleRate = pcm.sampleRate
     sampleCount += pcm.samples.count
+    // Hash original Float32 samples before the listening artifact is quantized to Int16 WAV.
+    pcm.samples.withUnsafeBytes { digest.update(bufferPointer: $0) }
     chunks.append(.init(arrived: arrived, accepted: accepted, samples: pcm.samples.count))
     await audio.append(pcm)
   }
@@ -62,7 +70,9 @@ actor VoiceProfileSamples {
   func report() -> Report {
     .init(
       startedAt: started, elapsedSeconds: elapsed(), sampleRate: sampleRate,
-      sampleCount: sampleCount, firstNonSilentPCM: firstNonSilent,
+      sampleCount: sampleCount,
+      pcmSHA256: digest.finalize().map { String(format: "%02x", $0) }.joined(),
+      firstNonSilentPCM: firstNonSilent,
       leadingSilentSamples: leadingSilentSamples,
       simulatedPlaybackGapSeconds: gapSeconds, sinkWaitSeconds: waitSeconds, chunks: chunks)
   }

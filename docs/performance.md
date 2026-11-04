@@ -563,3 +563,10 @@ the two additional silent native playback checks also passed under Thread Saniti
 The [provider optimization validation](reports/provider-optimization-2026-11-01.md) records bounded
 STT, text and voice adapter measurements, retained changes, rejected experiments, and unavailable
 native coverage. It separates input preparation, inference, device preparation and audible output.
+
+The [spoken-turn investigation](reports/spoken-turn-optimization-2026-11-04.md) removes renderer waits
+from token and speech delivery, with bounded latest-snapshot presentation. Fish's frame-level GPU
+sampling reduced synthesis time by 4.1–4.4% in paired release checks with identical original PCM.
+The report also records STT finalization, cancellation recovery, and text/voice contention across
+seven model pairs. Those are headless sink measurements; they do not establish audible-device
+latency or justify lowering conversational pause thresholds.

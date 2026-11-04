@@ -14,11 +14,20 @@ import SilliesTTS
 
   private static func run() async throws {
     let arguments = CommandLine.arguments
+    if arguments.count == 2, arguments[1] == "--self-test" {
+      try await VoiceBenchmarkSelfCheck.run()
+      return
+    }
+    if arguments.count == 7, arguments[1] == "overlap" {
+      try await VoiceOverlapBenchmark(arguments: Array(arguments.dropFirst(2))).run()
+      return
+    }
     guard [4, 6].contains(arguments.count),
-      ["install", "run", "latency", "profile", "voices"].contains(arguments[1])
+      ["install", "run", "latency", "profile", "voices", "recovery"].contains(arguments[1])
     else {
       fputs(
-        "Usage: TTSBenchmark install|run|latency|profile|voices MODEL_ID MODEL_DIRECTORY [LANGUAGE TEXT]\n",
+        "Usage: TTSBenchmark install|run|latency|profile|voices|recovery MODEL_ID MODEL_DIRECTORY [LANGUAGE TEXT]\n"
+          + "       TTSBenchmark overlap TEXT_ID TEXT_DIRECTORY VOICE_ID VOICE_DIRECTORY OUTPUT_DIRECTORY\n",
         stderr
       )
       exit(EXIT_FAILURE)
@@ -68,6 +77,13 @@ import SilliesTTS
       activity: InferenceActivity())
     if arguments[1] == "voices" {
       try await VoicePreparationBenchmark.run(registry: registry, manifest: manifest)
+      return
+    }
+    if arguments[1] == "recovery" {
+      try await VoiceRecoveryBenchmark(
+        registry: registry, manifest: manifest,
+        request: .init(text: passage, voiceID: voice.id, language: language), directory: directory
+      ).run()
       return
     }
     if arguments[1] == "latency" {

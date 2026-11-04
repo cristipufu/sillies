@@ -11,6 +11,15 @@ enum FishSampling {
   private static let minimumNoise: Float = 1e-6
 
   static func sample(_ logits: MLXArray, settings: Settings = .speech) throws -> Int32 {
+    let result = try sampleTensor(logits, settings: settings)
+    eval(result)
+    try Task.checkCancellation()
+    return result.item(Int32.self)
+  }
+
+  /// Keep dependent codebook choices on the GPU until the complete frame is needed by the codec.
+  static func sampleTensor(_ logits: MLXArray, settings: Settings = .speech) throws -> MLXArray {
+    try Task.checkCancellation()
     guard logits.ndim == 2, logits.dim(0) == 1, logits.dim(1) > 0 else {
       throw FishError.invalidTensor("generation logits")
     }
@@ -24,9 +33,6 @@ enum FishSampling {
     let probabilities = softmax(filtered, axis: -1)
     let noise = -log(MLXRandom.uniform(low: minimumNoise, high: 1, probabilities.shape))
     let position = argMax(probabilities / noise, axis: -1).reshaped(1, 1)
-    let result = takeAlong(order, position, axis: -1).asType(.int32)
-    eval(result)
-    try Task.checkCancellation()
-    return result.item(Int32.self)
+    return takeAlong(order, position, axis: -1).asType(.int32)
   }
 }

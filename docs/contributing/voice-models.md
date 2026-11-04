@@ -54,6 +54,11 @@ updates and assembles bounded phrases through the pure `SpokenPhraseBuffer`. `Sp
 one bounded reply with one reader; it can hold the complete reply while a large voice waits for text
 generation to release memory. This avoids a backpressure deadlock between inference branches.
 
+`ChatTextPresentation` owns one renderer task and one replaceable pending snapshot. A slow renderer
+must not block token acknowledgements or ready speech. Finish joins its final delivery before the
+turn is committed; cancellation stops native speech before waiting for presentation. Preserve the
+blocked-renderer and coalescing regressions when changing this handoff.
+
 The first text delta starts speculative voice preparation while phrase assembly continues. Admission
 must never preempt active reasoning to warm a voice: defer when memory or another interactive task
 prevents overlap. New incompatible text or recognition can cancel preparation without failing the
@@ -163,6 +168,26 @@ The runner reports first PCM separately from total synthesis time. Replace `run`
 compare a cold helper, explicit voice preparation, and two successive requests with retained state.
 Each phase writes a separate WAV. These sink measurements exclude text generation and device output;
 do not report them as end-to-end conversational latency. No download is performed by `run` or `latency`.
+
+`profile` writes original Float32 PCM hashes and chunk receipts when
+`SILLIES_VOICE_PROFILE_DIRECTORY` is set. Hashes are independent of WAV quantization and transport
+boundaries. `recovery` cancels after the first chunk, joins the worker and synthesizes another utterance.
+`TTSBenchmark --self-test`, included in `make check`, validates the timing origin, known PCM hashes,
+sub-Int16 changes and streamed-text matching without loading a model.
+
+For resource-contention experiments, set both `SILLIES_TEXT_HELPER` and `SILLIES_TTS_HELPER` to helpers
+built from the same source as the runner, then use:
+
+```sh
+python3 scripts/run-bounded-test.py 120 .build/release/TTSBenchmark overlap \
+  TEXT_MODEL_ID TEXT_MODEL_DIRECTORY VOICE_MODEL_ID VOICE_MODEL_DIRECTORY OUTPUT_DIRECTORY
+```
+
+The probe saves one cold observation, then two sequential and two overlapping observations in
+reversed order. It uses a fixed spoken passage, the production registries and a paced silent sink.
+It does not feed the generated answer to TTS or open an audio device. Its results measure resource
+contention, not complete conversational latency. Preserve changed text/audio, failures and raw timings;
+do not compare stochastic audio durations as if the waveforms were identical.
 
 ## Preparation and derived artifacts
 

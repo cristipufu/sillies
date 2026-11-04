@@ -1,0 +1,14 @@
+{
+  "reason": "Before any Gemma native run, corrected its transcribed cap from 192 to the existing product profile value of 384 MiB. Other checkpoint caps and helper algorithms unchanged. New worker artifact preserves all previously frozen runtime files.",
+  "previousRegistrationHash": "67f1770fd62f325434867b600ca0a6d043554a7e46ebf23f7e245bdfb284fa39",
+  "currentRegistrationHash": "d3359bfb38d76970e48efc34ba1a86099c28816b4bea2c7f07ecb5727eb2b790",
+  "runtime": "/tmp/sillies-cache-isolation-gemma-2026-11-04",
+  "hashes": {
+    "ChatModelBenchmark": "0e50e7494fdd88d3a75c04dc86f7311097cdb4fe4ef40fdb07b13f076bb577b6",
+    "Sillies_SilliesModelStore.bundle/Contents/Info.plist": "f7c1fc1faf7d367b999fd861ef54c04bb042a93d722a269679ccfbc5ac341ec9",
+    "Sillies_SilliesModelStore.bundle/Contents/Resources/Resources/search-models.json": "59f6a3dc3c9a927efe350c17482123aab772441c15f0500a30f356dde68c8995",
+    "Sillies_SilliesModelStore.bundle/Contents/Resources/Resources/speech-models.json": "1b872f425a15da38a49e0c13ce6ae4d55ba971e56cb5015752990996be9c824d",
+    "Sillies_SilliesModelStore.bundle/Contents/Resources/Resources/text-models.json": "9650e0fddacfacc757900d53721dff3f7cdef8dda3d103414e1b269d15e422cc",
+    "Sillies_SilliesModelStore.bundle/Contents/Resources/Resources/tts-models.json": "2e8a22ff952f8358cea1ada4fd6c4e32c023a6608ca65063045abfc3813c3513"
+  }
+}

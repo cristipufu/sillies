@@ -40,8 +40,9 @@ final class ArchitectureVisitor: SyntaxVisitor {
     if let allowed = ArchitecturePolicy.imports[owner], !allowed.contains(module) {
       report(node, "module-boundary", "\(owner) cannot import \(module).")
     }
-    if ["MLX", "MLXLLM", "MLXLMCommon", "Tokenizers"].contains(module),
-      !["SilliesTextInference", "SilliesFishSpeech"].contains(owner)
+    if ["MLX", "MLXLLM", "MLXLMCommon", "MLXEmbedders", "MLXHuggingFace", "Tokenizers"].contains(
+      module),
+      !["SilliesTextInference", "SilliesSearchInference", "SilliesFishSpeech"].contains(owner)
     {
       report(
         node, "inference-isolation",

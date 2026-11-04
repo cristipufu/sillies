@@ -8,13 +8,17 @@ package actor ConversationLibrary: ConversationRepository, CompanionMemoryReposi
   private let searches: ConversationSearchWorker
   private var database: ConversationDatabase?
   private var searchGeneration = UUID()
-  private var memorySearchGeneration = UUID()
+  var memorySearchGeneration = UUID()
+  var memoryEmbeddings: MemoryEmbeddingAccess?
+  var memoryIndexTask: Task<Void, Never>?
+  var memoryIndexGeneration = UUID()
+  var memoryIndexFailure: String?
   package init(directory: URL) {
     self.directory = directory
     searches = ConversationSearchWorker(directory: directory)
   }
 
-  private func storage() throws -> ConversationDatabase {
+  func storage() throws -> ConversationDatabase {
     dispatchPrecondition(condition: .notOnQueue(.main))
     if let database { return database }
     let opened = try ConversationDatabase(directory: directory)
@@ -54,13 +58,34 @@ package actor ConversationLibrary: ConversationRepository, CompanionMemoryReposi
     let snapshot = try storage().clear(handle)
     searchGeneration = UUID()
     memorySearchGeneration = UUID()
+    scheduleMemoryIndex()
     return snapshot
   }
   package func memories(_ query: CompanionMemoryQuery) async throws -> [CompanionMemory] {
     try Task.checkCancellation()
     _ = try storage()
     let generation = memorySearchGeneration
-    let result = try await searches.memories(query)
+    let keywords = try await searches.memories(query)
+    var related: [CompanionMemory] = []
+    if let access = memoryEmbeddings,
+      !query.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    {
+      do {
+        related = try await MemorySearchDeadline.perform { [searches] in
+          guard let embedding = try await access.embed(.init(text: query.text, purpose: .query))
+          else { return [] }
+          return try await searches.semanticMemories(
+            query, embedding: embedding, provider: access.identity)
+        }
+      } catch is CancellationError { try Task.checkCancellation() } catch MemoryEmbeddingError
+        .unavailable
+      {
+        // Keywords remain available during preparation or a deadline.
+      } catch {
+        fputs("Semantic memory search unavailable: \(error)\n", stderr)
+      }
+    }
+    let result = MemorySearchFusion.merge(keywords: keywords, semantic: related, limit: query.limit)
     try Task.checkCancellation()
     guard generation == memorySearchGeneration else { throw ConversationStorageError.changed }
     return result
@@ -72,11 +97,13 @@ package actor ConversationLibrary: ConversationRepository, CompanionMemoryReposi
   package func remember(_ request: MemoryWrite) throws -> MemoryReceipt {
     let receipt = try storage().remember(request)
     memorySearchGeneration = UUID()
+    scheduleMemoryIndex()
     return receipt
   }
   package func forget(_ handle: ConversationHandle, id: UUID) throws -> ConversationSnapshot {
     let snapshot = try storage().forget(handle, id: id)
     memorySearchGeneration = UUID()
+    scheduleMemoryIndex()
     return snapshot
   }
   package func undoMemory(_ handle: ConversationHandle, receiptID: UUID) throws
@@ -84,6 +111,7 @@ package actor ConversationLibrary: ConversationRepository, CompanionMemoryReposi
   {
     let snapshot = try storage().undoMemory(handle, receiptID: receiptID)
     memorySearchGeneration = UUID()
+    scheduleMemoryIndex()
     return snapshot
   }
   package func recentMemoryChanges(_ handle: ConversationHandle) throws -> [MemoryReceipt] {

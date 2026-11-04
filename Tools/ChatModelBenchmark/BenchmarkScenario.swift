@@ -8,6 +8,7 @@ struct BenchmarkPlan: Decodable, Sendable {
   let helper: String
   let workspace: String
   let jobs: [BenchmarkJob]
+  let memorySearch: BenchmarkMemorySearch.Configuration?
 }
 
 struct BenchmarkJob: Codable, Sendable {
@@ -50,29 +51,4 @@ struct BenchmarkScenario: Codable, Sendable {
   let records: [Record]
   let memories: [Fact]
   let turns: [String]
-}
-
-enum BenchmarkToolProfile: String, Codable, CaseIterable, Sendable {
-  case none, search, personal, app, expanded8, expanded12
-
-  var names: Set<String> {
-    switch self {
-    case .none: []
-    case .search: ["search_vault"]
-    case .personal: ["search_vault", "search_memories", "save_memory"]
-    case .app, .expanded8, .expanded12:
-      [
-        "search_vault", "read_vault_record", "search_conversation", "search_memories",
-        "save_memory",
-      ]
-    }
-  }
-  var distractorCount: Int {
-    switch self {
-    case .expanded8: 3
-    case .expanded12: 7
-    default: 0
-    }
-  }
-  var count: Int { names.count + distractorCount }
 }

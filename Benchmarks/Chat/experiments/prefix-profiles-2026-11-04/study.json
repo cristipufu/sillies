@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "purpose": "Qualify exact-prefix retention separately for Qwen 3.5 2B, 4B, 9B and LFM 2.5 2.6B, separating sampling variation from state-reuse regressions.",
+  "baseline": "Current reviewed application loop and profile, with cross-request caching disabled. Same source, helper, sampler settings and tools in both arms.",
+  "models": ["qwen-3.5-2b", "qwen-3.5-4b", "qwen-3.5-9b", "lfm-2.5-2.6b"],
+  "candidate": "Existing exact-token-prefix snapshot implementation. Checkpoint-native prefill remains unchanged. No model-specific prompts or output filters.",
+  "snapshot": {"maximumTokens": 2048, "maximumMiB": {"qwen-3.5-2b": 96, "qwen-3.5-4b": 192, "qwen-3.5-9b": 192, "lfm-2.5-2.6b": 64}},
+  "execution": {"maximumNativeSeconds": 3600, "maximumBatchSeconds": 180, "maximumTurnSeconds": 60, "parallelNativeWorkers": 1, "syntheticStoresOnly": true, "headless": true},
+  "quality": {"corpus": "../model-readiness-2026-11-04/prefix-conversations", "pairedSeeds": [11, 29], "seedScope": "The native sampler is reset to the specified seed for each generation, after loading. App sampling remains unseeded. Both arms use identical production temperatures, token budgets and tool definitions.", "review": "Inspect complete answers, delivered instructions/tools, rejected calls and persisted facts; aggregate scores alone cannot conceal a lost write."},
+  "acceptance": [
+    "Snapshot restoration matches independently recomputed split-prefill state. Investigate differences from ordinary unsplit prefill; do not claim bitwise equivalence when native chunk shapes differ.",
+    "No lost expected write, unsupported personal assertion, incorrect correction or tool-protocol regression versus paired baseline. Failure is investigated in integration first; unresolved regressions keep the profile disabled.",
+    "At least 20% median warm first-text improvement over ten matched greedy pairs, with all known-answer controls correct. Report initial no-prefix costs separately.",
+    "Cancellation, sink failure, session release, changed inputs and growing-prefix capacity controls pass. At most one bounded snapshot; no cross-companion state.",
+    "One candidate per model. At most one targeted diagnostic replay per observed discrepancy; no prompt tuning on test answers. Stop a model on an unresolved mandatory failure or the execution budget."
+  ],
+  "reviewer": "Implementing agent, not independent human review",
+  "publication": "Preserve raw failures, hashes, budgets and skipped cases. These targeted results do not replace the full benchmark leaderboard. No push or app restart."
+}

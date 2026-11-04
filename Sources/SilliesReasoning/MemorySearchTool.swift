@@ -14,7 +14,7 @@ struct MemorySearchTool: ConversationTool {
       description:
         "Look up saved facts about the human user. These memories describe the user, not the assistant.",
       parameters: [
-        .init("query", description: "Topic keywords, or an empty string for recent memories.")
+        .init("query", description: "A topic or question, or an empty string for recent memories.")
       ])
   }
   func call(arguments: Data) async throws -> ConversationToolOutput {
@@ -32,6 +32,8 @@ struct MemorySearchTool: ConversationTool {
     struct Result: Encodable {
       let subject = "user"
       let attribution: String
+      let relevance =
+        "Ranked candidates may be unrelated. Use only facts that support the user's request; otherwise report no matching memory."
       let facts: [Fact]
     }
     let results = facts.prefix(Self.resultLimit).map {

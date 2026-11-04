@@ -24,6 +24,19 @@ let package = Package(
     .target(name: "SilliesCore", exclude: ["AGENTS.md"]),
     .target(name: "SilliesDesign", resources: [.copy("Themes")]),
     .target(name: "SilliesInference"),
+    .target(
+      name: "SilliesSearchModels",
+      dependencies: ["SilliesCore", "SilliesInference"]),
+    .executableTarget(
+      name: "SilliesSearchInference",
+      dependencies: [
+        "SilliesSearchModels", "SilliesCore", "SilliesInference",
+        .product(name: "MLX", package: "mlx-swift"),
+        .product(name: "MLXEmbedders", package: "mlx-swift-lm"),
+        .product(name: "MLXHuggingFace", package: "mlx-swift-lm"),
+        .product(name: "Tokenizers", package: "swift-transformers"),
+        .product(name: "MLXLMCommon", package: "mlx-swift-lm"),
+      ]),
     .target(name: "SilliesFileSystem"),
     .target(
       name: "SilliesTTS", dependencies: ["SilliesCore", "SilliesModelStore", "SilliesInference"]),
@@ -112,7 +125,7 @@ let package = Package(
         "SilliesSpeechNemotron",
         "SilliesModelStore", "SilliesModelValidation", "SilliesDiarizationNemotron",
         "WindowMetadataProtocol",
-        "SilliesTextModels", "SilliesInference",
+        "SilliesTextModels", "SilliesInference", "SilliesSearchModels",
         "SilliesReasoning",
         "SilliesVault", "SilliesWriting",
         "SilliesChat", "SilliesTTS", "SilliesVoicePlayback",
@@ -120,6 +133,10 @@ let package = Package(
       exclude: ["Platform/AGENTS.md", "UI/AGENTS.md"],
       resources: [.copy("Resources/Characters"), .copy("Resources/Scenes")]
     ),
+    .executableTarget(
+      name: "MemorySearchBenchmark",
+      dependencies: ["SilliesCore", "SilliesVault", "SilliesSearchModels", "SilliesInference"],
+      path: "Tools/MemorySearchBenchmark"),
     .executableTarget(
       name: "SpeechBenchmark",
       dependencies: [
@@ -135,6 +152,7 @@ let package = Package(
       name: "ChatModelBenchmark",
       dependencies: [
         "SilliesCore", "SilliesModelStore", "SilliesTextModels", "SilliesReasoning", "SilliesVault",
+        "SilliesSearchModels", "SilliesInference",
       ], path: "Tools/ChatModelBenchmark", exclude: ["AGENTS.md"]),
     .target(
       name: "SilliesConversationTestSupport", dependencies: ["SilliesCore", "SilliesPersistence"],
@@ -150,6 +168,9 @@ let package = Package(
       dependencies: [
         "SilliesWriting", "SilliesCore", "SilliesAudio", "SilliesSpeech", "SilliesReasoning",
       ]),
+    .testTarget(
+      name: "SilliesSearchModelsTests",
+      dependencies: ["SilliesSearchModels", "SilliesCore", "SilliesInference"]),
     .testTarget(name: "SilliesCoreTests", dependencies: ["SilliesCore"]),
     .testTarget(name: "SilliesDesignTests", dependencies: ["SilliesDesign"]),
     .testTarget(

@@ -1,0 +1,6 @@
+{
+  "reason": "The raw native timing harness cannot execute tool calls. LFM returned legitimate tool requests instead of visible text on several samples, so null first-text times cannot be treated as latency or wrong cached state. Measure a separately labeled direct-generation control with both arms receiving the same source history and no tools. Full production tool workflows remain unchanged and reviewed. The zero-reasoning token-exhaustion control is also unsupported for this thinking model; preserve that failure and use the native sink/cancellation/recovery controls with the actual production allowance.",
+  "scope": "One LFM measurement correction, not a product prompt change or a rerun replacing failures.",
+  "budgetUnchanged": true,
+  "scriptSHA256": "901e65f17d960dd9441214f970f5ae58feef10cf04ee7f4517b33e67909ff578"
+}

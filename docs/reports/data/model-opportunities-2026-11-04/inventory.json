@@ -1,0 +1,107 @@
+[
+  {
+    "archive": "contract-baseline-apple.json.gz",
+    "validity": "valid registered diagnostic",
+    "audit": "contract-baseline-apple-audit.json"
+  },
+  {
+    "archive": "contract-baseline-gemma-4-12b.json.gz",
+    "validity": "valid registered diagnostic",
+    "audit": "contract-baseline-gemma-4-12b-audit.json"
+  },
+  {
+    "archive": "contract-baseline-gemma-4-26b-a4b.json.gz",
+    "validity": "valid registered diagnostic",
+    "audit": "contract-baseline-gemma-4-26b-a4b-audit.json"
+  },
+  {
+    "archive": "contract-baseline-gemma-4-e4b.json.gz",
+    "validity": "valid registered diagnostic",
+    "audit": "contract-baseline-gemma-4-e4b-audit.json"
+  },
+  {
+    "archive": "contract-baseline-granite-4.2-3b.json.gz",
+    "validity": "valid registered diagnostic",
+    "audit": "contract-baseline-granite-4.2-3b-audit.json"
+  },
+  {
+    "archive": "contract-baseline-granite-4.2-8b.json.gz",
+    "validity": "valid registered diagnostic",
+    "audit": "contract-baseline-granite-4.2-8b-audit.json"
+  },
+  {
+    "archive": "contract-baseline-lfm-2.5-2.6b.json.gz",
+    "validity": "valid registered diagnostic",
+    "audit": "contract-baseline-lfm-2.5-2.6b-audit.json"
+  },
+  {
+    "archive": "contract-baseline-lfm-2.5-24b-a2b.json.gz",
+    "validity": "valid registered diagnostic",
+    "audit": "contract-baseline-lfm-2.5-24b-a2b-audit.json"
+  },
+  {
+    "archive": "contract-baseline-ministral-3-8b.json.gz",
+    "validity": "valid registered diagnostic",
+    "audit": "contract-baseline-ministral-3-8b-audit.json"
+  },
+  {
+    "archive": "contract-baseline-nemotron-3.5-bolt-e4b.json.gz",
+    "validity": "valid registered diagnostic",
+    "audit": "contract-baseline-nemotron-3.5-bolt-e4b-audit.json"
+  },
+  {
+    "archive": "contract-baseline-qwen-3.5-2b.json.gz",
+    "validity": "valid registered diagnostic",
+    "audit": "contract-baseline-qwen-3.5-2b-audit.json"
+  },
+  {
+    "archive": "contract-baseline-qwen-3.5-4b.json.gz",
+    "validity": "valid registered diagnostic",
+    "audit": "contract-baseline-qwen-3.5-4b-audit.json"
+  },
+  {
+    "archive": "contract-baseline-qwen-3.5-9b.json.gz",
+    "validity": "valid registered diagnostic",
+    "audit": "contract-baseline-qwen-3.5-9b-audit.json"
+  },
+  {
+    "archive": "contract-cache-app-gemma-4-e4b.json.gz",
+    "validity": "valid registered diagnostic",
+    "audit": "contract-cache-app-gemma-4-e4b-audit.json"
+  },
+  {
+    "archive": "contract-cache-app-nemotron-3.5-bolt-e4b.json.gz",
+    "validity": "valid registered diagnostic",
+    "audit": "contract-cache-app-nemotron-3.5-bolt-e4b-audit.json"
+  },
+  {
+    "archive": "invalid-contract-split-gemma-4-12b.json.gz",
+    "validity": "invalid tool-split experiment: replacement tool filtered out",
+    "audit": "invalid-contract-split-gemma-4-12b-audit.json"
+  },
+  {
+    "archive": "invalid-contract-split-granite-4.2-3b.json.gz",
+    "validity": "invalid tool-split experiment: replacement tool filtered out",
+    "audit": "invalid-contract-split-granite-4.2-3b-audit.json"
+  },
+  {
+    "archive": "invalid-contract-split-ministral-3-8b.json.gz",
+    "validity": "invalid tool-split experiment: replacement tool filtered out",
+    "audit": "invalid-contract-split-ministral-3-8b-audit.json"
+  },
+  {
+    "archive": "contract-split-wired-gemma-4-12b.json.gz",
+    "validity": "valid registered diagnostic",
+    "audit": "contract-split-wired-gemma-4-12b-audit.json"
+  },
+  {
+    "archive": "contract-split-wired-granite-4.2-3b.json.gz",
+    "validity": "valid registered diagnostic",
+    "audit": "contract-split-wired-granite-4.2-3b-audit.json"
+  },
+  {
+    "archive": "contract-split-wired-ministral-3-8b.json.gz",
+    "validity": "valid registered diagnostic",
+    "audit": "contract-split-wired-ministral-3-8b-audit.json"
+  }
+]

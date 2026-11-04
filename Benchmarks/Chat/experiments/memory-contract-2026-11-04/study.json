@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "purpose": "Test a clearer durable-fact and ongoing-preference contract without a second inference phase, text filters, or relaxed write semantics.",
+  "candidate": "Replace permissive only-save-for wording with an explicit action requirement for directly supplied lasting facts and ongoing preferences in the latest user message, including alongside another question. Current negative wording restricts writes but does not require eligible writes. Preserve opt-out, secrets, quotations, source and correction rules.",
+  "models": [
+    "apple",
+    "qwen-3.5-4b",
+    "lfm-2.5-24b-a2b",
+    "gemma-4-26b-a4b"
+  ],
+  "corpus": "corpus/cases.json",
+  "phases": {
+    "screen": "The six existing development scenarios, baseline and candidate once; seed 11 for MLX. Repeat an improving candidate and baseline at seed 29 (Apple remains system-managed) before validation.",
+    "validation": "A candidate must improve at least one whole positive task in both screens with no new inappropriate write or lost provenance. Then run the twelve existing validation scenarios and six general/Vault controls in both arms; seed 29 for MLX."
+  },
+  "acceptance": "Whole-task improvement including actual committed value, owner and provenance; no new inappropriate write attempts or false saved-memory acknowledgements, no regression in general/Vault controls. A screening change does not qualify a global policy. Freeze and inspect every observation; do not treat lexical anchors as semantic truth.",
+  "exhaustion": {
+    "maximumNativeSeconds": 1200,
+    "maximumBatchSeconds": 180,
+    "maximumTurnSeconds": 60,
+    "maximumCandidates": 1,
+    "parallelNativeWorkers": 1
+  },
+  "limits": "Reused regression cases, not independent holdout; one Mac; implementing-agent review. Stop after one candidate comparison, not a claim of capability ceiling.",
+  "constraints": [
+    "Synthetic stores only",
+    "No app restart or push",
+    "No live corpus changes after execution starts",
+    "No inference concurrently with builds or performance checks"
+  ]
+}

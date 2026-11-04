@@ -170,7 +170,7 @@ class ChatBenchmarkTests(unittest.TestCase):
         self.assertTrue({"general-knowledge", "vault", "mixed-knowledge", "identity", "memories", "context", "tool-scaling"} <= groups)
         self.assertGreaterEqual(len(cases), 50)
         profiles = {profile for case in cases for profile in case["profiles"]}
-        self.assertEqual({corpus.PROFILES[profile] for profile in profiles}, {0, 1, 3, 5, 8, 12})
+        self.assertEqual(profiles, set(corpus.PROFILES))
 
     def test_malformed_native_event_preserves_failed_case(self):
         with tempfile.TemporaryDirectory() as directory:

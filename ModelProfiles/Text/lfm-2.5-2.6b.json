@@ -72,6 +72,14 @@
       "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit"
     ],
     "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
-    "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained from the committed baseline. This checkpoint was not natively compared in the November 3 focused experiment. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+    "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained from the committed baseline. This checkpoint was not natively compared in the November 3 focused experiment. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md. Bounded native prefix retention qualified in docs/reports/cache-isolation-2026-11-04.md: exact native restoration, complete paired production workflow review, explicit cancellation/release/capacity checks and ten matched direct-generation warm controls. The native direct probe does not measure complete tool-loop latency."
+  },
+  "runtime": {
+    "conversationCache": "prefixSnapshot",
+    "chatTemplate": "checkpoint",
+    "prefixSnapshot": {
+      "maximumTokens": 2048,
+      "maximumBytes": 67108864
+    }
   }
 }

@@ -72,6 +72,14 @@
       "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit"
     ],
     "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
-    "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context retained after the November 3 4K/8K comparison: both passed 6/6 cases, but compacted follow-ups took about 3.3 seconds at 4K versus 8.8 seconds at 8K. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+    "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context retained after the November 3 4K/8K comparison: both passed 6/6 cases, but compacted follow-ups took about 3.3 seconds at 4K versus 8.8 seconds at 8K. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md. November 4 native cache readiness: enable a single exact-prefix snapshot, capped at 2048 tokens and 384 MiB of logical state arrays. Ten matched warm pairs improved median first text from 2.667 to 1.114 seconds. State-copy, invalidation, cancellation, bounded-history, release and production-tool controls passed without a new task failure. Initial preparation adds work; this does not change historical leaderboard scores. See docs/reports/model-readiness-2026-11-04.md."
+  },
+  "runtime": {
+    "conversationCache": "prefixSnapshot",
+    "chatTemplate": "checkpoint",
+    "prefixSnapshot": {
+      "maximumTokens": 2048,
+      "maximumBytes": 402653184
+    }
   }
 }

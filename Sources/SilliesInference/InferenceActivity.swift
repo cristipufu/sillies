@@ -13,6 +13,10 @@ package actor InferenceActivity {
   }
   private var text: Work?
   private var synthesis: Work?
+  private var embedding: Work?
+  private var interactiveCount = 0
+  private var embeddingDrainWaiters: [CheckedContinuation<Void, Never>] = []
+  package enum EmbeddingPriority: Sendable { case query, background }
   private let overlapBudget: UInt64
   private let residency: InferenceModelResidency
   private var synthesisWaiter: CheckedContinuation<Void, Never>?
@@ -29,6 +33,62 @@ package actor InferenceActivity {
   }
   package func prepareVoiceModel(_ reservation: InferenceReservation) async {
     await residency.makeRoom(for: .voice, reservation: reservation)
+  }
+  package func prepareSearchModel(_ reservation: InferenceReservation) async {
+    await residency.makeRoom(for: .search, reservation: reservation)
+  }
+  package func rememberSearchModel(
+    id: UUID, reservation: InferenceReservation,
+    evict: @escaping @Sendable () async -> Void
+  ) async {
+    await residency.remember(
+      .search, resident: .init(id: id, bytes: reservation.bytes, evict: evict))
+  }
+  package func forgetSearchModel(_ id: UUID) async { await residency.forget(.search, id: id) }
+
+  /// Search never overlaps inference. Interactive work cancels and drains its native operation.
+  package func beginInteractiveWork() async {
+    interactiveCount += 1
+    guard let embedding else { return }
+    embedding.cancel()
+    await withCheckedContinuation { embeddingDrainWaiters.append($0) }
+  }
+  package func endInteractiveWork() {
+    interactiveCount = max(0, interactiveCount - 1)
+    resumeIdleWaiters()
+  }
+  package func waitForEmbeddingAdmission(_ priority: EmbeddingPriority) async throws {
+    let id = UUID()
+    try await withTaskCancellationHandler {
+      try Task.checkCancellation()
+      guard !canClaimEmbedding(priority) else { return }
+      try await withCheckedThrowingContinuation { idleWaiters[id] = $0 }
+    } onCancel: {
+      Task { await self.cancelWaiter(id) }
+    }
+  }
+  private func canClaimEmbedding(_ priority: EmbeddingPriority) -> Bool {
+    speechCount == 0 && text == nil && synthesis == nil && embedding == nil
+      && (priority == .query || interactiveCount == 0)
+  }
+  package func claimEmbedding(
+    _ id: UUID, priority: EmbeddingPriority = .background,
+    cancel: @escaping @Sendable () -> Void
+  ) -> Bool {
+    guard canClaimEmbedding(priority) else { return false }
+    embedding = Work(id: id, reservation: .init(), cancel: cancel)
+    return true
+  }
+  package func releaseEmbedding(_ id: UUID) {
+    guard embedding?.id == id else { return }
+    embedding = nil
+    let waiters = embeddingDrainWaiters
+    embeddingDrainWaiters.removeAll()
+    for waiter in waiters { waiter.resume() }
+    synthesisWaiter?.resume()
+    synthesisWaiter = nil
+    resumeSpeechWaiters()
+    resumeIdleWaiters()
   }
   package func rememberTextModel(
     id: UUID, reservation: InferenceReservation, evict: @escaping @Sendable () async -> Void
@@ -55,7 +115,8 @@ package actor InferenceActivity {
     speechCount += 1
     text?.cancel()
     synthesis?.cancel()
-    guard text != nil || synthesis != nil else { return }
+    embedding?.cancel()
+    guard text != nil || synthesis != nil || embedding != nil else { return }
     await withCheckedContinuation { speechWaiters.append($0) }
   }
 
@@ -68,6 +129,7 @@ package actor InferenceActivity {
     try await waitForTextAdmission(.init())
   }
   package func waitForTextAdmission(_ reservation: InferenceReservation) async throws {
+    embedding?.cancel()
     let id = UUID()
     try await withTaskCancellationHandler {
       try Task.checkCancellation()
@@ -82,6 +144,7 @@ package actor InferenceActivity {
   package func claimText(
     _ id: UUID, reservation: InferenceReservation = .init(), cancel: @escaping @Sendable () -> Void
   ) -> Bool {
+    embedding?.cancel()
     preemptPreparation(for: reservation)
     guard canClaimText(reservation) else { return false }
     text = Work(id: id, reservation: reservation, cancel: cancel)
@@ -102,6 +165,14 @@ package actor InferenceActivity {
   ) async -> Bool {
     guard speechCount == 0, synthesis == nil else { return false }
     synthesis = Work(id: id, reservation: reservation, cancel: cancel)
+    if let embedding {
+      embedding.cancel()
+      await withTaskCancellationHandler {
+        await withCheckedContinuation { synthesisWaiter = $0 }
+      } onCancel: {
+        Task { await self.cancelSynthesisWaiter(id) }
+      }
+    }
     if let text, !reservation.canOverlap(text.reservation, budget: overlapBudget) {
       if reservation.conversationID == nil
         || reservation.conversationID != text.reservation.conversationID
@@ -125,7 +196,7 @@ package actor InferenceActivity {
   package func claimVoicePreparation(
     _ id: UUID, reservation: InferenceReservation, cancel: @escaping @Sendable () -> Void
   ) -> Bool {
-    guard speechCount == 0, synthesis == nil,
+    guard speechCount == 0, synthesis == nil, embedding == nil,
       text.map({ reservation.canOverlap($0.reservation, budget: overlapBudget) }) ?? true
     else { return false }
     synthesis = Work(id: id, reservation: reservation, cancel: cancel, kind: .preparation)
@@ -145,7 +216,7 @@ package actor InferenceActivity {
   }
 
   private func canClaimText(_ reservation: InferenceReservation) -> Bool {
-    guard speechCount == 0, text == nil else { return false }
+    guard speechCount == 0, text == nil, embedding == nil else { return false }
     guard let synthesis else { return true }
     return reservation.canOverlap(synthesis.reservation, budget: overlapBudget)
   }
@@ -164,7 +235,7 @@ package actor InferenceActivity {
   }
 
   private func resumeSpeechWaiters() {
-    guard text == nil, synthesis == nil else { return }
+    guard text == nil, synthesis == nil, embedding == nil else { return }
     let waiters = speechWaiters
     speechWaiters.removeAll()
     for waiter in waiters { waiter.resume() }

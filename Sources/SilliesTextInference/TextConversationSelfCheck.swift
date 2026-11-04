@@ -5,6 +5,7 @@ import SilliesTextModels
 /// Checks the packaged native adapter and IPC without downloading or loading model weights.
 enum TextConversationSelfCheck {
   static func run() throws {
+    try checkWithdrawnToolSchema()
     let call = TextGenerationOutput.Call(
       id: "lookup", name: "search_vault",
       arguments: Data(#"{"query":"Ghostty"}"#.utf8))
@@ -46,5 +47,21 @@ enum TextConversationSelfCheck {
     guard measured.operation == .measure, measured.messages == request.messages else {
       throw TextModelError.invalidResponse
     }
+  }
+
+  private static func checkWithdrawnToolSchema() throws {
+    let request = TextGenerationRequest(
+      instructions: "The tool budget is exhausted. Answer from returned evidence.",
+      prompt: "Which links did I save?", maximumTokens: 240, style: .conversation)
+    let processor = ToolCallProcessor(
+      format: .gemma4, tools: MLXConversationInput.nativeTools(request))
+    let source =
+      #"<|tool_call>call:read_vault_record{recordID:<|"|>fixture<|"|>,query:<|"|>links<|"|>}<tool_call|>"#
+    let events = processor.processChunkOutputs(source) + processor.processEOSOutputs()
+    guard events.count == 1, case .toolCall(let call) = events[0],
+      call.function.name == "read_vault_record"
+    else { throw TextModelError.invalidResponse }
+    // Parsing is not execution: ConversationToolbox's quota tests ensure this late call can
+    // receive the existing budget response but cannot perform another operation.
   }
 }

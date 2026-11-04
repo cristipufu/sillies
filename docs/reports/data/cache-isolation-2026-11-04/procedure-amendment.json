@@ -1,0 +1,9 @@
+{
+  "reason": "Qwen4 initial replay varied sampling profiles in the same native helper, unlike production immutable preparation. Keep those outputs as initial diagnostics. Subsequent controlled replays use one immutable preparation per process and include token fingerprints and private-channel hashes. No production prompt, seed, expected answer or cache algorithm changed.",
+  "preservedInitialScripts": {
+    "initial-replay.py": "5e7be75d702d71b28383caa650294c14c47904c6c089f263f5113c7af0e3c038",
+    "initial-native_io.py": "727700f6c0b0b403353c7ad30e26369f707d261497ffec4010e29201052d0fff",
+    "initial-freeze.py": "e1d2dbe4cbe1b1b4189d6d961cd5204b210597be4cfdf75d33f8d7aae5dc8435"
+  },
+  "budgetUnchanged": 3600
+}

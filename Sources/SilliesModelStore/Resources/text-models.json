@@ -83,7 +83,11 @@
               "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit"
             ],
             "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
-            "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained. The November 3 focused comparison used this checkpoint; larger contexts were not tested for it. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+            "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained. The November 3 focused comparison used this checkpoint; larger contexts were not tested for it. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md. The November 4 model-opportunities study measured ten correct retained/rebuilt pairs and nine passing native invalidation controls for this exact checkpoint; native-session continuation is enabled. See docs/reports/model-opportunities-2026-11-04.md for the separate app workflow validation and limits."
+          },
+          "runtime": {
+            "conversationCache": "nativeSession",
+            "chatTemplate": "checkpoint"
           }
         },
         "release": {
@@ -367,7 +371,15 @@
               "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit"
             ],
             "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
-            "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context retained after the November 3 4K/8K comparison: both passed 6/6 cases, but compacted follow-ups took about 3.3 seconds at 4K versus 8.8 seconds at 8K. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+            "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context retained after the November 3 4K/8K comparison: both passed 6/6 cases, but compacted follow-ups took about 3.3 seconds at 4K versus 8.8 seconds at 8K. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md. November 4 native cache readiness: enable a single exact-prefix snapshot, capped at 2048 tokens and 384 MiB of logical state arrays. Ten matched warm pairs improved median first text from 2.667 to 1.114 seconds. State-copy, invalidation, cancellation, bounded-history, release and production-tool controls passed without a new task failure. Initial preparation adds work; this does not change historical leaderboard scores. See docs/reports/model-readiness-2026-11-04.md."
+          },
+          "runtime": {
+            "conversationCache": "prefixSnapshot",
+            "chatTemplate": "checkpoint",
+            "prefixSnapshot": {
+              "maximumTokens": 2048,
+              "maximumBytes": 402653184
+            }
           }
         },
         "release": {
@@ -792,7 +804,15 @@
               "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit"
             ],
             "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
-            "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained from the committed baseline. This checkpoint was not natively compared in the November 3 focused experiment. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+            "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained from the committed baseline. This checkpoint was not natively compared in the November 3 focused experiment. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md. Bounded native prefix retention qualified in docs/reports/cache-isolation-2026-11-04.md: exact native restoration, complete paired production workflow review, explicit cancellation/release/capacity checks and ten matched direct-generation warm controls. The native direct probe does not measure complete tool-loop latency."
+          },
+          "runtime": {
+            "conversationCache": "prefixSnapshot",
+            "chatTemplate": "checkpoint",
+            "prefixSnapshot": {
+              "maximumTokens": 2048,
+              "maximumBytes": 67108864
+            }
           }
         },
         "release": {
@@ -931,7 +951,15 @@
               "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit"
             ],
             "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
-            "rationale": "Native checkpoint capacity comes from pinned config.json. 8K working context selected from the November 3 comparison: 192-message continuity was correct and avoided expensive summaries, with about 31 MiB additional peak MLX allocation. A larger forced-compaction case still exceeded the 60-second turn deadline; this is not a long-history latency guarantee. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+            "rationale": "Native checkpoint capacity comes from pinned config.json. 8K working context selected from the November 3 comparison: 192-message continuity was correct and avoided expensive summaries, with about 31 MiB additional peak MLX allocation. A larger forced-compaction case still exceeded the 60-second turn deadline; this is not a long-history latency guarantee. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md. November 4 native cache readiness: enable one exact-prefix snapshot, capped at 2048 tokens and 128 MiB of logical state arrays. Ten matched warm pairs improved median first text from 2.338 to 1.008 seconds. Native recurrent-state, cancellation, release and memory checks passed. A discovered empty-versus-absent tool-schema mismatch was fixed centrally before rerunning production workflows; the formerly rejected late call now reaches the existing application quota handling. See docs/reports/model-readiness-2026-11-04.md for task limitations and initial preparation costs."
+          },
+          "runtime": {
+            "conversationCache": "prefixSnapshot",
+            "chatTemplate": "checkpoint",
+            "prefixSnapshot": {
+              "maximumTokens": 2048,
+              "maximumBytes": 134217728
+            }
           }
         },
         "release": {
@@ -1232,7 +1260,11 @@
               "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit"
             ],
             "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
-            "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained. The November 3 focused comparison used this checkpoint; larger contexts were not tested for it. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+            "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained. The November 3 focused comparison used this checkpoint; larger contexts were not tested for it. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md. The November 4 model-opportunities study measured ten correct retained/rebuilt pairs and nine passing native invalidation controls for this exact checkpoint; native-session continuation is enabled. See docs/reports/model-opportunities-2026-11-04.md for the separate app workflow validation and limits."
+          },
+          "runtime": {
+            "conversationCache": "nativeSession",
+            "chatTemplate": "checkpoint"
           }
         },
         "release": {
@@ -1383,7 +1415,15 @@
               "https://huggingface.co/mlx-community/Qwen3.5-2B-4bit"
             ],
             "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
-            "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained. The November 3 focused comparison used this checkpoint; larger contexts were not tested for it. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+            "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained. The November 3 focused comparison used this checkpoint; larger contexts were not tested for it. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md. Bounded native prefix retention qualified in docs/reports/cache-isolation-2026-11-04.md: identical-input state/answer controls, complete paired workflow review and native lifecycle checks; this is a bounded regression screen, not a population-level quality guarantee."
+          },
+          "runtime": {
+            "conversationCache": "prefixSnapshot",
+            "chatTemplate": "checkpoint",
+            "prefixSnapshot": {
+              "maximumTokens": 2048,
+              "maximumBytes": 100663296
+            }
           }
         },
         "release": {
@@ -1516,7 +1556,15 @@
               "https://huggingface.co/mlx-community/Qwen3.5-4B-MLX-4bit"
             ],
             "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
-            "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained from the committed baseline. This checkpoint was not natively compared in the November 3 focused experiment. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+            "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained from the committed baseline. This checkpoint was not natively compared in the November 3 focused experiment. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md. Bounded native prefix retention qualified in docs/reports/cache-isolation-2026-11-04.md: identical-input state/answer controls, complete paired workflow review and native lifecycle checks; this is a bounded regression screen, not a population-level quality guarantee."
+          },
+          "runtime": {
+            "conversationCache": "prefixSnapshot",
+            "chatTemplate": "checkpoint",
+            "prefixSnapshot": {
+              "maximumTokens": 2048,
+              "maximumBytes": 201326592
+            }
           }
         },
         "release": {

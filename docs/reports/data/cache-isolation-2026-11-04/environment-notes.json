@@ -1,0 +1,10 @@
+[
+  {
+    "at": "2026-11-04T11:52:27.834638+00:00",
+    "observation": "Two external swift-frontend processes detected while LFM 2.6B workflow ran. Not started by this study; no build commanded during native runs. Do not qualify latency from affected workflow measurements; dedicated warm controls must use a quiet host. No thermal warning reported."
+  },
+  {
+    "at": "2026-11-04T12:11:44.629397+00:00",
+    "observation": "No swift-frontend, swiftpm-testing-helper or other Sillies inference helpers active immediately before dedicated warm controls. Study worker begins after this check."
+  }
+]

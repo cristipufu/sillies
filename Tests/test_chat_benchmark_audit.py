@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "Benchmarks/Chat"))
-from evaluation import audit, corpus, environment, evidence, receipts, report, reviews, scoring
+from evaluation import archive, audit, corpus, environment, evidence, receipts, report, reviews, scoring
 from evaluation.runner import ModelBatch
 from evaluation.storage import initialize, write_json
 from benchmark import scheduled_models
@@ -50,6 +50,80 @@ def prepare_run(path, cases):
 
 
 class ChatBenchmarkAuditTests(unittest.TestCase):
+    def test_retrieval_fixture_must_keep_sources_out_of_initial_prompt(self):
+        rule = {"kind": "initial_context_omits", "values": ["The answer is violet"]}
+        initial = {"instructions": "Answer from evidence", "messages": [{"content": "What is the answer?"}]}
+        retrieved = {"instructions": "Answer from evidence", "messages": [{"content": "The answer is violet"}]}
+        turn = {"reply": "Violet", "requests": [initial, retrieved]}
+        self.assertTrue(scoring.check_rule(rule, turn, [])["passed"])
+        turn['requests'][0] = retrieved
+        self.assertFalse(scoring.check_rule(rule, turn, [])["passed"])
+        turn['requests'][0] = {"instructions": "The answer is violet", "messages": []}
+        self.assertFalse(scoring.check_rule(rule, turn, [])["passed"])
+        turn['requests'] = []
+        self.assertFalse(scoring.check_rule(rule, turn, [])["passed"])
+
+    def test_memory_absence_requires_an_actual_persisted_snapshot(self):
+        rule = {"kind": "memory_absent", "values": ["secret"]}
+        self.assertFalse(scoring.check_rule(rule, {"reply": "Not saved"}, [])["passed"])
+        self.assertTrue(scoring.check_rule(rule, {"reply": "Not saved", "memories": []}, [])["passed"])
+
+    def test_manual_pass_cannot_certify_a_contaminated_retrieval_fixture(self):
+        _, receipt = receipt_for(sample_case())
+        turn = receipt["turns"][0]
+        turn["checks"] = [{"category": "behavior", "kind": "initial_context_omits", "passed": False}]
+        review = rubric_review(receipt)
+        review["verdict"] = "pass"
+        with self.assertRaisesRegex(ValueError, "invalid fixture"):
+            reviews.validate(review, turn)
+
+    def test_whitespace_is_not_a_completed_reply(self):
+        case = sample_case()
+        case['turns'][0]['checks'] = []
+        job = corpus.jobs([case], 1)[0]
+        event = {"event": "turn", "payload": {"position": {"job": job['id'], "turn": 0},
+                 "input": case['turns'][0]['user'], "reply": " \n\t"}}
+        self.assertFalse(scoring.evaluate(job, [event], None)['passed'])
+
+    def test_manual_pass_cannot_override_a_failed_or_empty_turn(self):
+        for reply, error in (("", None), (" \n", None), ("Partial answer", "deadline")):
+            with self.subTest(reply=reply, error=error):
+                _, receipt = receipt_for(sample_case())
+                receipt['turns'][0].update(reply=reply, error=error)
+                review = rubric_review(receipt)
+                review['verdict'] = 'pass'
+                with self.assertRaisesRegex(ValueError, 'failed or empty turn'):
+                    reviews.summarize([review], {'apple': [receipt]})
+
+    def test_case_failure_cannot_be_overridden_by_successful_turn_reviews(self):
+        _, receipt = receipt_for(sample_case())
+        receipt['error'] = 'Worker failed before its completion receipt'
+        review = rubric_review(receipt)
+        review['verdict'] = 'pass'
+        result = reviews.summarize([review], {'apple': [receipt]})['apple']
+        self.assertEqual(result['rubricCases'], {'pass': 0, 'fail': 1, 'pending': 0})
+
+    def test_export_refreshes_reviews_and_audit_rejects_inflated_review_scores(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)
+            case = sample_case()
+            prepare_run(path, [case])
+            job, receipt = receipt_for(case)
+            write_json(path / 'apple/cases' / f"{job['id']}.json", receipt)
+            report.generate(path)
+            # Review arrives after the cached summary was written.
+            write_json(path / 'reviews.json', [rubric_review(receipt)])
+            destination = path / 'published.json.gz'
+            archive.export(path, destination)
+            checked = audit.verify(destination)['models']['apple']
+            self.assertEqual(checked['reviews']['rubricCases']['fail'], 1)
+            self.assertTrue(checked['publishedReviewSummaryVerified'])
+            changed = audit.read_document(destination)
+            changed['summary']['models']['apple']['semanticReviews']['rubricCases']['pass'] = 1
+            write_json(path / 'altered.json', changed)
+            with self.assertRaisesRegex(ValueError, 'review scores do not reproduce'):
+                audit.verify(path / 'altered.json')
+
     def test_scheduling_preserves_the_full_comparison_and_order(self):
         planned = ["small", "large", "control"]
         self.assertEqual(scheduled_models(planned, ["control", "small"]), ["small", "control"])

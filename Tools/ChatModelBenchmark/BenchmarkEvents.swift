@@ -43,8 +43,11 @@ struct BenchmarkTurnResult: Encodable, Sendable {
     let seconds: Double
   }
   struct Memory: Codable, Sendable {
+    let id: UUID
+    let revision: UUID
     let key: String
     let value: String
+    let sourceMessageID: UUID
     let source: String
   }
   let position: BenchmarkPosition
@@ -126,7 +129,9 @@ actor BenchmarkTurnTrace {
       compacted: compacted, summary: memory?.summary ?? "",
       sources: sources.map(\.id),
       memories: evidence.memories.map {
-        .init(key: $0.key, value: $0.value, source: $0.sourceQuote)
+        .init(
+          id: $0.id, revision: $0.revision, key: $0.key, value: $0.value,
+          sourceMessageID: $0.sourceMessageID, source: $0.sourceQuote)
       })
   }
 }

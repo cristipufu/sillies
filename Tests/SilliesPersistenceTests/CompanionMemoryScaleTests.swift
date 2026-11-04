@@ -66,9 +66,12 @@ func memorySearchRanksRelevantOlderFactsWithBoundedPages(_ count: Int) async thr
   let fixture = try MemoryScaleFixture(count: 200)
   defer { fixture.remove() }
   try fixture.database.sql.execute("DROP INDEX companion_memories_recent")
+  try fixture.database.sql.execute("DROP TRIGGER memory_embeddings_update")
+  try fixture.database.sql.execute("DROP TRIGGER memory_embeddings_delete")
+  try fixture.database.sql.execute("DROP TABLE memory_embeddings")
   try fixture.database.sql.execute("PRAGMA user_version=1")
   let reopened = try ConversationDatabase(directory: fixture.directory)
-  #expect(try reopened.sql.integer("PRAGMA user_version") == 2)
+  #expect(try reopened.sql.integer("PRAGMA user_version") == ConversationDatabase.schemaVersion)
   let first = try reopened.memoryPage(.init(handle: fixture.handle))
   let cursor = try #require(first.next)
   let second = try reopened.memoryPage(.init(handle: fixture.handle, position: .before(cursor)))

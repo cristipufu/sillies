@@ -40,9 +40,16 @@ def verify(archive: Path, snapshot: Path | None = None) -> dict:
         calculated = report.aggregate(primary)
         if calculated != document["summary"]["models"][model]["primary"]:
             raise ValueError(f"Published primary metrics do not reproduce: {model}")
+        published_reviews = document["summary"]["models"][model].get("semanticReviews")
+        has_rubric_reviews = semantic[model]['primaryRubricReviewedTurns'] > 0
+        changed_reviews = published_reviews is not None and any(
+            semantic[model].get(key) != value for key, value in published_reviews.items())
+        if changed_reviews or (has_rubric_reviews and published_reviews != semantic[model]):
+            raise ValueError(f"Published review scores do not reproduce: {model}")
         findings[model] = {"completedCases": len(recorded), "plannedCases": len(jobs),
                            "observedTurns": sum(len(receipt["turns"]) for receipt in recorded),
                            "primary": calculated, "reviews": semantic[model],
+                           "publishedReviewSummaryVerified": published_reviews == semantic[model],
                            "contextAnswerLeakage": context_answers_in_history(recorded, jobs)}
     return {"archiveSHA256": file_hash(archive), "corpusHash": corpus.digest(cases),
             "integrity": "recorded checks and primary metrics reproduced",

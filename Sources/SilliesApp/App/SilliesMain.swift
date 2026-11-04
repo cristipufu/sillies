@@ -204,9 +204,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     withObservationTracking {
       let active = controller.shouldRun && controller.liveCount > 0
       updates.setActivity(active ? .active : .suspended)
-      Task { [models = reasoningServices.models, voices = voiceServices?.environment] in
+      Task {
+        [
+          models = reasoningServices.models, voices = voiceServices?.environment,
+          search = searchServices?.environment
+        ] in
         await models.setActivity(active ? .active : .suspended)
-        if active { await voices?.resume() } else { await voices?.stop() }
+        if active {
+          await voices?.resume()
+          await search?.resume()
+        } else {
+          await voices?.stop()
+          await search?.stop()
+        }
       }
     } onChange: { [weak self] in
       Task { @MainActor in self?.observeModelUpdateActivity() }
@@ -224,6 +234,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
   private var conversationSessions: ConversationSessions?
   private var conversations: ConversationLibrary?
+  private var searchServices: SearchServices?
 
   private func configureChat(
     skills: SkillCoordinator, speech: SpeechServices, characters: [CharacterDefinition]
@@ -237,6 +248,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       })
     let conversations = ConversationLibrary(directory: skills.vault.storageDirectory)
     self.conversations = conversations
+    searchServices = SearchServices(conversations: conversations)
     let services = ChatServices(
       captureFactory: speech.conversationCaptureFactory(reference: reference),
       loadLanguages: speech.languages.load,
@@ -304,6 +316,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     automatedRunner.stopPreview()
     speechServices?.stop()
     textModels.stop()
+    searchServices?.models.stop()
     voiceServices?.models.stop()
     appearancePreferences?.stop()
     languagePreferences?.stop()
@@ -347,6 +360,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     shortcuts?.stop()
     speechServices?.stop()
     textModels.stop()
+    searchServices?.models.stop()
     voiceServices?.models.stop()
     controller?.stop()
     cleanupTemporaryPreferences()
@@ -574,6 +588,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
           controller: controller, appearance: appearancePreferences, language: languagePreferences,
           speechModels: speechServices?.models,
           voiceModels: voiceServices?.models, textModels: textModels,
+          searchModels: searchServices?.models,
           shortcuts: shortcuts, loginItems: loginItems, writingTools: writingTools,
           navigation: settingsNavigation), appearance: appearance)
       window.center()

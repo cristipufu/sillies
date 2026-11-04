@@ -19,6 +19,12 @@ actor ConversationSearchWorker {
     return try storage().memories(query)
   }
 
+  func semanticMemories(_ query: CompanionMemoryQuery, embedding: MemoryEmbedding, provider: String)
+    throws -> [CompanionMemory]
+  {
+    try storage().semanticMemories(query, embedding: embedding, provider: provider)
+  }
+
   private func storage() throws -> ConversationSearchDatabase {
     if let database { return database }
     let opened = try ConversationSearchDatabase(directory: directory)

@@ -60,7 +60,7 @@ Vault pagination uses a stable `(createdAt, id)` cursor. Show more reads one fol
 
 `LocalConversationService` receives `ConversationBackend` and `ConversationTool` capabilities. Apple and MLX adapters preserve native roles and call/result IDs. `ConversationToolbox` bounds tool execution and emits actual source references; `VaultSearchTool` and `VaultReadTool` own local retrieval in `SilliesVault`. Ranked FTS search reads headers and snippets without decoding every record. Source cards and image caching remain in the app UI. Vault retrieval tools are read-only; the separate memory tool can persist user facts with verified provenance. No tool has shell or network capability.
 
-Chat supplies a shared inference lifetime to text and voice registries. Closed lifetimes unregister explicitly; memory pressure can evict retained models. Apple text retains one completed native session, including its tool transcript, with tool invocation rebound to the current turn. Continuation requires the exact committed dialogue and tool exchanges; errors, memory pressure, changed history, tools or instructions invalidate reuse. Downloaded text keeps a bounded exact input-tokenization cache; it does not assume that a model's KV state can rewind.
+Chat supplies a shared inference lifetime to text and voice registries. Closed lifetimes unregister explicitly; memory pressure can evict retained models. Apple text retains one completed native session, including its tool transcript, with tool invocation rebound to the current turn. Continuation requires the exact committed dialogue and tool exchanges; errors, memory pressure, changed history, tools or instructions invalidate reuse. Downloaded text keeps a bounded exact input-tokenization cache; it does not assume that a model's KV state can rewind. Reviewed profiles may retain a single immutable prefix snapshot inside the helper. Reuse requires exact tokens and session identity, clones native state, preserves full-prompt admission and sampling constraints, and clears on errors or release. The profile bounds retained tokens and logical state bytes. The registry stops and reaps the previous worker before preparing a changed checkpoint or profile; models are not hot-swapped in one production helper.
 
 Live source cards belong to a stable reply ID. A record's first reply owns its card within that conversation; later replies retain their own retrieval evidence without displaying duplicate cards. Late progress cannot enter a different turn. Native chat text measures proposed widths with a separate TextKit layout, leaving the displayed view's layout untouched. Scroll following responds to committed content geometry and pauses while reading or selecting text.
 
@@ -118,6 +118,21 @@ identity and revision. Saved facts are ranked on the independent read-only searc
 bounded body decoding; `ChatMemoryBrowser` retains one 40-fact page. Storage has no 200-fact cap.
 Models decide which explicit facts qualify; tool choice remains a model-quality concern.
 See [Chat tools and context](contributing/chat-tools.md).
+
+`SearchServices` composes the optional saved-memory embedding capability. Apple Natural Language
+is the default; a pinned multilingual E5 download is selectable in Search & Memory. Native SDKs
+stay in `SilliesSearchInference`; `SilliesSearchModels` owns its cancellable helper and shared
+inference admission. `ConversationLibrary` indexes bounded batches through an injected capability.
+Vectors live in a versioned SQLite table, with transactional update/delete invalidation and
+revision-checked publication. Exact model/script spaces never mix. Foreground lookup combines
+keyword and semantic rankings within a 150 ms semantic deadline, then hydrates bounded results.
+The vector index is scoped by companion, provider and embedding space. Ranking streams borrowed
+SQLite blobs, prepares the query once, and retains only bounded identities with deterministic ties.
+Bodies are hydrated after ranking. Schema upgrades preserve vectors transactionally and reject
+orphaned entries rather than silently dropping them. Large or busy indexes fall back to keywords.
+Interactive turns, including Apple's backend, preempt background indexing. Pause, exclusions,
+termination, replacement and memory pressure drain the producer and release its installation lease.
+See [adding a search model](contributing/search-models.md) for extension and validation contracts.
 
 `ChatTurnOperation` joins cancellable text and speech branches. Native text deltas reach a bounded
 phrase assembler and a coalesced UI presentation; whole history arrays are not rebuilt per token.

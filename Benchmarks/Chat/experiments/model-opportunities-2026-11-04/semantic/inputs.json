@@ -1,0 +1,252 @@
+{
+  "documents": [
+    {
+      "id": "rail",
+      "owner": "pogo",
+      "language": "en",
+      "text": "For long-distance travel, I prefer trains to flying."
+    },
+    {
+      "id": "food",
+      "owner": "pogo",
+      "language": "en",
+      "text": "I follow a vegetarian diet and avoid eating meat."
+    },
+    {
+      "id": "work",
+      "owner": "pogo",
+      "language": "en",
+      "text": "My regular working hours are nine in the morning until five in the afternoon."
+    },
+    {
+      "id": "style",
+      "owner": "pogo",
+      "language": "en",
+      "text": "I learn best from concrete examples and step-by-step explanations."
+    },
+    {
+      "id": "garden",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Leila holds the spare key to my garden gate."
+    },
+    {
+      "id": "bike",
+      "owner": "pogo",
+      "language": "en",
+      "text": "My bicycle is kept in the basement storage room."
+    },
+    {
+      "id": "project",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Mina is the courier for the Zephyr delivery project."
+    },
+    {
+      "id": "identifier",
+      "owner": "pogo",
+      "language": "en",
+      "text": "My device inventory identifier is ZX_47_Q9."
+    },
+    {
+      "id": "hobby",
+      "owner": "pogo",
+      "language": "en",
+      "text": "On weekends I enjoy hiking in the mountains."
+    },
+    {
+      "id": "drink",
+      "owner": "pogo",
+      "language": "es",
+      "text": "Mi bebida habitual es el té de menta."
+    },
+    {
+      "id": "units",
+      "owner": "pogo",
+      "language": "de",
+      "text": "Ich bevorzuge metrische Einheiten für Entfernungen und Gewichte."
+    },
+    {
+      "id": "pet",
+      "owner": "pogo",
+      "language": "ro",
+      "text": "Pisica mea se numește Luna."
+    },
+    {
+      "id": "airport",
+      "owner": "pogo",
+      "language": "en",
+      "text": "The airport train platform is numbered nine."
+    },
+    {
+      "id": "restaurant",
+      "owner": "pogo",
+      "language": "en",
+      "text": "The restaurant on Garden Street has a red gate."
+    },
+    {
+      "id": "screen",
+      "owner": "pogo",
+      "language": "en",
+      "text": "The spare computer has a blue desktop background."
+    },
+    {
+      "id": "foreign-project",
+      "owner": "bolt",
+      "language": "en",
+      "text": "Ivo is the courier for the Zephyr delivery project."
+    },
+    {
+      "id": "foreign-secret",
+      "owner": "bolt",
+      "language": "en",
+      "text": "My private laboratory is on Cedar Street."
+    }
+  ],
+  "queries": [
+    {
+      "id": "travel",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Which transport do I favor for a long journey?"
+    },
+    {
+      "id": "diet",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What dietary restrictions should a meal follow for me?"
+    },
+    {
+      "id": "hours",
+      "owner": "pogo",
+      "language": "en",
+      "text": "When am I usually on the clock?"
+    },
+    {
+      "id": "learning",
+      "owner": "pogo",
+      "language": "en",
+      "text": "How should new concepts be taught to me?"
+    },
+    {
+      "id": "key",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Who can unlock my outdoor plot if I lose my key?"
+    },
+    {
+      "id": "bike-location",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Where did I leave my cycle?"
+    },
+    {
+      "id": "exact-code",
+      "owner": "pogo",
+      "language": "en",
+      "text": "ZX_47_Q9"
+    },
+    {
+      "id": "courier",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Who is the courier for Zephyr?"
+    },
+    {
+      "id": "cross-travel",
+      "owner": "pogo",
+      "language": "es",
+      "text": "¿Cómo prefiero viajar entre ciudades?"
+    },
+    {
+      "id": "cross-drink",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What do I usually drink?"
+    },
+    {
+      "id": "missing",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What is the name of my dentist?"
+    },
+    {
+      "id": "foreign",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Where is my private laboratory?"
+    },
+    {
+      "id": "heldout-travel",
+      "owner": "pogo",
+      "language": "de",
+      "text": "Reise ich lieber mit dem Zug oder mit dem Flugzeug?"
+    },
+    {
+      "id": "heldout-diet",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Should my dinner include beef or chicken?"
+    },
+    {
+      "id": "heldout-hours",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What time does my workday end?"
+    },
+    {
+      "id": "heldout-learning",
+      "owner": "pogo",
+      "language": "es",
+      "text": "¿Qué tipo de explicaciones me ayudan a aprender?"
+    },
+    {
+      "id": "heldout-key",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Who has a backup way into my garden?"
+    },
+    {
+      "id": "heldout-bike",
+      "owner": "pogo",
+      "language": "en",
+      "text": "In which part of the building is my two-wheeler stored?"
+    },
+    {
+      "id": "heldout-code",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Find the device with inventory ID ZX_47_Q9."
+    },
+    {
+      "id": "heldout-hobby",
+      "owner": "pogo",
+      "language": "es",
+      "text": "¿Qué me gusta hacer los fines de semana?"
+    },
+    {
+      "id": "heldout-pet",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What is my cat called?"
+    },
+    {
+      "id": "heldout-units",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Which system should distances and weights use?"
+    },
+    {
+      "id": "heldout-missing",
+      "owner": "pogo",
+      "language": "en",
+      "text": "When is my next dentist appointment?"
+    },
+    {
+      "id": "heldout-owner",
+      "owner": "bolt",
+      "language": "en",
+      "text": "Who delivers the Zephyr project parcels?"
+    }
+  ]
+}

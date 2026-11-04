@@ -159,7 +159,8 @@ def model_inventory(root):
     text = json.loads((folder / "text-models.json").read_text())["manifests"]
     voices = json.loads((folder / "tts-models.json").read_text())["manifests"]
     lines = ["| Model | License in catalog | Publisher | Pinned artifacts |", "| --- | --- | --- | --- |"]
-    for manifest in speech + text + voices:
+    search = json.loads((folder / "search-models.json").read_text())["manifests"]
+    for manifest in speech + text + voices + search:
         model = manifest["model"]
         repository = manifest["artifacts"][0]["url"].split("/resolve/")[0]
         revision = model["revision"]

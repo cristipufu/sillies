@@ -72,6 +72,14 @@
       "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit"
     ],
     "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
-    "rationale": "Native checkpoint capacity comes from pinned config.json. 8K working context selected from the November 3 comparison: 192-message continuity was correct and avoided expensive summaries, with about 31 MiB additional peak MLX allocation. A larger forced-compaction case still exceeded the 60-second turn deadline; this is not a long-history latency guarantee. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+    "rationale": "Native checkpoint capacity comes from pinned config.json. 8K working context selected from the November 3 comparison: 192-message continuity was correct and avoided expensive summaries, with about 31 MiB additional peak MLX allocation. A larger forced-compaction case still exceeded the 60-second turn deadline; this is not a long-history latency guarantee. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md. November 4 native cache readiness: enable one exact-prefix snapshot, capped at 2048 tokens and 128 MiB of logical state arrays. Ten matched warm pairs improved median first text from 2.338 to 1.008 seconds. Native recurrent-state, cancellation, release and memory checks passed. A discovered empty-versus-absent tool-schema mismatch was fixed centrally before rerunning production workflows; the formerly rejected late call now reaches the existing application quota handling. See docs/reports/model-readiness-2026-11-04.md for task limitations and initial preparation costs."
+  },
+  "runtime": {
+    "conversationCache": "prefixSnapshot",
+    "chatTemplate": "checkpoint",
+    "prefixSnapshot": {
+      "maximumTokens": 2048,
+      "maximumBytes": 134217728
+    }
   }
 }

@@ -25,6 +25,7 @@ import SilliesTextModels
 
   private static func validate(_ plan: BenchmarkPlan) async throws {
     try await BenchmarkDiagnosticsSelfCheck.run()
+    try BenchmarkToolProfileSelfCheck.run()
     var verified = Set<String>()
     for job in plan.jobs where verified.insert(job.scenario.id).inserted {
       let fixture = try await BenchmarkFixture.create(
@@ -37,6 +38,11 @@ import SilliesTextModels
 
   private static func run(_ plan: BenchmarkPlan) async throws {
     let model = try await BenchmarkModel.prepare(plan)
+    let memorySearch: BenchmarkMemorySearch
+    do { memorySearch = try await BenchmarkMemorySearch.prepare(plan.memorySearch) } catch {
+      await model.stop()
+      throw error
+    }
     let lifetime = TextModelLifetime()
     await model.backend.retain(for: lifetime)
     let events = BenchmarkEvents()
@@ -44,7 +50,7 @@ import SilliesTextModels
       try await events.emit(.model, model.metadata)
       let runner = BenchmarkConversation(
         backend: model.backend, inference: model.inference,
-        events: events, workspace: URL(fileURLWithPath: plan.workspace))
+        events: events, workspace: URL(fileURLWithPath: plan.workspace), memorySearch: memorySearch)
       for job in plan.jobs {
         // The supervisor admits one case at a time, so a batch can stop between cases without
         // discarding a partially evaluated conversation or unloading the model after every case.
@@ -52,9 +58,11 @@ import SilliesTextModels
         try await runner.run(job)
       }
       await lifetime.end()
+      await memorySearch.stop()
       await model.stop()
     } catch {
       await lifetime.end()
+      await memorySearch.stop()
       await model.stop()
       throw error
     }

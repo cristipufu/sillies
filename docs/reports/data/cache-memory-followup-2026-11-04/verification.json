@@ -1,0 +1,14 @@
+{
+  "sourceCommit": "e61c21d16b2d3420b8b8e7001a11649323201e57",
+  "finalCheck": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer make check BUILD_DIR=/tmp/sillies-cache-memory-final-check",
+  "exitCode": 0,
+  "selectedNativeTests": 747,
+  "verifiedNativeRuns": 19,
+  "scaleMode": "Release, synthetic 384-dimensional vectors; three exact-rank queries per size, independently computed scalar oracle; fixture setup outside timing. Final scan diagnostic precedes timed ranking. No concurrent native inference or build.",
+  "scaleCounts": [
+    1000,
+    10000,
+    100000
+  ],
+  "nativeQualityLimits": "See cache-memory-followup-2026-11-04.md. Final Vault payload-only patch has no separate native quality comparison after restoring original global instructions; budget exhausted. All original outcomes, including interruption and unrun cases, are preserved."
+}

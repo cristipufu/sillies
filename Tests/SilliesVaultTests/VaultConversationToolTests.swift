@@ -258,11 +258,10 @@ private func checkGeneralKnowledgeAfterVaultConversation(backend: any Conversati
   await lifetime.end()
 }
 
-@Test func vaultSearchReportsTotalSeparatelyFromItsBoundedResultsWithoutLoadingBodies() async throws
-{
+@Test func vaultSearchReportsOnlyItsBoundedResultsWithoutLoadingBodies() async throws {
   struct Page: Decodable {
     struct Record: Decodable { let recordID: UUID }
-    let totalVaultRecords: Int
+    let totalVaultRecords: Int?
     let returnedRecordCount: Int
     let records: [Record]
   }
@@ -276,7 +275,7 @@ private func checkGeneralKnowledgeAfterVaultConversation(backend: any Conversati
     arguments: Data(#"{"query":"","category":"all"}"#.utf8))
   for text in [result.text, result.briefText] {
     let page = try JSONDecoder().decode(Page.self, from: Data(text.utf8))
-    #expect(page.totalVaultRecords == 17)
+    #expect(page.totalVaultRecords == nil)
     #expect(page.returnedRecordCount == 5)
     #expect(page.records.map(\.recordID) == result.sources.map(\.id))
   }
@@ -292,7 +291,7 @@ private func checkGeneralKnowledgeAfterVaultConversation(backend: any Conversati
     let category: String
     let coverage: String
     let returnedRecordCount: Int
-    let totalVaultRecords: Int
+    let totalVaultRecords: Int?
     let records: [String]
   }
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -308,9 +307,35 @@ private func checkGeneralKnowledgeAfterVaultConversation(backend: any Conversati
     #expect(page.query == "missing topic")
     #expect(page.category == "meetings")
     #expect(page.returnedRecordCount == 0)
-    #expect(page.totalVaultRecords == 1)
+    #expect(page.totalVaultRecords == nil)
     #expect(page.records.isEmpty)
     #expect(!page.coverage.contains("read_vault_record"))
   }
   #expect(result.sources.isEmpty)
+}
+
+@Test func savedLinkSearchDoesNotCountUnrelatedRecordsOrConfuseRecordsWithURLs() async throws {
+  struct Page: Decodable {
+    struct Record: Decodable { let links: [URL] }
+    let category: String
+    let totalVaultRecords: Int?
+    let returnedRecordCount: Int
+    let records: [Record]
+  }
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { removeVaultFixture(directory) }
+  let library = VaultLibrary(directory: directory)
+  var link = savedItem(.stash, app: "Safari", text: "")
+  link.stashedItems = ["https://example.com/one", "https://example.com/two"]
+  let others = (0..<4).map { savedItem(.listen, app: "Meet", text: "Planning \($0)") }
+  _ = try await library.commit(.init(records: ([link] + others).map(VaultRecordWrite.insert)))
+  let result = try await VaultSearchTool(library: library).call(
+    arguments: Data(#"{"query":"","category":"links"}"#.utf8))
+  for text in [result.text, result.briefText] {
+    let page = try JSONDecoder().decode(Page.self, from: Data(text.utf8))
+    #expect(page.category == "links")
+    #expect(page.totalVaultRecords == nil)
+    #expect(page.returnedRecordCount == 1)
+    #expect(page.records.flatMap(\.links).map(\.absoluteString) == link.stashedItems)
+  }
 }

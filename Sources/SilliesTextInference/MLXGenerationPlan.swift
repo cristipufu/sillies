@@ -6,10 +6,10 @@ import SilliesTextModels
 struct MLXGenerationPlan: Sendable {
   let request: TextInferenceRequest
   let parameters: GenerateParameters
-  let tools: [[String: any Sendable]]
+  let tools: [[String: any Sendable]]?
   let maximumInputTokens: Int?
 
-  init(_ request: TextInferenceRequest) throws {
+  init(_ request: TextInferenceRequest, samplingSeed: UInt64? = nil) throws {
     let configuration = request.configuration
     let generation = request.generation
     let task = generation.style.settings(in: configuration.profile.generation)
@@ -25,6 +25,11 @@ struct MLXGenerationPlan: Sendable {
         String(localized: "The text model exceeds this Mac’s memory budget."))
     }
     guard outputTokens <= configuration.contextTokens else { throw TextModelError.contextLimit }
+    if let snapshot = configuration.profile.runtimePolicy.prefixSnapshot,
+      snapshot.maximumBytes > configuration.memoryLimitBytes
+    {
+      throw TextModelError.invalidResponse
+    }
     maximumInputTokens =
       generation.operation == .measure ? nil : configuration.contextTokens - outputTokens
     let sampling = task.sampling
@@ -34,9 +39,10 @@ struct MLXGenerationPlan: Sendable {
       repetitionPenalty: sampling.repetitionPenalty,
       repetitionContextSize: task.repetitionContextTokens)
     parameters.prefill = PrefillParameters(stepSize: configuration.profile.prefill.chunkTokens)
+    parameters.seed = samplingSeed
     self.parameters = parameters
     self.request = request
-    tools = MLXConversationInput.tools(generation)
+    tools = MLXConversationInput.nativeTools(generation)
   }
 
   var templateContext: [String: any Sendable] {
@@ -46,5 +52,9 @@ struct MLXGenerationPlan: Sendable {
     request.configuration.profile.runtimePolicy.conversationCache == .nativeSession
       && request.generation.style == .conversation && request.generation.sessionID != nil
       && request.generation.messages.allSatisfy { $0.reasoningContent == nil }
+  }
+  var usesPrefixSnapshot: Bool {
+    request.configuration.profile.runtimePolicy.conversationCache == .prefixSnapshot
+      && request.generation.style == .conversation && request.generation.sessionID != nil
   }
 }

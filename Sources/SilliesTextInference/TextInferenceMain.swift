@@ -12,25 +12,11 @@ import SilliesTextModels
     if let library = Bundle.main.url(forResource: "mlx", withExtension: "metallib") {
       GPU.metallib = library
     }
-    if CommandLine.arguments.count == 3, CommandLine.arguments[1] == "--inspect-generation" {
-      do {
-        try await TextGenerationInspection.run(
-          requestURL: URL(fileURLWithPath: CommandLine.arguments[2]))
-      } catch {
-        fputs("Synthetic generation inspection failed: \(error)\n", stderr)
-        exit(EXIT_FAILURE)
-      }
-      return
-    }
-    if CommandLine.arguments.count == 3, CommandLine.arguments[1] == "--inspect-tokenizer" {
-      do {
-        try await TextTokenizerInspection.run(
-          requestURL: URL(fileURLWithPath: CommandLine.arguments[2]))
-      } catch {
-        fputs("Tokenizer inspection failed: \(error)\n", stderr)
-        exit(EXIT_FAILURE)
-      }
-      return
+    do {
+      if try await TextInferenceInspection.runIfRequested(CommandLine.arguments) { return }
+    } catch {
+      fputs("Synthetic text inference inspection failed: \(error)\n", stderr)
+      exit(EXIT_FAILURE)
     }
     if CommandLine.arguments.contains("--self-test") {
       let result = (MLXArray([1, 2, 3]) * 2).sum().item(Int.self)
@@ -44,6 +30,8 @@ import SilliesTextModels
         try TextRejectedToolSelfCheck.run()
         try await TextInputSelfCheck.run()
         try await TextTemplateSelfCheck.run()
+        try TextPrefixCacheSelfCheck.run()
+        try TextSamplingDiagnosticSelfCheck.run()
       } catch {
         fputs("Native conversation check failed: \(error)\n", stderr)
         exit(EXIT_FAILURE)
@@ -73,7 +61,17 @@ import SilliesTextModels
     }
     _ = fcntl(STDOUT_FILENO, F_SETNOSIGPIPE, 1)
     _ = fcntl(STDOUT_FILENO, F_SETFL, O_NONBLOCK)
-    let runtime = MLXTextRuntime()
+    let runtime: MLXTextRuntime
+    do {
+      let reproduction = try TextInferenceInspection.reproduction(CommandLine.arguments)
+      runtime = MLXTextRuntime(
+        reproduction: reproduction,
+        inputObserver: reproduction.samplingSeed == nil
+          ? nil : TextInferenceInspection.recordFingerprint)
+    } catch {
+      fputs("Invalid native sampling diagnostic: \(error)\n", stderr)
+      exit(EXIT_FAILURE)
+    }
     while true {
       let request: TextInferenceRequest
       do {

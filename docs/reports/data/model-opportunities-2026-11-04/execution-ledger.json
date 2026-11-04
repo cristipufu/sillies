@@ -1,0 +1,1013 @@
+{
+  "limitSeconds": 3600,
+  "runs": [
+    {
+      "index": 0,
+      "variant": "contract-baseline-apple",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "apple"
+      ],
+      "startedAt": "2026-11-04T05:57:21.449930+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 38.59781987499446,
+      "log": "batch-00-contract-baseline-apple.log",
+      "logSHA256": "c21a53764fe0d641c0bb3fab01ead5c6853285ec8f33c860e3ce2d2c47353d6c"
+    },
+    {
+      "index": 1,
+      "variant": "contract-baseline-gemma-4-12b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "gemma-4-12b"
+      ],
+      "startedAt": "2026-11-04T05:58:00.107297+00:00",
+      "reservedSeconds": 180,
+      "status": "deadline-or-interruption",
+      "exitCode": -2,
+      "elapsedSeconds": 170.2964341660263,
+      "log": "batch-01-contract-baseline-gemma-4-12b.log",
+      "logSHA256": "32fbe9a21637606dcbd83c666e13114cf921bc17922156d9535ac2b530dbf4fb"
+    },
+    {
+      "index": 2,
+      "variant": "contract-baseline-gemma-4-12b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "gemma-4-12b"
+      ],
+      "startedAt": "2026-11-04T06:01:49.503776+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 44.894993250025436,
+      "log": "batch-02-contract-baseline-gemma-4-12b.log",
+      "logSHA256": "d261ac17ae4079e43d042d45e99ce39d44e14dc323a791135b38896944aa9146"
+    },
+    {
+      "index": 3,
+      "variant": "contract-baseline-gemma-4-26b-a4b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "gemma-4-26b-a4b"
+      ],
+      "startedAt": "2026-11-04T06:02:34.475101+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 45.30053179099923,
+      "log": "batch-03-contract-baseline-gemma-4-26b-a4b.log",
+      "logSHA256": "9de96ce2ffef521218fb05a2a7be7edfa8436df13a0b2295ba22289afd22fa7d"
+    },
+    {
+      "index": 4,
+      "variant": "contract-baseline-gemma-4-26b-a4b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "gemma-4-26b-a4b"
+      ],
+      "startedAt": "2026-11-04T06:03:19.834218+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 35.13449179101735,
+      "log": "batch-04-contract-baseline-gemma-4-26b-a4b.log",
+      "logSHA256": "9604e3d935e878996220333de3a9cd09b09d5d1b04eb1e6eb2fb17becf111e19"
+    },
+    {
+      "index": 5,
+      "variant": "contract-baseline-gemma-4-e4b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "gemma-4-e4b"
+      ],
+      "startedAt": "2026-11-04T06:03:55.024941+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 27.30006558302557,
+      "log": "batch-05-contract-baseline-gemma-4-e4b.log",
+      "logSHA256": "8a404018e5c88a617832bd23351adbaa80936af790373c347906dc014c21f560"
+    },
+    {
+      "index": 6,
+      "variant": "contract-baseline-granite-4.2-3b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "granite-4.2-3b"
+      ],
+      "startedAt": "2026-11-04T06:04:22.372298+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 26.178819500026293,
+      "log": "batch-06-contract-baseline-granite-4.2-3b.log",
+      "logSHA256": "94310db2039b3b4d2da55874c9cf6a70cc3ac1daaba54ff0ecb78f5eb94e3512"
+    },
+    {
+      "index": 7,
+      "variant": "contract-baseline-granite-4.2-8b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "granite-4.2-8b"
+      ],
+      "startedAt": "2026-11-04T06:04:48.597457+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 44.419887833006214,
+      "log": "batch-07-contract-baseline-granite-4.2-8b.log",
+      "logSHA256": "50286b3729f2de069e51de607446f58f709d48fc95defb85c682b32764a4f917"
+    },
+    {
+      "index": 8,
+      "variant": "contract-baseline-granite-4.2-8b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "granite-4.2-8b"
+      ],
+      "startedAt": "2026-11-04T06:05:33.086277+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 30.76027199998498,
+      "log": "batch-08-contract-baseline-granite-4.2-8b.log",
+      "logSHA256": "61c5ce5eb68a2c5c2e4b9602d4f86dd6f9be3358edeaf3874667412fb095e41a"
+    },
+    {
+      "index": 9,
+      "variant": "contract-baseline-lfm-2.5-2.6b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "lfm-2.5-2.6b"
+      ],
+      "startedAt": "2026-11-04T06:06:03.913699+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 52.597867833974306,
+      "log": "batch-09-contract-baseline-lfm-2.5-2.6b.log",
+      "logSHA256": "7d42384d62dd4012d42f9687061f422bb6a518ce219c6f6b698e5c2f7a2a2ccb"
+    },
+    {
+      "index": 10,
+      "variant": "contract-baseline-lfm-2.5-2.6b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "lfm-2.5-2.6b"
+      ],
+      "startedAt": "2026-11-04T06:06:56.573291+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 44.949094958021306,
+      "log": "batch-10-contract-baseline-lfm-2.5-2.6b.log",
+      "logSHA256": "6635023fb66cc778415b414ec67b97cae1dec70c225e12053c39da7d5aa27c56"
+    },
+    {
+      "index": 11,
+      "variant": "contract-baseline-lfm-2.5-2.6b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "lfm-2.5-2.6b"
+      ],
+      "startedAt": "2026-11-04T06:07:41.577905+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 40.61811466701329,
+      "log": "batch-11-contract-baseline-lfm-2.5-2.6b.log",
+      "logSHA256": "932ff4ea48e7ac4d5b68bd5702f8c04405892409cc41383fd598c5ec4b817e48"
+    },
+    {
+      "index": 12,
+      "variant": "contract-baseline-lfm-2.5-24b-a2b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "lfm-2.5-24b-a2b"
+      ],
+      "startedAt": "2026-11-04T06:08:22.259081+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 76.07124395901337,
+      "log": "batch-12-contract-baseline-lfm-2.5-24b-a2b.log",
+      "logSHA256": "86f05d2fad8588feee5f172c6645eccbb4ceee9c2ae6c28d3994522c69fc99c7"
+    },
+    {
+      "index": 13,
+      "variant": "contract-baseline-lfm-2.5-24b-a2b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "lfm-2.5-24b-a2b"
+      ],
+      "startedAt": "2026-11-04T06:09:38.380394+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 42.0497122919769,
+      "log": "batch-13-contract-baseline-lfm-2.5-24b-a2b.log",
+      "logSHA256": "d27bf737fd8673c4414e276bbf945a27193ba7f2a3d7fe525621270bd1fd790b"
+    },
+    {
+      "index": 14,
+      "variant": "contract-baseline-lfm-2.5-24b-a2b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "lfm-2.5-24b-a2b"
+      ],
+      "startedAt": "2026-11-04T06:10:20.493979+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 33.797618750017136,
+      "log": "batch-14-contract-baseline-lfm-2.5-24b-a2b.log",
+      "logSHA256": "bf5acd5c1608176b3f619aa9d33ea3d70725228920b9fa8b8e47a94f543bcc28"
+    },
+    {
+      "index": 15,
+      "variant": "contract-baseline-ministral-3-8b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "ministral-3-8b"
+      ],
+      "startedAt": "2026-11-04T06:10:54.429356+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 42.5880355410045,
+      "log": "batch-15-contract-baseline-ministral-3-8b.log",
+      "logSHA256": "3e1aeb955d72e5e2e04c52068deb638fa9024f664d88118829f69808a1287b01"
+    },
+    {
+      "index": 16,
+      "variant": "contract-baseline-ministral-3-8b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "ministral-3-8b"
+      ],
+      "startedAt": "2026-11-04T06:11:37.075997+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 32.650400042010006,
+      "log": "batch-16-contract-baseline-ministral-3-8b.log",
+      "logSHA256": "d25c8e303ce940948164b0ed6feabe0586eded38f2add34b249760316c3c4ec4"
+    },
+    {
+      "index": 17,
+      "variant": "contract-baseline-nemotron-3.5-bolt-e4b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "nemotron-3.5-bolt-e4b"
+      ],
+      "startedAt": "2026-11-04T06:12:09.782279+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 36.762470375048,
+      "log": "batch-17-contract-baseline-nemotron-3.5-bolt-e4b.log",
+      "logSHA256": "bb39045f9117ca77bd524a261973c184c2a082c65ae5b31505aaaa88f81408ab"
+    },
+    {
+      "index": 18,
+      "variant": "contract-baseline-qwen-3.5-2b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "qwen-3.5-2b"
+      ],
+      "startedAt": "2026-11-04T06:12:46.599187+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 21.875268500007223,
+      "log": "batch-18-contract-baseline-qwen-3.5-2b.log",
+      "logSHA256": "85a0feaf5104da8adc88bc403b5adbcc887b364359fb709c07022224cd04a0a7"
+    },
+    {
+      "index": 19,
+      "variant": "contract-baseline-qwen-3.5-4b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "qwen-3.5-4b"
+      ],
+      "startedAt": "2026-11-04T06:13:08.532937+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 42.85813020798378,
+      "log": "batch-19-contract-baseline-qwen-3.5-4b.log",
+      "logSHA256": "b110b355994842ea930ce1018f701a56d8f1e68d97b3658c454fdf19352753df"
+    },
+    {
+      "index": 20,
+      "variant": "contract-baseline-qwen-3.5-4b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "qwen-3.5-4b"
+      ],
+      "startedAt": "2026-11-04T06:13:51.453495+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 19.860251042002346,
+      "log": "batch-20-contract-baseline-qwen-3.5-4b.log",
+      "logSHA256": "d1a389518a19bf8d26095bfddafef1699c2ccec116149b49e1ba3440544af1d0"
+    },
+    {
+      "index": 21,
+      "variant": "contract-baseline-qwen-3.5-9b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "qwen-3.5-9b"
+      ],
+      "startedAt": "2026-11-04T06:14:11.375267+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 44.562928792031016,
+      "log": "batch-21-contract-baseline-qwen-3.5-9b.log",
+      "logSHA256": "f5bb315d1ca9a604888499c9bdfea62aa74b1325dc03f54ed38cae4a84958a87"
+    },
+    {
+      "index": 22,
+      "variant": "contract-baseline-qwen-3.5-9b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "baseline",
+        "qwen-3.5-9b"
+      ],
+      "startedAt": "2026-11-04T06:14:56.001010+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 31.226085416041315,
+      "log": "batch-22-contract-baseline-qwen-3.5-9b.log",
+      "logSHA256": "b373a23d84550a68146d571b21246a221afd2d05dca64f04cad2da561472345f"
+    },
+    {
+      "index": 23,
+      "variant": "semantic",
+      "command": [
+        "/tmp/sillies-model-opportunities-split/ChatModelBenchmark",
+        "--inspect-memories",
+        "Benchmarks/Chat/experiments/model-opportunities-2026-11-04/semantic/inputs.json"
+      ],
+      "startedAt": "2026-11-04T06:19:02.436769+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 1.5202357500093058,
+      "log": "batch-23-semantic.log",
+      "logSHA256": "ed741c344bcb8debe50ecf7a3df491d434a017b37c46314adfc4e6696ef2be95"
+    },
+    {
+      "index": 24,
+      "variant": "cache-screen-gemma-4-e4b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/cache_screen.py",
+        "gemma-4-e4b"
+      ],
+      "startedAt": "2026-11-04T06:20:31.366918+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 16.919397082994692,
+      "log": "batch-24-cache-screen-gemma-4-e4b.log",
+      "logSHA256": "d9edd4439d0912bf07acaa881022dee1bc238a1596302e0d29f7e043ffe64226"
+    },
+    {
+      "index": 25,
+      "variant": "cache-screen-gemma-4-12b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/cache_screen.py",
+        "gemma-4-12b"
+      ],
+      "startedAt": "2026-11-04T06:20:48.351321+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 81.35300912498496,
+      "log": "batch-25-cache-screen-gemma-4-12b.log",
+      "logSHA256": "c71149c7c3c326b4a81eb949b02cdb5907d9f7306b16388763b0dfa931adcb92"
+    },
+    {
+      "index": 26,
+      "variant": "cache-screen-lfm-2.5-2.6b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/cache_screen.py",
+        "lfm-2.5-2.6b"
+      ],
+      "startedAt": "2026-11-04T06:22:09.756820+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 36.71274300001096,
+      "log": "batch-26-cache-screen-lfm-2.5-2.6b.log",
+      "logSHA256": "9590da00f1b1addde36cd5b1323b317d15bfc372969f20216a6e26563c348c00"
+    },
+    {
+      "index": 27,
+      "variant": "cache-screen-nemotron-3.5-bolt-e4b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/cache_screen.py",
+        "nemotron-3.5-bolt-e4b"
+      ],
+      "startedAt": "2026-11-04T06:22:46.522123+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 16.698905833996832,
+      "log": "batch-27-cache-screen-nemotron-3.5-bolt-e4b.log",
+      "logSHA256": "9cb1dfdfe11df1e019fb1b63ebb3e46e24de91acbad02d6752ed855c0e37d98e"
+    },
+    {
+      "index": 28,
+      "variant": "cache-screen-qwen-3.5-2b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/cache_screen.py",
+        "qwen-3.5-2b"
+      ],
+      "startedAt": "2026-11-04T06:23:03.274010+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 12.440854375017807,
+      "log": "batch-28-cache-screen-qwen-3.5-2b.log",
+      "logSHA256": "8d732b7fc81bdef33bf89ba5729df06d73a0c889af4c54458cc97f03a0292387"
+    },
+    {
+      "index": 29,
+      "variant": "cache-screen-qwen-3.5-9b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/cache_screen.py",
+        "qwen-3.5-9b"
+      ],
+      "startedAt": "2026-11-04T06:23:15.768796+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 58.77566145797027,
+      "log": "batch-29-cache-screen-qwen-3.5-9b.log",
+      "logSHA256": "e5151b168838f0ac9e20672b5923ce06b4ef45d045162c28f15dff4c3c26cda2"
+    },
+    {
+      "index": 30,
+      "variant": "contract-split-granite-4.2-3b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "split",
+        "granite-4.2-3b"
+      ],
+      "startedAt": "2026-11-04T06:24:45.296139+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 37.70633941696724,
+      "log": "batch-30-contract-split-granite-4.2-3b.log",
+      "logSHA256": "30672dfaaf42d4375d29525c2f1180656c530e94674ba1a181b7b229938ea8e7"
+    },
+    {
+      "index": 31,
+      "variant": "contract-split-ministral-3-8b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "split",
+        "ministral-3-8b"
+      ],
+      "startedAt": "2026-11-04T06:25:23.056735+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 45.28450154198799,
+      "log": "batch-31-contract-split-ministral-3-8b.log",
+      "logSHA256": "809538c690dec64b91cb7de9d772ac8b7c5285fdc21f88e6da5d2010129c4c16"
+    },
+    {
+      "index": 32,
+      "variant": "contract-split-ministral-3-8b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "split",
+        "ministral-3-8b"
+      ],
+      "startedAt": "2026-11-04T06:26:08.401433+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 14.418357749993447,
+      "log": "batch-32-contract-split-ministral-3-8b.log",
+      "logSHA256": "642962b6f02f542915e7ea064e63c198ee20ecc808512e7e801cc4bd6cf47297"
+    },
+    {
+      "index": 33,
+      "variant": "contract-split-gemma-4-12b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "split",
+        "gemma-4-12b"
+      ],
+      "startedAt": "2026-11-04T06:26:22.865954+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 51.931455500016455,
+      "log": "batch-33-contract-split-gemma-4-12b.log",
+      "logSHA256": "911830df109da33658254e8d08e7fffe14be0b0862d3f903a179a60d36340e18"
+    },
+    {
+      "index": 34,
+      "variant": "contract-split-gemma-4-12b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "split",
+        "gemma-4-12b"
+      ],
+      "startedAt": "2026-11-04T06:27:14.848586+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 43.11523220798699,
+      "log": "batch-34-contract-split-gemma-4-12b.log",
+      "logSHA256": "c2cf68fb355ad80099684aea82df117716075f8f37cfc42d336bf87b02492eb5"
+    },
+    {
+      "index": 35,
+      "variant": "contract-split-gemma-4-12b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "split",
+        "gemma-4-12b"
+      ],
+      "startedAt": "2026-11-04T06:27:58.031878+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 49.90614745899802,
+      "log": "batch-35-contract-split-gemma-4-12b.log",
+      "logSHA256": "d8e023a9f52e6daf4ca74948aabc8dec7a68f6b0b2f1f75b9b821b856642c501"
+    },
+    {
+      "index": 36,
+      "variant": "cache-confirm-gemma-4-e4b-0",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/cache_screen.py",
+        "gemma-4-e4b",
+        "0",
+        "5"
+      ],
+      "startedAt": "2026-11-04T06:31:09.469952+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 26.484669915982522,
+      "log": "batch-36-cache-confirm-gemma-4-e4b-0.log",
+      "logSHA256": "01a5a8bc18268c2c894cafec2d7c8de7da14208e2b2f503d4a62003e84e22043"
+    },
+    {
+      "index": 37,
+      "variant": "cache-confirm-gemma-4-e4b-1",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/cache_screen.py",
+        "gemma-4-e4b",
+        "1",
+        "5"
+      ],
+      "startedAt": "2026-11-04T06:31:36.009149+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 28.79143791599199,
+      "log": "batch-37-cache-confirm-gemma-4-e4b-1.log",
+      "logSHA256": "03bd639d3593d8659119a99bacd8a678808299241545924a4a45a07f28f4f303"
+    },
+    {
+      "index": 38,
+      "variant": "cache-controls-gemma-4-e4b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/cache_controls.py",
+        "gemma-4-e4b"
+      ],
+      "startedAt": "2026-11-04T06:32:04.855601+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 30.316521707980428,
+      "log": "batch-38-cache-controls-gemma-4-e4b.log",
+      "logSHA256": "1c8bbb27e5101b520ffdfc19412a94625eb3178380df0676d84de43eb232a05c"
+    },
+    {
+      "index": 39,
+      "variant": "cache-confirm-nemotron-3.5-bolt-e4b-0",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/cache_screen.py",
+        "nemotron-3.5-bolt-e4b",
+        "0",
+        "5"
+      ],
+      "startedAt": "2026-11-04T06:32:35.232947+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 28.082239250012208,
+      "log": "batch-39-cache-confirm-nemotron-3.5-bolt-e4b-0.log",
+      "logSHA256": "e881a91c2e141933f91573990a44f3bd22b2791661907d25ad60e3ac5788791d"
+    },
+    {
+      "index": 40,
+      "variant": "cache-confirm-nemotron-3.5-bolt-e4b-1",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/cache_screen.py",
+        "nemotron-3.5-bolt-e4b",
+        "1",
+        "5"
+      ],
+      "startedAt": "2026-11-04T06:33:03.385131+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 28.429825792030897,
+      "log": "batch-40-cache-confirm-nemotron-3.5-bolt-e4b-1.log",
+      "logSHA256": "d0f260a940286a3c6bf883ef59fb2c5abc0360b1d2e257e0a772b99678abd982"
+    },
+    {
+      "index": 41,
+      "variant": "cache-controls-nemotron-3.5-bolt-e4b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/cache_controls.py",
+        "nemotron-3.5-bolt-e4b"
+      ],
+      "startedAt": "2026-11-04T06:33:31.862729+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 31.40750825003488,
+      "log": "batch-41-cache-controls-nemotron-3.5-bolt-e4b.log",
+      "logSHA256": "cb73a12efe79e942996cab1fb4be14fc8badccc5e76abd384aba97b1fcdbf7a8"
+    },
+    {
+      "index": 42,
+      "variant": "contract-split-wired-granite-4.2-3b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "split-wired",
+        "granite-4.2-3b"
+      ],
+      "startedAt": "2026-11-04T06:34:03.371837+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 30.57003933301894,
+      "log": "batch-42-contract-split-wired-granite-4.2-3b.log",
+      "logSHA256": "0f240b35373135da30d18ee33b81491e493a3e7d86bf3f67aea665c3eaa2c9f9"
+    },
+    {
+      "index": 43,
+      "variant": "contract-split-wired-ministral-3-8b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "split-wired",
+        "ministral-3-8b"
+      ],
+      "startedAt": "2026-11-04T06:34:33.996013+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 45.274935416993685,
+      "log": "batch-43-contract-split-wired-ministral-3-8b.log",
+      "logSHA256": "d6818aca02373ea95a95f4da3277a2b934d7b3ade563dec13bc17dc525c10b17"
+    },
+    {
+      "index": 44,
+      "variant": "contract-split-wired-ministral-3-8b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "split-wired",
+        "ministral-3-8b"
+      ],
+      "startedAt": "2026-11-04T06:35:19.332432+00:00",
+      "reservedSeconds": 180,
+      "status": "failed",
+      "exitCode": 1,
+      "elapsedSeconds": 0.29155358305433765,
+      "log": "batch-44-contract-split-wired-ministral-3-8b.log",
+      "logSHA256": "f867bfe66157afd04d2c5496a571f6a8f0777d87ba49f46b6585a61bd232fcd4"
+    },
+    {
+      "index": 45,
+      "variant": "contract-split-wired-ministral-3-8b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "split-wired",
+        "ministral-3-8b"
+      ],
+      "startedAt": "2026-11-04T06:38:17.208343+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 25.68656716699479,
+      "log": "batch-45-contract-split-wired-ministral-3-8b.log",
+      "logSHA256": "ecc12c9191ce513c84ea1692b593aea78839b6e3386bbfad7e41edb2266d3708"
+    },
+    {
+      "index": 46,
+      "variant": "contract-split-wired-gemma-4-12b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "split-wired",
+        "gemma-4-12b"
+      ],
+      "startedAt": "2026-11-04T06:38:42.944548+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 66.82284866698319,
+      "log": "batch-46-contract-split-wired-gemma-4-12b.log",
+      "logSHA256": "4939a78131e4d69a342668ae851b13019c15366134fc106f18b91bbbd1a65e0b"
+    },
+    {
+      "index": 47,
+      "variant": "contract-split-wired-gemma-4-12b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "split-wired",
+        "gemma-4-12b"
+      ],
+      "startedAt": "2026-11-04T06:39:49.815030+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 41.0541782079963,
+      "log": "batch-47-contract-split-wired-gemma-4-12b.log",
+      "logSHA256": "afda83d76c29e869f7aa5d5a6de3b38e9116edb14493cfecd5593d8e9f19c203"
+    },
+    {
+      "index": 48,
+      "variant": "contract-split-wired-gemma-4-12b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "split-wired",
+        "gemma-4-12b"
+      ],
+      "startedAt": "2026-11-04T06:40:30.931867+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 50.36551179102389,
+      "log": "batch-48-contract-split-wired-gemma-4-12b.log",
+      "logSHA256": "8d7d50a95a7f3f3a690fe71bbf644569e78b8c7b270c42f3a9a3de79f1df90d2"
+    },
+    {
+      "index": 49,
+      "variant": "prefix-gemma-4-26b-a4b",
+      "command": [
+        "/tmp/sillies-model-opportunities-prefix/SilliesTextInference.app/Contents/MacOS/SilliesTextInference",
+        "--inspect-prefix-cache",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/prefix-gemma-4-26b-a4b.json"
+      ],
+      "startedAt": "2026-11-04T06:42:07.549045+00:00",
+      "reservedSeconds": 180,
+      "status": "failed",
+      "exitCode": -5,
+      "elapsedSeconds": 6.7271530000143684,
+      "log": "batch-49-prefix-gemma-4-26b-a4b.log",
+      "logSHA256": "31ae73cc87e74cfefb40e8ea2cb34e17ec74233351520339a45930485b5ec7c5"
+    },
+    {
+      "index": 50,
+      "variant": "prefix-lfm-2.5-24b-a2b",
+      "command": [
+        "/tmp/sillies-model-opportunities-prefix/SilliesTextInference.app/Contents/MacOS/SilliesTextInference",
+        "--inspect-prefix-cache",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/prefix-lfm-2.5-24b-a2b.json"
+      ],
+      "startedAt": "2026-11-04T06:42:14.342465+00:00",
+      "reservedSeconds": 180,
+      "status": "failed",
+      "exitCode": -5,
+      "elapsedSeconds": 5.3339389160391875,
+      "log": "batch-50-prefix-lfm-2.5-24b-a2b.log",
+      "logSHA256": "f5df5a3837c625c802a88cc27492f30f7299d960fbe8c0823bc1d61ea3f14d6f"
+    },
+    {
+      "index": 51,
+      "variant": "prefix-qwen-3.5-4b",
+      "command": [
+        "/tmp/sillies-model-opportunities-prefix/SilliesTextInference.app/Contents/MacOS/SilliesTextInference",
+        "--inspect-prefix-cache",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/prefix-qwen-3.5-4b.json"
+      ],
+      "startedAt": "2026-11-04T06:42:19.741341+00:00",
+      "reservedSeconds": 180,
+      "status": "failed",
+      "exitCode": -5,
+      "elapsedSeconds": 3.358040708990302,
+      "log": "batch-51-prefix-qwen-3.5-4b.log",
+      "logSHA256": "31ae73cc87e74cfefb40e8ea2cb34e17ec74233351520339a45930485b5ec7c5"
+    },
+    {
+      "index": 52,
+      "variant": "prefix-batched-gemma-4-26b-a4b",
+      "command": [
+        "/tmp/sillies-model-opportunities-prefix/SilliesTextInference.app/Contents/MacOS/SilliesTextInference",
+        "--inspect-prefix-cache",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/prefix-gemma-4-26b-a4b.json"
+      ],
+      "startedAt": "2026-11-04T06:44:04.883954+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 35.547172375023365,
+      "log": "batch-52-prefix-batched-gemma-4-26b-a4b.log",
+      "logSHA256": "468324e19367cf6b225650593bd0ac580cd4afc6e3560bfcf164f7503fe7080a"
+    },
+    {
+      "index": 53,
+      "variant": "prefix-batched-lfm-2.5-24b-a2b",
+      "command": [
+        "/tmp/sillies-model-opportunities-prefix/SilliesTextInference.app/Contents/MacOS/SilliesTextInference",
+        "--inspect-prefix-cache",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/prefix-lfm-2.5-24b-a2b.json"
+      ],
+      "startedAt": "2026-11-04T06:44:40.496538+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 31.76176633295836,
+      "log": "batch-53-prefix-batched-lfm-2.5-24b-a2b.log",
+      "logSHA256": "92f30d20f9b163eb492b7b342428ebac1b41ddd9e1669aadf7e55257eea9acec"
+    },
+    {
+      "index": 54,
+      "variant": "prefix-batched-qwen-3.5-4b",
+      "command": [
+        "/tmp/sillies-model-opportunities-prefix/SilliesTextInference.app/Contents/MacOS/SilliesTextInference",
+        "--inspect-prefix-cache",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/prefix-qwen-3.5-4b.json"
+      ],
+      "startedAt": "2026-11-04T06:45:12.323141+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 35.586568083032034,
+      "log": "batch-54-prefix-batched-qwen-3.5-4b.log",
+      "logSHA256": "c93b89b62f3d5373d031322f43b5508da1a90ec9b8a5a1c79ca9e3974a19874b"
+    },
+    {
+      "index": 55,
+      "variant": "contract-cache-app-gemma-4-e4b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "cache-app",
+        "gemma-4-e4b"
+      ],
+      "startedAt": "2026-11-04T06:48:39.702815+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 29.37912508303998,
+      "log": "batch-55-contract-cache-app-gemma-4-e4b.log",
+      "logSHA256": "d7df0582c3225e3eb2abdd4e828bf2c3dc1413812539ab38eac65a2bd364e715"
+    },
+    {
+      "index": 56,
+      "variant": "contract-cache-app-nemotron-3.5-bolt-e4b",
+      "command": [
+        "python3",
+        "-B",
+        "/Users/cristian.pufu/Documents/GitHub/sillies-macos/build/chat-benchmarks/model-opportunities-2026-11-04/run_contract.py",
+        "cache-app",
+        "nemotron-3.5-bolt-e4b"
+      ],
+      "startedAt": "2026-11-04T06:49:09.135997+00:00",
+      "reservedSeconds": 180,
+      "status": "completed",
+      "exitCode": 0,
+      "elapsedSeconds": 37.18765224999515,
+      "log": "batch-56-contract-cache-app-nemotron-3.5-bolt-e4b.log",
+      "logSHA256": "174d76faa49796e98a3bef05878fb81b49eb34f58e4181200ec3cf845ea3e9f2"
+    }
+  ]
+}

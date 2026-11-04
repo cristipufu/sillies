@@ -1,0 +1,66 @@
+[
+  {
+    "run": "evidence-contract-apple-baseline-11",
+    "verifiedSearchResults": 6
+  },
+  {
+    "run": "evidence-contract-apple-baseline-29",
+    "verifiedSearchResults": 6
+  },
+  {
+    "run": "evidence-contract-apple-candidate-11",
+    "verifiedSearchResults": 6
+  },
+  {
+    "run": "evidence-contract-apple-candidate-29",
+    "verifiedSearchResults": 6
+  },
+  {
+    "run": "evidence-contract-gemma-4-26b-a4b-baseline-11",
+    "verifiedSearchResults": 7
+  },
+  {
+    "run": "evidence-contract-gemma-4-26b-a4b-baseline-29",
+    "verifiedSearchResults": 7
+  },
+  {
+    "run": "evidence-contract-gemma-4-26b-a4b-candidate-11",
+    "verifiedSearchResults": 7
+  },
+  {
+    "run": "evidence-contract-gemma-4-26b-a4b-candidate-29",
+    "verifiedSearchResults": 5
+  },
+  {
+    "run": "evidence-contract-lfm-2.5-24b-a2b-baseline-11",
+    "verifiedSearchResults": 11
+  },
+  {
+    "run": "evidence-contract-lfm-2.5-24b-a2b-baseline-29",
+    "verifiedSearchResults": 10
+  },
+  {
+    "run": "evidence-contract-lfm-2.5-24b-a2b-candidate-11",
+    "verifiedSearchResults": 11
+  },
+  {
+    "run": "evidence-contract-lfm-2.5-24b-a2b-candidate-29",
+    "verifiedSearchResults": 11
+  },
+  {
+    "run": "evidence-contract-qwen-3.5-9b-baseline-11",
+    "verifiedSearchResults": 4
+  },
+  {
+    "run": "evidence-contract-qwen-3.5-9b-baseline-29",
+    "verifiedSearchResults": 3
+  },
+  {
+    "run": "evidence-contract-qwen-3.5-9b-candidate-11",
+    "verifiedSearchResults": 4
+  },
+  {
+    "run": "evidence-contract-qwen-3.5-9b-candidate-29",
+    "verifiedSearchResults": 3
+  }
+]

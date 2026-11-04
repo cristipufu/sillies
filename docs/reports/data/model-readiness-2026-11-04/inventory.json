@@ -1,0 +1,17 @@
+{
+  "study": "model-readiness-2026-11-04",
+  "baselineCommit": "e61c21d16b2d3420b8b8e7001a11649323201e57",
+  "nativeSeconds": 2564.5993243281846,
+  "limitsUnchanged": true,
+  "enabledPrefixProfiles": [
+    "gemma-4-26b-a4b",
+    "lfm-2.5-24b-a2b"
+  ],
+  "withheldPrefixProfiles": [
+    "qwen-3.5-4b"
+  ],
+  "semanticProductEnabled": false,
+  "splitMemoryToolsEnabled": false,
+  "verification": "make check passed; all published comparison audits reproduce",
+  "reviewer": "Implementing agent; not independent or blinded"
+}

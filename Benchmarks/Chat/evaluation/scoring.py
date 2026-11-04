@@ -45,7 +45,8 @@ def check_rule(rule: dict, turn: dict, tools: list[dict]) -> dict:
         passed, observed = any(value in values for value in actual), actual
     elif kind in {"memory_contains", "memory_absent"}:
         present = any(value.casefold() in fact for value in values for fact in facts)
-        passed, observed = present if kind == "memory_contains" else not present, facts
+        matches = present if kind == "memory_contains" else not present
+        passed, observed = isinstance(turn.get("memories"), list) and matches, facts
     elif kind == "source_includes":
         observed = turn.get("sources", [])
         passed = {value.casefold() for value in values} <= {value.casefold() for value in observed}
@@ -54,9 +55,12 @@ def check_rule(rule: dict, turn: dict, tools: list[dict]) -> dict:
     elif kind == "compaction_calls_at_most":
         observed = turn.get("compactionCalls")
         passed = isinstance(observed, int) and 0 <= observed <= int(values[0])
-    elif kind == "retained_context_omits":
+    elif kind in {"retained_context_omits", "initial_context_omits"}:
         requests = turn.get("requests", [])
-        observed = [message["content"] for message in requests[-1]["messages"]] if requests else []
+        request = requests[0 if kind == "initial_context_omits" else -1] if requests else None
+        observed = [message["content"] for message in request["messages"]] if request else []
+        if request and kind == "initial_context_omits":
+            observed = [request.get("instructions", "")] + observed
         passed = bool(requests) and all(value.casefold() not in text.casefold() for value in values for text in observed)
     else:
         raise ValueError(f"Unknown scoring rule: {kind}")
@@ -75,7 +79,7 @@ def evaluate(job: dict, events: list[dict], failure: str | None) -> dict:
         if observed is None:
             observed = {"position": {"job": job["id"], "turn": index}, "input": expected["user"],
                         "error": failure or "Turn did not complete", "reply": None}
-        checks = [{"kind": "completed", "category": "behavior", "passed": not observed.get("error") and bool(observed.get("reply")),
+        checks = [{"kind": "completed", "category": "behavior", "passed": not observed.get("error") and bool((observed.get("reply") or "").strip()),
                    "observed": observed.get("error")},
                   {"kind": "tool_execution", "category": "behavior", "passed": not any(call.get("error") for call in calls),
                    "observed": [call["error"] for call in calls if call.get("error")]}]

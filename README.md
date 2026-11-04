@@ -156,6 +156,14 @@ and labels extracted highlights separately. Text-model revisions currently ship 
 
 [Text models, requirements, and evaluation status →](docs/local-text-models.md)
 
+#### Search & Memory
+
+Companions can find saved memories by meaning, even when you use different words. Apple’s available
+language assets are the default; **Multilingual E5 Small** is an optional download in Settings →
+**Search & Memory**. Keyword search stays available while the local index prepares.
+
+[Local memory search and adding a search model →](docs/contributing/search-models.md)
+
 ## Your Mac does the work
 
 Audio, screenshots, transcripts, and text inference stay on your Mac. No cloud inference fallback,
@@ -197,6 +205,7 @@ Start with [Contributing to Sillies](CONTRIBUTING.md) for setup, bug reports, ch
 | **A Chat tool** | [Local capabilities, Vault sources, and conversation memory](docs/contributing/chat-tools.md) |
 | **A Chat evaluation** | [General knowledge, Vault retrieval, memories, and tool reliability](Benchmarks/Chat/README.md) |
 | **A text / LLM model** | [Model manifests and text-provider adapters](docs/contributing/text-models.md) |
+| **A search / embedding model** | [Native providers, indexing, and memory retrieval](docs/contributing/search-models.md) |
 | **A voice / TTS model** | [Voice providers, native runtimes, and playback](docs/contributing/voice-models.md) |
 | **A language** | [JSON translations, plural forms, and native macOS localization](docs/contributing/localization.md) |
 | **A theme** | [JSON palettes, light/dark appearances, and readable colors](docs/contributing/themes.md) |

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "purpose": "Validate persistent production memory retrieval and source-grounded answers using Apple and downloadable multilingual E5, with keyword-only controls.",
+  "retrievalCorpus": "../model-readiness-2026-11-04/semantic",
+  "conversationCorpus": "../model-readiness-2026-11-04/semantic-archived",
+  "searchArms": ["keywords", "apple", "e5"],
+  "answerModels": ["apple", "qwen-3.5-4b"],
+  "sampling": "One fixed MLX diagnostic seed, 11, for all arms. Apple uses its production generation settings. No cache policy changes.",
+  "execution": {"maximumNativeSeconds": 1200, "maximumBatchSeconds": 180, "maximumTurnSeconds": 60, "parallelNativeWorkers": 1, "syntheticStoresOnly": true, "headless": true},
+  "review": "Inspect every answer against source facts and tool results, independently of lexical anchors and completion scores. Positive recall is not answer accuracy; negative-query candidates are not proof of false assertions. Missing, failed and uncertain cases stay visible.",
+  "acceptance": "Native retrieval must improve positive recall, preserve owner/space isolation and exact keyword access, and not show a systematic new unsupported-assertion failure in the reviewed negative cases. Persistence, correction, Undo, deletion, provider replacement, priority, deadline and cancellation tests must pass. Keyword fallback must remain available.",
+  "exhaustion": "One production candidate, no tuning on these frozen answers. Preserve and diagnose failures; do not rerun for a nicer score. Stop after one completed comparison or the execution cap.",
+  "reviewer": "Implementing agent; not independent or blinded",
+  "publication": "Targeted product validation, not a replacement for the full model leaderboard. No push or app restart."
+}

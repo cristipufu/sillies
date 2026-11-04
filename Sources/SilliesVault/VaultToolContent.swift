@@ -34,18 +34,16 @@ enum VaultToolContent {
     let query: String
     let category: VaultSearchRequest.Category
     let coverage: String
-    let totalVaultRecords: Int
     let returnedRecordCount: Int
     let records: [RecordPassage]
-    init(_ records: [RecordPassage], request: VaultSearchRequest, totalVaultRecords: Int) {
+    init(_ records: [RecordPassage], request: VaultSearchRequest) {
       status = records.isEmpty ? .noMatches : .matches
       query = request.query
       category = request.category
       coverage =
         records.isEmpty
-        ? "Search completed: no saved records matched this query and category. The whole-Vault count is not a count of matches."
-        : "Search excerpts only. Use read_vault_record with recordID and topic keywords when the requested detail is missing from an excerpt."
-      self.totalVaultRecords = totalVaultRecords
+        ? "Search completed: no saved records matched this query and category."
+        : "Matching record excerpts, limited to this page. returnedRecordCount counts these records, not all saved items or individual URLs. Use read_vault_record with recordID and topic keywords when the requested detail is missing from an excerpt."
       returnedRecordCount = records.count
       self.records = records
     }
@@ -72,16 +70,16 @@ enum VaultToolContent {
   }
 
   static func searchOutput(
-    _ sources: [ChatSource], request: VaultSearchRequest, totalVaultRecords: Int
+    _ sources: [ChatSource], request: VaultSearchRequest
   ) throws
     -> ConversationToolOutput
   {
     let full = SearchPage(
       sources.map { RecordPassage($0, excerptLimit: maximumExcerptCharacters) },
-      request: request, totalVaultRecords: totalVaultRecords)
+      request: request)
     let brief = SearchPage(
       sources.map { RecordPassage($0, excerptLimit: briefExcerptCharacters) },
-      request: request, totalVaultRecords: totalVaultRecords)
+      request: request)
     return try .init(text: encoded(full), sources: sources, briefText: encoded(brief))
   }
 

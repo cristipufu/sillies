@@ -33,6 +33,8 @@ public struct TextModelProfile: Codable, Equatable, Sendable {
 
   public var isValid: Bool {
     context.isValid && prefill.isValid && generation.isValid && conversation.isValid
+      && runtimePolicy.isValid
+      && (runtimePolicy.prefixSnapshot.map { $0.maximumTokens < context.workingTokens } ?? true)
       && generation.conversation.outputTokens < context.workingTokens
       && generation.summary.outputTokens < context.workingTokens
       && conversation.safetyTokens < context.workingTokens

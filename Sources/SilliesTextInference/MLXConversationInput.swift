@@ -48,6 +48,13 @@ enum MLXConversationInput {
     }
   }
 
+  /// Preserve the ordinary SDK path's absent-schema semantics after the application withdraws
+  /// tools. Calls still pass through the application's capability and per-turn execution budget.
+  /// An empty native array instead rejects every parsed call before that recovery can run.
+  static func nativeTools(_ request: TextGenerationRequest) -> [[String: any Sendable]]? {
+    request.tools.isEmpty ? nil : tools(request)
+  }
+
   static func tools(_ request: TextGenerationRequest) -> [[String: any Sendable]] {
     request.tools.map { tool in
       var properties: [String: any Sendable] = [:]

@@ -114,13 +114,21 @@ final class VaultSQLConnection {
   static func data(_ row: OpaquePointer, column: Int32 = 0, maximumBytes: Int = Int.max) throws
     -> Data
   {
+    try withBlob(row, column: column, maximumBytes: maximumBytes) { Data($0) }
+  }
+
+  /// The borrowed bytes are valid only during this call, before the statement advances.
+  static func withBlob<Result>(
+    _ row: OpaquePointer, column: Int32, maximumBytes: Int,
+    consume: (UnsafeRawBufferPointer) throws -> Result
+  ) throws -> Result {
     let count = sqlite3_column_bytes(row, column)
     guard count >= 0, count <= maximumBytes else { throw CocoaError(.fileReadCorruptFile) }
-    guard count > 0 else { return Data() }
+    guard count > 0 else { return try consume(.init(start: nil, count: 0)) }
     guard let bytes = sqlite3_column_blob(row, column) else {
       throw CocoaError(.fileReadCorruptFile)
     }
-    return Data(bytes: bytes, count: Int(count))
+    return try consume(.init(start: bytes, count: Int(count)))
   }
 
   static func text(_ row: OpaquePointer, column: Int32 = 0) throws -> String {

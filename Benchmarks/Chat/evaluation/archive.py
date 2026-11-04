@@ -5,13 +5,13 @@ import gzip
 import json
 from pathlib import Path
 
-from . import receipts
+from . import receipts, report
 
 
 def export(output: Path, destination: Path) -> None:
     configuration = json.loads((output / "run.json").read_text())
     document = {"configuration": configuration,
-                "summary": json.loads((output / "summary.json").read_text()), "models": {}}
+                "summary": report.generate(output), "models": {}}
     review_path = output / "reviews.json"
     document["reviews"] = json.loads(review_path.read_text()) if review_path.exists() else []
     results = receipts.load(output, configuration)

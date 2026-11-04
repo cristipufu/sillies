@@ -1,0 +1,53 @@
+{
+  "archiveSHA256": "92163eadb27818c4623e47625cf92df7c4bac6f9a4c015e2f8063ba5ed413742",
+  "corpusHash": "7206a518a236b0fe8c65e8fe304d893d77fcd138d8dee5572f480c2f907dcf9e",
+  "integrity": "recorded checks and primary metrics reproduced",
+  "meaning": "Integrity is not semantic correctness, statistical confidence or release readiness.",
+  "models": {
+    "gemma-4-e4b": {
+      "completedCases": 9,
+      "plannedCases": 9,
+      "observedTurns": 10,
+      "primary": {
+        "cases": 9,
+        "passed": 6,
+        "turns": 10,
+        "errors": 0,
+        "checks": {
+          "behavior": {
+            "passed": 36,
+            "total": 41
+          },
+          "exact_answer": {
+            "passed": 1,
+            "total": 1
+          },
+          "lexical_anchor": {
+            "passed": 7,
+            "total": 7
+          }
+        },
+        "firstTextP50": 1.533334625,
+        "firstTextP95": 5.1426430419999996,
+        "totalP50": 2.112819833,
+        "totalP95": 5.208081958
+      },
+      "reviews": {
+        "pass": 6,
+        "fail": 4,
+        "uncertain": 0,
+        "primaryTurns": 10,
+        "primaryReviewedTurns": 10,
+        "primaryRubricReviewedTurns": 10,
+        "legacyReplyOnlyReviews": 0,
+        "rubricCases": {
+          "pass": 6,
+          "fail": 3,
+          "pending": 0
+        }
+      },
+      "publishedReviewSummaryVerified": true,
+      "contextAnswerLeakage": []
+    }
+  }
+}

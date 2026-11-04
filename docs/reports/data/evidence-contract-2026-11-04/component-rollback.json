@@ -1,0 +1,9 @@
+{
+  "reason": "The original candidate removed both the unrelated global count and its system-prompt explanation. Apple confused the human name with the companion in both candidate repetitions; its first request differs only in that deleted instruction, before any Vault output. Restore the original prompt, preserving its interpretation of archived results, and keep the local output-contract repair. This is a post-observation component rollback, not a second tuned prompt.",
+  "originalCandidate": "Frozen candidate worker and both-seed observations remain unchanged and archived.",
+  "finalScope": "VaultToolContent and VaultSearchTool output/count behavior only; no new model policy or output guard.",
+  "boundedFollowup": "Use only the remainder of the same 900-second budget for Apple production regression cases, without extending the study. Other models have the broader original-candidate comparison; do not present that as a complete comparison of the final payload-only patch.",
+  "budgetSupervisor": "A final batch may reserve fewer than 180 seconds when less remains. The child deadline plus 10 seconds of cleanup stays inside the original cumulative 900-second cap.",
+  "selection": "Apple vault and identity groups at seed label 11 (Apple sampling is system-managed); all original corpus checks unchanged.",
+  "followupOutcome": "No native budget remained after the original planned comparison. Final payload-only behavior has deterministic tool tests and the original global prompt, but no separate native quality comparison. Do not transfer the original candidate scores to the final patch."
+}

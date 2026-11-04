@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "baselineCommit": "e61c21d16b2d3420b8b8e7001a11649323201e57",
+  "baselineOverlay": "The uncommitted model-opportunities round, frozen before new changes.",
+  "purpose": "Resolve three experimental opportunities with production integration gates, independently per model.",
+  "execution": {
+    "maximumNativeSeconds": 3600,
+    "maximumBatchSeconds": 180,
+    "maximumTurnSeconds": 60,
+    "parallelNativeWorkers": 1,
+    "headless": true,
+    "syntheticStoresOnly": true,
+    "restartRunningApp": false,
+    "downloads": "Only the pinned public multilingual-e5-small checkpoint, into an isolated experiment directory; no user preferences or installed model selection changes."
+  },
+  "tracks": {
+    "prefix": {
+      "models": ["gemma-4-26b-a4b", "lfm-2.5-24b-a2b", "qwen-3.5-4b"],
+      "maximumCandidates": 1,
+      "approach": "One helper-owned exact-token-prefix snapshot using pinned official native APIs; full prompt admission and original tool-turn state remain authoritative.",
+      "acceptance": [
+        "Native snapshot restoration reproduces the same split-prefill computation, including recurrent/carried state; inspect any difference from ordinary chunking before native answer claims.",
+        "At least 20% median warm first-text improvement in repeated matched pairs; all expected answers correct; include initial preparation in cold latency.",
+        "Changed instructions/tools/history/session/model, context overflow, cancellation, sink failure and release invalidate safely. No leaked state across companions or failed tool turns.",
+        "One retained snapshot, measured and enforced byte cap. Bounded growing-context/repeated-release controls show no accumulating allocations.",
+        "Production conversation/tool workflows preserve correctness and streamed/final output agreement. Unsupported profiles stay disabled."
+      ]
+    },
+    "semantic": {
+      "maximumCandidates": 2,
+      "candidates": ["Apple contextual embeddings from previous round as reference", "Native multilingual-e5-small with documented retrieval prefixes and masked mean pooling"],
+      "acceptance": [
+        "Frozen broader paraphrase, cross-language, exact identifier, ownership and negative cases; expected identities never enter the inference process.",
+        "Improved held-out recall without exact identifier regressions, evaluated with both full questions and normal tool keywords. No universal score cutoff selected on test answers.",
+        "Negative retrieval candidates are evidence candidates, not answers: end-to-end tests must refuse unsupported personal assertions.",
+        "Production promotion additionally requires a versioned derived index, atomic correction/deletion visibility, bounded background work, lexical fallback, restart/cancellation tests and measured scale."
+      ]
+    },
+    "splitWrites": {
+      "models": ["granite-4.2-3b", "ministral-3-8b", "gemma-4-12b"],
+      "maximumCandidates": 1,
+      "candidate": "Create-only save_memory, required-reference replace_memory, and one general instruction to handle explicit durable assertions alongside questions. No case-specific examples or automatic intent guesses.",
+      "screenCorpus": "../model-opportunities-2026-11-04/contract/cases.json",
+      "reservedCorpus": "../model-opportunities-2026-11-04/validation/cases.json",
+      "acceptance": "At least two additional complete screen tasks against the fixed prior baseline, preserved source/general controls, no unauthorized write/provenance loss or false save acknowledgement. Qualifiers require two paired confirmation repetitions plus reserved cases. Otherwise revert."
+    }
+  },
+  "review": {
+    "reviewer": "Implementing agent; not independent or blinded",
+    "freezeBeforeInference": true,
+    "auditEvaluatorWithFailureInputs": true,
+    "preserveFailedAndUnrunCases": true,
+    "noLeaderboardChange": true,
+    "stop": "Stop each candidate on a mandatory acceptance failure after investigating the integration; stop native execution when the budget cannot admit the next bounded batch. Do not lower a gate after seeing scores."
+  }
+}

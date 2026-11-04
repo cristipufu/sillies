@@ -1,5 +1,6 @@
 import Foundation
 import SilliesCore
+import SilliesInference
 import SilliesModelStore
 import SilliesReasoning
 import SilliesTextModels
@@ -8,7 +9,12 @@ import SilliesTextModels
 @MainActor final class ReasoningServices {
   let models: TextModelEnvironment
   let reasoning: any LocalReasoning
-  private let turns = ReasoningTurnGate()
+  private let turns = ReasoningTurnGate { event in
+    switch event {
+    case .began: await InferenceActivity.shared.beginInteractiveWork()
+    case .ended: await InferenceActivity.shared.endInteractiveWork()
+    }
+  }
 
   init(defaults: UserDefaults = .standard, directory: URL? = nil) {
     let support =

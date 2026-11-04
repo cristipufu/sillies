@@ -40,6 +40,12 @@ cp Resources/TextInference-Info.plist "$text_helper/Contents/Info.plist"
 cp "$binary_dir/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib" "$text_helper/Contents/Resources/mlx.metallib"
 ditto "$binary_dir/swift-transformers_Hub.bundle" "$text_helper/Contents/Resources/swift-transformers_Hub.bundle"
 ditto "$binary_dir/Sillies_SilliesTextInference.bundle" "$text_helper/Contents/Resources/Sillies_SilliesTextInference.bundle"
+search_helper="$app/Contents/Helpers/SilliesSearchInference.app"
+mkdir -p "$search_helper/Contents/MacOS" "$search_helper/Contents/Resources"
+install -m 755 "$binary_dir/SilliesSearchInference" "$search_helper/Contents/MacOS/SilliesSearchInference"
+cp Resources/SearchInference-Info.plist "$search_helper/Contents/Info.plist"
+cp "$binary_dir/mlx-swift_Cmlx.bundle/Contents/Resources/default.metallib" "$search_helper/Contents/Resources/mlx.metallib"
+ditto "$binary_dir/swift-transformers_Hub.bundle" "$search_helper/Contents/Resources/swift-transformers_Hub.bundle"
 voice_helper="$app/Contents/Helpers/SilliesTTSInference.app"
 mkdir -p "$voice_helper/Contents/MacOS" "$voice_helper/Contents/Resources"
 install -m 755 "$binary_dir/SilliesTTSInference" "$voice_helper/Contents/MacOS/SilliesTTSInference"
@@ -53,7 +59,7 @@ bash scripts/embed-sparkle.sh .build/artifacts "$app"
 
 cp Info.plist "$app/Contents/Info.plist"
 python3 -B scripts/localize.py build "$app/Contents/Resources" --plist "$app/Contents/Info.plist"
-for helper in "$text_helper" "$voice_helper"; do
+for helper in "$text_helper" "$voice_helper" "$search_helper"; do
   python3 -B scripts/localize.py build "$helper/Contents/Resources" --plist "$helper/Contents/Info.plist"
 done
 if [[ -n "${SILLIES_VERSION:-}" ]]; then
@@ -91,6 +97,7 @@ codesign "${sign[@]}" "$framework/Versions/B/Autoupdate" >/dev/null
 codesign "${sign[@]}" "$framework/Versions/B/Updater.app" >/dev/null
 codesign "${sign[@]}" "$framework" >/dev/null
 codesign "${sign[@]}" --identifier app.sillies.text-inference "$text_helper" >/dev/null
+codesign "${sign[@]}" --identifier app.sillies.search-inference "$search_helper" >/dev/null
 codesign "${sign[@]}" --identifier app.sillies.tts-inference "$voice_helper" >/dev/null
 codesign "${sign[@]}" --identifier app.sillies.window-metadata "$app/Contents/Helpers/SilliesWindowMetadata" >/dev/null
 codesign "${sign[@]}" --entitlements Sillies.entitlements --identifier app.sillies.macos "$app" >/dev/null

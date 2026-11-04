@@ -1,0 +1,678 @@
+{
+  "documents": [
+    {
+      "id": "rail",
+      "owner": "pogo",
+      "language": "en",
+      "text": "For long-distance travel, I prefer trains to flying."
+    },
+    {
+      "id": "food",
+      "owner": "pogo",
+      "language": "en",
+      "text": "I follow a vegetarian diet and avoid eating meat."
+    },
+    {
+      "id": "work",
+      "owner": "pogo",
+      "language": "en",
+      "text": "My regular working hours are nine in the morning until five in the afternoon."
+    },
+    {
+      "id": "style",
+      "owner": "pogo",
+      "language": "en",
+      "text": "I learn best from concrete examples and step-by-step explanations."
+    },
+    {
+      "id": "garden",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Leila holds the spare key to my garden gate."
+    },
+    {
+      "id": "bike",
+      "owner": "pogo",
+      "language": "en",
+      "text": "My bicycle is kept in the basement storage room."
+    },
+    {
+      "id": "project",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Mina is the courier for the Zephyr delivery project."
+    },
+    {
+      "id": "identifier",
+      "owner": "pogo",
+      "language": "en",
+      "text": "My device inventory identifier is ZX_47_Q9."
+    },
+    {
+      "id": "hobby",
+      "owner": "pogo",
+      "language": "en",
+      "text": "On weekends I enjoy hiking in the mountains."
+    },
+    {
+      "id": "drink",
+      "owner": "pogo",
+      "language": "es",
+      "text": "Mi bebida habitual es el té de menta."
+    },
+    {
+      "id": "units",
+      "owner": "pogo",
+      "language": "de",
+      "text": "Ich bevorzuge metrische Einheiten für Entfernungen und Gewichte."
+    },
+    {
+      "id": "pet",
+      "owner": "pogo",
+      "language": "ro",
+      "text": "Pisica mea se numește Luna."
+    },
+    {
+      "id": "airport",
+      "owner": "pogo",
+      "language": "en",
+      "text": "The airport train platform is numbered nine."
+    },
+    {
+      "id": "restaurant",
+      "owner": "pogo",
+      "language": "en",
+      "text": "The restaurant on Garden Street has a red gate."
+    },
+    {
+      "id": "screen",
+      "owner": "pogo",
+      "language": "en",
+      "text": "The spare computer has a blue desktop background."
+    },
+    {
+      "id": "foreign-project",
+      "owner": "bolt",
+      "language": "en",
+      "text": "Ivo is the courier for the Zephyr delivery project."
+    },
+    {
+      "id": "foreign-secret",
+      "owner": "bolt",
+      "language": "en",
+      "text": "My private laboratory is on Cedar Street."
+    },
+    {
+      "id": "new-noise",
+      "owner": "pogo",
+      "language": "en",
+      "text": "I work best in a quiet room with no background music."
+    },
+    {
+      "id": "new-coffee",
+      "owner": "pogo",
+      "language": "fr",
+      "text": "Je ne bois jamais de café après midi."
+    },
+    {
+      "id": "new-sport",
+      "owner": "pogo",
+      "language": "es",
+      "text": "Practico natación los martes y los jueves."
+    },
+    {
+      "id": "new-language",
+      "owner": "pogo",
+      "language": "de",
+      "text": "Meine bevorzugte Sprache für technische Dokumentation ist Englisch."
+    },
+    {
+      "id": "new-camera",
+      "owner": "pogo",
+      "language": "en",
+      "text": "The serial number of my camera is CAM-88-ZQ."
+    },
+    {
+      "id": "new-birthday",
+      "owner": "pogo",
+      "language": "it",
+      "text": "Il mio compleanno è il 23 ottobre."
+    },
+    {
+      "id": "new-breakfast",
+      "owner": "pogo",
+      "language": "pt",
+      "text": "No pequeno-almoço costumo comer aveia com maçã."
+    },
+    {
+      "id": "new-sister",
+      "owner": "pogo",
+      "language": "en",
+      "text": "My younger sister is named Noura."
+    },
+    {
+      "id": "new-contact",
+      "owner": "pogo",
+      "language": "en",
+      "text": "I prefer email over phone calls for non-urgent work questions."
+    },
+    {
+      "id": "new-plants",
+      "owner": "pogo",
+      "language": "ro",
+      "text": "Vecinul meu, Radu, udă plantele când sunt plecat."
+    },
+    {
+      "id": "new-commute",
+      "owner": "pogo",
+      "language": "en",
+      "text": "My commute to the office usually takes thirty-five minutes on foot."
+    },
+    {
+      "id": "new-dessert",
+      "owner": "pogo",
+      "language": "nl",
+      "text": "Mijn favoriete dessert is appeltaart."
+    },
+    {
+      "id": "new-text",
+      "owner": "pogo",
+      "language": "en",
+      "text": "I prefer larger text and high contrast when reading long documents."
+    },
+    {
+      "id": "new-instrument",
+      "owner": "pogo",
+      "language": "en",
+      "text": "I play the cello in an amateur orchestra."
+    },
+    {
+      "id": "new-city",
+      "owner": "pogo",
+      "language": "fr",
+      "text": "Je vis à Lyon depuis 2021."
+    },
+    {
+      "id": "new-shoe",
+      "owner": "pogo",
+      "language": "de",
+      "text": "Meine Schuhgröße ist 42."
+    },
+    {
+      "id": "new-conference",
+      "owner": "pogo",
+      "language": "en",
+      "text": "My annual conference badge code is QX_19_B2."
+    },
+    {
+      "id": "new-hotel",
+      "owner": "pogo",
+      "language": "es",
+      "text": "En los hoteles prefiero una habitación lejos del ascensor."
+    },
+    {
+      "id": "bolt-office",
+      "owner": "bolt",
+      "language": "en",
+      "text": "My office is in Vienna."
+    }
+  ],
+  "queries": [
+    {
+      "id": "travel",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Which transport do I favor for a long journey?"
+    },
+    {
+      "id": "diet",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What dietary restrictions should a meal follow for me?"
+    },
+    {
+      "id": "hours",
+      "owner": "pogo",
+      "language": "en",
+      "text": "When am I usually on the clock?"
+    },
+    {
+      "id": "learning",
+      "owner": "pogo",
+      "language": "en",
+      "text": "How should new concepts be taught to me?"
+    },
+    {
+      "id": "key",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Who can unlock my outdoor plot if I lose my key?"
+    },
+    {
+      "id": "bike-location",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Where did I leave my cycle?"
+    },
+    {
+      "id": "exact-code",
+      "owner": "pogo",
+      "language": "en",
+      "text": "ZX_47_Q9"
+    },
+    {
+      "id": "courier",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Who is the courier for Zephyr?"
+    },
+    {
+      "id": "cross-travel",
+      "owner": "pogo",
+      "language": "es",
+      "text": "¿Cómo prefiero viajar entre ciudades?"
+    },
+    {
+      "id": "cross-drink",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What do I usually drink?"
+    },
+    {
+      "id": "missing",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What is the name of my dentist?"
+    },
+    {
+      "id": "foreign",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Where is my private laboratory?"
+    },
+    {
+      "id": "heldout-travel",
+      "owner": "pogo",
+      "language": "de",
+      "text": "Reise ich lieber mit dem Zug oder mit dem Flugzeug?"
+    },
+    {
+      "id": "heldout-diet",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Should my dinner include beef or chicken?"
+    },
+    {
+      "id": "heldout-hours",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What time does my workday end?"
+    },
+    {
+      "id": "heldout-learning",
+      "owner": "pogo",
+      "language": "es",
+      "text": "¿Qué tipo de explicaciones me ayudan a aprender?"
+    },
+    {
+      "id": "heldout-key",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Who has a backup way into my garden?"
+    },
+    {
+      "id": "heldout-bike",
+      "owner": "pogo",
+      "language": "en",
+      "text": "In which part of the building is my two-wheeler stored?"
+    },
+    {
+      "id": "heldout-code",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Find the device with inventory ID ZX_47_Q9."
+    },
+    {
+      "id": "heldout-hobby",
+      "owner": "pogo",
+      "language": "es",
+      "text": "¿Qué me gusta hacer los fines de semana?"
+    },
+    {
+      "id": "heldout-pet",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What is my cat called?"
+    },
+    {
+      "id": "heldout-units",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Which system should distances and weights use?"
+    },
+    {
+      "id": "heldout-missing",
+      "owner": "pogo",
+      "language": "en",
+      "text": "When is my next dentist appointment?"
+    },
+    {
+      "id": "heldout-owner",
+      "owner": "bolt",
+      "language": "en",
+      "text": "Who delivers the Zephyr project parcels?"
+    },
+    {
+      "id": "new-noise-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What kind of sound environment helps me concentrate?"
+    },
+    {
+      "id": "new-noise-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "concentration sound environment"
+    },
+    {
+      "id": "new-coffee-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "When do I stop drinking coffee?"
+    },
+    {
+      "id": "new-coffee-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "coffee cutoff time"
+    },
+    {
+      "id": "new-sport-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "On which weekdays do I go swimming?"
+    },
+    {
+      "id": "new-sport-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "swimming weekdays"
+    },
+    {
+      "id": "new-language-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Which language do I prefer for technical manuals?"
+    },
+    {
+      "id": "new-language-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "technical documentation preferred language"
+    },
+    {
+      "id": "new-camera-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Which device has the serial CAM-88-ZQ?"
+    },
+    {
+      "id": "new-camera-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "CAM-88-ZQ"
+    },
+    {
+      "id": "new-birthday-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "When is my birthday?"
+    },
+    {
+      "id": "new-birthday-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "birthday date"
+    },
+    {
+      "id": "new-breakfast-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What is my usual breakfast?"
+    },
+    {
+      "id": "new-breakfast-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "usual breakfast"
+    },
+    {
+      "id": "new-sister-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What is the name of my younger sibling?"
+    },
+    {
+      "id": "new-sister-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "younger sister name"
+    },
+    {
+      "id": "new-contact-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "How should someone contact me about routine work?"
+    },
+    {
+      "id": "new-contact-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "preferred work contact"
+    },
+    {
+      "id": "new-plants-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Who looks after my plants when I am away?"
+    },
+    {
+      "id": "new-plants-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "plants holiday caretaker"
+    },
+    {
+      "id": "new-commute-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "How long does walking to my office take?"
+    },
+    {
+      "id": "new-commute-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "walking office commute duration"
+    },
+    {
+      "id": "new-dessert-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What is my favorite dessert?"
+    },
+    {
+      "id": "new-dessert-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "favorite dessert"
+    },
+    {
+      "id": "new-text-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What display adjustments make long reading easier for me?"
+    },
+    {
+      "id": "new-text-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "reading accessibility text contrast"
+    },
+    {
+      "id": "new-instrument-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Which instrument do I perform on?"
+    },
+    {
+      "id": "new-instrument-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "musical instrument"
+    },
+    {
+      "id": "new-city-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "In which city do I live?"
+    },
+    {
+      "id": "new-city-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "home city"
+    },
+    {
+      "id": "new-shoe-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What size shoes do I wear?"
+    },
+    {
+      "id": "new-shoe-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "shoe size"
+    },
+    {
+      "id": "new-conference-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What is the code on my conference pass?"
+    },
+    {
+      "id": "new-conference-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "conference badge code"
+    },
+    {
+      "id": "new-hotel-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Where should a hotel put my room?"
+    },
+    {
+      "id": "new-hotel-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "hotel room location preference"
+    },
+    {
+      "id": "absent-office-city-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Which city is my office in?"
+    },
+    {
+      "id": "absent-office-city-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "office city"
+    },
+    {
+      "id": "absent-car-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What brand of car do I own?"
+    },
+    {
+      "id": "absent-car-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "my car brand"
+    },
+    {
+      "id": "absent-shoe-color-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What color are my shoes?"
+    },
+    {
+      "id": "absent-shoe-color-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "shoe color"
+    },
+    {
+      "id": "absent-salary-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What is my monthly salary?"
+    },
+    {
+      "id": "absent-salary-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "monthly salary"
+    },
+    {
+      "id": "absent-birthday-location-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "Where was I born?"
+    },
+    {
+      "id": "absent-birthday-location-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "birthplace"
+    },
+    {
+      "id": "absent-pet-age-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "How old is my cat?"
+    },
+    {
+      "id": "absent-pet-age-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "cat age"
+    },
+    {
+      "id": "absent-contact-address-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "What is my work email address?"
+    },
+    {
+      "id": "absent-contact-address-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "work email address"
+    },
+    {
+      "id": "absent-conference-date-question",
+      "owner": "pogo",
+      "language": "en",
+      "text": "On what date is my conference?"
+    },
+    {
+      "id": "absent-conference-date-keywords",
+      "owner": "pogo",
+      "language": "en",
+      "text": "conference date"
+    }
+  ]
+}

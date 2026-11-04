@@ -1,0 +1,287 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "reserved-fresh-memory-preferred-name",
+      "group": "memory-validation",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "memory-study-validation"
+      ],
+      "turns": [
+        {
+          "user": "Please call me Soraya.",
+          "rubric": "Actually save Soraya as the human preferred name with evidence from this statement, without confusing it with Pogo.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "save_memory"
+              ]
+            },
+            {
+              "kind": "memory_contains",
+              "values": [
+                "Soraya"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "What should you call me? Answer only with my name.",
+          "rubric": "Recall Soraya without a new write.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Soraya"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reserved-fresh-memory-hobby-correction",
+      "group": "memory-validation",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "memory-study-validation"
+      ],
+      "turns": [
+        {
+          "user": "My main hobby has changed: it is woodworking now, not birdwatching. Update that for me.",
+          "rubric": "Replace the old main hobby with woodworking, preserving identity and correction provenance; do not retain conflicting main-hobby memories.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "save_memory"
+              ]
+            },
+            {
+              "kind": "memory_contains",
+              "values": [
+                "woodworking"
+              ]
+            },
+            {
+              "kind": "memory_absent",
+              "values": [
+                "birdwatching"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "What is my main hobby these days?",
+          "rubric": "Recall woodworking without rewriting its evidence.",
+          "checks": [
+            {
+              "kind": "contains_any",
+              "values": [
+                "woodworking"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "memories": [
+        {
+          "key": "main_hobby",
+          "value": "birdwatching",
+          "statement": "My main hobby is birdwatching."
+        }
+      ]
+    },
+    {
+      "id": "reserved-fresh-memory-question-preserves-provenance",
+      "group": "memory-validation",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "memory-study-validation"
+      ],
+      "turns": [
+        {
+          "user": "Is my favorite color yellow?",
+          "rubric": "Read the stored violet preference; answer violet without rewriting the fact or replacing its source with this question.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_memories"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "violet"
+              ]
+            }
+          ]
+        }
+      ],
+      "memories": [
+        {
+          "key": "favorite_color",
+          "value": "violet",
+          "statement": "My favorite color is violet."
+        }
+      ]
+    },
+    {
+      "id": "reserved-fresh-memory-fictional-owner",
+      "group": "memory-validation",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "memory-study-validation"
+      ],
+      "turns": [
+        {
+          "user": "My friend wrote a scene where a robot says, \"I was born on February 12.\" Who has that birthday in the scene?",
+          "rubric": "Attribute the birthday to the fictional robot only; no user or companion birthday memory and no claim of saving.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "memory_absent",
+              "values": [
+                "September"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reserved-fresh-memory-german-opt-out",
+      "group": "memory-validation",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "memory-study-validation"
+      ],
+      "turns": [
+        {
+          "user": "Ich bin Flötistin, aber speichere das bitte nicht als Erinnerung. Was ist ein Streichquartett?",
+          "rubric": "Respect the explicit German opt-out. Explain a string quartet in German without writing the occupation or claiming to remember it.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "no_tools"
+            }
+          ]
+        }
+      ],
+      "language": "de"
+    },
+    {
+      "id": "reserved-mixed-combined-question",
+      "group": "mixed-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Who owns our Aurora checklist, and what is photosynthesis?",
+          "rubric": "Answer the personal part from Vault (Mina) and the general part from knowledge; do not claim a Vault source proves the science.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault"
+              ]
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "Mina"
+              ]
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "sunlight",
+                "light energy"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "f0ca7212-8575-5268-8967-d6dd7f6c4021",
+          "kind": "stash",
+          "app": "Safari",
+          "title": "Aurora project links",
+          "text": "",
+          "links": [
+            "https://example.org/aurora/status"
+          ]
+        },
+        {
+          "id": "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty test output",
+          "text": "Ghostty terminal: cargo test. All 17 tests passed. Build tag cedar-27.",
+          "links": []
+        },
+        {
+          "id": "c0e625a9-767b-5664-8cb7-516884d93dc6",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Aurora launch planning",
+          "text": "Mina owns the launch checklist. The launch is July 17. The approved budget is 2400 EUR. The release code is violet-42.",
+          "links": []
+        },
+        {
+          "id": "d70e8fae-8086-5314-99c6-13c967bd22e8",
+          "kind": "listen",
+          "app": "Zoom",
+          "title": "Atlas review",
+          "text": "Sam will publish the Atlas report on August 6. The budget is 9100 EUR.",
+          "links": []
+        },
+        {
+          "id": "232b8914-3440-56aa-8b33-94ae48fd9ff9",
+          "kind": "stash",
+          "app": "Notes",
+          "title": "Paris project location",
+          "text": "The Paris project team chose Copenhagen for its workshop.",
+          "links": []
+        }
+      ],
+      "tags": [
+        "memory-study-controls"
+      ]
+    }
+  ]
+}

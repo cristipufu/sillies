@@ -1,4 +1,6 @@
 import AppKit
+import SilliesModelStore
+import SilliesVault
 import SwiftUI
 import Testing
 
@@ -30,6 +32,14 @@ import Testing
   await speech.models.load()
   let textModels = TextModelsPresentation()
   await textModels.load()
+  let search = SearchModelsPresentation(
+    environment: SearchModelEnvironment(
+      store: ModelStore(root: directory.appendingPathComponent("SearchModels")),
+      conversations: ConversationLibrary(
+        directory: directory.appendingPathComponent("Conversations")),
+      runtime: .init(inference: .init(), executable: directory.appendingPathComponent("unused")),
+      selection: .init(id: SearchModelEnvironment.appleID, save: { _ in })))
+  await search.downloads.load()
   let previousAppearance = NSApp.appearance
   defer {
     NSApp.appearance = previousAppearance
@@ -42,6 +52,7 @@ import Testing
     for destination in SettingsDestination.allCases {
       let view = SettingsView(
         controller: controller, speechModels: speech.models, textModels: textModels,
+        searchModels: search,
         shortcuts: shortcuts,
         loginItems: LoginItemSettings(), writingTools: writing,
         navigation: SettingsNavigation(destination: destination))

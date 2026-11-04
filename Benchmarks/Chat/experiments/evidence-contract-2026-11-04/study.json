@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "purpose": "Remove the unrelated whole-Vault count from search results; retain returned-record counts, explicit bounded coverage and completed empty-search status. Test the contract without output filters or inference-policy changes.",
+  "models": [
+    "apple",
+    "qwen-3.5-9b",
+    "lfm-2.5-24b-a2b",
+    "gemma-4-26b-a4b"
+  ],
+  "arms": [
+    "baseline",
+    "candidate"
+  ],
+  "seeds": [
+    11,
+    29
+  ],
+  "corpus": "corpus/cases.json",
+  "comparison": "Each arm uses production cache settings qualified before this study. Apple uses system-managed sampling. Baselines are frozen original-contract workers; candidates restore the original memory-save prompt before freezing.",
+  "acceptance": "Tool output must match actual results, never conflate whole-Vault counts, records and URLs, preserve full-record and empty-result behavior, and avoid new write/ownership defects. Review every answer and call against evidence; report complete task scores and observed regressions separately, including unrelated misses. A deterministic contract repair is not a claim that all count hallucinations are solved.",
+  "exhaustion": {
+    "maximumNativeSeconds": 900,
+    "maximumBatchSeconds": 180,
+    "maximumTurnSeconds": 60,
+    "maximumCandidates": 1,
+    "parallelNativeWorkers": 1
+  },
+  "limits": "One Mac, reused regression scenarios, implementing-agent review without blinding. No leaderboard update or model-family generalization.",
+  "constraints": [
+    "Synthetic stores only",
+    "No app restart or push",
+    "No corpus edits after execution starts",
+    "No concurrent inference and builds/performance checks"
+  ]
+}

@@ -40,6 +40,11 @@ The [native integration follow-up](reports/native-conversation-integration-2026-
 Granite 8B's measured conversation-cache improvement and fixes Ministral's interrupted-message
 formatting. It also completes Qwen 4B's frozen memory-policy validation; that policy remains disabled.
 Its warm-follow-up timings are separate from the whole-task measurements in this table.
+The [five-opportunity study and benchmark review](reports/model-opportunities-2026-11-04.md) adds
+validated native-cache profiles for Gemma E4B and Nemotron, checks memory behavior across all thirteen
+models, and reports the prefix-cache, semantic-retrieval and tool-split experiments. It also fixes a
+benchmark tool-selection defect and strengthens score auditing. Its diagnostic subsets leave the
+leaderboard below unchanged.
 
 | Model | Model release | Required Mac RAM | Download | Reviewed task score | Median first text |
 | --- | --- | --- | --- | --- | --- |
@@ -165,9 +170,36 @@ For a new STT engine, follow [the separate speech-provider recipe](local-speech-
 
 ## Resource and failure behavior
 
-One downloaded text model is loaded at a time. Each request starts a fresh prompt cache. Chat reconstructs native conversation messages from its bounded working context; meeting tasks remain independent. Input is checked against a 4,096-token total context. Tasks request at most 1,400 generation tokens (Chat normally requests 240). LFM2.5 always reasons, so its catalog policy grants 1,024 additional generation tokens for replies and ordinary transformations, or 2,048 for history summaries. Context measurement and source splitting reserve the same allowance. This is a bounded combined ceiling, not a guaranteed split between reasoning and answer tokens; unfinished responses fail. Native reasoning channels are separated from visible text. Orphaned closing delimiters are now rejected before that delimiter reaches the streaming sink, including split chunks; this does not validate arbitrary generated prose. The [LFM rerun](reports/lfm-chat-rerun-2026-11-02.md) documents the verified boundary fix and remaining generation failures. MLX uses the model-specific allocation budget described above, with a 128 MiB cache. These limits do not describe total process RSS or all driver allocations.
+One downloaded text model is loaded at a time. Chat reconstructs native messages from bounded
+working context. Validated profiles for Gemma E4B, Granite 3B/8B, Ministral and Nemotron permit
+native cache continuation when history and session identity match; the SDK can still rebuild when
+its cache cannot safely reconcile the next prompt. Gemma 26B, LFM 24B/2.6B and Qwen 3.5 2B/4B retain
+one bounded exact-prefix snapshot, copied for each matching continuation. Other profiles use fresh caches. Meeting tasks
+remain independent. Gemma 12B and LFM 24B use an 8,192-token working context; the other downloadable
+profiles use 4,096. Admission reserves output and reasoning capacity inside those per-model limits.
+See the [profile contracts](model-profiles.md) and [cache measurements](reports/model-opportunities-2026-11-04.md).
+The [readiness follow-up](reports/model-readiness-2026-11-04.md) reports snapshot performance,
+the remaining Qwen gate, semantic retrieval experiments and rejected memory-tool changes.
+The [controlled cache comparison](reports/cache-isolation-2026-11-04.md) separates prompt splitting
+from native state reuse and qualifies Qwen 2B/4B and LFM 2.6B. Qwen 9B remains disabled after its
+whole-task review missed the acceptance margin; native replay did not show state corruption.
+The [Search & Memory report](reports/search-memory-and-prefix-profiles-2026-11-04.md) covers
+persistent native retrieval. Search models are selected independently in Settings → Search & Memory;
+see [the extension guide](contributing/search-models.md) and the
+[memory, evidence and scale follow-up](reports/cache-memory-followup-2026-11-04.md).
 
-The helper runs at utility priority. Speech inference preempts active downloaded-text inference, waits for worker exit, and allows interrupted text work to retry once speech is idle. Explicit dictation reserves that priority through finalization, including Apple Speech. Text model leases prevent deletion while loading or generating. A 60-second idle release, pause/exclusion handling, selection changes, and termination release the worker. IPC responses are bounded to 128 KiB and each request has a 120-second deadline. The app does not wait synchronously for helper exit.
+Tasks request at most 1,400 generation tokens (Chat normally requests 240). LFM2.5 always reasons,
+so its catalog policy grants 1,024 additional generation tokens for replies and ordinary
+transformations, or 2,048 for history summaries. Context measurement and source splitting reserve
+the same allowance. This is a bounded combined ceiling, not a guaranteed split between reasoning
+and answer tokens; unfinished responses fail. Native reasoning channels are separated from visible
+text. Orphaned closing delimiters are rejected before they reach the streaming sink, including split
+chunks; this does not validate arbitrary generated prose. The [LFM rerun](reports/lfm-chat-rerun-2026-11-02.md)
+documents the boundary fix and remaining failures. MLX uses the model-specific allocation budget
+described above and a 128 MiB temporary allocator cache. Retained conversation state is separate;
+these limits do not describe total process RSS or all driver allocations.
+
+The helper runs at utility priority. Speech inference preempts active downloaded-text inference, waits for worker exit, and allows interrupted text work to retry once speech is idle. Explicit dictation reserves that priority through finalization, including Apple Speech. Text model leases prevent deletion while loading or generating. Active conversation lifetimes can retain the loaded model across the 60-second idle checks while memory policy permits it. Session end releases that conversation's cache; idle release, memory pressure, pause/exclusion handling, selection changes, and termination release resources through their owners. IPC responses are bounded to 128 KiB and each request has a 120-second deadline. The app does not wait synchronously for helper exit.
 
 Interactive writing goes ahead of queued background notes, and long meetings yield between chunks. Dictation retains its separate 750 ms cleanup deadline: if loading or generation misses it, the finalized transcript is inserted once. A delayed model output never rewrites the destination. This means larger models may improve meeting notes without being fast enough for dictation cleanup.
 

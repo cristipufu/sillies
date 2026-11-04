@@ -72,6 +72,10 @@
       "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit"
     ],
     "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
-    "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained. The November 3 focused comparison used this checkpoint; larger contexts were not tested for it. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+    "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained. The November 3 focused comparison used this checkpoint; larger contexts were not tested for it. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md. The November 4 model-opportunities study measured ten correct retained/rebuilt pairs and nine passing native invalidation controls for this exact checkpoint; native-session continuation is enabled. See docs/reports/model-opportunities-2026-11-04.md for the separate app workflow validation and limits."
+  },
+  "runtime": {
+    "conversationCache": "nativeSession",
+    "chatTemplate": "checkpoint"
   }
 }

@@ -1,0 +1,13 @@
+{
+  "answers-apple-apple.json.gz": "d694cf4367851bd35d5b22a5af24a058d7504b4aa73307d31fe6884de6c819df",
+  "answers-apple-qwen-3.5-4b.json.gz": "d2127430779826ea79527fd99d0f97481d369bce763e646ad18928bda4448f24",
+  "answers-e5-apple.json.gz": "924e340b3221f0bc1526bb5a4b1bf3248a7bbc4cd7c2812907d6c3704b6a592c",
+  "answers-e5-qwen-3.5-4b.json.gz": "e1398561994b3346a77b6b887131bdddf09b1a4821179d4bf00fe070efcd6646",
+  "answers-keywords-apple.json.gz": "959ff37bb1c8b9d69d0d11da199b3cc24f5796b4512935d1bca81e5c4f77a961",
+  "answers-keywords-qwen-3.5-4b.json.gz": "e66b339c7d73446fb5db2277555a03449786a30d85b4ebdf10fe2ef61e6d6a17",
+  "audits.json": "7dad780322ae99615c87f04130cfd2af0b6a0ab04bd573d29199c154250da63f",
+  "execution-ledger.json": "cfb4653cfe7606fef45b1243b09647e86dd3c4a8868606c5e14f591426fa3bf2",
+  "retrieval-and-procedures.json.gz": "77810a677d26308731a395c8980b60955bc2aa178aa79488b7d383689850b1e1",
+  "runtime-hashes.json": "bc6b8b7adbdad831884b4cea9a396d864a3952620d81cf4a9a59fad982ebf335",
+  "source-overlay.json.gz": "c57980f0fe744ebd88f8a0aa4985136e081e5c801da0d66fd7cf2d576624e63e"
+}

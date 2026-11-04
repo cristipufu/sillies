@@ -1,0 +1,14 @@
+{
+  "scope": "Passing correction reviews only; state, provenance and exact operation references. Not a conversational-quality judge.",
+  "passed": [
+    "contract-baseline-gemma-4-26b-a4b",
+    "contract-baseline-granite-4.2-8b",
+    "contract-baseline-ministral-3-8b",
+    "contract-baseline-nemotron-3.5-bolt-e4b",
+    "contract-baseline-qwen-3.5-4b",
+    "contract-cache-app-nemotron-3.5-bolt-e4b",
+    "contract-split-wired-gemma-4-12b",
+    "contract-split-wired-granite-4.2-3b",
+    "contract-split-wired-ministral-3-8b"
+  ]
+}

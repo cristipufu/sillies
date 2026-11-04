@@ -108,11 +108,12 @@ final class AutomatedLaunchRunner {
           (
             speech: try SpeechModelCatalog.bundled().manifests.count,
             text: try TextModelCatalog.bundled().manifests.count,
-            voice: try TTSModelCatalog.bundled().manifests.count
+            voice: try TTSModelCatalog.bundled().manifests.count,
+            search: try SearchModelCatalog.bundled().manifests.count
           )
         }.value
         print(
-          "Validated \(characterCount) character packs, all animation references, \(models.speech) downloadable speech models, \(models.text) downloadable text models, and \(models.voice) downloadable voice models."
+          "Validated \(characterCount) character packs, all animation references, \(models.speech) downloadable speech models, \(models.text) downloadable text models, \(models.voice) downloadable voice models, and \(models.search) downloadable search models."
         )
         NSApp.terminate(nil)
       } catch {

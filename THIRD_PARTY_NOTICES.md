@@ -86,6 +86,7 @@ Review the upstream model cards and applicable license before redistributing wei
 | Qwen3-TTS 0.6B | Apache 2.0 | [Model card](https://huggingface.co/argmaxinc/ttskit-coreml) | [065712357592](https://huggingface.co/argmaxinc/ttskit-coreml/tree/065712357592bc0d194cf7cd91852c5cde3eb1b8) |
 | Qwen3-TTS 1.7B | Apache 2.0 | [Model card](https://huggingface.co/argmaxinc/ttskit-coreml) | [065712357592](https://huggingface.co/argmaxinc/ttskit-coreml/tree/065712357592bc0d194cf7cd91852c5cde3eb1b8) |
 | Fish S2 Pro | Fish Audio Research License (non-commercial) | [Model card](https://huggingface.co/fishaudio/s2-pro) | [c8d4481b3f7c](https://huggingface.co/mlx-community/fish-audio-s2-pro-8bit/tree/c8d4481b3f7cbfe64d855c8b7cda7739502fc3ff) |
+| Multilingual E5 Small | MIT | [Model card](https://huggingface.co/intfloat/multilingual-e5-small) | [614241f622f5](https://huggingface.co/intfloat/multilingual-e5-small/tree/614241f622f53c4eeff9890bdc4f31cfecc418b3) |
 
 ## Resolved software
 

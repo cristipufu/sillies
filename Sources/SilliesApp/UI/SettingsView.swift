@@ -8,6 +8,7 @@ struct SettingsView: View {
   var speechModels: SpeechModelsPresentation? = nil
   var voiceModels: VoiceModelsPresentation? = nil
   var textModels: TextModelsPresentation? = nil
+  var searchModels: SearchModelsPresentation? = nil
   var shortcuts: CommandShortcuts? = nil
   var loginItems: LoginItemSettings? = nil
   var writingTools: WritingTools? = nil
@@ -102,6 +103,8 @@ struct SettingsView: View {
       }
     case .intelligence:
       if let textModels { TextModelSettingsView(model: textModels) }
+    case .search:
+      if let searchModels { SearchModelSettingsView(model: searchModels) }
     case .voices:
       if let voiceModels { VoiceModelSettingsView(model: voiceModels) }
     case .shortcuts:

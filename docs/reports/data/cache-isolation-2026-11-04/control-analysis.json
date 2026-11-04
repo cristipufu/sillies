@@ -1,0 +1,59 @@
+{
+  "qwen-3.5-2b": {
+    "timing": {
+      "pairs": 10,
+      "correctAnswersBothArms": true,
+      "baselineMedianSeconds": 1.1160617915156763,
+      "retainedMedianSeconds": 0.32872997896629386,
+      "reduction": 0.7054553955118743
+    },
+    "native": {
+      "stateRequests": 3,
+      "exactRestoration": true,
+      "cancellationSinkRecoveryRelease": true,
+      "boundedCapacityRequests": 13,
+      "maximumRetainedBytes": 41103360
+    },
+    "invalidationStateChecks": 9,
+    "invalidationAnswerChecksPassed": 9,
+    "workload": "App tool definitions retained in the native probe; all ten follow-ups answered without a call."
+  },
+  "qwen-3.5-4b": {
+    "timing": {
+      "pairs": 10,
+      "correctAnswersBothArms": true,
+      "baselineMedianSeconds": 2.7790101665013935,
+      "retainedMedianSeconds": 0.780238208011724,
+      "reduction": 0.7192388076096904
+    },
+    "native": {
+      "stateRequests": 3,
+      "exactRestoration": true,
+      "cancellationSinkRecoveryRelease": true,
+      "boundedCapacityRequests": 13,
+      "maximumRetainedBytes": 109019136
+    },
+    "invalidationStateChecks": 9,
+    "invalidationAnswerChecksPassed": 9,
+    "workload": "App tool definitions retained in the native probe; all ten follow-ups answered without a call."
+  },
+  "lfm-2.5-2.6b": {
+    "timing": {
+      "pairs": 10,
+      "correctAnswersBothArms": true,
+      "baselineMedianSeconds": 1.4132284584920853,
+      "retainedMedianSeconds": 0.9437931040010881,
+      "reduction": 0.33217230495901895
+    },
+    "native": {
+      "stateRequests": 3,
+      "exactRestoration": true,
+      "cancellationSinkRecoveryRelease": true,
+      "boundedCapacityRequests": 13,
+      "maximumRetainedBytes": 25985024
+    },
+    "invalidationStateChecks": 8,
+    "invalidationAnswerChecksPassed": 2,
+    "workload": "Direct generation without tools; production tool workflows evaluated separately."
+  }
+}

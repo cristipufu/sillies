@@ -72,6 +72,14 @@
       "https://huggingface.co/mlx-community/Qwen3.5-4B-MLX-4bit"
     ],
     "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
-    "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained from the committed baseline. This checkpoint was not natively compared in the November 3 focused experiment. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md."
+    "rationale": "Native checkpoint capacity comes from pinned config.json. 4K working context and task decoding retained from the committed baseline. This checkpoint was not natively compared in the November 3 focused experiment. Task decoding otherwise preserves the committed baseline. Prefill delegates to the pinned runtime. Application choices and limitations are documented in docs/reports/agent-profiles-2026-11-03.md. Bounded native prefix retention qualified in docs/reports/cache-isolation-2026-11-04.md: identical-input state/answer controls, complete paired workflow review and native lifecycle checks; this is a bounded regression screen, not a population-level quality guarantee."
+  },
+  "runtime": {
+    "conversationCache": "prefixSnapshot",
+    "chatTemplate": "checkpoint",
+    "prefixSnapshot": {
+      "maximumTokens": 2048,
+      "maximumBytes": 201326592
+    }
   }
 }

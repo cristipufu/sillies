@@ -4,13 +4,16 @@ struct ArchitecturePolicy {
   var uncheckedOwners: [String: String]
 
   static let imports: [String: Set<String>] = [
+    "MemorySearchBenchmark": [
+      "Foundation", "SilliesCore", "SilliesVault", "SilliesSearchModels", "SilliesInference",
+    ],
     "ConversationStorageProbe": ["Foundation", "SilliesConversationTestSupport"],
     "SilliesConversationTestSupport": [
       "Foundation", "Darwin", "SQLite3", "SilliesCore", "SilliesPersistence",
     ],
     "ChatModelBenchmark": [
       "Foundation", "SilliesCore", "SilliesModelStore", "SilliesTextModels", "SilliesReasoning",
-      "SilliesVault", "Synchronization",
+      "SilliesVault", "SilliesSearchModels", "SilliesInference", "Synchronization",
     ],
     "SilliesCore": ["Foundation", "CoreGraphics"],
     "SilliesDesign": ["Foundation"],
@@ -42,6 +45,11 @@ struct ArchitecturePolicy {
     "SilliesModelStore": [
       "Foundation", "CryptoKit", "Synchronization", "SilliesCore", "SilliesFileSystem",
     ],
+    "SilliesSearchModels": ["Foundation", "SilliesCore", "SilliesInference"],
+    "SilliesSearchInference": [
+      "Foundation", "Darwin", "NaturalLanguage", "MLX", "MLXEmbedders", "MLXHuggingFace",
+      "MLXLMCommon", "SilliesCore", "SilliesSearchModels", "SilliesInference", "Tokenizers",
+    ],
     "SilliesInference": ["Foundation", "Darwin"],
     "SilliesChat": [
       "Foundation", "Observation", "SilliesCore", "SilliesAudio", "SilliesSpeech",
@@ -60,7 +68,8 @@ struct ArchitecturePolicy {
       "Foundation", "Darwin", "SilliesCore", "SilliesModelStore", "SilliesInference",
     ],
     "SilliesTextInference": [
-      "Foundation", "Darwin", "MLX", "MLXLLM", "MLXLMCommon", "Tokenizers", "SilliesTextModels",
+      "Foundation", "Darwin", "CryptoKit", "MLX", "MLXLLM", "MLXLMCommon", "Tokenizers",
+      "SilliesTextModels",
       "SilliesInference",
     ],
     "SilliesModelValidation": ["Foundation", "CoreML"],

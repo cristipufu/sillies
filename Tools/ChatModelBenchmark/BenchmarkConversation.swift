@@ -14,6 +14,7 @@ struct BenchmarkConversation {
   let inference: BenchmarkInferenceTrace
   let events: BenchmarkEvents
   let workspace: URL
+  let memorySearch: BenchmarkMemorySearch
 
   func run(_ job: BenchmarkJob) async throws {
     try await events.emit(.caseStarted, job)
@@ -23,13 +24,15 @@ struct BenchmarkConversation {
     do {
       let fixture = try await BenchmarkFixture.create(for: job.scenario, root: workspace)
       defer { fixture.remove() }
-      let dialogue = BenchmarkDialogue(
-        scenario: job.scenario, fixture: fixture, session: lifetime.id)
-      let session = Session(job: job, fixture: fixture, dialogue: dialogue)
-      try await dialogue.prepare()
-      for (index, input) in job.scenario.turns.enumerated() {
-        try await turn(input, at: .init(job: job.id, turn: index), in: session)
-        completed += 1
+      try await memorySearch.withIndex(in: fixture.conversations) {
+        let dialogue = BenchmarkDialogue(
+          scenario: job.scenario, fixture: fixture, session: lifetime.id)
+        let session = Session(job: job, fixture: fixture, dialogue: dialogue)
+        try await dialogue.prepare()
+        for (index, input) in job.scenario.turns.enumerated() {
+          try await turn(input, at: .init(job: job.id, turn: index), in: session)
+          completed += 1
+        }
       }
       await lifetime.end()
       try await events.emit(
@@ -87,20 +90,19 @@ struct BenchmarkConversation {
     let staticTools: [any ConversationTool] = [
       VaultSearchTool(library: fixture.vault), VaultReadTool(library: fixture.vault),
     ]
-    .filter { profile.names.contains($0.definition.name) }
-    let extras = Array(BenchmarkDistractorTool.available.prefix(profile.distractorCount))
+    .filter { profile.includes($0.definition.name) }
     return LocalConversationService(
-      resolveBackend: { selected }, tools: measured(staticTools + extras, position: position),
+      resolveBackend: { selected }, tools: measured(staticTools, position: position),
       turns: .init(),
       history: .init(
         repository: fixture.conversations,
         tools: { context in
-          measured(
-            ConversationHistoryTools(
-              conversations: fixture.conversations, memories: fixture.conversations
-            )
-            .tools(for: context).filter { profile.names.contains($0.definition.name) },
-            position: position)
+          let historyTools = ConversationHistoryTools(
+            conversations: fixture.conversations, memories: fixture.conversations
+          ).tools(for: context).filter { profile.includes($0.definition.name) }
+          let count = profile.distractorCount(baseCount: staticTools.count + historyTools.count)
+          let extras = Array(BenchmarkDistractorTool.available.prefix(count))
+          return measured(historyTools + extras, position: position)
         }))
   }
 

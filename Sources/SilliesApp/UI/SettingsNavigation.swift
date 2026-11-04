@@ -7,7 +7,7 @@ import SwiftUI
 }
 
 enum SettingsDestination: String, CaseIterable, Identifiable {
-  case general, appearance, companions, writing, speech, intelligence, voices, shortcuts
+  case general, appearance, companions, writing, speech, intelligence, search, voices, shortcuts
   var id: Self { self }
   var title: String {
     switch self {
@@ -17,6 +17,7 @@ enum SettingsDestination: String, CaseIterable, Identifiable {
     case .writing: String(localized: "Dictation & Writing")
     case .speech: String(localized: "Speech & Meetings")
     case .intelligence: String(localized: "Local AI")
+    case .search: String(localized: "Search & Memory")
     case .voices: String(localized: "Voices")
     case .shortcuts: String(localized: "Shortcuts")
     }
@@ -29,6 +30,7 @@ enum SettingsDestination: String, CaseIterable, Identifiable {
     case .writing: "mic.fill"
     case .speech: "waveform"
     case .intelligence: "sparkles"
+    case .search: "brain.head.profile"
     case .voices: "speaker.wave.2"
     case .shortcuts: "keyboard"
     }
@@ -42,6 +44,7 @@ enum SettingsDestination: String, CaseIterable, Identifiable {
     case .speech: String(localized: "Local speech models for dictation and meetings.")
     case .intelligence:
       String(localized: "Optional local models for multilingual notes and writing.")
+    case .search: String(localized: "Help your companions find the memories that matter.")
     case .voices: String(localized: "Give your companions a voice, entirely on your Mac.")
     case .shortcuts: String(localized: "A keyboard path to your companions’ skills.")
     }

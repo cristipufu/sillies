@@ -39,6 +39,14 @@ def validate(review: dict, turn: dict) -> None:
         raise ValueError("A full rubric review must bind to task evidence")
     if review["verdict"] not in {"pass", "fail", "uncertain"} or not review.get("note", "").strip():
         raise ValueError("A semantic review needs a verdict and rationale")
+    if full_rubric(review) and review["verdict"] == "pass" and (
+        turn.get("error") or not (turn.get("reply") or "").strip()
+    ):
+        raise ValueError("A failed or empty turn cannot receive a full-rubric pass")
+    if full_rubric(review) and review["verdict"] == "pass" and any(
+        check["kind"] == "initial_context_omits" and not check["passed"] for check in turn.get("checks", [])
+    ):
+        raise ValueError("An invalid fixture cannot receive a full-rubric pass")
 
 
 def full_rubric(review: dict) -> bool:
@@ -68,5 +76,6 @@ def model_summary(model: str, cases: list[dict], judgments: dict) -> dict:
                   rubricCases={"pass": 0, "fail": 0, "pending": 0})
     for case in primary:
         verdicts = [judgments.get((model, case["job"], index), {}) for index in range(len(case["turns"]))]
-        counts["rubricCases"][rubric_status(verdicts)] += 1
+        status = "fail" if case.get("error") else rubric_status(verdicts)
+        counts["rubricCases"][status] += 1
     return counts

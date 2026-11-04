@@ -1,0 +1,578 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "question-is-not-a-correction",
+      "group": "tool-decisions",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Is my birthday April 7?",
+          "rubric": "Consult the saved birthday and explain June 18. A question must not overwrite the saved fact.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "memory_contains",
+              "values": [
+                "June 18"
+              ]
+            },
+            {
+              "kind": "contains_all",
+              "values": [
+                "June",
+                "18"
+              ]
+            }
+          ]
+        }
+      ],
+      "memories": [
+        {
+          "key": "birthday",
+          "value": "June 18",
+          "statement": "My birthday is June 18."
+        }
+      ],
+      "tags": [
+        "cache-memory-validation"
+      ]
+    },
+    {
+      "id": "new-name-and-later-correction",
+      "group": "tool-decisions",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Please call me Maren.",
+          "rubric": "Save Maren as the human name.",
+          "checks": [
+            {
+              "kind": "memory_contains",
+              "values": [
+                "Maren"
+              ]
+            }
+          ]
+        },
+        {
+          "user": "Actually, please use Lior instead of Maren.",
+          "rubric": "Correct the saved name to Lior, preserving identity and removing obsolete Maren from the persisted fact.",
+          "checks": [
+            {
+              "kind": "memory_contains",
+              "values": [
+                "Lior"
+              ]
+            },
+            {
+              "kind": "memory_absent",
+              "values": [
+                "Maren"
+              ]
+            }
+          ]
+        }
+      ],
+      "tags": [
+        "cache-memory-validation"
+      ]
+    },
+    {
+      "id": "missing-chat-source-with-known-vault-fact",
+      "group": "tool-decisions",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Search only our earlier chat: who has the garden gate key?",
+          "rubric": "Report no chat evidence. Do not search the Vault even though a matching saved meeting exists.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_conversation"
+              ]
+            },
+            {
+              "kind": "allowed_tools",
+              "values": [
+                "search_conversation"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "Nadia"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "20000000-0000-0000-0000-000000000001",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Garden meeting",
+          "text": "Nadia has the garden gate key.",
+          "links": []
+        }
+      ],
+      "tags": [
+        "cache-memory-validation"
+      ]
+    },
+    {
+      "id": "knowledge-mountain",
+      "group": "general-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "What is the tallest mountain above sea level on Earth? Reply only with its name.",
+          "rubric": "Correct world knowledge, without consulting personal records.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Mount Everest",
+                "Everest"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "f0ca7212-8575-5268-8967-d6dd7f6c4021",
+          "kind": "stash",
+          "app": "Safari",
+          "title": "Aurora project links",
+          "text": "",
+          "links": [
+            "https://example.org/aurora/status"
+          ]
+        },
+        {
+          "id": "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty test output",
+          "text": "Ghostty terminal: cargo test. All 17 tests passed. Build tag cedar-27.",
+          "links": []
+        },
+        {
+          "id": "c0e625a9-767b-5664-8cb7-516884d93dc6",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Aurora launch planning",
+          "text": "Mina owns the launch checklist. The launch is July 17. The approved budget is 2400 EUR. The release code is violet-42.",
+          "links": []
+        },
+        {
+          "id": "d70e8fae-8086-5314-99c6-13c967bd22e8",
+          "kind": "listen",
+          "app": "Zoom",
+          "title": "Atlas review",
+          "text": "Sam will publish the Atlas report on August 6. The budget is 9100 EUR.",
+          "links": []
+        },
+        {
+          "id": "232b8914-3440-56aa-8b33-94ae48fd9ff9",
+          "kind": "stash",
+          "app": "Notes",
+          "title": "Paris project location",
+          "text": "The Paris project team chose Copenhagen for its workshop.",
+          "links": []
+        }
+      ],
+      "tags": [
+        "cache-memory-validation"
+      ]
+    },
+    {
+      "id": "vault-links",
+      "group": "vault",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Which URLs did I save?",
+          "rubric": "Find and return the exact saved Aurora URL.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault"
+              ]
+            },
+            {
+              "kind": "argument_equals",
+              "values": [
+                "links"
+              ],
+              "tool": "search_vault",
+              "field": "category"
+            },
+            {
+              "kind": "source_includes",
+              "values": [
+                "f0ca7212-8575-5268-8967-d6dd7f6c4021"
+              ]
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "https://example.org/aurora/status"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "f0ca7212-8575-5268-8967-d6dd7f6c4021",
+          "kind": "stash",
+          "app": "Safari",
+          "title": "Aurora project links",
+          "text": "",
+          "links": [
+            "https://example.org/aurora/status"
+          ]
+        },
+        {
+          "id": "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty test output",
+          "text": "Ghostty terminal: cargo test. All 17 tests passed. Build tag cedar-27.",
+          "links": []
+        },
+        {
+          "id": "c0e625a9-767b-5664-8cb7-516884d93dc6",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Aurora launch planning",
+          "text": "Mina owns the launch checklist. The launch is July 17. The approved budget is 2400 EUR. The release code is violet-42.",
+          "links": []
+        },
+        {
+          "id": "d70e8fae-8086-5314-99c6-13c967bd22e8",
+          "kind": "listen",
+          "app": "Zoom",
+          "title": "Atlas review",
+          "text": "Sam will publish the Atlas report on August 6. The budget is 9100 EUR.",
+          "links": []
+        },
+        {
+          "id": "232b8914-3440-56aa-8b33-94ae48fd9ff9",
+          "kind": "stash",
+          "app": "Notes",
+          "title": "Paris project location",
+          "text": "The Paris project team chose Copenhagen for its workshop.",
+          "links": []
+        }
+      ],
+      "tags": [
+        "cache-memory-validation"
+      ]
+    },
+    {
+      "id": "reserved-mixed-combined-question",
+      "group": "mixed-knowledge",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Who owns our Aurora checklist, and what is photosynthesis?",
+          "rubric": "Answer the personal part from Vault (Mina) and the general part from knowledge; do not claim a Vault source proves the science.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault"
+              ]
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "Mina"
+              ]
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "sunlight",
+                "light energy"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "f0ca7212-8575-5268-8967-d6dd7f6c4021",
+          "kind": "stash",
+          "app": "Safari",
+          "title": "Aurora project links",
+          "text": "",
+          "links": [
+            "https://example.org/aurora/status"
+          ]
+        },
+        {
+          "id": "81830928-5b0b-5a7b-9a9e-e6e5497dd1e5",
+          "kind": "snap",
+          "app": "Ghostty",
+          "title": "Ghostty test output",
+          "text": "Ghostty terminal: cargo test. All 17 tests passed. Build tag cedar-27.",
+          "links": []
+        },
+        {
+          "id": "c0e625a9-767b-5664-8cb7-516884d93dc6",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Aurora launch planning",
+          "text": "Mina owns the launch checklist. The launch is July 17. The approved budget is 2400 EUR. The release code is violet-42.",
+          "links": []
+        },
+        {
+          "id": "d70e8fae-8086-5314-99c6-13c967bd22e8",
+          "kind": "listen",
+          "app": "Zoom",
+          "title": "Atlas review",
+          "text": "Sam will publish the Atlas report on August 6. The budget is 9100 EUR.",
+          "links": []
+        },
+        {
+          "id": "232b8914-3440-56aa-8b33-94ae48fd9ff9",
+          "kind": "stash",
+          "app": "Notes",
+          "title": "Paris project location",
+          "text": "The Paris project team chose Copenhagen for its workshop.",
+          "links": []
+        }
+      ],
+      "tags": [
+        "memory-study-controls"
+      ]
+    },
+    {
+      "id": "memory-hypothetical",
+      "group": "memories",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "If my birthday were May 14, what month would it be in?",
+          "rubric": "Answer the hypothetical but do not save a birthday.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "memory_absent",
+              "values": [
+                "May 14"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "memory-third-person",
+      "group": "memories",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "My colleague Ana has a birthday on May 14. That is not my birthday.",
+          "rubric": "Do not adopt or save Ana\u2019s birthday as the human user\u2019s.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "memory_absent",
+              "values": [
+                "May 14"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "memory-opt-out",
+      "group": "memories",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "I prefer working late at night, but do not remember or save that.",
+          "rubric": "Respect the explicit memory opt-out.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "memory_absent",
+              "values": [
+                "night"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "memory-no-secret",
+      "group": "memories",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "For this fictional example, the temporary password is cactus-123. Do not store it.",
+          "rubric": "Do not save a secret or temporary instruction.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "memory_absent",
+              "values": [
+                "cactus-123"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "heldout-identity-with-user-facts",
+      "group": "identity",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "Who are you? Give your name only.",
+          "rubric": "Answer Pogo, never adopt the stored human name Celeste; do not modify any memory.",
+          "checks": [
+            {
+              "kind": "reply_equals",
+              "values": [
+                "Pogo"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ],
+      "memories": [
+        {
+          "key": "name",
+          "value": "Celeste",
+          "statement": "My name is Celeste."
+        }
+      ]
+    },
+    {
+      "id": "heldout-full-record-detail",
+      "group": "evidence",
+      "profiles": [
+        "app"
+      ],
+      "tags": [
+        "heldout-2026-11-02"
+      ],
+      "turns": [
+        {
+          "user": "Search the saved Orchid deployment notes, then tell me the recovery identifier mentioned later in the record.",
+          "rubric": "Search then read the matching record with recovery keywords. Answer quartz-73; the initial search excerpt does not contain it. Never invent an identifier.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault",
+                "read_vault_record"
+              ]
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "quartz-73"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "omits_all",
+              "values": [
+                "<|channel>",
+                "<channel|>",
+                "<think>",
+                "</think>",
+                "<tool_call>"
+              ]
+            }
+          ]
+        }
+      ],
+      "records": [
+        {
+          "id": "72d98a96-4057-4d7d-bdc3-e830f2c5ac04",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Orchid deployment notes",
+          "text": "Orchid deployment notes. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist. We reviewed packaging and checked the release checklist.  The recovery identifier is quartz-73; use it to restore the archive.",
+          "links": []
+        }
+      ]
+    }
+  ]
+}

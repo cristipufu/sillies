@@ -12,17 +12,30 @@ actor MLXTextRuntime {
   private var preparation: TextModelPreparation?
   private var inputProcessor: MLXInputProcessor?
   private let conversation = MLXNativeConversation()
+  private let prefixSnapshot: MLXPrefixSnapshot
   private var active = false
   private var constraints = CheckpointGenerationConstraints.unconstrained
   private let rejectionObserver: (@Sendable (RejectedToolCall) async -> Void)?
   private let timingObserver: TextPreparationTiming.Observer?
+  private let samplingSeed: UInt64?
+  private let inputObserver: (@Sendable ([Int]) -> Void)?
 
   init(
     rejectionObserver: (@Sendable (RejectedToolCall) async -> Void)? = nil,
-    timingObserver: TextPreparationTiming.Observer? = nil
+    timingObserver: TextPreparationTiming.Observer? = nil,
+    reproduction: TextInferenceInspection.Reproduction = .init(),
+    inputObserver: (@Sendable ([Int]) -> Void)? = nil
   ) {
     self.rejectionObserver = rejectionObserver
     self.timingObserver = timingObserver
+    samplingSeed = reproduction.samplingSeed
+    prefixSnapshot = MLXPrefixSnapshot(retention: reproduction.prefixRetention)
+    self.inputObserver = inputObserver
+  }
+
+  func prefixCacheStatus() async -> MLXPrefixSnapshot.Status {
+    guard let model else { return .init(tokens: 0, bytes: 0) }
+    return await model.perform { [prefixSnapshot] _ in prefixSnapshot.status }
   }
 
   func generate(_ request: TextInferenceRequest, receive: @escaping TextDeltaSink) async throws
@@ -32,12 +45,18 @@ actor MLXTextRuntime {
     active = true
     defer { active = false }
     if request.generation.operation == .releaseSession {
-      if let id = request.generation.sessionID { await conversation.release(id) }
+      if let id = request.generation.sessionID {
+        await conversation.release(id)
+        if let model {
+          await model.perform { [prefixSnapshot] _ in prefixSnapshot.release(id) }
+        }
+      }
       Memory.clearCache()
       return .init(text: "")
     }
     do { return try await perform(request, receive: receive) } catch {
       await conversation.clear()
+      await clearPrefixSnapshot()
       Memory.clearCache()
       throw error
     }
@@ -51,7 +70,7 @@ actor MLXTextRuntime {
   private func perform(_ request: TextInferenceRequest, receive: @escaping TextDeltaSink)
     async throws -> TextGenerationOutput
   {
-    let plan = try MLXGenerationPlan(request)
+    let plan = try MLXGenerationPlan(request, samplingSeed: samplingSeed)
     Memory.cacheLimit = Self.cacheBytes
     Memory.memoryLimit = request.configuration.memoryLimitBytes
     let loadStart = ContinuousClock.now
@@ -59,6 +78,7 @@ actor MLXTextRuntime {
     await timingObserver?(.init(.modelLoad, since: loadStart))
     let inputStart = ContinuousClock.now
     let input = try await prepareInput(plan, using: container)
+    if let inputObserver { inputObserver(input.text.tokens.asArray(Int.self)) }
     await timingObserver?(.init(.inputPreparation, since: inputStart))
     if request.generation.operation == .measure {
       return .init(text: "", inputTokens: input.text.tokens.size)
@@ -67,6 +87,19 @@ actor MLXTextRuntime {
     let collector = await collector(
       promptTail: promptTail, style: request.generation.style, using: container)
     defer { Memory.clearCache() }
+    if plan.usesPrefixSnapshot, input.text.mask == nil, input.text.tokens.ndim == 1,
+      input.image == nil, input.video == nil, input.audio == nil
+    {
+      await conversation.clear()
+      let invocation = MLXPrefixGeneration.Invocation(
+        tokens: input.text.tokens.asArray(Int.self), plan: plan, components: constraints.components,
+        collector: collector, rejectionObserver: rejectionObserver)
+      return try await container.perform { [prefixSnapshot] context in
+        try await MLXPrefixGeneration.generate(
+          invocation, snapshot: prefixSnapshot, context: context, receive: receive)
+      }
+    }
+    await clearPrefixSnapshot()
     if plan.usesNativeSession {
       return try await conversation.generate(
         .init(
@@ -89,7 +122,7 @@ actor MLXTextRuntime {
     } else {
       await container.update { $0.processor = inputProcessor }
     }
-    if !plan.tools.isEmpty, await container.configuration.toolCallFormat == nil {
+    if plan.tools != nil, await container.configuration.toolCallFormat == nil {
       throw TextModelError.toolsUnavailable
     }
     let messages = try await container.perform { context in
@@ -102,7 +135,7 @@ actor MLXTextRuntime {
     }
     return try await container.prepare(
       input: UserInput(
-        messages: messages, tools: plan.tools.isEmpty ? nil : plan.tools,
+        messages: messages, tools: plan.tools,
         additionalContext: plan.templateContext))
   }
 
@@ -125,7 +158,7 @@ actor MLXTextRuntime {
     let stream = try await container.perform(nonSendable: prepared.input) { context, input in
       try MLXLMCommon.generate(
         input: input, parameters: plan.parameters, context: context, components: components,
-        tools: plan.tools.isEmpty ? nil : plan.tools)
+        tools: plan.tools)
     }
     var collector = prepared.collector
     for await event in stream {
@@ -140,6 +173,7 @@ actor MLXTextRuntime {
     let location = preparation.directory
     if self.preparation == preparation, let model { return model }
     await conversation.clear()
+    await clearPrefixSnapshot()
     model = nil
     inputProcessor = nil
     Memory.clearCache()
@@ -160,5 +194,11 @@ actor MLXTextRuntime {
     constraints = loadedConstraints
     model = loaded
     return loaded
+  }
+
+  private func clearPrefixSnapshot() async {
+    if let model {
+      await model.perform { [prefixSnapshot] _ in prefixSnapshot.clear() }
+    }
   }
 }

@@ -64,7 +64,7 @@ def generate(output: Path) -> dict:
                     f"{ratio(stats['checks']['behavior'])} | {ratio(stats['checks']['exact_answer'])} | "
                     f"{ratio(stats['checks']['lexical_anchor'])} | {review['primaryRubricReviewedTurns']}/{stats['turns']} | {seconds(stats['firstTextP50'])} / {seconds(stats['firstTextP95'])} | "
                     f"{seconds(stats['totalP50'])} | {stats['errors']} |")
-    lines = ["# Local Chat model evaluation", "", "Primary comparison: the app's five tools. Automated checks alone do not establish answer correctness or release readiness.", "",
+    lines = ["# Local Chat model evaluation", "", "Primary comparison: the app's production tools, recorded in each delivered request. Automated checks alone do not establish answer correctness or release readiness.", "",
              "| Model | Model release | Completed/planned | Checks passed/planned | Behavior checks | Exact answers | Lexical anchors | Full rubric reviews/observed turns | First text p50 / p95 | Turn p50 | Failed turns |",
              "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |", *rows, "",
              "Model release means the original publisher release, not a converted checkpoint upload; source links are frozen in run.json.",

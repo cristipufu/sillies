@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "baselineCommit": "e61c21d16b2d3420b8b8e7001a11649323201e57",
+  "purpose": "Investigate the five authorized memory, native-cache and semantic-retrieval opportunities independently; promote only supported changes.",
+  "execution": {
+    "maximumNativeSeconds": 3600,
+    "maximumBatchSeconds": 180,
+    "maximumTurnSeconds": 60,
+    "parallelNativeWorkers": 1,
+    "headless": true,
+    "syntheticStoresOnly": true,
+    "downloadModels": false,
+    "restartRunningApp": false
+  },
+  "tracks": {
+    "memoryContract": {
+      "models": "All 12 installed catalog checkpoints and Apple",
+      "corpus": "contract/cases.json",
+      "repetitions": 1,
+      "purpose": "Broader diagnostic validation of the committed create-only / revision-checked replacement contract, not a leaderboard or a claim of statistical reliability. Inspect attempted writes, acknowledgements, persisted identities and source provenance, including false claims with no write."
+    },
+    "stablePrefix": {
+      "models": ["gemma-4-26b-a4b", "lfm-2.5-24b-a2b", "qwen-3.5-4b"],
+      "maximumCandidates": 1,
+      "purpose": "Evaluate exact-prefix snapshots using native cache/state APIs. Inspect upstream implementations first. Do not silently adopt a community fork or alter checkpoint templates to manufacture a prefix match.",
+      "acceptance": "Native-state equivalence, correct matched answers, at least 20% median first-text reduction, measured bounded memory; exact-match admission, context changes, cancellation, failures and lifetime invalidation must remain correct. Unsupported API integration remains experimental."
+    },
+    "remainingCacheCoverage": {
+      "models": ["gemma-4-e4b", "gemma-4-12b", "lfm-2.5-2.6b", "nemotron-3.5-bolt-e4b", "qwen-3.5-2b", "qwen-3.5-9b"],
+      "screenPairsPerModel": 3,
+      "confirmationPairsPerQualifyingModel": 10,
+      "acceptance": "At least 20% median first-text reduction, every expected answer correct, all nine invalidation controls correct, and a real app tool workflow completing without state or parsing regression. A checkpoint is independent of its model family."
+    },
+    "semanticRetrieval": {
+      "maximumCandidates": 2,
+      "candidates": ["Apple sentence embeddings where already available", "Apple contextual embeddings where already available"],
+      "purpose": "Compare lexical and semantic retrieval on frozen paraphrase, literal identifier, unrelated, owner and multilingual cases. Supported language alone does not establish aligned cross-language vectors. Do not download system assets in the experiment.",
+      "acceptance": "All owner/source boundaries intact, no loss of exact identifier retrieval, better held-out paraphrase retrieval, explicitly measured no-match behavior, bounded disk/memory/query work. Missing assets or unsupported language falls back to lexical search without blocking. No unvalidated pooling or global semantic threshold in production."
+    },
+    "splitWrites": {
+      "models": ["granite-4.2-3b", "ministral-3-8b", "gemma-4-12b"],
+      "maximumCandidates": 1,
+      "purpose": "One create/correct schema split against the now insert-only writer. Keep the same persistence transactions, source evidence, generation settings and general instructions. The previous schema experiment used upsert creation and is not this control.",
+      "screenCorpus": "contract/cases.json",
+      "confirmationRepetitions": 2,
+      "heldoutCorpus": "validation/cases.json",
+      "acceptance": "At least two additional complete tasks over control in the screen, preserved general/Vault/source controls, no critical attempted or committed unauthorized write, question-as-fact, provenance loss, or false acknowledgement. Confirm the gain in two repeated paired runs and fresh validation. Warm p50/p95 overhead must stay within max(250ms,10%)/max(500ms,15%). Otherwise do not promote."
+    }
+  },
+  "review": {
+    "goldOutsideWorker": true,
+    "preserveFailuresAndUnrunCases": true,
+    "scoreMixedQuestionComponentsSeparately": true,
+    "reviewer": "Implementing coding agent; not independent or blinded",
+    "noDefaultOrLeaderboardChange": true,
+    "stop": "Stop a candidate when its mandatory gate fails; preserve the failed run. Stop native work when all registered tracks are resolved or the cumulative budget cannot admit another bounded batch. Never extend the budget to tune against failures."
+  }
+}

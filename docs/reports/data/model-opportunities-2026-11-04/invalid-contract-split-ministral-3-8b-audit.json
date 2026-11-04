@@ -1,0 +1,53 @@
+{
+  "archiveSHA256": "64152d5672b3fcd86d0efd7aac2a9212b62e3a844f7a71362e6ced8d655b844a",
+  "corpusHash": "7206a518a236b0fe8c65e8fe304d893d77fcd138d8dee5572f480c2f907dcf9e",
+  "integrity": "recorded checks and primary metrics reproduced",
+  "meaning": "Integrity is not semantic correctness, statistical confidence or release readiness.",
+  "models": {
+    "ministral-3-8b": {
+      "completedCases": 9,
+      "plannedCases": 9,
+      "observedTurns": 10,
+      "primary": {
+        "cases": 9,
+        "passed": 6,
+        "turns": 10,
+        "errors": 0,
+        "checks": {
+          "behavior": {
+            "passed": 37,
+            "total": 41
+          },
+          "exact_answer": {
+            "passed": 1,
+            "total": 1
+          },
+          "lexical_anchor": {
+            "passed": 7,
+            "total": 7
+          }
+        },
+        "firstTextP50": 4.170403291,
+        "firstTextP95": 7.885563375,
+        "totalP50": 5.556112167,
+        "totalP95": 8.677742833
+      },
+      "reviews": {
+        "pass": 0,
+        "fail": 0,
+        "uncertain": 0,
+        "primaryTurns": 10,
+        "primaryReviewedTurns": 0,
+        "primaryRubricReviewedTurns": 0,
+        "legacyReplyOnlyReviews": 0,
+        "rubricCases": {
+          "pass": 0,
+          "fail": 0,
+          "pending": 9
+        }
+      },
+      "publishedReviewSummaryVerified": true,
+      "contextAnswerLeakage": []
+    }
+  }
+}

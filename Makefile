@@ -24,7 +24,7 @@ race-check:
 	bash scripts/test-races.sh
 
 lint:
-	swift format lint --strict --recursive Package.swift Sources Tests Tools/ArchitectureCheck Tools/SpeechBenchmark Tools/TextModelBenchmark Tools/ChatModelBenchmark Tools/ConversationStorageProbe Tools/TTSBenchmark scripts/make-icon.swift scripts/native-test-host.swift scripts/native-test-presentation.swift
+	swift format lint --strict --recursive Package.swift Sources Tests Tools/ArchitectureCheck Tools/SpeechBenchmark Tools/TextModelBenchmark Tools/ChatModelBenchmark Tools/ConversationStorageProbe Tools/MemorySearchBenchmark Tools/TTSBenchmark scripts/make-icon.swift scripts/native-test-host.swift scripts/native-test-presentation.swift
 	bash -n scripts/build-app.sh scripts/embed-sparkle.sh scripts/test.sh scripts/toolchain.sh scripts/check-main-thread.sh scripts/test-stress.sh scripts/test-races.sh scripts/test-downloaded-speech.sh
 	python3 -B -m unittest discover -s Tests -p 'test_*.py'
 	python3 -B scripts/theme-fallback.py --check
@@ -38,6 +38,7 @@ check: lint test debug
 	$(BUILD_DIR)/Sillies.app/Contents/Helpers/SilliesTTSInference.app/Contents/MacOS/SilliesTTSInference --self-test
 	python3 -B scripts/test-inference-parent-exit.py "$(BUILD_DIR)/Sillies.app/Contents/Helpers/SilliesTTSInference.app/Contents/MacOS/SilliesTTSInference"
 	python3 -B scripts/test-inference-parent-exit.py "$(BUILD_DIR)/Sillies.app/Contents/Helpers/SilliesTextInference.app/Contents/MacOS/SilliesTextInference"
+	python3 -B scripts/test-inference-parent-exit.py "$(BUILD_DIR)/Sillies.app/Contents/Helpers/SilliesSearchInference.app/Contents/MacOS/SilliesSearchInference"
 	$(BUILD_DIR)/Sillies.app/Contents/MacOS/Sillies --validate-catalog
 
 gui-check: check

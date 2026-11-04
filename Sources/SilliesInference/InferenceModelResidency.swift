@@ -2,7 +2,7 @@ import Foundation
 
 /// Idle helpers still hold weights. Evict an incompatible idle model before loading its peer.
 actor InferenceModelResidency {
-  enum Runtime: Sendable { case text, voice }
+  enum Runtime: Sendable { case text, voice, search }
   struct Resident: Sendable {
     let id: UUID
     let bytes: UInt64
@@ -16,11 +16,15 @@ actor InferenceModelResidency {
     if models[runtime]?.id == id { models[runtime] = nil }
   }
   func makeRoom(for runtime: Runtime, reservation: InferenceReservation) async {
-    let peer: Runtime = runtime == .text ? .voice : .text
-    guard let resident = models[peer],
-      reservation.bytes > budget || resident.bytes > budget - reservation.bytes
-    else { return }
-    models[peer] = nil
-    await resident.evict()
+    // Search is cheapest to reload. Account for all idle peers, not only a text/voice pair.
+    for peer in [Runtime.search, .voice, .text] where peer != runtime {
+      let available = reservation.bytes >= budget ? 0 : budget - reservation.bytes
+      let retained = models.filter { $0.key != runtime }.values.reduce(UInt64(0)) {
+        let sum = $0.addingReportingOverflow($1.bytes)
+        return sum.overflow ? .max : sum.partialValue
+      }
+      guard retained > available, let resident = models.removeValue(forKey: peer) else { continue }
+      await resident.evict()
+    }
   }
 }

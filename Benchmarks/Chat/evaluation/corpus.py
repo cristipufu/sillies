@@ -7,10 +7,11 @@ import random
 import re
 from pathlib import Path
 
-PROFILES = {"none": 0, "search": 1, "personal": 3, "app": 5, "expanded8": 8, "expanded12": 12}
+# The app profile follows production capabilities; its count is recorded in delivered requests.
+PROFILES = ("none", "search", "personal", "app", "expanded8", "expanded12")
 KINDS = {"reply_equals", "contains_any", "contains_all", "omits_all", "no_tools",
          "required_tools", "allowed_tools", "no_writes", "argument_equals", "memory_contains",
-         "memory_absent", "source_includes", "compacted", "retained_context_omits", "compaction_calls_at_most"}
+         "memory_absent", "source_includes", "compacted", "retained_context_omits", "initial_context_omits", "compaction_calls_at_most"}
 OWNER = {"id": "pogo", "name": "Pogo", "personality": "Warm, curious and upbeat."}
 IDENTIFIER = re.compile(r"[a-z][a-z0-9-]{0,90}\Z")
 

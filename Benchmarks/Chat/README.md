@@ -9,6 +9,11 @@ All records, people and saved memories are synthetic. Native Swift workers run t
 a Python 3.11+ standard-library supervisor manages deadlines, receipts and scoring.
 There is no Python inference runtime, cloud judge or additional dependency.
 
+Production semantic-memory comparisons can inject a `memorySearch` configuration into the worker
+plan. Each case builds its own persistent index and uses the normal memory tool; the configuration
+and artifact hashes must be frozen with the run. See [Search & Memory validation](../../docs/reports/search-memory-and-prefix-profiles-2026-11-04.md)
+and the [provider contract](../../docs/contributing/search-models.md).
+
 Read the [model selection summary](../../docs/local-text-models.md#which-model-should-i-use)
 and the [reviewed thirteen-model comparison](../../docs/reports/corrected-local-chat-models-2026-11-02.md).
 Both LFMs also have a [complete rerun after integration fixes](../../docs/reports/lfm-chat-rerun-2026-11-02.md),
@@ -24,6 +29,13 @@ The original checks had false positives and did not prove summary retention.
 Screenshot fixtures include real tiny PNG attachments and synthetic OCR text, so the normal
 screenshot category can retrieve them. This measures text-based screenshot retrieval, not vision.
 Each inference case also runs the same preflight before admitting the model.
+
+Memory fixtures create provenance messages as well as stored facts. For retrieval experiments, place
+those messages outside the recent-history window and add `initial_context_omits` with the source
+statements. This checks instructions and messages **before** any retrieval call; later tool evidence
+is allowed. A failed fixture check invalidates the comparison and cannot receive a manual rubric pass.
+The separate `retained_context_omits` check deliberately examines recent messages only, so a summary
+can carry the answer when testing compaction.
 
 ## What it covers
 
@@ -130,6 +142,23 @@ The published report identifies its source commit; a changed app configuration i
 
 ## Read the results honestly
 
+The [five-opportunity study and evaluator review](../../docs/reports/model-opportunities-2026-11-04.md)
+contains the latest focused memory/cache/retrieval experiments, including invalid runs and why they
+cannot support model conclusions. Its results do not replace the full-corpus comparison.
+
+Review the measuring system before publishing a comparison. The `app` profile admits the production
+tool set dynamically; restricted profiles are deliberate ablations. Inspect the actual delivered
+definitions, prompt roles, tool results and stop reasons. A missing tool in the harness is an invalid
+experiment, not a model failure. Freeze the evaluator, catalog, worker and helper before resumable
+runs; do not change them between batches.
+
+Fixture self-checks protect tool inclusion, private-channel redaction and memory-evidence capture.
+Evaluator tests include false save acknowledgements, missing state, empty/failed replies, stale
+reviews, tampered scores, missing cases and interrupted workers. Recomputing a score with the same
+function checks reproducibility; it cannot independently prove that function's logic is correct.
+Full-rubric review and these adversarial tests remain necessary. Neither proves a benchmark is
+bug-free or replaces independent human review.
+
 The November 2 extension adds 22 previously unrun scenarios (29 turns), tagged
 `heldout-2026-11-02`. Freeze them before inference; do not tune prompts to their results and keep
 calling them held out. They broaden facts, phrasing, memory opt-outs, identity, mixed questions and
@@ -161,6 +190,11 @@ admission limits; timing measured on one Mac is not a prediction for every Mac w
 Each `MODEL/cases/*.json` preserves the reply, partial output, actual executed tool calls and
 arguments, stored memories, retrieved IDs, compaction attempts, app-level backend requests, token measurements and
 the checks that passed or failed. `events.jsonl` also preserves progress up to a hard timeout.
+
+New memory snapshots include the persisted identity, revision and source-message identity as well as
+the fact and source quote. Older snapshots do not contain those fields; inspect their actual tool
+references and write receipts, and disclose that weaker evidence. Never infer an empty store from
+a missing snapshot after a process deadline.
 
 New workers record `memoryCommitSeconds`: elapsed time from the same turn start used for text
 timing until the app receives each successful memory-write receipt. Replayed receipts are counted
@@ -201,6 +235,9 @@ Regenerate with `python3 Benchmarks/Chat/benchmark.py report --output PATH`.
 Publish an auditable compressed snapshot with `python3 Benchmarks/Chat/benchmark.py export
 --output PATH --archive docs/reports/results.json.gz`. It includes configuration, metadata,
 all case receipts and any semantic reviews; keep the full worker logs locally for diagnosis.
+Export recomputes the summary from receipts and reviews. Audit checks published review totals as
+well as automatic primary metrics. Legacy partial review summaries are explicitly distinguished
+from verified full summaries; a failed case or failed/empty turn cannot receive a full-task pass.
 Do not rank models with unequal coverage, or hide failed/timeout cases from the denominator.
 A failed compaction may fail a full case; subsequent turns still have explicit failure receipts.
 

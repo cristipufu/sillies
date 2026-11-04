@@ -72,7 +72,7 @@ actor MLXNativeConversation {
           invocation.model, instructions: request.instructions,
           generateParameters: invocation.parameters, components: invocation.components,
           additionalContext: invocation.templateContext,
-          tools: request.tools.isEmpty ? nil : MLXConversationInput.tools(request)))
+          tools: MLXConversationInput.nativeTools(request)))
       pending = request.messages
     }
     let completion: Completion

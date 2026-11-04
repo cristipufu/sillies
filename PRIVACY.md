@@ -57,6 +57,7 @@ The default application data lives under `~/Library/Application Support/Sillies/
 | `Vault/` | Saved session metadata, recordings, screenshots, transcripts, recognized screenshot text, notes, speaker names, stash items, a separate `conversations.sqlite` containing per-companion messages, drafts, search indexes, context summaries and personal memories with source quotes and recent Undo payloads; a local SQLite database containing record bodies, listing metadata, full-text search documents, and an attachment-cleanup journal. Records can include source app/window titles and model revisions. |
 | `SpeechModels/` | Downloaded speech/speaker models, installation state, partial downloads/resume information, and model-update metadata. |
 | `TextModels/` | Downloaded text models and installation state, including partial downloads. |
+| `SearchModels/` | Optional downloaded embedding models, installation state and partial downloads. Memory search vectors are derived locally in the conversation database and invalidated when the corresponding memory changes or is deleted. |
 | `VoiceModels/` | Downloaded voice models, codecs, supplied voices, installation state, and partial downloads. |
 | `Dictation/` | The separate text recovery history, including original/result text and destination app labels. |
 

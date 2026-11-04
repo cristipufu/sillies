@@ -46,7 +46,6 @@ package struct VaultSearchTool: ConversationTool {
           header: match.header, excerpt: String(match.excerpt.prefix(Self.excerptCharacters)),
           links: links))
     }
-    let total = try await library.page(.init(limit: 1)).total
-    return try VaultToolContent.searchOutput(sources, request: request, totalVaultRecords: total)
+    return try VaultToolContent.searchOutput(sources, request: request)
   }
 }

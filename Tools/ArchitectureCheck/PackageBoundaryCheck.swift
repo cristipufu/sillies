@@ -49,8 +49,10 @@ final class PackageBoundaryCheck: SyntaxVisitor {
         failures.append("\(name) cannot load the Fish runtime outside its helper process.")
         continue
       }
-      if let target, ["MLX", "MLXLLM", "MLXLMCommon", "Tokenizers"].contains(target),
-        !["SilliesTextInference", "SilliesFishSpeech"].contains(name)
+      if let target,
+        ["MLX", "MLXLLM", "MLXLMCommon", "MLXEmbedders", "MLXHuggingFace", "Tokenizers"].contains(
+          target),
+        !["SilliesTextInference", "SilliesSearchInference", "SilliesFishSpeech"].contains(name)
       {
         failures.append("\(name) cannot load native inference SDKs outside a helper process.")
         continue

@@ -1,0 +1,15 @@
+{
+  "audits.json": "3ab93aac7183d495ba40538bfb7668f6fdba8983d33ba6f578162ecd3aa1a87f",
+  "candidate-source-overlay.json.gz": "a5670cbd928149021f5417332153b8e738973dae1f829d79514eb766d1d7090f",
+  "execution-ledger.json": "30d08265c08bcda6e67e7e8c1cf7fed7f32e7ae42cbca2ce7589f6f8230412a7",
+  "memory-study-development-apple-baseline-11.json.gz": "b802eb2ff013320375ea683b1fbdd447aec54051ae6555fa5581c281bb0fae50",
+  "memory-study-development-apple-candidate-11.json.gz": "8ce104f89539967d37a6c1870f91c379ef778b34138cd271abb47b77339c45c5",
+  "memory-study-development-gemma-4-26b-a4b-baseline-11.json.gz": "22c0ef81ae83056a9ead47de2ae05cdf408a510d843a06a7b1b622b273571df8",
+  "memory-study-development-gemma-4-26b-a4b-candidate-11.json.gz": "812c0eadb253ad8a8c9e64ff480ffb232728a89c6b0bbbba2925f07339874b19",
+  "memory-study-development-lfm-2.5-24b-a2b-baseline-11.json.gz": "d413d9fb376f1a20886d78981d01575792d50389d3027cdee03a53ac21dace93",
+  "memory-study-development-lfm-2.5-24b-a2b-candidate-11.json.gz": "91e33f22a44de1aee0ce810f8e18495347af6cbb2b7da311b3e7a25db97c5b11",
+  "memory-study-development-qwen-3.5-4b-baseline-11.json.gz": "aa6239169648f076767b36089256be9a1eb6d47be465ce475bcd028f73260308",
+  "memory-study-development-qwen-3.5-4b-candidate-11.json.gz": "05f6231f48d47f93cf70d26cc23dd841eb6dffaa246f36c8e0e7d6cf89dbc91d",
+  "procedures-and-observations.json.gz": "798d1130d21b3e4aa15cb56b49d27ba3d78a3e84d79916a6f3e8ce6a039983b0",
+  "runtime-hashes.json": "eaecc29c18af440ad57fbe999b300ec6861be82b4738a1562433789e7f82f9ae"
+}

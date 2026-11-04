@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "purpose": "Separate numerical effects of prefix partitioning from state reuse, qualify measured caching, then investigate memory writes, evidence contracts and persistent search scale.",
+  "models": [
+    "qwen-3.5-2b",
+    "qwen-3.5-4b",
+    "qwen-3.5-9b",
+    "lfm-2.5-2.6b",
+    "lfm-2.5-24b-a2b",
+    "gemma-4-26b-a4b"
+  ],
+  "arms": {
+    "ordinary": "Existing raw path without cross-request retention.",
+    "recomputed": "Prefix path with identical retained token boundary but native arrays discarded and recomputed every request.",
+    "retained": "Same prefix path, retaining one bounded snapshot."
+  },
+  "snapshotMiB": {
+    "qwen-3.5-2b": 96,
+    "qwen-3.5-4b": 192,
+    "qwen-3.5-9b": 192,
+    "lfm-2.5-2.6b": 64,
+    "lfm-2.5-24b-a2b": 128,
+    "gemma-4-26b-a4b": 384
+  },
+  "nativeReplay": {
+    "seeds": [
+      11,
+      29
+    ],
+    "requests": "Frozen first requests and tool continuations from the prior synthetic runs. Replay identical complete requests in each arm. Compare recomputed/retained generated text and tool calls, including warm hits; private channels are hashed, never exposed.",
+    "minimumMatchedWarmGenerationsPerModel": 10,
+    "baselineRepeatability": "Repeat the identical ordinary requests in a fresh process at seed 11, separating numerical/sampling nondeterminism from cache differences."
+  },
+  "workflow": {
+    "corpus": "corpus/cases.json",
+    "seeds": [
+      11,
+      29
+    ],
+    "arms": [
+      "ordinary",
+      "retained"
+    ],
+    "review": "Complete task rubric for both arms, inspect writes and evidence. Include cold/warm labels. No blanket failure on changed phrasing. Existing cases are regression data, not an independent holdout.",
+    "cases": 12
+  },
+  "acceptance": [
+    "Native recomputation/reuse restores equivalent state, generated content and tool calls on identical recorded inputs; investigate all mismatches before attribution.",
+    "At least 20% lower median warm first-text latency with no new reproducible state/ownership, unauthorized-write or protocol defect attributable to retention.",
+    "Full workflow paired task success must not lose more than 5 percentage points; count failures and uncertainty, review both improvements and regressions. This is a practical bounded screening margin, not a statistical noninferiority claim.",
+    "Cancellation, failed sink, release, changed context/tools/identity and bounded allocation controls pass before activating a profile."
+  ],
+  "exhaustion": {
+    "maximumNativeSeconds": 3600,
+    "maximumBatchSeconds": 180,
+    "maximumTurnSeconds": 60,
+    "parallelNativeWorkers": 1,
+    "maximumImplementationCorrections": 1,
+    "maximumQualityCandidates": 1,
+    "policy": "No tuning against answer cases. Preserve failures, stop unsafe native reuse immediately; evaluate aggregate workflow quality only after its complete paired batch. Unrun gates are not passed."
+  },
+  "constraints": [
+    "Synthetic stores only",
+    "No new model download",
+    "No app restart",
+    "No push",
+    "All new behavior remains local and has explicit owners",
+    "Separate memory/evidence/search studies use their own frozen baselines after caching decisions"
+  ],
+  "reviewer": "Implementing agent; not independent human review"
+}

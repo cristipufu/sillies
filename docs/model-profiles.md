@@ -11,7 +11,8 @@ embeds them in each model manifest. Algorithms consume the profile, never a mode
 | `context.maximumTokens` | Capacity declared by the pinned checkpoint's text configuration. It does not certify that the full capacity is practical on a particular Mac. |
 | `context.workingTokens` | Application working context, bounded by the checkpoint capacity. Its rationale distinguishes measured choices from retained baseline settings. |
 | `prefill.chunkTokens` | `null` delegates to the native runtime's model-selected default. An integer is a reviewed override, not a new global default. |
-| `runtime.conversationCache` | `disabled` by default. `nativeSession` opts a validated checkpoint into exact-history native continuation; the SDK decides whether its token/cache state can actually be reused. |
+| `runtime.conversationCache` | `disabled` by default. `nativeSession` delegates exact-history continuation to the SDK. `prefixSnapshot` retains one immutable native prefix for an explicitly validated checkpoint. |
+| `runtime.prefixSnapshot` | Required only for `prefixSnapshot`: maximum retained tokens and logical state-array bytes. These do not replace the helper's total allocation budget or full-prompt context admission. |
 | `runtime.chatTemplate` | `checkpoint` uses downloaded metadata. A reviewed adapter policy can select an unchanged, pinned publisher template shipped with attribution; it never rewrites downloaded files. |
 | `generation.conversation`, `summary`, `precise` | Task-specific answer and reasoning allowances, sampling, and repetition context. |
 | `conversation.safetyTokens` | Margin for provider framing and boundary measurement. |
@@ -49,6 +50,23 @@ Profiles are required. Invalid capacities, sampling, chunk sizes and overflowing
 validation before inference. The catalog's offline tests compare generated descriptors with their
 source profiles and reject stale runtime provenance. Byte limits protect transport and persistence;
 they are not substitutes for token-based context accounting.
+
+Gemma 26B and LFM 24B enable the snapshot path after the [November 4 readiness checks](reports/model-readiness-2026-11-04.md).
+Each retains at most 2,048 tokens, with logical state limits of 384 MiB and 128 MiB respectively.
+The [controlled cache comparison](reports/cache-isolation-2026-11-04.md) also qualifies Qwen 3.5
+2B and 4B, and LFM 2.5 2.6B: 2,048 tokens with 96, 192 and 64 MiB limits respectively.
+Session identity and the retained token prefix must match. Changed instructions, tools or history
+inside that prefix rebuild it; later differences are processed normally. Every use clones the snapshot; generation never
+advances the retained original or rewinds recurrent state. Native state without a copy/size contract
+is passed to the current generation but never retained. Failures clear the snapshot, and cancellation
+drains generation before state is released. Sampling penalties still see the complete input.
+
+Preparing the first snapshot adds latency. Native balanced prefill also makes different chunk shapes
+numerically different, so state-copy correctness alone does not establish answer quality.
+Qwen 9B remains disabled because its whole-task review missed the acceptance margin. Native state
+replay matched; this is not evidence of state corruption or a conclusion about all Qwen models.
+Adding a model requires native state, lifecycle, bounded-memory and conversation/tool comparisons,
+not a family-name assumption.
 
 ## Long-lived conversations
 

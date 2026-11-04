@@ -1,0 +1,140 @@
+{
+  "travel": {
+    "expected": [
+      "rail"
+    ],
+    "partition": "development"
+  },
+  "diet": {
+    "expected": [
+      "food"
+    ],
+    "partition": "development"
+  },
+  "hours": {
+    "expected": [
+      "work"
+    ],
+    "partition": "development"
+  },
+  "learning": {
+    "expected": [
+      "style"
+    ],
+    "partition": "development"
+  },
+  "key": {
+    "expected": [
+      "garden"
+    ],
+    "partition": "development"
+  },
+  "bike-location": {
+    "expected": [
+      "bike"
+    ],
+    "partition": "development"
+  },
+  "exact-code": {
+    "expected": [
+      "identifier"
+    ],
+    "partition": "development"
+  },
+  "courier": {
+    "expected": [
+      "project"
+    ],
+    "partition": "development"
+  },
+  "cross-travel": {
+    "expected": [
+      "rail"
+    ],
+    "partition": "development"
+  },
+  "cross-drink": {
+    "expected": [
+      "drink"
+    ],
+    "partition": "development"
+  },
+  "missing": {
+    "expected": [],
+    "partition": "development"
+  },
+  "foreign": {
+    "expected": [],
+    "partition": "development"
+  },
+  "heldout-travel": {
+    "expected": [
+      "rail"
+    ],
+    "partition": "validation"
+  },
+  "heldout-diet": {
+    "expected": [
+      "food"
+    ],
+    "partition": "validation"
+  },
+  "heldout-hours": {
+    "expected": [
+      "work"
+    ],
+    "partition": "validation"
+  },
+  "heldout-learning": {
+    "expected": [
+      "style"
+    ],
+    "partition": "validation"
+  },
+  "heldout-key": {
+    "expected": [
+      "garden"
+    ],
+    "partition": "validation"
+  },
+  "heldout-bike": {
+    "expected": [
+      "bike"
+    ],
+    "partition": "validation"
+  },
+  "heldout-code": {
+    "expected": [
+      "identifier"
+    ],
+    "partition": "validation"
+  },
+  "heldout-hobby": {
+    "expected": [
+      "hobby"
+    ],
+    "partition": "validation"
+  },
+  "heldout-pet": {
+    "expected": [
+      "pet"
+    ],
+    "partition": "validation"
+  },
+  "heldout-units": {
+    "expected": [
+      "units"
+    ],
+    "partition": "validation"
+  },
+  "heldout-missing": {
+    "expected": [],
+    "partition": "validation"
+  },
+  "heldout-owner": {
+    "expected": [
+      "foreign-project"
+    ],
+    "partition": "validation"
+  }
+}

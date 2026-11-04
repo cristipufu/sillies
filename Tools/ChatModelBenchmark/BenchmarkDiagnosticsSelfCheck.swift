@@ -6,16 +6,27 @@ import SilliesTextModels
 enum BenchmarkDiagnosticsSelfCheck {
   static func run() async throws {
     let generation = try reasoningRedaction()
+    let original = CompanionMemory(
+      replacing: nil, fact: .init(key: "name", value: "First name"),
+      source: .init(messageID: UUID(), quote: "My name is First name."), savedAt: .distantPast)
+    let corrected = CompanionMemory(
+      replacing: original, fact: .init(key: "name", value: "Corrected name"),
+      source: .init(messageID: UUID(), quote: "Please use Corrected name."), savedAt: .now)
     let trace = BenchmarkTurnTrace()
     let record = await trace.result(
       position: .init(job: "fixture", turn: 0), input: "Recall the decision",
       outcome: .failure(TextGenerationFailure(reason: .outputTokenLimit)),
       evidence: .init(
-        memories: [], generations: [generation],
+        memories: [corrected], generations: [generation],
         progress: .init(memory: .init(summary: "The verified checkpoint remains available."))))
     guard record.summary == "The verified checkpoint remains available.", record.error != nil,
       record.generations.count == 1
     else { throw Failure.lostCheckpoint }
+    guard let memory = record.memories.first, memory.id == original.id,
+      memory.revision == corrected.revision, memory.revision != original.revision,
+      memory.sourceMessageID == corrected.sourceMessageID,
+      memory.sourceMessageID != original.sourceMessageID, memory.source == corrected.sourceQuote
+    else { throw Failure.lostMemoryEvidence }
   }
 
   private static func reasoningRedaction() throws -> BenchmarkGeneration {
@@ -37,5 +48,5 @@ enum BenchmarkDiagnosticsSelfCheck {
     return generation
   }
 
-  private enum Failure: Error { case lostCheckpoint, reasoningDisclosure }
+  private enum Failure: Error { case lostCheckpoint, lostMemoryEvidence, reasoningDisclosure }
 }

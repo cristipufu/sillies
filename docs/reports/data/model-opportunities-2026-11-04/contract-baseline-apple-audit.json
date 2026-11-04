@@ -1,0 +1,53 @@
+{
+  "archiveSHA256": "85c580e0208025e4cc8223146e289722e18740c6badc9a29a3e3fd76ca525145",
+  "corpusHash": "7206a518a236b0fe8c65e8fe304d893d77fcd138d8dee5572f480c2f907dcf9e",
+  "integrity": "recorded checks and primary metrics reproduced",
+  "meaning": "Integrity is not semantic correctness, statistical confidence or release readiness.",
+  "models": {
+    "apple": {
+      "completedCases": 9,
+      "plannedCases": 9,
+      "observedTurns": 10,
+      "primary": {
+        "cases": 9,
+        "passed": 2,
+        "turns": 10,
+        "errors": 0,
+        "checks": {
+          "behavior": {
+            "passed": 32,
+            "total": 41
+          },
+          "exact_answer": {
+            "passed": 0,
+            "total": 1
+          },
+          "lexical_anchor": {
+            "passed": 4,
+            "total": 7
+          }
+        },
+        "firstTextP50": 2.813399542,
+        "firstTextP95": 8.135211666,
+        "totalP50": 3.290964334,
+        "totalP95": 9.742793916
+      },
+      "reviews": {
+        "pass": 2,
+        "fail": 8,
+        "uncertain": 0,
+        "primaryTurns": 10,
+        "primaryReviewedTurns": 10,
+        "primaryRubricReviewedTurns": 10,
+        "legacyReplyOnlyReviews": 0,
+        "rubricCases": {
+          "pass": 2,
+          "fail": 7,
+          "pending": 0
+        }
+      },
+      "publishedReviewSummaryVerified": true,
+      "contextAnswerLeakage": []
+    }
+  }
+}

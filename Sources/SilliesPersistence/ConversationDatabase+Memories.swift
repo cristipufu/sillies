@@ -4,8 +4,6 @@ import SilliesCore
 extension ConversationDatabase {
   static let maximumMemoryPayloadBytes = 32_768
   private static let maximumMemoryReceiptBytes = maximumMemoryPayloadBytes * 2 + 1_024
-  private static let maximumMemoryKeyCharacters = 80
-  private static let maximumMemoryValueCharacters = 500
   private static let maximumRecentMemoryChanges = 40
 
   public func remember(_ request: MemoryWrite) throws -> MemoryReceipt {
@@ -13,8 +11,7 @@ extension ConversationDatabase {
       try validate(request.handle)
       try validateMemorySource(request)
       let key = request.key.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-      guard !key.isEmpty, key.count <= Self.maximumMemoryKeyCharacters,
-        !request.value.isEmpty, request.value.count <= Self.maximumMemoryValueCharacters
+      guard MemoryFact(key: key, value: request.value).isValid
       else { throw ConversationStorageError.invalidData }
       let previous = try previousMemory(for: request, key: key)
       let saved = CompanionMemory(

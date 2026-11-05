@@ -9,6 +9,7 @@ final class VoiceActivityDetector {
   private static let minimumSpeechPower = 0.000_01
   private let state: OpaquePointer
   private var endpoint = VoiceTurnEndpoint()
+  private(set) var lastSpeechSample: TimeInterval?
   init() throws {
     dispatchPrecondition(condition: .notOnQueue(.main))
     guard let state = sillies_vad_create() else {
@@ -17,8 +18,13 @@ final class VoiceActivityDetector {
     self.state = state
   }
   deinit { sillies_vad_destroy(state) }
-  func beginNextTurn() { endpoint = VoiceTurnEndpoint() }
-  func consume(_ buffer: AVAudioPCMBuffer) throws -> VoiceTurnEndpoint.Event? {
+  func beginNextTurn() {
+    endpoint = VoiceTurnEndpoint()
+    lastSpeechSample = nil
+  }
+  func consume(_ buffer: AVAudioPCMBuffer, endingAt time: TimeInterval) throws -> VoiceTurnEndpoint
+    .Event?
+  {
     dispatchPrecondition(condition: .notOnQueue(.main))
     guard buffer.frameLength == MeetingAudioTimeline.frameSamples,
       let samples = buffer.floatChannelData?[0]
@@ -32,8 +38,10 @@ final class VoiceActivityDetector {
       (0..<Int(buffer.frameLength)).reduce(0.0) {
         $0 + Double(samples[$1]) * Double(samples[$1])
       } / Double(buffer.frameLength)
+    let isSpeech = result == 1 && power >= Self.minimumSpeechPower
+    if isSpeech { lastSpeechSample = time }
     return endpoint.consume(
-      isSpeech: result == 1 && power >= Self.minimumSpeechPower,
+      isSpeech: isSpeech,
       duration: Double(buffer.frameLength) / buffer.format.sampleRate)
   }
 }

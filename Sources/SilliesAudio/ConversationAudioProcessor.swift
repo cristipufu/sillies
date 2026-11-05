@@ -8,6 +8,7 @@ final class ConversationAudioProcessor {
   private let audio: MeetingAudioProcessor
   private let detector: VoiceActivityDetector
   private var microphoneEnd: TimeInterval?
+  var lastSpeechSample: TimeInterval? { detector.lastSpeechSample }
 
   init(reference: VoicePlaybackReference) throws {
     self.reference = reference
@@ -40,7 +41,10 @@ final class ConversationAudioProcessor {
       let output = try audio.nextReadyOutput(
         through: microphoneEnd - MeetingAudioTimeline.callbackHoldback)
     else { return nil }
-    return (output.microphone, try detector.consume(output.microphone), output.endTime)
+    return (
+      output.microphone, try detector.consume(output.microphone, endingAt: output.endTime),
+      output.endTime
+    )
   }
 
   func nextFinalMicrophone() throws -> AVAudioPCMBuffer? {

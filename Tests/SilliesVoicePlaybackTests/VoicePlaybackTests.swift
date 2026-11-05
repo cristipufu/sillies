@@ -15,12 +15,45 @@ private final class OutputProbe: VoiceOutputDevice, Sendable {
   }
   let completions = Mutex<[@Sendable () -> Void]>([])
   let stopCount = Mutex(0)
+  let pauseCount = Mutex(0)
+  let resumeCount = Mutex(0)
+  func pause() { pauseCount.withLock { $0 += 1 } }
+  func resume() { resumeCount.withLock { $0 += 1 } }
   let preparationCount = Mutex(0)
   func prepare(sampleRate: Int) throws { preparationCount.withLock { $0 += 1 } }
   func schedule(_ audio: SynthesizedAudio, completed: @escaping @Sendable () -> Void) throws {
     completions.withLock { $0.append(completed) }
   }
   func stop() { stopCount.withLock { $0 += 1 } }
+}
+
+@Test func playbackPauseRetainsBoundedAudioAndDoesNotTriggerTheStallWatchdog() async throws {
+  let device = OutputProbe()
+  let playback = VoicePlayback(makeDevice: { device }, stallTimeout: .milliseconds(20))
+  let id = UUID()
+  let interrupted = Mutex(false)
+  await playback.start(id: id) {
+    if case .interrupted = $0 { interrupted.withLock { $0 = true } }
+  }
+  await playback.pause(id: id)
+  let audio = try SynthesizedAudio(samples: Array(repeating: 0.1, count: 4096), sampleRate: 8_000)
+  try await playback.enqueue(audio, id: id)
+  let waiting = Task { try await playback.enqueue(audio, id: id) }
+  try await Task.sleep(for: .milliseconds(60))
+  #expect(!interrupted.withLock { $0 })
+  #expect(device.pauseCount.withLock { $0 } == 1)
+  #expect(device.completions.withLock { $0.count } == 1)
+  await playback.resume(id: UUID())
+  #expect(device.resumeCount.withLock { $0 } == 0)
+  await playback.resume(id: id)
+  #expect(device.resumeCount.withLock { $0 } == 1)
+  let completeFirstBuffer = try #require(device.completions.withLock { $0.first })
+  completeFirstBuffer()
+  try await waiting.value
+  await playback.pause(id: id)
+  await playback.stop(id: id)
+  await playback.resume(id: id)
+  #expect(device.resumeCount.withLock { $0 } == 1)
 }
 
 @Test func playbackPreparesBeforePCMAndCancellationDiscardsThePreparedDevice() async throws {

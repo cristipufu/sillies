@@ -141,6 +141,19 @@ keeps one device session across phrases and records completed spoken phrases onl
 completion. Partial replies survive interruption; automatic context/preemption retries are disabled
 after text delivery. Tools remain typed protocol events, separate from spoken text.
 
+`ChatVoiceInterruption` serializes pause/resume intent for one reply. VAD onset pauses output;
+recognized words confirm cancellation, while an empty finalized utterance can resume retained audio.
+Pause keeps the existing queue bound and suspends its stall watchdog. It does not restore inference
+preempted by recognition. Reply completion must leave an in-flight microphone finalization in charge
+of its phase, so its final words are still submitted. Mute, finish and confirmed interruption cancel
+the pending control operation and stop playback through the owning session.
+
+`VoiceEndpointTiming` carries the last VAD-positive frame end and the endpoint detection time on the
+capture host clock. `ChatTurnDelivery` uses that origin for endpoint, recognizer finalization, first
+text, PCM and device-presentation milestones. The VAD timestamp is not a measured last phoneme.
+`TTSBenchmark conversation` covers generated replies and production phrase assembly with a paced
+silent sink; its PCM and gap figures exclude capture, STT and physical speaker presentation.
+
 `InferenceActivity` permits same-turn text/voice overlap within conservative memory reservations.
 `InferenceModelResidency` accounts for cached idle helpers and evicts an incompatible peer before
 loading. Large pairs serialize without cancelling the text stream. Recognition still preempts both;

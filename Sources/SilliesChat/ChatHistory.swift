@@ -151,6 +151,19 @@ package final class ChatHistory {
     memoryReceipts = Array(memoryReceipts.prefix(Self.maximumMemoryReceipts))
   }
 
+  func remember(_ request: MemoryWrite) async throws {
+    guard !stopped, handle == request.handle, let repository = configuration.memories else {
+      throw ConversationStorageError.changed
+    }
+    try await flush()
+    try Task.checkCancellation()
+    guard !stopped, handle == request.handle else { throw ConversationStorageError.changed }
+    let receipt = try await repository.remember(request)
+    // A completed write stays visible even if its initiating view was dismissed or cancelled.
+    guard handle == request.handle else { return }
+    receivedMemory(receipt)
+  }
+
   private func scheduleSave() {
     guard !stopped, failure == nil, autosave == nil else { return }
     autosave = Task { [weak self] in

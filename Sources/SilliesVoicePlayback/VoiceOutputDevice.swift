@@ -8,4 +8,6 @@ package protocol VoiceOutputDevice: AnyObject {
   func prepare(sampleRate: Int) throws
   func schedule(_ audio: SynthesizedAudio, completed: @escaping @Sendable () -> Void) throws
   func stop()
+  func pause()
+  func resume()
 }

@@ -19,7 +19,8 @@ struct ConversationHistoryPreparation {
     let result = ChatContext(
       companionName: context.companionName, profile: context.profile,
       messages: page.entries.map(\.message), memory: checkpoint.memory
-    ).inTurn(context.turnID, session: context.sessionID).inHistory(handle)
+    ).inTurn(context.turnID, session: context.sessionID).inHistory(handle).presented(
+      as: context.mode)
     return page.hasOlder ? result.coveringRecentWindow() : result.followingCheckpoint()
   }
 }

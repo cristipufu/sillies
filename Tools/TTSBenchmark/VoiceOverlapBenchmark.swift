@@ -34,30 +34,12 @@ struct VoiceOverlapBenchmark {
   }
 
   init(arguments: [String]) throws {
-    guard arguments.count == 5,
-      let textManifest = try TextModelCatalog.bundled().manifests.first(where: {
-        $0.modelID == arguments[0]
-      }),
-      let voiceManifest = try TTSModelCatalog.bundled().manifests.first(where: {
-        $0.modelID == arguments[2]
-      }),
-      let textHelper = ProcessInfo.processInfo.environment["SILLIES_TEXT_HELPER"],
-      let voiceHelper = ProcessInfo.processInfo.environment["SILLIES_TTS_HELPER"]
-    else { throw TTSError.invalidRequest }
-    self.textManifest = textManifest
-    self.voiceManifest = voiceManifest
-    directory = URL(fileURLWithPath: arguments[4])
-    let activity = InferenceActivity()
-    text = try TextModelRegistry(
-      store: ModelStore(root: URL(fileURLWithPath: arguments[1])),
-      providers: [MLXTextModelProvider(executable: URL(fileURLWithPath: textHelper))],
-      activity: activity)
-    voice = try TTSModelRegistry(
-      store: ModelStore(root: URL(fileURLWithPath: arguments[3])),
-      providers: [
-        WorkerTTSProvider(
-          id: voiceManifest.model.providerID, executable: URL(fileURLWithPath: voiceHelper))
-      ], activity: activity)
+    let models = try VoiceBenchmarkModels(arguments: arguments)
+    self.textManifest = models.textManifest
+    self.voiceManifest = models.voiceManifest
+    self.directory = models.directory
+    self.text = models.text
+    self.voice = models.voice
   }
 
   func run() async throws {

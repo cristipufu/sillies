@@ -17,6 +17,7 @@ package final class ChatSession {
   package let profile: CharacterChatProfile
   package let history: ChatHistory
   package let browser: ConversationBrowser
+  package let memoryEditor: ChatMemoryEditor
   package private(set) var mode = ConversationMode.chat
   package private(set) var messages: [ChatMessage] = []
   package private(set) var hasEarlierMessages = false
@@ -43,6 +44,7 @@ package final class ChatSession {
   package var onFinish: (@MainActor () -> Void)?
   @ObservationIgnored private let services: ChatServices
   @ObservationIgnored private let microphone: ChatMicrophone
+  @ObservationIgnored private let voiceInterruption: ChatVoiceInterruption
   @ObservationIgnored private var restoration: Task<Void, Never>?
   @ObservationIgnored private var operation: Task<Void, Never>?
   @ObservationIgnored private var turnID = UUID()
@@ -51,11 +53,17 @@ package final class ChatSession {
   @ObservationIgnored private var voiceSequence = 0
   @ObservationIgnored private var spokenDelivery: ChatTurnDelivery?
   @ObservationIgnored private var voiceTurnEndedAt: ContinuousClock.Instant?
+  @ObservationIgnored private var voiceEndpoint: VoiceEndpointTiming?
+  @ObservationIgnored private var replyHasSpeech = false
   @ObservationIgnored private var conversationLifetime = SpeechModelLifetime()
   package var firstTextLatency: Duration? { spokenDelivery?.snapshot.firstText }
   package var firstAudioLatency: Duration? { spokenDelivery?.snapshot.firstAudio }
   package var firstPCMLatency: Duration? { spokenDelivery?.snapshot.firstPCM }
   package var voicePreparedLatency: Duration? { spokenDelivery?.snapshot.voicePrepared }
+  package var endpointLatency: Duration? { spokenDelivery?.snapshot.endpoint }
+  package var recognitionFinalizedLatency: Duration? {
+    spokenDelivery?.snapshot.recognitionFinalized
+  }
 
   package init(
     companionName: String, profile: CharacterChatProfile, services: ChatServices,
@@ -68,15 +76,19 @@ package final class ChatSession {
     self.services = services
     let history = ChatHistory(configuration: services.history)
     self.history = history
+    memoryEditor = ChatMemoryEditor(history: history)
     browser = ConversationBrowser(history: history)
     microphone = ChatMicrophone(services: services)
+    voiceInterruption = ChatVoiceInterruption(output: services.speech)
     if !history.isLoaded { phase = .loading }
   }
 
   deinit { Task { [conversationLifetime] in await conversationLifetime.end() } }
 
   package var isRecording: Bool { phase == .preparingMicrophone || phase == .listening }
-  package var isWorking: Bool { [.thinking, .preparingVoice, .speaking].contains(phase) }
+  package var isWorking: Bool {
+    voiceInterruption.isActive || [.thinking, .preparingVoice, .speaking].contains(phase)
+  }
   package var canCompose: Bool {
     phase == .ready && !isFinalizingMicrophone && history.isLoaded && history.failure == nil
   }
@@ -167,9 +179,10 @@ package final class ChatSession {
 
   package func muteMicrophone() {
     guard isVoiceConversationActive else { return }
+    if voiceInterruption.isActive { cancelReply() }
     isVoiceConversationActive = false
     isFinalizingMicrophone = true
-    voiceTurnEndedAt = nil
+    clearVoiceTiming()
     if !isWorking { setPhase(.finalizing) }
     microphone.finish { [weak self] result in
       guard let self else { return }
@@ -183,7 +196,7 @@ package final class ChatSession {
   package func stopVoiceConversation() {
     guard isVoiceConversationActive else { return }
     isVoiceConversationActive = false
-    voiceTurnEndedAt = nil
+    clearVoiceTiming()
     cancelReply()
     setPhase(.finalizing)
     microphone.finish { [weak self] result in
@@ -205,6 +218,17 @@ package final class ChatSession {
       }
     }
     guard isVoiceConversationActive, phase == .finalizing, voiceFinalizations == 0 else { return }
+    if pendingVoiceText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+      let previous = voiceInterruption.resume(turnID: turnID)
+    {
+      pendingVoiceTurns.removeAll()
+      voiceSequence = 0
+      draft = ""
+      clearVoiceTiming()
+      setPhase(previous)
+      return
+    }
+    if voiceInterruption.isActive { cancelReply() }
     draft = pendingVoiceText
     pendingVoiceTurns.removeAll()
     voiceSequence = 0
@@ -212,7 +236,7 @@ package final class ChatSession {
     if canSend {
       send()
     } else if draft.isEmpty {
-      voiceTurnEndedAt = nil
+      clearVoiceTiming()
       setPhase(.listening)
     } else {
       stopVoiceConversation()
@@ -226,11 +250,12 @@ package final class ChatSession {
   }
 
   package func finish(completion: @escaping @MainActor () -> Void) {
+    memoryEditor.close()
     voiceActivation = UUID()
     restoration?.cancel()
     Task { [conversationLifetime] in await conversationLifetime.end() }
     isVoiceConversationActive = false
-    voiceTurnEndedAt = nil
+    clearVoiceTiming()
     cancelReply()
     setPhase(.finished)
     microphone.finish { [self] result in
@@ -241,6 +266,11 @@ package final class ChatSession {
     }
   }
 
+  private func clearVoiceTiming() {
+    voiceTurnEndedAt = nil
+    voiceEndpoint = nil
+  }
+
   private func requestReply() {
     guard phase == .ready else { return }
     failure = nil
@@ -249,15 +279,16 @@ package final class ChatSession {
     discoveredSources = []
     let token = UUID()
     turnID = token
-    let delivery = ChatTurnDelivery(started: voiceTurnEndedAt ?? .now)
+    let delivery = ChatTurnDelivery(started: voiceTurnEndedAt ?? .now, endpoint: voiceEndpoint)
     spokenDelivery = delivery
-    voiceTurnEndedAt = nil
+    clearVoiceTiming()
+    replyHasSpeech = spokenReplies
     let profile = CharacterChatProfile(
       personality: profile.personality, languageIdentifier: language,
       preferredVoices: profile.preferredVoices)
     let context = ChatContext(
       companionName: companionName, profile: profile, messages: messages, memory: memory
-    ).inTurn(token, session: conversationLifetime.id).inHistory(history.handle)
+    ).inTurn(token, session: conversationLifetime.id).inHistory(history.handle).presented(as: mode)
     setPhase(.thinking)
     operation = Task { [weak self, services, conversationLifetime] in
       do {
@@ -293,15 +324,14 @@ package final class ChatSession {
         case .notice(let message): self.notice = .voiceUnavailable(message)
         case .failed(let failure): self.failure = failure
         }
-        self.operation = nil
-        self.setPhase(self.isVoiceConversationActive ? .listening : .ready)
+        self.finishReplyActivity()
       } catch {
         guard let self, self.turnID == token, !Task.isCancelled else { return }
+        self.voiceInterruption.cancel()
         self.markInterrupted(token)
         // Recognition can preempt inference before its speech-start update reaches the UI.
         if error is CancellationError {
-          self.operation = nil
-          self.setPhase(self.isVoiceConversationActive ? .listening : .ready)
+          self.finishReplyActivity()
           return
         }
         self.failure = SessionFailure(
@@ -315,6 +345,16 @@ package final class ChatSession {
         }
       }
     }
+  }
+
+  private func finishReplyActivity() {
+    operation = nil
+    voiceInterruption.cancel()
+    // Capture owns its in-flight utterance. A reply completing or being preempted must not
+    // replace finalization with listening and strand the final recognizer result.
+    guard !isFinalizingMicrophone else { return }
+    if isVoiceConversationActive, phase == .listening || phase == .finalizing { return }
+    setPhase(isVoiceConversationActive ? .listening : .ready)
   }
 
   package func presentedMessage(_ message: ChatMessage) -> ChatMessage {
@@ -366,7 +406,7 @@ package final class ChatSession {
       id: turn, role: .companion, text: reply.text,
       evidence: .init(sources: reply.sources, exchanges: reply.exchanges)
     )
-    .withDelivery(.complete, spokenText: spokenDelivery?.snapshot.spokenText)
+    .withDelivery(.complete, spokenText: replyHasSpeech ? spokenDelivery?.snapshot.spokenText : nil)
     if let index = messages.firstIndex(where: { $0.id == turn }) {
       messages[index] = message
     } else {
@@ -390,7 +430,7 @@ package final class ChatSession {
       messages[index].completion == .streaming
     else { return }
     messages[index] = presentedMessage(messages[index]).withDelivery(
-      .interrupted, spokenText: spokenDelivery?.snapshot.spokenText)
+      .interrupted, spokenText: replyHasSpeech ? spokenDelivery?.snapshot.spokenText : nil)
     clearStreamPresentation()
     history.stage(messages[index])
   }
@@ -456,12 +496,23 @@ package final class ChatSession {
     switch update {
     case .capturing: setPhase(.listening)
     case .speechStarted:
-      cancelReply()
+      clearVoiceTiming()
+      if isWorking {
+        voiceInterruption.begin(turnID: turnID, phase: phase)
+      } else {
+        cancelReply()
+      }
       draft = ""
       setPhase(.listening)
-    case .speechEnded: finishListening()
+    case .speechEnded(let timing):
+      guard phase == .listening else { return }
+      voiceEndpoint = timing
+      finishListening()
     case .transcript(let text, let level, _):
       guard phase == .listening else { return }
+      if voiceInterruption.isActive, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        cancelReply()
+      }
       draft = text
       audioLevel = level
       onChange?()
@@ -481,6 +532,7 @@ package final class ChatSession {
     case .milestone: return
     case .speaking(let level):
       guard isWorking else { return }
+      guard !voiceInterruption.isActive else { return }
       phase = .speaking
       audioLevel = level
     case .finished, .interrupted: audioLevel = 0
@@ -645,6 +697,7 @@ package final class ChatSession {
   }
 
   private func cancelReply() {
+    voiceInterruption.cancel()
     let previous = turnID
     markInterrupted(previous)
     turnID = UUID()

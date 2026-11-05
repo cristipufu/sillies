@@ -10,7 +10,7 @@ package enum AudioCaptureUpdate: Sendable {
   case languageChanged(SpeechLanguage)
   case transcript(String, level: Double, elapsed: TimeInterval)
   case speechStarted
-  case speechEnded
+  case speechEnded(VoiceEndpointTiming?)
   case failed(SessionFailure)
   case transcriptionStopped(SessionFailure)
   case speakerDetectionNotice(String)

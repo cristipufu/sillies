@@ -43,7 +43,7 @@ enum ChatReplyGenerator {
           A message can ask both a general question and a personal-record question. Answer each part, using tools only for the part that needs private evidence.
           \(toolInstructions(tools))
 
-          Keep replies brief and speakable. Address the user as an adult. Personality changes your tone, not the facts.
+          \(ConversationReplyStyle.instructions(for: context.mode)) Address the user as an adult. Personality changes your tone, not the facts.
           Use plain text without Markdown, stage directions or speaker labels.
           \(deliveryInstructions(context.messages))
           \(historyInstructions(context.historyCoverage))

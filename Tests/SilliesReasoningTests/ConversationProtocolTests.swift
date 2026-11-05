@@ -297,3 +297,25 @@ private actor RecoveryTool: ConversationTool {
   #expect(refused.contains("turnToolLimitReached"))
   #expect(await tool.calls == ConversationToolbox.maximumCalls)
 }
+
+@Test func chatAndTalkKeepOriginalRolesAndTheLatestUserPrompt() {
+  let messages: [ChatMessage] = [
+    .init(role: .user, text: "Explain jasmine tea."),
+    .init(role: .companion, text: "Heat the water. Add the leaves.")
+      .withDelivery(.interrupted, spokenText: "Heat the water."),
+    .init(role: .user, text: "Continue"),
+  ]
+  let context = ChatContext(
+    companionName: "Pogo", profile: .init(personality: "Curious"), messages: messages)
+  let typed = ChatReplyGenerator.request(for: context, tools: [], maximumTokens: 240)
+  let spoken = ChatReplyGenerator.request(
+    for: context.presented(as: .talk), tools: [], maximumTokens: 240)
+  #expect(typed.messages == spoken.messages)
+  #expect(typed.messages.map(\.content) == messages.map(\.text))
+  #expect(typed.messages.map(\.role) == [.user, .assistant, .user])
+  #expect(
+    typed.instructions.contains("Keep replies brief and speakable. Address the user as an adult."))
+  #expect(!typed.instructions.contains("The user is speaking with you"))
+  #expect(spoken.instructions.contains("The user is speaking with you"))
+  #expect(spoken.instructions.contains("do not read out long URLs"))
+}

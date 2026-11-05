@@ -28,6 +28,8 @@ package protocol ChatSpeechOutput: Sendable {
     receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void
   ) async throws -> String?
   func stop(id: UUID) async
+  func pause(id: UUID) async
+  func resume(id: UUID) async
   func speakStream(
     _ request: ChatSpeechRequest, text: SpeechTextStream,
     receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void

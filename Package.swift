@@ -162,7 +162,10 @@ let package = Package(
       path: "Tools/ConversationStorageProbe"),
     .executableTarget(
       name: "TTSBenchmark",
-      dependencies: ["SilliesModelStore", "SilliesTTS", "SilliesInference", "SilliesTextModels"],
+      dependencies: [
+        "SilliesModelStore", "SilliesTTS", "SilliesInference", "SilliesTextModels",
+        "SilliesCore", "SilliesChat", "SilliesReasoning",
+      ],
       path: "Tools/TTSBenchmark"),
     .testTarget(
       name: "SilliesWritingTests",

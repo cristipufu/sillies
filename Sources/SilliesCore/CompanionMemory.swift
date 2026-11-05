@@ -2,11 +2,19 @@ import Foundation
 
 /// A user-visible fact with original-message provenance; separate from lossy context summaries.
 public struct MemoryFact: Codable, Equatable, Sendable {
+  public static let maximumKeyCharacters = 80
+  public static let maximumValueCharacters = 500
   public let key: String
   public let value: String
   public init(key: String, value: String) {
     self.key = key
     self.value = value
+  }
+  public var isValid: Bool {
+    !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      && key.count <= Self.maximumKeyCharacters
+      && !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      && value.count <= Self.maximumValueCharacters
   }
 }
 
@@ -73,7 +81,19 @@ public struct MemoryWrite: Sendable {
   }
 }
 
-public enum MemoryMutationError: Error { case keyAlreadyExists, replacementChanged }
+public enum MemoryMutationError: Error, LocalizedError {
+  case keyAlreadyExists, replacementChanged
+  public var errorDescription: String? {
+    switch self {
+    case .keyAlreadyExists:
+      String(
+        localized:
+          "A memory already uses this topic. Choose another topic or correct it in conversation.")
+    case .replacementChanged:
+      String(localized: "This memory changed. Reopen it before editing.")
+    }
+  }
+}
 
 public struct MemoryReceipt: Codable, Equatable, Identifiable, Sendable {
   public let handle: ConversationHandle

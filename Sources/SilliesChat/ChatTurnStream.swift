@@ -4,11 +4,11 @@ import SilliesReasoning
 import SilliesTTS
 
 /// Bounded text delivery and sentence assembly live off the UI actor.
-actor ChatTurnStream {
+package actor ChatTurnStream {
   private static let presentationInterval: Duration = .milliseconds(50)
-  static let defaultOpeningPhraseDelay: Duration = .milliseconds(350)
+  package static let defaultOpeningPhraseDelay: Duration = .milliseconds(350)
   private let openingPhraseDelay: Duration
-  let speech = SpeechTextStream()
+  package let speech = SpeechTextStream()
   private var text = ""
   private var phrases = SpokenPhraseBuffer()
   private var speechStopped = false
@@ -19,7 +19,7 @@ actor ChatTurnStream {
   private var reportedPhrase = false
   private let presentation: ChatTextPresentation
   private let milestone: @Sendable (SpeechDeliveryMilestone) -> Void
-  init(
+  package init(
     receive: @escaping @Sendable (String) async -> Void,
     milestone: @escaping @Sendable (SpeechDeliveryMilestone) -> Void = { _ in },
     openingPhraseDelay: Duration = ChatTurnStream.defaultOpeningPhraseDelay
@@ -29,7 +29,7 @@ actor ChatTurnStream {
     self.openingPhraseDelay = openingPhraseDelay
   }
 
-  func append(_ delta: String) async throws {
+  package func append(_ delta: String) async throws {
     try Task.checkCancellation()
     guard delta.utf8.count <= ChatContext.maximumMessageBytes - text.utf8.count,
       text.count + delta.count <= ChatContext.maximumMessageCharacters
@@ -53,7 +53,7 @@ actor ChatTurnStream {
     }
   }
 
-  func finish(_ completedText: String) async throws {
+  package func finish(_ completedText: String) async throws {
     cancelOpeningDeadline()
     guard
       text.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -70,7 +70,7 @@ actor ChatTurnStream {
     await publish()
     await presentation.finish()
   }
-  func cancel() async {
+  package func cancel() async {
     cancelOpeningDeadline()
     speechStopped = true
     await speech.cancel()

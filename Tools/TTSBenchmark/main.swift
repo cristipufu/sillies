@@ -22,12 +22,17 @@ import SilliesTTS
       try await VoiceOverlapBenchmark(arguments: Array(arguments.dropFirst(2))).run()
       return
     }
+    if (7...8).contains(arguments.count), arguments[1] == "conversation" {
+      try await VoiceConversationBenchmark(arguments: Array(arguments.dropFirst(2))).run()
+      return
+    }
     guard [4, 6].contains(arguments.count),
       ["install", "run", "latency", "profile", "voices", "recovery"].contains(arguments[1])
     else {
       fputs(
         "Usage: TTSBenchmark install|run|latency|profile|voices|recovery MODEL_ID MODEL_DIRECTORY [LANGUAGE TEXT]\n"
-          + "       TTSBenchmark overlap TEXT_ID TEXT_DIRECTORY VOICE_ID VOICE_DIRECTORY OUTPUT_DIRECTORY\n",
+          + "       TTSBenchmark overlap TEXT_ID TEXT_DIRECTORY VOICE_ID VOICE_DIRECTORY OUTPUT_DIRECTORY\n"
+          + "       TTSBenchmark conversation TEXT_ID TEXT_DIRECTORY VOICE_ID VOICE_DIRECTORY OUTPUT_DIRECTORY [current-first|early-first]\n",
         stderr
       )
       exit(EXIT_FAILURE)

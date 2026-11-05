@@ -1,9 +1,27 @@
 import Foundation
+import SilliesAudio
 import SilliesTTS
 import Synchronization
 import Testing
 
 @testable import SilliesChat
+
+@Test @MainActor func chatVoiceTimingIncludesAcousticSilenceBeforeRecognitionAndPlayback() throws {
+  let now = ProcessInfo.processInfo.systemUptime
+  let timing = try #require(VoiceEndpointTiming(lastSpeechSample: now - 1, detected: now - 0.1))
+  let delivery = ChatTurnDelivery(started: .now, endpoint: timing)
+  delivery.receivedText()
+  delivery.received(.milestone(.firstPCM))
+  delivery.received(.milestone(.audibleOutput(now + 0.2)))
+  #expect(try #require(delivery.snapshot.endpoint) > .seconds(0.89))
+  #expect(try #require(delivery.snapshot.endpoint) < .seconds(0.91))
+  #expect(try #require(delivery.snapshot.recognitionFinalized) >= .seconds(1))
+  #expect(try #require(delivery.snapshot.firstText) >= .seconds(1))
+  #expect(try #require(delivery.snapshot.firstPCM) >= .seconds(1))
+  #expect(try #require(delivery.snapshot.firstAudio) >= .seconds(1.19))
+  #expect(VoiceEndpointTiming(lastSpeechSample: .nan, detected: now) == nil)
+  #expect(VoiceEndpointTiming(lastSpeechSample: now + 1, detected: now) == nil)
+}
 
 @Test func chatStartsVoicePreparationBeforeACompletePhraseExists() async throws {
   let stream = ChatTurnStream(receive: { _ in })

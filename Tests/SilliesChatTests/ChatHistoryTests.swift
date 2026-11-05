@@ -26,8 +26,13 @@ import Testing
 }
 
 private actor HistoryStorageProbe: ConversationRepository, CompanionMemoryRepository {
+  private let memoryCommitted: @Sendable () -> Void
+  init(memoryCommitted: @escaping @Sendable () -> Void = {}) {
+    self.memoryCommitted = memoryCommitted
+  }
   let handle = ConversationHandle(companionID: "pogo", generation: UUID())
   var saved: [ConversationUpdate] = []
+  var memoryWrites: [MemoryWrite] = []
   private var writesAllowed = false
   private var snapshot: ConversationSnapshot {
     .init(
@@ -53,11 +58,116 @@ private actor HistoryStorageProbe: ConversationRepository, CompanionMemoryReposi
     .init(facts: [], next: nil)
   }
   func remember(_ request: MemoryWrite) throws -> MemoryReceipt {
-    throw ConversationStorageError.invalidData
+    guard
+      saved.contains(where: { $0.messages.contains(where: { $0.id == request.sourceMessageID }) })
+    else { throw ConversationStorageError.invalidData }
+    guard !memoryWrites.contains(where: { $0.key == request.key }) else {
+      throw MemoryMutationError.keyAlreadyExists
+    }
+    memoryWrites.append(request)
+    memoryCommitted()
+    return .init(
+      handle: request.handle, id: UUID(), previous: nil,
+      saved: .init(
+        replacing: nil, fact: request.fact, source: request.source, savedAt: request.savedAt))
   }
   func forget(_ handle: ConversationHandle, id: UUID) -> ConversationSnapshot { snapshot }
   func undoMemory(_ handle: ConversationHandle, receiptID: UUID) -> ConversationSnapshot {
     snapshot
   }
   func recentMemoryChanges(_ handle: ConversationHandle) -> [MemoryReceipt] { [] }
+}
+
+@Test @MainActor func explicitMemoryFlushesItsSourceAndPublishesAReceiptWithoutInference()
+  async throws
+{
+  let store = HistoryStorageProbe()
+  await store.allowWrites()
+  let history = ChatHistory(configuration: .stored(conversations: store, memories: store))
+  _ = try await history.load(.init(id: "pogo", name: "Pogo"))
+  let message = ChatMessage(role: .user, text: "I prefer short answers.")
+  history.stage(message)
+  let editor = ChatMemoryEditor(history: history)
+  #expect(!editor.canRemember(.init(role: .companion, text: "An invented fact")))
+  editor.begin(message)
+  editor.topic = "Answer length"
+  editor.value = "I prefer concise answers."
+  await editor.save()
+  #expect(!editor.isPresented && editor.failure == nil)
+  let saved = try #require(await store.memoryWrites.first)
+  #expect(saved.value == "I prefer concise answers.")
+  #expect(saved.sourceMessageID == message.id && saved.sourceQuote == message.text)
+  #expect(history.memoryReceipts.count == 1)
+  #expect(history.memories.page.facts.first?.value == saved.value)
+  editor.begin(message)
+  editor.topic = "Answer length"
+  await editor.save()
+  #expect(editor.isPresented && editor.failure != nil)
+  #expect(await store.memoryWrites.count == 1)
+  #expect(editor.value == message.text)
+  editor.close()
+  history.stopAndFlush(deliver: { action in Task { @MainActor in action() } }, completion: {})
+}
+
+@Test @MainActor func explicitMemoryRejectsAChangedConversationAndKeepsTheReviewedFact()
+  async throws
+{
+  let store = HistoryStorageProbe()
+  await store.allowWrites()
+  let history = ChatHistory(configuration: .stored(conversations: store, memories: store))
+  let snapshot = try #require(try await history.load(.init(id: "pogo", name: "Pogo")))
+  let editor = ChatMemoryEditor(history: history)
+  editor.begin(.init(role: .user, text: "A fact"))
+  editor.topic = "Topic"
+  history.restore(
+    .init(
+      handle: .init(companionID: "pogo", generation: UUID()),
+      checkpoint: .init(), page: snapshot.page))
+  await editor.save()
+  #expect(editor.isPresented && editor.failure != nil)
+  #expect(editor.value == "A fact")
+  #expect(await store.memoryWrites.isEmpty)
+  editor.close()
+}
+
+@Test @MainActor func explicitMemoryRetainsTheDraftWhenItsSourceCannotBeSaved() async throws {
+  let store = HistoryStorageProbe()
+  let history = ChatHistory(configuration: .stored(conversations: store, memories: store))
+  _ = try await history.load(.init(id: "pogo", name: "Pogo"))
+  let message = ChatMessage(role: .user, text: "I prefer short answers.")
+  history.stage(message)
+  let editor = ChatMemoryEditor(history: history)
+  editor.begin(message)
+  editor.topic = "Answer length"
+  await editor.save()
+  #expect(editor.isPresented && editor.failure != nil)
+  #expect(editor.value == message.text)
+  #expect(await store.memoryWrites.isEmpty)
+  #expect(history.memoryReceipts.isEmpty)
+  await store.allowWrites()
+  await editor.save()
+  #expect(!editor.isPresented && editor.failure == nil)
+  #expect(history.memoryReceipts.count == 1)
+  history.stopAndFlush(deliver: { action in Task { @MainActor in action() } }, completion: {})
+}
+
+@Test @MainActor func explicitMemoryPublishesACommittedReceiptEvenIfItsTaskIsCancelled()
+  async throws
+{
+  let store = HistoryStorageProbe(memoryCommitted: { withUnsafeCurrentTask { $0?.cancel() } })
+  await store.allowWrites()
+  let history = ChatHistory(configuration: .stored(conversations: store, memories: store))
+  _ = try await history.load(.init(id: "pogo", name: "Pogo"))
+  let message = ChatMessage(role: .user, text: "I prefer short answers.")
+  history.stage(message)
+  let editor = ChatMemoryEditor(history: history)
+  editor.begin(message)
+  editor.topic = "Answer length"
+  let saving = Task { await editor.save() }
+  await saving.value
+  #expect(saving.isCancelled)
+  #expect(!editor.isPresented && editor.failure == nil)
+  #expect(history.memoryReceipts.count == 1)
+  #expect(await store.memoryWrites.count == 1)
+  history.stopAndFlush(deliver: { action in Task { @MainActor in action() } }, completion: {})
 }

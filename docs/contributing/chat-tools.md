@@ -46,6 +46,18 @@ Memory writes bind provenance to the original current user message in applicatio
 and prompts express the storage policy, but correct provenance alone does not prove that a model
 chose an appropriate fact: evaluate real persisted state, opt-outs and identity separately.
 
+The user can also choose **Remember this…** on their own message, review the topic and fact,
+and save without inference. `ChatMemoryEditor` owns the draft; `ChatHistory` flushes the source before
+calling the same provenance-checked repository. A successful write publishes its receipt and Undo,
+including when cancellation arrives after commit. Duplicate topics require an explicit correction;
+the editor must not silently replace another fact.
+
+`ChatContext.mode` distinguishes written Chat from spoken Talk without changing the tool capabilities.
+Interrupted speech keeps the original assistant reply intact, with the existing incomplete-reply
+notice. Completed spoken phrases remain recorded separately, but the November 5 context experiments
+did not qualify a new model-facing delivery representation. Do not assume a model can infer where
+playback stopped. The latest user prompt stays unchanged.
+
 ## Add a capability
 
 1. Implement `ConversationTool` in the feature that owns the data. Define a stable name, a concise

@@ -14,6 +14,8 @@ while Qwen starts responding sooner on the test Mac. LFM 2.6B has the strongest 
 models admitted on an 8 GB Mac, but its new median first text is 6.46 seconds and long-history
 continuity remains uneven. These are integration results, not measurements on each RAM
 configuration. Automatic memory saving remains unreliable across several models.
+For a fact you want to keep explicitly, right-click your own Chat message, choose **Remember this…**,
+and review it before saving. This action does not need a model decision and provides Undo.
 
 For continuing conversations, also read the [context, summary and identity follow-up](reports/continuity-review-2026-11-03.md).
 It reproduces Apple's difficulty correcting an earlier mistaken identity, reviews source attribution,
@@ -109,6 +111,9 @@ MLX weights alone do not make them usable in Sillies; they are not offered as wo
 
 ## Benchmarks
 
+- **[Chat and voice improvement study](reports/chat-voice-improvements-2026-11-05.md)** —
+  interruption recovery, reviewed memory saving, endpoint and reasoning experiments, and generated-answer
+  speech timing. Rejected policies and scoring false positives remain visible; leaderboard scores are unchanged.
 - **[Stored Chat: one million messages and restart recovery](reports/stored-conversation-scale-2026-11-03.md)** —
   growing SQLite histories, browsing and selection during streaming, common-term search performance,
   and recovery after killing a writer. These application checks use fake inference, not model scores.

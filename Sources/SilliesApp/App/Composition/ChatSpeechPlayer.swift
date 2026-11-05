@@ -10,6 +10,7 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
   private var active: (id: UUID, task: Task<String?, Error>)?
   private var interruptedPlaybackID: UUID?
   private var firstPCMFor: UUID?
+  private var pausedID: UUID?
 
   init(models: VoiceModelEnvironment, playback: any SpeechPlayback) {
     self.models = models
@@ -64,11 +65,13 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
     }
     try Task.checkCancellation()
     guard active == nil else { throw TTSError.busy }
+    if pausedID != request.id { pausedID = nil }
     let task = Task { try await self.perform(request, text: text, receive: receive) }
     active = (request.id, task)
     defer {
       if active?.id == request.id { active = nil }
       if interruptedPlaybackID == request.id { interruptedPlaybackID = nil }
+      if pausedID == request.id { pausedID = nil }
     }
     return try await withTaskCancellationHandler {
       try await task.value
@@ -78,10 +81,23 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
   }
 
   func stop(id: UUID) async {
+    if pausedID == id { pausedID = nil }
     guard let active, active.id == id else { return }
     active.task.cancel()
     await playback.stop(id: id)
     _ = await active.task.result
+  }
+
+  func pause(id: UUID) async {
+    guard !Task.isCancelled, active == nil || active?.id == id else { return }
+    pausedID = id
+    await playback.pause(id: id)
+  }
+
+  func resume(id: UUID) async {
+    guard !Task.isCancelled, pausedID == id else { return }
+    pausedID = nil
+    await playback.resume(id: id)
   }
 
   private func perform(
@@ -117,6 +133,7 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
         Task { await self?.playbackInterrupted(id: request.id) }
       }
     }
+    if pausedID == request.id { await playback.pause(id: request.id) }
     do {
       async let voiceReady = models.prepareVoiceIfPossible(
         .init(id: voice.id, language: language), using: manifest, conversationID: request.id)

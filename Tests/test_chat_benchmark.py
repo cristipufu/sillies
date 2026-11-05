@@ -21,6 +21,21 @@ def scenario():
 
 
 class ChatBenchmarkTests(unittest.TestCase):
+    def test_mode_and_delivery_evidence_reach_worker_without_gold(self):
+        case = scenario()
+        case["mode"] = "talk"
+        case["history"] = [{"role": "assistant", "text": "One. Two.",
+                            "spokenText": "One.", "interrupted": True}]
+        job = corpus.worker_job(corpus.jobs([corpus.validate(case)], 1)[0])
+        self.assertEqual(job["scenario"]["mode"], "talk")
+        self.assertEqual(job["scenario"]["history"], case["history"])
+        self.assertNotIn("gold-only-token", json.dumps(job))
+        case["history"][0]["role"] = "user"
+        with self.assertRaises(ValueError): corpus.validate(case)
+        case = scenario()
+        case["mode"] = "unknown"
+        with self.assertRaises(ValueError): corpus.validate(case)
+
     def test_gold_rubrics_and_expectations_never_enter_worker_inputs(self):
         job = corpus.jobs([corpus.validate(scenario())], 1)[0]
         encoded = json.dumps(corpus.worker_job(job))

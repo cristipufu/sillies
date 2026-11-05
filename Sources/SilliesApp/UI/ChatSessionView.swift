@@ -50,6 +50,12 @@ struct ChatSessionView: View {
     }
     .sheet(isPresented: $showsMemories) { ConversationMemoriesView(model: model) }
     .sheet(isPresented: $showsSearch) { ConversationSearchView(browser: model.browser) }
+    .sheet(
+      isPresented: Binding(
+        get: { model.memoryEditor.isPresented },
+        set: { if !$0 { model.memoryEditor.close() } }
+      )
+    ) { ChatMemoryEditorView(editor: model.memoryEditor) }
     .confirmationDialog("Clear this conversation and its memories?", isPresented: $confirmsClear) {
       Button("Clear conversation", role: .destructive) { Task { await model.clearConversation() } }
     } message: {

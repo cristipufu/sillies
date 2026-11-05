@@ -30,6 +30,7 @@ enum ConversationRecentWindow {
       companionName: context.companionName, profile: context.profile,
       messages: selected, memory: context.memory
     ).inTurn(context.turnID, session: context.sessionID).inHistory(context.historyHandle)
+      .presented(as: context.mode)
     if selected.count != context.messages.count || context.historyCoverage == .recentWindow {
       return result.coveringRecentWindow()
     }

@@ -52,6 +52,8 @@ import SilliesTTS
       _ request: ChatSpeechRequest, receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void
     ) async throws -> String? { nil }
     func stop(id: UUID) async {}
+    func pause(id: UUID) async {}
+    func resume(id: UUID) async {}
   }
 
   private final class UnavailableMicrophone: ConversationCapture, Sendable {

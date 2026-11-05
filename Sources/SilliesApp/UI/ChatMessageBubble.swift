@@ -58,6 +58,10 @@ struct ChatMessageBubble: View {
           fromUser ? Color.clear : theme.border)
       )
       .contextMenu {
+        if model.memoryEditor.canRemember(message) {
+          Button("Remember this…", systemImage: "sparkles") { model.memoryEditor.begin(message) }
+            .disabled(!model.canCompose)
+        }
         Button("Copy message", systemImage: "doc.on.doc") {
           NSPasteboard.general.clearContents()
           NSPasteboard.general.setString(message.text, forType: .string)

@@ -35,6 +35,7 @@ actor BenchmarkDialogue {
         personality: scenario.owner.personality, languageIdentifier: scenario.language),
       messages: messages, memory: memory
     ).inTurn(UUID(), session: session).inHistory(fixture.handle)
+      .presented(as: scenario.mode.flatMap(ConversationMode.init(rawValue:)) ?? .chat)
   }
 
   func accept(_ reply: ChatReply) async throws {

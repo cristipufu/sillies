@@ -26,6 +26,7 @@ package actor VoicePlayback: SpeechPlayback {
   private var queuedSeconds = 0.0
   private var capacityWaiter: CheckedContinuation<Void, Error>?
   private var finishWaiter: CheckedContinuation<Void, Error>?
+  private var isPaused = false
 
   package init(reference: (@Sendable (AudioRenderFrame) -> Void)? = nil) {
     makeDevice = { NativeVoiceOutput(reference: reference) }
@@ -94,6 +95,26 @@ package actor VoicePlayback: SpeechPlayback {
     reset()
   }
 
+  package func pause(id: UUID) {
+    guard currentID == id, !isPaused else { return }
+    isPaused = true
+    watchdog?.cancel()
+    watchdog = nil
+    device?.pause()
+    receive?(.speaking(level: 0))
+  }
+
+  package func resume(id: UUID) {
+    guard currentID == id, isPaused else { return }
+    isPaused = false
+    lastProgress = .now
+    device?.resume()
+    if let next = pending.first {
+      receive?(.speaking(level: next.level))
+      watchProgress(id: id, generation: generation)
+    }
+  }
+
   package func markUtterance(_ text: String, id: UUID) throws {
     try Task.checkCancellation()
     try requireSession(id)
@@ -138,6 +159,7 @@ package actor VoicePlayback: SpeechPlayback {
       Task { await self?.audibleOutput(time, id: id, generation: token) }
     }
     self.device = device
+    if isPaused { device.pause() }
     return device
   }
 
@@ -185,7 +207,7 @@ package actor VoicePlayback: SpeechPlayback {
   }
 
   private func watchProgress(id: UUID, generation token: UUID) {
-    guard watchdog == nil else { return }
+    guard watchdog == nil, !isPaused else { return }
     let timeout = stallTimeout
     watchdog = Task { [weak self] in
       while !Task.isCancelled {
@@ -196,7 +218,7 @@ package actor VoicePlayback: SpeechPlayback {
   }
 
   private func checkProgress(id: UUID, generation token: UUID) -> Bool {
-    guard currentID == id, generation == token else { return false }
+    guard !Task.isCancelled, !isPaused, currentID == id, generation == token else { return false }
     if !pending.isEmpty, lastProgress.duration(to: .now) >= stallTimeout {
       outputInterrupted(id: id, generation: token)
       return false
@@ -208,6 +230,7 @@ package actor VoicePlayback: SpeechPlayback {
     watchdog?.cancel()
     watchdog = nil
     currentID = nil
+    isPaused = false
     generation = UUID()
     device?.stop()
     device = nil

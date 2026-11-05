@@ -78,6 +78,7 @@ struct ConversationContextManager {
       companionName: context.companionName, profile: context.profile,
       messages: messages, memory: memory
     ).inTurn(context.turnID, session: context.sessionID).inHistory(context.historyHandle)
+      .presented(as: context.mode)
       .coveringRecentWindow()
   }
 }

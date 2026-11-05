@@ -33,6 +33,8 @@ def load(directory: Path) -> list[dict]:
 
 
 def validate(case: dict) -> dict:
+    if case.get("mode", "chat") not in {"chat", "talk"}:
+        raise ValueError(f"Invalid conversation mode: {case.get('id')}")
     if not IDENTIFIER.fullmatch(case.get("id", "")) or not IDENTIFIER.fullmatch(case.get("group", "")):
         raise ValueError(f"Invalid case identity: {case.get('id')}")
     if not isinstance(case.get("turns"), list) or not 1 <= len(case["turns"]) <= 20:
@@ -67,6 +69,10 @@ def validate(case: dict) -> dict:
     for message in case.get("history", []) + [item for batch in batches for item in batch]:
         if message.get("role") not in {"user", "assistant"} or not isinstance(message.get("text"), str):
             raise ValueError(f"Invalid seeded history: {case['id']}")
+        if "interrupted" in message and (message["role"] != "assistant" or type(message["interrupted"]) is not bool):
+            raise ValueError(f"Invalid interrupted reply: {case['id']}")
+        if "spokenText" in message and (message["role"] != "assistant" or not isinstance(message["spokenText"], str)):
+            raise ValueError(f"Invalid playback evidence: {case['id']}")
     if len(case.get("history", [])) > 200:
         raise ValueError(f"Seeded history is too large: {case['id']}")
     return case
@@ -86,6 +92,7 @@ def jobs(cases: list[dict], repeats: int, order_seed: int | None = None) -> list
 def worker_job(job: dict) -> dict:
     case = job["case"]
     scenario = {"id": case["id"], "owner": case.get("owner", OWNER), "language": case.get("language", "en"),
+                "mode": case.get("mode", "chat"),
                 "history": case.get("history", []), "historyBatches": case.get("historyBatches", []), "records": case.get("records", []),
                 "memories": case.get("memories", []), "turns": [turn["user"] for turn in case["turns"]]}
     return {"id": job["id"], "scenario": scenario, "tools": job["profile"]}

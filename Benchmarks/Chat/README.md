@@ -37,6 +37,12 @@ is allowed. A failed fixture check invalidates the comparison and cannot receive
 The separate `retained_context_omits` check deliberately examines recent messages only, so a summary
 can carry the answer when testing compaction.
 
+Scenarios can set `mode` to `chat` (the default) or `talk`. Seeded assistant messages can include
+`spokenText` and an `interrupted` boolean to test continuity after partial playback. These are input
+facts, not scoring expectations. Keep checks and rubrics in the external evaluator. The bounded
+[Chat/voice study](../../docs/reports/chat-voice-improvements-2026-11-05.md) exercises these paths;
+it does not replace the full model comparison.
+
 ## What it covers
 
 The corpus has **74 scenarios, 93 tool-profile cases and 134 turns per model**. The primary five-tool

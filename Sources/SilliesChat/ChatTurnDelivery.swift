@@ -1,4 +1,5 @@
 import Foundation
+import SilliesAudio
 import SilliesTTS
 
 /// Presentation delivery owns timing and the prefix confirmed by hardware completion callbacks.
@@ -11,20 +12,27 @@ import SilliesTTS
     var preparationStarted: Duration?
     var voicePrepared: Duration?
     var firstPCM: Duration?
+    var endpoint: Duration?
+    var recognitionFinalized: Duration?
   }
-  private let started: ContinuousClock.Instant
   private let hostStart: TimeInterval
   private(set) var snapshot = Snapshot()
-  init(started: ContinuousClock.Instant) {
-    self.started = started
+  init(started: ContinuousClock.Instant, endpoint: VoiceEndpointTiming? = nil) {
+    let now = ProcessInfo.processInfo.systemUptime
+    let endpoint = endpoint.flatMap { $0.detected <= now ? $0 : nil }
     let elapsed = started.duration(to: .now).components
     let attosecondsPerSecond = 1e18
-    hostStart =
-      ProcessInfo.processInfo.systemUptime - Double(elapsed.seconds)
+    let fallbackStart =
+      now - Double(elapsed.seconds)
       - Double(elapsed.attoseconds) / attosecondsPerSecond
+    hostStart = endpoint?.lastSpeechSample ?? fallbackStart
+    if let endpoint {
+      snapshot.endpoint = .seconds(endpoint.detected - endpoint.lastSpeechSample)
+      snapshot.recognitionFinalized = .seconds(now - hostStart)
+    }
   }
   func receivedText() {
-    if snapshot.firstText == nil { snapshot.firstText = started.duration(to: .now) }
+    if snapshot.firstText == nil { snapshot.firstText = elapsed }
   }
   func received(_ update: SpeechPlaybackUpdate) {
     switch update {
@@ -37,7 +45,7 @@ import SilliesTTS
   }
 
   private func record(_ milestone: SpeechDeliveryMilestone) {
-    let elapsed = started.duration(to: .now)
+    let elapsed = elapsed
     switch milestone {
     case .phraseReady: if snapshot.phraseReady == nil { snapshot.phraseReady = elapsed }
     case .preparationStarted:
@@ -49,5 +57,9 @@ import SilliesTTS
         snapshot.firstAudio = .seconds(time - hostStart)
       }
     }
+  }
+
+  private var elapsed: Duration {
+    .seconds(max(0, ProcessInfo.processInfo.systemUptime - hostStart))
   }
 }

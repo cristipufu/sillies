@@ -141,7 +141,10 @@ package final class VoiceConversationCapture: ConversationCapture {
             || state.speechStart.map({ time - $0 >= Self.maximumTurnDuration }) == true
           {
             state.speechStart = nil
-            update(.speechEnded)
+            let timing = processor.lastSpeechSample.flatMap {
+              VoiceEndpointTiming(lastSpeechSample: $0, detected: AudioCaptureClock.now)
+            }
+            update(.speechEnded(timing))
           }
           if time - state.lastPublication >= Self.publicationInterval {
             state.lastPublication = time

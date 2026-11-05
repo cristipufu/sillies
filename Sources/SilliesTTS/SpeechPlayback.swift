@@ -19,5 +19,7 @@ package protocol SpeechPlayback: Sendable {
   func enqueue(_ audio: SynthesizedAudio, id: UUID) async throws
   func finish(id: UUID) async throws
   func stop(id: UUID) async
+  func pause(id: UUID) async
+  func resume(id: UUID) async
   func markUtterance(_ text: String, id: UUID) async throws
 }

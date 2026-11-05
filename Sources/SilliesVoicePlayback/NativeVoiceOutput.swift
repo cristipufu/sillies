@@ -12,6 +12,7 @@ final class NativeVoiceOutput: VoiceOutputDevice {
   private var configurationObserver: (any NSObjectProtocol)?
   private var renderReference: VoiceRenderReference?
   private var audible: (@Sendable (TimeInterval) -> Void)?
+  private var isPaused = false
 
   init(reference: (@Sendable (AudioRenderFrame) -> Void)? = nil) { self.reference = reference }
   deinit { stop() }
@@ -34,7 +35,18 @@ final class NativeVoiceOutput: VoiceOutputDevice {
     buffer.frameLength = frameCount
     for (index, sample) in audio.samples.enumerated() { channel[index] = max(-1, min(1, sample)) }
     player.scheduleBuffer(buffer, completionCallbackType: .dataPlayedBack) { _ in completed() }
-    if !player.isPlaying { player.play() }
+    if !isPaused, !player.isPlaying { player.play() }
+  }
+
+  func pause() {
+    isPaused = true
+    player?.pause()
+  }
+
+  func resume() {
+    guard isPaused else { return }
+    isPaused = false
+    player?.play()
   }
 
   func stop() {
@@ -49,6 +61,7 @@ final class NativeVoiceOutput: VoiceOutputDevice {
     engine = nil
     renderReference = nil
     sampleRate = nil
+    isPaused = false
   }
 
   private func preparedFormat(sampleRate requestedRate: Int) throws -> AVAudioFormat {

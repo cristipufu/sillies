@@ -3,10 +3,43 @@ import QuartzCore
 import SilliesChat
 import SilliesCore
 import SilliesReasoning
+import SilliesVault
 import SwiftUI
 import Testing
 
 @testable import SilliesApp
+
+@Test @MainActor func reviewedMemoryUsesTheSharedEditorAndCanBeUndoneWithoutInference() async throws
+{
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { removeTestFile(at: directory) }
+  let store = ConversationLibrary(directory: directory)
+  let session = ChatWindowFixture.makeReadySession(
+    conversation: MissingChatModel(), history: .stored(conversations: store, memories: store),
+    owner: .init(id: "pogo", name: "Pogo"))
+  await session.restoreHistory()
+  let message = ChatMessage(role: .user, text: "I prefer jasmine tea when reading.")
+  session.history.stage(message)
+  let editor = session.memoryEditor
+  editor.begin(message)
+  editor.topic = "Favourite tea"
+  editor.value = "The user prefers jasmine tea while reading."
+  #expect(editor.canSave)
+  for scheme in [ColorScheme.light, .dark] {
+    try renderSkillInterface(
+      ChatMemoryEditorView(editor: editor).environment(\.colorScheme, scheme),
+      size: CGSize(width: 400, height: 390), name: "sillies-reviewed-memory-\(scheme)")
+  }
+  await editor.save()
+  #expect(editor.failure == nil && !editor.isPresented)
+  let receipt = try #require(session.history.memoryReceipts.first)
+  #expect(receipt.saved.value == "The user prefers jasmine tea while reading.")
+  #expect(receipt.saved.sourceMessageID == message.id)
+  await session.undoMemory(receipt)
+  #expect(session.history.memoryReceipts.isEmpty)
+  #expect(session.history.memories.page.facts.isEmpty)
+  await withCheckedContinuation { continuation in session.finish { continuation.resume() } }
+}
 
 @Test @MainActor func emptyAndShortSavedChatsFitWithoutHistoryNavigation() throws {
   let session = ChatWindowFixture.makeReadySession(conversation: MissingChatModel())

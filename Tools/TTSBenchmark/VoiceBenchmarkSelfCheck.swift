@@ -32,6 +32,11 @@ enum VoiceBenchmarkSelfCheck {
       throw TTSError.unavailable("PCM hashing lost sub-Int16 differences.")
     }
     try await checkTextEvidence()
+    try VoiceConversationBenchmark.validateDelivery("One. Two!", phrases: ["One.", "Two!"])
+    do {
+      try VoiceConversationBenchmark.validateDelivery("One. Two!", phrases: ["One.", "One."])
+      throw TextModelError.invalidResponse
+    } catch TTSError.unavailable {}
     print("Voice benchmark timing, Float32 evidence and streamed-text validation: passed")
   }
 

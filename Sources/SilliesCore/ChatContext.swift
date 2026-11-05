@@ -11,6 +11,7 @@ public struct ChatContext: Sendable {
   public let profile: CharacterChatProfile
   public let messages: [ChatMessage]
   public let memory: ConversationMemory
+  public private(set) var mode = ConversationMode.chat
   public private(set) var turnID = UUID()
   public private(set) var sessionID: UUID?
   public private(set) var historyHandle: ConversationHandle?
@@ -35,6 +36,12 @@ public struct ChatContext: Sendable {
   public func inHistory(_ handle: ConversationHandle?) -> Self {
     var copy = self
     copy.historyHandle = handle
+    return copy
+  }
+
+  public func presented(as mode: ConversationMode) -> Self {
+    var copy = self
+    copy.mode = mode
     return copy
   }
 

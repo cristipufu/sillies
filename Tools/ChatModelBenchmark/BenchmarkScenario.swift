@@ -27,7 +27,13 @@ struct BenchmarkScenario: Codable, Sendable {
     enum Role: String, Codable, Sendable { case user, assistant }
     let role: Role
     let text: String
-    var chatMessage: ChatMessage { .init(role: role == .user ? .user : .companion, text: text) }
+    let spokenText: String?
+    let interrupted: Bool?
+    var chatMessage: ChatMessage {
+      let message = ChatMessage(role: role == .user ? .user : .companion, text: text)
+      guard interrupted == true else { return message }
+      return message.withDelivery(.interrupted, spokenText: spokenText)
+    }
   }
   struct Record: Codable, Sendable {
     let id: UUID
@@ -45,6 +51,7 @@ struct BenchmarkScenario: Codable, Sendable {
   let id: String
   let owner: Owner
   let language: String
+  let mode: String?
   let history: [Message]
   /// Additional archived turns between measured requests, exercising checkpoint reuse.
   let historyBatches: [[Message]]?

@@ -31,7 +31,9 @@ runtime executable-plugin loader.
    Keep the named limbs, head, eyes, and attachment anchors compatible with shared clips. Put unique
    clips in their own animation file and register them in `AnimationLibrary`.
 5. Give every animation a reset path and a reduced-motion expression. Reuse layers and the existing
-   clocks; do not add timers to a character.
+   clocks; do not add timers to a character. Register moving details with `addDetail` for automatic
+   interruption cleanup. `registerSecondaryMotion` keeps details alive during shared clips and
+   skips them for Reduce Motion; a primary clip can override the same animation key.
 
 The catalog discovers bundled packs automatically, and the crew picker reads the catalog. No
 character-specific branch belongs in the controller, behavior engine, or window tracker.
@@ -50,3 +52,14 @@ Verify that transparent areas pass input through and that artwork stays outside 
 The [renderer and attachment contract](../extending.md#add-a-character) covers design coordinates,
 limb depth, hit testing, transitions, and example rigs. For new behavior, continue with
 [interactions](interactions.md). Follow the [development contract](../../AGENTS.md).
+
+Headless artwork review for Novi, Lumi, Rook and Flick (including animated GIFs sampled from the
+registered layer curves):
+
+```sh
+SILLIES_COMPANION_PREVIEWS="$PWD/build/companion-previews" \
+  bash scripts/test.sh --filter exportNewCompanionArtwork
+```
+
+These exports inspect artwork and authored motion without opening windows. They do not measure live
+WindowServer presentation or frame pacing. Run visible checks only when explicitly requested.

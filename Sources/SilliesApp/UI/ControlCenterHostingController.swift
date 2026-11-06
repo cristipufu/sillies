@@ -2,8 +2,8 @@ import AppKit
 import SwiftUI
 
 enum ControlCenterLayout {
-  static let width: CGFloat = 388
-  static let maximumHeight: CGFloat = 560
+  static let width: CGFloat = 420
+  static let maximumHeight: CGFloat = 640
 }
 
 /// AppKit must know the final viewport before positioning a status-item popover.
@@ -48,8 +48,7 @@ private struct ControlCenterViewport: View {
   let content: ControlCenterView
   let size: CGSize
   var body: some View {
-    ScrollView(.vertical) { content }
-      .scrollBounceBehavior(.basedOnSize)
+    content
       .frame(width: size.width, height: size.height)
       .background(theme.paper)
   }

@@ -520,23 +520,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       actions: .init(
         openSettings: { [weak self] in self?.showSettings() },
         openVault: { [weak self] in self?.showVault() },
-        openStash: { [weak self] in self?.showVault(.stash) },
-        openCompanions: { [weak self] in
-          self?.settingsNavigation.destination = .companions
-          self?.settingsNavigation.companionsPage = .crew
-          self?.showSettings()
-        },
-        openWriting: { [weak self] in
-          self?.popover.performClose(nil)
-          self?.controller?.onOpenWritingSession?()
-        },
-        openConversation: { [weak self] in self?.openConversation($0, companionID: $1) },
-        openSetup: { [weak self] in
-          self?.settingsNavigation.destination = .setup
-          self?.showSettings()
-        },
-        quit: { NSApp.terminate(nil) }),
-      speechModels: speechServices?.models, dictation: writingTools?.dictation)
+        quit: { NSApp.terminate(nil) }))
   }
 
   private func controlCenterHost(

@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Little companions. Useful superpowers.</strong><br>
-  Twelve animated companions that live on your window edges.<br>
+  Sixteen animated companions that live on your window edges.<br>
   Dictate a thought, capture a meeting, save something for later. All on your Mac.
 </p>
 
@@ -27,11 +27,11 @@
 ## Meet your crew
 
 <p align="center">
-  <img src="docs/images/crew.png" width="1000" alt="All twelve Sillies companions: Mochi, Kiko, Pogo, Bolt, Boo, Bloop, Sprout, Pip, Pebble, Taro, Nib, and Mallow, with their personality captions">
+  <img src="docs/images/crew.png" width="1000" alt="All sixteen Sillies companions: Mochi, Kiko, Pogo, Bolt, Boo, Bloop, Sprout, Pip, Pebble, Taro, Nib, Mallow, Novi, Lumi, Rook, and Flick, with their personality captions">
 </p>
 
 Mochi naps on the title bar. Kiko takes the dramatic route. Pogo climbs the side of your window.
-Bolt is doing his very best. Pick your favorites from twelve companions, each with its own artwork,
+Bolt is doing his very best. Pick your favorites from sixteen companions, each with its own artwork,
 personality, and reactions.
 
 They ride along as you move and resize windows. In **Playful** mode, they might dance together, sweep

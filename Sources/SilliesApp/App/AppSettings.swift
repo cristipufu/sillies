@@ -12,6 +12,7 @@ enum ActivityLevel: String, CaseIterable, Codable, Identifiable {
 final class AppSettings {
   static let minSize: Double = 48
   static let maxSize: Double = 112
+  static let sizeStep: Double = 16
   static let defaultSize: Double = 64
   static let largeSizeThreshold: Double = 90
   static let defaultCharacterIDs = ["mochi", "kiko"]

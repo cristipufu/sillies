@@ -20,7 +20,8 @@ import Testing
   }
   try ReadmePreviewRenderer.export(
     ReadmeCrewScene(characters: characters).environment(\.colorScheme, .light),
-    to: directory.appendingPathComponent("crew.png"), appearance: .aqua)
+    to: directory.appendingPathComponent("crew.png"), appearance: .aqua,
+    size: CGSize(width: 1200, height: 1200))
   try ReadmePreviewRenderer.export(
     ReadmeListeningScene().environment(\.colorScheme, .light),
     to: directory.appendingPathComponent("listening-light.png"), appearance: .aqua)
@@ -28,11 +29,13 @@ import Testing
 
 @MainActor
 private enum ReadmePreviewRenderer {
-  private static let size = CGSize(width: 1200, height: 800)
+  private static let defaultSize = CGSize(width: 1200, height: 800)
   private static let scale: CGFloat = 2
 
-  static func export(_ scene: some View, to destination: URL, appearance: NSAppearance.Name) throws
-  {
+  static func export(
+    _ scene: some View, to destination: URL, appearance: NSAppearance.Name,
+    size: CGSize = defaultSize
+  ) throws {
     let window = NSWindow(
       contentRect: CGRect(origin: .zero, size: size), styleMask: [.borderless], backing: .buffered,
       defer: false)

@@ -14,7 +14,7 @@ func windowDragSmoothnessBudgetAndSinglePassPlacement() throws {
   let settings = AppSettings(defaults: defaults)
   settings.followsWindows = true
   settings.reduceMotion = false
-  settings.enabledCharacters = Set(try CharacterCatalog().characters.map(\.id))
+  try enableFullCrewForTiming(in: settings)
 
   let controller = try CompanionController(
     settings: settings, services: .init(accessibility: .disabled))
@@ -77,7 +77,7 @@ func windowResizeSmoothnessBudgetAndCompactionQuantization() throws {
   let settings = AppSettings(defaults: defaults)
   settings.followsWindows = true
   settings.reduceMotion = false
-  settings.enabledCharacters = Set(try CharacterCatalog().characters.map(\.id))
+  try enableFullCrewForTiming(in: settings)
 
   let controller = try CompanionController(
     settings: settings, services: .init(accessibility: .disabled))
@@ -134,7 +134,7 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
   let settings = AppSettings(defaults: defaults)
   settings.followsWindows = true
   settings.reduceMotion = false
-  settings.enabledCharacters = Set(try CharacterCatalog().characters.map(\.id))
+  try enableFullCrewForTiming(in: settings)
 
   let controller = try CompanionController(
     settings: settings, services: .init(accessibility: .disabled))
@@ -203,7 +203,7 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
 
 @Test(arguments: [
   "mochi", "kiko", "pogo", "bolt", "boo", "bloop", "sprout", "pip", "pebble", "taro", "nib",
-  "mallow",
+  "mallow", "novi", "lumi", "rook", "flick",
 ]) @MainActor
 func companionDragSmoothnessBudgetAndUnclippedMaskStability(characterID: String) throws {
   let diagnostics = DragFrameDiagnostics.fromEnvironment()
@@ -262,4 +262,12 @@ func companionDragSmoothnessBudgetAndUnclippedMaskStability(characterID: String)
     Comment(
       rawValue: controller.smoothnessMetrics.diagnosticReport + "; " + controller.dragTimingSummary)
   )
+}
+
+@MainActor
+private func enableFullCrewForTiming(in settings: AppSettings) throws {
+  settings.enabledCharacters = Set(try CharacterCatalog().characters.map(\.id))
+  // Fit sixteen independent panels into the smallest resize fixture. Individual drag cases
+  // retain the default size; all timing thresholds and native placement counts are unchanged.
+  settings.size = AppSettings.minSize
 }

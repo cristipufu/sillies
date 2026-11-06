@@ -1,0 +1,370 @@
+{
+  "schemaVersion": 1,
+  "id": "rook",
+  "name": "Rook",
+  "subtitle": "At your service. After this nap.",
+  "bio": "A pocket-sized knight with a soft cape and serious manners. Every small favor is a noble quest.",
+  "renderer": "knight",
+  "accent": "8EBDB6",
+  "speed": 30,
+  "order": 15,
+  "reactions": [
+    {
+      "id": "settle-in",
+      "event": "ambient",
+      "animation": "idle",
+      "duration": 6,
+      "priority": 0,
+      "cooldown": 0,
+      "weight": 3,
+      "motion": "none"
+    },
+    {
+      "id": "a-little-wander",
+      "event": "ambient",
+      "animation": "walk",
+      "duration": 4.5,
+      "priority": 0,
+      "cooldown": 8,
+      "weight": 5,
+      "motion": "stroll"
+    },
+    {
+      "id": "a-little-ritual",
+      "event": "ambient",
+      "animation": "rook.polish",
+      "duration": 3.4,
+      "priority": 0,
+      "cooldown": 28,
+      "weight": 2,
+      "motion": "none"
+    },
+    {
+      "id": "a-cozy-rest",
+      "event": "ambient",
+      "animation": "sleep",
+      "duration": 12,
+      "priority": 0,
+      "cooldown": 45,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "a-small-surprise",
+      "event": "ambient",
+      "animation": "rook.visorSlip",
+      "duration": 1.8,
+      "priority": 0,
+      "cooldown": 32,
+      "weight": 2,
+      "motion": "none"
+    },
+    {
+      "id": "new-view",
+      "event": "appChanged",
+      "animation": "peek",
+      "duration": 1.2,
+      "priority": 5,
+      "cooldown": 0.2,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "hold-on-tight",
+      "event": "windowMoved",
+      "animation": "balance",
+      "duration": 1.4,
+      "priority": 5,
+      "cooldown": 0.3,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "make-a-little-room",
+      "event": "windowResized",
+      "animation": "brace",
+      "duration": 1.4,
+      "priority": 5,
+      "cooldown": 0.25,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "where-did-it-go",
+      "event": "windowDisappeared",
+      "animation": "surprised",
+      "duration": 1,
+      "priority": 6,
+      "cooldown": 2,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "something-new",
+      "event": "contextChanged",
+      "animation": "peek",
+      "duration": 2,
+      "priority": 1,
+      "cooldown": 8,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "watch-it-go",
+      "event": "scroll",
+      "animation": "peek",
+      "duration": 1.2,
+      "priority": 1,
+      "cooldown": 8,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "hello-friend",
+      "event": "pet",
+      "animation": "happy",
+      "duration": 2,
+      "priority": 5,
+      "cooldown": 0.5,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "up-we-go",
+      "event": "pickedUp",
+      "animation": "surprised",
+      "duration": 2.2,
+      "priority": 6,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "back-on-my-ledge",
+      "event": "dropped",
+      "animation": "land",
+      "duration": 0.8,
+      "priority": 6,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "waiting-for-you",
+      "event": "userIdle",
+      "animation": "sleep",
+      "duration": 25,
+      "priority": 1,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "there-you-are",
+      "event": "userReturned",
+      "animation": "happy",
+      "duration": 2,
+      "priority": 2,
+      "cooldown": 4,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "a-new-neighbor",
+      "event": "neighbor",
+      "animation": "happy",
+      "duration": 2,
+      "priority": 1,
+      "cooldown": 20,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "steady-again",
+      "event": "windowSettled",
+      "animation": "land",
+      "duration": 0.8,
+      "priority": 5,
+      "cooldown": 0.15,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "a-long-way-down",
+      "event": "edgeReached",
+      "animation": "peek",
+      "duration": 2,
+      "priority": 1,
+      "cooldown": 8,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "hanging-out",
+      "event": "ambient.wall",
+      "animation": "hang",
+      "duration": 3,
+      "priority": 0,
+      "cooldown": 0,
+      "weight": 4,
+      "motion": "none"
+    },
+    {
+      "id": "one-grip-at-a-time",
+      "event": "ambient.wall",
+      "animation": "climb",
+      "duration": 3,
+      "priority": 0,
+      "cooldown": 4,
+      "weight": 4,
+      "motion": "stroll"
+    },
+    {
+      "id": "picture-time",
+      "event": "skill.snap",
+      "animation": "snap",
+      "duration": 1.2,
+      "priority": 8,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "listening-with-you",
+      "event": "skill.listen",
+      "animation": "listen",
+      "duration": 180,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "participate-companion",
+      "event": "skill.participate",
+      "animation": "listen",
+      "duration": 180,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "record-companion",
+      "event": "skill.record",
+      "animation": "listen",
+      "duration": 180,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "explain-companion",
+      "event": "skill.explain",
+      "animation": "snap",
+      "duration": 1.2,
+      "priority": 8,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "keeping-an-eye-out",
+      "event": "skill.watch",
+      "animation": "watch",
+      "duration": 180,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "a-little-focus",
+      "event": "skill.focus",
+      "animation": "focus",
+      "duration": 180,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "we-did-it",
+      "event": "skill.completed",
+      "animation": "happy",
+      "duration": 2,
+      "priority": 8,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "a-treasure-to-keep",
+      "event": "stash.received",
+      "animation": "peek",
+      "duration": 2,
+      "priority": 7,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    },
+    {
+      "id": "chat-ready",
+      "event": "skill.chat",
+      "animation": "listen",
+      "duration": 3,
+      "priority": 85,
+      "cooldown": 0,
+      "weight": 1,
+      "motion": "none"
+    }
+  ],
+  "transitions": {
+    "enter": {
+      "animation": "appear",
+      "duration": 0.3
+    },
+    "exit": {
+      "animation": "disappear",
+      "duration": 0.2
+    },
+    "reattach": {
+      "animation": "fade",
+      "duration": 0.18
+    }
+  },
+  "playful": {
+    "scenes": [
+      "dance",
+      "monocle",
+      "sweep",
+      "protest",
+      "tug-of-war",
+      "campfire",
+      "paper-plane",
+      "scoreboard",
+      "sit",
+      "lift",
+      "edge-climb",
+      "shove",
+      "parachute"
+    ],
+    "clips": {
+      "scene.dance": "scene.robotDance"
+    },
+    "signs": [
+      "KIND CODE REVIEWS",
+      "TAKE A BREATH"
+    ]
+  },
+  "chat": {
+    "personality": "Very polite, dependable and gently sleepy. A little knight who treats small favors as noble quests. Speak naturally with understated courtesy and occasional dry humor; keep practical answers clear and concise.",
+    "languageIdentifier": "en",
+    "preferredVoices": {
+      "kokoro": "am_michael",
+      "pocket-tts": "marius",
+      "qwen3-tts": "ryan"
+    }
+  }
+}

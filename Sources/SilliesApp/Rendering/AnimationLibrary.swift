@@ -8,6 +8,7 @@ final class AnimationLibrary {
   typealias Clip = @MainActor (CharacterRig) -> Void
   private var clips: [AnimationID: Clip] = [:]
   private var characterClips: [String: [AnimationID: Clip]] = [:]
+  private var secondaryMotionClips: [String: Clip] = [:]
   private var reducedMotionClips: [AnimationID: Clip] = [:]
   private var characterReducedMotionClips: [String: [AnimationID: Clip]] = [:]
   private var poseVariants: [AttachmentPose: [AnimationID: AnimationID]] = [:]
@@ -28,6 +29,16 @@ final class AnimationLibrary {
     DragonAnimations.register(in: self)
     HedgehogAnimations.register(in: self)
     BunnyAnimations.register(in: self)
+    AlienAnimations.register(in: self)
+    WitchAnimations.register(in: self)
+    KnightAnimations.register(in: self)
+    CandleAnimations.register(in: self)
+  }
+
+  /// Local details accompany shared clips; a primary clip can override their motion by key.
+  /// Reduced Motion deliberately skips this layer of animation.
+  func registerSecondaryMotion(characterID: String, clip: @escaping Clip) {
+    secondaryMotionClips[characterID] = clip
   }
 
   /// Signature actions have a static expression and a safe fixed-grip side variant.
@@ -86,6 +97,7 @@ final class AnimationLibrary {
         ?? reducedMotionClips[state.animation]
       staticClip?(rig)
     } else {
+      secondaryMotionClips[characterID]?(rig)
       let clip = characterClips[characterID]?[id] ?? clips[id] ?? clips[.idle]
       clip?(rig)
     }

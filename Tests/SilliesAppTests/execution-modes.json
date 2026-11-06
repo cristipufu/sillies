@@ -59,6 +59,15 @@
       "wholeCrewHasDistinctInteractivePerches()": "gui"
     }
   },
+  "NewCompanionTests.swift": {
+    "default": "headless"
+  },
+  "CompanionArtworkPreviewTests.swift": {
+    "default": "headless"
+  },
+  "CompanionCardPreviewTests.swift": {
+    "default": "headless"
+  },
   "ChatComposerTests.swift": {
     "default": "headless"
   },
@@ -87,6 +96,9 @@
     "default": "gui"
   },
   "ControlCenterSizingTests.swift": {
+    "default": "headless"
+  },
+  "FillWidthSegmentedPickerTests.swift": {
     "default": "headless"
   },
   "ConversationAttachmentTests.swift": {

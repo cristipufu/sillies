@@ -4,14 +4,14 @@ import Testing
 
 @testable import SilliesApp
 
-@Test @MainActor func bundledCrewHasTwelveDistinctValidatedCharacters() throws {
+@Test @MainActor func bundledCrewHasSixteenDistinctValidatedCharacters() throws {
   let catalog = try CharacterCatalog()
   #expect(
     catalog.characters.map(\.id) == [
       "mochi", "kiko", "pogo", "bolt", "boo", "bloop", "sprout", "pip", "pebble", "taro", "nib",
-      "mallow",
+      "mallow", "novi", "lumi", "rook", "flick",
     ])
-  #expect(Set(catalog.characters.map(\.renderer)).count == 12)
+  #expect(Set(catalog.characters.map(\.renderer)).count == 16)
   try catalog.validateAssets(
     renderers: RendererRegistry(), animations: AnimationLibrary(), transitions: TransitionLibrary())
 }
@@ -97,6 +97,7 @@ import Testing
   let settings = AppSettings(defaults: defaults)
   let catalog = try CharacterCatalog()
   settings.enabledCharacters = Set(catalog.characters.map(\.id))
+  settings.size = AppSettings.minSize
   settings.followsWindows = false
   settings.reduceMotion = true
   let controller = try CompanionController(
@@ -104,7 +105,7 @@ import Testing
   controller.start()
   defer { controller.stop() }
   let attachments = controller.attachmentDiagnostics
-  #expect(attachments.count == 12 && attachments.allSatisfy(\.visible))
+  #expect(attachments.count == catalog.characters.count && attachments.allSatisfy(\.visible))
   for attachment in attachments {
     #expect(
       controller.interactiveArtworkCount(
@@ -123,7 +124,7 @@ import Testing
   defaults.set(["kiko"], forKey: "characters")
   let settings = AppSettings(defaults: defaults)
   #expect(settings.enabledCharacters == ["kiko"])
-  #expect(try CharacterCatalog().characters.count == 12)
+  #expect(try CharacterCatalog().characters.count == 16)
 }
 
 @MainActor

@@ -4,7 +4,7 @@ import SilliesCore
 /// Append/update individual messages. Opening or saving never decodes the whole conversation.
 public final class ConversationDatabase {
   public static let filename = "conversations.sqlite"
-  static let schemaVersion = 5
+  static let schemaVersion = 6
   static let maximumMessageBytes = 1_024 * 1_024
   static let maximumCheckpointBytes = 64 * 1_024
   private static let directoryPermissions = 0o700
@@ -61,24 +61,7 @@ public final class ConversationDatabase {
   }
 
   public func clear(_ handle: ConversationHandle) throws -> ConversationSnapshot {
-    try sql.transaction {
-      try validate(handle)
-      try sql.execute(
-        "DELETE FROM memory_search WHERE id IN (SELECT id FROM companion_memories WHERE owner=?)",
-        [.text(handle.companionID)])
-      try sql.execute("DELETE FROM companion_memories WHERE owner=?", [.text(handle.companionID)])
-      try sql.execute("DELETE FROM memory_changes WHERE owner=?", [.text(handle.companionID)])
-      try sql.execute("DELETE FROM conversation_search WHERE owner=?", [.text(handle.companionID)])
-      try sql.execute(
-        "DELETE FROM conversation_messages WHERE owner=?", [.text(handle.companionID)])
-      try sql.execute(
-        "UPDATE conversations SET generation=?,checkpoint=?,updated=0 WHERE id=?",
-        [
-          .text(UUID().uuidString), .data(try encoder.encode(ConversationCheckpoint())),
-          .text(handle.companionID),
-        ])
-    }
-    return try snapshot(handle.companionID)
+    try removeConversationData(.messagesAndMemories, handle: handle)
   }
 
   func validate(_ handle: ConversationHandle) throws {
@@ -147,7 +130,7 @@ public final class ConversationDatabase {
 
   private func prepareSchema() throws {
     try prepareExistingSchema()
-    if try sql.integer("PRAGMA user_version") < Self.schemaVersion {
+    if try sql.integer("PRAGMA user_version") < 5 {
       try sql.transaction {
         try sql.execute(
           "CREATE INDEX conversation_messages_date ON conversation_messages(owner,created,sequence)"
@@ -155,6 +138,7 @@ public final class ConversationDatabase {
         try sql.execute("PRAGMA user_version=5")
       }
     }
+    if try sql.integer("PRAGMA user_version") < 6 { try preparePersonalFacts() }
   }
 
   private func prepareExistingSchema() throws {

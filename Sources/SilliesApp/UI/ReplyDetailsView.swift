@@ -51,6 +51,16 @@ struct ReplyDetailsView: View {
       VStack(alignment: .leading, spacing: Layout.gap) {
         Label(
           "Recent messages: \(context.recentMessages)", systemImage: "bubble.left.and.bubble.right")
+        if let count = context.selectedVaultItems, count > 0 {
+          Label("Selected Vault items: \(count)", systemImage: "paperclip")
+        }
+        if let count = context.pinnedFacts, count > 0 {
+          Label("Pinned facts: \(count)", systemImage: "pin")
+        }
+        if let count = context.omittedPinnedFacts, count > 0 {
+          Text("Pinned facts left out to fit this reply: \(count)").font(.caption).foregroundStyle(
+            theme.secondary)
+        }
         if !context.notes.summary.isEmpty {
           DisclosureGroup("Conversation notes") {
             VStack(alignment: .leading, spacing: Layout.gap) {

@@ -48,6 +48,12 @@ final class AudioSkillSession: ActiveSkillSession {
     presentation.onPause = { [weak self] in self?.pause() }
     presentation.onResume = { [weak self] in self?.resume() }
     presentation.onSelectLanguage = { [weak self] in self?.selectLanguage($0) }
+    presentation.onRefreshReasoningAvailability = { [weak self] in
+      guard let self, self.service != nil, self.presentation.canFinish,
+        let language = self.presentation.selectedLanguage
+      else { return }
+      self.refreshReasoningAvailability(language)
+    }
   }
 
   var initialStatusDetail: String { presentation.status }
@@ -119,12 +125,15 @@ final class AudioSkillSession: ActiveSkillSession {
 
   private func refreshReasoningAvailability(_ language: SpeechLanguage) {
     availabilityTask?.cancel()
-    presentation.reasoningNotice = String(localized: "Checking local notes availability…")
+    presentation.reasoningAvailability = .checking
     availabilityTask = Task { [weak self, reasoning] in
       let notice = await reasoning.availabilityNotice(
         localeIdentifier: language.isAutomatic ? nil : language.id)
       guard !Task.isCancelled else { return }
-      self?.presentation.reasoningNotice = notice
+      self?.presentation.reasoningAvailability =
+        notice.map {
+          .unavailable($0)
+        } ?? .available
     }
   }
 
@@ -207,7 +216,7 @@ final class AudioSkillSession: ActiveSkillSession {
   private func considerSuggestion() {
     guard request.kind == .participate, presentation.phase == .capturing,
       presentation.pendingLanguageID == nil, presentation.suggestionsEnabled,
-      presentation.reasoningNotice == nil, presentation.transcriptionFailure == nil,
+      presentation.reasoningAvailability.isAvailable, presentation.transcriptionFailure == nil,
       suggestionTask == nil,
       presentation.elapsed - lastSuggestionCheck >= Self.suggestionCheckInterval,
       presentation.transcript.count >= Self.minimumSourceCharacters,
@@ -240,6 +249,7 @@ final class AudioSkillSession: ActiveSkillSession {
       return
     }
     let service = service
+    let preparationFailure = presentation.captureFailure
     self.service = nil
     stopReceivingUpdates()
     stopReasoning()
@@ -260,19 +270,17 @@ final class AudioSkillSession: ActiveSkillSession {
           finalize: context, id: id, kind: kind, suggestions: suggestions,
           transcription: transcription))
       MainRunLoopDelivery.perform { [weak self] in
-        self?.presentation.transcript = result.preview
-        self?.presentation.speakerDetectionNotice = result.speakerDetectionNotice
-        self?.presentation.elapsed = result.duration
-        self?.presentation.phase = .finished
-        self?.presentation.status = outcome.bannerSummary
-        self?.presentation.savedRecordID = outcome.record.id
+        self?.presentation.complete(
+          result, recordID: outcome.record.id, status: outcome.bannerSummary)
         completion(outcome)
       }
     }
     if let service {
       service.finish(completion: completed)
     } else {
-      completed(AudioCaptureResult(transcript: "", recordingURL: nil, duration: 0, failure: nil))
+      completed(
+        AudioCaptureResult(
+          transcript: "", recordingURL: nil, duration: 0, failure: preparationFailure))
     }
   }
 
@@ -328,6 +336,9 @@ final class AudioSkillSession: ActiveSkillSession {
     suggestionTask = nil
     availabilityTask?.cancel()
     availabilityTask = nil
+    if presentation.reasoningAvailability == .checking {
+      presentation.reasoningAvailability = .unchecked
+    }
   }
 
   private func stopReceivingUpdates() {

@@ -32,6 +32,43 @@ free text uses the normal composer. Talk also accepts a choice while listening b
 Never parse questions or choices out of generated prose, and never await a person while holding an
 inference slot. See [tool contracts](chat-tools.md).
 
+## Explicit context and memories
+
+The paperclip opens a bounded Vault picker. Vault rows can also be dragged into Chat, or opened with
+**Discuss with…**. `ChatSelectedRecords` owns at most three stable record IDs; the checkpoint saves
+those IDs alongside the draft. Removing a chip stops automatic inclusion in future turns. Earlier
+messages may still quote the item. A selected item is context, not a restriction on other available
+search tools. This is text/OCR context, not image interpretation.
+
+`ConversationMaterialProviding` resolves current record data on the Vault actor for every reply.
+Deleted items remain visible as unavailable references and supply no evidence. Excerpt selection uses
+the actual excerpt budget; do not select a large passage and then cut off its relevant detail.
+`read_vault_record` can read the selected ID when a bounded excerpt is insufficient. Never persist
+full selected bodies in the checkpoint or load them on the main actor.
+
+Memories has three pages: **Pinned**, **Learned**, and **Manage**. Pinned facts are user-authored,
+separate from model-written memories and from companion identity. Four shared facts and four facts
+per companion fit a small explicit profile. A companion-specific topic supersedes the same shared
+topic. Edits use revisions; models have no capability to change this profile. Learned-memory search
+retains provenance, correction and Undo. Late search results cannot replace a newer query.
+
+`ConversationBackgroundAccess` injects selected evidence and the applicable profile into bounded
+reply preparation. Values are quoted source data in a user message, never developer instructions.
+Preparation respects the chosen model's budget: reduce old history first, then excerpt payloads,
+then whole lowest-priority pinned facts if necessary. Never truncate a fact mid-sentence. Reply
+details disclose included and omitted counts. The full archive and profile remain intact.
+
+Message deletion, learned-memory deletion, and companion-preference reset have separate controls.
+Deleting messages can leave a memory's original source quote available; forgetting a memory can
+leave its original messages searchable. Neither removes pinned facts. These operations invalidate
+conversation generations, checkpoints and derived search work as appropriate. Native and downloaded
+prefix caches also compare history/profile revisions before reuse.
+
+Storage mutations accepted by `ChatPersistenceOperation` outlive sheet cancellation and drain using
+the injected modal-safe delivery path before app termination. A late completion must not restart a
+finished conversation. Storage ownership remains in the repository actor; presentation owners do
+not create live repositories or perform inference.
+
 ## Navigation and export
 
 Search has its own request identity and cancellation boundary. A stale result cannot replace a newer

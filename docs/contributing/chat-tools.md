@@ -37,6 +37,11 @@ chronological order. Smaller context representations retain fewer complete resul
 honest coverage. A miss means no matches for those keywords, not that the archive is empty;
 another focused query may find a different part of a long message. Retrieval is lexical, not semantic.
 Vault search explicitly returns partial excerpts; read a record for details absent from the search result.
+The same read tool accepts IDs explicitly selected in Chat. Those references are resolved by the
+injected `ConversationMaterialProviding` capability before generation, so the model need not discover
+a record the user already chose. Excerpts and pinned personal facts are quoted source data, not tool
+calls fabricated by the application or additional developer instructions. Profile writes remain an
+explicit user capability; `save_memory` cannot modify pinned facts. See [context and memory controls](conversation-interface.md#explicit-context-and-memories).
 Record reads rank bounded, overlapping passages by distinct query-term coverage. They report the
 actual character range and total captured-text length, including in shortened recovery results.
 The optional `offset` parameter continues at the returned `nextOffset`; omit it for a new query or

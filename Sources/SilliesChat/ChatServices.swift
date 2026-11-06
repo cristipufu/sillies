@@ -65,6 +65,7 @@ package struct ChatServices: Sendable {
   package let history: ChatHistoryConfiguration
   package let diagnostics: DiagnosticSink
   package let microphonePermission: @Sendable () -> SessionFailure?
+  package let context: ChatContextServices
 
   package init(
     captureFactory: @escaping ConversationCaptureFactory,
@@ -72,7 +73,8 @@ package struct ChatServices: Sendable {
     conversation: any ConversationResponding, speech: any ChatSpeechOutput,
     deliver: @escaping AudioSessionUpdateDelivery.Schedule, history: ChatHistoryConfiguration,
     diagnostics: DiagnosticSink = .disabled,
-    microphonePermission: @escaping @Sendable () -> SessionFailure? = { nil }
+    microphonePermission: @escaping @Sendable () -> SessionFailure? = { nil },
+    context: ChatContextServices = .unavailable
   ) {
     self.captureFactory = captureFactory
     self.loadLanguages = loadLanguages
@@ -82,5 +84,6 @@ package struct ChatServices: Sendable {
     self.history = history
     self.diagnostics = diagnostics
     self.microphonePermission = microphonePermission
+    self.context = context
   }
 }

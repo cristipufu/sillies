@@ -41,14 +41,13 @@ import SilliesTextModels
   }
   func makeConversation(
     tools: [any ConversationTool],
-    history: any ConversationRepository,
-    historyTools: @escaping @Sendable (ChatContext) -> [any ConversationTool] = { _ in [] },
+    history: ConversationHistoryAccess,
     modelSelection: @escaping @Sendable () async -> String? = { nil }
   ) -> any ConversationResponding {
     LocalConversationService(
       resolveBackend: { [models] in await models.backend(overriding: modelSelection()) },
       tools: tools + [ConversationClarificationTool()], turns: turns,
-      history: .init(repository: history, tools: historyTools))
+      history: history)
   }
 
   func makeVault(directory: URL? = nil) -> SessionVaultStore {

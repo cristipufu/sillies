@@ -12,7 +12,7 @@ struct AudioSessionNotices: View {
   var body: some View {
     if let message = statusMessage {
       HStack(alignment: .top, spacing: 10) {
-        Image(systemName: hasWarning ? "exclamationmark.triangle.fill" : "person.2.wave.2")
+        Image(systemName: hasWarning ? "exclamationmark.triangle.fill" : "info.circle")
           .foregroundStyle(hasWarning ? theme.warning : theme.secondary)
         Text(message).font(.caption).foregroundStyle(theme.secondary)
           .lineLimit(2).textSelection(.enabled)
@@ -27,32 +27,30 @@ struct AudioSessionNotices: View {
   }
 
   private var statusMessage: String? {
-    failure?.message ?? model.speakerDetectionNotice ?? model.reasoningNotice
+    failure?.message ?? model.speakerDetectionNotice ?? model.reasoningAvailability.statusMessage
       ?? (model.diarizationModel == nil
         ? nil : String(localized: "Speaker labels enabled · Labels may take a few seconds"))
   }
 
   private var failure: SessionFailure? {
-    if case .failed(let failure) = model.phase { return failure }
-    return model.transcriptionFailure
+    model.captureFailure ?? model.transcriptionFailure
   }
 
   private var hasWarning: Bool {
-    failure != nil || model.speakerDetectionNotice != nil || model.reasoningNotice != nil
+    failure != nil || model.speakerDetectionNotice != nil
+      || model.reasoningAvailability.failureMessage != nil
   }
 
   private var details: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 12) {
-        if case .failed(let failure) = model.phase {
+        if let failure = model.captureFailure {
           SessionFailureNotice(failure: failure)
         }
-        if let failure = model.transcriptionFailure {
+        if let failure = model.transcriptionFailure, failure != model.captureFailure {
           SessionFailureNotice(failure: failure)
         }
-        if let notice = model.reasoningNotice {
-          SessionWarningNotice(message: notice) { EmptyView() }
-        }
+        AudioReasoningNotice(model: model)
         if model.diarizationModel != nil, let message = model.speakerDetectionNotice {
           Text(message).font(.callout).textSelection(.enabled)
         } else if model.diarizationModel != nil {

@@ -26,11 +26,7 @@ enum ConversationRecentWindow {
       throw TextModelError.invalidResponse
     }
     selected = Array(selected[firstUser...])
-    let result = ChatContext(
-      companionName: context.companionName, profile: context.profile,
-      messages: selected, memory: context.memory
-    ).inTurn(context.turnID, session: context.sessionID).inHistory(context.historyHandle)
-      .presented(as: context.mode)
+    let result = context.replacingHistory(messages: selected, memory: context.memory)
     if selected.count != context.messages.count || context.historyCoverage == .recentWindow {
       return result.coveringRecentWindow()
     }

@@ -71,6 +71,30 @@ import Testing
   #expect(browser.failure == nil)
 }
 
+@Test @MainActor func memorySearchDoesNotPublishAnEarlierQueryOrAnUnrelatedReceipt() async throws {
+  let repository = MemoryBrowserProbe()
+  let browser = ChatMemoryBrowser(repository: repository)
+  let handle = ConversationHandle(companionID: "pogo", generation: UUID())
+  try await browser.refresh(handle)
+  await repository.suspendNext()
+  browser.query = "quartz"
+  let stale = Task { await browser.show(.latest) }
+  await repository.waitForRead()
+  browser.query = "marigold"
+  await browser.show(.latest)
+  await repository.release()
+  await stale.value
+  #expect(browser.page.facts.map(\.value) == ["marigold"])
+  let unrelated = CompanionMemory(
+    replacing: nil, fact: .init(key: "drink", value: "tea"),
+    source: .init(messageID: UUID(), quote: "I like tea"), savedAt: Date())
+  let before = browser.searchIdentity
+  browser.received(.init(handle: handle, id: UUID(), previous: nil, saved: unrelated))
+  #expect(browser.searchIdentity != before)
+  #expect(browser.page.facts.map(\.value) == ["marigold"])
+  #expect(browser.failure == nil)
+}
+
 private actor MemoryBrowserProbe: CompanionMemoryRepository {
   private var shouldSuspend = false
   private var olderFactsRemoved = false
@@ -104,7 +128,14 @@ private actor MemoryBrowserProbe: CompanionMemoryRepository {
           source: .init(messageID: UUID(), quote: "Synthetic source"), savedAt: Date())
       ], next: nil)
   }
-  func memories(_ query: CompanionMemoryQuery) -> [CompanionMemory] { [] }
+  func memories(_ query: CompanionMemoryQuery) async -> [CompanionMemory] {
+    _ = await memoryPage(.init(handle: query.handle))
+    return [
+      .init(
+        replacing: nil, fact: .init(key: "query", value: query.text),
+        source: .init(messageID: UUID(), quote: "Synthetic search result"), savedAt: Date())
+    ]
+  }
   func remember(_ request: MemoryWrite) throws -> MemoryReceipt {
     throw ConversationStorageError.invalidData
   }

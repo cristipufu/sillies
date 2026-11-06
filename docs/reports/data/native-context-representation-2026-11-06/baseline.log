@@ -1,0 +1,9 @@
+Test receipts: /Users/cristian.pufu/Documents/GitHub/sillies-macos/build/test-results/run-f_6u1r_a
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Test nativeRepresentationControlsPreserveAppToolsAndPersistence() started.
+NATIVE REPRESENTATION: baseline, 8 observations, /private/tmp/sillies-native-representation/baseline.json
+✔ Test nativeRepresentationControlsPreserveAppToolsAndPersistence() passed after 36.141 seconds.
+✔ Test run with 1 test in 0 suites passed after 36.142 seconds.
+Verified completion of 1 selected tests across 1 runs.

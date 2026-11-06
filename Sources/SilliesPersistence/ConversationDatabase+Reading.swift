@@ -81,7 +81,7 @@ extension ConversationDatabase {
     let value = try sql.integer(
       "SELECT sequence FROM conversation_messages WHERE owner=? AND id=?",
       [.text(owner), .text(id.uuidString)])
-    guard value > 0 else { throw ConversationStorageError.changed }
+    guard value > 0 else { throw ConversationStorageError.messageUnavailable }
     return Int64(value)
   }
 

@@ -33,6 +33,8 @@ package actor ConversationToolbox {
     callLimit = maximumCalls
   }
 
+  func includeSelectedSources(_ sources: [ChatSource]) { publish(sources) }
+
   package init(tools: [any ConversationTool], progress: @escaping @Sendable (ChatProgress) -> Void)
     throws
   {

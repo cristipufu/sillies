@@ -17,11 +17,13 @@ package final class AudioTranscriptionService: SessionAudioCapture {
   package convenience init(
     configuration: AudioCaptureConfiguration, speech: @escaping LocalSpeechFactory.Make,
     diarization: SpeakerDiarizationFactory.Make? = nil,
-    onUpdate: @escaping @Sendable (AudioCaptureUpdate) -> Void
+    events: AudioCaptureEvents
   ) {
     self.init(
-      configuration: configuration, dependencies: .init(speech: speech, diarization: diarization),
-      onUpdate: onUpdate)
+      configuration: configuration,
+      dependencies: .init(
+        reportOverload: events.reportOverload, speech: speech, diarization: diarization),
+      onUpdate: events.update)
   }
 
   init(
@@ -239,16 +241,17 @@ package final class AudioTranscriptionService: SessionAudioCapture {
   private func enqueue(_ packet: AudioCaptureInputQueue.Packet) {
     inputQueue.enqueue(
       packet, receive: { [weak self] in self?.process($0) },
-      overflow: { [weak self] in
-        self?.fail(
-          SessionFailure(
-            category: .audioProcessing,
-            message:
-              String(
-                localized:
-                  "Audio capture fell behind. Finish to save the available transcript and recording."
-              )))
-      })
+      overflow: { [weak self] in self?.captureOverloaded() })
+  }
+
+  private func captureOverloaded() {
+    if let backlog = inputQueue.overload { dependencies.reportOverload(backlog) }
+    fail(
+      SessionFailure(
+        category: .audioProcessing,
+        message: String(
+          localized:
+            "Audio capture fell behind. Finish to save the available transcript and recording.")))
   }
 
   private func process(_ packet: AudioCaptureInputQueue.Packet) {

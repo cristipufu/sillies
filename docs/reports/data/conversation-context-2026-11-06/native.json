@@ -1,0 +1,110 @@
+[
+  {
+    "answer": "I apologize, but I couldn't find any information about the tallest mountain above sea level in my records.",
+    "calls": [
+      "search_memories",
+      "search_conversation",
+      "search_vault"
+    ],
+    "question": 0,
+    "seconds": 3.758954666,
+    "variant": "nativeConstructor"
+  },
+  {
+    "answer": "I apologize, but I couldn't find the capital of Japan in my records. It's a fascinating country with a rich culture and history. Would you like to know more about Japan?",
+    "calls": [
+      "search_memories",
+      "search_conversation",
+      "search_vault"
+    ],
+    "question": 1,
+    "seconds": 3.724924708,
+    "variant": "nativeConstructor"
+  },
+  {
+    "answer": "Seven times eight is fifty-six.",
+    "calls": [
+      "search_conversation",
+      "search_memories",
+      "search_vault"
+    ],
+    "question": 2,
+    "seconds": 3.125271417,
+    "variant": "nativeConstructor"
+  },
+  {
+    "answer": "I couldn't find any information about an Aurora review in your saved notes. It's possible that the review wasn't recorded or mentioned in your conversations.",
+    "calls": [
+      "search_memories",
+      "search_conversation"
+    ],
+    "question": 3,
+    "seconds": 2.775768042,
+    "variant": "nativeConstructor"
+  },
+  {
+    "answer": "I'm sorry, but I couldn't find any information about the capital of Japan or the Aurora review in your saved notes.",
+    "calls": [
+      "search_memories",
+      "search_conversation",
+      "search_vault"
+    ],
+    "question": 4,
+    "seconds": 3.136009917,
+    "variant": "nativeConstructor"
+  },
+  {
+    "answer": "I'm sorry, but I couldn't find any information about the tallest mountain above sea level. Perhaps you could provide more details or context, and I'll do my best to help!",
+    "calls": [
+      "search_memories",
+      "search_conversation",
+      "search_vault"
+    ],
+    "question": 0,
+    "seconds": 3.6652855,
+    "variant": "nativeSampling"
+  },
+  {
+    "answer": "I'm sorry, but I couldn't find any information about the capital of Japan in the records I have. Could you please provide me with more context or details?",
+    "calls": [
+      "search_memories",
+      "search_conversation",
+      "search_vault"
+    ],
+    "question": 1,
+    "seconds": 3.444918708,
+    "variant": "nativeSampling"
+  },
+  {
+    "answer": "Seven times eight is fifty-six.",
+    "calls": [
+      "search_conversation",
+      "search_memories",
+      "search_vault"
+    ],
+    "question": 2,
+    "seconds": 3.124667375,
+    "variant": "nativeSampling"
+  },
+  {
+    "answer": "I couldn't find any records related to the Aurora review in your saved notes.",
+    "calls": [
+      "search_conversation",
+      "search_memories"
+    ],
+    "question": 3,
+    "seconds": 2.504627542,
+    "variant": "nativeSampling"
+  },
+  {
+    "answer": "I don't have the capital of Japan or the Aurora review in your saved notes.",
+    "calls": [
+      "search_conversation",
+      "search_memories",
+      "search_vault"
+    ],
+    "question": 4,
+    "seconds": 3.041943042,
+    "variant": "nativeSampling"
+  }
+]

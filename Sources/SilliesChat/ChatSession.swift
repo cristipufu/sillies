@@ -26,6 +26,9 @@ package final class ChatSession {
   package let browser: ConversationBrowser
   package let export: ConversationExport
   package let memoryEditor: ChatMemoryEditor
+  package let selectedRecords: ChatSelectedRecords
+  package let personalFacts: ChatPersonalFacts
+  private let historyMutation = ChatPersistenceOperation<ConversationSnapshot>()
   package private(set) var mode = ConversationMode.chat
   package private(set) var messages: [ChatMessage] = []
   package private(set) var hasEarlierMessages = false
@@ -97,10 +100,15 @@ package final class ChatSession {
     export = ConversationExport(
       history: history, companionName: companionName, deliver: services.deliver)
     memoryEditor = ChatMemoryEditor(history: history)
+    selectedRecords = ChatSelectedRecords(provider: services.context.materials)
+    personalFacts = ChatPersonalFacts(history: history, repository: services.context.personalFacts)
     browser = ConversationBrowser(history: history)
     microphone = ChatMicrophone(services: services)
     voiceInterruption = ChatVoiceInterruption(output: services.speech)
     memoryEditor.allowsCorrection = { [weak self] in self?.canCompose == true }
+    selectedRecords.canChange = { [weak self] in self?.canCompose == true }
+    selectedRecords.onChange = { [weak self] in self?.saveCheckpoint() }
+    personalFacts.canChange = { [weak self] in self?.canCompose == true }
     memoryEditor.onCorrection = { [weak self] snapshot in
       guard let self, self.phase != .finished else { return }
       self.restore(snapshot)
@@ -116,7 +124,7 @@ package final class ChatSession {
   }
   package var canCompose: Bool {
     phase == .ready && !isFinalizingMicrophone && history.isLoaded && history.failure == nil
-      && !memoryEditor.isSaving
+      && !memoryEditor.isSaving && !personalFacts.isSaving
   }
   package var canSend: Bool {
     canCompose && !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -377,6 +385,8 @@ package final class ChatSession {
   }
 
   package func finish(completion: @escaping @MainActor () -> Void) {
+    selectedRecords.stop()
+    personalFacts.stop()
     export.cancel()
     browser.cancelSearch()
     browser.cancelNavigation()
@@ -392,8 +402,12 @@ package final class ChatSession {
       isFinalizingMicrophone = false
       preserveFinalWords(result)
       saveCheckpoint()
-      export.finish { [self] in
-        history.stopAndFlush(deliver: services.deliver, completion: completion)
+      historyMutation.finish(deliver: services.deliver) { [self] in
+        personalFacts.finish(deliver: services.deliver) { [self] in
+          export.finish { [self] in
+            history.stopAndFlush(deliver: services.deliver, completion: completion)
+          }
+        }
       }
     }
   }
@@ -427,6 +441,7 @@ package final class ChatSession {
     let context = ChatContext(
       companionName: companionName, profile: profile, messages: messages, memory: memory
     ).inTurn(token, session: conversationLifetime.id).inHistory(history.handle).presented(as: mode)
+      .selecting(selectedRecords.selection)
     setPhase(.thinking)
     operation = Task { [weak self, services, conversationLifetime, speechDrain] in
       do {
@@ -855,6 +870,7 @@ package final class ChatSession {
     messages = snapshot.page.entries.map(\.message)
     hasEarlierMessages = snapshot.page.hasOlder
     memory = snapshot.checkpoint.memory
+    selectedRecords.restore(snapshot.checkpoint.selectedRecords)
     draft = snapshot.checkpoint.draft
     language = languageOverride ?? snapshot.checkpoint.language ?? profile.languageIdentifier
     rebuildSourceCardOwners()
@@ -883,31 +899,54 @@ package final class ChatSession {
   }
 
   private func changeMemories(
-    _ change: (any CompanionMemoryRepository, ConversationHandle) async throws ->
+    _ change:
+      @escaping @Sendable (any CompanionMemoryRepository, ConversationHandle) async throws ->
       ConversationSnapshot
   ) async {
     guard canCompose, let repository = history.configuration.memories, let handle = history.handle
     else { return }
-    setPhase(.loading)
-    do {
-      try await history.flush()
-      let snapshot = try await change(repository, handle)
-      restore(snapshot)
-      try await history.refreshMemories()
-    } catch { history.recordFailure(error) }
-    setPhase(.ready)
+    await mutateHistory { try await change(repository, handle) }
   }
 
   package func clearConversation() async {
+    await removeConversationData(.messagesAndMemories)
+  }
+
+  package func removeConversationData(_ removal: ConversationDataRemoval) async {
     guard canCompose, let repository = history.configuration.conversations,
       let handle = history.handle
     else { return }
+    await mutateHistory {
+      if let manager = repository as? any ConversationDataManaging {
+        return try await manager.removeConversationData(removal, handle: handle)
+      } else if removal == .messagesAndMemories {
+        return try await repository.clear(handle)
+      } else {
+        throw ConversationStorageError.invalidData
+      }
+    }
+  }
+
+  private func mutateHistory(
+    _ mutation: @escaping @Sendable () async throws -> ConversationSnapshot
+  ) async {
     setPhase(.loading)
     do {
       try await history.flush()
-      restore(try await repository.clear(handle))
+      guard phase != .finished else { return }
+      _ = try await historyMutation.run(
+        mutation,
+        accept: { [self] snapshot in
+          restore(snapshot)
+          if phase == .finished {
+            selectedRecords.stop()
+            history.memories.invalidate()
+          }
+        })
+      guard phase != .finished else { return }
       try await history.refreshMemories()
-    } catch { history.recordFailure(error) }
+    } catch { if phase != .finished { history.recordFailure(error) } }
+    guard phase != .finished else { return }
     setPhase(.ready)
   }
 
@@ -915,6 +954,7 @@ package final class ChatSession {
     guard phase == .finished else { return }
     conversationLifetime = SpeechModelLifetime()
     history.resumeSaving()
+    selectedRecords.refresh()
     setPhase(history.isLoaded ? .ready : .loading)
   }
 
@@ -968,7 +1008,8 @@ package final class ChatSession {
     history.update(
       .init(
         memory: memory, draft: voiceDraft ?? draft, language: language,
-        readingMessageID: history.checkpoint.readingMessageID))
+        readingMessageID: history.checkpoint.readingMessageID,
+        selectedRecords: selectedRecords.selection))
   }
 
   private var pendingVoiceText: String {

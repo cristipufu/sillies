@@ -6,6 +6,45 @@ import Testing
 
 @testable import SilliesAudio
 
+@Test func captureQueueDrainsAutoreleasedWorkBetweenPackets() async throws {
+  let queue = DispatchQueue(label: "sillies.test.capture-pools", autoreleaseFrequency: .never)
+  let input = AudioCaptureInputQueue(queue: queue)
+  let packet = try oneMillisecondOfMeetingAudio()
+  let counts = Mutex((live: 0, peak: 0, released: 0))
+  queue.suspend()
+  let packetCount = 1_000
+  for _ in 0..<packetCount {
+    input.enqueue(
+      packet,
+      receive: { _ in
+        counts.withLock {
+          $0.live += 1
+          $0.peak = max($0.peak, $0.live)
+        }
+        _ = Unmanaged.passRetained(
+          CaptureAutoreleaseProbe {
+            counts.withLock {
+              $0.live -= 1
+              $0.released += 1
+            }
+          }
+        ).autorelease()
+      }, overflow: { Issue.record("The bounded fixture should not overflow.") })
+  }
+  input.stop()
+  queue.resume()
+  await withCheckedContinuation { continuation in queue.async { continuation.resume() } }
+  #expect(counts.withLock { $0.live } == 0)
+  #expect(counts.withLock { $0.peak } == 1)
+  #expect(counts.withLock { $0.released } == packetCount)
+}
+
+private final class CaptureAutoreleaseProbe: NSObject {
+  private let released: @Sendable () -> Void
+  init(released: @escaping @Sendable () -> Void) { self.released = released }
+  deinit { released() }
+}
+
 @Test func captureQueueDrainsRapidMeetingCallbacksWithoutDroppingSamples() async throws {
   let queue = DispatchQueue(label: "sillies.test.rapid-audio")
   let input = AudioCaptureInputQueue(queue: queue)
@@ -21,6 +60,7 @@ import Testing
   await withCheckedContinuation { continuation in queue.async { continuation.resume() } }
   #expect(probe.frames == 96_000)
   #expect(probe.overflows == 0)
+  #expect(input.overload == nil)
 }
 
 @Test func captureQueueReportsSustainedOverloadOnceAndRemainsBounded() async throws {
@@ -36,6 +76,16 @@ import Testing
   await withCheckedContinuation { continuation in queue.async { continuation.resume() } }
   #expect(probe.overflows == 1)
   #expect(probe.frames > 0 && probe.frames < 5_000 * 48)
+  let backlog = try #require(input.overload)
+  #expect(backlog.pressure.limit == .callbacks)
+  #expect(backlog.pressure.packets == 4_096)
+  #expect(backlog.pressure.bytes > 0)
+  #expect(abs(backlog.pressure.sourceDuration - 4.096) < 0.001)
+  #expect(backlog.timing.maximumQueueWait > 0)
+  #expect(backlog.timing.maximumProcessing > 0)
+  #expect(
+    input.metrics.pendingPackets == 0,
+    "The diagnostic must retain the failure snapshot after draining.")
 }
 
 @Test func captureQueueConcurrentProducersAndStopLeaveNoRetainedPackets() async throws {
@@ -166,6 +216,7 @@ private final class AudioInputProbe: @unchecked Sendable {
   #expect(metrics.retainedBytes <= AudioCaptureInputQueue.maximumQueuedBytes)
   #expect(metrics.retainedBytes + bytesPerPacket > AudioCaptureInputQueue.maximumQueuedBytes)
   #expect(overflows.withLock { $0 } == 1)
+  #expect(input.overload?.pressure.limit == .bytes)
   #expect(input.metrics.retainedBytes == 0)
   #expect(input.metrics.pendingPackets == 0)
 }

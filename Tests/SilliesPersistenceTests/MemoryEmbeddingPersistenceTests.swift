@@ -220,6 +220,8 @@ private struct SearchEmbeddingFixture {
       .init(handle: handle, fact: .init(key: key, value: value), source: source, savedAt: Date()))
   }
   func restoreVersionThree() throws {
+    try database.sql.execute("DROP TABLE personal_facts")
+    try database.sql.execute("DROP TABLE personal_fact_state")
     try database.sql.execute("DROP INDEX conversation_messages_date")
     try database.sql.execute("DROP INDEX memory_embeddings_scope")
     try database.sql.execute("ALTER TABLE memory_embeddings DROP COLUMN owner")

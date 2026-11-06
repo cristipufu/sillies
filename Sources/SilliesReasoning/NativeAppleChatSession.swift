@@ -9,14 +9,17 @@ protocol AppleChatSession: Sendable {
 struct NativeAppleChatSession: AppleChatSession {
   private let session: LanguageModelSession
 
+  init(session: LanguageModelSession) { self.session = session }
+
   init(request: TextGenerationRequest, invocation: AppleToolInvocation) throws {
     let registered = try request.tools.map {
       try AppleConversationTool($0, invoke: invocation.invoke)
     }
-    session = LanguageModelSession(
-      model: .default, tools: registered,
-      transcript: try AppleConversationTranscript.make(
-        request, tools: registered.map { .init(tool: $0) }))
+    self.init(
+      session: LanguageModelSession(
+        model: .default, tools: registered,
+        transcript: try AppleConversationTranscript.make(
+          request, tools: registered.map { .init(tool: $0) })))
   }
 
   func respond(_ request: TextGenerationRequest, receive: @escaping TextDeltaSink) async throws

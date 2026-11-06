@@ -9,8 +9,10 @@ public struct ChatContext: Sendable {
   public static let maximumMessageBytes = 16_000
   public let companionName: String
   public let profile: CharacterChatProfile
-  public let messages: [ChatMessage]
-  public let memory: ConversationMemory
+  public private(set) var messages: [ChatMessage]
+  public private(set) var memory: ConversationMemory
+  public private(set) var selectedRecords = ConversationRecordSelection()
+  public private(set) var background = ConversationBackground()
   public private(set) var mode = ConversationMode.chat
   public private(set) var turnID = UUID()
   public private(set) var sessionID: UUID?
@@ -42,6 +44,26 @@ public struct ChatContext: Sendable {
   public func presented(as mode: ConversationMode) -> Self {
     var copy = self
     copy.mode = mode
+    return copy
+  }
+
+  public func selecting(_ records: ConversationRecordSelection) -> Self {
+    var copy = self
+    copy.selectedRecords = records
+    return copy
+  }
+
+  public func prepared(with background: ConversationBackground) -> Self {
+    var copy = self
+    copy.background = background
+    return copy
+  }
+
+  /// Replace only the bounded working history; retain the turn's explicit context and identity.
+  public func replacingHistory(messages: [ChatMessage], memory: ConversationMemory) -> Self {
+    var copy = self
+    copy.messages = messages
+    copy.memory = memory
     return copy
   }
 

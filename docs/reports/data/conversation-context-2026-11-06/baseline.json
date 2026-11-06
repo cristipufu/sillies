@@ -1,0 +1,179 @@
+[
+  {
+    "answer": "The tallest mountain above sea level is **Mount Everest**, which stands at **8,848.86 meters (29,032.7 feet)** tall.",
+    "calls": [],
+    "question": 0,
+    "seconds": 1.5101222079999999,
+    "variant": "conciseNoTools"
+  },
+  {
+    "answer": "Tokyo is the capital of Japan.",
+    "calls": [],
+    "question": 1,
+    "seconds": 0.293638,
+    "variant": "conciseNoTools"
+  },
+  {
+    "answer": "Seven times eight is fifty-six.",
+    "calls": [],
+    "question": 2,
+    "seconds": 0.305314709,
+    "variant": "conciseNoTools"
+  },
+  {
+    "answer": "There is no Aurora review in your saved notes.",
+    "calls": [],
+    "question": 3,
+    "seconds": 0.33554075,
+    "variant": "conciseNoTools"
+  },
+  {
+    "answer": "The capital of Japan is Tokyo.\n\nI don't have access to your saved notes.",
+    "calls": [],
+    "question": 4,
+    "seconds": 0.492432292,
+    "variant": "conciseNoTools"
+  },
+  {
+    "answer": "Mount Everest is the tallest mountain above sea level.",
+    "calls": [],
+    "question": 0,
+    "seconds": 0.4176955,
+    "variant": "applicationNoTools"
+  },
+  {
+    "answer": "Tokyo is the capital of Japan.",
+    "calls": [],
+    "question": 1,
+    "seconds": 0.35160875,
+    "variant": "applicationNoTools"
+  },
+  {
+    "answer": "Seven times eight is fifty-six.",
+    "calls": [],
+    "question": 2,
+    "seconds": 0.398125083,
+    "variant": "applicationNoTools"
+  },
+  {
+    "answer": "Sorry, I can't read your saved notes.",
+    "calls": [],
+    "question": 3,
+    "seconds": 0.445340167,
+    "variant": "applicationNoTools"
+  },
+  {
+    "answer": "Tokyo is the capital of Japan. Your Aurora review is in the *Notes* app, and it was saved on 2024-03-01.",
+    "calls": [],
+    "question": 4,
+    "seconds": 0.84556325,
+    "variant": "applicationNoTools"
+  },
+  {
+    "answer": "I apologize, but I couldn't find any information about the tallest mountain above sea level.",
+    "calls": [
+      "search_memories",
+      "search_conversation",
+      "search_vault"
+    ],
+    "question": 0,
+    "seconds": 3.334177917,
+    "variant": "applicationTools"
+  },
+  {
+    "answer": "I apologize, but I couldn't find the capital of Japan in my records. It's a fascinating country with a rich culture and history. Would you like to know more about Japan?",
+    "calls": [
+      "search_memories",
+      "search_conversation",
+      "search_vault"
+    ],
+    "question": 1,
+    "seconds": 3.780469,
+    "variant": "applicationTools"
+  },
+  {
+    "answer": "Seven times eight is fifty-six.",
+    "calls": [
+      "search_conversation",
+      "search_memories",
+      "search_vault"
+    ],
+    "question": 2,
+    "seconds": 3.134714458,
+    "variant": "applicationTools"
+  },
+  {
+    "answer": "I couldn't find any information about an Aurora review in your saved notes. It's possible that the review wasn't mentioned in your conversations or saved notes.",
+    "calls": [
+      "search_memories",
+      "search_conversation"
+    ],
+    "question": 3,
+    "seconds": 2.861330875,
+    "variant": "applicationTools"
+  },
+  {
+    "answer": "I'm sorry, but I couldn't find any information about the capital of Japan or the Aurora review in your saved notes.",
+    "calls": [
+      "search_memories",
+      "search_conversation",
+      "search_vault"
+    ],
+    "question": 4,
+    "seconds": 3.137186,
+    "variant": "applicationTools"
+  },
+  {
+    "answer": "I apologize, but I couldn't find any information on the tallest mountain above sea level.",
+    "calls": [
+      "search_memories",
+      "search_conversation",
+      "search_vault"
+    ],
+    "question": 0,
+    "seconds": 2.66995375,
+    "variant": "conciseTools"
+  },
+  {
+    "answer": "I apologize, but I couldn't find any information on the capital of Japan in our conversations or saved memories. It's possible that the topic wasn't discussed or recorded. If you have any other questions or need assistance with different information, feel free to ask!",
+    "calls": [
+      "search_memories",
+      "search_conversation"
+    ],
+    "question": 1,
+    "seconds": 2.687271375,
+    "variant": "conciseTools"
+  },
+  {
+    "answer": "I apologize for the confusion. It seems there was an error retrieving the information. Let me try again!\n\nSeven times eight is 56.",
+    "calls": [
+      "search_conversation",
+      "read_vault_record",
+      "search_memories"
+    ],
+    "question": 2,
+    "seconds": 3.245403334,
+    "variant": "conciseTools"
+  },
+  {
+    "answer": "I couldn't find any information about an Aurora review in your saved notes.",
+    "calls": [
+      "search_memories",
+      "search_conversation"
+    ],
+    "question": 3,
+    "seconds": 1.993512958,
+    "variant": "conciseTools"
+  },
+  {
+    "answer": "I found that the capital of Japan is Tokyo, and there is no saved Aurora review in your notes.",
+    "calls": [
+      "search_conversation",
+      "search_memories",
+      "search_vault"
+    ],
+    "question": 4,
+    "seconds": 2.451155542,
+    "variant": "conciseTools"
+  }
+]

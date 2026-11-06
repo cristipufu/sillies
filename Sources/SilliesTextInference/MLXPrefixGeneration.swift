@@ -19,7 +19,9 @@ enum MLXPrefixGeneration {
   ) async throws -> TextGenerationOutput {
     let plan = invocation.plan
     let boundary =
-      snapshot.matches(tokens: invocation.tokens, sessionID: plan.request.generation.sessionID)
+      snapshot.matches(
+        tokens: invocation.tokens, sessionID: plan.request.generation.sessionID,
+        contextIdentity: plan.request.generation.contextIdentity)
       ? 0
       : try await MLXPrefixBoundary.count(tokens: invocation.tokens, plan: plan, context: context)
     let prepared = try snapshot.prepare(

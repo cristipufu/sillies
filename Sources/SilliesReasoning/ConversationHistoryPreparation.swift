@@ -16,11 +16,8 @@ struct ConversationHistoryPreparation {
         maximumBytes: limit.byteLimit))
     try Task.checkCancellation()
     guard page.entries.last?.id == current.id else { throw ConversationStorageError.changed }
-    let result = ChatContext(
-      companionName: context.companionName, profile: context.profile,
-      messages: page.entries.map(\.message), memory: checkpoint.memory
-    ).inTurn(context.turnID, session: context.sessionID).inHistory(handle).presented(
-      as: context.mode)
+    let result = context.replacingHistory(
+      messages: page.entries.map(\.message), memory: checkpoint.memory)
     return page.hasOlder ? result.coveringRecentWindow() : result.followingCheckpoint()
   }
 }

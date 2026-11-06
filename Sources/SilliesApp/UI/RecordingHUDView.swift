@@ -9,11 +9,11 @@ struct RecordingHUDView: View {
   let state: CompanionBindingState
 
   var body: some View {
-    if case .active(let target, let skill, _, let status, let level) = state {
+    if case .active(_, let skill, _, let status, let level) = state {
       HStack(spacing: SessionHUDMetrics.spacing) {
         SessionAudioIndicator(level: level, isCapturing: model.audioSession?.phase == .capturing)
         SessionHUDLabel(
-          title: "\(skill.title) · \(target?.appName ?? String(localized: "Microphone"))",
+          title: "\(skill.title) · \(model.sourceName(for: state))",
           status: status, layout: .flexible)
         if let session = model.audioSession {
           AudioHUDControls(session: session, open: { model.onOpenSession?() })

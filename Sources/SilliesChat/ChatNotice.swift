@@ -2,12 +2,13 @@ import Foundation
 
 package enum ChatNotice: Sendable {
   package enum SettingsDestination: Sendable {
-    case textModels, voices, recognition
+    case textModels, voices, recognition, companionProfile
     package var title: String {
       switch self {
       case .textModels: String(localized: "Choose a text model…")
       case .voices: String(localized: "Choose a voice…")
       case .recognition: String(localized: "Choose a speech model…")
+      case .companionProfile: String(localized: "Companion settings…")
       }
     }
   }

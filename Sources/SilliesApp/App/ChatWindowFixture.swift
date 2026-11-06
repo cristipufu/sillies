@@ -26,7 +26,7 @@ import SilliesTTS
 
   static func makeReadySession(
     conversation: any ConversationResponding, history: ChatHistoryConfiguration,
-    owner: ConversationOwner
+    owner: ConversationOwner, context: ChatContextServices = .unavailable
   ) -> ChatSession {
     let session = ChatSession(
       companionName: owner.name, profile: .init(personality: "Warm and playful"),
@@ -34,7 +34,8 @@ import SilliesTTS
         captureFactory: { _, _ in UnavailableMicrophone() },
         loadLanguages: { .init(languages: []) },
         conversation: conversation, speech: SilentVoice(),
-        deliver: { MainRunLoopDelivery.perform($0) }, history: history), companionID: owner.id)
+        deliver: { MainRunLoopDelivery.perform($0) }, history: history, context: context),
+      companionID: owner.id)
     session.spokenReplies = false
     return session
   }

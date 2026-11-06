@@ -57,6 +57,7 @@ enum ConversationToolLoop {
         instructions: instructions, messages: messages,
         tools: remainingCalls > 0 ? request.tools : []),
       maximumTokens: request.maximumTokens, style: request.style
-    ).inConversation(request.conversationID).inSession(request.sessionID)
+    ).inConversation(request.conversationID).inSession(request.sessionID).inContext(
+      request.contextIdentity)
   }
 }

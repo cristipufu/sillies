@@ -15,7 +15,9 @@ extension ApplicationAudioSource: ApplicationCapture {}
 
 /// Device factories and a clock let lifecycle tests reorder callbacks without hardware or sleeps.
 struct AudioCaptureDependencies: Sendable {
-  var queue = DispatchQueue(label: "app.sillies.audio-session", qos: .utility)
+  // Processing live input has the same priority as its device callbacks, even during background inference.
+  var queue = DispatchQueue(label: "app.sillies.audio-session", qos: .userInitiated)
+  var reportOverload: @Sendable (AudioCaptureBacklog) -> Void = { _ in }
   typealias Failure = @Sendable (SessionFailure) -> Void
   var microphone:
     @Sendable (@escaping AudioCaptureInputQueue.Receiver, @escaping Failure) ->

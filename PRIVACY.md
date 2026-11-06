@@ -1,6 +1,6 @@
 # Privacy policy
 
-**Sillies for macOS · Last updated October 31, 2026**
+**Sillies for macOS · Last updated November 6, 2026**
 
 Sillies processes your conversations, screenshots, and writing on your Mac. There is no Sillies account,
 advertising, in-app analytics, telemetry, or cloud inference fallback. The developer does not receive
@@ -17,7 +17,7 @@ GitHub, model-hosting services, or another app into which you insert or export c
 | Window companions | App/window identifiers, titles, geometry, focus and lifecycle events, pointer interactions, and time since input, used to place companions and select reactions. |
 | Listen and Participate | Audio from the selected application's output and your microphone, recordings, transcripts, timestamps, optional speaker labels, notes, and suggestions. |
 | Record | Microphone audio, a playable recording, transcript, and notes. |
-| Chat | Messages you type, microphone audio after choosing Talk, recognized words, local replies, and synthesized speech. Each companion has a continuous, locally saved conversation. Chat can search earlier messages and your Vault/Stash locally. Bounded context summaries and clear personal facts identified by the model are stored locally; saved facts show a memory chip with Undo and can be reviewed or forgotten. Closing the bubble saves the draft and does not delete history. Clear conversation deletes its messages, summaries, and memories. Chat does not save microphone recordings or generated audio. |
+| Chat | Messages you type, microphone audio after choosing Talk, recognized words, local replies, and synthesized speech. Each companion has a continuous, locally saved conversation. Chat can search earlier messages and your Vault/Stash locally. You can explicitly select Vault items and pin shared or companion-specific facts. Bounded context summaries and model-written memories are stored separately; model-written facts show a memory chip with Undo and can be reviewed or forgotten. Closing the bubble saves the draft and selected item references. Chat does not save microphone recordings or generated audio. |
 | Snap and Explain | An explicitly selected window image, recognized text, and, for Explain, a local explanation. Snap's text recognition makes saved screenshots searchable. |
 | Dictation | Microphone audio during the session, recognized text, optional cleanup, destination information, and a short text recovery history. Dictation does not save an audio recording. |
 | Selection commands and insertion | The selected text and bounded focused-field/destination context needed to shorten, correct, translate, or insert text. |
@@ -79,6 +79,16 @@ of secure erasure from disk or backups.
   removing the reference does not delete that original.
 - **Writing recovery** keeps up to 20 recent results independently of meeting retention. You can remove
   individual results or clear that history. This includes recoverable text when insertion fails.
+- **Conversation messages and learned memories** have separate deletion controls in Chat → Memories →
+  Manage. Deleting messages retains learned memories and their source quotes unless you choose to delete
+  both. Forgetting learned memories retains original messages, which remain searchable. Context summaries
+  and affected derived search data are invalidated. Companion preferences and user-pinned facts remain.
+- **Pinned facts** are manually authored and remain until you edit or unpin them. Shared facts are
+  available to every companion; companion-specific facts apply only to that companion. Models cannot
+  modify these facts. They live locally in the conversation database.
+- **Selected Vault context** stores up to three record references with the conversation. Removing a chip
+  stops its automatic inclusion in future requests; earlier messages may still quote it, and ordinary
+  Vault search remains available. Deleting the Vault item makes that reference unavailable.
 - **Downloaded models** can be removed in Settings when unused. A speech-model update can retain the
   previous revision for rollback. Paused downloads can retain partial files for resuming.
 - **Exports and copies** remain wherever you save or paste them. Deleting the Vault record does not delete

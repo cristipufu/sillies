@@ -4,7 +4,7 @@ import SilliesPersistence
 
 /// Serial, lazy storage access. No UI actor or model runtime can own the database connection.
 package actor ConversationLibrary: ConversationRepository, CompanionMemoryRepository,
-  CompanionMemoryEditing
+  CompanionMemoryEditing, PersonalFactsRepository, ConversationDataManaging
 {
   let directory: URL
   private let searches: ConversationSearchWorker
@@ -57,7 +57,12 @@ package actor ConversationLibrary: ConversationRepository, CompanionMemoryReposi
   }
   package func conversations() throws -> [ConversationHeader] { try storage().conversations() }
   package func clear(_ handle: ConversationHandle) throws -> ConversationSnapshot {
-    let snapshot = try storage().clear(handle)
+    try removeConversationData(.messagesAndMemories, handle: handle)
+  }
+  package func removeConversationData(
+    _ removal: ConversationDataRemoval, handle: ConversationHandle
+  ) throws -> ConversationSnapshot {
+    let snapshot = try storage().removeConversationData(removal, handle: handle)
     searchGeneration = UUID()
     memorySearchGeneration = UUID()
     scheduleMemoryIndex()

@@ -52,7 +52,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private var shortcuts: CommandShortcuts?
   private var writingTools: WritingTools?
   private let loginItems = LoginItemSettings()
-  private lazy var audioSessionWindow = AudioSessionWindowController(appearance: appearance)
+  private lazy var audioSessionWindow = AudioSessionWindowController(appearance: appearance) {
+    [weak self] in
+    guard let self else { return }
+    self.settingsNavigation.returnsToSetup = false
+    self.settingsNavigation.destination = .intelligence
+    self.showSettings()
+  }
   private var vaultWindow: NSWindow?
   private var previewWindow: NSWindow?
   private var temporaryPreferencesDomain: String?
@@ -657,7 +663,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
               }
             }
           })
-      })
+      },
+      discussion: .init(
+        companions: controller.catalog.characters.filter {
+          $0.chat != nil && controller.settings.enabledCharacters.contains($0.id)
+        }.map { .init(id: $0.id, name: $0.name) },
+        open: { [weak self] id, owner in
+          guard let self, let skills = self.controller?.skills else {
+            return .init(
+              category: .captureUnavailable,
+              message: String(
+                localized: "This companion could not open a conversation. Please try again."))
+          }
+          let failure = skills.startConversation(
+            .chat, for: owner.id, name: owner.name, selectedRecord: id)
+          if failure == nil { self.vaultWindow?.orderOut(nil) }
+          return failure
+        }))
     let host = ThemedHostingController(rootView: rootView, appearance: appearance)
     host.sizingOptions = []
     if let vaultWindow {

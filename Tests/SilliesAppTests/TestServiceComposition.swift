@@ -9,7 +9,10 @@ import SilliesSpeechApple
 
 /// Test-only defaults. Production constructors require their service owners explicitly.
 struct FixtureReasoning: LocalReasoning {
-  func availabilityNotice(localeIdentifier: String?) async -> String? { "Fixture reasoning" }
+  var availability: @Sendable (String?) async -> String? = { _ in "Fixture reasoning" }
+  func availabilityNotice(localeIdentifier: String?) async -> String? {
+    await availability(localeIdentifier)
+  }
   func notes(
     for text: String, kind: CompanionSkillKind, fallback: String, localeIdentifier: String?
   ) async -> LocalNotes {
@@ -44,7 +47,7 @@ extension SkillCoordinator {
     vault: SessionVaultStore,
     audioFactory: @escaping SessionAudioCaptureFactory = {
       AudioTranscriptionService(
-        configuration: $0, speech: AppleSpeechProvider.makeChannel, onUpdate: $1)
+        configuration: $0, speech: AppleSpeechProvider.makeChannel, events: .init(update: $1))
     }, audioLanguages: AudioLanguageEnvironment = .live,
     snapshotLoader: @escaping SnapshotLoader = { ids, top in
       await WindowTargetMetadata.shared.snapshots(for: ids, primaryScreenTop: top)

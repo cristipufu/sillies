@@ -4,8 +4,10 @@ import SwiftUI
 @MainActor
 final class AudioSessionWindowController: NSObject, NSWindowDelegate {
   private let appearance: ThemeEnvironment
-  init(appearance: ThemeEnvironment) {
+  private let openTextModels: () -> Void
+  init(appearance: ThemeEnvironment, openTextModels: @escaping () -> Void) {
     self.appearance = appearance
+    self.openTextModels = openTextModels
   }
 
   private(set) var window: CompanionUtilityWindow?
@@ -19,6 +21,7 @@ final class AudioSessionWindowController: NSObject, NSWindowDelegate {
   }
 
   func prepare(_ model: AudioSessionPresentation) {
+    model.onOpenTextModelSettings = openTextModels
     if window == nil {
       let window = CompanionUtilityWindow(
         contentRect: CGRect(origin: .zero, size: SessionWindowLayout.initialSize),
@@ -49,5 +52,9 @@ final class AudioSessionWindowController: NSObject, NSWindowDelegate {
 
   func windowWillClose(_ notification: Notification) {
     displayedSession?.hideDetails()
+  }
+
+  func windowDidBecomeKey(_ notification: Notification) {
+    displayedSession?.onRefreshReasoningAvailability?()
   }
 }

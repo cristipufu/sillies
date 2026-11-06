@@ -64,6 +64,18 @@ enum TextPrefixCacheSelfCheck {
     guard snapshot.status.tokens == 0, snapshot.status.bytes == 0 else {
       throw TextModelError.invalidResponse
     }
+    let context = TextGenerationRequest.ContextIdentity(history: UUID(), personalFacts: UUID())
+    var revised = capture
+    revised.contextIdentity = context
+    snapshot.capture(revised, limits: limits)
+    guard snapshot.matches(tokens: continuation, sessionID: session, contextIdentity: context),
+      snapshot.restore(
+        tokens: continuation, sessionID: session,
+        contextIdentity: .init(history: UUID(), personalFacts: context.personalFacts)) == nil,
+      snapshot.restore(
+        tokens: continuation, sessionID: session,
+        contextIdentity: .init(history: context.history, personalFacts: UUID())) == nil
+    else { throw TextModelError.invalidResponse }
     snapshot.capture(capture, limits: .init(maximumTokens: 8, maximumBytes: 1))
     guard snapshot.status.tokens == 0 else { throw TextModelError.invalidResponse }
     snapshot.capture(capture, limits: .init(maximumTokens: 1, maximumBytes: 1_024))

@@ -6,6 +6,20 @@ import SilliesCore
 final class CompanionHUDModel {
   enum Surface { case card, speechBubble }
 
+  func sourceName(for state: CompanionBindingState) -> String {
+    if let target = state.boundTarget { return target.appName }
+    let skill: CompanionSkillKind
+    switch state {
+    case .active(_, let activeSkill, _, _, _): skill = activeSkill
+    case .completed(_, let completedSkill, _, let recordID, _):
+      if let completedRecord, completedRecord.id == recordID { return completedRecord.appName }
+      skill = completedSkill
+    case .followingFocusedWindow: return String(localized: "Your companion")
+    }
+    if skill.isMeetingSession { return String(localized: "Meeting") }
+    return skill == .chat ? String(localized: "Your companion") : String(localized: "Microphone")
+  }
+
   func surface(for state: CompanionBindingState) -> Surface {
     switch state {
     case .active(_, let skill, _, _, _), .completed(_, let skill, _, _, _):

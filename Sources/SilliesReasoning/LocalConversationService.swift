@@ -81,7 +81,8 @@ package actor LocalConversationService: ConversationResponding {
     } else {
       source = context
     }
-    var working = try await manager.prepare(source)
+    var working = try await manager.prepare(history.background.prepare(source))
+    await toolbox.includeSelectedSources(working.background.records.compactMap(\.source))
     progress(.generating)
     let text: String
     let delivery = ConversationStreamDelivery(receive: receive)

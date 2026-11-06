@@ -6,15 +6,24 @@ struct ChatComposerField: View {
   @Environment(\.silliesTheme) private var theme
   @Bindable var model: ChatSession
   var focusRequest: UUID? = nil
+  var addContext: (() -> Void)? = nil
   @Environment(\.chatReadingSize) private var readingSize
   @State private var isFocused = false
   private static let cornerRadius: CGFloat = 14
   private static let actionSize: CGFloat = 36
   private static let inset: CGFloat = 8
   private static let actionSpacing: CGFloat = 6
+  private static let attachmentWidth: CGFloat = 28
 
   var body: some View {
     HStack(alignment: .bottom, spacing: Self.actionSpacing) {
+      if let addContext {
+        Button(action: addContext) {
+          Image(systemName: "paperclip").frame(width: Self.attachmentWidth, height: Self.actionSize)
+        }
+        .buttonStyle(.plain).disabled(!model.selectedRecords.canAdd)
+        .accessibilityLabel("Add from Vault").help("Add from Vault")
+      }
       ZStack(alignment: .topLeading) {
         ChatComposer(
           text: $model.draft,

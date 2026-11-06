@@ -44,6 +44,15 @@ final class AudioCaptureInputQueue: Sendable {
     var budget = AudioInputBudget<SessionAudioSource>()
     var accepting = true
     var metrics = Metrics()
+    var pressure: AudioCaptureBacklog.Pressure?
+    var timing = AudioCaptureBacklog.Timing()
+
+    mutating func stopAccepting(_ limit: AudioCaptureBacklog.Limit, source: SessionAudioSource) {
+      accepting = false
+      pressure = .init(
+        limit: limit, packets: metrics.pendingPackets, bytes: metrics.retainedBytes,
+        sourceDuration: budget.queuedDuration(for: source))
+    }
   }
   private let queue: DispatchQueue
   private let state = Mutex(State())
@@ -51,6 +60,11 @@ final class AudioCaptureInputQueue: Sendable {
   init(queue: DispatchQueue) { self.queue = queue }
 
   var metrics: Metrics { state.withLock { $0.metrics } }
+  var overload: AudioCaptureBacklog? {
+    state.withLock { state in
+      state.pressure.map { .init(pressure: $0, timing: state.timing) }
+    }
+  }
 
   func enqueue(
     _ packet: Packet, receive: @escaping Receiver,
@@ -60,14 +74,14 @@ final class AudioCaptureInputQueue: Sendable {
     state.withLock { state in
       guard state.accepting else { return }
       guard bytes <= Self.maximumQueuedBytes - state.metrics.retainedBytes else {
-        state.accepting = false
+        state.stopAccepting(.bytes, source: packet.source)
         queue.async(execute: overflow)
         return
       }
       switch state.budget.reserve(duration: packet.duration, source: packet.source) {
       case .invalid: return
-      case .full:
-        state.accepting = false
+      case .full(let limit):
+        state.stopAccepting(limit == .duration ? .duration : .callbacks, source: packet.source)
         queue.async(execute: overflow)
       case .accepted:
         state.metrics.pendingPackets += 1
@@ -76,15 +90,20 @@ final class AudioCaptureInputQueue: Sendable {
           state.metrics.peakRetainedBytes, state.metrics.retainedBytes)
         // Admission and submission are atomic with stop, so finish cannot overtake this buffer.
         queue.async { [self] in
-          defer { release(packet, bytes: bytes) }
-          receive(packet)
+          let began = AudioCaptureClock.now
+          defer { release(packet, bytes: bytes, began: began) }
+          // A continuous device stream may keep its worker busy indefinitely. Retire transient
+          // Foundation/AVFoundation objects per packet, independently of the target queue's policy.
+          autoreleasepool { receive(packet) }
         }
       }
     }
   }
 
-  private func release(_ packet: Packet, bytes: Int) {
+  private func release(_ packet: Packet, bytes: Int, began: TimeInterval) {
+    let ended = AudioCaptureClock.now
     state.withLock {
+      $0.timing.record(capturedAt: packet.capturedAt, began: began, ended: ended)
       $0.budget.release(duration: packet.duration, source: packet.source)
       $0.metrics.pendingPackets -= 1
       $0.metrics.retainedBytes -= bytes

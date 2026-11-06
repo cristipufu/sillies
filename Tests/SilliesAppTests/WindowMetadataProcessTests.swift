@@ -16,7 +16,7 @@ func metadataExactLookupDistinguishesUnshownWindowsFromDestroyedWindows(_ cycle:
   let fixture = try autoreleasepool { try MetadataWindowFixture() }
   defer { fixture.destroy() }
   let id = fixture.id
-  CATransaction.flush()
+  autoreleasepool { CATransaction.flush() }
   let hidden = await Task.detached {
     client.read(.windows([id]))?.entries.compactMap {
       WindowServerSource.ParsedWindowEntry(dictionary: $0)?.id
@@ -27,6 +27,7 @@ func metadataExactLookupDistinguishesUnshownWindowsFromDestroyedWindows(_ cycle:
     fixture.destroy()
     CATransaction.flush()
   }
+  try wakeNativeEventLoop()
   let deadline = ContinuousClock.now.advanced(by: .seconds(2))
   var closed: Bool?
   repeat {
@@ -36,6 +37,16 @@ func metadataExactLookupDistinguishesUnshownWindowsFromDestroyedWindows(_ cycle:
   } while ContinuousClock.now < deadline
   #expect(fixture.isDestroyed, "Window fixture must release its window in cycle \(cycle).")
   #expect(closed == true, "WindowServer must retire the destroyed window in cycle \(cycle).")
+}
+
+/// Async jobs can run inside AppKit's event wait without draining its outer autorelease pool.
+/// An inert event gives the headless host a complete native event cycle after window teardown.
+@MainActor private func wakeNativeEventLoop() throws {
+  let event = try #require(
+    NSEvent.otherEvent(
+      with: .applicationDefined, location: .zero, modifierFlags: [], timestamp: 0,
+      windowNumber: 0, context: nil, subtype: 0, data1: 0, data2: 0))
+  NSApplication.shared.postEvent(event, atStart: false)
 }
 
 /// Native ownership stays in synchronous scopes, outside the asynchronous test's assertions.

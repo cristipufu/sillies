@@ -18,6 +18,7 @@ struct ChatSessionView: View {
   @State private var showsMemories = false
   @State private var showsSearch = false
   @State private var showsStarters = false
+  @State private var showsVaultPicker = false
   @State private var readingSize = ChatReadingSize.standard
   @State private var composerFocus: UUID?
   @State private var confirmsClear = false
@@ -48,7 +49,14 @@ struct ChatSessionView: View {
         ChatNoticeViewport(model: model, openSettings: openSettings)
       }
       if model.mode == .chat {
-        ChatComposerField(model: model, focusRequest: composerFocus).padding(16)
+        if let vault {
+          ChatContextStrip(selection: model.selectedRecords, openRecord: vault.openRecord)
+        }
+        ChatComposerField(
+          model: model, focusRequest: composerFocus,
+          addContext: vault != nil && model.selectedRecords.isAvailable
+            ? { showsVaultPicker = true } : nil
+        ).padding(16)
       }
     }
     .environment(\.chatReadingSize, readingPreference?.wrappedValue ?? readingSize)
@@ -64,13 +72,24 @@ struct ChatSessionView: View {
         if model.memoryEditor.isPresented {
           ChatMemoryEditorView(editor: model.memoryEditor)
         } else {
-          ConversationMemoriesView(model: model)
+          ConversationMemoriesView(model: model, openSettings: { openSettings(.companionProfile) })
         }
       }
-      .interactiveDismissDisabled(model.memoryEditor.isSaving)
+      .interactiveDismissDisabled(model.memoryEditor.isSaving || model.personalFacts.isSaving)
       .onDisappear { model.memoryEditor.close() }
     }
     .sheet(isPresented: $showsSearch) { ConversationSearchView(browser: model.browser) }
+    .sheet(isPresented: $showsVaultPicker) {
+      if let vault { ChatVaultPicker(store: vault.store, selection: model.selectedRecords) }
+    }
+    .dropDestination(for: VaultRecordTransfer.self) { items, _ in
+      guard model.mode == .chat, model.selectedRecords.canAdd else { return false }
+      var accepted = false
+      for item in items.prefix(ConversationRecordSelection.maximumRecords) {
+        if model.selectedRecords.add(item.id) { accepted = true }
+      }
+      return accepted
+    }
     .popover(isPresented: $showsStarters) {
       ConversationStartersView(model: model) {
         showsStarters = false
@@ -88,7 +107,9 @@ struct ChatSessionView: View {
     .confirmationDialog("Clear this conversation and its memories?", isPresented: $confirmsClear) {
       Button("Clear conversation", role: .destructive) { Task { await model.clearConversation() } }
     } message: {
-      Text("Saved messages and memories for this companion will be deleted from this Mac.")
+      Text(
+        "Delete this companion’s messages, draft and learned memories. Keep pinned facts and preferences."
+      )
     }
     .onChange(of: model.language) { availabilityRevision = UUID() }
     .onChange(of: model.spokenReplies) { availabilityRevision = UUID() }
@@ -157,6 +178,7 @@ struct ChatSessionView: View {
       Button("Export conversation…", action: exportConversation).disabled(
         !model.export.isAvailable || model.export.isExporting)
       Button("Memories…") { showsMemories = true }
+      Button("Companion settings…") { openSettings(.companionProfile) }
       Button("Clear conversation…", role: .destructive) { confirmsClear = true }.disabled(
         !model.canCompose)
       Divider()

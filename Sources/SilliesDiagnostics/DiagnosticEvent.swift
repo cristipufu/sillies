@@ -3,7 +3,7 @@ import Foundation
 /// Deliberately has no message, prompt, transcript, path, URL or arbitrary metadata field.
 package struct DiagnosticEvent: Codable, Sendable, Equatable {
   package enum Area: String, Codable, Sendable {
-    case app, chat, recognition, synthesis, inference, diagnostics
+    case app, chat, capture, recognition, synthesis, inference, diagnostics
   }
   package enum Action: String, Codable, Sendable {
     case started, completed, failed, cancelled, preempted, phaseChanged, speechDetected
@@ -14,6 +14,7 @@ package struct DiagnosticEvent: Codable, Sendable, Equatable {
     case userStop, microphoneMuted, voiceEnded, sessionClosed, speechDetected, recognizedWords
     case recognitionPriority, interactivePriority, incompatibleMemory, runtimeCancellation
     case emptyRecognition, explicitContinuation, playbackInterruption
+    case captureByteLimit, captureCallbackLimit, captureDurationLimit
   }
   package enum Phase: String, Codable, Sendable {
     case loading, ready, preparingMicrophone, listening, finalizing, thinking, preparingVoice
@@ -22,6 +23,8 @@ package struct DiagnosticEvent: Codable, Sendable, Equatable {
   package enum Metric: String, Codable, Sendable {
     case firstText, firstPCM, firstAudio, endpoint, recognitionFinalized, voicePrepared
     case contextMessages, contextToolResults, replyToolCalls
+    case captureQueuedPackets, captureQueuedBytes, captureQueuedAudio
+    case captureMaximumQueueWait, captureMaximumProcessing
   }
   package enum Fault: String, Codable, Sendable {
     case permissionDenied, captureUnavailable, captureInterrupted, audioProcessing

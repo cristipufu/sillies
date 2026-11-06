@@ -2,10 +2,24 @@ import Foundation
 import SilliesCore
 
 package struct TextGenerationRequest: Codable, Sendable {
+  package struct ContextIdentity: Codable, Equatable, Sendable {
+    package let history: UUID?
+    package let personalFacts: UUID?
+    package init(history: UUID?, personalFacts: UUID?) {
+      self.history = history
+      self.personalFacts = personalFacts
+    }
+  }
   package enum Operation: String, Codable, Sendable { case generate, measure, releaseSession }
   package private(set) var operation = Operation.generate
   package private(set) var conversationID: UUID?
   package private(set) var sessionID: UUID?
+  package private(set) var contextIdentity: ContextIdentity?
+  package func inContext(_ identity: ContextIdentity?) -> Self {
+    var copy = self
+    copy.contextIdentity = identity
+    return copy
+  }
   package func inSession(_ id: UUID?) -> Self {
     var copy = self
     copy.sessionID = id

@@ -6,9 +6,14 @@ public struct ChatSource: Codable, Equatable, Identifiable, Sendable {
   public let title: String
   public let kind: CompanionSkillKind
   public let createdAt: Date
-  public let excerpt: String
+  public private(set) var excerpt: String
   public let links: [URL]
   public let imageFilename: String?
+  public func withExcerpt(_ text: String) -> Self {
+    var copy = self
+    copy.excerpt = text
+    return copy
+  }
   private let retrievalMethod: VaultSearchMatch.Retrieval?
   public var retrieval: VaultSearchMatch.Retrieval { retrievalMethod ?? .keyword }
   public var audioFilename: String? { nil }

@@ -111,6 +111,11 @@ MLX weights alone do not make them usable in Sillies; they are not offered as wo
 
 ## Benchmarks
 
+- **[Explicit Vault context and memory controls](reports/conversation-context-2026-11-06.md)** —
+  selected records, pinned facts, independent deletion and headless lifecycle validation. The
+  [Apple representation follow-up](reports/native-context-representation-2026-11-06.md) compares
+  structured tool results and explicit fact ownership; neither resolved identity or opt-out failures.
+  These diagnostic cases do not change the leaderboard.
 - **[Chat and voice improvement study](reports/chat-voice-improvements-2026-11-05.md)** —
   interruption recovery, reviewed memory saving, endpoint and reasoning experiments, and generated-answer
   speech timing. Rejected policies and scoring false positives remain visible; leaderboard scores are unchanged.

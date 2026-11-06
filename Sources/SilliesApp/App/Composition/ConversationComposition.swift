@@ -33,11 +33,13 @@ import SilliesVault
       tools: [
         VaultSearchTool(library: dependencies.vault), VaultReadTool(library: dependencies.vault),
       ],
-      history: conversations,
-      historyTools: { context in
-        ConversationHistoryTools(conversations: conversations, memories: conversations).tools(
-          for: context)
-      },
+      history: .init(
+        repository: conversations,
+        tools: { context in
+          ConversationHistoryTools(conversations: conversations, memories: conversations).tools(
+            for: context)
+        },
+        background: .init(materials: dependencies.vault, personalFacts: conversations)),
       modelSelection: { await dependencies.preferences.customization(for: id).textModelID })
     let created = ChatServices(
       captureFactory: dependencies.speech.conversationCaptureFactory(reference: reference),
@@ -46,7 +48,8 @@ import SilliesVault
       deliver: { MainRunLoopDelivery.perform($0) },
       history: .stored(conversations: conversations, memories: conversations),
       diagnostics: dependencies.diagnostics,
-      microphonePermission: MicrophoneAuthorization.failure)
+      microphonePermission: MicrophoneAuthorization.failure,
+      context: .init(materials: dependencies.vault, personalFacts: conversations))
     services[id] = created
     return created
   }

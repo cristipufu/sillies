@@ -95,6 +95,9 @@
   "ConversationExportShutdownTests.swift": {
     "default": "headless"
   },
+  "ConversationContextInterfaceTests.swift": {
+    "default": "headless"
+  },
   "ConversationUsabilityTests.swift": {
     "default": "headless"
   },

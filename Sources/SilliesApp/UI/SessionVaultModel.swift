@@ -16,6 +16,7 @@ final class SessionVaultModel {
   var selectedRecordID: UUID?
   private(set) var lastStashID: UUID?
   private(set) var feedback: String?
+  private(set) var discussionFailure: SessionFailure?
   @ObservationIgnored private var feedbackTask: Task<Void, Never>?
   @ObservationIgnored private var feedbackGeneration = UUID()
   @ObservationIgnored private let exporter: VaultExportController
@@ -23,6 +24,7 @@ final class SessionVaultModel {
   @ObservationIgnored private var speakerTask: Task<Void, Never>?
   @ObservationIgnored private let transcriptWindow: SavedTranscriptWindow
   let pasteBack: PasteBackCoordinator?
+  let discussion: VaultDiscussionPresentation?
   private var listing: VaultListing
   private(set) var relatedRecords: [SessionRecordHeader] = []
   var keywordRecords: [SessionRecordHeader] { listing.records }
@@ -67,6 +69,7 @@ final class SessionVaultModel {
     var initialRecordID: UUID?
     var pasteBack: PasteBackCoordinator?
     let appearance: ThemeEnvironment
+    var discussion: VaultDiscussionPresentation? = nil
   }
   init(
     vault: SessionVaultStore, presentation: Presentation,
@@ -78,6 +81,7 @@ final class SessionVaultModel {
     exporter = VaultExportController(library: vault.library)
     listing = VaultListing(.init(records: vault.records, total: vault.recordCount, nextCursor: nil))
     self.pasteBack = presentation.pasteBack
+    discussion = presentation.discussion
     selectedRecordID = presentation.initialRecordID ?? vault.records.first?.id
   }
 
@@ -281,6 +285,21 @@ final class SessionVaultModel {
   func openTranscript(_ record: SessionRecord) {
     transcriptWindow.show(record.transcript, title: record.displayTitle)
   }
+  func discuss(_ recordID: UUID, with companion: ConversationOwner) {
+    guard let discussion else { return }
+    discussionFailure = nil
+    vault.whenPersisted { [weak self] error in
+      guard let self, self.isPresented else { return }
+      if let error {
+        self.discussionFailure = .init(category: .recordingSave, message: error)
+        return
+      }
+      if let failure = discussion.open(recordID, companion) {
+        self.discussionFailure = failure
+      }
+    }
+  }
+  func dismissDiscussionFailure() { discussionFailure = nil }
   func regenerateNotes(_ record: SessionRecord) {
     performEdit(
       record.id, .requestNotes,

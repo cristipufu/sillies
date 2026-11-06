@@ -9,6 +9,22 @@ package final class ChatMemoryBrowser {
   package private(set) var isLoading = false
   package private(set) var failure: String?
   package private(set) var pageRevision = UUID()
+  package var query = "" {
+    didSet {
+      if query != oldValue {
+        invalidate()
+        page = .init(facts: [], next: nil)
+        failure = nil
+      }
+    }
+  }
+  package private(set) var refreshRevision = UUID()
+  package struct SearchIdentity: Hashable {
+    let query: String
+    let revision: UUID
+  }
+  package var searchIdentity: SearchIdentity { .init(query: query, revision: refreshRevision) }
+  private static let searchDelay: Duration = .milliseconds(200)
   @ObservationIgnored private let repository: (any CompanionMemoryRepository)?
   @ObservationIgnored private var handle: ConversationHandle?
   @ObservationIgnored private var generation = UUID()
@@ -31,6 +47,8 @@ package final class ChatMemoryBrowser {
   package func received(_ receipt: MemoryReceipt) {
     guard receipt.handle == handle else { return }
     invalidate()
+    refreshRevision = UUID()
+    guard query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
     var facts = page.facts.filter { $0.id != receipt.saved.id }
     if page.previous == nil {
       facts.insert(receipt.saved, at: 0)
@@ -50,17 +68,28 @@ package final class ChatMemoryBrowser {
   private func load(_ position: CompanionMemoryPageRequest.Position) async throws {
     guard let repository, let handle else { return }
     let token = UUID()
+    let submittedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
     generation = token
     isLoading = true
     defer { if generation == token { isLoading = false } }
     do {
-      var result = try await repository.memoryPage(.init(handle: handle, position: position))
-      if result.facts.isEmpty, position != .latest, generation == token {
+      var result: CompanionMemoryPage
+      if submittedQuery.isEmpty {
+        result = try await repository.memoryPage(.init(handle: handle, position: position))
+      } else {
+        try await Task.sleep(for: Self.searchDelay)
+        let facts = try await repository.memories(
+          .init(handle: handle, text: submittedQuery, limit: CompanionMemoryPageRequest.pageSize))
+        result = .init(facts: facts, next: nil)
+      }
+      if result.facts.isEmpty, submittedQuery.isEmpty, position != .latest, generation == token {
         try Task.checkCancellation()
         result = try await repository.memoryPage(.init(handle: handle))
       }
       try Task.checkCancellation()
-      guard generation == token, self.handle == handle else { return }
+      guard generation == token, self.handle == handle,
+        query.trimmingCharacters(in: .whitespacesAndNewlines) == submittedQuery
+      else { return }
       page = result
       pageRevision = UUID()
       failure = nil

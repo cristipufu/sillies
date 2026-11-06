@@ -67,6 +67,8 @@ func memorySearchRanksRelevantOlderFactsWithBoundedPages(_ count: Int) async thr
   defer { fixture.remove() }
   try fixture.database.sql.execute("DROP INDEX companion_memories_recent")
   try fixture.database.sql.execute("DROP INDEX conversation_messages_date")
+  try fixture.database.sql.execute("DROP TABLE personal_facts")
+  try fixture.database.sql.execute("DROP TABLE personal_fact_state")
   try fixture.database.sql.execute("DROP TRIGGER memory_embeddings_update")
   try fixture.database.sql.execute("DROP TRIGGER memory_embeddings_delete")
   try fixture.database.sql.execute("DROP TABLE memory_embeddings")

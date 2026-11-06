@@ -71,8 +71,10 @@ final class SpeechServices {
   var captureFactory: SessionAudioCaptureFactory {
     { [registry, vocabulary, dictationRuntime, diagnostics] configuration, update in
       let selected = configuration.model
+      let operation = UUID()
       diagnostics.record(
-        .init(.recognition, .modelSelected).using(model: selected.id, provider: selected.providerID)
+        .init(.recognition, .modelSelected, operation: operation)
+          .using(model: selected.id, provider: selected.providerID)
       )
       var configuration = configuration
       let dictionary = vocabulary.snapshot()
@@ -98,7 +100,11 @@ final class SpeechServices {
           }
           return try await preparation.makeChannel(
             language: language, output: output, failure: failure)
-        }, diarization: diarization, onUpdate: update)
+        }, diarization: diarization,
+        events: .init(
+          update: update,
+          reportOverload: { CaptureDiagnostics.record($0, operation: operation, sink: diagnostics) }
+        ))
     }
   }
 

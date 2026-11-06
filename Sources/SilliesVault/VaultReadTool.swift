@@ -15,9 +15,11 @@ package struct VaultReadTool: ConversationTool {
     .init(
       name: "read_vault_record",
       description:
-        "Read a search_vault result when its excerpt does not answer the question. Requires a real result ID.",
+        "Read a selected Vault item or a search result when its excerpt does not answer the question. Requires a real record ID.",
       parameters: [
-        .init("recordID", description: "The exact UUID returned by search_vault."),
+        .init(
+          "recordID",
+          description: "The exact UUID of a selected Vault item or a search_vault result."),
         .init(
           "query",
           description: "Topic words to locate the relevant passage, or empty for its beginning."),

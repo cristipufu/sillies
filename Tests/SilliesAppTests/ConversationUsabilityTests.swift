@@ -94,6 +94,14 @@ import Testing
   #expect(await session.browser.show(.around(first.id)))
   #expect(session.draft == "Unsent thought")
   #expect(session.browser.focusedMessageID == first.id)
+  #expect(!(await session.browser.show(.around(UUID()))))
+  #expect(
+    session.browser.failure == String(localized: "The original message is no longer available."))
+  let readFailure = SessionFailure(
+    category: .recordingSave, message: "Synthetic archive read failure")
+  await delayed.failNextPage(readFailure)
+  #expect(!(await session.browser.show(.around(first.id))))
+  #expect(session.browser.failure == readFailure.message)
   await session.browser.search("cancelled")
   #expect(session.browser.failure == nil && !session.browser.isSearching)
   await delayed.cancelNextPage()
@@ -296,9 +304,11 @@ private actor DelayedUsabilitySearch: ConversationRepository {
   let store: ConversationLibrary
   private var waiting: CheckedContinuation<Void, Never>?
   private var cancelsPage = false
+  private var pageFailure: SessionFailure?
   var isWaiting: Bool { waiting != nil }
   init(store: ConversationLibrary) { self.store = store }
   func cancelNextPage() { cancelsPage = true }
+  func failNextPage(_ failure: SessionFailure) { pageFailure = failure }
   func release() {
     waiting?.resume()
     waiting = nil
@@ -313,6 +323,10 @@ private actor DelayedUsabilitySearch: ConversationRepository {
   }
   func save(_ update: ConversationUpdate) async throws { try await store.save(update) }
   func page(_ request: ConversationPageRequest) async throws -> ConversationPage {
+    if let failure = pageFailure {
+      pageFailure = nil
+      throw failure
+    }
     if cancelsPage {
       cancelsPage = false
       throw CancellationError()

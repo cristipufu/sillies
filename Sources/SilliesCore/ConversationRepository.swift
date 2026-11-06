@@ -13,10 +13,11 @@ public protocol ConversationRepository: Sendable {
 }
 
 public enum ConversationStorageError: Error, LocalizedError {
-  case changed, unsupportedVersion, invalidData
+  case changed, messageUnavailable, unsupportedVersion, invalidData
   public var errorDescription: String? {
     switch self {
     case .changed: String(localized: "This conversation changed. Reopen it before continuing.")
+    case .messageUnavailable: String(localized: "The original message is no longer available.")
     case .unsupportedVersion:
       String(
         localized:

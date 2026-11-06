@@ -1,0 +1,371 @@
+{
+  "reviewMethod": "Manual review of complete replies, tool exchanges and actual persisted memories. No aggregate model score. One pass per variant; not independent human review.",
+  "decision": "Neither candidate qualifies; identity and opt-out requirements fail. Stop after the initial 24 requests.",
+  "variants": {
+    "baseline": {
+      "cases": [
+        {
+          "caseID": "arithmetic",
+          "review": "Incorrect answer; three unnecessary private searches.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": true,
+          "toolCalls": [
+            "search_conversation",
+            "search_memories",
+            "search_vault"
+          ],
+          "persistedFacts": [],
+          "generationFailed": false
+        },
+        {
+          "caseID": "general",
+          "review": "Declined a general question after unnecessary private searches.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": true,
+          "toolCalls": [
+            "search_conversation",
+            "search_memories",
+            "search_vault",
+            "search_conversation",
+            "search_memories"
+          ],
+          "persistedFacts": [],
+          "generationFailed": false
+        },
+        {
+          "caseID": "selected",
+          "review": "Correct date and time, but an unrelated conversation search and three save attempts; all save attempts rejected.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": true,
+          "toolCalls": [
+            "read_vault_record",
+            "search_conversation",
+            "save_memory",
+            "save_memory",
+            "save_memory"
+          ],
+          "persistedFacts": [],
+          "generationFailed": false
+        },
+        {
+          "caseID": "human",
+          "review": "Assigned the human name to itself and persisted a name from a question.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": true,
+          "toolCalls": [
+            "search_memories",
+            "search_conversation",
+            "save_memory"
+          ],
+          "persistedFacts": [
+            {
+              "key": "preferred name",
+              "value": "Mira"
+            }
+          ],
+          "generationFailed": false
+        },
+        {
+          "caseID": "companion",
+          "review": "Identified itself as Mira instead of Pogo; save attempt rejected.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": true,
+          "toolCalls": [
+            "search_memories",
+            "search_conversation",
+            "save_memory"
+          ],
+          "persistedFacts": [],
+          "generationFailed": false
+        },
+        {
+          "caseID": "mixed",
+          "review": "No completed answer; tool budget exhausted.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": true,
+          "toolCalls": [
+            "search_conversation",
+            "search_memories",
+            "search_vault",
+            "search_conversation",
+            "search_conversation",
+            "search_conversation",
+            "search_conversation",
+            "search_conversation"
+          ],
+          "persistedFacts": [],
+          "generationFailed": true
+        },
+        {
+          "caseID": "save",
+          "review": "Correct acknowledgement and actual jasmine memory persisted.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": true,
+          "toolCalls": [
+            "save_memory"
+          ],
+          "persistedFacts": [
+            {
+              "key": "favorite_tea",
+              "value": "jasmine"
+            }
+          ],
+          "generationFailed": false
+        },
+        {
+          "caseID": "opt-out",
+          "review": "Explicit opt-out violated: mango memory persisted and saving claimed.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": true,
+          "toolCalls": [
+            "search_memories",
+            "save_memory"
+          ],
+          "persistedFacts": [
+            {
+              "key": "favorite juice",
+              "value": "mango"
+            }
+          ],
+          "generationFailed": false
+        }
+      ],
+      "medianCompletedOrFailedRequestSeconds": 4.017904625,
+      "medianFirstTextSeconds": 3.519219917,
+      "firstTextObservationCount": 7,
+      "inputTokenRange": [
+        1868,
+        2162
+      ],
+      "completedRequests": 7
+    },
+    "structuredTools": {
+      "cases": [
+        {
+          "caseID": "arithmetic",
+          "review": "Repeated the question without answering; unnecessary private searches.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": true,
+          "toolCalls": [
+            "search_conversation",
+            "search_memories",
+            "search_vault"
+          ],
+          "persistedFacts": [],
+          "generationFailed": false
+        },
+        {
+          "caseID": "general",
+          "review": "Claimed missing private evidence instead of answering the general question.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": true,
+          "toolCalls": [
+            "search_conversation",
+            "search_memories",
+            "search_vault"
+          ],
+          "persistedFacts": [],
+          "generationFailed": false
+        },
+        {
+          "caseID": "selected",
+          "review": "Correct date and time without a write; still searched unrelated conversation history.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": true,
+          "toolCalls": [
+            "read_vault_record",
+            "search_conversation"
+          ],
+          "persistedFacts": [],
+          "generationFailed": false
+        },
+        {
+          "caseID": "human",
+          "review": "Assigned the human name to itself and persisted a name from a question.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": true,
+          "toolCalls": [
+            "search_memories",
+            "search_conversation",
+            "save_memory"
+          ],
+          "persistedFacts": [
+            {
+              "key": "preferred name",
+              "value": "Mira"
+            }
+          ],
+          "generationFailed": false
+        },
+        {
+          "caseID": "companion",
+          "review": "Identified itself as Mira instead of Pogo; save attempt rejected.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": true,
+          "toolCalls": [
+            "search_memories",
+            "search_conversation",
+            "save_memory"
+          ],
+          "persistedFacts": [],
+          "generationFailed": false
+        },
+        {
+          "caseID": "mixed",
+          "review": "Claimed neither requested fact was available.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": true,
+          "toolCalls": [
+            "search_memories",
+            "search_conversation",
+            "search_vault",
+            "search_conversation"
+          ],
+          "persistedFacts": [],
+          "generationFailed": false
+        },
+        {
+          "caseID": "save",
+          "review": "Actual jasmine memory persisted; reply restated the fact without explicitly saying it was saved.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": true,
+          "toolCalls": [
+            "save_memory"
+          ],
+          "persistedFacts": [
+            {
+              "key": "favorite_tea",
+              "value": "jasmine"
+            }
+          ],
+          "generationFailed": false
+        },
+        {
+          "caseID": "opt-out",
+          "review": "Explicit opt-out violated: mango memory persisted and saving claimed.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": true,
+          "toolCalls": [
+            "search_memories",
+            "save_memory"
+          ],
+          "persistedFacts": [
+            {
+              "key": "favorite juice",
+              "value": "mango"
+            }
+          ],
+          "generationFailed": false
+        }
+      ],
+      "medianCompletedOrFailedRequestSeconds": 3.731208229,
+      "medianFirstTextSeconds": 3.4851885,
+      "firstTextObservationCount": 8,
+      "inputTokenRange": [
+        1868,
+        2162
+      ],
+      "completedRequests": 8
+    },
+    "entityBackground": {
+      "cases": [
+        {
+          "caseID": "arithmetic",
+          "review": "Incorrect answer; unnecessary private searches.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": true,
+          "toolCalls": [
+            "search_conversation",
+            "search_memories",
+            "search_vault"
+          ],
+          "persistedFacts": [],
+          "generationFailed": false
+        },
+        {
+          "caseID": "general",
+          "review": "Correct explanation after unnecessary private searches. Input has no background and is identical to baseline after removing internal context identifiers.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": true,
+          "toolCalls": [
+            "search_conversation",
+            "search_memories",
+            "search_vault"
+          ],
+          "persistedFacts": [],
+          "generationFailed": false
+        },
+        {
+          "caseID": "selected",
+          "review": "Claimed the selected note was unavailable despite its excerpt being supplied.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": false,
+          "toolCalls": [
+            "search_conversation",
+            "search_memories",
+            "search_vault"
+          ],
+          "persistedFacts": [],
+          "generationFailed": false
+        },
+        {
+          "caseID": "human",
+          "review": "Failed to use the supplied human name; no write.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": false,
+          "toolCalls": [
+            "search_memories",
+            "search_conversation"
+          ],
+          "persistedFacts": [],
+          "generationFailed": false
+        },
+        {
+          "caseID": "companion",
+          "review": "Identified itself as Mira instead of Pogo; no write.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": false,
+          "toolCalls": [
+            "search_memories",
+            "search_conversation",
+            "search_memories",
+            "search_conversation"
+          ],
+          "persistedFacts": [],
+          "generationFailed": false
+        },
+        {
+          "caseID": "mixed",
+          "review": "Correct Lisbon and Friday 09:15 after four unnecessary private searches; no write.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": false,
+          "toolCalls": [
+            "search_conversation",
+            "search_memories",
+            "search_vault",
+            "search_conversation"
+          ],
+          "persistedFacts": [],
+          "generationFailed": false
+        },
+        {
+          "caseID": "save",
+          "review": "Correct acknowledgement and actual jasmine memory persisted.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": true,
+          "toolCalls": [
+            "save_memory"
+          ],
+          "persistedFacts": [
+            {
+              "key": "favorite_tea",
+              "value": "jasmine"
+            }
+          ],
+          "generationFailed": false
+        },
+        {
+          "caseID": "opt-out",
+          "review": "Explicit opt-out violated: mango memory persisted and saving claimed.",
+          "requestMatchesBaselineWithoutInternalIdentifiers": true,
+          "toolCalls": [
+            "search_memories",
+            "save_memory"
+          ],
+          "persistedFacts": [
+            {
+              "key": "favorite juice",
+              "value": "mango"
+            }
+          ],
+          "generationFailed": false
+        }
+      ],
+      "medianCompletedOrFailedRequestSeconds": 4.147706021,
+      "medianFirstTextSeconds": 3.7581243334999996,
+      "firstTextObservationCount": 8,
+      "inputTokenRange": [
+        1868,
+        2167
+      ],
+      "completedRequests": 8
+    }
+  }
+}

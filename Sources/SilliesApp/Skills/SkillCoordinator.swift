@@ -166,8 +166,17 @@ final class SkillCoordinator {
   }
 
   @discardableResult
-  func startConversation(_ mode: ConversationMode, for id: String, name: String) -> SessionFailure?
-  {
+  func startConversation(
+    _ mode: ConversationMode, for id: String, name: String, selectedRecord: UUID? = nil
+  ) -> SessionFailure? {
+    if selectedRecord != nil, let session = activeChatSession, session.companionID == id,
+      session.phase != .loading || session.history.isLoaded, !session.canCompose
+    {
+      return .init(
+        category: .captureUnavailable,
+        message: String(
+          localized: "Wait for the current reply or stop Talk before adding a Vault item."))
+    }
     guard activeAudioSession == nil, !isAudioReserved(), canStartAudio() else {
       return .init(
         category: .captureUnavailable,
@@ -179,7 +188,7 @@ final class SkillCoordinator {
       stopSkill(for: previous.companionID)
       whenFinished { [weak self] in
         guard let self, self.pendingConversation == token else { return }
-        self.startConversation(mode, for: id, name: name)
+        self.startConversation(mode, for: id, name: name, selectedRecord: selectedRecord)
       }
       return nil
     }
@@ -196,6 +205,16 @@ final class SkillCoordinator {
     case .chat:
       presentation.showChat()
       onOpenChatSession?(presentation)
+      if let selectedRecord {
+        Task { [weak self, weak presentation] in
+          guard let presentation else { return }
+          await presentation.restoreHistory()
+          guard let self, self.pendingConversation == token,
+            self.sessions[id] === conversation
+          else { return }
+          presentation.selectedRecords.add(selectedRecord)
+        }
+      }
     case .talk:
       Task { [weak self, weak presentation] in
         guard let self, let presentation, self.pendingConversation == token,

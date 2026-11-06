@@ -1,0 +1,50 @@
+[
+  {
+    "answer": "Mount Everest is the tallest mountain above sea level, standing at 8,848.86 meters (29,031.7 feet).",
+    "calls": [
+      "answer_general_question"
+    ],
+    "question": 0,
+    "seconds": 4.86301925,
+    "variant": "generalTool"
+  },
+  {
+    "answer": "Tokyo is the capital city of Japan.",
+    "calls": [
+      "answer_general_question"
+    ],
+    "question": 1,
+    "seconds": 3.694912875,
+    "variant": "generalTool"
+  },
+  {
+    "answer": "Seven times eight is fifty-six.",
+    "calls": [
+      "answer_general_question"
+    ],
+    "question": 2,
+    "seconds": 3.6024146249999998,
+    "variant": "generalTool"
+  },
+  {
+    "answer": "I couldn't find any records related to an Aurora review in your saved notes.",
+    "calls": [
+      "search_conversation",
+      "search_memories"
+    ],
+    "question": 3,
+    "seconds": 2.885309417,
+    "variant": "generalTool"
+  },
+  {
+    "answer": "I'm sorry, but I couldn't find any information about an Aurora review in your saved notes. The capital of Japan is Tokyo.",
+    "calls": [
+      "search_conversation",
+      "answer_general_question",
+      "search_memories"
+    ],
+    "question": 4,
+    "seconds": 4.868257208,
+    "variant": "generalTool"
+  }
+]

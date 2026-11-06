@@ -16,6 +16,8 @@ import Testing
       handle: snapshot.handle, messages: [message], checkpoint: .init(draft: "Unsent"),
       savedAt: date))
   try original.sql.execute("DROP INDEX conversation_messages_date")
+  try original.sql.execute("DROP TABLE personal_facts")
+  try original.sql.execute("DROP TABLE personal_fact_state")
   try original.sql.execute("PRAGMA user_version=4")
   let updated = try ConversationDatabase(directory: directory)
   let reopened = try updated.open(.init(id: "pogo", name: "Pogo"))

@@ -12,6 +12,10 @@ import SwiftUI
   ) {
     returnsToSetup = false
     switch requested {
+    case .companionProfile:
+      setup.move(to: .preparation)
+      setup.isProfileExpanded = true
+      destination = .setup
     case .textModels where setup.replyModelOverride != nil:
       setup.move(to: .preparation)
       setup.isProfileExpanded = true

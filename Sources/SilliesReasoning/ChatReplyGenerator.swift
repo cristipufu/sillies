@@ -44,6 +44,7 @@ enum ChatReplyGenerator {
           You can converse, explain, suggest ideas and help draft text. Only claim you can perform an action when an available tool supports it. Helping someone plan an action is different from carrying it out.
           \(toolInstructions(tools))
           \(clarificationInstructions(tools))
+          \(context.background.records.isEmpty && context.background.personalFacts?.facts.isEmpty != false ? "" : ConversationBackgroundPrompt.instructions)
 
           \(ConversationReplyStyle.instructions(for: context.mode)) Address the user as an adult. Personality changes your tone, not the facts.
           Use plain text without Markdown, stage directions or speaker labels.
@@ -56,10 +57,16 @@ enum ChatReplyGenerator {
           Personality: \(context.profile.personality)
           If an earlier reply conflicts with this character profile, correct the mistake instead of repeating it.
           """,
-        messages: ConversationContextNotes.applying(context.memory, to: messages), tools: tools),
+        messages: ConversationBackgroundPrompt.applying(
+          context.background, to: ConversationContextNotes.applying(context.memory, to: messages)),
+        tools: tools),
       maximumTokens: maximumTokens,
       style: .conversation
     ).inConversation(context.turnID).inSession(context.sessionID)
+      .inContext(
+        .init(
+          history: context.historyHandle?.generation,
+          personalFacts: context.background.personalFacts?.revision))
   }
 
   private static func toolInstructions(_ tools: [ConversationToolDefinition]) -> String {

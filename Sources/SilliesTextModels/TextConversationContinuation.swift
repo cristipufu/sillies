@@ -4,6 +4,7 @@ import SilliesCore
 /// Reuse requires the exact committed conversation, including roles, tools and session identity.
 package struct TextConversationContinuation: Sendable {
   private let sessionID: UUID?
+  private let contextIdentity: TextGenerationRequest.ContextIdentity?
   private let instructions: String
   private let tools: [ConversationToolDefinition]
   private let messages: [TextMessage]
@@ -13,6 +14,7 @@ package struct TextConversationContinuation: Sendable {
     completedExchanges: [ConversationToolExchange] = []
   ) {
     sessionID = request.sessionID
+    contextIdentity = request.contextIdentity
     instructions = request.instructions
     tools = request.tools
     messages =
@@ -21,7 +23,7 @@ package struct TextConversationContinuation: Sendable {
   }
 
   package func suffix(for request: TextGenerationRequest) -> [TextMessage]? {
-    guard let sessionID, request.sessionID == sessionID,
+    guard let sessionID, request.sessionID == sessionID, request.contextIdentity == contextIdentity,
       request.instructions == instructions, request.tools == tools,
       request.messages.count > messages.count, request.messages.starts(with: messages)
     else { return nil }

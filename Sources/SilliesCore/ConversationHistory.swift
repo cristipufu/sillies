@@ -25,6 +25,8 @@ public struct ConversationCheckpoint: Codable, Equatable, Sendable {
   public var draft: String
   public var language: String?
   public var readingMessageID: UUID?
+  private var vaultSelection: ConversationRecordSelection?
+  public var selectedRecords: ConversationRecordSelection { vaultSelection ?? .init() }
   public private(set) var contextRevision: UUID?
   public var memorySnapshot: ConversationMemorySnapshot {
     .init(memory: memory, revision: contextRevision)
@@ -40,12 +42,13 @@ public struct ConversationCheckpoint: Codable, Equatable, Sendable {
   }
   public init(
     memory: ConversationMemory = .init(), draft: String = "", language: String? = nil,
-    readingMessageID: UUID? = nil
+    readingMessageID: UUID? = nil, selectedRecords: ConversationRecordSelection = .init()
   ) {
     self.memory = memory
     self.draft = draft
     self.language = language
     self.readingMessageID = readingMessageID
+    vaultSelection = selectedRecords.ids.isEmpty ? nil : selectedRecords
   }
 }
 

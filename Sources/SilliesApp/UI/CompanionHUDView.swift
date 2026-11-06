@@ -15,7 +15,7 @@ struct CompanionHUDView: View {
       case .followingFocusedWindow:
         EmptyView()
 
-      case .active(let target, let skill, _, let statusDetail, _):
+      case .active(_, let skill, _, let statusDetail, _):
         if skill == .chat, let conversation = model.conversation, conversation.mode == .talk {
           TalkHUDView(
             model: conversation, openTranscript: { model.onOpenSession?() },
@@ -24,9 +24,7 @@ struct CompanionHUDView: View {
         } else if skill.isAudioSession {
           RecordingHUDView(model: model, state: state)
         } else {
-          activeCard(
-            target: target, skill: skill, statusDetail: statusDetail
-          )
+          activeCard(skill: skill, statusDetail: statusDetail)
         }
 
       case .completed(let target, let skill, let summary, let recordID, _):
@@ -50,15 +48,13 @@ struct CompanionHUDView: View {
 
   private var surface: CompanionHUDModel.Surface { model.surface(for: state) }
 
-  private func activeCard(
-    target: WindowTargetCandidate?, skill: CompanionSkillKind, statusDetail: String
-  ) -> some View {
+  private func activeCard(skill: CompanionSkillKind, statusDetail: String) -> some View {
     HStack(spacing: 9) {
       statusIndicator(for: skill)
 
       SessionHUDLabel(
         title:
-          "\(skill.title) · \(sourceName(target: target, skill: skill))",
+          "\(skill.title) · \(model.sourceName(for: state))",
         status: statusDetail)
 
       if skill == .chat {
@@ -105,7 +101,7 @@ struct CompanionHUDView: View {
           .foregroundStyle(theme.ink)
           .lineLimit(1)
         Text(
-          "\((sourceName(target: target, skill: skill))) · \(summary)"
+          "\(model.sourceName(for: state)) · \(summary)"
         )
         .font(.system(size: 10, weight: .medium))
         .foregroundStyle(theme.secondary)
@@ -165,11 +161,6 @@ struct CompanionHUDView: View {
 
   private var completionNeedsAttention: Bool {
     model.persistenceError != nil || model.completedRecord?.failure != nil
-  }
-
-  private func sourceName(target: WindowTargetCandidate?, skill: CompanionSkillKind) -> String {
-    target?.appName
-      ?? (skill == .chat ? String(localized: "Your companion") : String(localized: "Microphone"))
   }
 
   private func completionHeadline(for skill: CompanionSkillKind) -> String {

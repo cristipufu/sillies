@@ -1,4 +1,5 @@
 import AppKit
+import SilliesAudio
 import SilliesAudioTestSupport
 import SilliesCore
 import SilliesModelStore
@@ -6,6 +7,23 @@ import SwiftUI
 import Testing
 
 @testable import SilliesApp
+
+@Test @MainActor func audioSessionCompletedFailuresRemainReadable() throws {
+  let model = try participateLayoutFixture()
+  let failure = SessionFailure(
+    category: .audioProcessing, message: "Synthetic audio processing failure")
+  model.complete(
+    .init(transcript: model.transcript, recordingURL: nil, duration: 30, failure: failure),
+    recordID: UUID(), status: "Session needs attention")
+  #expect(model.captureFailure == failure)
+  #expect(model.phase == .finished && !model.canFinish && !model.canPause)
+  #expect(!model.transcript.isEmpty && model.audioLevel == 0)
+  for scheme in [ColorScheme.light, .dark] {
+    try renderSkillInterface(
+      AudioSessionView(model: model).environment(\.colorScheme, scheme),
+      size: SessionWindowLayout.minimumSize, name: "sillies-completed-audio-warning-\(scheme)")
+  }
+}
 
 @Test @MainActor func participatePanesFitLongSuggestionsAndNoticesWithoutNestedScrolling() throws {
   let model = try participateLayoutFixture()
@@ -17,11 +35,25 @@ import Testing
         size: SessionWindowLayout.minimumSize, name: "sillies-participate-\(pane)-\(scheme)")
     }
   }
+  model.reasoningAvailability = .unavailable(
+    "Apple’s on-device AI does not support this language. Choose a downloaded text model in Settings → Local AI."
+  )
+  model.onOpenTextModelSettings = {}
+  model.suggestions = []
+  for scheme in [ColorScheme.light, .dark] {
+    for pane in [AudioSessionPresentation.DetailPane.transcript, .suggestions] {
+      model.selectDetailPane(pane)
+      try renderSkillInterface(
+        AudioSessionView(model: model).environment(\.colorScheme, scheme),
+        size: SessionWindowLayout.minimumSize, name: "sillies-notes-unavailable-\(pane)-\(scheme)")
+    }
+  }
   model.phase = .failed(.permissionDenied(.openScreenRecordingSettings))
   model.transcriptionFailure = .permissionDenied(.openMicrophoneSettings)
   model.speakerDetectionNotice = String(repeating: "Speaker labels are unavailable. ", count: 8)
-  model.reasoningNotice = String(
-    repeating: "Suggestions are unavailable for this language. ", count: 8)
+  model.reasoningAvailability = .unavailable(
+    String(
+      repeating: "Suggestions are unavailable for this language. ", count: 8))
   for pane in [AudioSessionPresentation.DetailPane.transcript, .suggestions] {
     model.selectDetailPane(pane)
     try renderSkillInterface(
@@ -35,7 +67,7 @@ import Testing
   model.phase = .paused
   model.transcriptionFailure = nil
   model.speakerDetectionNotice = nil
-  model.reasoningNotice = nil
+  model.reasoningAvailability = .available
   model.pendingLanguageID = fixtureFrench.id
   model.selectDetailPane(.transcript)
   model.transcript = ""
@@ -90,7 +122,7 @@ import Testing
 
 @Test @MainActor func closingMeetingDetailsLeavesLaterSuggestionsUnread() throws {
   let model = try participateLayoutFixture()
-  let controller = AudioSessionWindowController(appearance: ThemeEnvironment())
+  let controller = AudioSessionWindowController(appearance: ThemeEnvironment(), openTextModels: {})
   controller.prepare(model)
   let window = try #require(controller.window)
   #expect(!window.isVisible)
@@ -144,6 +176,7 @@ import Testing
   model.model = try catalog.manifest(for: "parakeet-ultra").model
   model.diarizationModel = try catalog.manifest(for: "nemotron-speakers").model
   model.phase = .capturing
+  model.reasoningAvailability = .available
   model.elapsed = 125
   model.languages = [fixtureEnglish, fixtureFrench]
   model.selectedLanguageID = fixtureEnglish.id

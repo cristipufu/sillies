@@ -94,6 +94,13 @@ struct SessionVaultDetailHeader: View {
 
       // Row 3: Dedicated horizontal action toolbar (never wraps or crowds metadata)
       HStack(spacing: 9) {
+        if let discussion = model.discussion, !discussion.companions.isEmpty {
+          Menu("Discuss with…") {
+            ForEach(discussion.companions, id: \.id) { companion in
+              Button(companion.name) { model.discuss(record.id, with: companion) }
+            }
+          }.help("Choose a companion to discuss this item")
+        }
         if record.imageFilename != nil {
           toolbarButton(
             String(localized: "Copy Image"), symbol: "photo.on.rectangle.angled",
@@ -112,13 +119,12 @@ struct SessionVaultDetailHeader: View {
             model.copyText(record.primaryText, feedback: String(localized: "Text copied"))
           }
         }
-        toolbarButton(
-          String(localized: "Copy Markdown"), symbol: "square.and.arrow.up", emphasis: .standard
-        ) {
-          model.copyText(
-            SessionMarkdownFormatter.format(record), feedback: String(localized: "Markdown copied"))
-        }
         Menu {
+          Button("Copy Markdown") {
+            model.copyText(
+              SessionMarkdownFormatter.format(record),
+              feedback: String(localized: "Markdown copied"))
+          }
           if let pasteBack = model.pasteBack, pasteBack.destination != nil {
             Button(pasteBack.actionTitle) { model.paste(record) }.disabled(pasteBack.isPasting)
           }

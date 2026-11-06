@@ -28,7 +28,11 @@ struct ConversationContextManager {
     let current = replacing(window, messages: [latest], memory: window.memory)
     let currentTokens = window.messages.count == 1 ? measured : try await requiredTokens(current)
     guard let currentTokens, currentTokens <= budget.admissionTokens else {
-      guard window.memory != ConversationMemory() else { throw TextModelError.contextLimit }
+      if current.memory == .init(), current.background.records.isEmpty,
+        current.background.personalFacts?.facts.isEmpty != false
+      {
+        throw TextModelError.contextLimit
+      }
       return try await minimal(window, latest: latest, capacity: budget.admissionTokens)
     }
     let starts = window.messages.indices.filter { window.messages[$0].role == .user }
@@ -52,9 +56,21 @@ struct ConversationContextManager {
   private func minimal(_ context: ChatContext, latest: ChatMessage, capacity: Int) async throws
     -> ChatContext
   {
-    let minimal = replacing(context, messages: [latest], memory: .init())
-    guard try await fits(minimal, within: capacity) else { throw TextModelError.contextLimit }
-    return minimal
+    var minimal = replacing(context, messages: [latest], memory: .init())
+    if try await fits(minimal, within: capacity) { return minimal }
+    if !minimal.background.records.isEmpty {
+      minimal = minimal.prepared(with: minimal.background.referencingRecords())
+      if try await fits(minimal, within: capacity) { return minimal }
+    }
+    // Drop whole lowest-priority facts, never truncate a name, negation or preference mid-sentence.
+    for _
+      in 0..<min(
+        PersonalFact.maximumPerScope * 2, minimal.background.personalFacts?.contextFacts.count ?? 0)
+    {
+      minimal = minimal.prepared(with: minimal.background.omittingLastFact())
+      if try await fits(minimal, within: capacity) { return minimal }
+    }
+    throw TextModelError.contextLimit
   }
 
   private func fits(_ context: ChatContext, within capacity: Int) async throws -> Bool {
@@ -74,11 +90,7 @@ struct ConversationContextManager {
   private func replacing(
     _ context: ChatContext, messages: [ChatMessage], memory: ConversationMemory
   ) -> ChatContext {
-    .init(
-      companionName: context.companionName, profile: context.profile,
-      messages: messages, memory: memory
-    ).inTurn(context.turnID, session: context.sessionID).inHistory(context.historyHandle)
-      .presented(as: context.mode)
+    context.replacingHistory(messages: messages, memory: memory)
       .coveringRecentWindow()
   }
 }

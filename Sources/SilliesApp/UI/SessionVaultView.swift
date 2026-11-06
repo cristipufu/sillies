@@ -10,10 +10,12 @@ struct SessionVaultView: View {
   @State private var model: SessionVaultModel
   @State private var showsStashComposer = false
   @State private var showsRetention = false
+  private static let noticeInset: CGFloat = 12
 
   init(
     vault: SessionVaultStore, initialRecordID: UUID? = nil, pasteBack: PasteBackCoordinator? = nil,
-    appearance: ThemeEnvironment, conversations: VaultConversationPresentation? = nil
+    appearance: ThemeEnvironment, conversations: VaultConversationPresentation? = nil,
+    discussion: VaultDiscussionPresentation? = nil
   ) {
     self.vault = vault
     self.conversations = conversations
@@ -23,13 +25,24 @@ struct SessionVaultView: View {
         presentation: .init(
           initialRecordID: initialRecordID,
           pasteBack: pasteBack,
-          appearance: appearance)))
+          appearance: appearance, discussion: discussion)))
   }
 
   var body: some View {
     let records = model.filteredRecords
     let current = model.selectedHeader(in: records)
     VStack(spacing: 0) {
+      if let failure = model.discussionFailure {
+        HStack(alignment: .top) {
+          SessionFailureNotice(failure: failure)
+          Button {
+            model.dismissDiscussionFailure()
+          } label: {
+            Image(systemName: "xmark")
+          }
+          .buttonStyle(.plain).accessibilityLabel("Dismiss")
+        }.padding(Self.noticeInset)
+      }
       if conversations != nil {
         Picker("Library", selection: $showsConversations) {
           Text("Vault").tag(false)
@@ -303,6 +316,16 @@ struct SessionVaultView: View {
           lineWidth: isSelected ? 1.4 : 0.75))
     }
     .buttonStyle(.plain)
+    .draggable(VaultRecordTransfer(id: record.id))
+    .contextMenu {
+      if let discussion = model.discussion {
+        Menu("Discuss with…") {
+          ForEach(discussion.companions, id: \.id) { companion in
+            Button(companion.name) { model.discuss(record.id, with: companion) }
+          }
+        }
+      }
+    }
   }
 
   private func cleanPreviewText(for record: SessionRecordHeader) -> String {

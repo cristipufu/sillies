@@ -2,6 +2,7 @@ import AVFoundation
 import AppKit
 import SilliesAudioTestSupport
 import SilliesCore
+import SilliesModelStore
 import SilliesPersistence
 import SilliesReasoning
 import SilliesSpeech
@@ -15,7 +16,9 @@ private final class FixtureAudioCapture: SessionAudioCapture, Sendable {
   let finishes = Mutex(0)
   private let update: @Sendable (AudioCaptureUpdate) -> Void
   private let queue = DispatchQueue(label: "sillies.test.capture")
-  init(update: @escaping @Sendable (AudioCaptureUpdate) -> Void) {
+  private let failure: SessionFailure?
+  init(failure: SessionFailure? = nil, update: @escaping @Sendable (AudioCaptureUpdate) -> Void) {
+    self.failure = failure
     self.update = update
   }
   func start() {
@@ -33,9 +36,108 @@ private final class FixtureAudioCapture: SessionAudioCapture, Sendable {
       completion(
         AudioCaptureResult(
           transcript: "Please ship the report on Friday.", recordingURL: nil, duration: 4,
-          failure: nil))
+          failure: self.failure))
     }
   }
+}
+
+@Test(arguments: [CompanionSkillKind.listen, .participate, .record])
+@MainActor func unavailableNotesDoNotInterruptDownloadedTranscription(_ kind: CompanionSkillKind)
+  async throws
+{
+  let speechModel = try SpeechModelCatalog.bundled().manifest(for: "parakeet-ultra").model
+  let captures = Mutex<[AudioCaptureConfiguration]>([])
+  let unavailable = Mutex(true)
+  let reasoning = FixtureReasoning(availability: { language in
+    language == fixtureFrench.id && unavailable.withLock { $0 }
+      ? "The selected text model does not support this language." : nil
+  })
+  var languages = fixtureAudioLanguages()
+  languages.preferences.remember(fixtureEnglish, for: speechModel)
+  languages.load = {
+    SpeechLanguageCatalog(languages: [fixtureEnglish, fixtureFrench], model: speechModel)
+  }
+  let session = AudioSkillSession(
+    request: .init(
+      kind: kind, target: nil, recordingDirectory: FileManager.default.temporaryDirectory),
+    services: .init(
+      captureFactory: { configuration, update in
+        captures.withLock { $0.append(configuration) }
+        return FixtureAudioCapture(update: update)
+      }, languages: languages, reasoning: reasoning), onChange: {})
+  defer { session.cancel() }
+  let model = session.presentation
+  session.start()
+  try await waitForAudioCondition {
+    model.phase == .capturing && model.reasoningAvailability.isAvailable
+  }
+  model.onSelectLanguage?(fixtureFrench.id)
+  try await waitForAudioCondition { model.reasoningAvailability.failureMessage != nil }
+  #expect(model.selectedLanguageID == fixtureFrench.id)
+  #expect(model.phase == .capturing)
+  #expect(model.transcriptionFailure == nil)
+  #expect(model.canPause && model.canSelectLanguage)
+  #expect(model.transcript.contains("report"))
+  #expect(model.model.id == speechModel.id)
+
+  var openedSettings = false
+  let controller = AudioSessionWindowController(appearance: ThemeEnvironment()) {
+    openedSettings = true
+  }
+  defer { controller.close() }
+  controller.prepare(model)
+  model.onOpenTextModelSettings?()
+  #expect(openedSettings)
+  unavailable.withLock { $0 = false }
+  controller.windowDidBecomeKey(Notification(name: NSWindow.didBecomeKeyNotification))
+  try await waitForAudioCondition { model.reasoningAvailability.isAvailable }
+  #expect(model.phase == .capturing && model.transcript.contains("report"))
+  #expect(captures.withLock { $0.count == 1 && $0.first?.model.id == speechModel.id })
+  session.cancel()
+  model.onRefreshReasoningAvailability?()
+  #expect(
+    model.reasoningAvailability.isAvailable, "A closed capture must not restart availability work.")
+}
+
+@MainActor private func waitForAudioCondition(_ condition: () -> Bool) async throws {
+  let deadline = ContinuousClock.now.advanced(by: .seconds(2))
+  while !condition(), ContinuousClock.now < deadline {
+    try await Task.sleep(for: .milliseconds(5))
+  }
+  #expect(condition(), "The fixture audio session did not reach the expected state.")
+}
+
+@Test(arguments: [CompanionSkillKind.listen, .participate, .record])
+@MainActor func audioSkillsRetainPreparationFailuresWhenFinishing(_ kind: CompanionSkillKind)
+  async throws
+{
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { removeTestFile(at: directory) }
+  let failure = SessionFailure(category: .transcription, message: "Synthetic model unavailable")
+  var languages = fixtureAudioLanguages()
+  languages.load = { throw failure }
+  let vault = SessionVaultStore(directory: directory)
+  let coordinator = SkillCoordinator(
+    vault: vault,
+    audioFactory: { _, update in
+      Issue.record("Model preparation failed; capture must not start.")
+      return FixtureAudioCapture(update: update)
+    }, audioLanguages: languages)
+  let target = WindowTargetCandidate(
+    windowID: 321, processID: 123, appName: "Synthetic meeting",
+    frame: CGRect(x: 100, y: 100, width: 700, height: 500))
+  coordinator.startSkill(kind, for: "mochi", companionName: "Mochi", target: target)
+  let presentation = try #require(coordinator.activeAudioSession)
+  try await waitForAudioCondition { presentation.phase == .failed(failure) }
+  coordinator.stopSkill(for: "mochi")
+  await coordinator.shutdown()
+  let id = try #require(vault.records.first?.id)
+  let saved = try #require(try await vault.record(id: id))
+  #expect(saved.failure == failure)
+  #expect(saved.transcript.isEmpty && saved.audioFilename == nil)
+  #expect(presentation.phase == .finished)
+  #expect(presentation.captureFailure == failure)
+  #expect(presentation.reasoningAvailability.statusMessage == nil)
 }
 
 @Test func audioModesCaptureTheIntendedSources() {
@@ -195,6 +297,56 @@ private actor BoundAudioWindowProbe {
 }
 
 private enum MeetingCaptureState: CaseIterable { case recording, paused }
+
+@Test(arguments: [CompanionSkillKind.listen, .participate])
+@MainActor private func closingMeetingKeepsItsWarningWithTheOriginalCompanion(
+  _ kind: CompanionSkillKind
+) async throws {
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { removeTestFile(at: directory) }
+  let probe = BoundAudioWindowProbe()
+  let failure = SessionFailure(category: .audioProcessing, message: "Fixture capture backlog")
+  let vault = SessionVaultStore(directory: directory)
+  let coordinator = SkillCoordinator(
+    vault: vault,
+    audioFactory: { _, update in FixtureAudioCapture(failure: failure, update: update) },
+    audioLanguages: fixtureAudioLanguages(), snapshotLoader: { _, _ in await probe.snapshot() })
+  var changedCompanions: Set<String> = []
+  coordinator.onBindingChanged = { id, _ in changedCompanions.insert(id) }
+  let target = WindowTargetCandidate(
+    windowID: 321, processID: 123, appName: "Zoom",
+    frame: CGRect(x: 100, y: 100, width: 700, height: 500))
+  coordinator.startSkill(kind, for: "mochi", companionName: "Mochi", target: target)
+  await waitForCapture(coordinator)
+  let audioPresentation = try #require(coordinator.activeAudioSession)
+  await probe.close()
+  coordinator.pollBoundWindows()
+  try await waitForAudioCondition {
+    if case .completed = coordinator.binding(for: "mochi") { return true }
+    return false
+  }
+  let binding = coordinator.binding(for: "mochi")
+  let presentation = coordinator.presentation(for: "mochi")
+  #expect(binding.boundTarget == nil)
+  #expect(changedCompanions == ["mochi"])
+  #expect(coordinator.binding(for: "kiko") == .followingFocusedWindow)
+  #expect(coordinator.presentation(for: "kiko").completedRecord == nil)
+  let saved = try #require(presentation.completedRecord)
+  #expect(saved.characterID == "mochi" && saved.appName == "Zoom")
+  #expect(saved.failure == failure)
+  #expect(audioPresentation.captureFailure == failure)
+  let hud = CompanionHUDModel()
+  hud.updatePresentation(presentation)
+  #expect(hud.sourceName(for: binding) == "Zoom")
+  // An unrelated cached record must never supply the source label.
+  hud.completedRecord = SessionRecordHeader(
+    SessionRecord(
+      kind: .record,
+      origin: .init(
+        characterID: "kiko", characterName: "Kiko", source: .init(appName: "Microphone"))))
+  #expect(hud.sourceName(for: binding) == String(localized: "Meeting"))
+  await coordinator.shutdown()
+}
 
 @Test(arguments: [CompanionSkillKind.listen, .participate], MeetingCaptureState.allCases)
 @MainActor private func closingTheBoundMeetingFinishesCaptureOnceAndReleasesTheCompanion(

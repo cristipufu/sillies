@@ -33,6 +33,10 @@ package final class ConversationBrowser {
       guard requestID == request, history.handle == handle, !Task.isCancelled else { return false }
       let result = try await repository.page(.init(handle: handle, position: position))
       guard requestID == request, history.handle == handle, !Task.isCancelled else { return false }
+      if case .around(let id) = position, !result.entries.contains(where: { $0.id == id }) {
+        failure = ConversationStorageError.messageUnavailable.localizedDescription
+        return false
+      }
       page = result
       sourceOwners.removeAll(keepingCapacity: true)
       for entry in result.entries {

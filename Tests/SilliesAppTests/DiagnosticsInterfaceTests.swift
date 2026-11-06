@@ -1,9 +1,33 @@
 import AppKit
 import SilliesDiagnostics
 import SwiftUI
+import Synchronization
 import Testing
 
 @testable import SilliesApp
+@testable import SilliesAudio
+
+@Test func diagnosticsCaptureBacklogKeepsFailureIdentityAndTimingUnits() throws {
+  let events = Mutex<[DiagnosticEvent]>([])
+  let sink = DiagnosticSink { event in events.withLock { $0.append(event) } }
+  let operation = UUID()
+  var timing = AudioCaptureBacklog.Timing()
+  timing.record(capturedAt: 10, began: 12, ended: 12.125)
+  let backlog = AudioCaptureBacklog(
+    pressure: .init(limit: .callbacks, packets: 4_096, bytes: 2_000, sourceDuration: 4),
+    timing: timing)
+  CaptureDiagnostics.record(backlog, operation: operation, sink: sink)
+  let recorded = events.withLock { $0 }
+  #expect(recorded.count == 6)
+  #expect(recorded.allSatisfy { $0.operation == operation && $0.area == .capture })
+  #expect(recorded.first?.action == .failed && recorded.first?.reason == .captureCallbackLimit)
+  #expect(recorded.first { $0.metric == .captureQueuedPackets }?.count == 4_096)
+  #expect(recorded.first { $0.metric == .captureQueuedAudio }?.milliseconds == 4_000)
+  #expect(recorded.first { $0.metric == .captureMaximumQueueWait }?.milliseconds == 2_000)
+  #expect(recorded.first { $0.metric == .captureMaximumProcessing }?.milliseconds == 125)
+  let encoded = try JSONEncoder().encode(recorded)
+  #expect(try JSONDecoder().decode([DiagnosticEvent].self, from: encoded) == recorded)
+}
 
 @Test @MainActor func diagnosticsSettingsExportClearAndDisableWithoutPresentingWindows()
   async throws

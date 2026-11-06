@@ -57,8 +57,8 @@ import Testing
       message:
         "Speech processing couldn’t keep pace with the audio. Finish to save the available transcript."
     ))
-  model.reasoningNotice =
-    "Apple’s on-device AI does not support this language. Your transcript is saved."
+  model.reasoningAvailability = .unavailable(
+    "Apple’s on-device AI does not support this language. Your transcript is saved.")
   model.speakerDetectionNotice =
     "Speaker detection stopped. Transcription continued without speaker labels."
   try renderSkillInterface(

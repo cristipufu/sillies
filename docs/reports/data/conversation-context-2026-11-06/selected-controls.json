@@ -1,0 +1,177 @@
+[
+  {
+    "answer": "The Aurora review is scheduled for Tuesday at 14:00.",
+    "calls": [],
+    "exchanges": [],
+    "prompt": "When is the Aurora review in the selected note?",
+    "question": 0,
+    "savedFacts": [],
+    "seconds": 0.718790333,
+    "variant": "applicationNoTools"
+  },
+  {
+    "answer": "My preferred name is Alex.",
+    "calls": [],
+    "exchanges": [],
+    "prompt": "What is my preferred name?",
+    "question": 1,
+    "savedFacts": [],
+    "seconds": 0.517869958,
+    "variant": "applicationNoTools"
+  },
+  {
+    "answer": "Pogo!\n\nI am your companion, Alex.\n\n* * *",
+    "calls": [],
+    "exchanges": [],
+    "prompt": "What is your name?",
+    "question": 2,
+    "savedFacts": [],
+    "seconds": 0.748529084,
+    "variant": "applicationNoTools"
+  },
+  {
+    "answer": "Japan's capital is Tokyo.\n\nAurora review is scheduled for Tuesday at 2:00 PM.",
+    "calls": [],
+    "exchanges": [],
+    "prompt": "What is Japan's capital, and when is the review in the selected note?",
+    "question": 3,
+    "savedFacts": [],
+    "seconds": 0.744120625,
+    "variant": "applicationNoTools"
+  },
+  {
+    "answer": "The Aurora review is scheduled for Tuesday at 14:00.",
+    "calls": [
+      "read_vault_record",
+      "search_conversation"
+    ],
+    "exchanges": [
+      {
+        "call": {
+          "arguments": "eyJyZWNvcmRJRCI6ICJBNjhGNDk5My01MDU4LTQ5NjEtQjdEQy1BNUFEMzEwN0UwNUYiLCAicXVlcnkiOiAiQXVyb3JhIHJldmlldyBpcyBzY2hlZHVsZWQgZm9yIFR1ZXNkYXkgYXQgMTQ6MDAuIn0=",
+          "id": "FC02AC2D-990C-442B-800A-7D8F4FB79B78",
+          "name": "read_vault_record"
+        },
+        "result": "{\"additionalPassages\":[],\"coverage\":{\"endOffset\":48,\"isComplete\":true,\"startOffset\":0,\"totalCharacters\":48},\"guidance\":\"The complete captured text is included.\",\"record\":{\"displayedInChat\":true,\"excerpt\":\"Aurora review is scheduled for Tuesday at 14:00.\",\"hasImage\":false,\"kind\":\"stash\",\"links\":[],\"recordID\":\"A68F4993-5058-4961-B7DC-A5AD3107E05F\",\"retrieval\":\"keyword\",\"title\":\"Notes\"}}"
+      },
+      {
+        "call": {
+          "arguments": "eyJxdWVyeSI6ICJBdXJvcmEgcmV2aWV3IGlzIHNjaGVkdWxlZCBmb3IgVHVlc2RheSBhdCAxNDowMC4ifQ==",
+          "id": "BC558CC1-90A0-4E14-BCFF-2C2FA984F854",
+          "name": "search_conversation"
+        },
+        "result": "{\"hasMoreMatches\":false,\"source\":\"conversation\",\"query\":\"Aurora review is scheduled for Tuesday at 14:00.\",\"status\":\"noMatches\",\"messages\":[]}"
+      }
+    ],
+    "prompt": "When is the Aurora review in the selected note?",
+    "question": 0,
+    "savedFacts": [],
+    "seconds": 2.887273708,
+    "variant": "conciseTools"
+  },
+  {
+    "answer": "My preferred name is Alex.",
+    "calls": [
+      "search_memories",
+      "save_memory"
+    ],
+    "exchanges": [
+      {
+        "call": {
+          "arguments": "eyJxdWVyeSI6ICJwcmVmZXJyZWQgbmFtZSJ9",
+          "id": "B0DD1FFF-4031-4EE7-8693-1EB59BDE71C5",
+          "name": "search_memories"
+        },
+        "result": "{\"attribution\":\"These facts describe the human chatting with Pogo. They do not describe Pogo.\",\"facts\":[],\"relevance\":\"Ranked candidates may be unrelated. Use only facts that support the user's request; otherwise report no matching memory.\",\"subject\":\"user\"}"
+      },
+      {
+        "call": {
+          "arguments": "eyJ2YWx1ZSI6ICJBbGV4IiwgImtleSI6ICJwcmVmZXJyZWQgbmFtZSJ9",
+          "id": "F48E4E9C-37B0-49B7-AA7F-80395BAE576D",
+          "name": "save_memory"
+        },
+        "result": "{\"memory\":{\"key\":\"preferred name\",\"memoryID\":\"967E3E4E-CA13-4CDD-8A69-372734847A49\",\"revision\":\"C6846E36-D744-4D7A-AEDA-06AA00EEF82D\",\"value\":\"Alex\"},\"status\":\"saved\"}"
+      }
+    ],
+    "prompt": "What is my preferred name?",
+    "question": 1,
+    "savedFacts": [
+      {
+        "fact": {
+          "key": "preferred name",
+          "value": "Alex"
+        },
+        "id": "967E3E4E-CA13-4CDD-8A69-372734847A49",
+        "revision": "C6846E36-D744-4D7A-AEDA-06AA00EEF82D",
+        "savedAt": 815654441.989852,
+        "source": {
+          "attribution": "message",
+          "messageID": "FFDD6545-2F70-46F9-93F8-686CA64B3BC0",
+          "quote": "What is my preferred name?"
+        }
+      }
+    ],
+    "seconds": 2.054960584,
+    "variant": "conciseTools"
+  },
+  {
+    "answer": "My name is Alex. Aurora review is scheduled for Tuesday at 14:00.",
+    "calls": [
+      "search_memories",
+      "read_vault_record"
+    ],
+    "exchanges": [
+      {
+        "call": {
+          "arguments": "eyJxdWVyeSI6ICJwcmVmZXJyZWQgbmFtZSJ9",
+          "id": "886A48CB-38B4-4280-A8E4-A8E01C2D88B6",
+          "name": "search_memories"
+        },
+        "result": "{\"attribution\":\"These facts describe the human chatting with Pogo. They do not describe Pogo.\",\"facts\":[],\"relevance\":\"Ranked candidates may be unrelated. Use only facts that support the user's request; otherwise report no matching memory.\",\"subject\":\"user\"}"
+      },
+      {
+        "call": {
+          "arguments": "eyJxdWVyeSI6ICJBdXJvcmEgcmV2aWV3IGlzIHNjaGVkdWxlZCBmb3IgVHVlc2RheSBhdCAxNDowMC4iLCAicmVjb3JkSUQiOiAiQTY4RjQ5OTMtNTA1OC00OTYxLUI3REMtQTVBRDMxMDdFMDVGIn0=",
+          "id": "2381AD19-2A55-4760-80AB-D27F9470AC7C",
+          "name": "read_vault_record"
+        },
+        "result": "{\"additionalPassages\":[],\"coverage\":{\"endOffset\":48,\"isComplete\":true,\"startOffset\":0,\"totalCharacters\":48},\"guidance\":\"The complete captured text is included.\",\"record\":{\"displayedInChat\":true,\"excerpt\":\"Aurora review is scheduled for Tuesday at 14:00.\",\"hasImage\":false,\"kind\":\"stash\",\"links\":[],\"recordID\":\"A68F4993-5058-4961-B7DC-A5AD3107E05F\",\"retrieval\":\"keyword\",\"title\":\"Notes\"}}"
+      }
+    ],
+    "prompt": "What is your name?",
+    "question": 2,
+    "savedFacts": [],
+    "seconds": 2.734228792,
+    "variant": "conciseTools"
+  },
+  {
+    "answer": "Japan's capital is Tokyo. The review in the selected note is scheduled for Tuesday at 14:00.",
+    "calls": [
+      "search_memories",
+      "read_vault_record"
+    ],
+    "exchanges": [
+      {
+        "call": {
+          "arguments": "eyJxdWVyeSI6ICJKYXBhbidzIGNhcGl0YWwifQ==",
+          "id": "8E811AE2-50F9-49FB-A3E5-95866DF72DB4",
+          "name": "search_memories"
+        },
+        "result": "{\"attribution\":\"These facts describe the human chatting with Pogo. They do not describe Pogo.\",\"facts\":[],\"relevance\":\"Ranked candidates may be unrelated. Use only facts that support the user's request; otherwise report no matching memory.\",\"subject\":\"user\"}"
+      },
+      {
+        "call": {
+          "arguments": "eyJxdWVyeSI6ICJBdXJvcmEgcmV2aWV3IGlzIHNjaGVkdWxlZCBmb3IgVHVlc2RheSBhdCAxNDowMC4iLCAicmVjb3JkSUQiOiAiQTY4RjQ5OTMtNTA1OC00OTYxLUI3REMtQTVBRDMxMDdFMDVGIn0=",
+          "id": "B5CB12B5-7EB6-46B0-B3D8-D393F59C8C76",
+          "name": "read_vault_record"
+        },
+        "result": "{\"additionalPassages\":[],\"coverage\":{\"endOffset\":48,\"isComplete\":true,\"startOffset\":0,\"totalCharacters\":48},\"guidance\":\"The complete captured text is included.\",\"record\":{\"displayedInChat\":true,\"excerpt\":\"Aurora review is scheduled for Tuesday at 14:00.\",\"hasImage\":false,\"kind\":\"stash\",\"links\":[],\"recordID\":\"A68F4993-5058-4961-B7DC-A5AD3107E05F\",\"retrieval\":\"keyword\",\"title\":\"Notes\"}}"
+      }
+    ],
+    "prompt": "What is Japan's capital, and when is the review in the selected note?",
+    "question": 3,
+    "savedFacts": [],
+    "seconds": 2.570529166,
+    "variant": "conciseTools"
+  }
+]

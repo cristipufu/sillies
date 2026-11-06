@@ -24,21 +24,26 @@ final class MLXPrefixSnapshot: @unchecked Sendable {
     let tokens: [Int]
     let cache: [KVCache]
     let state: LMOutput.State?
+    var contextIdentity: TextGenerationRequest.ContextIdentity? = nil
   }
   private struct Entry {
     let sessionID: UUID
     let tokens: [Int]
     let cache: [KVCache]
     let bytes: Int
+    let contextIdentity: TextGenerationRequest.ContextIdentity?
   }
   private var entry: Entry?
   private let retention: Retention
   init(retention: Retention = .retained) { self.retention = retention }
   var status: Status { .init(tokens: entry?.tokens.count ?? 0, bytes: entry?.bytes ?? 0) }
 
-  func matches(tokens: [Int], sessionID: UUID?) -> Bool {
+  func matches(
+    tokens: [Int], sessionID: UUID?, contextIdentity: TextGenerationRequest.ContextIdentity? = nil
+  ) -> Bool {
     guard let entry else { return false }
-    return entry.sessionID == sessionID && tokens.count > entry.tokens.count
+    return entry.sessionID == sessionID && entry.contextIdentity == contextIdentity
+      && tokens.count > entry.tokens.count
       && tokens.starts(with: entry.tokens)
   }
 
@@ -60,11 +65,15 @@ final class MLXPrefixSnapshot: @unchecked Sendable {
     entry = Entry(
       sessionID: snapshot.sessionID, tokens: snapshot.tokens,
       cache: retention == .retained ? snapshot.cache.map { $0.copy() } : [],
-      bytes: retention == .retained ? bytes : 0)
+      bytes: retention == .retained ? bytes : 0, contextIdentity: snapshot.contextIdentity)
   }
 
-  func restore(tokens: [Int], sessionID: UUID?) -> Prepared? {
-    guard retention == .retained, matches(tokens: tokens, sessionID: sessionID), let entry else {
+  func restore(
+    tokens: [Int], sessionID: UUID?, contextIdentity: TextGenerationRequest.ContextIdentity? = nil
+  ) -> Prepared? {
+    guard retention == .retained,
+      matches(tokens: tokens, sessionID: sessionID, contextIdentity: contextIdentity), let entry
+    else {
       return nil
     }
     return .init(
@@ -76,11 +85,16 @@ final class MLXPrefixSnapshot: @unchecked Sendable {
     tokens: [Int], boundary: Int, plan: MLXGenerationPlan, context: ModelContext
   ) throws -> Prepared {
     let started = ContinuousClock.now
-    if let restored = restore(tokens: tokens, sessionID: plan.request.generation.sessionID) {
+    if let restored = restore(
+      tokens: tokens, sessionID: plan.request.generation.sessionID,
+      contextIdentity: plan.request.generation.contextIdentity)
+    {
       return restored
     }
     let previousBoundary =
-      matches(tokens: tokens, sessionID: plan.request.generation.sessionID)
+      matches(
+        tokens: tokens, sessionID: plan.request.generation.sessionID,
+        contextIdentity: plan.request.generation.contextIdentity)
       ? entry?.tokens.count : nil
     clear()
     let cache = try context.model.newCache(parameters: plan.parameters)
@@ -101,7 +115,9 @@ final class MLXPrefixSnapshot: @unchecked Sendable {
     // The public State type can carry arbitrary objects and has no size/copy contract. Preserve
     // it for this generation, but never retain it. Recurrent KV caches have native copy semantics.
     capture(
-      .init(sessionID: sessionID, tokens: prefix, cache: cache, state: output.state), limits: policy
+      .init(
+        sessionID: sessionID, tokens: prefix, cache: cache, state: output.state,
+        contextIdentity: plan.request.generation.contextIdentity), limits: policy
     )
     return .init(
       cache: cache, state: output.state, consumedTokens: count, reusedTokens: 0,

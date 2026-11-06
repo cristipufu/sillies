@@ -14,7 +14,6 @@ final class CompanionUtilityWindow: NSWindow {
     backing: NSWindow.BackingStoreType, defer flag: Bool
   ) {
     super.init(contentRect: contentRect, styleMask: styleMask, backing: backing, defer: flag)
-    level = CompanionPanel.contentWindowLevel
     registerExclusion()
   }
 

@@ -3,19 +3,15 @@ import SwiftUI
 
 struct ConversationSearchView: View {
   @Environment(\.silliesTheme) private var theme
-  @Environment(\.dismiss) private var dismiss
   let browser: ConversationBrowser
+  let back: () -> Void
   @State private var query = ""
   @State private var date = Date()
   @FocusState private var searchFocused: Bool
   private static let searchDelay = Duration.milliseconds(250)
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
-      HStack {
-        Text("Search conversation").font(.headline)
-        Spacer()
-        Button("Done") { dismiss() }.buttonStyle(SoftButtonStyle()).keyboardShortcut(.cancelAction)
-      }
+      ChatPageHeader(title: String(localized: "Search conversation"), back: back)
       TextField("Search messages", text: $query).textFieldStyle(.roundedBorder)
         .focused($searchFocused).accessibilityLabel("Search messages")
       HStack {
@@ -24,7 +20,7 @@ struct ConversationSearchView: View {
         Spacer()
         Button("Go to date") {
           Task {
-            if await browser.show(.onOrAfter(Calendar.current.startOfDay(for: date))) { dismiss() }
+            if await browser.show(.onOrAfter(Calendar.current.startOfDay(for: date))) { back() }
           }
         }.buttonStyle(SoftButtonStyle()).disabled(browser.isLoading)
       }
@@ -45,7 +41,7 @@ struct ConversationSearchView: View {
             ForEach(browser.matches) { match in
               Button {
                 Task {
-                  if await browser.show(.around(match.id)) { dismiss() }
+                  if await browser.show(.around(match.id)) { back() }
                 }
               } label: {
                 VStack(alignment: .leading, spacing: 4) {
@@ -66,7 +62,7 @@ struct ConversationSearchView: View {
           if let failure = browser.failure { Text(failure).font(.caption).textSelection(.enabled) }
         }
       }
-    }.padding(20).frame(width: 360, height: 420)
+    }.padding(20).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
       .background(theme.paper).foregroundStyle(theme.ink).tint(theme.accent)
       .onAppear { searchFocused = true }
       .onChange(of: query) { browser.cancelSearch() }

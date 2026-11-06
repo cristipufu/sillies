@@ -4,7 +4,8 @@ import Testing
 
 @testable import SilliesApp
 
-@Test @MainActor func vaultDetailSelectionRejectsLateResultsAndReleasesContentOnClose() async throws
+@Test @MainActor func vaultDetailSelectionRejectsLateResultsAndPreservesReadingOnClose()
+  async throws
 {
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
   defer { removeTestFile(at: directory) }
@@ -17,7 +18,7 @@ import Testing
   let loader = DelayedDetail()
   let model = SessionVaultModel(
     vault: vault,
-    presentation: .init(initialRecordID: first.id, appearance: ThemeEnvironment()),
+    presentation: .init(initialRecordID: first.id),
     loadDetail: { id in
       if id == first.id { return await loader.read(first) }
       return second
@@ -31,7 +32,10 @@ import Testing
   await old.value
   #expect(model.visibleDetail?.id == second.id)
   model.stop()
-  #expect(model.visibleDetail == nil)
+  #expect(!model.isPresented)
+  #expect(model.visibleDetail?.id == second.id)
+  model.resume()
+  #expect(model.visibleDetail?.id == second.id)
 }
 
 @Test @MainActor func vaultDetailFailureKeepsSelectionAndCanRetry() async throws {
@@ -44,7 +48,7 @@ import Testing
   let state = DetailFailureState()
   let model = SessionVaultModel(
     vault: vault,
-    presentation: .init(initialRecordID: record.id, appearance: ThemeEnvironment()),
+    presentation: .init(initialRecordID: record.id),
     loadDetail: { _ in
       if state.failed { throw CocoaError(.fileReadNoPermission) }
       return record

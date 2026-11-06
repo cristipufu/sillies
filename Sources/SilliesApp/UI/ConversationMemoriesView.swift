@@ -4,13 +4,11 @@ import SwiftUI
 
 struct ConversationMemoriesView: View {
   @Environment(\.silliesTheme) private var theme
-  @Environment(\.dismiss) private var dismiss
   let model: ChatSession
+  let back: () -> Void
   var openSettings: () -> Void = {}
   private enum Page { case pinned, learned, manage }
   private enum Layout {
-    static let width: CGFloat = 380
-    static let height: CGFloat = 500
     static let inset: CGFloat = 20
     static let sectionGap: CGFloat = 16
     static let rowGap: CGFloat = 12
@@ -23,30 +21,26 @@ struct ConversationMemoriesView: View {
   private var browser: ChatMemoryBrowser { model.history.memories }
   var body: some View {
     VStack(alignment: .leading, spacing: Layout.sectionGap) {
-      HStack {
-        Text("Memories").font(.title2.bold())
-        Spacer()
-        Button("Done") { dismiss() }.buttonStyle(SoftButtonStyle()).disabled(
-          model.personalFacts.isSaving)
-      }
+      ChatPageHeader(title: String(localized: "Memories"), back: back)
+        .disabled(model.personalFacts.isSaving)
       Picker("Memories", selection: $selectedPage) {
         if model.personalFacts.isAvailable { Text("Pinned").tag(Page.pinned) }
         Text("Learned").tag(Page.learned)
         Text("Manage").tag(Page.manage)
-      }.pickerStyle(.segmented).disabled(model.personalFacts.isSaving)
+      }.pickerStyle(.segmented).labelsHidden().disabled(model.personalFacts.isSaving)
       if selectedPage == .pinned {
         ChatPersonalFactsView(model: model.personalFacts, companionName: model.companionName)
       } else if selectedPage == .manage {
         ConversationDataControlsView(
           model: model,
           openSettings: {
-            dismiss()
+            back()
             openSettings()
           })
       } else {
         learnedMemories
       }
-    }.padding(Layout.inset).frame(width: Layout.width, height: Layout.height)
+    }.padding(Layout.inset).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
       .background(theme.paper).foregroundStyle(theme.ink).tint(theme.accent)
       .onDisappear {
         browser.invalidate()
@@ -78,7 +72,7 @@ struct ConversationMemoriesView: View {
                 Button("Show message") {
                   Task {
                     if await model.browser.show(.around(fact.sourceMessageID)) {
-                      dismiss()
+                      back()
                     } else {
                       sourceFailure = model.browser.failure
                     }

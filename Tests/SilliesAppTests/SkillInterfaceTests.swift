@@ -91,10 +91,18 @@ import Testing
         actionItems: ["Coordinate the customer call."], suggestions: [suggestion])),
     metadata: .init(durationSeconds: 125))
   vault.add(record)
+  let vaultModel = SessionVaultModel(vault: vault, presentation: .init(initialRecordID: record.id))
+  await vaultModel.refreshSearch()
+  await vaultModel.loadSelection()
   let vaultView = SessionVaultView(
-    vault: vault, initialRecordID: record.id, appearance: ThemeEnvironment())
+    vault: vault, conversations: nil, model: vaultModel, navigation: VaultNavigation())
   try renderSkillInterface(
     vaultView, size: CGSize(width: 980, height: 660), name: "sillies-vault-preview")
+  vaultModel.openTranscript(record)
+  try renderSkillInterface(
+    vaultView, size: SessionVaultWindowController.minimumSize,
+    name: "sillies-vault-full-transcript")
+  vaultModel.closeTranscript()
   let interrupted = SessionRecord(
     kind: .listen,
     origin: .init(characterID: "mochi", characterName: "Mochi", source: .init(appName: "Meeting")),
@@ -103,8 +111,15 @@ import Testing
       notes: .init(summary: "Discuss system settings tomorrow. Keep these notes."),
       processing: .init(failure: .permissionDenied(.openScreenRecordingSettings))))
   vault.add(interrupted)
+  let interruptedModel = SessionVaultModel(
+    vault: vault, presentation: .init(initialRecordID: interrupted.id))
+  await interruptedModel.refreshSearch()
+  await interruptedModel.loadSelection()
   try renderSkillInterface(
-    SessionVaultView(vault: vault, initialRecordID: interrupted.id, appearance: ThemeEnvironment()),
+    SessionVaultView(
+      vault: vault, conversations: nil,
+      model: interruptedModel,
+      navigation: VaultNavigation()),
     size: CGSize(width: 980, height: 660), name: "sillies-vault-permission-preview")
   await vault.flush()
 }

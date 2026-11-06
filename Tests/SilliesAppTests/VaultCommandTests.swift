@@ -16,7 +16,7 @@ import Testing
   await vault.flush()
   let model = SessionVaultModel(
     vault: vault,
-    presentation: .init(initialRecordID: original.id, appearance: ThemeEnvironment()))
+    presentation: .init(initialRecordID: original.id))
   await model.loadSelection()
   let displayed = try #require(model.visibleDetail)
   try await vault.edit(
@@ -49,7 +49,7 @@ import Testing
   renamed.transcript = "Alex: The updated transcript."
   renamed.speakerNames = ["meeting:1": "Alex"]
   try await vault.edit(id: original.id, .renameSpeaker(.init(original: original, renamed: renamed)))
-  let model = SessionVaultModel(vault: vault, presentation: .init(appearance: ThemeEnvironment()))
+  let model = SessionVaultModel(vault: vault, presentation: .init())
   model.regenerateNotes(original)
   await vault.flush()
   #expect(

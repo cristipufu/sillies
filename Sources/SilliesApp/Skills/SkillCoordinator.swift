@@ -28,6 +28,10 @@ final class SkillCoordinator {
     let token: UInt64
     let windowID: CGWindowID?
   }
+  private struct ConversationDestination {
+    var recordID: UUID?
+    var opened: ((ChatSession) -> Void)?
+  }
 
   let vault: SessionVaultStore
   var savedRecordCount: Int { vault.recordCount }
@@ -169,6 +173,22 @@ final class SkillCoordinator {
   func startConversation(
     _ mode: ConversationMode, for id: String, name: String, selectedRecord: UUID? = nil
   ) -> SessionFailure? {
+    startConversation(mode, for: id, name: name, destination: .init(recordID: selectedRecord))
+  }
+
+  /// A deferred companion switch delivers navigation only after the new session owns its window.
+  func openConversation(
+    for owner: ConversationOwner, then navigate: @escaping (ChatSession) -> Void
+  )
+    -> SessionFailure?
+  {
+    startConversation(.chat, for: owner.id, name: owner.name, destination: .init(opened: navigate))
+  }
+
+  private func startConversation(
+    _ mode: ConversationMode, for id: String, name: String, destination: ConversationDestination
+  ) -> SessionFailure? {
+    let selectedRecord = destination.recordID
     if selectedRecord != nil, let session = activeChatSession, session.companionID == id,
       session.phase != .loading || session.history.isLoaded, !session.canCompose
     {
@@ -188,7 +208,7 @@ final class SkillCoordinator {
       stopSkill(for: previous.companionID)
       whenFinished { [weak self] in
         guard let self, self.pendingConversation == token else { return }
-        self.startConversation(mode, for: id, name: name, selectedRecord: selectedRecord)
+        self.startConversation(mode, for: id, name: name, destination: destination)
       }
       return nil
     }
@@ -205,6 +225,7 @@ final class SkillCoordinator {
     case .chat:
       presentation.showChat()
       onOpenChatSession?(presentation)
+      destination.opened?(presentation)
       if let selectedRecord {
         Task { [weak self, weak presentation] in
           guard let presentation else { return }

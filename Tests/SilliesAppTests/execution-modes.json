@@ -15,7 +15,13 @@
     }
   },
   "AppContentWindowStackingTests.swift": {
-    "default": "gui"
+    "default": "gui",
+    "tests": {
+      "contentRestoresItsNativeLevelWhenSilliesDeactivates()": "headless"
+    }
+  },
+  "WindowPresentationPolicyTests.swift": {
+    "default": "headless"
   },
   "AppearanceSettingsTests.swift": {
     "default": "headless"
@@ -54,6 +60,9 @@
     }
   },
   "ChatComposerTests.swift": {
+    "default": "headless"
+  },
+  "ChatPageNavigationTests.swift": {
     "default": "headless"
   },
   "ChatInterfaceTests.swift": {
@@ -299,5 +308,17 @@
     "tests": {
       "writingReservesOneAvailableMascotUntilReleased()": "gui"
     }
+  },
+  "VaultWindowNavigationTests.swift": {
+    "default": "headless"
+  },
+  "NativeFileDialogTests.swift": {
+    "default": "headless"
+  },
+  "ModelCatalogNavigationTests.swift": {
+    "default": "headless"
+  },
+  "VaultActionLifetimeTests.swift": {
+    "default": "headless"
   }
 }

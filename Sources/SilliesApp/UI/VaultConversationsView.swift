@@ -1,49 +1,57 @@
 import SilliesCore
 import SwiftUI
 
-struct VaultConversationPresentation {
-  let repository: any ConversationRepository
-  let open: (ConversationOwner, UUID?) -> Void
-}
-
 struct VaultConversationsView: View {
   @Environment(\.silliesTheme) private var theme
-  let presentation: VaultConversationPresentation
-  @State private var headers: [ConversationHeader] = []
-  @State private var results: [ConversationSearchMatch] = []
-  @State private var query = ""
-  @State private var failure: String?
+  @Bindable var model: VaultConversationsModel
+  let isPresented: Bool
+  @FocusState private var searchFocused: Bool
   var body: some View {
     VStack(alignment: .leading, spacing: 18) {
       Text("Conversations").font(.system(.largeTitle, design: .rounded).bold())
-      TextField("Search messages", text: $query).textFieldStyle(.roundedBorder)
+      TextField("Search messages", text: $model.query).textFieldStyle(.roundedBorder)
+        .focused($searchFocused)
+      if let failure = model.openFailure { SessionFailureNotice(failure: failure) }
+      if model.isLoading { ProgressView("Searching…").controlSize(.small) }
       ScrollView {
         LazyVStack(alignment: .leading, spacing: 12) {
-          if query.isEmpty {
-            ForEach(headers) { header in
+          if model.query.isEmpty {
+            ForEach(model.headers) { header in
               Button {
-                presentation.open(header.owner, nil)
+                model.open(header.owner)
               } label: {
                 row(name: header.owner.name, text: header.excerpt)
               }.buttonStyle(.plain)
             }
           } else {
-            ForEach(results) { result in
+            ForEach(model.results) { result in
               Button {
-                presentation.open(result.owner, result.id)
+                model.open(result.owner, messageID: result.id)
               } label: {
                 row(name: result.owner.name, text: result.entry.message.text)
               }.buttonStyle(.plain)
             }
           }
-          if headers.isEmpty, query.isEmpty {
+          if !model.isLoading, model.headers.isEmpty, model.query.isEmpty {
             Text("No conversations yet.").foregroundStyle(theme.secondary)
           }
-          if let failure { Text(failure).textSelection(.enabled) }
+          if !model.isLoading, !model.query.isEmpty, model.results.isEmpty {
+            Text("No matching messages.").foregroundStyle(theme.secondary)
+          }
+          if let failure = model.loadFailure { Text(failure).textSelection(.enabled) }
+        }
+      }.disabled(model.isOpening)
+    }.padding(24).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+      .task(id: isPresented ? model.query : nil) {
+        if isPresented { await model.load() }
+      }
+      .onChange(of: isPresented) { _, visible in
+        if !visible {
+          searchFocused = false
+          model.stop()
         }
       }
-    }.padding(24).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-      .task(id: query) { await load() }
+      .onDisappear { model.stop() }
   }
   private func row(name: String, text: String) -> some View {
     VStack(alignment: .leading, spacing: 6) {
@@ -51,24 +59,5 @@ struct VaultConversationsView: View {
       Text(text).font(.callout).foregroundStyle(theme.secondary).lineLimit(3)
     }.frame(maxWidth: .infinity, alignment: .leading).padding(16)
       .background(theme.card, in: RoundedRectangle(cornerRadius: 18))
-  }
-  private func load() async {
-    do {
-      if query.isEmpty {
-        let loaded = try await presentation.repository.conversations()
-        guard !Task.isCancelled else { return }
-        headers = loaded
-      } else {
-        try await Task.sleep(for: .milliseconds(250))
-        let loaded = try await presentation.repository.search(.init(query: query))
-        guard !Task.isCancelled else { return }
-        results = loaded
-      }
-      failure = nil
-    } catch {
-      guard !Task.isCancelled else { return }
-      failure = error.localizedDescription
-      fputs("Conversation list failed: \(error)\n", stderr)
-    }
   }
 }

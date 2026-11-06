@@ -1,6 +1,11 @@
+import SilliesCore
 import SwiftUI
 
 struct SettingsView: View {
+  struct Actions {
+    let openRetention: () -> Void
+    let openMemories: (String) -> SessionFailure?
+  }
   @Environment(\.silliesTheme) private var theme
   let controller: CompanionController
   var appearance: AppearancePreferences? = nil
@@ -17,6 +22,7 @@ struct SettingsView: View {
   var suggestions: SetupModelSuggestions? = nil
   var companionPreferences: CompanionPreferences? = nil
   var exportDiagnostics: () -> Void = {}
+  var actions: Actions?
   @Bindable var navigation = SettingsNavigation()
   private var destination: SettingsDestination { navigation.destination }
 
@@ -44,6 +50,9 @@ struct SettingsView: View {
               Text(destination.title).font(.system(size: 26, weight: .bold, design: .rounded))
               Text(destination.explanation).font(.callout).foregroundStyle(theme.secondary)
             }.padding(.bottom, 4)
+            if let failure = navigation.failure {
+              SessionFailureNotice(failure: failure)
+            }
             page
           }.padding(28).frame(maxWidth: .infinity, alignment: .topLeading)
         }.id(destination)
@@ -57,7 +66,7 @@ struct SettingsView: View {
   }
 
   private var sidebar: some View {
-    VStack(alignment: .leading, spacing: 24) {
+    VStack(alignment: .leading, spacing: 20) {
       HStack(spacing: 10) {
         CharacterPortrait(
           renderer: controller.catalog.characters.first?.renderer ?? "cat", size: 36,
@@ -69,30 +78,43 @@ struct SettingsView: View {
             theme.secondary)
         }
       }
-      VStack(spacing: 6) {
-        ForEach(SettingsDestination.allCases) { item in
-          Button {
-            navigation.destination = item
-          } label: {
-            HStack(spacing: 10) {
-              Image(systemName: item.symbol).frame(width: 18)
-              Text(item.title).font(
-                .system(size: 12, weight: destination == item ? .semibold : .medium)
-              )
-              .fixedSize(horizontal: false, vertical: true)
-              Spacer(minLength: 0)
-              if item == .speech, let count = speechModels?.availableUpdateCount, count > 0 {
-                Text("\(count)").font(.caption.bold())
+      ScrollView {
+        VStack(alignment: .leading, spacing: 12) {
+          ForEach(SettingsGroup.allCases) { group in
+            VStack(alignment: .leading, spacing: 4) {
+              Text(group.title).font(.caption.weight(.semibold)).foregroundStyle(theme.secondary)
+                .padding(.horizontal, 12)
+              ForEach(group.destinations) { item in
+                Button {
+                  navigation.destination = item
+                  navigation.failure = nil
+                  navigation.returnsToSetup = false
+                } label: {
+                  HStack(spacing: 10) {
+                    Image(systemName: item.symbol).frame(width: 18)
+                    Text(item.title).font(
+                      .system(size: 12, weight: destination == item ? .semibold : .medium)
+                    )
+                    .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                    if item == .speech, let count = speechModels?.availableUpdateCount, count > 0 {
+                      Text("\(count)").font(.caption.bold())
+                    }
+                  }.padding(.horizontal, 12).padding(.vertical, 8)
+                    .foregroundStyle(destination == item ? theme.accent : theme.ink)
+                    .background(
+                      destination == item ? theme.accent.opacity(0.12) : .clear,
+                      in: RoundedRectangle(cornerRadius: 10))
+                }.buttonStyle(.plain).accessibilityAddTraits(destination == item ? .isSelected : [])
               }
-            }.padding(.horizontal, 12).padding(.vertical, 11)
-              .foregroundStyle(destination == item ? theme.accent : theme.ink)
-              .background(
-                destination == item ? theme.accent.opacity(0.12) : .clear,
-                in: RoundedRectangle(cornerRadius: 10))
-          }.buttonStyle(.plain).accessibilityAddTraits(destination == item ? .isSelected : [])
+            }
+          }
+          if let actions {
+            Button("Retention…", systemImage: "archivebox") { actions.openRetention() }
+              .buttonStyle(.plain).font(.callout).padding(.horizontal, 12)
+          }
         }
       }
-      Spacer()
       Label("On your Mac. In your corner.", systemImage: "lock.shield")
         .font(.system(size: 10)).foregroundStyle(theme.secondary)
     }.padding(16).frame(width: SettingsWindowLayout.sidebarWidth)
@@ -110,11 +132,20 @@ struct SettingsView: View {
     case .appearance:
       if let appearance { AppearanceSettingsPage(model: appearance) }
     case .companions:
-      CompanionSettingsPage(controller: controller)
-      if let companionPreferences, let textModels, let voiceModels {
+      Picker("Companions", selection: $navigation.companionsPage) {
+        Text("Your crew").tag(SettingsNavigation.CompanionsPage.crew)
+        Text("Companion profile").tag(SettingsNavigation.CompanionsPage.profile)
+      }.pickerStyle(.segmented)
+      if navigation.companionsPage == .crew {
+        CompanionSettingsPage(controller: controller)
+      } else if let companionPreferences, let textModels, let voiceModels {
         CompanionProfilesSettingsView(
-          characters: controller.catalog.characters, preferences: companionPreferences,
-          textModels: textModels, voiceModels: voiceModels)
+          characters: controller.catalog.characters,
+          preferences: companionPreferences, textModels: textModels, voiceModels: voiceModels,
+          selectedID: $navigation.selectedCompanionID,
+          openMemories: actions.map { actions in
+            { navigation.failure = actions.openMemories($0) }
+          })
       }
     case .writing:
       if let writingTools {
@@ -134,6 +165,9 @@ struct SettingsView: View {
       if let textModels { TextModelSettingsView(model: textModels) }
     case .search:
       if let searchModels { SearchModelSettingsView(model: searchModels) }
+      Button("Memories", systemImage: "brain.head.profile") {
+        navigation.showProfile(navigation.selectedCompanionID)
+      }.buttonStyle(SoftButtonStyle())
     case .voices:
       if let voiceModels { VoiceModelSettingsView(model: voiceModels) }
     case .shortcuts:

@@ -11,18 +11,33 @@ final class SessionVaultModel {
   private static let feedbackDuration: Duration = .milliseconds(1800)
   private let vault: SessionVaultStore
   @ObservationIgnored private let loadDetail: @MainActor (UUID) async throws -> SessionRecord?
-  var selectedFilter: CompanionSkillKind?
-  var searchQuery = ""
-  var selectedRecordID: UUID?
+  var selectedFilter: CompanionSkillKind? {
+    didSet { if selectedFilter != oldValue { requestedRecordID = nil } }
+  }
+  var searchQuery = "" {
+    didSet { if searchQuery != oldValue { requestedRecordID = nil } }
+  }
+  var selectedRecordID: UUID? {
+    didSet {
+      if selectedRecordID != oldValue {
+        expandedTranscriptID = nil
+        requestedRecordID = nil
+      }
+    }
+  }
+  private var requestedRecordID: UUID?
   private(set) var lastStashID: UUID?
   private(set) var feedback: String?
   private(set) var discussionFailure: SessionFailure?
   @ObservationIgnored private var feedbackTask: Task<Void, Never>?
   @ObservationIgnored private var feedbackGeneration = UUID()
-  @ObservationIgnored private let exporter: VaultExportController
+  @ObservationIgnored private let windowActions: VaultWindowActions?
+  private var exportRequest: UUID?
+  private var discussionRequest: UUID?
+  var isExporting: Bool { exportRequest != nil }
+  private(set) var expandedTranscriptID: UUID?
   @ObservationIgnored private let speakerWorker = SessionSpeakerWorker()
   @ObservationIgnored private var speakerTask: Task<Void, Never>?
-  @ObservationIgnored private let transcriptWindow: SavedTranscriptWindow
   let pasteBack: PasteBackCoordinator?
   let discussion: VaultDiscussionPresentation?
   private var listing: VaultListing
@@ -35,7 +50,7 @@ final class SessionVaultModel {
   private var detailGeneration = UUID()
   private var detailRevision = 0
   @ObservationIgnored private var observedDetailRevision: Int?
-  private var isPresented = true
+  private(set) var isPresented = true
   private(set) var isSearching = false
   private(set) var searchError: String?
   private var searchGeneration = UUID()
@@ -68,31 +83,43 @@ final class SessionVaultModel {
   @MainActor struct Presentation {
     var initialRecordID: UUID?
     var pasteBack: PasteBackCoordinator?
-    let appearance: ThemeEnvironment
+    var windowActions: VaultWindowActions? = nil
     var discussion: VaultDiscussionPresentation? = nil
   }
   init(
     vault: SessionVaultStore, presentation: Presentation,
     loadDetail: (@MainActor (UUID) async throws -> SessionRecord?)? = nil
   ) {
-    transcriptWindow = SavedTranscriptWindow(appearance: presentation.appearance)
+    windowActions = presentation.windowActions
     self.vault = vault
     self.loadDetail = loadDetail ?? { try await vault.record(id: $0) }
-    exporter = VaultExportController(library: vault.library)
     listing = VaultListing(.init(records: vault.records, total: vault.recordCount, nextCursor: nil))
     self.pasteBack = presentation.pasteBack
     discussion = presentation.discussion
     selectedRecordID = presentation.initialRecordID ?? vault.records.first?.id
+    requestedRecordID = presentation.initialRecordID
   }
 
   var hasMoreResults: Bool { listing.hasMore }
+  var canExport: Bool { isPresented && windowActions != nil && !isExporting }
+  var canPopOutTranscript: Bool { windowActions != nil }
+
+  func navigate(to recordID: UUID) {
+    selectedFilter = nil
+    searchQuery = ""
+    selectedRecordID = recordID
+    requestedRecordID = recordID
+    expandedTranscriptID = nil
+  }
+
+  func resume() { isPresented = true }
   func showMore() {
     guard hasMoreResults, !isSearching else { return }
     pageRequest += 1
   }
 
   func refreshSearch() async {
-    isPresented = true
+    guard isPresented else { return }
     let token = UUID()
     searchGeneration = token
     let request = searchIdentity
@@ -156,7 +183,8 @@ final class SessionVaultModel {
     listing = updated
     appliedSearch = request
     if selectedRecordID == nil
-      || (filterChanged && !filteredRecords.contains(where: { $0.id == selectedRecordID }))
+      || (filterChanged && requestedRecordID != selectedRecordID
+        && !filteredRecords.contains(where: { $0.id == selectedRecordID }))
     {
       selectedRecordID = filteredRecords.first?.id
     }
@@ -174,7 +202,7 @@ final class SessionVaultModel {
   }
 
   func loadSelection() async {
-    isPresented = true
+    guard isPresented else { return }
     let token = UUID()
     detailGeneration = token
     guard let id = selectedRecordID else {
@@ -193,7 +221,13 @@ final class SessionVaultModel {
       }
       detail = record
       if let record { vault.pin(record) }
-      if record == nil { selectedRecordID = filteredRecords.first(where: { $0.id != id })?.id }
+      if record == nil {
+        if requestedRecordID == id {
+          detailError = String(localized: "Unavailable Vault item")
+        } else {
+          selectedRecordID = filteredRecords.first(where: { $0.id != id })?.id
+        }
+      }
     } catch {
       guard !Task.isCancelled, detailGeneration == token, isPresented else { return }
       detailError = String(localized: "Could not open this session: \(error.localizedDescription)")
@@ -203,7 +237,7 @@ final class SessionVaultModel {
   }
 
   func selectedHeader(in records: [SessionRecordHeader]) -> SessionRecordHeader? {
-    records.first { $0.id == selectedRecordID } ?? records.first
+    records.first { $0.id == selectedRecordID }
   }
 
   func saveStash(_ items: [String]) {
@@ -241,7 +275,8 @@ final class SessionVaultModel {
 
   func delete(_ record: SessionRecord) { delete(id: record.id) }
   private func delete(id: UUID) {
-    if selectedRecordID == id, let index = filteredRecords.firstIndex(where: { $0.id == id }) {
+    if selectedRecordID == id {
+      let index = filteredRecords.firstIndex(where: { $0.id == id }) ?? 0
       let remaining = filteredRecords.filter { $0.id != id }
       selectedRecordID = remaining.isEmpty ? nil : remaining[min(index, remaining.count - 1)].id
     }
@@ -273,23 +308,36 @@ final class SessionVaultModel {
   }
   func exportAll() { exportSelection(.all) }
   private func exportSelection(_ selection: VaultExportSelection) {
+    guard let windowActions, canExport else { return }
+    let request = UUID()
+    exportRequest = request
     vault.whenPersisted { [weak self] error in
-      guard let self, self.isPresented else { return }
+      guard let self, self.isPresented, self.exportRequest == request else { return }
       if let error {
+        self.exportRequest = nil
         self.showFeedback(error)
         return
       }
-      self.exporter.chooseFolder(selection) { [weak self] in self?.showFeedback($0) }
+      windowActions.export(selection) { [weak self] message in
+        guard let self, self.exportRequest == request else { return }
+        self.exportRequest = nil
+        if self.isPresented, let message { self.showFeedback(message) }
+      }
     }
   }
   func openTranscript(_ record: SessionRecord) {
-    transcriptWindow.show(record.transcript, title: record.displayTitle)
+    expandedTranscriptID = record.id
   }
+  func closeTranscript() { expandedTranscriptID = nil }
+  func popOutTranscript(_ record: SessionRecord) { windowActions?.popOutTranscript(record) }
   func discuss(_ recordID: UUID, with companion: ConversationOwner) {
-    guard let discussion else { return }
+    guard let discussion, isPresented, discussionRequest == nil else { return }
+    let request = UUID()
+    discussionRequest = request
     discussionFailure = nil
     vault.whenPersisted { [weak self] error in
-      guard let self, self.isPresented else { return }
+      guard let self, self.isPresented, self.discussionRequest == request else { return }
+      self.discussionRequest = nil
       if let error {
         self.discussionFailure = .init(category: .recordingSave, message: error)
         return
@@ -356,12 +404,14 @@ final class SessionVaultModel {
 
   func stop() {
     isPresented = false
+    exportRequest = nil
+    discussionRequest = nil
     detailGeneration = UUID()
     searchGeneration = UUID()
     isSearching = false
-    detail = nil
+    isLoadingDetail = false
     clearFeedback()
-    vault.setPinnedRecord(nil)
+    if let detail, vault.pinnedRecordID == detail.id { vault.setPinnedRecord(nil) }
   }
 
   private func clearFeedback() {

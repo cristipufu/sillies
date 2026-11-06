@@ -6,6 +6,20 @@ enum ModelInstallationState: Equatable {
   case downloading(Double)
   case failed(String)
   case preparationFailed(String)
+  var isInstalled: Bool {
+    switch self {
+    case .downloaded, .ready, .preparing, .validating, .preparationFailed: true
+    default: false
+    }
+  }
+  var needsCatalogAttention: Bool {
+    switch self {
+    case .downloading, .verifying, .preparing, .validating, .cancelling, .failed,
+      .preparationFailed:
+      true
+    default: false
+    }
+  }
   var label: String {
     switch self {
     case .absent: String(localized: "Not downloaded")

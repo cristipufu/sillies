@@ -16,6 +16,7 @@ from urllib.request import urlopen
 class ModelEntry:
     identifier: str
     name: str
+    family: str
     repository: str
     revision: str
     memory_gb: int
@@ -30,14 +31,14 @@ class ModelEntry:
 # Settings preserves this order: families alphabetically, smaller downloads first within each family.
 MODELS = [
     ModelEntry(
-        identifier="gemma-4-e4b", name="Gemma 4 E4B",
+        identifier="gemma-4-e4b", family="Gemma", name="Gemma 4 E4B",
         repository="mlx-community/gemma-4-E4B-it-4bit",
         revision="475b9088d29754a3379866cf5aeb6b41acd313c2", memory_gb=16,
         detail="Google’s compact model for local notes and writing.",
         languages="Over 140 languages. Quality varies by language.",
         release_date="2026-04-02", release_source="https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/"),
     ModelEntry(
-        identifier="gemma-4-12b", name="Gemma 4 12B",
+        identifier="gemma-4-12b", family="Gemma", name="Gemma 4 12B",
         repository="mlx-community/gemma-4-12B-it-4bit",
         revision="73bcf09092aa277861d5a191b989b666f7f32e8f", memory_gb=24,
         detail="Larger multilingual model for more demanding summaries.",
@@ -45,14 +46,14 @@ MODELS = [
         release_date="2026-06-03", release_source="https://blog.google/innovation-and-ai/technology/developers-tools/introducing-gemma-4-12b/",
         license="Apache 2.0"),
     ModelEntry(
-        identifier="gemma-4-26b-a4b", name="Gemma 4 26B A4B",
+        identifier="gemma-4-26b-a4b", family="Gemma", name="Gemma 4 26B A4B",
         repository="mlx-community/gemma-4-26B-A4B-it-4bit",
         revision="0d77464eeb233a2da68ebf9d7dc4edaac7db956d", memory_gb=32,
         detail="Larger model for conversations and summaries. Requires more available memory.",
         languages="Over 140 languages. Quality varies by language.",
         release_date="2026-04-02", release_source="https://blog.google/innovation-and-ai/technology/developers-tools/gemma-4/"),
     ModelEntry(
-        identifier="granite-4.2-3b", name="Granite 4.2 3B",
+        identifier="granite-4.2-3b", family="Granite", name="Granite 4.2 3B",
         repository="ibm-granite/granite-4.2-3b-q4-mlx",
         revision="0c6f39b1827afd5eb2c1c3b13751929857434953", memory_gb=8,
         detail="Compact multilingual notes and writing.",
@@ -60,7 +61,7 @@ MODELS = [
         release_date="2026-08-25", release_source="https://research.ibm.com/blog/introducing-granite-4-2",
         license="Apache 2.0", reasoning="switchableThinkTags"),
     ModelEntry(
-        identifier="granite-4.2-8b", name="Granite 4.2 8B",
+        identifier="granite-4.2-8b", family="Granite", name="Granite 4.2 8B",
         repository="ibm-granite/granite-4.2-8b-q4-mlx",
         revision="9047f073e46c527f70dade07bb55b1700d728e36", memory_gb=16,
         detail="Larger multilingual model for more demanding summaries.",
@@ -68,7 +69,7 @@ MODELS = [
         release_date="2026-08-25", release_source="https://research.ibm.com/blog/introducing-granite-4-2",
         license="Apache 2.0", reasoning="switchableThinkTags"),
     ModelEntry(
-        identifier="lfm-2.5-2.6b", name="LFM2.5 2.6B",
+        identifier="lfm-2.5-2.6b", family="LFM", name="LFM2.5 2.6B",
         repository="LiquidAI/LFM2.5-2.6B-MLX-4bit",
         revision="04efa23776ce61ec34ec95ec34c859854c89542b", memory_gb=8,
         detail="Compact multilingual notes and writing.",
@@ -76,7 +77,7 @@ MODELS = [
         release_date="2026-08-04", release_source="https://www.liquid.ai/blog/lfm2-5-2-6b",
         license="LFM Open License 1.0", reasoning="alwaysOnThinkTags"),
     ModelEntry(
-        identifier="lfm-2.5-24b-a2b", name="LFM2.5 24B A2B",
+        identifier="lfm-2.5-24b-a2b", family="LFM", name="LFM2.5 24B A2B",
         repository="LiquidAI/LFM2.5-24B-A2B-MLX-4bit",
         revision="667408d494bde191c2cb9dd4f4549827816b9275", memory_gb=32,
         detail="Larger model for conversations and summaries. Requires more available memory.",
@@ -84,14 +85,14 @@ MODELS = [
         release_date="2026-10-13", release_source="https://www.liquid.ai/blog/lfm2-5-24b-a2b",
         license="LFM Open License 1.0", reasoning="alwaysOnThinkTags"),
     ModelEntry(
-        identifier="ministral-3-8b", name="Ministral 3 8B",
+        identifier="ministral-3-8b", family="Ministral", name="Ministral 3 8B",
         repository="mlx-community/Ministral-3-8B-Instruct-2512-4bit",
         revision="182f003f01daa75f9de0f2c4d379722fd0bc1c61", memory_gb=24,
         detail="Mistral’s multilingual model for local notes and writing.",
         languages="Dozens of languages; quality varies by language.",
         release_date="2025-12-02", release_source="https://mistral.ai/news/mistral-3"),
     ModelEntry(
-        identifier="nemotron-3.5-bolt-e4b", name="Nemotron 3.5 Bolt E4B",
+        identifier="nemotron-3.5-bolt-e4b", family="Nemotron", name="Nemotron 3.5 Bolt E4B",
         repository="mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit",
         revision="0c204a16b6b186d1434e70f5fc2ca2e30984a006", memory_gb=24,
         detail="Compact multilingual notes and writing.",
@@ -99,21 +100,21 @@ MODELS = [
         release_date="2026-10-23", release_source="https://research.nvidia.com/labs/nemotron/NVIDIA-Nemotron-3.5-Bolt-E4B-4GB/",
         license="OpenMDW 1.1"),
     ModelEntry(
-        identifier="qwen-3.5-2b", name="Qwen3.5 2B",
+        identifier="qwen-3.5-2b", family="Qwen", name="Qwen3.5 2B",
         repository="mlx-community/Qwen3.5-2B-4bit",
         revision="674aaa7240b91e8012fcad5d791b7dfe5ba90207", memory_gb=8,
         detail="Lightweight multilingual chat and short writing tasks.",
         languages="201 languages and dialects.",
         release_date="2026-03-02", release_source="https://github.com/QwenLM/Qwen3.8#news"),
     ModelEntry(
-        identifier="qwen-3.5-4b", name="Qwen3.5 4B",
+        identifier="qwen-3.5-4b", family="Qwen", name="Qwen3.5 4B",
         repository="mlx-community/Qwen3.5-4B-MLX-4bit",
         revision="32f3e8ecf65426fc3306969496342d504bfa13f3", memory_gb=16,
         detail="Compact multilingual notes and writing.",
         languages="201 languages and dialects.",
         release_date="2026-03-02", release_source="https://github.com/QwenLM/Qwen3.8#news"),
     ModelEntry(
-        identifier="qwen-3.5-9b", name="Qwen3.5 9B",
+        identifier="qwen-3.5-9b", family="Qwen", name="Qwen3.5 9B",
         repository="mlx-community/Qwen3.5-9B-MLX-4bit",
         revision="938d8919941c6e7efd3c7150eff7fe9d12afa631", memory_gb=24,
         detail="Larger multilingual model for more demanding summaries.",
@@ -148,7 +149,7 @@ def descriptor(model):
     if not model.release_source.startswith("https://"):
         raise ValueError("Release provenance requires HTTPS")
     return dict(
-        id=model.identifier, providerID="mlx", name=model.name, detail=model.detail,
+        id=model.identifier, providerID="mlx", name=model.name, family=model.family, detail=model.detail,
         revision=model.revision, license=model.license, reasoning=model.reasoning,
         profile=profile(model),
         release=dict(date=model.release_date, sourceURL=model.release_source),

@@ -3,12 +3,11 @@ import SilliesChat
 import UniformTypeIdentifiers
 
 @MainActor final class ConversationExportController {
-  private var chooser: NSSavePanel?
+  private let dialog = NativeFileDialog()
 
   func chooseFile(for model: ConversationExport, parent: NSWindow) {
-    guard chooser == nil, model.isAvailable, !model.isExporting else { return }
+    guard !dialog.isPresented, model.isAvailable, !model.isExporting else { return }
     let panel = NSSavePanel()
-    chooser = panel
     panel.allowedContentTypes = [UTType(filenameExtension: "md") ?? .plainText]
     panel.nameFieldStringValue = "Sillies-Conversation.md"
     panel.canCreateDirectories = true
@@ -16,12 +15,11 @@ import UniformTypeIdentifiers
     panel.message = String(
       localized: "Save this companion’s messages as Markdown. Memories and drafts are not included."
     )
-    panel.beginSheetModal(for: parent) { [weak self] response in
-      self?.chooser = nil
-      guard response == .OK, let destination = panel.url else { return }
+    dialog.choose(panel, for: parent) { destination in
+      guard let destination else { return }
       model.start(to: destination)
     }
   }
 
-  func cancel() { chooser?.cancel(nil) }
+  func cancel() { dialog.cancel() }
 }

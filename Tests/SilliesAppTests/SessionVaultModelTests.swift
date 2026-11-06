@@ -50,7 +50,7 @@ import Testing
   for record in records.reversed() { vault.add(record) }
   let model = SessionVaultModel(
     vault: vault,
-    presentation: .init(initialRecordID: records[1].id, appearance: ThemeEnvironment()))
+    presentation: .init(initialRecordID: records[1].id))
   model.searchQuery = "Meeting"
   model.selectedFilter = .record
   await model.refreshSearch()
@@ -68,7 +68,7 @@ import Testing
   defer { removeTestFile(at: directory) }
   let vault = SessionVaultStore(directory: directory)
   await vault.waitUntilLoaded()
-  let model = SessionVaultModel(vault: vault, presentation: .init(appearance: ThemeEnvironment()))
+  let model = SessionVaultModel(vault: vault, presentation: .init())
   model.saveStash(["   \n"])
   #expect(vault.records.isEmpty)
   model.saveStash([" first ", "\n", " second\n"])

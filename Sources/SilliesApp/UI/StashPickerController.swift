@@ -13,7 +13,7 @@ struct StashPickerView: View {
   let paste: PasteBackCoordinator
   let actions: Actions
   let readError: () -> String?
-  @State private var model: SessionVaultModel
+  @Bindable var model: SessionVaultModel
   @State private var selected: UUID?
   @FocusState private var searchFocused: Bool
   init(
@@ -24,7 +24,7 @@ struct StashPickerView: View {
     self.actions = actions
     self.readError = readError
     model.selectedFilter = .stash
-    _model = State(initialValue: model)
+    self.model = model
   }
   var body: some View {
     @Bindable var model = model
@@ -84,10 +84,9 @@ struct StashPickerView: View {
       }
     }.padding(24).frame(minWidth: 560, minHeight: 440)
       .background(theme.paper).foregroundStyle(theme.ink).tint(theme.accent)
-      .task(id: model.searchIdentity) { await model.refreshSearch() }
+      .task(id: model.isPresented ? model.searchIdentity : nil) { await model.refreshSearch() }
       .onAppear { searchFocused = true }
       .onExitCommand(perform: actions.close)
-      .onDisappear { model.stop() }
   }
   private func moveSelection(by offset: Int) {
     let records = model.filteredRecords
@@ -104,17 +103,22 @@ struct StashPickerView: View {
   }
 }
 
-@MainActor @Observable final class StashPickerController {
+@MainActor @Observable final class StashPickerController: NSObject, NSWindowDelegate {
   let paste = PasteBackCoordinator()
+  let model: SessionVaultModel
   private let vault: SessionVaultStore
   private var readError: String?
-  @ObservationIgnored private var window: NSWindow?
+  @ObservationIgnored private(set) var window: NSWindow?
   @ObservationIgnored private var opening: Task<Void, Never>?
   @ObservationIgnored private var insertion: Task<Void, Never>?
   private let appearance: ThemeEnvironment
   init(vault: SessionVaultStore, appearance: ThemeEnvironment) {
     self.vault = vault
     self.appearance = appearance
+    model = SessionVaultModel(vault: vault, presentation: .init())
+    super.init()
+    model.selectedFilter = .stash
+    model.stop()
   }
   func show() {
     readError = nil
@@ -127,6 +131,12 @@ struct StashPickerView: View {
     }
   }
   private func present() {
+    prepare()
+    NSApp.activate(ignoringOtherApps: true)
+    window?.makeKeyAndOrderFront(nil)
+  }
+  func prepare() {
+    model.resume()
     if window == nil {
       let window = NSPanel(
         contentRect: CGRect(x: 0, y: 0, width: 600, height: 500),
@@ -135,10 +145,11 @@ struct StashPickerView: View {
       AppContentWindowStacking.shared.register(window)
       appearance.register(window)
       window.isReleasedWhenClosed = false
+      window.delegate = self
       window.contentMinSize = CGSize(width: 560, height: 440)
       window.contentViewController = ThemedHostingController(
         rootView: StashPickerView(
-          model: SessionVaultModel(vault: vault, presentation: .init(appearance: appearance)),
+          model: model,
           paste: paste,
           actions: .init(
             choose: { [weak self] in self?.choose($0) }, close: { [weak self] in self?.stop() }),
@@ -146,8 +157,6 @@ struct StashPickerView: View {
       window.center()
       self.window = window
     }
-    NSApp.activate(ignoringOtherApps: true)
-    window?.makeKeyAndOrderFront(nil)
   }
   private func choose(_ id: UUID) {
     insertion?.cancel()
@@ -161,7 +170,7 @@ struct StashPickerView: View {
           throw VaultStorageError(
             message: String(localized: "This stash is no longer available. Choose another item."))
         }
-        window?.orderOut(nil)
+        hide()
         if paste.destination == nil {
           vault.copyText(record.primaryText)
         } else {
@@ -178,8 +187,19 @@ struct StashPickerView: View {
   }
   func stop() {
     opening?.cancel()
+    opening = nil
     insertion?.cancel()
+    insertion = nil
     paste.release()
+    hide()
+  }
+  private func hide() {
+    model.stop()
     window?.orderOut(nil)
+  }
+  func windowWillClose(_ notification: Notification) { stop() }
+  isolated deinit {
+    stop()
+    window?.close()
   }
 }

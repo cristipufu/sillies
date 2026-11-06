@@ -9,6 +9,7 @@ public struct TextModelDescriptor: Codable, Equatable, Identifiable, Sendable {
   public let id: String
   public let providerID: String
   public let name: String
+  public var family: String? = nil
   public let detail: String
   public let revision: String
   public let license: String

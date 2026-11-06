@@ -1,4 +1,6 @@
 import AppKit
+import SilliesDesign
+import SilliesDiagnostics
 import SilliesModelStore
 import SilliesVault
 import SwiftUI
@@ -32,6 +34,28 @@ import Testing
   await speech.models.load()
   let textModels = TextModelsPresentation()
   await textModels.load()
+  let appearancePreferences = AppearancePreferences(defaults: defaults)
+  await appearancePreferences.load()
+  let language = LanguagePreferences(
+    defaults: defaults, metadataURL: directory.appendingPathComponent("Languages.json"),
+    load: { _ in
+      try JSONDecoder().decode(
+        [InterfaceLanguage].self,
+        from: Data(#"[{"code":"en","language":"English","english":"English"}]"#.utf8))
+    })
+  language.start()
+  let voices = try VoiceServices(
+    defaults: defaults, directory: directory.appendingPathComponent("Voices"))
+  await voices.models.load()
+  let setupFixture = try SetupFixture()
+  let setup = setupFixture.makePresentation()
+  let suggestions = SetupModelSuggestions(
+    text: textModels, voice: voices.models, speech: speech.models)
+  await suggestions.load()
+  let recorder = DiagnosticRecorder(
+    directory: directory.appendingPathComponent("Diagnostics"), enabled: false)
+  let diagnostics = DiagnosticsPresentation(
+    recorder: recorder, enabled: false, savePreference: { _ in })
   let search = SearchModelsPresentation(
     environment: SearchModelEnvironment(
       store: ModelStore(root: directory.appendingPathComponent("SearchModels")),
@@ -47,21 +71,40 @@ import Testing
     writing.stop()
     speech.stop()
     shortcuts.stop()
+    textModels.stop()
+    voices.models.stop()
+    search.stop()
+    appearancePreferences.stop()
+    language.stop()
+    setup.stop()
+    setupFixture.close()
   }
   for appearance in [NSAppearance.Name.aqua, .darkAqua] {
     NSApp.appearance = NSAppearance(named: appearance)
     for destination in SettingsDestination.allCases {
+      let navigation = SettingsNavigation(destination: destination)
       let view = SettingsView(
-        controller: controller, speechModels: speech.models, textModels: textModels,
+        controller: controller, appearance: appearancePreferences, language: language,
+        speechModels: speech.models, voiceModels: voices.models, textModels: textModels,
         searchModels: search,
         shortcuts: shortcuts,
         loginItems: LoginItemSettings(), writingTools: writing,
-        navigation: SettingsNavigation(destination: destination))
+        diagnostics: diagnostics, setup: setup, suggestions: suggestions,
+        companionPreferences: setupFixture.preferences,
+        actions: .init(openRetention: {}, openMemories: { _ in nil }),
+        navigation: navigation)
       try renderSkillInterface(
         view, size: SettingsWindowLayout.minimumSize,
         name: "sillies-settings-\(destination.rawValue)-\(appearance.rawValue)")
+      if destination == .companions {
+        navigation.showProfile("pogo")
+        try renderSkillInterface(
+          view, size: SettingsWindowLayout.minimumSize,
+          name: "sillies-settings-profile-\(appearance.rawValue)")
+      }
     }
   }
   await writing.history.flush()
   await controller.skills.vault.flush()
+  await recorder.shutdown()
 }

@@ -187,7 +187,7 @@ import Testing
       .environment(\.colorScheme, scheme), size: ChatWindowLayout.initialSize,
       name: "sillies-conversation-clarification-\(scheme)")
     try renderSkillInterface(
-      ConversationSearchView(browser: session.browser).environment(\.colorScheme, scheme),
+      ConversationSearchView(browser: session.browser, back: {}).environment(\.colorScheme, scheme),
       size: CGSize(width: 400, height: 460), name: "sillies-conversation-search-\(scheme)")
   }
 }

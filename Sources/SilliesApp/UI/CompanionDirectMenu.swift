@@ -52,7 +52,7 @@ import SwiftUI
   ) -> SkillFloatingPanel {
     let panel = SkillFloatingPanel(
       contentRect: layout.frame, ignoresMouseEvents: true,
-      level: CompanionPanel.hudLevel(forWindowLayer: pet.attachedWindowLayer), focus: .keyboard)
+      level: pet.panel.level, focus: .keyboard)
     let host = ThemedHostingView(
       rootView: CompanionDirectMenuView(layout: layout) { [weak self] action in
         self?.close()

@@ -346,7 +346,7 @@ func floatingForeignWindowsLikeBrowserPictureInPictureAreTrackableBelowCompanion
     .rawValue
   #expect(normalCompanionLevel > WindowServerSource.normalWindowLayer)
   #expect(normalCompanionLevel < floatingLayer)
-  #expect(normalHUDLevel > normalCompanionLevel)
+  #expect(normalHUDLevel == normalCompanionLevel)
   #expect(normalHUDLevel < floatingLayer)
   #expect(floatingCompanionLevel > floatingLayer)
   #expect(pickedUpCompanionLevel > floatingLayer)

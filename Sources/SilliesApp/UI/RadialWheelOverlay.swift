@@ -64,7 +64,8 @@ final class RadialWheelController {
   func prepare() {
     guard panel == nil else { return }
     let created = SkillFloatingPanel(
-      contentRect: CGRect(origin: .zero, size: Self.canvasSize), ignoresMouseEvents: true)
+      contentRect: CGRect(origin: .zero, size: Self.canvasSize), ignoresMouseEvents: true,
+      level: CompanionPanel.overlayLevel)
     let view = ThemedHostingView(rootView: RadialWheelView(model: model), appearance: appearance)
     view.sizingOptions = []
     created.contentView = view

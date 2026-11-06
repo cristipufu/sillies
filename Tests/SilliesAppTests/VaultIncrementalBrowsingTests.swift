@@ -24,7 +24,7 @@ import Testing
   await vault.flush()
   let model = SessionVaultModel(
     vault: vault,
-    presentation: .init(initialRecordID: records[0].id, appearance: ThemeEnvironment()))
+    presentation: .init(initialRecordID: records[0].id))
   await model.refreshSearch()
   #expect(model.filteredRecords.count == 200)
   let before = try await vault.library.metrics()
@@ -73,7 +73,7 @@ import Testing
   await vault.flush()
   let model = SessionVaultModel(
     vault: vault,
-    presentation: .init(initialRecordID: first.id, appearance: ThemeEnvironment()))
+    presentation: .init(initialRecordID: first.id))
   model.searchQuery = "decision"
   await model.refreshSearch()
   #expect(model.filteredRecords.isEmpty)
@@ -122,7 +122,7 @@ import Testing
   await vault.flush()
   let model = SessionVaultModel(
     vault: vault,
-    presentation: .init(initialRecordID: selected.id, appearance: ThemeEnvironment()))
+    presentation: .init(initialRecordID: selected.id))
   await model.refreshSearch()
   let identity = model.detailIdentity
   for _ in 0..<300 {

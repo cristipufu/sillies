@@ -14,6 +14,7 @@ ending Talk owns capture shutdown. The transcript must not switch the session’
 | Indexed date lookup and atomic file publication | `SilliesPersistence` |
 | Markdown formatting and validated question data | `SilliesCore` |
 | Native save sheet, anchored bubble and text editing | `SilliesApp` |
+| In-bubble utility navigation | `ChatWindowNavigation`, owned by `ChatSessionWindowController` |
 | Shared message-size preference | App-owned `ChatReadingPreferences` |
 
 Views forward actions; they must not fetch records, write files or hold inference work. Keep the
@@ -64,12 +65,25 @@ leave its original messages searchable. Neither removes pinned facts. These oper
 conversation generations, checkpoints and derived search work as appropriate. Native and downloaded
 prefix caches also compare history/profile revisions before reuse.
 
-Storage mutations accepted by `ChatPersistenceOperation` outlive sheet cancellation and drain using
+Storage mutations accepted by `ChatPersistenceOperation` outlive presentation dismissal and drain using
 the injected modal-safe delivery path before app termination. A late completion must not restart a
 finished conversation. Storage ownership remains in the repository actor; presentation owners do
 not create live repositories or perform inference.
 
 ## Navigation and export
+
+Memories, conversation search, the Vault picker and the memory editor occupy the existing anchored
+Chat bubble. Do not present these routine pages as native sheets over its transparent, shaped window:
+macOS sheet dimming applies to the parent window, not just the drawn bubble. Use the shared Back
+header for utility pages; memory editing retains explicit Cancel and Save actions.
+
+Keep the conversation mounted while a utility page is visible so its viewport, draft and native
+selection survive. Conceal its native text views and release their first responder through
+`NativeTextVisibility`; SwiftUI opacity and hit testing alone do not prevent keyboard interaction.
+Keep the session's availability task on the stable root. Navigating pages must not restart inference,
+switch Chat/Talk, or stop capture. Outside-click dismissal is suspended during a utility task, as it
+was for the native sheet, and resumes on return to the conversation. Export file choosers and
+destructive confirmations remain separate, explicitly scoped modal actions.
 
 Search has its own request identity and cancellation boundary. A stale result cannot replace a newer
 query or publish after the view/session closes. Search flushes pending messages first. Date navigation
@@ -93,7 +107,7 @@ selection and defer font changes during IME composition. New content follows the
 the user is following and has no selection. Empty conversations start at the top. Earlier messages
 and Latest remain conditional on content outside the viewport.
 
-Use headless `ConversationUsabilityTests`, `ConversationExportShutdownTests`,
+Use headless `ChatPageNavigationTests`, `ConversationUsabilityTests`, `ConversationExportShutdownTests`,
 `ConversationClarificationTests`, `ConversationNavigationExportTests`, the date-migration regression,
 and the existing composer/reading/attachment/Talk checks. Inspect opt-in light/dark snapshots at
 minimum size and with large text and long choices. Native tool-quality checks remain opt-in and

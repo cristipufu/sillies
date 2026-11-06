@@ -85,7 +85,7 @@ public struct SessionRecord: Codable, Identifiable, Equatable, Sendable {
   }
 
   public static func formatDuration(_ seconds: Double) -> String {
-    let total = max(0, Int(seconds.rounded()))
+    let total = max(0, Int(exactly: seconds.rounded()) ?? 0)
     let minutes = total / 60
     let remainder = total % 60
     return String(format: "%02d:%02d", minutes, remainder)

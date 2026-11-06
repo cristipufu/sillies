@@ -101,7 +101,8 @@
             ]
           }
         ],
-        "streamsAudio": false
+        "streamsAudio": false,
+        "family": "Kokoro"
       },
       "components": [
         {
@@ -607,7 +608,8 @@
             ]
           }
         ],
-        "streamsAudio": true
+        "streamsAudio": true,
+        "family": "Pocket TTS"
       },
       "components": [
         {
@@ -1072,7 +1074,8 @@
             ]
           }
         ],
-        "streamsAudio": true
+        "streamsAudio": true,
+        "family": "Qwen3-TTS"
       },
       "components": [
         {
@@ -1531,7 +1534,8 @@
             ]
           }
         ],
-        "streamsAudio": true
+        "streamsAudio": true,
+        "family": "Qwen3-TTS"
       },
       "components": [
         {
@@ -2006,7 +2010,8 @@
             ]
           }
         ],
-        "streamsAudio": true
+        "streamsAudio": true,
+        "family": "Fish"
       },
       "components": [
         {

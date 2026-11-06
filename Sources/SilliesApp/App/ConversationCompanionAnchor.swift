@@ -7,5 +7,5 @@ struct ConversationCompanionAnchor {
   let position: CGPoint
   let visibleFrame: CGRect
   let edge: PerchSurface.Edge
-  let windowLayer: Int
+  let window: CompanionWindowAnchor
 }

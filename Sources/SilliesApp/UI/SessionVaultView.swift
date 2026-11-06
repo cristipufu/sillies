@@ -5,28 +5,11 @@ import SwiftUI
 struct SessionVaultView: View {
   @Environment(\.silliesTheme) private var theme
   let vault: SessionVaultStore
-  let conversations: VaultConversationPresentation?
-  @State private var showsConversations = false
-  @State private var model: SessionVaultModel
-  @State private var showsStashComposer = false
-  @State private var showsRetention = false
+  let conversations: VaultConversationsModel?
+  @Bindable var model: SessionVaultModel
+  @Bindable var navigation: VaultNavigation
+  @FocusState private var searchFocused: Bool
   private static let noticeInset: CGFloat = 12
-
-  init(
-    vault: SessionVaultStore, initialRecordID: UUID? = nil, pasteBack: PasteBackCoordinator? = nil,
-    appearance: ThemeEnvironment, conversations: VaultConversationPresentation? = nil,
-    discussion: VaultDiscussionPresentation? = nil
-  ) {
-    self.vault = vault
-    self.conversations = conversations
-    _model = State(
-      initialValue: SessionVaultModel(
-        vault: vault,
-        presentation: .init(
-          initialRecordID: initialRecordID,
-          pasteBack: pasteBack,
-          appearance: appearance, discussion: discussion)))
-  }
 
   var body: some View {
     let records = model.filteredRecords
@@ -44,32 +27,48 @@ struct SessionVaultView: View {
         }.padding(Self.noticeInset)
       }
       if conversations != nil {
-        Picker("Library", selection: $showsConversations) {
-          Text("Vault").tag(false)
-          Text("Conversations").tag(true)
+        Picker("Library", selection: $navigation.section) {
+          Text("Vault").tag(VaultNavigation.Section.captures)
+          Text("Conversations").tag(VaultNavigation.Section.conversations)
         }.pickerStyle(.segmented).frame(maxWidth: 300).padding(12)
         Divider().overlay(theme.border)
       }
-      if showsConversations, let conversations {
-        VaultConversationsView(presentation: conversations)
-      } else {
+      ZStack {
         HStack(spacing: 0) {
           sidebar(records: records, selected: current)
           Divider().overlay(theme.border)
-          SessionVaultDetailView(vault: vault, model: model, record: model.visibleDetail)
+          SessionVaultDetailView(
+            vault: vault, model: model, record: model.visibleDetail,
+            isVisible: navigation.section == .captures && model.isPresented)
+        }
+        .opacity(navigation.section == .captures ? 1 : 0)
+        .allowsHitTesting(navigation.section == .captures)
+        .disabled(navigation.section != .captures || !model.isPresented)
+        .accessibilityHidden(navigation.section != .captures)
+        if let conversations {
+          VaultConversationsView(
+            model: conversations,
+            isPresented: navigation.section == .conversations && model.isPresented
+          )
+          .opacity(navigation.section == .conversations ? 1 : 0)
+          .allowsHitTesting(navigation.section == .conversations)
+          .disabled(navigation.section != .conversations || !model.isPresented)
+          .accessibilityHidden(navigation.section != .conversations)
         }
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(theme.paper)
     .foregroundStyle(theme.ink)
-    .onDisappear { model.stop() }
-    .task(id: model.searchIdentity) { await model.refreshSearch() }
-    .task(id: model.detailIdentity) { await model.loadSelection() }
-    .sheet(isPresented: $showsStashComposer) {
-      StashComposerView { model.saveStash([$0]) }
+    .onChange(of: navigation.section) { _, _ in searchFocused = false }
+    .task(id: model.isPresented ? model.searchIdentity : nil) { await model.refreshSearch() }
+    .task(id: model.isPresented ? model.detailIdentity : nil) { await model.loadSelection() }
+    .sheet(item: $navigation.editor) { editor in
+      switch editor {
+      case .stash: StashComposerView { model.saveStash([$0]) }
+      case .retention: VaultRetentionView(vault: vault)
+      }
     }
-    .sheet(isPresented: $showsRetention) { VaultRetentionView(vault: vault) }
   }
 
   private func sidebar(records: [SessionRecordHeader], selected: SessionRecordHeader?) -> some View
@@ -112,6 +111,7 @@ struct SessionVaultView: View {
           text: Binding(get: { model.searchQuery }, set: { model.searchQuery = $0 })
         )
         .textFieldStyle(.plain)
+        .focused($searchFocused)
         .font(.system(size: 12.5))
         if !model.searchQuery.isEmpty {
           Button {
@@ -132,7 +132,7 @@ struct SessionVaultView: View {
           .strokeBorder(theme.border, lineWidth: 0.8))
 
       HStack {
-        Button("Add text / link", systemImage: "plus") { showsStashComposer = true }
+        Button("Add text / link", systemImage: "plus") { navigation.editor = .stash }
         Spacer()
         Button("Save Clipboard", systemImage: "clipboard") {
           model.saveStash(StashPasteboard.items(from: .general))
@@ -158,9 +158,10 @@ struct SessionVaultView: View {
       }.font(.caption)
 
       HStack {
-        Button("Retention…") { showsRetention = true }
+        Button("Retention…") { navigation.editor = .retention }
         Spacer()
-        Button("Export all…") { model.exportAll() }.disabled(vault.recordCount == 0)
+        Button("Export all…") { model.exportAll() }.disabled(
+          vault.recordCount == 0 || !model.canExport)
       }.font(.caption)
 
       if let error = vault.persistenceError {

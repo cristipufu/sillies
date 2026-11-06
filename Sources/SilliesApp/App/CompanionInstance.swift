@@ -36,7 +36,7 @@ final class CompanionInstance {
     guard let attachmentDisplay else { return nil }
     return .init(
       companionID: definition.id, position: position, visibleFrame: attachmentDisplay,
-      edge: surface?.edge ?? .top, windowLayer: attachedWindowLayer)
+      edge: surface?.edge ?? .top, window: .init(window: panel))
   }
   var holdsConversationPerch: Bool { isConversing || isChoosingDirectAction }
   func beginDirectActionMenu() {
@@ -57,7 +57,10 @@ final class CompanionInstance {
   var writingAnchor: WritingCompanionAnchor {
     .init(
       name: definition.name, position: position, characterSize: view.characterSize,
-      windowLayer: attachedWindowLayer, windowNumber: panel.windowNumber)
+      window: .init(window: panel))
+  }
+  var feedbackPlacement: StashFeedbackController.Placement {
+    .init(position: position, companion: .init(window: panel))
   }
 
   func beginWritingIndicator(at time: TimeInterval) -> BehaviorState? {

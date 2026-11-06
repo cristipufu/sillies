@@ -7,8 +7,10 @@ struct ControlCenterView: View {
   struct Actions {
     let openSettings: () -> Void
     var openVault: () -> Void = {}
+    var openStash: () -> Void = {}
+    var openCompanions: () -> Void = {}
     var openWriting: () -> Void = {}
-    var openConversation: (ConversationMode) -> Void = { _ in }
+    var openConversation: (ConversationMode, String) -> Void = { _, _ in }
     var openSetup: () -> Void = {}
     let quit: () -> Void
   }
@@ -16,10 +18,21 @@ struct ControlCenterView: View {
   let actions: Actions
   var speechModels: SpeechModelsPresentation? = nil
   var dictation: DictationCoordinator? = nil
+  @State private var selectedCompanionID = ""
+  private var availableCompanions: [CharacterDefinition] {
+    controller.catalog.characters.filter {
+      $0.chat != nil && controller.settings.enabledCharacters.contains($0.id)
+    }
+  }
+  private var conversationCompanionID: String? {
+    availableCompanions.first { $0.id == selectedCompanionID }?.id
+      ?? availableCompanions.first { $0.id == controller.skills.activeChatSession?.companionID }?.id
+      ?? availableCompanions.first?.id
+  }
 
   var body: some View {
     @Bindable var settings = controller.settings
-    VStack(alignment: .leading, spacing: 18) {
+    VStack(alignment: .leading, spacing: 14) {
       HStack(spacing: 11) {
         Image(systemName: "sparkles")
           .font(.system(size: 21, weight: .medium)).foregroundStyle(theme.accent)
@@ -72,92 +85,74 @@ struct ControlCenterView: View {
             Button(dictation.isActive ? String(localized: "Cancel") : String(localized: "Dismiss"))
             { dictation.dismiss() }
           }
+        } else if let session = controller.skills.activeChatSession {
+          Button(
+            "Open \(session.mode == .talk ? String(localized: "Talk") : String(localized: "Chat"))",
+            systemImage: session.mode == .talk ? "waveform" : "text.bubble"
+          ) {
+            actions.openConversation(session.mode, session.companionID)
+          }
+          Spacer()
+          if session.isVoiceConversationActive {
+            Button("End voice") { session.stopVoiceConversation() }
+          }
         } else {
           Button("Record microphone", systemImage: "mic.fill") {
             controller.startMicrophoneRecording()
           }
           .disabled(!controller.shouldRun || controller.liveCount == 0)
           Spacer()
-          Button("Pocket Stash", systemImage: "tray") { actions.openVault() }
+          Button("Pocket Stash", systemImage: "tray") { actions.openStash() }
         }
       }.font(.system(size: 12, weight: .medium))
 
-      HStack {
-        Text("THE LITTLE CREW").font(.system(size: 9, weight: .bold)).tracking(1.5)
-        Spacer()
-        Text("\(controller.liveCount) of \(controller.catalog.characters.count) out & about")
-          .font(.system(size: 10)).foregroundStyle(theme.secondary)
-      }.padding(.top, 2)
-
-      LazyVGrid(
-        columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
-        spacing: 12
-      ) {
-        ForEach(controller.catalog.characters) { character in
-          CompanionCharacterCard(
-            character: character, enabled: settings.enabledCharacters.contains(character.id),
-            registry: controller.renderers
-          ) {
-            settings.toggleCharacter(character.id)
+      VStack(alignment: .leading, spacing: 10) {
+        Picker(
+          "Companion",
+          selection: Binding(
+            get: { conversationCompanionID ?? "" }, set: { selectedCompanionID = $0 })
+        ) {
+          ForEach(availableCompanions) { Text($0.name).tag($0.id) }
+        }.disabled(availableCompanions.isEmpty)
+        HStack(spacing: 10) {
+          Button("Chat", systemImage: "text.bubble") { beginConversation(.chat) }
+          Button("Talk", systemImage: "waveform") { beginConversation(.talk) }
+          Spacer()
+          Button {
+            controller.greet()
+          } label: {
+            Image(systemName: "hand.wave")
           }
-        }
+          .help("Say hello").accessibilityLabel("Say hello")
+        }.buttonStyle(SoftButtonStyle()).disabled(conversationCompanionID == nil)
       }
 
-      HStack(spacing: 10) {
-        Button("Chat", systemImage: "text.bubble") { actions.openConversation(.chat) }
-        Button("Talk", systemImage: "waveform") { actions.openConversation(.talk) }
+      HStack {
+        Text("Your crew").font(.callout.weight(.semibold))
         Spacer()
-        Button {
-          controller.greet()
-        } label: {
-          Image(systemName: "hand.wave")
+        Button("Manage crew", action: actions.openCompanions)
+          .font(.caption).buttonStyle(.plain).foregroundStyle(theme.accent)
+      }
+      LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 6), spacing: 6)
+      {
+        ForEach(controller.catalog.characters) { character in
+          compactCompanion(character)
         }
-        .help("Say hello").accessibilityLabel("Say hello")
-      }.buttonStyle(SoftButtonStyle())
-      Text("Double-click a companion for Chat or Talk.")
-        .font(.caption).foregroundStyle(theme.secondary)
-
-      VStack(spacing: 14) {
-        HStack {
-          Label("Hang out", systemImage: "macwindow").font(.system(size: 12, weight: .medium))
-          Spacer()
-          Picker("Hang out", selection: $settings.followsWindows) {
-            Text("Window edges").tag(true)
-            Text("Desktop").tag(false)
-          }.labelsHidden().pickerStyle(.segmented).frame(width: 200)
-        }
-        Divider().overlay(theme.border.opacity(0.5))
-        HStack {
-          Label("Energy", systemImage: "leaf").font(.system(size: 12, weight: .medium))
-          Spacer()
-          Picker("Energy", selection: $settings.activity) {
-            ForEach(ActivityLevel.allCases) { Text($0.title).tag($0) }
-          }.labelsHidden().pickerStyle(.segmented).frame(width: 156)
-        }
-        Divider().overlay(theme.border.opacity(0.5))
-        HStack(spacing: 12) {
-          Label("Size", systemImage: "arrow.up.left.and.arrow.down.right").font(
-            .system(size: 12, weight: .medium)
-          ).frame(width: 65, alignment: .leading)
-          Slider(value: $settings.size, in: AppSettings.minSize...AppSettings.maxSize).tint(
-            theme.accent
-          )
-          .accessibilityLabel("Character size")
-          Text(sizeLabel).font(.system(size: 10, weight: .medium)).foregroundStyle(
-            theme.secondary
-          ).frame(width: 38)
-        }
-      }.padding(14).background(theme.card, in: RoundedRectangle(cornerRadius: 15))
-        .overlay(
-          RoundedRectangle(cornerRadius: 15).strokeBorder(
-            theme.border.opacity(0.7), lineWidth: 0.7))
+      }
+      HStack {
+        Label("Energy", systemImage: "leaf").font(.callout)
+        Spacer()
+        Picker("Energy", selection: $settings.activity) {
+          ForEach(ActivityLevel.allCases) { Text($0.title).tag($0) }
+        }.labelsHidden().pickerStyle(.segmented).frame(width: 180)
+      }
 
       Button(action: actions.openVault) {
         HStack(spacing: 9) {
           Image(systemName: "archivebox.fill")
             .foregroundStyle(theme.accent)
           VStack(alignment: .leading, spacing: 3) {
-            Text("Session Vault & Drop Skills").font(.system(size: 11, weight: .semibold))
+            Text("Session Vault").font(.system(size: 11, weight: .semibold))
             Text(
               controller.savedRecordCount == 0
                 ? String(localized: "Drag a companion onto a window to capture or listen.")
@@ -201,16 +196,43 @@ struct ControlCenterView: View {
           .buttonStyle(.plain).padding(.leading, 7).help("Quit Sillies").accessibilityLabel(
             "Quit Sillies")
       }
-    }.padding(22).frame(width: 388).background(theme.paper)
+    }.padding(22).frame(width: ControlCenterLayout.width).background(theme.paper)
       .foregroundStyle(theme.ink)
       .fixedSize(horizontal: false, vertical: true)
   }
 
-  private var sizeLabel: String {
-    controller.settings.size < AppSettings.defaultSize
-      ? String(localized: "Tiny")
-      : controller.settings.size > AppSettings.largeSizeThreshold
-        ? String(localized: "Big") : String(localized: "Little")
+  private func beginConversation(_ mode: ConversationMode) {
+    guard let id = conversationCompanionID else { return }
+    actions.openConversation(mode, id)
+  }
+
+  private func compactCompanion(_ character: CharacterDefinition) -> some View {
+    let enabled = controller.settings.enabledCharacters.contains(character.id)
+    return Button {
+      controller.settings.toggleCharacter(character.id)
+    } label: {
+      VStack(spacing: 3) {
+        CharacterPortrait(renderer: character.renderer, size: 32, registry: controller.renderers)
+          .frame(width: 36, height: 38)
+          .opacity(enabled ? 1 : 0.65)
+        Text(character.name).font(.system(size: 10, weight: .medium)).lineLimit(1)
+      }
+      .frame(maxWidth: .infinity).padding(.vertical, 5)
+      .background(
+        enabled ? theme.accent.opacity(0.12) : theme.card, in: RoundedRectangle(cornerRadius: 10)
+      )
+      .overlay(alignment: .topTrailing) {
+        if enabled {
+          Image(systemName: "checkmark.circle.fill").font(.system(size: 8)).foregroundStyle(
+            theme.accent
+          ).padding(3)
+        }
+      }
+    }.buttonStyle(.plain).accessibilityLabel(character.name)
+      .accessibilityValue(
+        enabled ? String(localized: "Selected") : String(localized: "Not selected")
+      )
+      .accessibilityAddTraits(enabled ? .isSelected : [])
   }
 
 }

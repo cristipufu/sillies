@@ -8,12 +8,16 @@ struct SearchModelSettingsView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 20) {
       SettingsCard(
-        title: String(localized: "Search & Memory"),
+        title: String(localized: "Search"),
         detail: String(
           localized:
             "Find memories and Vault passages by meaning, even when you use different words. Keyword search always stays available."
         )
       ) {
+        LabeledContent(
+          "App default",
+          value: downloads.manifests.first { $0.modelID == downloads.selectedModelID }?.model.name
+            ?? String(localized: "Apple Natural Language"))
         Label("Your recordings and text stay on this Mac.", systemImage: "lock.shield")
           .foregroundStyle(theme.secondary)
         Text(
@@ -32,7 +36,16 @@ struct SearchModelSettingsView: View {
       ) {
         selectionButton(SearchModelEnvironment.appleID)
       }
-      ForEach(downloads.manifests, id: \.modelID) { manifest in card(manifest) }
+      ModelCatalogBrowser(
+        entries: downloads.manifests.map { manifest in
+          .init(
+            id: manifest.modelID, family: manifest.model.name,
+            name: manifest.model.name,
+            detail: LocalizedCatalogText.value(manifest.model.languagesDescription),
+            state: downloads.state(for: manifest.modelID),
+            isSelected: downloads.selectedModelID == manifest.modelID,
+            model: manifest)
+        }, content: card)
       if let error = downloads.error {
         Text(error).foregroundStyle(theme.secondary).textSelection(.enabled)
       }
@@ -58,10 +71,7 @@ struct SearchModelSettingsView: View {
   }
   private func card(_ manifest: SearchModelManifest) -> some View {
     let state = downloads.state(for: manifest.modelID)
-    return SettingsCard(
-      title: manifest.model.name,
-      detail: LocalizedCatalogText.value(manifest.model.languagesDescription)
-    ) {
+    return VStack(alignment: .leading, spacing: 12) {
       Text(
         "\(ByteCountFormatter.string(fromByteCount: manifest.downloadBytes, countStyle: .file)) download · \(manifest.model.minimumMemoryGB) GB memory required"
       )
@@ -69,29 +79,12 @@ struct SearchModelSettingsView: View {
       if let fraction = state.downloadFraction { ProgressView(value: fraction) }
       Text(state.label).font(.caption).foregroundStyle(theme.secondary).textSelection(.enabled)
       HStack {
-        actions(manifest, state: state)
+        ModelInstallationControls(
+          model: downloads, manifest: manifest,
+          selectionTitle: String(localized: "Use for search"), scope: .manage)
         Spacer()
         Link("Model details ↗", destination: manifest.model.sourceURL).font(.caption)
       }
-    }
-  }
-  @ViewBuilder private func actions(_ manifest: SearchModelManifest, state: ModelInstallationState)
-    -> some View
-  {
-    switch state {
-    case .downloaded, .ready:
-      selectionButton(manifest.modelID)
-      Button("Remove", role: .destructive) { downloads.remove(manifest) }
-        .buttonStyle(SoftButtonStyle()).disabled(downloads.activeID != nil)
-    case .downloading, .verifying:
-      Button("Pause download") { downloads.pauseDownload() }.buttonStyle(SoftButtonStyle())
-    case .cancelling: ProgressView().controlSize(.small)
-    default:
-      Button(
-        state == .paused ? String(localized: "Resume download") : String(localized: "Download")
-      ) { downloads.download(manifest) }
-      .buttonStyle(SoftButtonStyle()).disabled(
-        downloads.activeID != nil || !downloads.supports(manifest))
     }
   }
   @ViewBuilder private func selectionButton(_ id: String) -> some View {

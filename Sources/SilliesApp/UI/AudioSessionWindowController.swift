@@ -28,6 +28,8 @@ final class AudioSessionWindowController: NSObject, NSWindowDelegate {
         styleMask: [.titled, .closable, .resizable, .miniaturizable], backing: .buffered,
         defer: false)
       window.isReleasedWhenClosed = false
+      AppContentWindowStacking.shared.register(window)
+      appearance.register(window)
       window.delegate = self
       window.contentMinSize = SessionWindowLayout.minimumSize
       window.center()

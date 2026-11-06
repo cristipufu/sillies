@@ -169,14 +169,15 @@ import SwiftUI
     guard let companions else { return false }
     guard !services.recording.hasActiveRecording else {
       feedback.showMessage(
-        String(localized: "Finish the current recording before writing."), at: NSEvent.mouseLocation
+        String(localized: "Finish the current recording before writing."),
+        at: .init(position: NSEvent.mouseLocation)
       )
       return false
     }
     guard companions.hasAvailableWritingCompanion else {
       feedback.showMessage(
         String(localized: "All companions are busy. Free one to start writing."),
-        at: NSEvent.mouseLocation)
+        at: .init(position: NSEvent.mouseLocation))
       return false
     }
     dictation.dismiss()
@@ -232,7 +233,8 @@ import SwiftUI
           openText: { [weak self] result in
             self?.recoveredText.show(
               result.text,
-              title: String(localized: "Sillies · \(result.applicationName) · Recent writing"))
+              title: String(localized: "Sillies · \(result.applicationName) · Recent writing"),
+              id: result.id)
           }), appearance: appearance)
       window.center()
       historyWindow = window

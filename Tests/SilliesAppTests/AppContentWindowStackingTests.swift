@@ -3,14 +3,14 @@ import Testing
 
 @testable import SilliesApp
 
-@Test @MainActor func foregroundContentOccludesMascotsEvenWhenTheirPanelsOrderForward() throws {
+@Test @MainActor func foregroundContentOccludesNormalMascotsAndRespectsFloatingWindows() throws {
   _ = NSApplication.shared
   let stacking = AppContentWindowStacking()
   let frame = CGRect(x: 260, y: 260, width: 360, height: 240)
   let content = NSWindow(
     contentRect: frame, styleMask: [.titled, .closable], backing: .buffered, defer: false)
   content.isReleasedWhenClosed = false
-  let overlay = SkillFloatingPanel(contentRect: frame, ignoresMouseEvents: false)
+  let overlay = SkillFloatingPanel(contentRect: frame, ignoresMouseEvents: false, level: .normal)
   overlay.backgroundColor = .systemPink
   overlay.isOpaque = true
   overlay.alphaValue = 1
@@ -26,8 +26,7 @@ import Testing
   let id = try #require(content.windowServerID)
   let point = CGPoint(x: frame.midX, y: frame.midY)
   for level in [
-    CompanionPanel.normalOverlayLevel, CompanionPanel.floatingOverlayLevel,
-    CompanionPanel.hudLevel(forWindowLayer: NSWindow.Level.floating.rawValue),
+    NSWindow.Level.normal, CompanionPanel.normalOverlayLevel,
   ] {
     overlay.level = level
     overlay.orderFrontRegardless()
@@ -35,6 +34,13 @@ import Testing
     #expect(content.level.rawValue > overlay.level.rawValue)
     #expect(NSWindow.windowNumber(at: point, belowWindowWithWindowNumber: 0) == Int(id))
   }
+  overlay.level = .floating
+  overlay.orderFrontRegardless()
+  try DisplayFrameSequence.presentCreatedWindows()
+  #expect(content.level.rawValue < overlay.level.rawValue)
+  #expect(
+    NSWindow.windowNumber(at: point, belowWindowWithWindowNumber: 0)
+      == Int(try #require(overlay.windowServerID)))
   #expect(content.canBecomeMain)
   #expect(content.canBecomeKey)
   #expect(
@@ -61,7 +67,8 @@ import Testing
   for _ in 0..<20 {
     stacking.update(.foreground)
     #expect(content.level == CompanionPanel.contentWindowLevel)
-    #expect(panel.level == CompanionPanel.contentWindowLevel)
+    #expect(panel.level == .floating)
+    #expect(content.level.rawValue < NSWindow.Level.floating.rawValue)
     stacking.register(content)
     stacking.update(.background)
     #expect(content.level == .normal)

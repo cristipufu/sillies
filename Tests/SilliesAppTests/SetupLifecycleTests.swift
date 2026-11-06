@@ -309,8 +309,8 @@ import Testing
   custom.personality = "Quiet and thoughtful"
   fixture.preferences.save(custom, for: character)
   navigation.showConversationSettings(.textModels, setup: model)
-  #expect(navigation.destination == .setup)
-  #expect(model.journey.step == .preparation && model.isProfileExpanded)
+  #expect(navigation.destination == .companions)
+  #expect(navigation.companionsPage == .profile && navigation.selectedCompanionID == character.id)
   for (request, destination) in destinations.dropFirst() {
     navigation.showConversationSettings(request, setup: model)
     #expect(navigation.destination == destination)

@@ -106,7 +106,7 @@ final class MeetingSpeechBubbleController {
     host.sizingOptions = []
     let panel = SkillFloatingPanel(
       contentRect: CGRect(origin: .zero, size: Self.initialSize),
-      ignoresMouseEvents: true)
+      ignoresMouseEvents: true, level: .normal)
     let background = CompanionSpeechBubbleBackground(
       frame: panel.contentRect(forFrameRect: panel.frame))
     appearance.observe(background) { view, palette in view.applyTheme(palette) }

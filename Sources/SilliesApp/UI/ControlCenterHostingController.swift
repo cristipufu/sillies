@@ -1,11 +1,14 @@
 import AppKit
 import SwiftUI
 
+enum ControlCenterLayout {
+  static let width: CGFloat = 388
+  static let maximumHeight: CGFloat = 560
+}
+
 /// AppKit must know the final viewport before positioning a status-item popover.
 @MainActor
 final class ControlCenterHostingController: NSHostingController<AnyView> {
-  private static let width: CGFloat = 388
-  private static let maximumHeight: CGFloat = 640
   private static let screenMargin: CGFloat = 24
   private let content: ControlCenterView
   private let appearance: ThemeEnvironment
@@ -26,8 +29,9 @@ final class ControlCenterHostingController: NSHostingController<AnyView> {
 
   func updateViewport(visibleFrame: CGRect) {
     let size = CGSize(
-      width: Self.width,
-      height: max(1, min(Self.maximumHeight, visibleFrame.height - Self.screenMargin)))
+      width: ControlCenterLayout.width,
+      height: max(
+        1, min(ControlCenterLayout.maximumHeight, visibleFrame.height - Self.screenMargin)))
     guard viewportSize != size else { return }
     viewportSize = size
     rootView = AnyView(

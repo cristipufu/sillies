@@ -24,9 +24,11 @@ enum ChatWindowLayout {
   private var observedMode: ConversationMode?
   private(set) var window: CompanionUtilityWindow?
   private let bubble = ConversationBubblePresentation()
+  let navigation = ChatWindowNavigation()
   private let exporter = ConversationExportController()
   private var anchor: ConversationCompanionAnchor?
   private weak var displayedSession: ChatSession?
+  private var navigationTask: Task<Void, Never>?
   let dismissal = ConversationWindowDismissal()
   var prefersReducedMotion: () -> Bool = { false }
   private var reducesMotion: Bool {
@@ -73,6 +75,9 @@ enum ChatWindowLayout {
     if let anchor { attach(to: anchor) }
     window?.title = String(localized: "Sillies · Chat with \(model.companionName)")
     if displayedSession !== model {
+      navigationTask?.cancel()
+      navigationTask = nil
+      navigation.show(.conversation)
       exporter.cancel()
       dismissal.stop()
       let view = ThemedHostingView(
@@ -87,13 +92,25 @@ enum ChatWindowLayout {
               self.exporter.chooseFile(for: model.export, parent: window)
             },
             readingPreference: Binding(
-              get: { [reading] in reading.size }, set: { [reading] in reading.size = $0 }))),
+              get: { [reading] in reading.size }, set: { [reading] in reading.size = $0 }),
+            navigation: navigation)),
         appearance: appearance)
       view.sizingOptions = []
       window?.contentView = view
       displayedSession = model
       observedMode = nil
-      observeMode(model)
+      observePresentation(model)
+    }
+  }
+  func showMessage(_ id: UUID, in model: ChatSession) {
+    guard displayedSession === model else { return }
+    navigation.show(.conversation)
+    navigationTask?.cancel()
+    navigationTask = Task { [weak self, weak model] in
+      guard let model else { return }
+      await model.restoreHistory()
+      guard !Task.isCancelled, self?.displayedSession === model else { return }
+      _ = await model.browser.show(.around(id))
     }
   }
   func follow(_ anchor: ConversationCompanionAnchor) {
@@ -103,8 +120,7 @@ enum ChatWindowLayout {
   private func attach(to anchor: ConversationCompanionAnchor) {
     self.anchor = anchor
     guard let window else { return }
-    AppContentWindowStacking.shared.setBackgroundLevel(
-      CompanionPanel.hudLevel(forWindowLayer: anchor.windowLayer), for: window)
+    AppContentWindowStacking.shared.setCompanionAnchor(anchor.window, for: window)
     let minimumSize = windowSize(ChatWindowLayout.minimumSize, edge: anchor.edge)
     if window.contentMinSize != minimumSize { window.contentMinSize = minimumSize }
     let layout = ConversationBubbleLayout(
@@ -129,7 +145,7 @@ enum ChatWindowLayout {
         width: verticalSize.width,
         height: verticalSize.height - ConversationBubbleLayout.tailHeight), edge: edge)
   }
-  private func observeMode(_ model: ChatSession) {
+  private func observePresentation(_ model: ChatSession) {
     if let anchor { attach(to: anchor) }
     if observedMode != model.mode {
       observedMode = model.mode
@@ -142,10 +158,12 @@ enum ChatWindowLayout {
     updateDismissal()
     withObservationTracking {
       _ = model.mode
+      _ = navigation.page
+      _ = model.memoryEditor.isPresented
     } onChange: { [weak self, weak model] in
       MainRunLoopDelivery.perform {
         guard let self, let model, self.displayedSession === model else { return }
-        self.observeMode(model)
+        self.observePresentation(model)
       }
     }
   }
@@ -161,7 +179,11 @@ enum ChatWindowLayout {
     window.makeKeyAndOrderFront(nil)
     updateDismissal()
     window.contentView?.layoutSubtreeIfNeeded()
-    if let editor = composer(in: window.contentView) { window.makeFirstResponder(editor) }
+    if let editor = composer(in: window.contentView), editor.isEditable,
+      !editor.isHiddenOrHasHiddenAncestor
+    {
+      window.makeFirstResponder(editor)
+    }
     NSAnimationContext.runAnimationGroup { context in
       context.duration = animate ? Self.animationDuration : 0
       window.animator().alphaValue = 1
@@ -173,12 +195,16 @@ enum ChatWindowLayout {
     return false
   }
   func dismissConversation() {
+    navigationTask?.cancel()
+    navigationTask = nil
     dismissal.stop()
     if displayedSession?.mode == .chat { displayedSession?.onFinish?() }
     if window != nil { close() }
   }
   private func updateDismissal() {
-    guard let window, window.isVisible, displayedSession != nil else {
+    guard let window, window.isVisible, let displayedSession,
+      navigation.page == .conversation, !displayedSession.memoryEditor.isPresented
+    else {
       dismissal.stop()
       return
     }
@@ -203,6 +229,8 @@ enum ChatWindowLayout {
     if displayedSession === session { close() }
   }
   func close() {
+    navigationTask?.cancel()
+    navigationTask = nil
     exporter.cancel()
     presentationRequested = false
     dismissal.stop()

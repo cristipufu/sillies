@@ -58,31 +58,31 @@ struct CompanionProfileEditor: View {
           }
         }
       }
+      Picker(
+        "Reply model",
+        selection: Binding(
+          get: { customization.textModelID ?? "" },
+          set: { customization.textModelID = $0.isEmpty ? nil : $0 }
+        )
+      ) {
+        Text("Use app default").tag("")
+        Text("Apple Intelligence").tag(textModels.fallbackModelID)
+        if let saved = customization.textModelID, saved != textModels.fallbackModelID,
+          !textModels.manifests.contains(where: { $0.modelID == saved })
+        {
+          Text("Saved reply model unavailable").tag(saved)
+        }
+        ForEach(
+          textModels.manifests.filter {
+            textModels.state(for: $0.modelID) == .downloaded
+              || $0.modelID == customization.textModelID
+          }, id: \.modelID
+        ) {
+          Text($0.model.name).tag($0.modelID)
+        }
+      }
       DisclosureGroup("Advanced") {
         VStack(alignment: .leading, spacing: 12) {
-          Picker(
-            "Reply model",
-            selection: Binding(
-              get: { customization.textModelID ?? "" },
-              set: { customization.textModelID = $0.isEmpty ? nil : $0 }
-            )
-          ) {
-            Text("Use app default").tag("")
-            Text("Apple Intelligence").tag(textModels.fallbackModelID)
-            if let saved = customization.textModelID, saved != textModels.fallbackModelID,
-              !textModels.manifests.contains(where: { $0.modelID == saved })
-            {
-              Text("Saved reply model unavailable").tag(saved)
-            }
-            ForEach(
-              textModels.manifests.filter {
-                textModels.state(for: $0.modelID) == .downloaded
-                  || $0.modelID == customization.textModelID
-              }, id: \.modelID
-            ) {
-              Text($0.model.name).tag($0.modelID)
-            }
-          }
           Text("Personality").font(.callout.weight(.medium))
           TextEditor(
             text: Binding(

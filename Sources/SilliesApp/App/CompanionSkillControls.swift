@@ -57,7 +57,7 @@ final class CompanionSkillControls {
           guard let self, self.isActive, let pet, pet.isStashTargeted != targeted else { return }
           pet.setStashTargeted(targeted)
           if targeted {
-            self.feedback.showDropTarget(at: pet.position)
+            self.feedback.showDropTarget(at: pet.feedbackPlacement)
           } else {
             self.feedback.hideDropTarget()
           }
@@ -124,7 +124,7 @@ final class CompanionSkillControls {
   private func canStartConversation(with pet: CompanionInstance) -> Bool {
     guard skills.activeAudioSession == nil, skills.canStartAudio(), !pet.isWritingIndicator else {
       feedback.showMessage(
-        String(localized: "Choose an available companion first."), at: pet.position)
+        String(localized: "Choose an available companion first."), at: pet.feedbackPlacement)
       return false
     }
     return true
@@ -144,21 +144,22 @@ final class CompanionSkillControls {
         items: items, for: pet.definition.id,
         companionName: pet.definition.name, currentTarget: target)
     else {
-      feedback.showMessage(String(localized: "Copy text or a link first"), at: pet.position)
+      feedback.showMessage(
+        String(localized: "Copy text or a link first"), at: pet.feedbackPlacement)
       return
     }
-    feedback.showMessage(String(localized: "Saving…"), at: pet.position)
+    feedback.showMessage(String(localized: "Saving…"), at: pet.feedbackPlacement)
     let requestGeneration = generation
     skills.whenPersisted { [weak self, weak pet] error in
       guard let self, self.isActive, self.generation == requestGeneration,
         let pet, self.environment.isRunning()
       else { return }
       if let error {
-        self.feedback.showMessage(error, at: pet.position)
+        self.feedback.showMessage(error, at: pet.feedbackPlacement)
         return
       }
       self.feedback.showSaved(
-        id, at: pet.position,
+        id, at: pet.feedbackPlacement,
         open: { [weak self] in self?.environment.openVault($0) },
         undo: { [weak self] in self?.skills.removeRecord(id: $0) })
     }

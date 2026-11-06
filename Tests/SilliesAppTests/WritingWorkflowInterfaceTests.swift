@@ -26,7 +26,7 @@ import Testing
       size: .init(width: 560, height: 400), name: "sillies-recent-writing-\(appearance.rawValue)")
     try renderSkillInterface(
       StashPickerView(
-        model: SessionVaultModel(vault: vault, presentation: .init(appearance: ThemeEnvironment())),
+        model: SessionVaultModel(vault: vault, presentation: .init()),
         paste: PasteBackCoordinator(), actions: .init(choose: { _ in }, close: {})),
       size: .init(width: 560, height: 440), name: "sillies-stash-picker-\(appearance.rawValue)")
     try renderSkillInterface(
@@ -52,7 +52,7 @@ import Testing
   #expect(controller.hasAvailableWritingCompanion)
   let companion = try #require(controller.beginWritingIndicator())
   #expect(["Mochi", "Kiko"].contains(companion.name))
-  #expect(controller.beginWritingIndicator()?.windowNumber == companion.windowNumber)
+  #expect(controller.beginWritingIndicator()?.window.windowID == companion.window.windowID)
   controller.endWritingIndicator()
   #expect(controller.hasAvailableWritingCompanion)
   settings.enabledCharacters = []

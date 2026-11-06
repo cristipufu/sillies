@@ -13,21 +13,27 @@ final class RecordingPlaybackModel {
   @ObservationIgnored private var player: AVPlayer?
   @ObservationIgnored private var observer: Any?
   @ObservationIgnored private var endObserver: NSObjectProtocol?
+  private var generation = UUID()
   private static let progressInterval = CMTime(seconds: 0.5, preferredTimescale: 600)
 
   func prepare(_ url: URL) async {
     stop()
+    let token = generation
+    error = nil
     do {
       let asset = AVURLAsset(url: url)
       let duration = try await asset.load(.duration).seconds
-      guard !Task.isCancelled, duration.isFinite, duration > 0 else { return }
+      guard !Task.isCancelled, generation == token, duration.isFinite, duration > 0 else { return }
       self.duration = duration
       let item = AVPlayerItem(asset: asset)
       let player = AVPlayer(playerItem: item)
       self.player = player
       observer = player.addPeriodicTimeObserver(forInterval: Self.progressInterval, queue: .main) {
         [weak self] time in
-        MainActor.assumeIsolated { self?.position = max(0, time.seconds) }
+        MainActor.assumeIsolated {
+          guard time.seconds.isFinite else { return }
+          self?.position = max(0, time.seconds)
+        }
       }
       endObserver = NotificationCenter.default.addObserver(
         forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main
@@ -35,6 +41,7 @@ final class RecordingPlaybackModel {
         MainActor.assumeIsolated { self?.isPlaying = false }
       }
     } catch {
+      guard !Task.isCancelled, generation == token else { return }
       self.error = String(localized: "Could not open recording: \(error.localizedDescription)")
     }
   }
@@ -51,11 +58,13 @@ final class RecordingPlaybackModel {
   }
 
   func seek(to seconds: Double) {
-    position = seconds
-    player?.seek(to: CMTime(seconds: seconds, preferredTimescale: 600))
+    guard seconds.isFinite else { return }
+    position = min(duration, max(0, seconds))
+    player?.seek(to: CMTime(seconds: position, preferredTimescale: 600))
   }
 
   func stop() {
+    generation = UUID()
     player?.pause()
     if let observer { player?.removeTimeObserver(observer) }
     if let endObserver { NotificationCenter.default.removeObserver(endObserver) }
@@ -64,11 +73,13 @@ final class RecordingPlaybackModel {
     player = nil
     isPlaying = false
   }
+  isolated deinit { stop() }
 }
 
 struct RecordingPlaybackView: View {
   @Environment(\.silliesTheme) private var theme
   let url: URL
+  var isPresented = true
   @State private var model = RecordingPlaybackModel()
 
   var body: some View {
@@ -99,6 +110,9 @@ struct RecordingPlaybackView: View {
         .font(.caption).monospacedDigit()
       }
     }.padding(16).background(theme.soft, in: RoundedRectangle(cornerRadius: 14))
-      .task(id: url) { await model.prepare(url) }.onDisappear { model.stop() }
+      .task(id: isPresented ? url : nil) {
+        if isPresented { await model.prepare(url) } else { model.stop() }
+      }
+      .onDisappear { model.stop() }
   }
 }

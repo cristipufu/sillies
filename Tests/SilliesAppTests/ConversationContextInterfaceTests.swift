@@ -105,7 +105,7 @@ import UniformTypeIdentifiers
           \.colorScheme, scheme),
       size: .init(width: 380, height: 420), name: "sillies-pinned-facts-\(scheme)")
     try renderSkillInterface(
-      ConversationMemoriesView(model: session).environment(\.colorScheme, scheme),
+      ConversationMemoriesView(model: session, back: {}).environment(\.colorScheme, scheme),
       size: .init(width: 380, height: 500), name: "sillies-memories-\(scheme)")
     try renderSkillInterface(
       ConversationDataControlsView(model: session, openSettings: {})
@@ -173,7 +173,6 @@ private struct ContextReply: ConversationResponding {
   let model = SessionVaultModel(
     vault: vault,
     presentation: .init(
-      appearance: ThemeEnvironment(),
       discussion: .init(
         companions: [owner],
         open: { _, _ in

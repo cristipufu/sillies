@@ -57,6 +57,9 @@ struct CompanionSkillTests {
   func sessionRecordFormatting() {
     #expect(SessionRecord.formatDuration(0) == "00:00")
     #expect(SessionRecord.formatDuration(125) == "02:05")
+    for duration in [Double.nan, .infinity, -.infinity, .greatestFiniteMagnitude, -1] {
+      #expect(SessionRecord.formatDuration(duration) == "00:00")
+    }
     let record = SessionRecord(
       kind: .listen,
       origin: .init(

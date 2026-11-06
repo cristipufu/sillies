@@ -61,7 +61,7 @@ final class CommandDispatcher {
         String(
           localized:
             "Companions are paused or unavailable in this app. Resume them in the Sillies menu."),
-        at: NSEvent.mouseLocation)
+        at: .init(position: NSEvent.mouseLocation))
       return
     }
     if onWritingCommand?(command) == true { return }
@@ -72,12 +72,13 @@ final class CommandDispatcher {
     if command.skill?.keepsCompanionStill == true, !skills.canStartAudio() {
       feedback.showMessage(
         String(localized: "Finish dictation or writing before starting another session."),
-        at: NSEvent.mouseLocation)
+        at: .init(position: NSEvent.mouseLocation))
       return
     }
     guard let companion = context?.companion ?? environment.companion() else {
       feedback.showMessage(
-        String(localized: "Choose an available companion first."), at: NSEvent.mouseLocation)
+        String(localized: "Choose an available companion first."),
+        at: .init(position: NSEvent.mouseLocation))
       return
     }
     if command == .saveClipboard {
@@ -95,7 +96,8 @@ final class CommandDispatcher {
     }
     guard let app = targeting.current() else {
       feedback.showMessage(
-        String(localized: "Focus the window you want to use first."), at: companion.position)
+        String(localized: "Focus the window you want to use first."),
+        at: .init(position: companion.position))
       return
     }
     cancelPending()
@@ -108,7 +110,8 @@ final class CommandDispatcher {
       else { return }
       guard let target else {
         self.feedback.showMessage(
-          String(localized: "No usable foreground window was found."), at: companion.position)
+          String(localized: "No usable foreground window was found."),
+          at: .init(position: companion.position))
         return
       }
       self.start(skill, context: .init(companion: companion, target: target))

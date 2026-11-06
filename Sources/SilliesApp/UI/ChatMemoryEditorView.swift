@@ -6,7 +6,6 @@ struct ChatMemoryEditorView: View {
   private enum Layout {
     static let spacing: CGFloat = 16
     static let padding: CGFloat = 20
-    static let width: CGFloat = 360
     static let editorHeight: CGFloat = 100
     static let sourceHeight: CGFloat = 90
     static let editorPadding: CGFloat = 8
@@ -21,6 +20,18 @@ struct ChatMemoryEditorView: View {
         editor.isEditing ? String(localized: "Edit memory") : String(localized: "Remember this…"),
         systemImage: "sparkles"
       ).font(.title2.bold())
+      ScrollView {
+        fields
+      }
+      actions
+    }.padding(Layout.padding).frame(
+      maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading
+    )
+    .background(theme.paper).foregroundStyle(theme.ink).tint(theme.accent)
+  }
+
+  private var fields: some View {
+    VStack(alignment: .leading, spacing: Layout.spacing) {
       HStack {
         TextField("Memory topic", text: $editor.topic).textFieldStyle(.roundedBorder)
           .disabled(editor.isEditing)
@@ -47,17 +58,18 @@ struct ChatMemoryEditorView: View {
       if let failure = editor.failure {
         Text(failure).font(.caption).foregroundStyle(theme.secondary).textSelection(.enabled)
       }
-      HStack {
-        Button("Cancel") { editor.close() }.buttonStyle(SoftButtonStyle())
-          .keyboardShortcut(.cancelAction).disabled(editor.isSaving)
-        Spacer()
-        if editor.isSaving { ProgressView().controlSize(.small) }
-        Button("Save memory") { Task { await editor.save() } }
-          .buttonStyle(AccentButtonStyle()).keyboardShortcut(.defaultAction)
-          .disabled(!editor.canSave)
-      }
-    }.padding(Layout.padding).frame(width: Layout.width)
-      .background(theme.paper).foregroundStyle(theme.ink).tint(theme.accent)
-      .interactiveDismissDisabled(editor.isSaving)
+    }
+  }
+
+  private var actions: some View {
+    HStack {
+      Button("Cancel") { editor.close() }.buttonStyle(SoftButtonStyle())
+        .keyboardShortcut(.cancelAction).disabled(editor.isSaving)
+      Spacer()
+      if editor.isSaving { ProgressView().controlSize(.small) }
+      Button("Save memory") { Task { await editor.save() } }
+        .buttonStyle(AccentButtonStyle()).keyboardShortcut(.defaultAction)
+        .disabled(!editor.canSave)
+    }
   }
 }

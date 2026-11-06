@@ -251,3 +251,11 @@ marks cold warmup separately. Compare both orders, verify exact phrase delivery,
 audio for pronunciation and phrasing before changing startup timing. First non-silent PCM is
 not physical speaker latency. Capture/VAD lifecycle checks and real-device output checks are
 separate; neither a scripted recognizer nor a silent sink certifies acoustic quality.
+
+### Catalog presentation
+
+Supply the optional `family` display field in the catalog generator when several variants belong
+together (for example, `Gemma` or `Qwen3-TTS`). Settings groups by this metadata and preserves catalog
+order within a family. Without it, the model name is its own group. Do not infer families from runtime
+provider IDs or name substrings. Installation controls and capability details stay with the provider;
+the shared catalog browser owns filtering, disclosure and visibility of in-progress or failed work.

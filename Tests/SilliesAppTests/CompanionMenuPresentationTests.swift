@@ -42,7 +42,8 @@ import Testing
 
 @Test @MainActor func radialMenuIgnoresGapsDismissesOutsideAndStopsMonitoring() {
   let panel = SkillFloatingPanel(
-    contentRect: CGRect(x: 0, y: 0, width: 300, height: 300), ignoresMouseEvents: true)
+    contentRect: CGRect(x: 0, y: 0, width: 300, height: 300), ignoresMouseEvents: true,
+    level: CompanionPanel.normalOverlayLevel)
   defer { panel.close() }
   let interaction = RadialMenuInteraction()
   var dismissed = false
@@ -79,7 +80,8 @@ import Testing
 
 @Test @MainActor func radialMenuTracksRenderedButtonsAfterItsPanelMoves() throws {
   let panel = SkillFloatingPanel(
-    contentRect: CGRect(x: 200, y: 300, width: 300, height: 300), ignoresMouseEvents: true)
+    contentRect: CGRect(x: 200, y: 300, width: 300, height: 300), ignoresMouseEvents: true,
+    level: CompanionPanel.normalOverlayLevel)
   defer { panel.close() }
   let interaction = RadialMenuInteraction()
   defer { interaction.stop() }
@@ -191,7 +193,7 @@ import Testing
   let window = try #require(menu.windowNumber.flatMap { NSApp.window(withWindowNumber: $0) })
   #expect(window.isVisible)
   #expect(window.canBecomeKey)
-  #expect(window.level == CompanionPanel.hudLevel(forWindowLayer: pet.attachedWindowLayer))
+  #expect(window.level == pet.panel.level)
   #expect(window.backgroundColor.alphaComponent == 0)
   #expect(pet.holdsConversationPerch)
   let escape = try #require(

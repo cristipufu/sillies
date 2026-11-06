@@ -5,6 +5,8 @@ import SwiftUI
 struct ChatComposer: NSViewRepresentable {
   @Environment(\.silliesTheme) private var theme
   @Environment(\.chatReadingSize) private var readingSize
+  @Environment(\.isEnabled) private var isEnabled
+  @Environment(\.chatTextPresentation) private var presentation
   @Binding var text: String
   let isEditable: Bool
   let send: () -> Void
@@ -45,7 +47,8 @@ struct ChatComposer: NSViewRepresentable {
     TextEditorAppearance.apply(theme, to: editor)
     ChatTypography.apply(readingSize, to: editor)
     if editor.string != text, !editor.hasMarkedText() { editor.string = text }
-    editor.isEditable = isEditable
+    editor.isEditable = isEditable && isEnabled
+    NativeTextVisibility.apply(presentation, to: editor)
     editor.onSend = send
     editor.focusChanged = focusChanged
     context.coordinator.requestFocus(focusRequest, for: editor)

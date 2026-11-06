@@ -22,8 +22,6 @@ struct SilliesMain {
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
-  private static let initialVaultWindowSize = NSSize(width: 980, height: 660)
-  private static let minVaultWindowSize = NSSize(width: 880, height: 560)
   private static let exportedCharacterPreviewPixels = 512
   private static let exportedCharacterPreviewScale: CGFloat = 4
 
@@ -59,7 +57,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     self.settingsNavigation.destination = .intelligence
     self.showSettings()
   }
-  private var vaultWindow: NSWindow?
+  private var vaultController: SessionVaultWindowController?
+  private var vaultWindow: NSWindow? { vaultController?.window }
   private var previewWindow: NSWindow?
   private var temporaryPreferencesDomain: String?
   private var playground: WindowPlayground?
@@ -372,11 +371,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     return nil
   }
 
-  private func openConversation(_ mode: ConversationMode) {
+  private func openConversation(_ mode: ConversationMode, companionID: String) {
     popover.performClose(nil)
-    if let session = controller?.skills.activeChatSession {
-      setup?.chooseCompanion(session.companionID)
-    }
+    setup?.chooseCompanion(companionID)
     setup?.openConversation(mode)
   }
 
@@ -414,6 +411,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     }
     isTerminating = true
     setup?.stop()
+    vaultController?.close()
+    diagnosticsExport.cancel()
     controlCenterDismissal.stop()
     shortcuts?.stop()
     automatedRunner.stopPreview()
@@ -470,6 +469,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
   func applicationWillTerminate(_ notification: Notification) {
     setup?.stop()
+    vaultController?.close()
+    diagnosticsExport.cancel()
     controlCenterDismissal.stop()
     automatedRunner.stopPreview()
     shortcuts?.stop()
@@ -519,11 +520,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       actions: .init(
         openSettings: { [weak self] in self?.showSettings() },
         openVault: { [weak self] in self?.showVault() },
+        openStash: { [weak self] in self?.showVault(.stash) },
+        openCompanions: { [weak self] in
+          self?.settingsNavigation.destination = .companions
+          self?.settingsNavigation.companionsPage = .crew
+          self?.showSettings()
+        },
         openWriting: { [weak self] in
           self?.popover.performClose(nil)
           self?.controller?.onOpenWritingSession?()
         },
-        openConversation: { [weak self] in self?.openConversation($0) },
+        openConversation: { [weak self] in self?.openConversation($0, companionID: $1) },
         openSetup: { [weak self] in
           self?.settingsNavigation.destination = .setup
           self?.showSettings()
@@ -634,76 +641,71 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   @objc private func openVaultFromMenu() { controller?.commands.perform(.openVault) }
 
   private func showVault(recordID: UUID? = nil) {
+    showVault(recordID.map { .record($0) } ?? .resume)
+  }
+
+  private func showVault(_ destination: SessionVaultWindowController.Destination) {
     if let writingTools {
       Task { [weak self] in
         await writingTools.pasteBack.captureDestination()
-        self?.presentVault(recordID: recordID)
+        self?.presentVault(destination)
       }
     } else {
-      presentVault(recordID: recordID)
+      presentVault(destination)
     }
   }
 
-  private func presentVault(recordID: UUID?) {
+  private func presentVault(_ destination: SessionVaultWindowController.Destination) {
     popover.performClose(nil)
     guard let controller else { return }
-    let rootView = SessionVaultView(
-      vault: controller.skills.vault, initialRecordID: recordID, pasteBack: writingTools?.pasteBack,
-      appearance: appearance,
-      conversations: conversations.map { library in
-        .init(
-          repository: library,
-          open: { [weak self] owner, messageID in
-            guard let self, let controller = self.controller else { return }
-            controller.skills.startConversation(.chat, for: owner.id, name: owner.name)
-            if let session = controller.skills.activeChatSession, session.companionID == owner.id {
-              Task {
-                await session.restoreHistory()
-                if let messageID { await session.browser.show(.around(messageID)) }
+    if vaultController == nil {
+      vaultController = SessionVaultWindowController(
+        vault: controller.skills.vault, appearance: appearance,
+        services: .init(
+          pasteBack: writingTools?.pasteBack,
+          conversations: conversations.map { library in
+            .init(
+              repository: library,
+              open: { [weak self] owner, messageID in
+                guard let self else { return Self.conversationUnavailable }
+                return self.openVaultConversation(owner, messageID: messageID)
+              })
+          },
+          discussion: .init(
+            availableCompanions: { [weak controller] in
+              guard let controller else { return [] }
+              return controller.catalog.characters.filter {
+                $0.chat != nil && controller.settings.enabledCharacters.contains($0.id)
+              }.map { .init(id: $0.id, name: $0.name) }
+            },
+            open: { [weak self] id, owner in
+              guard let self, let skills = self.controller?.skills else {
+                return Self.conversationUnavailable
               }
-            }
-          })
-      },
-      discussion: .init(
-        companions: controller.catalog.characters.filter {
-          $0.chat != nil && controller.settings.enabledCharacters.contains($0.id)
-        }.map { .init(id: $0.id, name: $0.name) },
-        open: { [weak self] id, owner in
-          guard let self, let skills = self.controller?.skills else {
-            return .init(
-              category: .captureUnavailable,
-              message: String(
-                localized: "This companion could not open a conversation. Please try again."))
-          }
-          let failure = skills.startConversation(
-            .chat, for: owner.id, name: owner.name, selectedRecord: id)
-          if failure == nil { self.vaultWindow?.orderOut(nil) }
-          return failure
-        }))
-    let host = ThemedHostingController(rootView: rootView, appearance: appearance)
-    host.sizingOptions = []
-    if let vaultWindow {
-      let currentFrame = vaultWindow.frame
-      vaultWindow.contentViewController = host
-      vaultWindow.setFrame(currentFrame, display: true)
-    } else {
-      let window = NSWindow(
-        contentRect: CGRect(origin: .zero, size: Self.initialVaultWindowSize),
-        styleMask: [.titled, .closable, .miniaturizable, .resizable],
-        backing: .buffered, defer: false)
-      window.title = String(localized: "Sillies · Session Vault")
-      AppContentWindowStacking.shared.register(window)
-      appearance.register(window)
-      window.titlebarAppearsTransparent = true
-      window.isReleasedWhenClosed = false
-      window.minSize = Self.minVaultWindowSize
-      window.contentViewController = host
-      window.setContentSize(Self.initialVaultWindowSize)
-      window.center()
-      vaultWindow = window
+              let failure = skills.startConversation(
+                .chat, for: owner.id, name: owner.name, selectedRecord: id)
+              if failure == nil { self.vaultController?.hide() }
+              return failure
+            })))
     }
-    NSApp.activate(ignoringOtherApps: true)
-    vaultWindow?.makeKeyAndOrderFront(nil)
+    vaultController?.show(destination)
+  }
+
+  private static var conversationUnavailable: SessionFailure {
+    .init(
+      category: .captureUnavailable,
+      message: String(localized: "This companion could not open a conversation. Please try again."))
+  }
+
+  private func openVaultConversation(_ owner: ConversationOwner, messageID: UUID?)
+    -> SessionFailure?
+  {
+    guard let skills = controller?.skills else { return Self.conversationUnavailable }
+    let failure = skills.openConversation(for: owner) { [weak self] session in
+      if let messageID { self?.chatWindow.showMessage(messageID, in: session) }
+    }
+    if failure == nil { vaultController?.hide() }
+    return failure
   }
 
   @objc private func showSettings() {
@@ -720,7 +722,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       window.titlebarAppearsTransparent = true
       window.isReleasedWhenClosed = false
       let lifecycle = SettingsWindowLifecycle(
-        stop: { [weak self] in self?.setup?.stop() },
+        stop: { [weak self] in
+          self?.setup?.stop()
+          self?.diagnosticsExport.cancel()
+        },
         refresh: { [weak self] in
           if self?.settingsNavigation.destination == .setup { self?.setup?.refresh() }
         })
@@ -736,9 +741,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
           diagnostics: diagnostics?.presentation,
           setup: setup, suggestions: setupSuggestions, companionPreferences: companionPreferences,
           exportDiagnostics: { [weak self] in
-            guard let self, let model = self.diagnostics?.presentation else { return }
-            self.diagnosticsExport.chooseFile(for: model)
+            guard let self, let model = self.diagnostics?.presentation,
+              let parent = self.settingsWindow
+            else { return }
+            self.diagnosticsExport.chooseFile(for: model, parent: parent)
           },
+          actions: .init(
+            openRetention: { [weak self] in self?.presentVault(.retention) },
+            openMemories: { [weak self] id in
+              guard let self, let controller = self.controller,
+                let character = controller.catalog.characters.first(where: { $0.id == id })
+              else { return Self.conversationUnavailable }
+              return controller.skills.openConversation(for: .init(id: id, name: character.name)) {
+                [weak self] _ in
+                self?.chatWindow.navigation.show(.memories)
+                self?.settingsWindow?.close()
+              }
+            }),
           navigation: settingsNavigation), appearance: appearance)
       window.center()
       settingsWindow = window

@@ -96,7 +96,8 @@
         },
         "sourceURL": "https://huggingface.co/mlx-community/gemma-4-E4B-it-4bit",
         "minimumMemoryGB": 16,
-        "languagesDescription": "Over 140 languages. Quality varies by language."
+        "languagesDescription": "Over 140 languages. Quality varies by language.",
+        "family": "Gemma"
       },
       "artifacts": [
         {
@@ -235,7 +236,8 @@
         },
         "sourceURL": "https://huggingface.co/mlx-community/gemma-4-12B-it-4bit",
         "minimumMemoryGB": 24,
-        "languagesDescription": "Over 140 languages. Quality varies by language."
+        "languagesDescription": "Over 140 languages. Quality varies by language.",
+        "family": "Gemma"
       },
       "artifacts": [
         {
@@ -388,7 +390,8 @@
         },
         "sourceURL": "https://huggingface.co/mlx-community/gemma-4-26B-A4B-it-4bit",
         "minimumMemoryGB": 32,
-        "languagesDescription": "Over 140 languages. Quality varies by language."
+        "languagesDescription": "Over 140 languages. Quality varies by language.",
+        "family": "Gemma"
       },
       "artifacts": [
         {
@@ -543,7 +546,8 @@
         },
         "sourceURL": "https://huggingface.co/ibm-granite/granite-4.2-3b-q4-mlx",
         "minimumMemoryGB": 8,
-        "languagesDescription": "12 languages. Quality varies by language."
+        "languagesDescription": "12 languages. Quality varies by language.",
+        "family": "Granite"
       },
       "artifacts": [
         {
@@ -680,7 +684,8 @@
         },
         "sourceURL": "https://huggingface.co/ibm-granite/granite-4.2-8b-q4-mlx",
         "minimumMemoryGB": 16,
-        "languagesDescription": "12 languages. Quality varies by language."
+        "languagesDescription": "12 languages. Quality varies by language.",
+        "family": "Granite"
       },
       "artifacts": [
         {
@@ -821,7 +826,8 @@
         },
         "sourceURL": "https://huggingface.co/LiquidAI/LFM2.5-2.6B-MLX-4bit",
         "minimumMemoryGB": 8,
-        "languagesDescription": "16 languages. Quality varies by language."
+        "languagesDescription": "16 languages. Quality varies by language.",
+        "family": "LFM"
       },
       "artifacts": [
         {
@@ -968,7 +974,8 @@
         },
         "sourceURL": "https://huggingface.co/LiquidAI/LFM2.5-24B-A2B-MLX-4bit",
         "minimumMemoryGB": 32,
-        "languagesDescription": "16 languages. Quality varies by language."
+        "languagesDescription": "16 languages. Quality varies by language.",
+        "family": "LFM"
       },
       "artifacts": [
         {
@@ -1124,7 +1131,8 @@
         },
         "sourceURL": "https://huggingface.co/mlx-community/Ministral-3-8B-Instruct-2512-4bit",
         "minimumMemoryGB": 24,
-        "languagesDescription": "Dozens of languages; quality varies by language."
+        "languagesDescription": "Dozens of languages; quality varies by language.",
+        "family": "Ministral"
       },
       "artifacts": [
         {
@@ -1273,7 +1281,8 @@
         },
         "sourceURL": "https://huggingface.co/mlx-community/NVIDIA-Nemotron-3.5-Bolt-E4B-OptiQ-4bit",
         "minimumMemoryGB": 24,
-        "languagesDescription": "35 languages. Quality varies by language."
+        "languagesDescription": "35 languages. Quality varies by language.",
+        "family": "Nemotron"
       },
       "artifacts": [
         {
@@ -1432,7 +1441,8 @@
         },
         "sourceURL": "https://huggingface.co/mlx-community/Qwen3.5-2B-4bit",
         "minimumMemoryGB": 8,
-        "languagesDescription": "201 languages and dialects."
+        "languagesDescription": "201 languages and dialects.",
+        "family": "Qwen"
       },
       "artifacts": [
         {
@@ -1573,7 +1583,8 @@
         },
         "sourceURL": "https://huggingface.co/mlx-community/Qwen3.5-4B-MLX-4bit",
         "minimumMemoryGB": 16,
-        "languagesDescription": "201 languages and dialects."
+        "languagesDescription": "201 languages and dialects.",
+        "family": "Qwen"
       },
       "artifacts": [
         {
@@ -1706,7 +1717,8 @@
         },
         "sourceURL": "https://huggingface.co/mlx-community/Qwen3.5-9B-MLX-4bit",
         "minimumMemoryGB": 24,
-        "languagesDescription": "201 languages and dialects."
+        "languagesDescription": "201 languages and dialects.",
+        "family": "Qwen"
       },
       "artifacts": [
         {

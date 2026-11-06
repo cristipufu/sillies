@@ -37,6 +37,10 @@ private struct StashFeedbackView: View {
 
 @MainActor
 final class StashFeedbackController {
+  struct Placement {
+    let position: CGPoint
+    var companion: CompanionWindowAnchor? = nil
+  }
   private let appearance: ThemeEnvironment
   init(appearance: ThemeEnvironment) {
     self.appearance = appearance
@@ -48,13 +52,14 @@ final class StashFeedbackController {
   private let model = StashFeedbackModel()
   private var panel: SkillFloatingPanel?
 
-  func showDropTarget(at point: CGPoint) {
+  func showDropTarget(at placement: Placement) {
     model.recordID = nil
-    show(String(localized: "Drop to save"), at: point, presentation: .hint)
+    show(String(localized: "Drop to save"), at: placement, presentation: .hint)
   }
 
   func showSaved(
-    _ id: UUID, at point: CGPoint, open: @escaping (UUID) -> Void, undo: @escaping (UUID) -> Void
+    _ id: UUID, at placement: Placement, open: @escaping (UUID) -> Void,
+    undo: @escaping (UUID) -> Void
   ) {
     model.recordID = id
     model.open = open
@@ -62,34 +67,42 @@ final class StashFeedbackController {
       undo($0)
       self?.hide()
     }
-    show(String(localized: "Saved"), at: point, presentation: .actionable)
+    show(String(localized: "Saved"), at: placement, presentation: .actionable)
   }
 
-  func showMessage(_ message: String, at point: CGPoint) {
+  func showMessage(_ message: String, at placement: Placement) {
     model.recordID = nil
-    show(message, at: point, presentation: .actionable)
+    show(message, at: placement, presentation: .actionable)
   }
 
-  private func show(_ message: String, at point: CGPoint, presentation: Presentation) {
+  private func show(_ message: String, at placement: Placement, presentation: Presentation) {
     model.message = message
     model.dismiss = { [weak self] in self?.hide() }
     if panel == nil {
       let panel = SkillFloatingPanel(
-        contentRect: CGRect(origin: .zero, size: Self.size), ignoresMouseEvents: false)
+        contentRect: CGRect(origin: .zero, size: Self.size), ignoresMouseEvents: false,
+        level: .normal)
       let host = ThemedHostingView(
         rootView: StashFeedbackView(model: model), appearance: appearance)
       host.sizingOptions = []
       panel.contentView = host
       self.panel = panel
     }
-    panel?.ignoresMouseEvents = presentation == .hint
+    guard let panel else { return }
+    panel.ignoresMouseEvents = presentation == .hint
+    panel.level = placement.companion?.level ?? .normal
+    let point = placement.position
     let screen = NSScreen.screens.first { $0.frame.contains(point) }
     let visible = CompanionPanel.visibleFrame(for: screen)
     let origin = CGPoint(
       x: min(max(point.x - Self.size.width / 2, visible.minX), visible.maxX - Self.size.width),
       y: min(max(point.y + Self.verticalOffset, visible.minY), visible.maxY - Self.size.height))
-    panel?.setFrameOrigin(origin)
-    panel?.orderFrontRegardless()
+    panel.setFrameOrigin(origin)
+    if let anchor = placement.companion {
+      anchor.orderAbove(panel)
+    } else {
+      panel.orderFrontRegardless()
+    }
   }
 
   func hideDropTarget() { if model.recordID == nil { hide() } }

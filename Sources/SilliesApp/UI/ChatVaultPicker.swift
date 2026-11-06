@@ -4,16 +4,15 @@ import SwiftUI
 
 struct ChatVaultPicker: View {
   @Environment(\.silliesTheme) private var theme
-  @Environment(\.dismiss) private var dismiss
   let selection: ChatSelectedRecords
+  let back: () -> Void
   @State private var model: ChatVaultPickerModel
-  init(store: SessionVaultStore, selection: ChatSelectedRecords) {
+  init(store: SessionVaultStore, selection: ChatSelectedRecords, back: @escaping () -> Void) {
     self.selection = selection
+    self.back = back
     _model = State(initialValue: ChatVaultPickerModel(store: store))
   }
   private enum Layout {
-    static let width: CGFloat = 360
-    static let height: CGFloat = 420
     static let inset: CGFloat = 20
     static let gap: CGFloat = 12
     static let corner: CGFloat = 12
@@ -21,11 +20,7 @@ struct ChatVaultPicker: View {
   var body: some View {
     @Bindable var picker = model
     VStack(alignment: .leading, spacing: Layout.gap) {
-      HStack {
-        Label("Add from Vault", systemImage: "paperclip").font(.headline)
-        Spacer()
-        Button("Done") { dismiss() }.buttonStyle(SoftButtonStyle())
-      }
+      ChatPageHeader(title: String(localized: "Add from Vault"), back: back)
       Text("Choose a recording, screenshot or saved item to discuss.")
         .font(.caption).foregroundStyle(theme.secondary)
       TextField("Search Vault", text: $picker.query).textFieldStyle(.roundedBorder)
@@ -33,7 +28,7 @@ struct ChatVaultPicker: View {
         LazyVStack(alignment: .leading, spacing: Layout.gap) {
           ForEach(model.records) { record in
             Button {
-              if selection.add(record.id) { dismiss() }
+              if selection.add(record.id) { back() }
             } label: {
               HStack {
                 Image(systemName: record.kind.symbolName).foregroundStyle(theme.accent)
@@ -60,7 +55,7 @@ struct ChatVaultPicker: View {
       if let failure = model.failure { Text(failure).font(.caption).textSelection(.enabled) }
       Text("Up to three items. Remove an item from Chat to stop including it in future replies.")
         .font(.caption).foregroundStyle(theme.secondary)
-    }.padding(Layout.inset).frame(width: Layout.width, height: Layout.height)
+    }.padding(Layout.inset).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
       .background(theme.paper).foregroundStyle(theme.ink).tint(theme.accent)
       .task(id: model.query) { await model.search() }
   }

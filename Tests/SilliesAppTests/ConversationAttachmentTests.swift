@@ -61,14 +61,14 @@ import Testing
   chat.follow(
     .init(
       companionID: "another-mascot", position: .zero, visibleFrame: visible, edge: .top,
-      windowLayer: 0))
+      window: .init(windowID: nil, level: .normal)))
   #expect(window.frame == frame)
   #expect(window.level == CompanionPanel.hudLevel(forWindowLayer: 0))
   chat.follow(
     .init(
       companionID: session.companionID, position: pet.position, visibleFrame: visible, edge: .top,
-      windowLayer: NSWindow.Level.floating.rawValue))
-  #expect(window.level == CompanionPanel.hudLevel(forWindowLayer: NSWindow.Level.floating.rawValue))
+      window: .init(windowID: nil, level: .floating)))
+  #expect(window.level == .floating)
   #expect(!window.isVisible)
 }
 
@@ -180,7 +180,7 @@ import Testing
     chat.follow(
       .init(
         companionID: session.companionID, position: point,
-        visibleFrame: visible, edge: edge, windowLayer: 0))
+        visibleFrame: visible, edge: edge, window: .init(windowID: nil, level: .normal)))
     await Task.yield()
     content.layoutSubtreeIfNeeded()
     #expect(

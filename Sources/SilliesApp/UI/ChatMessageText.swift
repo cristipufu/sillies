@@ -10,6 +10,7 @@ struct ChatMessageText: NSViewRepresentable {
   @Environment(\.silliesTheme) private var theme
   @Environment(\.chatSelectionReset) private var selectionReset
   @Environment(\.chatReadingSize) private var readingSize
+  @Environment(\.chatTextPresentation) private var presentation
   let text: String
   let color: NSColor
   let selectionChanged: (Bool) -> Void
@@ -21,6 +22,7 @@ struct ChatMessageText: NSViewRepresentable {
   }
   func updateNSView(_ view: NSTextView, context: Context) {
     context.coordinator.selectionChanged = selectionChanged
+    NativeTextVisibility.apply(presentation, to: view)
     ChatTypography.apply(readingSize, to: view)
     if view.string != text { context.coordinator.replaceText(in: view, with: text) }
     context.coordinator.resetSelection(in: view, revision: selectionReset)

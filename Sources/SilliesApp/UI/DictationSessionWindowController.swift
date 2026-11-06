@@ -24,7 +24,8 @@ import SwiftUI
       panel.isReleasedWhenClosed = false
       panel.hidesOnDeactivate = false
       panel.becomesKeyOnlyIfNeeded = true
-      panel.level = CompanionPanel.contentWindowLevel
+      AppContentWindowStacking.shared.register(panel)
+      appearance.register(panel)
       panel.contentMinSize = SessionWindowLayout.minimumSize
       let host = ThemedHostingController(
         rootView: DictationSessionView(

@@ -31,7 +31,7 @@ enum WritingFeedbackLayout {
 
   func prepare(_ content: Content) {
     guard panel == nil else { return }
-    let panel = SkillFloatingPanel(contentRect: .zero, ignoresMouseEvents: false)
+    let panel = SkillFloatingPanel(contentRect: .zero, ignoresMouseEvents: false, level: .normal)
     let host = ThemedHostingController(rootView: content, appearance: appearance)
     host.sizingOptions = []
     panel.contentViewController = host
@@ -52,13 +52,13 @@ enum WritingFeedbackLayout {
       layoutMeasurements += 1
     }
     attach(to: anchor)
-    if !panel.isVisible { panel.order(.above, relativeTo: anchor.windowNumber) }
+    if !panel.isVisible { anchor.window.orderAbove(panel) }
   }
   func attach(to companion: WritingCompanionAnchor) {
     anchor = companion
     let point = companion.position
     guard let panel else { return }
-    let level = CompanionPanel.hudLevel(forWindowLayer: companion.windowLayer)
+    let level = companion.window.level
     if panel.level != level { panel.level = level }
     let visible = CompanionPanel.visibleFrame(
       for: NSScreen.screens.first { $0.frame.contains(point) })

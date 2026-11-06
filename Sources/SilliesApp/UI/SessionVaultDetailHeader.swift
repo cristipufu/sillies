@@ -129,6 +129,7 @@ struct SessionVaultDetailHeader: View {
             Button(pasteBack.actionTitle) { model.paste(record) }.disabled(pasteBack.isPasting)
           }
           Button("Export Markdown & attachments…") { model.export([record]) }
+            .disabled(!model.canExport)
           Button(
             record.isProtected
               ? String(localized: "Remove protection")

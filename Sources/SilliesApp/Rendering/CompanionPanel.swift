@@ -12,8 +12,7 @@ final class CompanionPanel: NSPanel {
   private var stacking: Stacking = .following(windowLayer: 0)
   private var occlusionExclusion: WindowTrackingExclusions.Registration?
   private static let windowLevelOffsetAboveTarget = 1
-  private static let hudLevelOffsetAboveCompanion = 1
-  private static let contentLevelOffsetAboveHUD = 1
+  private static let contentLevelOffsetAboveCompanion = 1
   private static let defaultScreenVisibleFrame = CGRect(x: 0, y: 0, width: 1440, height: 900)
   static let normalOverlayLevel = NSWindow.Level(
     rawValue: NSWindow.Level.normal.rawValue + windowLevelOffsetAboveTarget)
@@ -22,7 +21,7 @@ final class CompanionPanel: NSPanel {
   static let overlayLevel = floatingOverlayLevel
   static let contentWindowLevel = NSWindow.Level(
     rawValue:
-      floatingOverlayLevel.rawValue + hudLevelOffsetAboveCompanion + contentLevelOffsetAboveHUD)
+      normalOverlayLevel.rawValue + contentLevelOffsetAboveCompanion)
   static let overlayCollectionBehavior: NSWindow.CollectionBehavior = [
     .canJoinAllSpaces, .canJoinAllApplications, .fullScreenAuxiliary, .ignoresCycle, .transient,
   ]
@@ -54,8 +53,7 @@ final class CompanionPanel: NSPanel {
   }
 
   static func hudLevel(forWindowLayer windowLayer: Int) -> NSWindow.Level {
-    let companionLevel = overlayLevel(forWindowLayer: windowLayer, isPickedUp: false)
-    return NSWindow.Level(rawValue: companionLevel.rawValue + hudLevelOffsetAboveCompanion)
+    overlayLevel(forWindowLayer: windowLayer, isPickedUp: false)
   }
 
   override var canBecomeKey: Bool { false }

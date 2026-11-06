@@ -22,6 +22,10 @@ struct SpeechModelSettingsView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
       if scope != .speakers {
+        LabeledContent(
+          "App default",
+          value: model.manifests.first { $0.modelID == model.selectedModelID }?.model.name
+            ?? String(localized: "Apple Speech"))
         HStack {
           VStack(alignment: .leading, spacing: 4) {
             Text("Apple Speech").fontWeight(.semibold)
@@ -36,10 +40,14 @@ struct SpeechModelSettingsView: View {
           }
         }
       }
-      ForEach(manifests, id: \.model.id) { manifest in
-        Divider()
-        modelRow(manifest)
-      }
+      ModelCatalogBrowser(
+        entries: manifests.map { manifest in
+          .init(
+            id: manifest.modelID, family: manifest.model.name,
+            name: manifest.model.name, detail: downloadDescription(manifest),
+            state: model.state(for: manifest.modelID), isSelected: model.isSelected(manifest),
+            model: manifest)
+        }, content: modelRow)
       if model.isLoading { ProgressView("Checking models…").controlSize(.small) }
       if scope == .all, let updates = model.updates {
         Divider()
@@ -76,15 +84,6 @@ struct SpeechModelSettingsView: View {
   private func modelRow(_ manifest: SpeechModelManifest) -> some View {
     let state = model.state(for: manifest.model.id)
     return VStack(alignment: .leading, spacing: 8) {
-      HStack(alignment: .top) {
-        VStack(alignment: .leading, spacing: 4) {
-          Text(manifest.model.name).fontWeight(.semibold)
-          Text(downloadDescription(manifest))
-            .font(.caption).foregroundStyle(theme.secondary)
-        }
-        Spacer(minLength: 8)
-        if model.isSelected(manifest) { selectedLabel }
-      }
       Text(LocalizedCatalogText.value(manifest.model.detail)).font(.caption).foregroundStyle(
         theme.secondary
       )

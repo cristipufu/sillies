@@ -249,7 +249,7 @@ private actor CleanupFixture {
   panel.attach(
     to: .init(
       name: "Kiko", position: .init(x: 300, y: 300), characterSize: 64,
-      windowLayer: 0, windowNumber: 0))
+      window: .init(windowID: nil, level: .normal)))
   panel.show(fixture.model, copy: { _ in }, history: {})
   let listening = try #require(panel.frame)
   #expect(listening.width <= WritingFeedbackLayout.width + 2 * WritingFeedbackLayout.shadowInset)
@@ -340,8 +340,8 @@ func dictationHistoryFailureUsesTheSharedNoticeAndRetryWithoutLosingText(permiss
   let panel = DictationPanelController(appearance: ThemeEnvironment())
   panel.attach(
     to: .init(
-      name: "Kiko", position: .init(x: 300, y: 300), characterSize: 64, windowLayer: 0,
-      windowNumber: 0))
+      name: "Kiko", position: .init(x: 300, y: 300), characterSize: 64,
+      window: .init(windowID: nil, level: .normal)))
   fixture.model.start(.toggle)
   try await waitForDictation { fixture.model.canFinish }
   panel.show(fixture.model, copy: { _ in }, history: {})

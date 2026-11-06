@@ -20,7 +20,7 @@ final class SkillFloatingPanel: NSPanel {
   }
 
   init(
-    contentRect: CGRect, ignoresMouseEvents: Bool, level: NSWindow.Level = .statusBar,
+    contentRect: CGRect, ignoresMouseEvents: Bool, level: NSWindow.Level,
     focus: Focus = .pointerOnly
   ) {
     self.focus = focus

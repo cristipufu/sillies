@@ -8,6 +8,7 @@ struct SessionVaultDetailView: View {
   let vault: SessionVaultStore
   let model: SessionVaultModel
   let record: SessionRecord?
+  var isVisible = true
   private struct SectionAction {
     let title: String
     let perform: () -> Void
@@ -15,9 +16,24 @@ struct SessionVaultDetailView: View {
   private struct PreviewIdentity: Hashable {
     let recordID: UUID
     let hasImage: Bool
+    let isVisible: Bool
   }
+  private var showsTranscript: Bool { record != nil && model.expandedTranscriptID == record?.id }
 
   var body: some View {
+    ZStack {
+      overview
+        .opacity(showsTranscript ? 0 : 1)
+        .allowsHitTesting(!showsTranscript)
+        .disabled(showsTranscript || !isVisible)
+        .accessibilityHidden(showsTranscript)
+      if let record, showsTranscript {
+        VaultTranscriptReader(record: record, model: model, isVisible: isVisible)
+      }
+    }
+  }
+
+  @ViewBuilder private var overview: some View {
     if let record {
       let previewImage = vault.cachedImage(for: record)
       ScrollView {
@@ -37,7 +53,7 @@ struct SessionVaultDetailView: View {
           }
 
           if let audioURL = vault.audioURL(for: record) {
-            RecordingPlaybackView(url: audioURL).id(record.id)
+            RecordingPlaybackView(url: audioURL, isPresented: isVisible).id(record.id)
           }
           if record.summaryPending {
             HStack {
@@ -179,8 +195,11 @@ struct SessionVaultDetailView: View {
         .padding(.vertical, 24)
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
-      .task(id: PreviewIdentity(recordID: record.id, hasImage: previewImage != nil)) {
-        vault.pin(record)
+      .task(
+        id: PreviewIdentity(
+          recordID: record.id, hasImage: previewImage != nil, isVisible: isVisible)
+      ) {
+        if isVisible { vault.pin(record) }
       }
     } else {
       VStack(spacing: 12) {

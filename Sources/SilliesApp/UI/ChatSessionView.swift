@@ -15,10 +15,8 @@ struct ChatSessionView: View {
   var vault: ChatVaultPresentation? = nil
   var exportConversation: () -> Void = {}
   var readingPreference: Binding<ChatReadingSize>? = nil
-  @State private var showsMemories = false
-  @State private var showsSearch = false
+  @State var navigation = ChatWindowNavigation()
   @State private var showsStarters = false
-  @State private var showsVaultPicker = false
   @State private var readingSize = ChatReadingSize.standard
   @State private var composerFocus: UUID?
   @State private var confirmsClear = false
@@ -35,7 +33,64 @@ struct ChatSessionView: View {
     Locale.current.localizedString(forLanguageCode: code) ?? code
   }
 
+  private var showsConversation: Bool {
+    navigation.page == .conversation && !model.memoryEditor.isPresented
+  }
+
   var body: some View {
+    ZStack {
+      conversation
+        .opacity(showsConversation ? 1 : 0)
+        .allowsHitTesting(showsConversation)
+        .disabled(!showsConversation)
+        .accessibilityHidden(!showsConversation)
+        .environment(\.chatTextPresentation, showsConversation ? .visible : .concealed)
+      if !showsConversation { auxiliaryPage }
+    }
+    .environment(\.chatReadingSize, readingPreference?.wrappedValue ?? readingSize)
+    .background(theme.paper).foregroundStyle(theme.ink).tint(theme.accent)
+    .task(id: availabilityRevision) {
+      await model.restoreHistory()
+      // Talk owns its startup checks. A transcript refresh must not supersede that activation.
+      guard model.mode == .chat else { return }
+      await model.refreshAvailability()
+    }
+    .onChange(of: model.language) { availabilityRevision = UUID() }
+    .onChange(of: model.spokenReplies) { availabilityRevision = UUID() }
+    .onChange(of: showsConversation) { _, visible in
+      if visible { composerFocus = UUID() }
+    }
+    .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in
+      availabilityRevision = UUID()
+    }
+  }
+
+  @ViewBuilder private var auxiliaryPage: some View {
+    if model.memoryEditor.isPresented {
+      ChatMemoryEditorView(editor: model.memoryEditor)
+    } else {
+      switch navigation.page {
+      case .conversation: EmptyView()
+      case .memories:
+        ConversationMemoriesView(
+          model: model, back: returnToConversation,
+          openSettings: { openSettings(.companionProfile) })
+      case .search:
+        ConversationSearchView(browser: model.browser, back: returnToConversation)
+      case .vault:
+        if let vault {
+          ChatVaultPicker(
+            store: vault.store, selection: model.selectedRecords, back: returnToConversation)
+        }
+      }
+    }
+  }
+
+  private func returnToConversation() {
+    navigation.show(.conversation)
+  }
+
+  private var conversation: some View {
     VStack(spacing: 0) {
       header.padding(12)
       Divider().overlay(theme.border)
@@ -55,35 +110,14 @@ struct ChatSessionView: View {
         ChatComposerField(
           model: model, focusRequest: composerFocus,
           addContext: vault != nil && model.selectedRecords.isAvailable
-            ? { showsVaultPicker = true } : nil
+            ? { navigation.show(.vault) } : nil
         ).padding(16)
       }
     }
-    .environment(\.chatReadingSize, readingPreference?.wrappedValue ?? readingSize)
-    .background(theme.paper).foregroundStyle(theme.ink).tint(theme.accent)
-    .task(id: availabilityRevision) {
-      await model.restoreHistory()
-      // Talk owns its startup checks. A transcript refresh must not supersede that activation.
-      guard model.mode == .chat else { return }
-      await model.refreshAvailability()
-    }
-    .sheet(isPresented: $showsMemories) {
-      VStack(spacing: 0) {
-        if model.memoryEditor.isPresented {
-          ChatMemoryEditorView(editor: model.memoryEditor)
-        } else {
-          ConversationMemoriesView(model: model, openSettings: { openSettings(.companionProfile) })
-        }
-      }
-      .interactiveDismissDisabled(model.memoryEditor.isSaving || model.personalFacts.isSaving)
-      .onDisappear { model.memoryEditor.close() }
-    }
-    .sheet(isPresented: $showsSearch) { ConversationSearchView(browser: model.browser) }
-    .sheet(isPresented: $showsVaultPicker) {
-      if let vault { ChatVaultPicker(store: vault.store, selection: model.selectedRecords) }
-    }
     .dropDestination(for: VaultRecordTransfer.self) { items, _ in
-      guard model.mode == .chat, model.selectedRecords.canAdd else { return false }
+      guard showsConversation, model.mode == .chat, model.selectedRecords.canAdd else {
+        return false
+      }
       var accepted = false
       for item in items.prefix(ConversationRecordSelection.maximumRecords) {
         if model.selectedRecords.add(item.id) { accepted = true }
@@ -97,24 +131,12 @@ struct ChatSessionView: View {
       }.padding(Self.starterInset).frame(width: Self.starterWidth).background(theme.paper)
         .foregroundStyle(theme.ink)
     }
-    .sheet(
-      isPresented: Binding(
-        // Corrections stay inside the Memories sheet, including during its dismissal.
-        get: { model.memoryEditor.isPresented && !model.memoryEditor.isEditing && !showsMemories },
-        set: { if !$0 { model.memoryEditor.close() } }
-      )
-    ) { ChatMemoryEditorView(editor: model.memoryEditor) }
     .confirmationDialog("Clear this conversation and its memories?", isPresented: $confirmsClear) {
       Button("Clear conversation", role: .destructive) { Task { await model.clearConversation() } }
     } message: {
       Text(
         "Delete this companion’s messages, draft and learned memories. Keep pinned facts and preferences."
       )
-    }
-    .onChange(of: model.language) { availabilityRevision = UUID() }
-    .onChange(of: model.spokenReplies) { availabilityRevision = UUID() }
-    .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in
-      availabilityRevision = UUID()
     }
   }
 
@@ -142,7 +164,7 @@ struct ChatSessionView: View {
       }
       Spacer(minLength: 4)
       Button {
-        showsSearch = true
+        navigation.show(.search)
       } label: {
         Image(systemName: "magnifyingglass").frame(
           width: Self.searchButtonSize.width, height: Self.searchButtonSize.height)
@@ -173,11 +195,11 @@ struct ChatSessionView: View {
       Button("Chat") { model.showChat() }
       Button("Talk") { Task { await model.startTalk() } }.disabled(!model.canCompose)
       Divider()
-      Button("Search conversation…") { showsSearch = true }
+      Button("Search conversation…") { navigation.show(.search) }
       if model.mode == .chat { Button("Conversation ideas…") { showsStarters = true } }
       Button("Export conversation…", action: exportConversation).disabled(
         !model.export.isAvailable || model.export.isExporting)
-      Button("Memories…") { showsMemories = true }
+      Button("Memories…") { navigation.show(.memories) }
       Button("Companion settings…") { openSettings(.companionProfile) }
       Button("Clear conversation…", role: .destructive) { confirmsClear = true }.disabled(
         !model.canCompose)

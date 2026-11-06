@@ -1,10 +1,15 @@
 import Observation
 import SilliesChat
+import SilliesCore
 import SwiftUI
 
 @MainActor @Observable final class SettingsNavigation {
   var destination: SettingsDestination
   var returnsToSetup = false
+  enum CompanionsPage { case crew, profile }
+  var companionsPage = CompanionsPage.crew
+  var selectedCompanionID = ""
+  var failure: SessionFailure?
   init(destination: SettingsDestination = .general) { self.destination = destination }
 
   func showConversationSettings(
@@ -13,17 +18,20 @@ import SwiftUI
     returnsToSetup = false
     switch requested {
     case .companionProfile:
-      setup.move(to: .preparation)
-      setup.isProfileExpanded = true
-      destination = .setup
+      showProfile(setup.character?.id)
     case .textModels where setup.replyModelOverride != nil:
-      setup.move(to: .preparation)
-      setup.isProfileExpanded = true
-      destination = .setup
+      showProfile(setup.character?.id)
     case .textModels: destination = .intelligence
     case .voices: destination = .voices
     case .recognition: destination = .speech
     }
+  }
+
+  func showProfile(_ companionID: String?) {
+    selectedCompanionID = companionID ?? ""
+    companionsPage = .profile
+    destination = .companions
+    returnsToSetup = false
   }
 }
 
@@ -40,7 +48,7 @@ enum SettingsDestination: String, CaseIterable, Identifiable {
     case .writing: String(localized: "Dictation & Writing")
     case .speech: String(localized: "Speech & Meetings")
     case .intelligence: String(localized: "Local AI")
-    case .search: String(localized: "Search & Memory")
+    case .search: String(localized: "Search")
     case .voices: String(localized: "Voices")
     case .shortcuts: String(localized: "Shortcuts")
     }
@@ -72,6 +80,25 @@ enum SettingsDestination: String, CaseIterable, Identifiable {
     case .search: String(localized: "Help your companions find the memories that matter.")
     case .voices: String(localized: "Give your companions a voice, entirely on your Mac.")
     case .shortcuts: String(localized: "A keyboard path to your companions’ skills.")
+    }
+  }
+}
+
+enum SettingsGroup: CaseIterable, Identifiable {
+  case everyday, models, help
+  var id: Self { self }
+  var title: String {
+    switch self {
+    case .everyday: String(localized: "Everyday")
+    case .models: String(localized: "Local models")
+    case .help: String(localized: "Help & data")
+    }
+  }
+  var destinations: [SettingsDestination] {
+    switch self {
+    case .everyday: [.general, .appearance, .companions, .writing, .shortcuts]
+    case .models: [.intelligence, .speech, .voices, .search]
+    case .help: [.setup]
     }
   }
 }

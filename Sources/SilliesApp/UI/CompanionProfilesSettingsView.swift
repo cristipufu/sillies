@@ -6,7 +6,8 @@ struct CompanionProfilesSettingsView: View {
   let preferences: CompanionPreferences
   let textModels: TextModelsPresentation
   let voiceModels: VoiceModelsPresentation
-  @State private var selectedID = ""
+  @Binding var selectedID: String
+  var openMemories: ((String) -> Void)?
 
   var body: some View {
     SettingsCard(title: String(localized: "A voice of their own")) {
@@ -14,13 +15,22 @@ struct CompanionProfilesSettingsView: View {
         ForEach(characters.filter { $0.chat != nil }) { Text($0.name).tag($0.id) }
       }
       if let character = characters.first(where: { $0.id == selectedID }) {
+        if let openMemories {
+          Button("Memories", systemImage: "brain.head.profile") { openMemories(character.id) }
+            .buttonStyle(SoftButtonStyle())
+        }
         CompanionProfileEditor(
           character: character, preferences: preferences, textModels: textModels,
           voiceModels: voiceModels, changed: {}
         ).id(character.id)
       }
     }.onAppear {
-      if selectedID.isEmpty { selectedID = characters.first(where: { $0.chat != nil })?.id ?? "" }
+      if !characters.contains(where: { $0.id == selectedID && $0.chat != nil }) {
+        selectedID = characters.first(where: { $0.chat != nil })?.id ?? ""
+      }
+    }.task {
+      await textModels.load()
+      await voiceModels.load()
     }
   }
 }

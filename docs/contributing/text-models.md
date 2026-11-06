@@ -204,3 +204,11 @@ Catalog changes also update the [runtime qualification matrix](../../ModelProfil
 See [qualification, bounded prefill experiments and portable hardware reports](runtime-qualification.md).
 Do not enable a faster cache or processing policy from latency alone. Per-Mac receipts are separate
 from the portable catalog; stale hardware/runtime/profile identities revert to the catalog setting.
+
+### Catalog presentation
+
+Supply the optional `family` display field in the catalog generator when several variants belong
+together (for example, `Gemma` or `Qwen3-TTS`). Settings groups by this metadata and preserves catalog
+order within a family. Without it, the model name is its own group. Do not infer families from runtime
+provider IDs or name substrings. Installation controls and capability details stay with the provider;
+the shared catalog browser owns filtering, disclosure and visibility of in-progress or failed work.

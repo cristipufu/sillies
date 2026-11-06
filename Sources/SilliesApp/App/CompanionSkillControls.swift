@@ -82,7 +82,8 @@ final class CompanionSkillControls {
         stopSkill: { [weak self] in self?.skills.stopSkill(for: id) },
         unbind: { [weak self] in self?.skills.unbind(companionID: id) },
         openVault: { [weak self] in self?.environment.openVault($0) },
-        focusWindow: { NSRunningApplication(processIdentifier: $0.processID)?.activate() }))
+        focusWindow: { NSRunningApplication(processIdentifier: $0.processID)?.activate() },
+        openChatSettings: { [weak self] in self?.skills.onOpenChatSettings?($0) }))
   }
 
   private func menu(for pet: CompanionInstance) -> NSMenu {

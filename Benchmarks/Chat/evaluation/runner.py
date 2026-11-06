@@ -116,6 +116,7 @@ class ModelBatch:
             plan = {"model": self.model, "modelDirectory": str(self.options.models_root),
                     "helper": str(self.options.helper), "workspace": workspace,
                     "jobs": [worker_job(job) for job in self.jobs]}
+            plan["prefillChunkTokens"] = getattr(self.options, "prefill_tokens", None)
             plan_path = Path(workspace) / "plan.json"
             write_json(plan_path, plan)
             worker = Worker([str(self.options.worker), str(plan_path)], self.directory / "worker.stderr.log")

@@ -45,8 +45,8 @@ final class PlayfulMessageArtwork {
     let measured = content.boundingRect(
       with: CGSize(width: Design.maximumTextWidth, height: .greatestFiniteMagnitude),
       options: [.usesLineFragmentOrigin, .usesFontLeading])
-    let inset = SuggestionBubbleLayout.shadowInset
-    let depth = SuggestionBubbleLayout.tailDepth
+    let inset = CompanionSpeechBubbleLayout.shadowInset
+    let depth = CompanionSpeechBubbleLayout.tailDepth
     let size = CGSize(
       width: ceil(measured.width) + (Design.padding + inset) * 2,
       height: ceil(measured.height) + (Design.padding + inset) * 2 + depth)

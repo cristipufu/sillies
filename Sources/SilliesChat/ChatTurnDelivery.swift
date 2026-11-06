@@ -1,11 +1,14 @@
 import Foundation
 import SilliesAudio
+import SilliesCore
 import SilliesTTS
+import Synchronization
 
-/// Presentation delivery owns timing and the prefix confirmed by hardware completion callbacks.
-@MainActor final class ChatTurnDelivery {
+/// Confirm playback before asynchronous UI delivery; old attempts cannot advance a resumed reply.
+final class ChatTurnDelivery: Sendable {
   struct Snapshot: Sendable {
-    var spokenText = ""
+    var speech = SpokenReplyProgress()
+    var spokenText: String { speech.completedText }
     var firstText: Duration?
     var firstAudio: Duration?
     var phraseReady: Duration?
@@ -15,36 +18,55 @@ import SilliesTTS
     var endpoint: Duration?
     var recognitionFinalized: Duration?
   }
+  private struct State {
+    var snapshot: Snapshot
+    var speechID: UUID?
+  }
   private let hostStart: TimeInterval
-  private(set) var snapshot = Snapshot()
-  init(started: ContinuousClock.Instant, endpoint: VoiceEndpointTiming? = nil) {
+  private let state: Mutex<State>
+  var snapshot: Snapshot { state.withLock { $0.snapshot } }
+
+  init(
+    started: ContinuousClock.Instant, endpoint: VoiceEndpointTiming? = nil,
+    speech: SpokenReplyProgress = .init()
+  ) {
     let now = ProcessInfo.processInfo.systemUptime
     let endpoint = endpoint.flatMap { $0.detected <= now ? $0 : nil }
     let elapsed = started.duration(to: .now).components
     let attosecondsPerSecond = 1e18
     let fallbackStart =
-      now - Double(elapsed.seconds)
-      - Double(elapsed.attoseconds) / attosecondsPerSecond
+      now - Double(elapsed.seconds) - Double(elapsed.attoseconds) / attosecondsPerSecond
     hostStart = endpoint?.lastSpeechSample ?? fallbackStart
+    var snapshot = Snapshot()
+    snapshot.speech = speech
     if let endpoint {
       snapshot.endpoint = .seconds(endpoint.detected - endpoint.lastSpeechSample)
       snapshot.recognitionFinalized = .seconds(now - hostStart)
     }
+    state = Mutex(State(snapshot: snapshot))
   }
+
+  func beginSpeech(_ id: UUID) { state.withLock { $0.speechID = id } }
+  func endSpeech(_ id: UUID) {
+    state.withLock { if $0.speechID == id { $0.speechID = nil } }
+  }
+  func plannedSpeech(_ phrase: String) { state.withLock { $0.snapshot.speech.append(phrase) } }
   func receivedText() {
-    if snapshot.firstText == nil { snapshot.firstText = elapsed }
+    state.withLock { if $0.snapshot.firstText == nil { $0.snapshot.firstText = elapsed } }
   }
-  func received(_ update: SpeechPlaybackUpdate) {
-    switch update {
-    case .milestone(let milestone): record(milestone)
-    case .utteranceFinished(let phrase):
-      snapshot.spokenText = [snapshot.spokenText, phrase].filter { !$0.isEmpty }.joined(
-        separator: " ")
-    case .speaking, .finished, .interrupted: break
+  @discardableResult func received(_ update: SpeechPlaybackUpdate, from id: UUID) -> Bool {
+    state.withLock { state in
+      guard state.speechID == id else { return false }
+      switch update {
+      case .milestone(let milestone): record(milestone, in: &state.snapshot)
+      case .utteranceFinished(let phrase): state.snapshot.speech.completed(phrase)
+      case .speaking, .finished, .interrupted: break
+      }
+      return true
     }
   }
 
-  private func record(_ milestone: SpeechDeliveryMilestone) {
+  private func record(_ milestone: SpeechDeliveryMilestone, in snapshot: inout Snapshot) {
     let elapsed = elapsed
     switch milestone {
     case .phraseReady: if snapshot.phraseReady == nil { snapshot.phraseReady = elapsed }

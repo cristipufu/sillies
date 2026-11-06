@@ -8,7 +8,7 @@ public struct ConversationBubbleLayout: Equatable, Sendable {
   }
   public static let tailHeight: CGFloat = 12
   private static let displayInset: CGFloat = 8
-  private static let cornerClearance: CGFloat = ConversationBubbleOutline.cornerRadius + 4
+  private static let cornerClearance = ConversationBubbleOutline.cornerRadius + tailHeight
   public let frame: CGRect
   public let tail: Tail
   public let tailOffset: CGFloat

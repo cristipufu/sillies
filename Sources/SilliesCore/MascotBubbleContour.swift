@@ -3,7 +3,7 @@ import CoreGraphics
 /// A shared curved speech contour in local coordinates. Bottom tails use the minimum-y edge.
 public enum MascotBubbleContour {
   public enum Tail: Sendable { case left, right, bottom }
-  private static let preferredRadius: CGFloat = 19
+  public static let cornerRadius: CGFloat = 16
   private static let tailHalfWidth: CGFloat = 8
 
   public static func path(in rect: CGRect, tail: Tail, offset: CGFloat, depth: CGFloat) -> CGPath {
@@ -11,7 +11,7 @@ public enum MascotBubbleContour {
     let right = rect.maxX - (tail == .right ? depth : 0)
     let bottom = rect.minY + (tail == .bottom ? depth : 0)
     let top = rect.maxY
-    let radius = min(preferredRadius, (right - left) / 2, (top - bottom) / 2)
+    let radius = min(cornerRadius, (right - left) / 2, (top - bottom) / 2)
     let half = min(tailHalfWidth, max(0, (top - bottom - radius * 2) / 2))
     let tipY = min(max(rect.minY + offset, bottom + radius + half), top - radius - half)
     let tipX = min(

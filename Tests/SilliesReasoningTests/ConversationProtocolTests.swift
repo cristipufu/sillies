@@ -317,5 +317,11 @@ private actor RecoveryTool: ConversationTool {
     typed.instructions.contains("Keep replies brief and speakable. Address the user as an adult."))
   #expect(!typed.instructions.contains("The user is speaking with you"))
   #expect(spoken.instructions.contains("The user is speaking with you"))
-  #expect(spoken.instructions.contains("do not read out long URLs"))
+  #expect(spoken.instructions.contains("natural conversational sentences"))
+  #expect(spoken.instructions.contains("not bullet points, numbered lists"))
+  #expect(
+    spoken.instructions.contains(
+      "Only claim you can perform an action when an available tool supports it"))
+  #expect(!spoken.instructions.contains("Supporting record cards are visible"))
+  #expect(spoken.instructions.contains("read out long URLs or record identifiers unless requested"))
 }

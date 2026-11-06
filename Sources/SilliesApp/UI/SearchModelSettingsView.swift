@@ -11,13 +11,13 @@ struct SearchModelSettingsView: View {
         title: String(localized: "Search & Memory"),
         detail: String(
           localized:
-            "Find saved memories by meaning, even when you use different words. Keyword search always stays available."
+            "Find memories and Vault passages by meaning, even when you use different words. Keyword search always stays available."
         )
       ) {
         Label("Your recordings and text stay on this Mac.", systemImage: "lock.shield")
           .foregroundStyle(theme.secondary)
         Text(
-          "This helps companions recall saved memories. It does not change your chat model or create new memories."
+          "Search includes meeting transcripts, screenshot text and Stash items. It does not change your chat model or create new memories."
         )
         .foregroundStyle(theme.secondary)
         indexStatus
@@ -46,13 +46,12 @@ struct SearchModelSettingsView: View {
       Label(message, systemImage: "exclamationmark.triangle").textSelection(.enabled)
     case .indexed(let progress):
       if progress.processed < progress.total {
-        ProgressView(value: Double(progress.processed), total: Double(max(1, progress.total)))
-        Text("Memories prepared: \(progress.processed) / \(progress.total)")
+        ProgressView("Search passages prepared: \(progress.processed)")
       } else {
         Label("Ready", systemImage: "checkmark.circle")
       }
       Text(
-        "Indexed for semantic search: \(progress.searchable). Keyword search includes every memory."
+        "Indexed for semantic search: \(progress.searchable). Keyword search stays available while the index is prepared."
       )
       .font(.caption).foregroundStyle(theme.secondary)
     }
@@ -99,7 +98,7 @@ struct SearchModelSettingsView: View {
     if downloads.selectedModelID == id {
       Label("Selected", systemImage: "checkmark.circle.fill").foregroundStyle(theme.accent)
     } else {
-      Button("Use for memory search") { downloads.select(id) }.buttonStyle(SoftButtonStyle())
+      Button("Use for search") { downloads.select(id) }.buttonStyle(SoftButtonStyle())
         .disabled(downloads.activeID != nil)
     }
   }

@@ -9,6 +9,7 @@ extension EnvironmentValues {
 struct ChatMessageText: NSViewRepresentable {
   @Environment(\.silliesTheme) private var theme
   @Environment(\.chatSelectionReset) private var selectionReset
+  @Environment(\.chatReadingSize) private var readingSize
   let text: String
   let color: NSColor
   let selectionChanged: (Bool) -> Void
@@ -20,6 +21,7 @@ struct ChatMessageText: NSViewRepresentable {
   }
   func updateNSView(_ view: NSTextView, context: Context) {
     context.coordinator.selectionChanged = selectionChanged
+    ChatTypography.apply(readingSize, to: view)
     if view.string != text { context.coordinator.replaceText(in: view, with: text) }
     context.coordinator.resetSelection(in: view, revision: selectionReset)
     context.coordinator.applyAppearance(theme, color: color, to: view)
@@ -32,7 +34,7 @@ struct ChatMessageText: NSViewRepresentable {
   }
   @MainActor final class Coordinator: NSObject, NSTextViewDelegate {
     var selectionChanged: (Bool) -> Void
-    let measurement = ChatMessageLayout()
+    let measurement = ChatTextLayout()
     private var selectionRevision: UUID?
     private var appliedTheme: SilliesTheme?
     private var appliedColor: NSColor?
@@ -67,6 +69,7 @@ struct ChatMessageText: NSViewRepresentable {
         prefix = min(prefix, next.rangeOfComposedCharacterSequence(at: prefix).location)
       }
       var attributes = ChatTypography.attributes
+      if let font = view.font { attributes[.font] = font }
       if let color = view.textColor { attributes[.foregroundColor] = color }
       view.textStorage?.replaceCharacters(
         in: NSRange(location: prefix, length: previous.length - prefix),

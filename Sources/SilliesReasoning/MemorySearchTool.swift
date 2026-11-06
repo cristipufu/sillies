@@ -28,6 +28,7 @@ struct MemorySearchTool: ConversationTool {
       let key: String
       let value: String
       let userStatement: String
+      let provenance: String
     }
     struct Result: Encodable {
       let subject = "user"
@@ -40,7 +41,10 @@ struct MemorySearchTool: ConversationTool {
       Fact(
         memoryID: $0.id, revision: $0.revision,
         key: $0.key, value: $0.value,
-        userStatement: String($0.sourceQuote.prefix(Self.statementCharacterLimit)))
+        userStatement: String(
+          ($0.source.attribution == .userCorrection ? $0.value : $0.sourceQuote)
+            .prefix(Self.statementCharacterLimit)),
+        provenance: $0.source.attribution == .userCorrection ? "edited_by_user" : "user_message")
     }
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.sortedKeys]

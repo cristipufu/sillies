@@ -6,6 +6,8 @@ struct GeneralSettingsPage: View {
   let controller: CompanionController
   let login: LoginItemSettings?
   var language: LanguagePreferences? = nil
+  var diagnostics: DiagnosticsPresentation? = nil
+  var exportDiagnostics: () -> Void = {}
   var body: some View {
     if let language { LanguageSettingsView(model: language) }
     if let login {
@@ -17,6 +19,7 @@ struct GeneralSettingsPage: View {
       }
     }
     SettingsCard(title: String(localized: "App updates")) { UpdatesSettingsView() }
+    if let diagnostics { DiagnosticsSettingsView(model: diagnostics, export: exportDiagnostics) }
     SettingsCard(
       title: String(localized: "Made for your Mac"),
       detail: String(localized: "Speech, writing, and saved captures are processed locally.")
@@ -28,7 +31,7 @@ struct GeneralSettingsPage: View {
       Button("Open Session Vault", systemImage: "archivebox") { controller.onOpenVault?(nil) }
         .buttonStyle(SoftButtonStyle())
     }
-    DisclosureGroup("Diagnostics") {
+    DisclosureGroup("Companion activity") {
       VStack(spacing: 10) {
         diagnostic(String(localized: "Companions"), value: "\(controller.liveCount)")
         diagnostic(

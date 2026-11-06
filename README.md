@@ -158,7 +158,7 @@ and labels extracted highlights separately. Text-model revisions currently ship 
 
 #### Search & Memory
 
-Companions can find saved memories by meaning, even when you use different words. Apple’s available
+Companions can find saved memories and Vault passages by meaning, even when you use different words. Apple’s available
 language assets are the default; **Multilingual E5 Small** is an optional download in Settings →
 **Search & Memory**. Keyword search stays available while the local index prepares.
 

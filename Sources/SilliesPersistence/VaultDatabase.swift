@@ -4,7 +4,7 @@ import SilliesCore
 /// Authoritative versioned storage. Confined to one worker, with bodies read only by explicit ID.
 public final class VaultDatabase {
   public static let filename = "vault.sqlite"
-  private static let schemaVersion = 1
+  private static let schemaVersion = 2
   private static let directoryPermissions = 0o700
   let sql: VaultSQLConnection
   let files: VaultFileStorage
@@ -39,7 +39,11 @@ public final class VaultDatabase {
             "This Vault was created by a newer Sillies version. Its files have been preserved.")
       )
     }
-    guard version == 0 else { return }
+    if version == 0 { try prepareInitialSchema() }
+    if version < 2 { try preparePassageSchema() }
+  }
+
+  private func prepareInitialSchema() throws {
     try sql.transaction {
       try sql.execute(
         "CREATE TABLE IF NOT EXISTS records(sequence INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT NOT NULL UNIQUE, created REAL NOT NULL, kind TEXT NOT NULL, protected INTEGER NOT NULL, pending_summary INTEGER NOT NULL, screenshot_state TEXT NOT NULL, image TEXT, audio TEXT, header BLOB NOT NULL, body BLOB NOT NULL)"

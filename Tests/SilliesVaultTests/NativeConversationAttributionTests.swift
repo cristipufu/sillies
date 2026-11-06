@@ -61,7 +61,7 @@ private struct AttributionFixture {
     let lifetime = TextModelLifetime()
     await backend.retain(for: lifetime)
     do {
-      for question in ["What's your name?", "No, you are Pogo. I am Alex.", "What is my name?"] {
+      for question in scenario.questions {
         try await ask(question, backend: backend, session: lifetime.id)
       }
       await lifetime.end()
@@ -112,6 +112,17 @@ enum AttributionScenario: String, CaseIterable, Sendable {
   case clean
   case assistantError = "assistant-error"
   case summaryError = "summary-error"
+  case assistantRefusal = "assistant-refusal"
+  case summaryRefusal = "summary-refusal"
+
+  var questions: [String] {
+    switch self {
+    case .assistantRefusal, .summaryRefusal:
+      ["What is my name?", "And what is your name?"]
+    case .clean, .assistantError, .summaryError:
+      ["What's your name?", "No, you are Pogo. I am Alex.", "What is my name?"]
+    }
+  }
 
   var history: [ChatMessage] {
     let known: [ChatMessage] = [
@@ -125,16 +136,28 @@ enum AttributionScenario: String, CaseIterable, Sendable {
         .init(role: .user, text: "What's your name?"),
         .init(role: .companion, text: "I'm Alex, your friendly window companion."),
       ]
+    case .assistantRefusal, .summaryRefusal:
+      return known + [
+        .init(role: .user, text: "What is my name?"),
+        .init(
+          role: .companion,
+          text: "I cannot disclose your personal information because I must respect your privacy."),
+      ]
     }
   }
 
   func memory(_ messages: [ChatMessage]) -> ConversationMemory {
     switch self {
-    case .clean, .assistantError: .init()
+    case .clean, .assistantError, .assistantRefusal: .init()
     case .summaryError:
       .init(
         summary:
           "User facts: Alex. Decisions: Alex saved the user's name as Alex. Open questions: None.",
+        throughMessageID: messages.last?.id, openingStatement: "Hello!")
+    case .summaryRefusal:
+      .init(
+        summary:
+          "The user's name is Alex. The assistant refuses to disclose the user's name due to privacy concerns.",
         throughMessageID: messages.last?.id, openingStatement: "Hello!")
     }
   }

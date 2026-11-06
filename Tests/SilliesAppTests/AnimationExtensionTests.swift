@@ -312,9 +312,9 @@ private final class MockEventProducer: WorkspaceEventProducer {
       audioLevel: Double(frame % 10) * 0.1)
     hud.prepare(
       state: state,
-      companionPoint: CGPoint(x: 300 + Double(frame), y: 700),
-      characterSize: 64,
-      visibleFrame: screen)
+      anchor: .init(
+        companionPoint: CGPoint(x: 300 + Double(frame), y: 700), characterSize: 64,
+        visibleFrame: screen, windowFrame: target.frame))
   }
   #expect(hud.layoutMeasurements == 1)
 
@@ -325,17 +325,17 @@ private final class MockEventProducer: WorkspaceEventProducer {
   hud.prepare(
     state: .active(
       target: target, skill: .listen, startedAt: 10, statusDetail: narrow, audioLevel: 0),
-    companionPoint: CGPoint(x: 300, y: 700),
-    characterSize: 64,
-    visibleFrame: screen)
+    anchor: .init(
+      companionPoint: CGPoint(x: 300, y: 700), characterSize: 64,
+      visibleFrame: screen, windowFrame: target.frame))
   let measurementsAfterNarrow = hud.layoutMeasurements
   let narrowWidth = try #require(hud.currentPanelSize?.width)
   hud.prepare(
     state: .active(
       target: target, skill: .listen, startedAt: 10, statusDetail: wide, audioLevel: 0),
-    companionPoint: CGPoint(x: 300, y: 700),
-    characterSize: 64,
-    visibleFrame: screen)
+    anchor: .init(
+      companionPoint: CGPoint(x: 300, y: 700), characterSize: 64,
+      visibleFrame: screen, windowFrame: target.frame))
   let wideWidth = try #require(hud.currentPanelSize?.width)
   #expect(hud.layoutMeasurements == measurementsAfterNarrow)
   #expect(wideWidth == narrowWidth)

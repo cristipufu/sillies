@@ -7,6 +7,13 @@ public struct ChatMessage: Codable, Equatable, Identifiable, Sendable {
   public private(set) var text: String
   public private(set) var sources: [ChatSource]
   public private(set) var exchanges: [ConversationToolExchange]
+  public private(set) var contextInspection: ReplyContextInspection?
+  public private(set) var clarification: ChatClarification?
+  public func asking(_ question: ChatClarification?) -> Self {
+    var copy = self
+    copy.clarification = question
+    return copy
+  }
   public enum Completion: String, Codable, Sendable { case streaming, complete, interrupted }
   private struct Delivery: Codable, Equatable, Sendable {
     let completion: Completion
@@ -27,6 +34,11 @@ public struct ChatMessage: Codable, Equatable, Identifiable, Sendable {
   public func withDelivery(_ completion: Completion, spokenText: String?) -> Self {
     var copy = self
     copy.delivery = Delivery(completion: completion, spokenText: spokenText)
+    return copy
+  }
+  public func inspecting(_ context: ReplyContextInspection?) -> Self {
+    var copy = self
+    copy.contextInspection = context
     return copy
   }
   public func withText(_ text: String) -> Self {

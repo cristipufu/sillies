@@ -12,8 +12,9 @@ final class MeetingSpeechBubbleController {
   }
 
   struct Placement {
-    let anchor: SuggestionBubbleLayout.Anchor
-    let windowLayer: Int
+    let anchor: CompanionSpeechBubbleLayout.Anchor
+    let companionWindow: NSWindow
+    var controlsFrame: CGRect?
   }
   private struct MeasurementKey: Equatable {
     let suggestionID: UUID
@@ -25,7 +26,7 @@ final class MeetingSpeechBubbleController {
   private var panel: SkillFloatingPanel?
   private var host: ThemedHostingController<MeetingSpeechBubbleView>?
   private var suggestionID: UUID?
-  private var background: MeetingSpeechBubbleBackground?
+  private var background: CompanionSpeechBubbleBackground?
   private var trackingExclusion: WindowTrackingExclusions.Registration?
   private var measuredSize: CGSize = .zero
   private var measurementKey: MeasurementKey?
@@ -40,15 +41,37 @@ final class MeetingSpeechBubbleController {
       return
     }
     let changed = suggestionID != suggestion.id
-    updateContent(suggestion)
+    guard prepare(suggestion: suggestion, placement: placement) else { return }
     guard let panel else { return }
-    let layout = SuggestionBubbleLayout(
-      anchor: placement.anchor,
-      size: resolveSize(for: suggestion, visibleFrame: placement.anchor.visibleFrame))
-    updateGeometry(layout, windowLayer: placement.windowLayer)
     let wasVisible = panel.isVisible
-    if !wasVisible { panel.orderFrontRegardless() }
+    guard let companionID = placement.companionWindow.windowServerID else {
+      hide()
+      return
+    }
+    panel.order(.above, relativeTo: Int(companionID))
     if changed || !wasVisible { animateAppearance() }
+  }
+
+  /// Layout and stacking policy can be verified without presenting a native window.
+  @discardableResult
+  func prepare(suggestion: MeetingSuggestion, placement: Placement) -> Bool {
+    updateContent(suggestion)
+    let size = resolveSize(for: suggestion, visibleFrame: placement.anchor.visibleFrame)
+    let layout: CompanionSpeechBubbleLayout
+    if let controlsFrame = placement.controlsFrame {
+      guard
+        let available = CompanionSpeechBubbleLayout(
+          anchor: placement.anchor, size: size, avoiding: controlsFrame)
+      else {
+        hide()
+        return false
+      }
+      layout = available
+    } else {
+      layout = CompanionSpeechBubbleLayout(anchor: placement.anchor, size: size)
+    }
+    updateGeometry(layout, level: placement.companionWindow.level)
+    return true
   }
 
   private func updateContent(_ suggestion: MeetingSuggestion) {
@@ -61,7 +84,7 @@ final class MeetingSpeechBubbleController {
 
   private func resolveSize(for suggestion: MeetingSuggestion, visibleFrame: CGRect) -> CGSize {
     let width = min(
-      Self.maximumWidth, SuggestionBubbleLayout.availableSize(in: visibleFrame).width)
+      Self.maximumWidth, CompanionSpeechBubbleLayout.availableSize(in: visibleFrame).width)
     let key = MeasurementKey(suggestionID: suggestion.id, availableWidth: width)
     guard measurementKey != key, let host else { return measuredSize }
     let fitting = host.sizeThatFits(in: CGSize(width: width, height: .greatestFiniteMagnitude))
@@ -71,9 +94,8 @@ final class MeetingSpeechBubbleController {
     return measuredSize
   }
 
-  private func updateGeometry(_ layout: SuggestionBubbleLayout, windowLayer: Int) {
+  private func updateGeometry(_ layout: CompanionSpeechBubbleLayout, level: NSWindow.Level) {
     guard let panel else { return }
-    let level = CompanionPanel.hudLevel(forWindowLayer: windowLayer)
     if panel.level != level { panel.level = level }
     if panel.frame != layout.frame { panel.setFrame(layout.frame, display: false) }
     background?.update(layout)
@@ -85,7 +107,7 @@ final class MeetingSpeechBubbleController {
     let panel = SkillFloatingPanel(
       contentRect: CGRect(origin: .zero, size: Self.initialSize),
       ignoresMouseEvents: true)
-    let background = MeetingSpeechBubbleBackground(
+    let background = CompanionSpeechBubbleBackground(
       frame: panel.contentRect(forFrameRect: panel.frame))
     appearance.observe(background) { view, palette in view.applyTheme(palette) }
     host.view.frame = background.bounds

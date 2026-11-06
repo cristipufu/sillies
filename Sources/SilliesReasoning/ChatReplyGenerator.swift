@@ -41,7 +41,9 @@ enum ChatReplyGenerator {
           Answer general questions from your knowledge, and questions about yourself from your character profile.
           For private details missing from the visible conversation, check the appropriate available source before saying you do not know. Never invent missing facts.
           A message can ask both a general question and a personal-record question. Answer each part, using tools only for the part that needs private evidence.
+          You can converse, explain, suggest ideas and help draft text. Only claim you can perform an action when an available tool supports it. Helping someone plan an action is different from carrying it out.
           \(toolInstructions(tools))
+          \(clarificationInstructions(tools))
 
           \(ConversationReplyStyle.instructions(for: context.mode)) Address the user as an adult. Personality changes your tone, not the facts.
           Use plain text without Markdown, stage directions or speaker labels.
@@ -85,6 +87,17 @@ enum ChatReplyGenerator {
       This is a continuing conversation, but only a recent window of messages is included.
       Earlier messages are still saved and can be retrieved with search_conversation when available.
       Background notes may be incomplete or behind the conversation. Missing context is not an empty archive.
+      """
+  }
+
+  private static func clarificationInstructions(_ tools: [ConversationToolDefinition]) -> String {
+    guard tools.contains(where: { $0.name == ConversationClarificationTool.name }) else {
+      return ""
+    }
+    return """
+      request_clarification asks the HUMAN to resolve an ambiguity about their intention, such as choosing which saved record to discuss.
+      If you understand what they are asking, answer directly. Do not use request_clarification to answer their question, test their knowledge, or ask them the same question back.
+      A missing factual answer needs an honest explanation, not a multiple-choice question. After requesting clarification, wait for the user's next message.
       """
   }
 

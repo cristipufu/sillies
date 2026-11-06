@@ -14,6 +14,10 @@ import SilliesVault
     let input = try JSONDecoder().decode(
       Input.self, from: Data(contentsOf: URL(fileURLWithPath: arguments[1])))
     guard input.documents.count <= 1000, input.queries.count <= 1000 else { throw ProbeError.usage }
+    if input.scope == "vault" {
+      try await VaultSearchBenchmark.run(input, arguments: arguments)
+      return
+    }
     let directory = FileManager.default.temporaryDirectory.appendingPathComponent(
       "sillies-search-probe-\(UUID())")
     let library = ConversationLibrary(directory: directory)
@@ -41,7 +45,7 @@ import SilliesVault
           executable: URL(fileURLWithPath: arguments[2]), modelBytes: 512 * 1024 * 1024,
           activity: InferenceActivity())
         session = runtime
-        try await library.useMemoryEmbeddings(runtime.access())
+        try await library.useSearchEmbeddings(runtime.access())
         try await waitForIndex(library)
       }
       for query in input.queries {
@@ -56,12 +60,12 @@ import SilliesVault
       }
     } catch {
       await session?.stop()
-      try await library.useMemoryEmbeddings(nil)
+      try await library.useSearchEmbeddings(nil)
       try FileManager.default.removeItem(at: directory)
       throw error
     }
     await session?.stop()
-    try await library.useMemoryEmbeddings(nil)
+    try await library.useSearchEmbeddings(nil)
     try FileManager.default.removeItem(at: directory)
   }
 
@@ -77,7 +81,8 @@ import SilliesVault
   }
 }
 
-private struct Input: Decodable {
+struct Input: Decodable {
+  let scope: String?
   struct Text: Decodable {
     let id: String
     let owner: String
@@ -86,9 +91,9 @@ private struct Input: Decodable {
   let documents: [Text]
   let queries: [Text]
 }
-private struct Result: Encodable {
+struct Result: Encodable {
   let id: String
   let matches: [String]
   let seconds: Double
 }
-private enum ProbeError: Error { case usage, indexFailed }
+enum ProbeError: Error { case usage, indexFailed }

@@ -17,9 +17,13 @@ struct ChatMemoryEditorView: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: Layout.spacing) {
-      Label("Remember this…", systemImage: "sparkles").font(.title2.bold())
+      Label(
+        editor.isEditing ? String(localized: "Edit memory") : String(localized: "Remember this…"),
+        systemImage: "sparkles"
+      ).font(.title2.bold())
       HStack {
         TextField("Memory topic", text: $editor.topic).textFieldStyle(.roundedBorder)
+          .disabled(editor.isEditing)
         Text("\(editor.topic.count)/\(MemoryFact.maximumKeyCharacters)")
           .font(.caption.monospacedDigit()).foregroundStyle(theme.secondary)
       }

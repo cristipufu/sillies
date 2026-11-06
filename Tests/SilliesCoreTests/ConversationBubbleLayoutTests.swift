@@ -2,6 +2,19 @@ import Foundation
 import SilliesCore
 import Testing
 
+@Test(arguments: [PerchSurface.Edge.top, .left, .right])
+func conversationTailShouldersStayOutsideRoundedCorners(edge: PerchSurface.Edge) {
+  let screen = CGRect(x: 0, y: 0, width: 1200, height: 900)
+  for anchor in [CGPoint(x: 0, y: 0), CGPoint(x: 1200, y: 900)] {
+    let layout = ConversationBubbleLayout(
+      anchor: anchor, size: CGSize(width: 400, height: 560), visibleFrame: screen, edge: edge)
+    let span = layout.tail.isSide ? layout.frame.height : layout.frame.width
+    let clearance = ConversationBubbleOutline.cornerRadius + ConversationBubbleLayout.tailHeight
+    #expect(layout.tailOffset >= clearance)
+    #expect(layout.tailOffset <= span - clearance)
+  }
+}
+
 @Test func conversationBubbleStaysOnScreenAndTailTracksMascot() {
   let display = CGRect(x: -1280, y: 0, width: 1280, height: 800)
   for point in [CGPoint(x: -1270, y: 780), CGPoint(x: -20, y: 790), CGPoint(x: -600, y: 40)] {

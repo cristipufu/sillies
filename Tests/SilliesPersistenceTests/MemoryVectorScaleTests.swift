@@ -25,7 +25,7 @@ func memoryVectorRankingMatchesScalarOracleAtScale(_ count: Int) async throws {
     ]
   ) { row in
     scannedBytes += try VaultSQLConnection.withBlob(
-      row, column: 1, maximumBytes: MemoryVectorStorage.maximumBytes
+      row, column: 1, maximumBytes: SearchVectorStorage.maximumBytes
     ) { $0.count }
   }
   print("VECTOR SCAN count=\(count) bytes=\(scannedBytes) query=\(scanStarted.duration(to: .now))")
@@ -46,7 +46,7 @@ private struct MemoryVectorScaleFixture {
   private static let resultCount = 4
   let directory: URL
   let handle: ConversationHandle
-  let query: MemoryEmbedding
+  let query: SearchEmbedding
   let expected: [String]
 
   init(count: Int) throws {
@@ -54,7 +54,7 @@ private struct MemoryVectorScaleFixture {
     let database = try ConversationDatabase(directory: directory)
     handle = try database.open(.init(id: "pogo", name: "Pogo")).handle
     var random = VectorRandom(seed: 0x718B_26F4)
-    query = try MemoryEmbedding(space: Self.provider, values: random.vector(Self.dimensions))
+    query = try SearchEmbedding(space: Self.provider, values: random.vector(Self.dimensions))
     let source = MemorySource(messageID: UUID(), quote: "Synthetic measurement fixture.")
     var best: [(key: String, score: Double)] = []
     let owner = handle.companionID
@@ -65,7 +65,7 @@ private struct MemoryVectorScaleFixture {
         let memory = CompanionMemory(
           replacing: nil, fact: .init(key: "fact_\(index)", value: "Synthetic fact \(index)"),
           source: source, savedAt: .distantPast)
-        let vector = try MemoryEmbedding(
+        let vector = try SearchEmbedding(
           space: Self.provider, values: random.vector(Self.dimensions))
         try database.sql.execute(
           "INSERT INTO companion_memories(id,owner,key,updated,body) VALUES(?,?,?,0,?)",
@@ -77,7 +77,7 @@ private struct MemoryVectorScaleFixture {
           "INSERT INTO memory_embeddings(provider,id,owner,space,vector) VALUES(?,?,?,?,?)",
           [
             .text(Self.provider), .text(memory.id.uuidString), .text(owner), .text(Self.provider),
-            .data(MemoryVectorStorage.encode(vector.values)),
+            .data(SearchVectorStorage.encode(vector.values)),
           ])
         // Deliberately independent of the production scoring and top-k implementations.
         var dot = 0.0

@@ -1,6 +1,8 @@
 import CryptoKit
 import Foundation
+import SilliesDiagnostics
 import SilliesInference
+import Synchronization
 import Testing
 
 @testable import SilliesModelStore
@@ -11,13 +13,21 @@ import Testing
   defer { fixture.remove() }
   let store = ModelStore(root: fixture.root, downloader: FixtureDownloader())
   try await store.install(fixture.manifest) { _ in }
-  let activity = InferenceActivity()
+  let diagnostics = Mutex<[DiagnosticEvent]>([])
+  let activity = InferenceActivity(
+    diagnostics: DiagnosticSink { event in
+      diagnostics.withLock { $0.append(event) }
+    })
   let engine = ProbeTextModel()
   let registry = try TextModelRegistry(
     store: store, providers: [ProbeProvider(model: engine)], activity: activity)
   let generation = Task { try await registry.generate(fixture.request, using: fixture.manifest) }
   try await waitFor { await engine.calls == 1 }
   await activity.beginSpeech()
+  #expect(
+    diagnostics.withLock {
+      $0.contains { $0.action == .preempted && $0.reason == .recognitionPriority }
+    })
   #expect(await engine.stops > 0)
   #expect(await engine.calls == 1)
   await activity.endSpeech()

@@ -1,6 +1,7 @@
 import Foundation
 import SilliesAudio
 import SilliesCore
+import SilliesDiagnostics
 import SilliesDiarizationNemotron
 import SilliesInference
 import SilliesModelStore
@@ -18,8 +19,13 @@ final class SpeechServices {
   private let registry: SpeechRuntimeRegistry
   private let preferences: SpeechLanguagePreferences
   private var startup: Task<Void, Never>?
+  private let diagnostics: DiagnosticSink
 
-  init(defaults: UserDefaults = .standard, modelDirectory: URL? = nil) throws {
+  init(
+    defaults: UserDefaults = .standard, modelDirectory: URL? = nil,
+    diagnostics: DiagnosticSink = .disabled
+  ) throws {
+    self.diagnostics = diagnostics
     vocabulary = VocabularyPreferences(defaults: defaults)
     let support =
       FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
@@ -63,7 +69,11 @@ final class SpeechServices {
   }
 
   var captureFactory: SessionAudioCaptureFactory {
-    { [registry, vocabulary, dictationRuntime] configuration, update in
+    { [registry, vocabulary, dictationRuntime, diagnostics] configuration, update in
+      let selected = configuration.model
+      diagnostics.record(
+        .init(.recognition, .modelSelected).using(model: selected.id, provider: selected.providerID)
+      )
       var configuration = configuration
       let dictionary = vocabulary.snapshot()
       configuration.dictionary = dictionary
@@ -93,7 +103,11 @@ final class SpeechServices {
   }
 
   func conversationCaptureFactory(reference: VoicePlaybackReference) -> ConversationCaptureFactory {
-    { [dictationRuntime, vocabulary] configuration, update in
+    { [dictationRuntime, vocabulary, diagnostics] configuration, update in
+      let selected = configuration.model
+      diagnostics.record(
+        .init(.recognition, .modelSelected).using(model: selected.id, provider: selected.providerID)
+      )
       let dictionary = vocabulary.snapshot()
       var configuration = configuration
       configuration.dictionary = dictionary

@@ -49,8 +49,10 @@ package actor LocalConversationService: ConversationResponding {
     guard let selected = selected as? any ConversationBackend else {
       throw TextModelError.toolsUnavailable
     }
+    progress(.waitingForInference)
     try await turns.acquire(.interactive)
     do {
+      progress(.generating)
       let reply = try await respond(
         to: context, backend: selected, progress: progress, receive: receive)
       await turns.release()
@@ -70,6 +72,7 @@ package actor LocalConversationService: ConversationResponding {
     try Task.checkCancellation()
     let toolbox = try ConversationToolbox(tools: tools + history.tools(context), progress: progress)
     let manager = ConversationContextManager(backend: selected, tools: toolbox.definitions)
+    progress(.preparingContext)
     let source: ChatContext
     if let repository = history.repository, context.historyHandle != nil {
       source = try await ConversationHistoryPreparation(
@@ -79,6 +82,7 @@ package actor LocalConversationService: ConversationResponding {
       source = context
     }
     var working = try await manager.prepare(source)
+    progress(.generating)
     let text: String
     let delivery = ConversationStreamDelivery(receive: receive)
     do {
@@ -102,7 +106,13 @@ package actor LocalConversationService: ConversationResponding {
     }
     try Task.checkCancellation()
     return await ChatReply(
-      text: text, sources: toolbox.sources, exchanges: toolbox.exchanges, memory: source.memory)
+      text: text, sources: toolbox.sources, exchanges: toolbox.exchanges, memory: source.memory
+    )
+    .asking(toolbox.clarification)
+    .inspecting(
+      .init(
+        context: working, availableTools: toolbox.definitions.count,
+        workingContextTokens: selected.contextWindowTokens))
   }
 
 }

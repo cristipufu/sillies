@@ -11,7 +11,7 @@ from pathlib import Path
 PROFILES = ("none", "search", "personal", "app", "expanded8", "expanded12")
 KINDS = {"reply_equals", "contains_any", "contains_all", "omits_all", "no_tools",
          "required_tools", "allowed_tools", "no_writes", "argument_equals", "memory_contains",
-         "memory_absent", "source_includes", "compacted", "retained_context_omits", "initial_context_omits", "compaction_calls_at_most"}
+         "memory_absent", "source_includes", "source_equals", "tool_calls_at_most", "compacted", "retained_context_omits", "initial_context_omits", "compaction_calls_at_most"}
 OWNER = {"id": "pogo", "name": "Pogo", "personality": "Warm, curious and upbeat."}
 IDENTIFIER = re.compile(r"[a-z][a-z0-9-]{0,90}\Z")
 
@@ -52,11 +52,11 @@ def validate(case: dict) -> dict:
             if check.get("kind") not in KINDS:
                 raise ValueError(f"Unknown check: {check}")
             if check["kind"] not in {"no_tools", "no_writes", "compacted"}:
-                if not isinstance(check.get("values"), list) or not check["values"]:
+                if not isinstance(check.get("values"), list) or (not check["values"] and check["kind"] != "source_equals"):
                     raise ValueError(f"Missing expected values: {check}")
                 if not all(isinstance(value, str) for value in check["values"]):
                     raise ValueError(f"Expected values must be strings: {check}")
-            if check["kind"] == "compaction_calls_at_most":
+            if check["kind"] in {"compaction_calls_at_most", "tool_calls_at_most"}:
                 if len(check["values"]) != 1 or not check["values"][0].isdigit() or not 0 <= int(check["values"][0]) <= 200:
                     raise ValueError(f"Invalid compaction call bound: {check}")
             if check["kind"] == "argument_equals" and not all(check.get(key) for key in ("tool", "field")):

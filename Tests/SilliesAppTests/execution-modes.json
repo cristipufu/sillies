@@ -35,6 +35,9 @@
   "AudioEnduranceTests.swift": {
     "default": "headless"
   },
+  "AudioSessionInterfaceTests.swift": {
+    "default": "headless"
+  },
   "AudioSkillTests.swift": {
     "default": "headless"
   },
@@ -61,9 +64,6 @@
       "chatStreamingBubbleUpdatesWithoutReplacingHistoryOrLosingSelection()": "gui"
     }
   },
-  "StoredChatInterfaceTests.swift": {
-    "default": "headless"
-  },
   "CommandTests.swift": {
     "default": "headless"
   },
@@ -77,12 +77,6 @@
   "ControlCenterDismissalTests.swift": {
     "default": "gui"
   },
-  "ConversationDismissalTests.swift": {
-    "default": "headless",
-    "tests": {
-      "chatNativeDismissalStopsMonitoringInTalkAndRestartsForChat()": "gui"
-    }
-  },
   "ControlCenterSizingTests.swift": {
     "default": "headless"
   },
@@ -91,6 +85,21 @@
     "tests": {
       "openChatAndMascotTrackEveryHostWindowDragFrame()": "gui"
     }
+  },
+  "ConversationDismissalTests.swift": {
+    "default": "headless",
+    "tests": {
+      "chatNativeDismissalStopsMonitoringInTalkAndRestartsForChat()": "gui"
+    }
+  },
+  "ConversationExportShutdownTests.swift": {
+    "default": "headless"
+  },
+  "ConversationUsabilityTests.swift": {
+    "default": "headless"
+  },
+  "DiagnosticsInterfaceTests.swift": {
+    "default": "headless"
   },
   "DictationTests.swift": {
     "default": "headless",
@@ -148,8 +157,7 @@
     "default": "headless",
     "tests": {
       "renderMeetingSpeechBubblePreview()": "gui",
-      "suggestionBubbleReplacesOneIdeaAndHidesWithHUD()": "gui",
-      "suggestionBubbleWrapsItsTextAndStaysAboveWalkingCompanions()": "gui"
+      "suggestionBubbleReplacesOneIdeaAndHidesWithHUD()": "gui"
     }
   },
   "NativeModelUpdateTests.swift": {
@@ -198,6 +206,12 @@
   "SettingsNavigationTests.swift": {
     "default": "headless"
   },
+  "SetupInterfaceTests.swift": {
+    "default": "headless"
+  },
+  "SetupLifecycleTests.swift": {
+    "default": "headless"
+  },
   "SkillInterfaceTests.swift": {
     "default": "headless"
   },
@@ -208,6 +222,12 @@
     "default": "headless"
   },
   "SpeechRuntimeTests.swift": {
+    "default": "headless"
+  },
+  "StoredChatInterfaceTests.swift": {
+    "default": "headless"
+  },
+  "TalkControlsTests.swift": {
     "default": "headless"
   },
   "TextInsertionTests.swift": {

@@ -164,6 +164,23 @@ package final class ChatHistory {
     receivedMemory(receipt)
   }
 
+  var canEditMemories: Bool { configuration.memories is any CompanionMemoryEditing }
+
+  func correctMemory(_ correction: MemoryCorrection) async throws -> MemoryCorrectionResult? {
+    guard !stopped, handle == correction.handle,
+      let repository = configuration.memories as? any CompanionMemoryEditing
+    else { throw ConversationStorageError.changed }
+    try await flush()
+    try Task.checkCancellation()
+    guard !stopped, handle == correction.handle else { throw ConversationStorageError.changed }
+    let result = try await repository.correctMemory(correction)
+    // Termination must not be undone by a correction that was already committing.
+    guard !stopped, handle == correction.handle else { return nil }
+    restore(result.snapshot)
+    receivedMemory(result.receipt)
+    return result
+  }
+
   private func scheduleSave() {
     guard !stopped, failure == nil, autosave == nil else { return }
     autosave = Task { [weak self] in

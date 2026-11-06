@@ -1,11 +1,11 @@
 import Foundation
 
-public struct WindowMetadataRequest: Codable, Sendable {
-  public let options: UInt32
-  public let reference: UInt32
+public enum WindowMetadataRequest: Codable, Sendable {
+  public static let maximumTargetWindows = 256
+  case windowList(options: UInt32, reference: UInt32)
+  case windows([UInt32])
 
   public init(options: UInt32, reference: UInt32) {
-    self.options = options
-    self.reference = reference
+    self = .windowList(options: options, reference: reference)
   }
 }

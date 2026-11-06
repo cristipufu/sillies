@@ -14,9 +14,15 @@ public struct TextModelDescriptor: Codable, Equatable, Identifiable, Sendable {
   public let license: String
   public let sourceURL: URL
   public let minimumMemoryGB: Int
-  public let profile: TextModelProfile
+  public private(set) var profile: TextModelProfile
   public var contextTokens: Int { profile.context.workingTokens }
   public let languagesDescription: String
   public let release: Release?
   public let reasoning: TextModelReasoning?
+  public func processingPrefill(inChunksOf tokens: Int) -> Self? {
+    guard let profile = profile.processingPrefill(inChunksOf: tokens) else { return nil }
+    var copy = self
+    copy.profile = profile
+    return copy
+  }
 }

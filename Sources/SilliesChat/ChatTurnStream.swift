@@ -19,13 +19,16 @@ package actor ChatTurnStream {
   private var reportedPhrase = false
   private let presentation: ChatTextPresentation
   private let milestone: @Sendable (SpeechDeliveryMilestone) -> Void
+  private let plannedSpeech: @Sendable (String) -> Void
   package init(
     receive: @escaping @Sendable (String) async -> Void,
     milestone: @escaping @Sendable (SpeechDeliveryMilestone) -> Void = { _ in },
-    openingPhraseDelay: Duration = ChatTurnStream.defaultOpeningPhraseDelay
+    openingPhraseDelay: Duration = ChatTurnStream.defaultOpeningPhraseDelay,
+    plannedSpeech: @escaping @Sendable (String) -> Void = { _ in }
   ) {
     presentation = ChatTextPresentation(receive: receive)
     self.milestone = milestone
+    self.plannedSpeech = plannedSpeech
     self.openingPhraseDelay = openingPhraseDelay
   }
 
@@ -83,6 +86,7 @@ package actor ChatTurnStream {
     await speech.cancel()
   }
   private func enqueue(_ ready: [String]) async throws {
+    for phrase in ready { plannedSpeech(phrase) }
     guard !speechStopped else { return }
     for phrase in ready {
       if !reportedPhrase {

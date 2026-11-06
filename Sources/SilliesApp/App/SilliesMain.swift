@@ -33,13 +33,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private let controlCenterDismissal = ControlCenterDismissal()
   private var settingsWindow: NSWindow?
   private let settingsNavigation = SettingsNavigation()
+  private var settingsLifecycle: SettingsWindowLifecycle?
+  private var setup: SetupPresentation?
+  private var setupSuggestions: SetupModelSuggestions?
+  private var companionPreferences: CompanionPreferences?
   private var speechServices: SpeechServices?
   private var voiceServices: VoiceServices?
   private var appearancePreferences: AppearancePreferences?
   private var languagePreferences: LanguagePreferences?
   private let appearance = ThemeEnvironment()
-  private lazy var chatWindow = ChatSessionWindowController(appearance: appearance)
-  private let reasoningServices = ReasoningServices()
+  private var diagnostics: DiagnosticServices?
+  private let diagnosticsExport = DiagnosticsExportController()
+  private lazy var chatWindow = ChatSessionWindowController(
+    appearance: appearance, reading: ChatReadingPreferences(defaults: .standard))
+  private lazy var reasoningServices = ReasoningServices(
+    diagnostics: diagnostics?.sink ?? .disabled)
   private lazy var textModels = TextModelsPresentation(environment: reasoningServices.models)
   private var shortcuts: CommandShortcuts?
   private var writingTools: WritingTools?
@@ -65,6 +73,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   func applicationDidFinishLaunching(_ notification: Notification) {
     do {
       let launch = LaunchConfiguration()
+      if !launch.isAutomatedRun {
+        let diagnostics = DiagnosticServices()
+        self.diagnostics = diagnostics
+        diagnostics.start()
+      }
       automatedRunner.armWatchdogIfNeeded(for: launch)
       if launch.runsWritingFixture {
         automatedRunner.startWritingFixture()
@@ -127,6 +140,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         observeCommandAvailability()
         _ = Updates.shared
         installStatusItem()
+        if let setup, !setup.journey.introduced {
+          setup.journey.deferSetup()
+          settingsNavigation.destination = .setup
+          showSettings()
+        }
       }
       if launch.showsPreview { showPreview() }
       automatedRunner.appWindowActions = .init(
@@ -160,6 +178,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         openPlayground: { [unowned self] in self.openOrCreatePlayground(for: controller) },
         exportPreviews: { [weak self] directory in self?.exportPreviews(to: directory) })
     } catch {
+      diagnostics?.sink.record(.init(.app, .failed).failing(error))
       let alert = NSAlert()
       alert.messageText = String(localized: "Sillies couldn’t get settled.")
       alert.informativeText = error.localizedDescription
@@ -240,53 +259,124 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     skills: SkillCoordinator, speech: SpeechServices, characters: [CharacterDefinition]
   ) throws {
     let reference = VoicePlaybackReference()
-    let voices = try VoiceServices(renderReference: reference.append)
+    let voices = try VoiceServices(
+      renderReference: reference.append, diagnostics: diagnostics?.sink ?? .disabled)
     voiceServices = voices
-    let profiles = Dictionary(
-      uniqueKeysWithValues: characters.compactMap { character in
-        character.chat.map { (character.id, $0) }
-      })
+    let preferences = CompanionPreferences(defaults: .standard, characters: characters)
+    companionPreferences = preferences
     let conversations = ConversationLibrary(directory: skills.vault.storageDirectory)
     self.conversations = conversations
-    searchServices = SearchServices(conversations: conversations)
-    let services = ChatServices(
-      captureFactory: speech.conversationCaptureFactory(reference: reference),
-      loadLanguages: speech.languages.load,
-      conversation: reasoningServices.makeConversation(
-        tools: [
-          VaultSearchTool(library: skills.vault.library),
-          VaultReadTool(library: skills.vault.library),
-        ],
-        history: conversations,
-        historyTools: { context in
-          ConversationHistoryTools(conversations: conversations, memories: conversations).tools(
-            for: context)
-        }), speech: voices.speech,
-      deliver: { MainRunLoopDelivery.perform($0) },
-      history: .stored(conversations: conversations, memories: conversations))
-    let sessions = ConversationSessions(profiles: profiles, services: services)
+    searchServices = SearchServices(conversations: conversations, vault: skills.vault.library)
+    let composition = ConversationComposition(
+      dependencies: .init(
+        speech: speech, voices: voices, reasoning: reasoningServices, conversations: conversations,
+        vault: skills.vault.library, preferences: preferences,
+        diagnostics: diagnostics?.sink ?? .disabled),
+      reference: reference)
+    let sessions = ConversationSessions(
+      profile: { id in characters.first { $0.id == id }.flatMap { preferences.profile(for: $0) } },
+      services: { composition.services(for: $0.id) },
+      languageOverride: { preferences.customization(for: $0).language })
     conversationSessions = sessions
+    preferences.onChange = { [weak sessions] id in sessions?.refreshProfile(for: id) }
+    configureSetup(characters: characters, composition: composition, preferences: preferences)
     controller?.onConversationAnchorChanged = { [weak self] in self?.chatWindow.follow($0) }
     skills.makeChatSession = { id, name in sessions.session(for: .init(id: id, name: name)) }
     skills.onCloseChatSession = { [weak self] session in self?.chatWindow.close(session) }
-    skills.onOpenChatSession = { [weak self] session in
-      guard let self else { return }
+    skills.onOpenChatSettings = { [weak self] destination in
+      guard let self, let setup = self.setup else { return }
+      if let session = self.controller?.skills.activeChatSession {
+        setup.chooseCompanion(session.companionID)
+        setup.chooseActivity(session.mode == .talk ? .talk : .chat)
+      }
+      self.settingsNavigation.showConversationSettings(destination, setup: setup)
+      self.showSettings()
+    }
+    skills.onOpenChatSession = { [weak self, weak skills] session in
+      guard let self, let skills else { return }
       self.chatWindow.show(
         session,
-        openSettings: { [weak self] destination in
-          self?.settingsNavigation.destination =
-            destination == .textModels ? .intelligence : .voices
-          self?.showSettings()
-        }, renderer: characters.first(where: { $0.id == session.companionID })?.renderer,
+        openSettings: { [weak skills] in skills?.onOpenChatSettings?($0) },
+        renderer: characters.first(where: { $0.id == session.companionID })?.renderer,
         vault: .init(
           store: skills.vault, openRecord: { [weak self] in self?.showVault(recordID: $0) }),
         anchor: self.controller?.conversationAnchor(for: session.companionID))
     }
   }
 
+  private func configureSetup(
+    characters: [CharacterDefinition], composition: ConversationComposition,
+    preferences: CompanionPreferences
+  ) {
+    guard let speech = speechServices, let voices = voiceServices else { return }
+    setupSuggestions = SetupModelSuggestions(
+      text: textModels, voice: voices.models, speech: speech.models)
+    setup = SetupPresentation(
+      journey: SetupJourney(defaults: .standard, availableIDs: characters.map(\.id)),
+      profiles: preferences, characters: characters,
+      audio: SetupAudioPreview(isBusy: { [weak self] in
+        self?.controller?.skills.hasActiveCaptureSkill == true
+          || self?.controller?.skills.canStartAudio() == false
+      }),
+      actions: .init(
+        services: { composition.services(for: $0) },
+        isGranted: SetupPermissions.isGranted, requestPermission: SetupPermissions.request,
+        meetingLanguage: {
+          let environment = speech.languages
+          let catalog = try await environment.load()
+          return catalog.preferredLanguage(
+            savedIdentifier: environment.preferences.selectedIdentifier(for: catalog.model))?.id
+        },
+        openSettings: { [weak self] destination in
+          self?.settingsNavigation.returnsToSetup = true
+          self?.settingsNavigation.destination = destination
+          self?.showSettings()
+        },
+        launch: { [weak self] character, activity in
+          self?.launchSetup(character, activity: activity)
+        },
+        dismiss: { [weak self] in self?.settingsWindow?.close() }))
+    controller?.skills.isAudioReserved = { [weak setup] in
+      guard let setup else { return false }
+      return setup.audio.phase != .idle
+    }
+  }
+
+  private func launchSetup(_ character: CharacterDefinition, activity: SetupActivity)
+    -> SessionFailure?
+  {
+    guard let controller else {
+      return .init(
+        category: .captureUnavailable,
+        message: String(
+          localized: "This companion could not open a conversation. Please try again."))
+    }
+    controller.settings.enabledCharacters.insert(character.id)
+    controller.settings.paused = false
+    if activity == .chat || activity == .talk {
+      if let failure = controller.skills.startConversation(
+        activity == .talk ? .talk : .chat, for: character.id, name: character.name)
+      {
+        return failure
+      }
+    } else {
+      controller.greet()
+    }
+    settingsWindow?.close()
+    return nil
+  }
+
+  private func openConversation(_ mode: ConversationMode) {
+    popover.performClose(nil)
+    if let session = controller?.skills.activeChatSession {
+      setup?.chooseCompanion(session.companionID)
+    }
+    setup?.openConversation(mode)
+  }
+
   private func makeSkillCoordinator(for launch: LaunchConfiguration) throws -> SkillCoordinator {
     guard launch.isAutomatedRun else {
-      let speech = try SpeechServices()
+      let speech = try SpeechServices(diagnostics: diagnostics?.sink ?? .disabled)
       speechServices = speech
       return SkillCoordinator(
         vault: reasoningServices.makeVault(),
@@ -308,9 +398,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     guard !isTerminating else { return .terminateNow }
     guard let controller else {
       cleanupTemporaryPreferences()
+      if let diagnostics {
+        isTerminating = true
+        let approve = onTerminationApproved
+        diagnostics.shutdown { approve(sender) }
+        return .terminateLater
+      }
       return .terminateNow
     }
     isTerminating = true
+    setup?.stop()
     controlCenterDismissal.stop()
     shortcuts?.stop()
     automatedRunner.stopPreview()
@@ -340,7 +437,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             self.controller?.skills.startConversation(
               .chat, for: failed.companionID, name: failed.companionName)
           } else {
-            approveTermination(sender)
+            let finishDiagnostics: @MainActor @Sendable () -> Void = { [weak self] in
+              if let diagnostics = self?.diagnostics {
+                diagnostics.shutdown { approveTermination(sender) }
+              } else {
+                approveTermination(sender)
+              }
+            }
+            if let setup = self?.setup {
+              setup.audio.finish(finishDiagnostics)
+            } else {
+              finishDiagnostics()
+            }
           }
           continuation.finish()
         }
@@ -355,6 +463,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   }
 
   func applicationWillTerminate(_ notification: Notification) {
+    setup?.stop()
     controlCenterDismissal.stop()
     automatedRunner.stopPreview()
     shortcuts?.stop()
@@ -407,6 +516,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         openWriting: { [weak self] in
           self?.popover.performClose(nil)
           self?.controller?.onOpenWritingSession?()
+        },
+        openConversation: { [weak self] in self?.openConversation($0) },
+        openSetup: { [weak self] in
+          self?.settingsNavigation.destination = .setup
+          self?.showSettings()
         },
         quit: { NSApp.terminate(nil) }),
       speechModels: speechServices?.models, dictation: writingTools?.dictation)
@@ -583,6 +697,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       window.contentMinSize = SettingsWindowLayout.minimumSize
       window.titlebarAppearsTransparent = true
       window.isReleasedWhenClosed = false
+      let lifecycle = SettingsWindowLifecycle(
+        stop: { [weak self] in self?.setup?.stop() },
+        refresh: { [weak self] in
+          if self?.settingsNavigation.destination == .setup { self?.setup?.refresh() }
+        })
+      settingsLifecycle = lifecycle
+      window.delegate = lifecycle
       window.contentViewController = ThemedHostingController(
         rootView: SettingsView(
           controller: controller, appearance: appearancePreferences, language: languagePreferences,
@@ -590,6 +711,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
           voiceModels: voiceServices?.models, textModels: textModels,
           searchModels: searchServices?.models,
           shortcuts: shortcuts, loginItems: loginItems, writingTools: writingTools,
+          diagnostics: diagnostics?.presentation,
+          setup: setup, suggestions: setupSuggestions, companionPreferences: companionPreferences,
+          exportDiagnostics: { [weak self] in
+            guard let self, let model = self.diagnostics?.presentation else { return }
+            self.diagnosticsExport.chooseFile(for: model)
+          },
           navigation: settingsNavigation), appearance: appearance)
       window.center()
       settingsWindow = window

@@ -3,6 +3,8 @@ import SwiftUI
 
 struct AudioSessionView: View {
   @Environment(\.silliesTheme) private var theme
+  private static let contentSpacing: CGFloat = 12
+  private static let contentPadding: CGFloat = 20
   let model: AudioSessionPresentation
 
   var body: some View {
@@ -13,48 +15,26 @@ struct AudioSessionView: View {
       )
       .background(theme.paper).foregroundStyle(theme.ink)
       .tint(theme.accent)
-      .onAppear { model.hasUnreadSuggestion = false }
-      .onChange(of: model.suggestions.count) { _, _ in model.hasUnreadSuggestion = false }
   }
 
   private var content: some View {
-    VStack(alignment: .leading, spacing: SessionWindowLayout.spacing) {
+    VStack(alignment: .leading, spacing: Self.contentSpacing) {
       AudioSessionHeader(model: model)
         .fixedSize(horizontal: false, vertical: true)
-      // Only the controls participate in fitting. The native transcript keeps a stable viewport.
-      ViewThatFits(in: .vertical) {
-        options
-        ScrollView { options }
-          .scrollBounceBehavior(.basedOnSize)
+      AudioLanguagePicker(model: model)
+        .fixedSize(horizontal: false, vertical: true)
+      AudioSessionNotices(model: model)
+        .fixedSize(horizontal: false, vertical: true)
+      if model.kind == .participate {
+        AudioMeetingPanes(model: model)
+      } else {
+        AudioTranscriptView(model: model)
       }
-      AudioTranscriptView(model: model)
       footer
         .fixedSize(horizontal: false, vertical: true)
     }
-    .padding(SessionWindowLayout.padding)
+    .padding(Self.contentPadding)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-  }
-
-  private var options: some View {
-    VStack(alignment: .leading, spacing: SessionWindowLayout.spacing) {
-      AudioLanguagePicker(model: model)
-      if model.diarizationModel != nil {
-        Label(
-          model.speakerDetectionNotice
-            ?? String(localized: "Speaker labels enabled · Labels may take a few seconds"),
-          systemImage: "person.2.wave.2"
-        )
-        .font(.caption).foregroundStyle(theme.secondary)
-        .fixedSize(horizontal: false, vertical: true)
-      }
-      if case .failed(let failure) = model.phase {
-        SessionFailureNotice(failure: failure)
-      }
-      if let failure = model.transcriptionFailure {
-        SessionFailureNotice(failure: failure)
-      }
-      if model.kind == .participate { AudioMeetingSuggestionsView(model: model) }
-    }
   }
 
   private var footer: some View {

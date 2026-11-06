@@ -7,7 +7,8 @@ import Testing
 
 @Test @MainActor func chatNativeBubbleRetainsTransparencyAcrossThemeUpdates() async throws {
   let appearance = ThemeEnvironment()
-  let controller = ChatSessionWindowController(appearance: appearance)
+  let controller = ChatSessionWindowController(
+    appearance: appearance, reading: .init(size: .standard))
   let session = ChatWindowFixture.makeSession()
   controller.prepare(session, openSettings: { _ in }, renderer: "cat")
   let window = try #require(controller.window)

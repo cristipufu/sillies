@@ -1,9 +1,30 @@
 import Foundation
+import SilliesInference
 import XCTest
 
 @testable import SilliesSpeech
 
 final class SpeechSchedulerTests: XCTestCase, @unchecked Sendable {
+  func testEveryOutcomeReleasesSpeechBeforeReturning() async {
+    for outcome in AdmissionEngine.Outcome.allCases {
+      let activity = InferenceActivity()
+      let scheduler = SpeechInferenceScheduler(
+        engine: AdmissionEngine(outcome: outcome), activity: activity)
+      do {
+        _ = try await scheduler.transcribe(.init(samples: [1], language: .automatic))
+        XCTAssertEqual(outcome, .success)
+      } catch is CancellationError {
+        XCTAssertEqual(outcome, .cancelled)
+      } catch is SpeechError {
+        XCTAssertEqual(outcome, .failure)
+      } catch { XCTFail("Unexpected error: \(error)") }
+      let speech = UUID()
+      let admitted = await activity.claimSynthesis(speech, cancel: {})
+      XCTAssertTrue(admitted, "A completed recognition job must release inference admission")
+      await activity.releaseSynthesis(speech)
+    }
+  }
+
   func testTwoSourcesShareWeightsWithoutOverlappingPredictions() async throws {
     let engine = ObservedEngine()
     let scheduler = SpeechInferenceScheduler(engine: engine)
@@ -43,6 +64,19 @@ final class SpeechSchedulerTests: XCTestCase, @unchecked Sendable {
     _ = try await first.value
     let calls = await engine.calls
     XCTAssertEqual(calls, 1)
+  }
+}
+
+private struct AdmissionEngine: SpeechWindowEngine {
+  enum Outcome: CaseIterable { case success, failure, cancelled }
+  let outcome: Outcome
+
+  func transcribe(_ request: SpeechWindowRequest) async throws -> SpeechWindowResult {
+    switch outcome {
+    case .success: return .init(words: [])
+    case .failure: throw SpeechError.unavailable("Fixture recognition failure")
+    case .cancelled: throw CancellationError()
+    }
   }
 }
 

@@ -19,7 +19,7 @@ actor ConversationSearchWorker {
     return try storage().memories(query)
   }
 
-  func semanticMemories(_ query: CompanionMemoryQuery, embedding: MemoryEmbedding, provider: String)
+  func semanticMemories(_ query: CompanionMemoryQuery, embedding: SearchEmbedding, provider: String)
     throws -> [CompanionMemory]
   {
     try storage().semanticMemories(query, embedding: embedding, provider: provider)

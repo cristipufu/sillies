@@ -2,8 +2,19 @@ import CoreGraphics
 import Foundation
 import SilliesCore
 
-/// The ordered on-screen stack supplies occlusion; unordered metadata only locates hidden targets.
+/// Occlusion and existence are distinct reads. Only an exact-ID lookup can confirm closure.
 enum BoundWindowSnapshots {
+  struct Source {
+    let visibleWindows: () -> [[String: Any]]?
+    let targetWindows: (Set<CGWindowID>) -> [[String: Any]]?
+    static var native: Source {
+      Source(
+        visibleWindows: {
+          WindowMetadataReader.snapshot(
+            [.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID)?.entries
+        }, targetWindows: { WindowMetadataReader.snapshot(for: $0)?.entries })
+    }
+  }
   private static let maximumInspectedWindows = 256
   private static let opaqueWindowAlpha = 0.99
   // System surfaces such as the Dock can have screen-sized transparent bounds and alpha == 1.
@@ -12,27 +23,31 @@ enum BoundWindowSnapshots {
 
   static func read(
     windowIDs: Set<CGWindowID>, primaryScreenTop: Double,
-    loadEntries: (CGWindowListOption) -> [[String: Any]]? = {
-      WindowMetadataReader.snapshot($0, kCGNullWindowID)?.entries
-    }
+    source: Source = .native
   ) -> [CGWindowID: WindowTargetSnapshot] {
     guard !windowIDs.isEmpty else { return [:] }
-    // Only optionOnScreenOnly promises front-to-back order. optionAll is an unordered inventory.
-    guard let visible = loadEntries([.optionOnScreenOnly, .excludeDesktopElements]) else {
+    guard let visible = source.visibleWindows() else {
       return unavailable(windowIDs)
     }
     var result = resolve(
       entries: visible, windowIDs: windowIDs, primaryScreenTop: primaryScreenTop)
     let missing = windowIDs.subtracting(result.keys)
     guard !missing.isEmpty else { return result }
-    guard let all = loadEntries([.optionAll, .excludeDesktopElements]) else {
+    guard let known = source.targetWindows(missing) else {
       return result.merging(unavailable(missing)) { current, _ in current }
     }
-    for row in all.prefix(maximumInspectedWindows) {
+    var complete = known.count <= min(missing.count, maximumInspectedWindows)
+    for row in known.prefix(maximumInspectedWindows) {
       guard let entry = WindowServerSource.ParsedWindowEntry(dictionary: row),
-        missing.contains(entry.id)
-      else { continue }
+        missing.contains(entry.id), result[entry.id] == nil
+      else {
+        complete = false
+        continue
+      }
       result[entry.id] = snapshot(entry, visibility: .hidden, primaryScreenTop: primaryScreenTop)
+    }
+    for id in missing where result[id] == nil {
+      result[id] = .init(frame: .zero, title: nil, visibility: complete ? .closed : .unavailable)
     }
     return result
   }
@@ -69,7 +84,8 @@ enum BoundWindowSnapshots {
     .init(
       frame: ScreenCoordinates.appKitRect(
         fromAccessibility: entry.frame, primaryScreenTop: primaryScreenTop),
-      title: entry.windowTitle, visibility: visibility, windowLayer: entry.layer)
+      title: entry.windowTitle, visibility: visibility, windowLayer: entry.layer,
+      ownerPID: entry.ownerPID)
   }
 
   private static func unavailable(_ windowIDs: Set<CGWindowID>) -> [CGWindowID:

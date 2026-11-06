@@ -6,7 +6,9 @@ import SilliesTTS
 /// Bounded, opt-in real-model check. Normal tests use injected runtimes and never download weights.
 @main enum TTSBenchmark {
   static func main() async {
-    do { try await run() } catch {
+    do { try await run() } catch BenchmarkInstallation.Interruption.signal(let number) {
+      exit(128 + number)
+    } catch {
       fputs("Voice model check failed: \(error.localizedDescription)\n", stderr)
       exit(EXIT_FAILURE)
     }
@@ -22,33 +24,36 @@ import SilliesTTS
       try await VoiceOverlapBenchmark(arguments: Array(arguments.dropFirst(2))).run()
       return
     }
-    if (7...8).contains(arguments.count), arguments[1] == "conversation" {
+    if (7...9).contains(arguments.count), arguments[1] == "conversation" {
       try await VoiceConversationBenchmark(arguments: Array(arguments.dropFirst(2))).run()
       return
     }
+    if arguments.count >= 2, arguments[1] == "install" {
+      guard (4...5).contains(arguments.count) else {
+        throw TTSError.unavailable(
+          "Usage: TTSBenchmark install MODEL_ID MODEL_DIRECTORY [TIMEOUT_SECONDS]")
+      }
+      let manifest = try manifest(named: arguments[2])
+      let store = ModelStore(root: URL(fileURLWithPath: arguments[3]))
+      let timeout = try BenchmarkInstallation.timeout(arguments.count == 5 ? arguments[4] : nil)
+      try await BenchmarkInstallation.run(manifest: manifest, store: store, timeout: timeout)
+      return
+    }
     guard [4, 6].contains(arguments.count),
-      ["install", "run", "latency", "profile", "voices", "recovery"].contains(arguments[1])
+      ["run", "latency", "profile", "voices", "recovery"].contains(arguments[1])
     else {
       fputs(
-        "Usage: TTSBenchmark install|run|latency|profile|voices|recovery MODEL_ID MODEL_DIRECTORY [LANGUAGE TEXT]\n"
+        "Usage: TTSBenchmark install MODEL_ID MODEL_DIRECTORY [TIMEOUT_SECONDS]\n"
+          + "       TTSBenchmark run|latency|profile|voices|recovery MODEL_ID MODEL_DIRECTORY [LANGUAGE TEXT]\n"
           + "       TTSBenchmark overlap TEXT_ID TEXT_DIRECTORY VOICE_ID VOICE_DIRECTORY OUTPUT_DIRECTORY\n"
-          + "       TTSBenchmark conversation TEXT_ID TEXT_DIRECTORY VOICE_ID VOICE_DIRECTORY OUTPUT_DIRECTORY [current-first|early-first]\n",
+          + "       TTSBenchmark conversation TEXT_ID TEXT_DIRECTORY VOICE_ID VOICE_DIRECTORY OUTPUT_DIRECTORY [current-first|early-first [SCENARIO.json]]\n",
         stderr
       )
       exit(EXIT_FAILURE)
     }
-    guard
-      let manifest = try TTSModelCatalog.bundled().manifests.first(where: {
-        $0.modelID == arguments[2]
-      })
-    else { throw TTSError.unavailable("Unknown voice model.") }
+    let manifest = try manifest(named: arguments[2])
     let directory = URL(fileURLWithPath: arguments[3])
     let store = ModelStore(root: directory)
-    if arguments[1] == "install" {
-      try await store.install(manifest) { _ in }
-      print("Verified installation: \(manifest.model.name)")
-      return
-    }
     let executable =
       ProcessInfo.processInfo.environment["SILLIES_TTS_HELPER"].map {
         URL(fileURLWithPath: $0)
@@ -111,5 +116,13 @@ import SilliesTTS
       await registry.stop()
       throw error
     }
+  }
+
+  private static func manifest(named id: String) throws -> TTSModelManifest {
+    guard let manifest = try TTSModelCatalog.bundled().manifests.first(where: { $0.modelID == id })
+    else {
+      throw TTSError.unavailable("Unknown voice model.")
+    }
+    return manifest
   }
 }

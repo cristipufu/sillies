@@ -13,6 +13,12 @@ import SilliesTextModels
 
   private static func run() async throws {
     let arguments = CommandLine.arguments
+    if arguments.count == 4, arguments[1] == "apply-calibration" {
+      try await CalibrationInstallation.apply(
+        receipt: URL(fileURLWithPath: arguments[2]),
+        models: URL(fileURLWithPath: arguments[3]))
+      return
+    }
     if arguments.count == 2, arguments[1] == "apple-context" {
       try await AppleSessionBenchmark.run()
       return

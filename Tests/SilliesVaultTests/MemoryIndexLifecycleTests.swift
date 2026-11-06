@@ -7,12 +7,12 @@ import Testing
 @Test func semanticDeadlineCancelsAndDrainsSlowWork() async throws {
   let stopped = AsyncStream<Void>.makeStream()
   let blocked = AsyncStream<Void>.makeStream()
-  await #expect(throws: MemoryEmbeddingError.self) {
-    try await MemorySearchDeadline.perform {
+  await #expect(throws: SearchEmbeddingError.self) {
+    try await SemanticSearchDeadline.perform {
       defer { stopped.continuation.yield(()) }
       for await _ in blocked.stream { break }
       try Task.checkCancellation()
-      return []
+      return [CompanionMemory]()
     }
   }
   for await _ in stopped.stream { break }
@@ -24,7 +24,7 @@ import Testing
   let handle = try await fixture.seed()
   let started = AsyncStream<Void>.makeStream()
   let blocked = AsyncStream<Void>.makeStream()
-  try await fixture.library.useMemoryEmbeddings(
+  try await fixture.library.useSearchEmbeddings(
     .init(identity: "blocked") { _ in
       started.continuation.yield(())
       for await _ in blocked.stream { break }
@@ -32,7 +32,7 @@ import Testing
       return nil
     })
   for await _ in started.stream { break }
-  try await fixture.library.useMemoryEmbeddings(nil)
+  try await fixture.library.useSearchEmbeddings(nil)
   let status = try await fixture.library.memoryIndexStatus()
   #expect(status.0 == nil)
   #expect(try await fixture.library.memories(.init(handle: handle, text: "bicycle")).count == 1)
@@ -44,7 +44,7 @@ import Testing
   let handle = try await fixture.seed()
   let first = AsyncStream<Void>.makeStream()
   let blocked = AsyncStream<Void>.makeStream()
-  try await fixture.library.useMemoryEmbeddings(
+  try await fixture.library.useSearchEmbeddings(
     .init(identity: "old") { _ in
       first.continuation.yield(())
       for await _ in blocked.stream { break }
@@ -52,23 +52,23 @@ import Testing
       return try .init(space: "old", values: [1, 0])
     })
   for await _ in first.stream { break }
-  try await fixture.library.useMemoryEmbeddings(
+  try await fixture.library.useSearchEmbeddings(
     .init(identity: "new") { _ in
       try .init(space: "new", values: [0, 1])
     })
   try await fixture.waitUntilIndexed()
   let result = try await fixture.library.memories(.init(handle: handle, text: "transport"))
   #expect(result.map(\.key) == ["commute"])
-  try await fixture.library.useMemoryEmbeddings(nil)
+  try await fixture.library.useSearchEmbeddings(nil)
 }
 
 @Test func failedEmbeddingPreparationKeepsTheArchiveAndKeywordResults() async throws {
   let fixture = MemoryIndexFixture()
   defer { fixture.remove() }
   let handle = try await fixture.seed()
-  try await fixture.library.useMemoryEmbeddings(
+  try await fixture.library.useSearchEmbeddings(
     .init(identity: "failed") { _ in
-      throw MemoryEmbeddingError.unavailable
+      throw SearchEmbeddingError.unavailable
     })
   let deadline = ContinuousClock.now.advanced(by: .seconds(2))
   while try await fixture.library.memoryIndexStatus().1 == nil, ContinuousClock.now < deadline {
@@ -76,7 +76,7 @@ import Testing
   }
   #expect(try await fixture.library.memoryIndexStatus().1 != nil)
   #expect(try await fixture.library.memories(.init(handle: handle, text: "bicycle")).count == 1)
-  try await fixture.library.useMemoryEmbeddings(nil)
+  try await fixture.library.useSearchEmbeddings(nil)
 }
 
 private struct MemoryIndexFixture {
@@ -106,7 +106,7 @@ private struct MemoryIndexFixture {
       }
       await Task.yield()
     }
-    throw MemoryEmbeddingError.unavailable
+    throw SearchEmbeddingError.unavailable
   }
   func remove() {
     do { try FileManager.default.removeItem(at: directory) } catch { Issue.record(error) }
@@ -120,7 +120,7 @@ private struct MemoryIndexFixture {
   let release = MemoryIndexSuspension()
   let started = AsyncStream<Void>.makeStream()
   let cancelled = AsyncStream<Void>.makeStream()
-  try await fixture.library.useMemoryEmbeddings(
+  try await fixture.library.useSearchEmbeddings(
     .init(identity: "old") { _ in
       await withTaskCancellationHandler {
         await release.wait(started: started.continuation)
@@ -132,7 +132,7 @@ private struct MemoryIndexFixture {
     })
   for await _ in started.stream { break }
   let first = Task {
-    try await fixture.library.useMemoryEmbeddings(
+    try await fixture.library.useSearchEmbeddings(
       .init(identity: "superseded") { _ in
         Issue.record("An obsolete selection started indexing")
         return nil
@@ -141,7 +141,7 @@ private struct MemoryIndexFixture {
   for await _ in cancelled.stream { break }
   let previousOwner = await fixture.library.memoryIndexGeneration
   let second = Task {
-    try await fixture.library.useMemoryEmbeddings(
+    try await fixture.library.useSearchEmbeddings(
       .init(identity: "latest") { _ in try .init(space: "latest", values: [1, 0]) })
   }
   // Observe admission only to make the race deterministic; assert the resulting index below.
@@ -158,7 +158,7 @@ private struct MemoryIndexFixture {
   try await fixture.waitUntilIndexed()
   let status = try await fixture.library.memoryIndexStatus()
   #expect(status.0?.searchable == 1)
-  try await fixture.library.useMemoryEmbeddings(nil)
+  try await fixture.library.useSearchEmbeddings(nil)
 }
 
 private actor MemoryIndexSuspension {

@@ -6,16 +6,16 @@ import Testing
 
 @Test(arguments: [1_000, 10_000])
 func semanticMemorySearchKeepsBodiesAndResultsBoundedAtScale(_ count: Int) async throws {
-  let fixture = try MemoryEmbeddingFixture()
+  let fixture = try SearchEmbeddingFixture()
   defer { fixture.remove() }
   let dimensions = 384
-  let ordinary = try MemoryEmbedding(
+  let ordinary = try SearchEmbedding(
     space: "scale", values: [0, 1] + Array(repeating: 0, count: dimensions - 2))
-  let target = try MemoryEmbedding(
+  let target = try SearchEmbedding(
     space: "scale", values: [1, 0] + Array(repeating: 0, count: dimensions - 2))
   for index in 0..<count {
     let receipt = try fixture.save(key: "fact_\(index)", value: "Synthetic fact \(index)")
-    try fixture.database.saveMemoryEmbedding(
+    try fixture.database.saveSearchEmbedding(
       index == count / 2 ? target : ordinary,
       for: .init(owner: fixture.handle.companionID, memory: receipt.saved), provider: "scale")
   }
@@ -30,14 +30,14 @@ func semanticMemorySearchKeepsBodiesAndResultsBoundedAtScale(_ count: Int) async
 }
 
 @Test func memoryVectorsSurviveRestartAndRefuseStaleCorrections() async throws {
-  let fixture = try MemoryEmbeddingFixture()
+  let fixture = try SearchEmbeddingFixture()
   defer { fixture.remove() }
   let saved = try fixture.save(key: "commute", value: "I cycle to work")
   let item = MemoryIndexItem(owner: fixture.handle.companionID, memory: saved.saved)
-  let vector = try MemoryEmbedding(space: "space-v1", values: [1, 0])
-  #expect(try fixture.database.saveMemoryEmbedding(vector, for: item, provider: "test"))
+  let vector = try SearchEmbedding(space: "space-v1", values: [1, 0])
+  #expect(try fixture.database.saveSearchEmbedding(vector, for: item, provider: "test"))
   let reopened = try ConversationDatabase(directory: fixture.directory)
-  #expect(try reopened.pendingMemoryEmbeddings(provider: "test").isEmpty)
+  #expect(try reopened.pendingSearchEmbeddings(provider: "test").isEmpty)
   let reader = try ConversationSearchDatabase(directory: fixture.directory)
   let query = CompanionMemoryQuery(handle: fixture.handle, text: "How do I travel?")
   #expect(
@@ -51,28 +51,28 @@ func semanticMemorySearchKeepsBodiesAndResultsBoundedAtScale(_ count: Int) async
   .replacing(saved.saved.reference)
   let changed = try reopened.remember(correction)
   #expect(try reader.semanticMemories(query, embedding: vector, provider: "test").isEmpty)
-  #expect(try !reopened.saveMemoryEmbedding(vector, for: item, provider: "test"))
+  #expect(try !reopened.saveSearchEmbedding(vector, for: item, provider: "test"))
   #expect(
-    try reopened.pendingMemoryEmbeddings(provider: "test").first?.memory.revision
+    try reopened.pendingSearchEmbeddings(provider: "test").first?.memory.revision
       == changed.saved.revision)
   let current = MemoryIndexItem(owner: fixture.handle.companionID, memory: changed.saved)
-  #expect(try reopened.saveMemoryEmbedding(vector, for: current, provider: "test"))
+  #expect(try reopened.saveSearchEmbedding(vector, for: current, provider: "test"))
   let undone = try reopened.undoMemory(fixture.handle, receiptID: changed.id)
-  #expect(try !reopened.saveMemoryEmbedding(vector, for: current, provider: "test"))
+  #expect(try !reopened.saveSearchEmbedding(vector, for: current, provider: "test"))
   #expect(
     try reader.semanticMemories(
       .init(handle: undone.handle, text: "travel"), embedding: vector, provider: "test"
     ).isEmpty)
   #expect(
-    try reopened.pendingMemoryEmbeddings(provider: "test").first?.memory.value == "I cycle to work")
+    try reopened.pendingSearchEmbeddings(provider: "test").first?.memory.value == "I cycle to work")
 }
 
 @Test func memoryRankingMigrationPreservesVectorsAndTheirInvalidation() async throws {
-  let fixture = try MemoryEmbeddingFixture()
+  let fixture = try SearchEmbeddingFixture()
   defer { fixture.remove() }
   let saved = try fixture.save(key: "drink", value: "tea")
-  let vector = try MemoryEmbedding(space: "migration", values: [1, 0, 0])
-  try fixture.database.saveMemoryEmbedding(
+  let vector = try SearchEmbedding(space: "migration", values: [1, 0, 0])
+  try fixture.database.saveSearchEmbedding(
     vector, for: .init(owner: fixture.handle.companionID, memory: saved.saved), provider: "test")
   try fixture.restoreVersionThree()
   let reopened = try ConversationDatabase(directory: fixture.directory)
@@ -80,7 +80,7 @@ func semanticMemorySearchKeepsBodiesAndResultsBoundedAtScale(_ count: Int) async
   let query = CompanionMemoryQuery(handle: fixture.handle, text: "beverage")
   #expect(try reopened.sql.integer("PRAGMA user_version") == ConversationDatabase.schemaVersion)
   #expect(try reader.semanticMemories(query, embedding: vector, provider: "test") == [saved.saved])
-  #expect(try reopened.pendingMemoryEmbeddings(provider: "test").isEmpty)
+  #expect(try reopened.pendingSearchEmbeddings(provider: "test").isEmpty)
   let forgotten = try reopened.forget(fixture.handle, id: saved.saved.id)
   #expect(
     try reader.semanticMemories(
@@ -89,16 +89,16 @@ func semanticMemorySearchKeepsBodiesAndResultsBoundedAtScale(_ count: Int) async
 }
 
 @Test func memoryRankingMigrationRejectsOrphansWithoutDiscardingThePriorIndex() async throws {
-  let fixture = try MemoryEmbeddingFixture()
+  let fixture = try SearchEmbeddingFixture()
   defer { fixture.remove() }
   let saved = try fixture.save(key: "drink", value: "tea")
-  let vector = try MemoryEmbedding(space: "migration", values: [1, 0])
-  try fixture.database.saveMemoryEmbedding(
+  let vector = try SearchEmbedding(space: "migration", values: [1, 0])
+  try fixture.database.saveSearchEmbedding(
     vector, for: .init(owner: fixture.handle.companionID, memory: saved.saved), provider: "test")
   try fixture.restoreVersionThree()
   try fixture.database.sql.execute(
     "INSERT INTO memory_embeddings(provider,id,space,vector) VALUES('test','missing','migration',?)",
-    [.data(MemoryVectorStorage.encode(vector.values))])
+    [.data(SearchVectorStorage.encode(vector.values))])
   #expect(throws: ConversationStorageError.self) {
     _ = try ConversationDatabase(directory: fixture.directory)
   }
@@ -108,14 +108,14 @@ func semanticMemorySearchKeepsBodiesAndResultsBoundedAtScale(_ count: Int) async
 }
 
 @Test func equallySimilarMemoriesKeepStableIdentityOrderingAcrossRestarts() async throws {
-  let fixture = try MemoryEmbeddingFixture()
+  let fixture = try SearchEmbeddingFixture()
   defer { fixture.remove() }
-  let vector = try MemoryEmbedding(space: "ties", values: [1, 0])
+  let vector = try SearchEmbedding(space: "ties", values: [1, 0])
   var expected: [String] = []
   for index in 0..<9 {
     let saved = try fixture.save(key: "fact_\(index)", value: "Synthetic fact \(index)").saved
     expected.append(saved.id.uuidString)
-    try fixture.database.saveMemoryEmbedding(
+    try fixture.database.saveSearchEmbedding(
       vector, for: .init(owner: fixture.handle.companionID, memory: saved), provider: "test")
   }
   expected.sort()
@@ -128,10 +128,10 @@ func semanticMemorySearchKeepsBodiesAndResultsBoundedAtScale(_ count: Int) async
 }
 
 @Test func strongerVectorsOutsideTheQueryScopeCannotDisplaceItsMemories() async throws {
-  let fixture = try MemoryEmbeddingFixture()
+  let fixture = try SearchEmbeddingFixture()
   defer { fixture.remove() }
   let ours = try fixture.save(key: "ours", value: "Our fact").saved
-  try fixture.database.saveMemoryEmbedding(
+  try fixture.database.saveSearchEmbedding(
     .init(space: "current", values: [0, 1]),
     for: .init(owner: fixture.handle.companionID, memory: ours), provider: "test")
   let foreign = try fixture.database.open(.init(id: "bolt", name: "Bolt")).handle
@@ -144,13 +144,13 @@ func semanticMemorySearchKeepsBodiesAndResultsBoundedAtScale(_ count: Int) async
         handle: foreign, fact: .init(key: "foreign_\(index)", value: source.text),
         source: .init(messageID: source.id, quote: source.text), savedAt: Date())
     ).saved
-    try fixture.database.saveMemoryEmbedding(
+    try fixture.database.saveSearchEmbedding(
       .init(space: "current", values: [1, 0]),
       for: .init(owner: foreign.companionID, memory: saved), provider: "test")
   }
   for (provider, space) in [("other-provider", "current"), ("test", "other-space")] {
     let saved = try fixture.save(key: provider + space, value: "Other model's fact").saved
-    try fixture.database.saveMemoryEmbedding(
+    try fixture.database.saveSearchEmbedding(
       .init(space: space, values: [1, 0]),
       for: .init(owner: fixture.handle.companionID, memory: saved), provider: provider)
   }
@@ -162,28 +162,28 @@ func semanticMemorySearchKeepsBodiesAndResultsBoundedAtScale(_ count: Int) async
 }
 
 @Test func forgettingAndClearingCannotResurrectInFlightEmbeddings() async throws {
-  let fixture = try MemoryEmbeddingFixture()
+  let fixture = try SearchEmbeddingFixture()
   defer { fixture.remove() }
   let saved = try fixture.save(key: "instrument", value: "violin")
   let item = MemoryIndexItem(owner: fixture.handle.companionID, memory: saved.saved)
   _ = try fixture.database.forget(fixture.handle, id: saved.saved.id)
-  #expect(try !fixture.database.saveMemoryEmbedding(nil, for: item, provider: "test"))
+  #expect(try !fixture.database.saveSearchEmbedding(nil, for: item, provider: "test"))
   let current = try fixture.database.open(.init(id: "pogo", name: "Pogo"))
   _ = try fixture.database.clear(current.handle)
-  #expect(try !fixture.database.saveMemoryEmbedding(nil, for: item, provider: "test"))
+  #expect(try !fixture.database.saveSearchEmbedding(nil, for: item, provider: "test"))
   #expect(try fixture.database.memoryIndexProgress(provider: "test").processed == 0)
 }
 
 @Test func semanticSearchIsOwnerAndVectorSpaceScopedAndUnsupportedFactsDoNotLoop() async throws {
-  let fixture = try MemoryEmbeddingFixture()
+  let fixture = try SearchEmbeddingFixture()
   defer { fixture.remove() }
   let first = try fixture.save(key: "drink", value: "tea")
   let item = MemoryIndexItem(owner: fixture.handle.companionID, memory: first.saved)
-  #expect(try fixture.database.saveMemoryEmbedding(nil, for: item, provider: "apple"))
-  #expect(try fixture.database.pendingMemoryEmbeddings(provider: "apple").isEmpty)
+  #expect(try fixture.database.saveSearchEmbedding(nil, for: item, provider: "apple"))
+  #expect(try fixture.database.pendingSearchEmbeddings(provider: "apple").isEmpty)
   #expect(try fixture.database.memoryIndexProgress(provider: "apple").searchable == 0)
-  let vector = try MemoryEmbedding(space: "old", values: [1, 0])
-  try fixture.database.saveMemoryEmbedding(vector, for: item, provider: "e5")
+  let vector = try SearchEmbedding(space: "old", values: [1, 0])
+  try fixture.database.saveSearchEmbedding(vector, for: item, provider: "e5")
   let reader = try ConversationSearchDatabase(directory: fixture.directory)
   let query = CompanionMemoryQuery(handle: fixture.handle, text: "beverage")
   #expect(
@@ -195,13 +195,13 @@ func semanticMemorySearchKeepsBodiesAndResultsBoundedAtScale(_ count: Int) async
     try reader.semanticMemories(
       .init(handle: other.handle, text: "beverage"), embedding: vector, provider: "e5"
     ).isEmpty)
-  try fixture.database.resetMemoryEmbeddings(provider: "apple")
-  #expect(try fixture.database.pendingMemoryEmbeddings(provider: "apple").count == 1)
-  try fixture.database.removeMemoryEmbeddings(except: "apple")
+  try fixture.database.resetSearchEmbeddings(provider: "apple")
+  #expect(try fixture.database.pendingSearchEmbeddings(provider: "apple").count == 1)
+  try fixture.database.removeSearchEmbeddings(except: "apple")
   #expect(try fixture.database.memoryIndexProgress(provider: "e5").processed == 0)
 }
 
-private struct MemoryEmbeddingFixture {
+private struct SearchEmbeddingFixture {
   let directory: URL
   let database: ConversationDatabase
   let handle: ConversationHandle
@@ -220,6 +220,7 @@ private struct MemoryEmbeddingFixture {
       .init(handle: handle, fact: .init(key: key, value: value), source: source, savedAt: Date()))
   }
   func restoreVersionThree() throws {
+    try database.sql.execute("DROP INDEX conversation_messages_date")
     try database.sql.execute("DROP INDEX memory_embeddings_scope")
     try database.sql.execute("ALTER TABLE memory_embeddings DROP COLUMN owner")
     try database.sql.execute("PRAGMA user_version=3")

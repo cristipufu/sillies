@@ -6,11 +6,11 @@ struct AudioHUDControls: View {
   let open: () -> Void
 
   var body: some View {
-    HStack(spacing: 6) {
+    HStack(spacing: SessionHUDMetrics.spacing) {
       Button(action: open) {
         Image(systemName: session.hasUnreadSuggestion ? "pawprint.fill" : "text.bubble")
           .foregroundStyle(session.hasUnreadSuggestion ? theme.warning : theme.accent)
-          .frame(width: 24, height: 24)
+          .frame(width: SessionHUDMetrics.controlSize, height: SessionHUDMetrics.controlSize)
       }.help(
         session.hasUnreadSuggestion
           ? String(localized: "A meeting suggestion is ready")
@@ -23,7 +23,7 @@ struct AudioHUDControls: View {
         if session.isPaused { session.onResume?() } else { session.onPause?() }
       } label: {
         Image(systemName: session.isPaused ? "play.fill" : "pause.fill").frame(
-          width: 24, height: 24)
+          width: SessionHUDMetrics.controlSize, height: SessionHUDMetrics.controlSize)
       }.disabled(!session.canPause).help(
         session.isPaused ? String(localized: "Resume") : String(localized: "Pause"))
     }.buttonStyle(.plain)

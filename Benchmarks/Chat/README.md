@@ -45,11 +45,19 @@ it does not replace the full model comparison.
 
 ## What it covers
 
-The corpus has **74 scenarios, 93 tool-profile cases and 134 turns per model**. The primary five-tool
-comparison contains all 74 scenarios and 107 turns. On November 2 the
+The corpus has **80 scenarios, 99 tool-profile cases and 142 turns per model**. The primary five-tool
+comparison contains all 80 scenarios and 115 turns. On November 2 the
 context fixtures were corrected: both the original fact and its correction now precede the
 compaction boundary, and scored turns check that the target fact is absent from recent raw messages.
 These corrected cases are a new corpus revision, not comparable rescoring of the original run.
+
+The November 5 addition contains four spoken-continuity and two evidence scenarios. Two tea
+continuations promote the earlier held-out failures; two label-only variants independently test the
+next unheard step. Do not call these fresh held-out cases or merge their results into the older
+leaderboard. Free-form continuation requires rubric review of the **first instruction and sequence**,
+even when every lexical anchor matches. `source_equals` checks the complete observed card list
+(including duplicates); missing evidence is not an empty list. `tool_calls_at_most` counts all calls,
+including repeats and failed attempts.
 
 | Group | What can go wrong |
 | --- | --- |
@@ -60,6 +68,7 @@ These corrected cases are a new corpus revision, not comparable rescoring of the
 | Memories | Claims a save without writing, forgets corrections, saves hypothetical or third-party facts |
 | Context | Loses corrected facts after compaction or cannot continue a long conversation |
 | Evidence | Follows instructions embedded in a saved record, claims a screenshot is a live screen |
+| Spoken continuity | Confuses written output with confirmed playback, repeats or skips steps after interruption |
 | Languages | Cannot answer ordinary questions in the requested language |
 | Tool scaling | Becomes less reliable with 0, 1, 3, 5, 8 or 12 available tools |
 
@@ -353,3 +362,10 @@ stopping point and immutable evidence. Manual rubric review still applies when l
 The [cache and memory follow-up](../../docs/reports/cache-memory-2026-11-04.md) extends native
 cache checks to Granite 3B and Ministral, separates first-message preparation spans, and tests
 ranked retrieval and revision-safe writes with up to 10,000 synthetic saved facts.
+
+## Runtime tuning and portable results
+
+`--prefill-tokens` runs an explicit candidate through the production adapter. Paired qualification
+keeps task regressions separate from speed gains; `share` exports content-free hardware/score totals
+without uploading them. See the [runtime qualification guide](../../docs/contributing/runtime-qualification.md)
+for bounded runs, required reviews, receipt installation and privacy constraints.

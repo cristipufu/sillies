@@ -25,10 +25,29 @@ enum WindowMetadataService {
 
   private static func capture(_ request: WindowMetadataRequest) throws -> WindowMetadataSnapshot {
     let capturedAt = ProcessInfo.processInfo.systemUptime
-    guard
-      let entries = CGWindowListCopyWindowInfo(
-        CGWindowListOption(rawValue: request.options), request.reference) as? [[String: Any]]
+    let response: CFArray?
+    switch request {
+    case .windowList(let options, let reference):
+      response = CGWindowListCopyWindowInfo(CGWindowListOption(rawValue: options), reference)
+    case .windows(let ids):
+      response = try describe(ids)
+    }
+    guard let entries = response as? [[String: Any]]
     else { throw WindowMetadataError.snapshotUnavailable }
     return WindowMetadataSnapshot(entries: entries, capturedAt: capturedAt)
+  }
+
+  private static func describe(_ ids: [UInt32]) throws -> CFArray? {
+    guard !ids.isEmpty, ids.count <= WindowMetadataRequest.maximumTargetWindows,
+      ids.allSatisfy({ $0 != kCGNullWindowID }), Set(ids).count == ids.count
+    else { throw POSIXError(.EINVAL) }
+    // Quartz expects pointer-sized raw CGWindowID values, not CFNumber objects.
+    var values = ids.map { UnsafeRawPointer(bitPattern: UInt($0)) }
+    return values.withUnsafeMutableBufferPointer { buffer in
+      guard let array = CFArrayCreate(nil, buffer.baseAddress, buffer.count, nil) else {
+        return nil
+      }
+      return CGWindowListCreateDescriptionFromArray(array)
+    }
   }
 }

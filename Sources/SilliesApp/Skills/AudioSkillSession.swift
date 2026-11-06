@@ -226,8 +226,7 @@ final class AudioSkillSession: ActiveSkillSession {
       guard self.presentation.phase == .capturing, self.presentation.suggestionsEnabled,
         let suggestion, self.suggestionGate.accept(suggestion, source: source)
       else { return }
-      self.presentation.suggestions = self.suggestionGate.suggestions
-      self.presentation.hasUnreadSuggestion = true
+      self.presentation.updateSuggestions(self.suggestionGate.suggestions)
       self.onChange()
     }
   }

@@ -13,13 +13,13 @@ package struct EmbeddingConfiguration: Codable, Equatable, Sendable {
 }
 package enum EmbeddingRequest: Codable, Sendable {
   case prepare(EmbeddingConfiguration)
-  case embed(MemoryEmbeddingInput)
+  case embed(SearchEmbeddingInput)
 }
 package struct EmbeddingResponse: Codable, Sendable {
   package var identity: String?
-  package var embedding: MemoryEmbedding?
+  package var embedding: SearchEmbedding?
   package var failure: String?
-  package init(identity: String? = nil, embedding: MemoryEmbedding? = nil, failure: String? = nil) {
+  package init(identity: String? = nil, embedding: SearchEmbedding? = nil, failure: String? = nil) {
     self.identity = identity
     self.embedding = embedding
     self.failure = failure

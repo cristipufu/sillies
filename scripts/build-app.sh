@@ -58,6 +58,11 @@ ditto "$binary_dir/FluidAudio_LuxTtsG2pResources.bundle" "$app/Contents/Resource
 bash scripts/embed-sparkle.sh .build/artifacts "$app"
 
 cp Info.plist "$app/Contents/Info.plist"
+build_revision="$(git rev-parse HEAD)"
+if [[ -n "$(git status --porcelain)" ]]; then build_revision="$build_revision.dirty"; fi
+build_timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
+/usr/libexec/PlistBuddy -c "Add :SilliesBuildRevision string $build_revision" "$app/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Add :SilliesBuildTimestamp string $build_timestamp" "$app/Contents/Info.plist"
 python3 -B scripts/localize.py build "$app/Contents/Resources" --plist "$app/Contents/Info.plist"
 for helper in "$text_helper" "$voice_helper" "$search_helper"; do
   python3 -B scripts/localize.py build "$helper/Contents/Resources" --plist "$helper/Contents/Info.plist"
@@ -74,6 +79,7 @@ fi
 
 rsync -a --delete Sources/SilliesApp/Resources/Characters/ "$app/Contents/Resources/Characters/"
 rsync -a --delete Sources/SilliesApp/Resources/Scenes/ "$app/Contents/Resources/Scenes/"
+cp Sources/SilliesApp/Resources/SetupRecommendations.json "$app/Contents/Resources/"
 ditto "$binary_dir/Sillies_SilliesModelStore.bundle" "$app/Contents/Resources/Sillies_SilliesModelStore.bundle"
 ditto "$binary_dir/Sillies_SilliesDesign.bundle" "$app/Contents/Resources/Sillies_SilliesDesign.bundle"
 cp LICENSE PRIVACY.md THIRD_PARTY_NOTICES.md "$app/Contents/Resources/"

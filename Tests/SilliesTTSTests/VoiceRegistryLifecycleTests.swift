@@ -103,6 +103,52 @@ func voicePreparationReusesTheInstalledRuntimeAcrossTurns(providerID: String) as
   await registry.stop()
 }
 
+@Test func firstVoicePhraseWaitsForRecognitionInsteadOfReportingAnotherSpeaker() async throws {
+  let fixture = try VoiceRegistryFixture()
+  defer { fixture.remove() }
+  let probe = PreparedVoiceProbe()
+  let activity = InferenceActivity()
+  let registry = try fixture.registry(probe, activity: activity)
+  await activity.beginSpeech()
+  let voice = Task {
+    try await registry.synthesize(
+      .init(text: "The reply is still ready.", voiceID: "voice", language: "en"),
+      using: fixture.manifest, receive: { _ in })
+  }
+  try await Task.sleep(for: .milliseconds(20))
+  #expect(await probe.loads == 0)
+  #expect(await probe.utterances == 0)
+  await activity.endSpeech()
+  try await voice.value
+  #expect(await probe.loads == 1)
+  #expect(await probe.utterances == 1)
+  await registry.stop()
+}
+
+@Test func cancellingVoiceWaitingForRecognitionLeavesTheNextTurnAvailable() async throws {
+  let fixture = try VoiceRegistryFixture()
+  defer { fixture.remove() }
+  let probe = PreparedVoiceProbe()
+  let activity = InferenceActivity()
+  let registry = try fixture.registry(probe, activity: activity)
+  await activity.beginSpeech()
+  let voice = Task {
+    try await registry.synthesize(
+      .init(text: "This reply was superseded.", voiceID: "voice", language: "en"),
+      using: fixture.manifest, receive: { _ in })
+  }
+  try await Task.sleep(for: .milliseconds(20))
+  voice.cancel()
+  await #expect(throws: CancellationError.self) { try await voice.value }
+  #expect(await probe.loads == 0)
+  await activity.endSpeech()
+  try await registry.synthesize(
+    .init(text: "The next reply.", voiceID: "voice", language: "en"),
+    using: fixture.manifest, receive: { _ in })
+  #expect(await probe.utterances == 1)
+  await registry.stop()
+}
+
 private actor PreparedVoiceProbe: PreparedTTSModel {
   private let preparationDelay: Duration
   var loads = 0

@@ -18,6 +18,7 @@ struct BenchmarkModel {
     let operatingSystem: String
     let memoryBytes: UInt64
     let processors: Int
+    let calibrationIdentity: TextCalibrationIdentity?
   }
   let backend: any ConversationBackend
   let inference: BenchmarkInferenceTrace
@@ -27,6 +28,7 @@ struct BenchmarkModel {
   static func prepare(_ plan: BenchmarkPlan) async throws -> Self {
     let inference = BenchmarkInferenceTrace()
     if plan.model == "apple" {
+      guard plan.prefillChunkTokens == nil else { throw TextModelError.invalidResponse }
       let backend = AppleReasoningBackend()
       return .init(
         backend: backend, inference: inference,
@@ -34,12 +36,16 @@ struct BenchmarkModel {
         stop: { await backend.stop() })
     }
     guard
-      let manifest = try TextModelCatalog.bundled().manifests.first(where: {
+      let baseline = try TextModelCatalog.bundled().manifests.first(where: {
         $0.modelID == plan.model
       })
     else {
       throw TextModelError.unavailable("Unknown catalog model: \(plan.model)")
     }
+    let identity = try TextCalibrationIdentity.capture(
+      baseline, helper: URL(fileURLWithPath: plan.helper))
+    let manifest =
+      try plan.prefillChunkTokens.map { try baseline.processingPrefill(inChunksOf: $0) } ?? baseline
     let store = ModelStore(root: URL(fileURLWithPath: plan.modelDirectory))
     guard try await store.isInstalled(manifest) else {
       throw TextModelError.unavailable("Model is not installed: \(plan.model)")
@@ -57,12 +63,14 @@ struct BenchmarkModel {
       backend: backend, inference: inference,
       metadata: metadata(
         id: plan.model, revision: manifest.revision, backend: backend,
-        profile: manifest.model.profile),
+        profile: manifest.model.profile, calibrationIdentity: identity),
       stop: { await registry.stop() })
   }
 
   private static func metadata(
-    id: String, revision: String, backend: any ConversationBackend, profile: TextModelProfile? = nil
+    id: String, revision: String, backend: any ConversationBackend,
+    profile: TextModelProfile? = nil,
+    calibrationIdentity: TextCalibrationIdentity? = nil
   )
     -> Metadata
   {
@@ -75,6 +83,7 @@ struct BenchmarkModel {
       toolResultBudgeting: backend.toolResultBudgeting,
       operatingSystem: ProcessInfo.processInfo.operatingSystemVersionString,
       memoryBytes: ProcessInfo.processInfo.physicalMemory,
-      processors: ProcessInfo.processInfo.activeProcessorCount)
+      processors: ProcessInfo.processInfo.activeProcessorCount,
+      calibrationIdentity: calibrationIdentity)
   }
 }

@@ -27,7 +27,7 @@ final class BenchmarkProgress: Sendable {
         guard value.rememberedReceipts.insert(receipt.id).inserted else { return }
         value.snapshot.memoryCommitSeconds.append(
           BenchmarkTurnTrace.seconds(start.duration(to: .now)))
-      case .compacting, .usingTool: break
+      case .compacting, .usingTool, .waitingForInference, .preparingContext, .generating: break
       }
     }
   }

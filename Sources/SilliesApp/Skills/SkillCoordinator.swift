@@ -37,8 +37,10 @@ final class SkillCoordinator {
   var onOpenAudioSession: ((AudioSessionPresentation) -> Void)?
   var onCloseChatSession: ((ChatSession) -> Void)?
   var onOpenChatSession: ((ChatSession) -> Void)?
+  var onOpenChatSettings: ((ChatNotice.SettingsDestination) -> Void)?
   var makeChatSession: ((String, String) -> ChatSession?)?
   var canStartAudio: () -> Bool = { true }
+  @ObservationIgnored var isAudioReserved: () -> Bool = { false }
   private var sessions: [String: any ActiveSkillSession] = [:]
   private var bindings: [String: CompanionBindingState] = [:]
   private var bindingTokens: [String: UInt64] = [:]
@@ -94,6 +96,7 @@ final class SkillCoordinator {
     return SkillPresentation(
       persistenceError: vault.persistenceError, completedRecord: completed,
       audioSession: audioPresentation(for: id),
+      conversation: (sessions[id] as? ConversationActivity)?.presentation,
       speakingLevel: (sessions[id] as? ConversationActivity)?.presentation.phase == .speaking
         ? (sessions[id] as? ConversationActivity)?.presentation.audioLevel ?? 0 : 0)
   }
@@ -123,20 +126,35 @@ final class SkillCoordinator {
     _ skill: CompanionSkillKind, for id: String, companionName: String,
     target: WindowTargetCandidate? = nil
   ) {
-    guard !skill.requiresWindow || target != nil else { return }
-    if skill == .chat, let existing = (sessions[id] as? ConversationActivity)?.presentation {
-      onOpenChatSession?(existing)
-      return
+    if skill == .chat {
+      startConversation(.chat, for: id, name: companionName)
+    } else {
+      activateSkill(skill, for: id, companionName: companionName, target: target)
+    }
+  }
+
+  @discardableResult
+  private func activateSkill(
+    _ skill: CompanionSkillKind, for id: String, companionName: String,
+    target: WindowTargetCandidate? = nil
+  ) -> (any ActiveSkillSession)? {
+    guard !skill.requiresWindow || target != nil else { return nil }
+    if skill == .chat, let existing = sessions[id] as? ConversationActivity {
+      return existing
     }
     // One audio session prevents duplicate system/microphone taps across the whole crew.
-    if skill.keepsCompanionStill, hasActiveCaptureSkill || !canStartAudio() { return }
+    if skill.keepsCompanionStill,
+      hasActiveCaptureSkill || isAudioReserved() || !canStartAudio()
+    {
+      return nil
+    }
     finishOrCancelSession(for: id)
     companionNames[id] = companionName
     let request = SessionRequest(
       skill: skill, companionID: id, companionName: companionName,
       target: skill.requiresWindow ? target : nil, startedAt: ProcessInfo.processInfo.systemUptime,
       token: advanceBindingToken(for: id))
-    guard let session = makeSession(request) else { return }
+    guard let session = makeSession(request) else { return nil }
     sessions[id] = session
     setBinding(
       .active(
@@ -144,10 +162,17 @@ final class SkillCoordinator {
         statusDetail: session.initialStatusDetail), for: id)
     onEmitEvent?(id, WorkspaceEvent(skill.eventKind, at: request.startedAt))
     session.start()
-    if let chat = session as? ConversationActivity { onOpenChatSession?(chat.presentation) }
+    return session
   }
 
-  func startConversation(_ mode: ConversationMode, for id: String, name: String) {
+  @discardableResult
+  func startConversation(_ mode: ConversationMode, for id: String, name: String) -> SessionFailure?
+  {
+    guard activeAudioSession == nil, !isAudioReserved(), canStartAudio() else {
+      return .init(
+        category: .captureUnavailable,
+        message: String(localized: "Finish the active session before opening a conversation."))
+    }
     let token = UUID()
     pendingConversation = token
     if let previous = activeChatSession, previous.companionID != id {
@@ -156,14 +181,30 @@ final class SkillCoordinator {
         guard let self, self.pendingConversation == token else { return }
         self.startConversation(mode, for: id, name: name)
       }
-      return
+      return nil
     }
-    startSkill(.chat, for: id, companionName: name)
-    guard let presentation = (sessions[id] as? ConversationActivity)?.presentation else { return }
+    guard
+      let conversation = activateSkill(.chat, for: id, companionName: name) as? ConversationActivity
+    else {
+      return .init(
+        category: .captureUnavailable,
+        message: String(
+          localized: "This companion could not open a conversation. Please try again."))
+    }
+    let presentation = conversation.presentation
     switch mode {
-    case .chat: presentation.showChat()
-    case .talk: Task { await presentation.startTalk() }
+    case .chat:
+      presentation.showChat()
+      onOpenChatSession?(presentation)
+    case .talk:
+      Task { [weak self, weak presentation] in
+        guard let self, let presentation, self.pendingConversation == token,
+          self.sessions[id] === conversation
+        else { return }
+        await presentation.startTalk()
+      }
     }
+    return nil
   }
 
   @discardableResult
@@ -265,7 +306,7 @@ final class SkillCoordinator {
       ) { [weak self] outcome in
         guard let self, self.bindingTokens[request.companionID] == request.token else { return }
         self.sessions.removeValue(forKey: request.companionID)
-        self.save(outcome, request: request)
+        self.save(outcome, request: request, completionTarget: request.target)
       }
     case .listen, .participate, .record:
       return makeAudioSession(request)
@@ -281,11 +322,15 @@ final class SkillCoordinator {
       presentation.onChange = { [weak self, weak presentation] in
         guard let self, let presentation, self.bindingTokens[request.companionID] == request.token
         else { return }
-        self.setBinding(
-          .active(
-            target: nil, skill: .chat, startedAt: request.startedAt,
-            statusDetail: presentation.status, audioLevel: presentation.audioLevel),
-          for: request.companionID)
+        let state = CompanionBindingState.active(
+          target: nil, skill: .chat, startedAt: request.startedAt,
+          statusDetail: presentation.status, audioLevel: presentation.audioLevel)
+        if self.binding(for: request.companionID) == state {
+          // Notices and available controls can change without changing the status line.
+          self.onBindingChanged?(request.companionID, state)
+        } else {
+          self.setBinding(state, for: request.companionID)
+        }
       }
       return ConversationActivity(presentation: presentation)
     case .stash: return nil
@@ -322,6 +367,10 @@ final class SkillCoordinator {
   }
 
   private func finishSession(for id: String) {
+    finishSession(for: id, completionTarget: binding(for: id).boundTarget)
+  }
+
+  private func finishSession(for id: String, completionTarget: WindowTargetCandidate?) {
     guard let session = sessions.removeValue(forKey: id),
       case .active(let target, let skill, let startedAt, _, _) = binding(for: id)
     else { return }
@@ -339,13 +388,13 @@ final class SkillCoordinator {
       companionID: id, companionName: request.companionName, target: target)
     setBinding(
       .active(
-        target: target, skill: skill, startedAt: startedAt,
+        target: completionTarget, skill: skill, startedAt: startedAt,
         statusDetail: String(localized: "Finishing…")),
       for: id)
     session.finish(context) { [weak self] outcome in
       guard let self else { return }
       if let outcome {
-        self.save(outcome, request: request)
+        self.save(outcome, request: request, completionTarget: completionTarget)
       } else if self.bindingTokens[id] == request.token {
         self.setBinding(.followingFocusedWindow, for: id)
       }
@@ -358,7 +407,10 @@ final class SkillCoordinator {
     }
   }
 
-  private func save(_ outcome: SkillCompletionOutcome, request: SessionRequest) {
+  private func save(
+    _ outcome: SkillCompletionOutcome, request: SessionRequest,
+    completionTarget: WindowTargetCandidate?
+  ) {
     vault.add(outcome.record, image: outcome.image, pngData: outcome.pngData)
     vault.whenPersisted { [weak self] error in
       guard let self, self.bindingTokens[request.companionID] == request.token else { return }
@@ -367,7 +419,7 @@ final class SkillCoordinator {
       self.onEmitEvent?(request.companionID, WorkspaceEvent(.skillCompleted, at: now))
       self.setBinding(
         .completed(
-          target: request.target, skill: request.skill,
+          target: completionTarget, skill: request.skill,
           summary: error == nil
             ? outcome.bannerSummary : String(localized: "Could not save · Open Vault"),
           recordID: outcome.record.id, expiresAt: now + Self.completionBannerDuration),
@@ -457,6 +509,10 @@ final class SkillCoordinator {
       case .active(var target, let skill, let start, let detail, let level):
         guard let session = sessions[id] else { continue }
         let snapshot = target.flatMap { snapshots[$0.windowID] }
+        if let target, snapshot?.hasClosed(target) == true {
+          finishSession(for: id, completionTarget: nil)
+          continue
+        }
         target = updatedTarget(target, snapshots: snapshots)
         let context = SkillTickContext(
           now: now, startedAt: start, currentDetail: detail,
@@ -479,7 +535,9 @@ final class SkillCoordinator {
     _ target: WindowTargetCandidate?, snapshots: [CGWindowID: WindowTargetSnapshot]
   ) -> WindowTargetCandidate? {
     guard var target else { return nil }
-    if let snapshot = snapshots[target.windowID] { return snapshot.updating(target) }
+    if let snapshot = snapshots[target.windowID] {
+      return snapshot.hasClosed(target) ? nil : snapshot.updating(target)
+    }
     target.isVisible = false
     return target
   }

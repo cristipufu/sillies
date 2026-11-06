@@ -37,7 +37,8 @@ import Testing
     visibleFrame: visible, characterSize: 64)
   _ = pet.configureSurface(surface, window: nil, display: visible)
   let session = ChatWindowFixture.makeSession()
-  let chat = ChatSessionWindowController(appearance: ThemeEnvironment())
+  let chat = ChatSessionWindowController(
+    appearance: ThemeEnvironment(), reading: .init(size: .standard))
   defer {
     chat.close()
     session.finish {}
@@ -78,7 +79,8 @@ import Testing
   var first = placement(for: pet, frame: initial, running: true)
   _ = first.update(mode: .immediate)
   let session = ChatWindowFixture.makeSession()
-  let chat = ChatSessionWindowController(appearance: ThemeEnvironment())
+  let chat = ChatSessionWindowController(
+    appearance: ThemeEnvironment(), reading: .init(size: .standard))
   defer {
     chat.close()
     session.finish {}
@@ -159,7 +161,8 @@ import Testing
     try await Task.sleep(for: .milliseconds(5))
   }
   session.draft = "A draft worth keeping."
-  let chat = ChatSessionWindowController(appearance: ThemeEnvironment())
+  let chat = ChatSessionWindowController(
+    appearance: ThemeEnvironment(), reading: .init(size: .standard))
   defer {
     chat.close()
     session.finish {}

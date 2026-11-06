@@ -3,11 +3,16 @@ import CoreGraphics
 import SilliesCore
 
 struct WindowTargetSnapshot: Sendable {
-  enum Visibility: Sendable { case visible, hidden, unavailable }
+  enum Visibility: Sendable { case visible, hidden, unavailable, closed }
   let frame: CGRect
   let title: String?
   var visibility: Visibility = .visible
   var windowLayer: Int = 0
+  var ownerPID: pid_t?
+
+  func hasClosed(_ target: WindowTargetCandidate) -> Bool {
+    visibility == .closed || ownerPID.map { $0 != target.processID } == true
+  }
 
   func updating(_ target: WindowTargetCandidate) -> WindowTargetCandidate {
     guard visibility != .unavailable else { return target }

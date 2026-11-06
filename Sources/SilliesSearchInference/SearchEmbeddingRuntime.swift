@@ -11,14 +11,14 @@ actor SearchEmbeddingRuntime {
     switch request {
     case .prepare(let configuration):
       guard self.configuration == nil || self.configuration == configuration else {
-        throw MemoryEmbeddingError.unavailable
+        throw SearchEmbeddingError.unavailable
       }
       if model == nil { model = try await EmbeddingRuntimeFactory.prepare(configuration) }
       self.configuration = configuration
       return await .init(identity: model?.identity)
     case .embed(let input):
       guard !input.text.isEmpty, input.text.utf8.count <= Self.maximumInputBytes, let model else {
-        throw MemoryEmbeddingError.unavailable
+        throw SearchEmbeddingError.unavailable
       }
       return try await .init(embedding: model.embed(input))
     }

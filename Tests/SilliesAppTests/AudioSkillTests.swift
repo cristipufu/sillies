@@ -5,12 +5,14 @@ import SilliesCore
 import SilliesPersistence
 import SilliesReasoning
 import SilliesSpeech
+import Synchronization
 import Testing
 
 @testable import SilliesApp
 @testable import SilliesAudio
 
-private final class FixtureAudioCapture: SessionAudioCapture, @unchecked Sendable {
+private final class FixtureAudioCapture: SessionAudioCapture, Sendable {
+  let finishes = Mutex(0)
   private let update: @Sendable (AudioCaptureUpdate) -> Void
   private let queue = DispatchQueue(label: "sillies.test.capture")
   init(update: @escaping @Sendable (AudioCaptureUpdate) -> Void) {
@@ -26,6 +28,7 @@ private final class FixtureAudioCapture: SessionAudioCapture, @unchecked Sendabl
   func resume() {}
   func changeLanguage(_ language: SpeechLanguage) { update(.languageChanged(language)) }
   func finish(completion: @escaping @Sendable (AudioCaptureResult) -> Void) {
+    finishes.withLock { $0 += 1 }
     queue.asyncAfter(deadline: .now() + 0.02) {
       completion(
         AudioCaptureResult(
@@ -185,9 +188,56 @@ private actor BoundAudioWindowProbe {
   let frame = CGRect(x: 100, y: 100, width: 700, height: 500)
   func hide() { visibility = .hidden }
   func show() { visibility = .visible }
+  func close() { visibility = .closed }
   func snapshot() -> [CGWindowID: WindowTargetSnapshot] {
     [321: WindowTargetSnapshot(frame: frame, title: "Meeting", visibility: visibility)]
   }
+}
+
+private enum MeetingCaptureState: CaseIterable { case recording, paused }
+
+@Test(arguments: [CompanionSkillKind.listen, .participate], MeetingCaptureState.allCases)
+@MainActor private func closingTheBoundMeetingFinishesCaptureOnceAndReleasesTheCompanion(
+  _ kind: CompanionSkillKind, _ state: MeetingCaptureState
+) async throws {
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { removeTestFile(at: directory) }
+  let probe = BoundAudioWindowProbe()
+  let capture = Mutex<FixtureAudioCapture?>(nil)
+  let vault = SessionVaultStore(
+    directory: directory, notesGenerator: { _ in LocalNotes(summary: "Fixture", actions: []) })
+  let coordinator = SkillCoordinator(
+    vault: vault,
+    audioFactory: { _, update in
+      let fixture = FixtureAudioCapture(update: update)
+      capture.withLock { $0 = fixture }
+      return fixture
+    }, audioLanguages: fixtureAudioLanguages(),
+    snapshotLoader: { _, _ in await probe.snapshot() })
+  let target = WindowTargetCandidate(
+    windowID: 321, processID: 123, appName: "Meeting", windowTitle: "Project review",
+    frame: CGRect(x: 100, y: 100, width: 700, height: 500))
+  coordinator.startSkill(kind, for: "mochi", companionName: "Mochi", target: target)
+  await waitForCapture(coordinator)
+  if state == .paused { coordinator.activeAudioSession?.onPause?() }
+  await probe.close()
+  coordinator.pollBoundWindows()
+  let deadline = ContinuousClock.now.advanced(by: .seconds(3))
+  while coordinator.activeAudioSession != nil, ContinuousClock.now < deadline {
+    try await Task.sleep(for: .milliseconds(5))
+    coordinator.pollBoundWindows()
+  }
+  #expect(coordinator.activeAudioSession == nil)
+  #expect(!coordinator.binding(for: "mochi").isBound)
+  let fixture = try #require(capture.withLock { $0 })
+  #expect(fixture.finishes.withLock { $0 } == 1)
+  await vault.flush()
+  #expect(vault.records.count == 1)
+  let saved = try #require(vault.records.first)
+  #expect(saved.kind == kind && saved.appName == "Meeting" && saved.windowTitle == "Project review")
+  #expect(try await vault.record(id: saved.id)?.transcript == "Please ship the report on Friday.")
+  #expect(!coordinator.binding(for: "mochi").isBound)
+  await coordinator.shutdown()
 }
 
 @Test @MainActor func hiddenMeetingWindowKeepsCaptureAndBindingUntilItReturns() async throws {

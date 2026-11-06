@@ -30,7 +30,7 @@ struct SpeechSettingsPage: View {
         detail:
           String(
             localized:
-              "The selected model is shared by dictation, Listen, Participate, and Record. Changes apply to your next session."
+              "The selected model is shared by Talk, dictation, Listen, Participate and Record. Changes apply to your next session."
           )
       ) {
         SpeechModelSettingsView(model: model, activeModelID: activeModelID, scope: .transcription)

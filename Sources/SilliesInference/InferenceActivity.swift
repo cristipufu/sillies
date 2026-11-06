@@ -1,9 +1,11 @@
 import Foundation
+import SilliesDiagnostics
 
 /// Microphone recognition preempts synthesis; interactive synthesis preempts background text work.
 package actor InferenceActivity {
   package static let shared = InferenceActivity()
   private var speechCount = 0
+  private var diagnostics: DiagnosticSink
   private struct Work {
     enum Kind { case generation, preparation }
     let id: UUID
@@ -23,9 +25,24 @@ package actor InferenceActivity {
   private var speechWaiters: [CheckedContinuation<Void, Never>] = []
   private var idleWaiters: [UUID: CheckedContinuation<Void, any Error>] = [:]
 
-  package init(overlapBudget: UInt64 = ProcessInfo.processInfo.physicalMemory / 3 * 2) {
+  package init(
+    overlapBudget: UInt64 = ProcessInfo.processInfo.physicalMemory / 3 * 2,
+    diagnostics: DiagnosticSink = .disabled
+  ) {
     self.overlapBudget = overlapBudget
+    self.diagnostics = diagnostics
     residency = InferenceModelResidency(budget: overlapBudget)
+  }
+
+  /// App composition attaches its lifetime-owned sink to the existing shared admission coordinator.
+  package func setDiagnostics(_ diagnostics: DiagnosticSink) { self.diagnostics = diagnostics }
+
+  private func preempt(_ work: Work?, because reason: DiagnosticEvent.Reason) {
+    guard let work else { return }
+    var event = DiagnosticEvent(.inference, .preempted, operation: work.id).because(reason)
+    event.relatedOperation = work.reservation.conversationID
+    diagnostics.record(event)
+    work.cancel()
   }
 
   package func prepareTextModel(_ reservation: InferenceReservation) async {
@@ -50,7 +67,7 @@ package actor InferenceActivity {
   package func beginInteractiveWork() async {
     interactiveCount += 1
     guard let embedding else { return }
-    embedding.cancel()
+    preempt(embedding, because: .interactivePriority)
     await withCheckedContinuation { embeddingDrainWaiters.append($0) }
   }
   package func endInteractiveWork() {
@@ -113,9 +130,9 @@ package actor InferenceActivity {
 
   package func beginSpeech() async {
     speechCount += 1
-    text?.cancel()
-    synthesis?.cancel()
-    embedding?.cancel()
+    preempt(text, because: .recognitionPriority)
+    preempt(synthesis, because: .recognitionPriority)
+    preempt(embedding, because: .recognitionPriority)
     guard text != nil || synthesis != nil || embedding != nil else { return }
     await withCheckedContinuation { speechWaiters.append($0) }
   }
@@ -129,7 +146,7 @@ package actor InferenceActivity {
     try await waitForTextAdmission(.init())
   }
   package func waitForTextAdmission(_ reservation: InferenceReservation) async throws {
-    embedding?.cancel()
+    preempt(embedding, because: .interactivePriority)
     let id = UUID()
     try await withTaskCancellationHandler {
       try Task.checkCancellation()
@@ -144,7 +161,7 @@ package actor InferenceActivity {
   package func claimText(
     _ id: UUID, reservation: InferenceReservation = .init(), cancel: @escaping @Sendable () -> Void
   ) -> Bool {
-    embedding?.cancel()
+    preempt(embedding, because: .interactivePriority)
     preemptPreparation(for: reservation)
     guard canClaimText(reservation) else { return false }
     text = Work(id: id, reservation: reservation, cancel: cancel)
@@ -166,7 +183,7 @@ package actor InferenceActivity {
     guard speechCount == 0, synthesis == nil else { return false }
     synthesis = Work(id: id, reservation: reservation, cancel: cancel)
     if let embedding {
-      embedding.cancel()
+      preempt(embedding, because: .interactivePriority)
       await withTaskCancellationHandler {
         await withCheckedContinuation { synthesisWaiter = $0 }
       } onCancel: {
@@ -177,7 +194,7 @@ package actor InferenceActivity {
       if reservation.conversationID == nil
         || reservation.conversationID != text.reservation.conversationID
       {
-        text.cancel()
+        preempt(text, because: .incompatibleMemory)
       }
       await withTaskCancellationHandler {
         await withCheckedContinuation { synthesisWaiter = $0 }
@@ -190,6 +207,19 @@ package actor InferenceActivity {
       return false
     }
     return true
+  }
+
+  /// A short recognition pass may occupy the runtime before the first spoken phrase is ready.
+  /// Wait without reserving synthesis so recognition can drain and retain its interactive priority.
+  package func waitForSynthesisAdmission() async throws {
+    let id = UUID()
+    try await withTaskCancellationHandler {
+      try Task.checkCancellation()
+      guard speechCount > 0 || synthesis != nil else { return }
+      try await withCheckedThrowingContinuation { idleWaiters[id] = $0 }
+    } onCancel: {
+      Task { await self.cancelWaiter(id) }
+    }
   }
 
   /// Speculation must never cancel text or reserve memory ahead of an incompatible reply.
@@ -207,7 +237,7 @@ package actor InferenceActivity {
     guard text == nil, let synthesis, synthesis.kind == .preparation,
       !reservation.canOverlap(synthesis.reservation, budget: overlapBudget)
     else { return }
-    synthesis.cancel()
+    preempt(synthesis, because: .incompatibleMemory)
   }
 
   package func requiresTextEviction(_ id: UUID) -> Bool {

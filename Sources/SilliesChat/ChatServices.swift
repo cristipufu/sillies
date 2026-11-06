@@ -1,6 +1,7 @@
 import Foundation
 import SilliesAudio
 import SilliesCore
+import SilliesDiagnostics
 import SilliesReasoning
 import SilliesSpeech
 import SilliesTTS
@@ -62,12 +63,16 @@ package struct ChatServices: Sendable {
   package let speech: any ChatSpeechOutput
   package let deliver: AudioSessionUpdateDelivery.Schedule
   package let history: ChatHistoryConfiguration
+  package let diagnostics: DiagnosticSink
+  package let microphonePermission: @Sendable () -> SessionFailure?
 
   package init(
     captureFactory: @escaping ConversationCaptureFactory,
     loadLanguages: @escaping @Sendable () async throws -> SpeechLanguageCatalog,
     conversation: any ConversationResponding, speech: any ChatSpeechOutput,
-    deliver: @escaping AudioSessionUpdateDelivery.Schedule, history: ChatHistoryConfiguration
+    deliver: @escaping AudioSessionUpdateDelivery.Schedule, history: ChatHistoryConfiguration,
+    diagnostics: DiagnosticSink = .disabled,
+    microphonePermission: @escaping @Sendable () -> SessionFailure? = { nil }
   ) {
     self.captureFactory = captureFactory
     self.loadLanguages = loadLanguages
@@ -75,5 +80,7 @@ package struct ChatServices: Sendable {
     self.speech = speech
     self.deliver = deliver
     self.history = history
+    self.diagnostics = diagnostics
+    self.microphonePermission = microphonePermission
   }
 }

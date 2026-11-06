@@ -7,48 +7,83 @@ import Testing
 @Test func boundVisibilityUsesOnScreenOrderInsteadOfTheUnorderedWindowInventory() throws {
   let target = windowEntry(id: 1, frame: CGRect(x: 196, y: 158, width: 1113, height: 696))
   let background = windowEntry(id: 2, frame: CGRect(x: 72, y: 87, width: 1289, height: 791))
-  var requests: [CGWindowListOption] = []
-  let snapshots = BoundWindowSnapshots.read(windowIDs: [1], primaryScreenTop: 982) { options in
-    requests.append(options)
-    return options.contains(.optionOnScreenOnly) ? [target, background] : [background, target]
-  }
+  let snapshots = BoundWindowSnapshots.read(
+    windowIDs: [1], primaryScreenTop: 982,
+    source: .init(
+      visibleWindows: { [target, background] },
+      targetWindows: { _ in
+        Issue.record("Visible windows do not require a second lookup")
+        return nil
+      }))
   #expect(snapshots[1]?.visibility == .visible)
-  #expect(requests == [[.optionOnScreenOnly, .excludeDesktopElements]])
 }
 
-@Test func boundVisibilityUsesTheInventoryOnlyToLocateHiddenWindows() throws {
+@Test func boundVisibilitySeparatesHiddenWindowsFromConfirmedClosures() throws {
   let frame = CGRect(x: 100, y: 100, width: 600, height: 400)
   let visible = windowEntry(id: 1, frame: frame)
   let hidden = windowEntry(id: 2, frame: frame)
-  var requests: [CGWindowListOption] = []
-  let snapshots = BoundWindowSnapshots.read(windowIDs: [1, 2, 3], primaryScreenTop: 1000) {
-    options in
-    requests.append(options)
-    return options.contains(.optionOnScreenOnly) ? [visible] : [hidden, visible]
-  }
+  var requested: Set<CGWindowID> = []
+  let snapshots = BoundWindowSnapshots.read(
+    windowIDs: [1, 2, 3], primaryScreenTop: 1000,
+    source: .init(
+      visibleWindows: { [visible] },
+      targetWindows: {
+        requested = $0
+        return [hidden]
+      }))
   #expect(snapshots[1]?.visibility == .visible)
   #expect(snapshots[2]?.visibility == .hidden)
   #expect(snapshots[2]?.frame == CGRect(x: 100, y: 500, width: 600, height: 400))
-  #expect(snapshots[3] == nil)
-  #expect(requests == [[.optionOnScreenOnly, .excludeDesktopElements], [.excludeDesktopElements]])
+  #expect(snapshots[3]?.visibility == .closed)
+  #expect(requested == [2, 3])
 }
 
 @Test func boundVisibilityRetainsKnownWindowsWhenMetadataIsUnavailable() throws {
   let visible = windowEntry(id: 1, frame: CGRect(x: 100, y: 100, width: 600, height: 400))
-  let unavailable = BoundWindowSnapshots.read(windowIDs: [1, 2], primaryScreenTop: 1000) { _ in nil
-  }
+  let unavailable = BoundWindowSnapshots.read(
+    windowIDs: [1, 2], primaryScreenTop: 1000,
+    source: .init(visibleWindows: { nil }, targetWindows: { _ in nil }))
   #expect(unavailable[1]?.visibility == .unavailable)
   #expect(unavailable[2]?.visibility == .unavailable)
-  let partial = BoundWindowSnapshots.read(windowIDs: [1, 2], primaryScreenTop: 1000) { options in
-    options.contains(.optionOnScreenOnly) ? [visible] : nil
-  }
+  let partial = BoundWindowSnapshots.read(
+    windowIDs: [1, 2], primaryScreenTop: 1000,
+    source: .init(visibleWindows: { [visible] }, targetWindows: { _ in nil }))
   #expect(partial[1]?.visibility == .visible)
   #expect(partial[2]?.visibility == .unavailable)
-  let empty = BoundWindowSnapshots.read(windowIDs: [], primaryScreenTop: 1000) { _ in
-    Issue.record("No windows were requested")
-    return nil
-  }
+  let empty = BoundWindowSnapshots.read(
+    windowIDs: [], primaryScreenTop: 1000,
+    source: .init(
+      visibleWindows: {
+        Issue.record("No windows were requested")
+        return nil
+      }, targetWindows: { _ in nil }))
   #expect(empty.isEmpty)
+}
+
+@Test func boundVisibilityCannotTreatTruncatedOrMalformedMetadataAsClosure() {
+  let frame = CGRect(x: 10, y: 10, width: 500, height: 400)
+  let entries = (1...300).map { windowEntry(id: UInt32($0), frame: frame) }
+  // The target lies beyond the visible-stack inspection budget. Its exact lookup still finds it.
+  let snapshot = BoundWindowSnapshots.read(
+    windowIDs: [300], primaryScreenTop: 1000,
+    source: .init(visibleWindows: { entries }, targetWindows: { _ in [entries[299]] }))
+  #expect(snapshot[300]?.visibility == .hidden)
+  let malformed = BoundWindowSnapshots.read(
+    windowIDs: [300], primaryScreenTop: 1000,
+    source: .init(
+      visibleWindows: { [] },
+      targetWindows: { _ in
+        [[kCGWindowNumber as String: 300]]
+      }))
+  #expect(malformed[300]?.visibility == .unavailable)
+}
+
+@Test func boundWindowIdentityIncludesItsOwnerProcess() {
+  let target = WindowTargetCandidate(windowID: 1, processID: 123, appName: "Meeting", frame: .zero)
+  let reused = WindowTargetSnapshot(frame: .zero, title: nil, ownerPID: 456)
+  #expect(reused.hasClosed(target))
+  #expect(
+    !WindowTargetSnapshot(frame: .zero, title: nil, visibility: .unavailable).hasClosed(target))
 }
 
 @Test(arguments: [CGWindowLevelKey.dockWindow, .statusWindow, .screenSaverWindow])
@@ -146,8 +181,10 @@ func windowMetadataRequiresAnExplicitOnScreenFlag(_ onScreen: Bool?) throws {
   for level in levels {
     companion.level = level
     hud.prepare(
-      state: state, companionPoint: companion.frame.origin, characterSize: 64,
-      visibleFrame: CGRect(x: 0, y: 0, width: 1440, height: 900))
+      state: state,
+      anchor: .init(
+        companionPoint: companion.frame.origin, characterSize: 64,
+        visibleFrame: CGRect(x: 0, y: 0, width: 1440, height: 900)))
     let window = try #require(hud.windowNumber.flatMap { NSApp.window(withWindowNumber: $0) })
     #expect(window.level == level)
     #expect(!window.isVisible)

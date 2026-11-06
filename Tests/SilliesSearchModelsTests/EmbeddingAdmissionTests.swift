@@ -50,17 +50,17 @@ import Testing
 }
 
 @Test func persistedVectorsRejectInvalidInputsAndDifferentSpaces() throws {
-  let vector = try MemoryEmbedding(space: "model/revision/script", values: [3, 4])
+  let vector = try SearchEmbedding(space: "model/revision/script", values: [3, 4])
   #expect(abs((vector.similarity(to: vector) ?? 0) - 1) < 0.0001)
   #expect(vector.similarity(to: try .init(space: "different", values: [3, 4])) == nil)
   for values: [Float] in [[], [0, 0], [.infinity], [.nan]] {
-    #expect(throws: MemoryEmbeddingError.self) {
-      try MemoryEmbedding(space: "model", values: values)
+    #expect(throws: SearchEmbeddingError.self) {
+      try SearchEmbedding(space: "model", values: values)
     }
   }
-  #expect(throws: MemoryEmbeddingError.self) {
+  #expect(throws: SearchEmbeddingError.self) {
     try JSONDecoder().decode(
-      MemoryEmbedding.self, from: Data(#"{"space":"model","values":[0,0]}"#.utf8))
+      SearchEmbedding.self, from: Data(#"{"space":"model","values":[0,0]}"#.utf8))
   }
 }
 

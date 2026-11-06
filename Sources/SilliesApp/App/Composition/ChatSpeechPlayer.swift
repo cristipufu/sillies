@@ -1,20 +1,26 @@
 import Foundation
 import SilliesChat
 import SilliesCore
+import SilliesDiagnostics
 import SilliesTTS
 
 /// Serial speech output with bounded synthesis requests and hardware backpressure.
 actor ChatSpeechPlayer: ChatSpeechOutput {
   private let models: VoiceModelEnvironment
   private let playback: any SpeechPlayback
+  private let diagnostics: DiagnosticSink
   private var active: (id: UUID, task: Task<String?, Error>)?
   private var interruptedPlaybackID: UUID?
   private var firstPCMFor: UUID?
   private var pausedID: UUID?
 
-  init(models: VoiceModelEnvironment, playback: any SpeechPlayback) {
+  init(
+    models: VoiceModelEnvironment, playback: any SpeechPlayback,
+    diagnostics: DiagnosticSink = .disabled
+  ) {
     self.models = models
     self.playback = playback
+    self.diagnostics = diagnostics
   }
 
   func availabilityNotice(language: String) async -> String? {
@@ -109,6 +115,9 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
         localized:
           "Text replies are ready. Add a voice in Settings → Voices to hear your companion.")
     }
+    diagnostics.record(
+      .init(.synthesis, .modelSelected, operation: request.id)
+        .using(model: manifest.model.id, provider: manifest.model.providerID))
     let language = request.profile.languageIdentifier
     guard manifest.model.supports(language: language) else {
       return
@@ -171,6 +180,8 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
   private func playbackInterrupted(id: UUID) {
     guard active?.id == id else { return }
     interruptedPlaybackID = id
+    diagnostics.record(
+      .init(.synthesis, .playbackInterrupted, operation: id).because(.playbackInterruption))
     active?.task.cancel()
   }
 }

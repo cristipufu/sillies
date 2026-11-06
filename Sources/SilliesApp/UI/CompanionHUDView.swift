@@ -7,6 +7,7 @@ struct CompanionHUDView: View {
   let model: CompanionHUDModel
   let state: CompanionBindingState
   @State private var hoveredPrimaryAction = false
+  private static let cardInset: CGFloat = 14
 
   var body: some View {
     Group {
@@ -14,34 +15,51 @@ struct CompanionHUDView: View {
       case .followingFocusedWindow:
         EmptyView()
 
-      case .active(let target, let skill, _, let statusDetail, let audioLevel):
-        activeCard(
-          target: target, skill: skill, statusDetail: statusDetail, audioLevel: audioLevel)
+      case .active(let target, let skill, _, let statusDetail, _):
+        if skill == .chat, let conversation = model.conversation, conversation.mode == .talk {
+          TalkHUDView(
+            model: conversation, openTranscript: { model.onOpenSession?() },
+            openSettings: { model.onOpenChatSettings?($0) }
+          )
+        } else if skill.isAudioSession {
+          RecordingHUDView(model: model, state: state)
+        } else {
+          activeCard(
+            target: target, skill: skill, statusDetail: statusDetail
+          )
+        }
 
       case .completed(let target, let skill, let summary, let recordID, _):
         completedCard(
-          target: target, skill: skill, summary: summary, recordID: recordID)
+          target: target, skill: skill, summary: summary, recordID: recordID
+        )
       }
     }
-    .padding(14)
+    .padding(
+      .horizontal,
+      surface == .speechBubble
+        ? CompanionSpeechBubbleLayout.tailDepth + CompanionSpeechBubbleLayout.shadowInset
+        : Self.cardInset
+    )
+    .padding(
+      .vertical,
+      surface == .speechBubble ? CompanionSpeechBubbleLayout.shadowInset : Self.cardInset
+    )
     .fixedSize()
   }
 
+  private var surface: CompanionHUDModel.Surface { model.surface(for: state) }
+
   private func activeCard(
-    target: WindowTargetCandidate?, skill: CompanionSkillKind, statusDetail: String,
-    audioLevel: Double
+    target: WindowTargetCandidate?, skill: CompanionSkillKind, statusDetail: String
   ) -> some View {
     HStack(spacing: 9) {
-      statusIndicator(for: skill, audioLevel: audioLevel)
+      statusIndicator(for: skill)
 
       SessionHUDLabel(
         title:
           "\(skill.title) · \(sourceName(target: target, skill: skill))",
         status: statusDetail)
-
-      if let session = model.audioSession, skill.isAudioSession {
-        AudioHUDControls(session: session, open: { model.onOpenSession?() })
-      }
 
       if skill == .chat {
         SessionHUDAction(title: String(localized: "Open Chat")) { model.onOpenSession?() }
@@ -140,7 +158,9 @@ struct CompanionHUDView: View {
     }
     .padding(.horizontal, 11)
     .padding(.vertical, 8)
-    .background(SessionHUDBackground(emphasis: .completed))
+    .background {
+      if surface == .card { SessionHUDBackground(emphasis: .completed) }
+    }
   }
 
   private var completionNeedsAttention: Bool {
@@ -157,20 +177,14 @@ struct CompanionHUDView: View {
       ? String(localized: "\(skill.title) Needs Attention") : skill.completionHeadline
   }
 
-  @ViewBuilder
-  private func statusIndicator(for skill: CompanionSkillKind, audioLevel: Double) -> some View {
-    if skill.isAudioSession {
-      SessionAudioIndicator(
-        level: audioLevel, isCapturing: model.audioSession?.phase == .capturing)
-    } else {
-      ZStack {
-        Circle()
-          .fill(theme.accent.opacity(0.14))
-          .frame(width: 28, height: 28)
-        Image(systemName: skill.symbolName)
-          .font(.system(size: 12, weight: .semibold))
-          .foregroundStyle(theme.accent)
-      }
+  private func statusIndicator(for skill: CompanionSkillKind) -> some View {
+    ZStack {
+      Circle()
+        .fill(theme.accent.opacity(0.14))
+        .frame(width: 28, height: 28)
+      Image(systemName: skill.symbolName)
+        .font(.system(size: 12, weight: .semibold))
+        .foregroundStyle(theme.accent)
     }
   }
 }

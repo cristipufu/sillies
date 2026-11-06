@@ -4,7 +4,7 @@ import SilliesCore
 extension ConversationDatabase {
   public static let defaultEmbeddingBatchCount = 24
   private static let maximumEmbeddingBatchCount = 100
-  public func pendingMemoryEmbeddings(
+  public func pendingSearchEmbeddings(
     provider: String, limit: Int = ConversationDatabase.defaultEmbeddingBatchCount
   ) throws -> [MemoryIndexItem] {
     try sql.cancellableRead {
@@ -30,8 +30,8 @@ extension ConversationDatabase {
   }
 
   /// Refuse embeddings computed before a correction, deletion, history reset or undo.
-  @discardableResult public func saveMemoryEmbedding(
-    _ embedding: MemoryEmbedding?, for item: MemoryIndexItem, provider: String
+  @discardableResult public func saveSearchEmbedding(
+    _ embedding: SearchEmbedding?, for item: MemoryIndexItem, provider: String
   ) throws -> Bool {
     try sql.transaction {
       let current = try CompanionMemoryRows.read(
@@ -40,7 +40,7 @@ extension ConversationDatabase {
         values: [.text(item.owner), .text(item.memory.id.uuidString)]
       ).first
       guard current?.revision == item.memory.revision else { return false }
-      let vector = embedding.map { MemoryVectorStorage.encode($0.values) } ?? Data([0])
+      let vector = embedding.map { SearchVectorStorage.encode($0.values) } ?? Data([0])
       try sql.execute(
         """
         INSERT INTO memory_embeddings(provider,id,owner,space,vector) VALUES(?,?,?,?,?)
@@ -54,7 +54,7 @@ extension ConversationDatabase {
     }
   }
 
-  public func memoryIndexProgress(provider: String) throws -> MemoryIndexProgress {
+  public func memoryIndexProgress(provider: String) throws -> SearchIndexProgress {
     try .init(
       processed: sql.integer(
         "SELECT COUNT(*) FROM memory_embeddings WHERE provider=?", [.text(provider)]),
@@ -63,10 +63,10 @@ extension ConversationDatabase {
       total: sql.integer("SELECT COUNT(*) FROM companion_memories"))
   }
 
-  public func removeMemoryEmbeddings(except provider: String) throws {
+  public func removeSearchEmbeddings(except provider: String) throws {
     try sql.execute("DELETE FROM memory_embeddings WHERE provider!=?", [.text(provider)])
   }
-  public func resetMemoryEmbeddings(provider: String) throws {
+  public func resetSearchEmbeddings(provider: String) throws {
     try sql.execute("DELETE FROM memory_embeddings WHERE provider=?", [.text(provider)])
   }
 }

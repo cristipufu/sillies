@@ -72,6 +72,13 @@ import Testing
   session.draft = "A new thought while I read earlier messages."
   session.send()
   try await waitForChatState { !session.streamedText.isEmpty }
+  let clipboard = NSPasteboard.withUniqueName()
+  defer { clipboard.releaseGlobally() }
+  #expect(selected.writeSelection(to: clipboard, types: selected.writablePasteboardTypes))
+  #expect(
+    clipboard.string(forType: .string)
+      == (selected.string as NSString).substring(with: selectedRange))
+  #expect(session.failure == nil && session.isWorking)
   await reply.complete()
   try await waitForChatState { session.phase == .ready }
   #expect(session.browser.page?.entries.map(\.id) == oldPage)
@@ -108,7 +115,8 @@ import Testing
       styleMask: [.borderless], backing: .buffered, defer: false)
     window.isReleasedWhenClosed = false
     host = NSHostingController(
-      rootView: ChatSessionView(model: session, openSettings: { _ in }, motion: .reduced))
+      rootView: ChatSessionView(model: session, openSettings: { _ in }, close: {}, motion: .reduced)
+    )
     host.sizingOptions = []
     window.contentViewController = host
     host.view.frame = CGRect(origin: .zero, size: ChatWindowLayout.initialSize)

@@ -120,6 +120,8 @@ extension VaultDatabase {
     try sql.execute(
       "INSERT INTO documents(id,body) VALUES(?,?)",
       [.text(record.id.uuidString), .text(Self.searchableText(record))])
+    let documentRowID = try sql.integer("SELECT last_insert_rowid()")
+    try invalidatePassages(for: record.id, documentRowID: documentRowID)
     metrics.encodedBodyBytes += body.count
     metrics.writtenBodies += 1
     metrics.indexedDocuments += 1

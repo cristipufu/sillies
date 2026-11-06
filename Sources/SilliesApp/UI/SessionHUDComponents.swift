@@ -1,3 +1,4 @@
+import SilliesCore
 import SwiftUI
 
 /// The compact session controls shared by recording, dictation, and selection editing.
@@ -6,11 +7,11 @@ struct SessionHUDBackground: View {
   enum Emphasis { case active, completed }
   let emphasis: Emphasis
   var body: some View {
-    RoundedRectangle(cornerRadius: 15, style: .continuous)
+    RoundedRectangle(cornerRadius: MascotBubbleContour.cornerRadius)
       .fill(theme.card.opacity(0.98))
       .shadow(color: .black.opacity(0.16), radius: 10, y: 3)
       .overlay(
-        RoundedRectangle(cornerRadius: 15, style: .continuous)
+        RoundedRectangle(cornerRadius: MascotBubbleContour.cornerRadius)
           .strokeBorder(
             emphasis == .active ? theme.accent.opacity(0.5) : theme.border,
             lineWidth: emphasis == .active ? 1.1 : 0.8))
@@ -18,16 +19,23 @@ struct SessionHUDBackground: View {
 }
 
 struct SessionHUDLabel: View {
+  enum Layout {
+    case standard, flexible
+    var width: CGFloat? { self == .standard ? 210 : nil }
+  }
   @Environment(\.silliesTheme) private var theme
   let title: String
   let status: String
+  var layout = Layout.standard
   var body: some View {
     VStack(alignment: .leading, spacing: 1.5) {
       Text(title).font(.system(size: 11, weight: .bold, design: .rounded))
         .foregroundStyle(theme.ink)
+        .help(title)
       Text(status).font(.system(size: 10, weight: .medium)).monospacedDigit()
         .foregroundStyle(theme.secondary)
-    }.lineLimit(1).frame(width: 210, alignment: .leading).help(status)
+    }.lineLimit(1).frame(width: layout.width, alignment: .leading)
+      .frame(maxWidth: layout == .flexible ? .infinity : nil, alignment: .leading).help(status)
   }
 }
 

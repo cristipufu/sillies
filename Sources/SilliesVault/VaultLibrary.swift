@@ -8,13 +8,20 @@ package actor VaultLibrary {
   private let directory: URL
   private var database: VaultDatabase?
   private var cache: VaultBodyCache
+  let semanticSearches: VaultSemanticSearchWorker
+  var embeddings: SearchEmbeddingAccess?
+  var indexTask: Task<Void, Never>?
+  var indexGeneration = UUID()
+  var searchRevision = UUID()
+  var indexFailure: String?
 
   package init(directory: URL, cacheBytes: Int = defaultCacheBytes) {
     self.directory = directory
     cache = VaultBodyCache(capacity: cacheBytes)
+    semanticSearches = VaultSemanticSearchWorker(directory: directory)
   }
 
-  private func storage() throws -> VaultDatabase {
+  func storage() throws -> VaultDatabase {
     dispatchPrecondition(condition: .notOnQueue(.main))
     if let database { return database }
     let opened = try VaultDatabase(directory: directory)
@@ -31,9 +38,15 @@ package actor VaultLibrary {
     try Task.checkCancellation()
     return try storage().page(request)
   }
-  package func search(_ request: VaultSearchRequest) throws -> [VaultSearchMatch] {
+  package func search(_ request: VaultSearchRequest) async throws -> [VaultSearchMatch] {
     try Task.checkCancellation()
-    return try storage().search(request)
+    let revision = searchRevision
+    let keywords = try storage().search(request)
+    let semantic = try await relatedMatches(request)
+    guard revision == searchRevision else { return try storage().search(request) }
+    var seen: Set<UUID> = []
+    return Array(
+      (keywords + semantic).filter { seen.insert($0.header.id).inserted }.prefix(request.limit))
   }
   package func matchingHeaders(_ ids: Set<UUID>, search: SessionRecordSearch) throws
     -> VaultHeaderMatches
@@ -61,6 +74,8 @@ package actor VaultLibrary {
       if mutation.retention.limit != nil { cache.removeAll() }
     }
     let removed = try database.commit(mutation)
+    searchRevision = UUID()
+    scheduleIndex()
     let current = try snapshot()
     return .init(
       page: current.page, eligibleRetentionCount: current.eligibleRetentionCount,

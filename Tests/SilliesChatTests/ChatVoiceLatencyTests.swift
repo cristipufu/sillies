@@ -10,9 +10,11 @@ import Testing
   let now = ProcessInfo.processInfo.systemUptime
   let timing = try #require(VoiceEndpointTiming(lastSpeechSample: now - 1, detected: now - 0.1))
   let delivery = ChatTurnDelivery(started: .now, endpoint: timing)
+  let attempt = UUID()
+  delivery.beginSpeech(attempt)
   delivery.receivedText()
-  delivery.received(.milestone(.firstPCM))
-  delivery.received(.milestone(.audibleOutput(now + 0.2)))
+  delivery.received(.milestone(.firstPCM), from: attempt)
+  delivery.received(.milestone(.audibleOutput(now + 0.2)), from: attempt)
   #expect(try #require(delivery.snapshot.endpoint) > .seconds(0.89))
   #expect(try #require(delivery.snapshot.endpoint) < .seconds(0.91))
   #expect(try #require(delivery.snapshot.recognitionFinalized) >= .seconds(1))
@@ -67,12 +69,14 @@ import Testing
 
 @Test @MainActor func chatAudioTimingWaitsForAudibleDeviceOutput() {
   let delivery = ChatTurnDelivery(started: .now)
+  let attempt = UUID()
+  delivery.beginSpeech(attempt)
   delivery.receivedText()
-  delivery.received(.milestone(.firstPCM))
-  delivery.received(.speaking(level: 0.8))
+  delivery.received(.milestone(.firstPCM), from: attempt)
+  delivery.received(.speaking(level: 0.8), from: attempt)
   #expect(delivery.snapshot.firstPCM != nil)
   #expect(delivery.snapshot.firstAudio == nil)
-  delivery.received(.milestone(.audibleOutput(ProcessInfo.processInfo.systemUptime)))
+  delivery.received(.milestone(.audibleOutput(ProcessInfo.processInfo.systemUptime)), from: attempt)
   #expect(delivery.snapshot.firstAudio != nil)
 }
 

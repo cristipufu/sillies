@@ -19,11 +19,25 @@ public struct MemoryFact: Codable, Equatable, Sendable {
 }
 
 public struct MemorySource: Codable, Equatable, Sendable {
+  public enum Attribution: String, Codable, Sendable { case message, userCorrection }
   public let messageID: UUID
   public let quote: String
+  public private(set) var attribution = Attribution.message
   public init(messageID: UUID, quote: String) {
     self.messageID = messageID
     self.quote = quote
+  }
+  public func correctedByUser() -> Self {
+    var copy = self
+    copy.attribution = .userCorrection
+    return copy
+  }
+  private enum CodingKeys: String, CodingKey { case messageID, quote, attribution }
+  public init(from decoder: any Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    messageID = try values.decode(UUID.self, forKey: .messageID)
+    quote = try values.decode(String.self, forKey: .quote)
+    attribution = try values.decodeIfPresent(Attribution.self, forKey: .attribution) ?? .message
   }
 }
 

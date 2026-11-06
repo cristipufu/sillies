@@ -28,6 +28,8 @@ def check_rule(rule: dict, turn: dict, tools: list[dict]) -> dict:
         category = "lexical_anchor"
     elif kind == "no_tools":
         passed, observed = not tools, sorted(names)
+    elif kind == "tool_calls_at_most":
+        passed, observed = len(tools) <= int(values[0]), len(tools)
     elif kind == "required_tools":
         passed, observed = set(values) <= names, sorted(names)
     elif kind == "allowed_tools":
@@ -50,6 +52,9 @@ def check_rule(rule: dict, turn: dict, tools: list[dict]) -> dict:
     elif kind == "source_includes":
         observed = turn.get("sources", [])
         passed = {value.casefold() for value in values} <= {value.casefold() for value in observed}
+    elif kind == "source_equals":
+        observed = turn.get("sources")
+        passed = isinstance(observed, list) and sorted(value.casefold() for value in values) == sorted(value.casefold() for value in observed)
     elif kind == "compacted":
         passed, observed = bool(turn.get("compacted")), turn.get("compacted", False)
     elif kind == "compaction_calls_at_most":

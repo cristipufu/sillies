@@ -107,6 +107,18 @@ Turn IDs reject late callbacks. Keep the rendered-audio echo reference and micro
 path active throughout. Test first phrase before final text, queue exhaustion, cancellation while
 waiting for memory or playback, and a voice failure during continued text generation.
 
+Talk uses the shared compact recording HUD; Chat retains the selectable message window. Opening Talk
+must not briefly present Chat. Mode switches preserve the draft and stored conversation. Failures
+remain accessible through the shared notices and settings actions. Expected inference cancellation
+is a lifecycle transition, not a raw error banner.
+
+After an intentional stop, **Continue speaking** replays only existing generated words after a
+verified spoken prefix. It cannot invoke reasoning or tools, append another reply, or infer missing
+words. Each replay has a fresh attempt identity while progress updates the original message. A new
+reply or replay awaits the previous playback stop asynchronously; an old stop must never cancel a
+new attempt. Empty recognized interruptions use the retained phrase queue automatically, and real
+words or closure cancel that recovery. Validate both event orders and delayed playback teardown.
+
 ## Native Fish implementation
 
 `SilliesFishSpeech` implements S2 Pro inference with the existing Apple MLX and Hugging Face tokenizer
@@ -159,7 +171,15 @@ python3 scripts/run-bounded-test.py 180 /usr/bin/sandbox-exec \
   .build/debug/TTSBenchmark run MODEL_ID /tmp/sillies-voice-check
 ```
 
-Installation is separate from the bounded inference test. Inspect/listen to the generated WAV;
+Installation is separate from the bounded inference test. The installer prints byte and verification
+progress to stderr, including when redirected to a log. Its default setup deadline is 30 minutes;
+an optional `TIMEOUT_SECONDS` argument after the model directory changes that setup limit. Network
+errors still terminate the transfer normally. Do not wrap multi-gigabyte downloads in the short
+inference watchdog. Ctrl-C, SIGTERM and the setup deadline cancel cooperatively and wait for the
+downloader to save resume data when the server supports it. Rerun the same installation command to
+reuse completed artifacts and resume the current file. A forced SIGKILL cannot provide that cleanup.
+
+Inspect/listen to the generated WAV;
 non-silent PCM alone does not establish speech quality. Optional final arguments are a language code
 and a short passage. Test the packaged helper too, since command-line execution does not establish
 that all Metal and runtime resources are bundled correctly.
@@ -173,7 +193,10 @@ do not report them as end-to-end conversational latency. No download is performe
 `SILLIES_VOICE_PROFILE_DIRECTORY` is set. Hashes are independent of WAV quantization and transport
 boundaries. `recovery` cancels after the first chunk, joins the worker and synthesizes another utterance.
 `TTSBenchmark --self-test`, included in `make check`, validates the timing origin, known PCM hashes,
-sub-Int16 changes and streamed-text matching without loading a model.
+sub-Int16 changes, streamed-text matching and installation cancellation ownership without loading a
+model. Installation checks exercise SIGINT, SIGTERM, deadline expiry and parent-task cancellation.
+The loopback downloader test also verifies a nonzero HTTP Range offset on resumption, so a fresh
+download cannot masquerade as successful resume.
 
 For resource-contention experiments, set both `SILLIES_TEXT_HELPER` and `SILLIES_TTS_HELPER` to helpers
 built from the same source as the runner, then use:
@@ -206,3 +229,25 @@ an explicit utterance-completion signal and bounded delivery. The pinned Pocket 
 its session is finished per phrase while model weights and native voice conditioning remain reusable.
 Qwen already caches voice/language prompts. Model-generated quiet audio is preserved unless a runtime
 contract identifies removable padding; a volume threshold cannot establish that speech is absent.
+
+### Playback recovery and timing qualification
+
+`ChatTurnDelivery` records planned phrases and confirmed playback synchronously, before UI
+notification. Every speech attempt has its own identity. `utteranceFinished` must mean confirmed
+playback, not synthesis or enqueue completion; stale attempt callbacks cannot advance delivery.
+An empty recognized interruption can resume a suspended output or re-synthesize bounded retained
+phrases after inference preemption. Recovery starts at the last confirmed phrase boundary and
+never invokes reasoning or tools. A partly heard phrase may repeat. Stop, mute and real user
+words must cancel recovery normally.
+
+Recognition finalization must release inference admission before reporting completion. Cancellation
+and finish join one reservation-release task, so a late cancellation cannot release another turn's
+reservation. This ordering lets an empty interruption recover immediately without a transient busy
+error; it must not rely on actor-task scheduling order.
+
+The headless `TTSBenchmark conversation` probe accepts an optional synthetic scenario JSON
+with `id`, `language`, and `prompt`, after the pair order. It saves WAV listening artifacts and
+marks cold warmup separately. Compare both orders, verify exact phrase delivery, and review
+audio for pronunciation and phrasing before changing startup timing. First non-silent PCM is
+not physical speaker latency. Capture/VAD lifecycle checks and real-device output checks are
+separate; neither a scripted recognizer nor a silent sink certifies acoustic quality.

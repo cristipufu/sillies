@@ -1,16 +1,35 @@
 import Observation
+import SilliesChat
 import SwiftUI
 
 @MainActor @Observable final class SettingsNavigation {
   var destination: SettingsDestination
+  var returnsToSetup = false
   init(destination: SettingsDestination = .general) { self.destination = destination }
+
+  func showConversationSettings(
+    _ requested: ChatNotice.SettingsDestination, setup: SetupPresentation
+  ) {
+    returnsToSetup = false
+    switch requested {
+    case .textModels where setup.replyModelOverride != nil:
+      setup.move(to: .preparation)
+      setup.isProfileExpanded = true
+      destination = .setup
+    case .textModels: destination = .intelligence
+    case .voices: destination = .voices
+    case .recognition: destination = .speech
+    }
+  }
 }
 
 enum SettingsDestination: String, CaseIterable, Identifiable {
-  case general, appearance, companions, writing, speech, intelligence, search, voices, shortcuts
+  case setup, general, appearance, companions, writing, speech, intelligence, search, voices,
+    shortcuts
   var id: Self { self }
   var title: String {
     switch self {
+    case .setup: String(localized: "Start here")
     case .general: String(localized: "General")
     case .appearance: String(localized: "Appearance")
     case .companions: String(localized: "Companions")
@@ -24,6 +43,7 @@ enum SettingsDestination: String, CaseIterable, Identifiable {
   }
   var symbol: String {
     switch self {
+    case .setup: "sparkles"
     case .general: "slider.horizontal.3"
     case .appearance: "paintpalette"
     case .companions: "pawprint.fill"
@@ -37,13 +57,14 @@ enum SettingsDestination: String, CaseIterable, Identifiable {
   }
   var explanation: String {
     switch self {
+    case .setup: String(localized: "A little help getting settled.")
     case .general: String(localized: "Make Sillies part of your day.")
     case .appearance: String(localized: "A familiar little world, in your colors.")
     case .companions: String(localized: "Choose your crew and how they spend their time.")
     case .writing: String(localized: "Your voice, your words, in the app you’re using.")
-    case .speech: String(localized: "Local speech models for dictation and meetings.")
+    case .speech: String(localized: "Speech recognition for Talk, dictation and meetings.")
     case .intelligence:
-      String(localized: "Optional local models for multilingual notes and writing.")
+      String(localized: "Local models for conversations, meeting notes and writing.")
     case .search: String(localized: "Help your companions find the memories that matter.")
     case .voices: String(localized: "Give your companions a voice, entirely on your Mac.")
     case .shortcuts: String(localized: "A keyboard path to your companions’ skills.")

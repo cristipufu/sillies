@@ -9,6 +9,7 @@ struct BenchmarkPlan: Decodable, Sendable {
   let workspace: String
   let jobs: [BenchmarkJob]
   let memorySearch: BenchmarkMemorySearch.Configuration?
+  let prefillChunkTokens: Int?
 }
 
 struct BenchmarkJob: Codable, Sendable {

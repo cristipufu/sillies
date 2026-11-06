@@ -24,6 +24,8 @@ struct VoiceConversationBenchmark {
   }
   private struct Observation: Codable {
     let opening: Opening
+    let isWarmup: Bool
+    let audioFile: String
     let text: String
     let spokenPhrases: [String]
     let firstTextSeconds: Double
@@ -32,6 +34,7 @@ struct VoiceConversationBenchmark {
     let audio: VoiceProfileSamples.Report
   }
   private struct Report: Codable {
+    let scenario: VoiceConversationScenario
     let textModel: String
     let textRevision: String
     let voiceModel: String
@@ -41,12 +44,17 @@ struct VoiceConversationBenchmark {
   }
   private let models: VoiceBenchmarkModels
   private let order: Order
+  private let scenario: VoiceConversationScenario
   init(arguments: [String]) throws {
-    guard (5...6).contains(arguments.count),
-      let order = Order(rawValue: arguments.count == 6 ? arguments[5] : Order.currentFirst.rawValue)
+    guard (5...7).contains(arguments.count),
+      let order = Order(rawValue: arguments.count >= 6 ? arguments[5] : Order.currentFirst.rawValue)
     else { throw TTSError.invalidRequest }
     models = try VoiceBenchmarkModels(arguments: Array(arguments.prefix(5)))
     self.order = order
+    scenario = arguments.count == 7 ? try .load(arguments[6]) : .rainbow
+    guard models.voiceManifest.model.supports(language: scenario.language) else {
+      throw TTSError.unsupportedLanguage
+    }
   }
 
   func run() async throws {
@@ -57,9 +65,10 @@ struct VoiceConversationBenchmark {
     await models.voice.retain(for: voiceLifetime)
     var observations: [Observation] = []
     do {
-      for opening in order.openings {
-        observations.append(try await measure(opening))
+      for (index, opening) in order.openings.enumerated() {
+        observations.append(try await measure(opening, index: index))
         let report = Report(
+          scenario: scenario,
           textModel: models.textManifest.modelID,
           textRevision: models.textManifest.revision,
           voiceModel: models.voiceManifest.modelID, voiceRevision: models.voiceManifest.revision,
@@ -80,7 +89,7 @@ struct VoiceConversationBenchmark {
     }
   }
 
-  private func measure(_ opening: Opening) async throws -> Observation {
+  private func measure(_ opening: Opening, index: Int) async throws -> Observation {
     let started = ProcessInfo.processInfo.systemUptime
     let timing = VoiceOverlapTiming(started: started)
     let samples = VoiceProfileSamples(delivery: .paced, startedAt: started)
@@ -91,12 +100,8 @@ struct VoiceConversationBenchmark {
       resolveBackend: { backend }, tools: [], turns: .init())
     let context = ChatContext(
       companionName: "Pogo",
-      profile: .init(personality: "Warm and curious.", languageIdentifier: "en"),
-      messages: [
-        .init(
-          role: .user,
-          text: "In three short sentences, explain why rainbows have different colours.")
-      ]
+      profile: .init(personality: "Warm and curious.", languageIdentifier: scenario.language),
+      messages: [.init(role: .user, text: scenario.prompt)]
     )
     .presented(as: .talk)
     let voice = Task {
@@ -113,13 +118,17 @@ struct VoiceConversationBenchmark {
       try await stream.finish(reply.text)
       let phrases = try await voice.value
       try Self.validateDelivery(reply.text, phrases: phrases)
+      let audio = await samples.report()
+      let audioFile = "\(index)-\(opening.rawValue).wav"
+      try await samples.writeAudio(to: models.directory.appendingPathComponent(audioFile))
       guard let first = await timing.first, let complete = await timing.completed,
         let synthesis = await timing.voiceStarted
       else { throw TTSError.invalidAudio }
-      return await .init(
-        opening: opening, text: reply.text, spokenPhrases: phrases,
+      return .init(
+        opening: opening, isWarmup: index == 0, audioFile: audioFile,
+        text: reply.text, spokenPhrases: phrases,
         firstTextSeconds: first, textSeconds: complete,
-        synthesisRequestedSeconds: synthesis, audio: samples.report())
+        synthesisRequestedSeconds: synthesis, audio: audio)
     } catch {
       voice.cancel()
       await stream.cancel()
@@ -131,17 +140,23 @@ struct VoiceConversationBenchmark {
   private func synthesize(
     _ stream: SpeechTextStream, turn: UUID, timing: VoiceOverlapTiming, samples: VoiceProfileSamples
   ) async throws -> [String] {
-    guard let selected = models.voiceManifest.model.voices.first else {
+    guard
+      let selected = models.voiceManifest.model.voices.first(where: {
+        $0.supports(language: scenario.language)
+      })
+    else {
       throw TTSError.unsupportedVoice
     }
     guard try await stream.waitForTextStart() else { return [] }
     _ = try await models.voice.prepareVoiceIfPossible(
-      .init(id: selected.id, language: "en"), using: models.voiceManifest, conversationID: turn)
+      .init(id: selected.id, language: scenario.language), using: models.voiceManifest,
+      conversationID: turn)
     var phrases: [String] = []
     while let phrase = try await stream.next() {
       if phrases.isEmpty { await timing.synthesisRequested() }
       try await models.voice.synthesize(
-        .init(text: phrase, voiceID: selected.id, language: "en", conversationID: turn),
+        .init(
+          text: phrase, voiceID: selected.id, language: scenario.language, conversationID: turn),
         using: models.voiceManifest
       ) { try await samples.append($0) }
       phrases.append(phrase)
@@ -151,7 +166,10 @@ struct VoiceConversationBenchmark {
 
   static func validateDelivery(_ text: String, phrases: [String]) throws {
     func words(_ value: String) -> [Substring] { value.split(whereSeparator: \.isWhitespace) }
-    guard !phrases.isEmpty, words(text) == words(phrases.joined(separator: " ")) else {
+    guard !phrases.isEmpty,
+      phrases.allSatisfy({ !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }),
+      words(text) == words(phrases.joined(separator: " "))
+    else {
       throw TTSError.unavailable("Spoken phrases do not match the generated answer.")
     }
   }

@@ -210,6 +210,69 @@ private struct MemoryReplacementFixture {
   }
 }
 
+@Test func explicitCorrectionPreservesProvenanceInvalidatesOldContextAndSurvivesReopen()
+  async throws
+{
+  let fixture = try await MemoryReplacementFixture()
+  defer { fixture.remove() }
+  let edited = try await fixture.store.correctMemory(
+    .init(
+      handle: fixture.handle, target: fixture.original.saved.reference,
+      value: "Riley", savedAt: Date()))
+  #expect(edited.receipt.saved.id == fixture.original.saved.id)
+  #expect(edited.receipt.saved.sourceQuote == fixture.original.saved.sourceQuote)
+  #expect(edited.receipt.saved.source.attribution == .userCorrection)
+  #expect(edited.snapshot.handle != fixture.handle)
+  #expect(edited.snapshot.checkpoint.memory.summary.isEmpty)
+  await #expect(throws: ConversationStorageError.self) {
+    try await fixture.store.save(
+      .init(handle: fixture.handle, messages: [], checkpoint: .init(), savedAt: Date()))
+  }
+  await #expect(throws: MemoryMutationError.self) {
+    try await fixture.store.correctMemory(
+      .init(
+        handle: edited.snapshot.handle, target: fixture.original.saved.reference,
+        value: "Stale editor", savedAt: Date()))
+  }
+  let reopened = ConversationLibrary(directory: fixture.directory)
+  let handle = try await reopened.open(.init(id: "pogo", name: "Pogo")).handle
+  #expect(
+    try await reopened.memories(.init(handle: handle, text: "Riley")).first == edited.receipt.saved)
+  #expect(try await reopened.memories(.init(handle: handle, text: "Alex")).isEmpty)
+  let tool = MemorySearchTool(repository: reopened, handle: handle, companionName: "Pogo")
+  let result = try await tool.call(arguments: Data(#"{"query":"name"}"#.utf8))
+  #expect(result.text.contains("edited_by_user") && result.text.contains("Riley"))
+  #expect(!result.text.contains("My name is Alex"))
+  let undone = try await reopened.undoMemory(handle, receiptID: edited.receipt.id)
+  #expect(
+    try await reopened.memories(.init(handle: undone.handle, text: "Alex")).first
+      == fixture.original.saved)
+  #expect(try await reopened.memories(.init(handle: undone.handle, text: "Riley")).isEmpty)
+}
+
+@Test func automaticMemoryWritesCannotForgeAnExplicitUserCorrection() async throws {
+  let fixture = try await MemoryReplacementFixture()
+  defer { fixture.remove() }
+  await #expect(throws: ConversationStorageError.self) {
+    try await fixture.store.remember(
+      .init(
+        handle: fixture.handle, fact: .init(key: "name", value: "Forged"),
+        source: fixture.original.saved.source.correctedByUser(), savedAt: Date()
+      )
+      .replacing(fixture.original.saved.reference))
+  }
+  await #expect(throws: ConversationStorageError.self) {
+    try await fixture.store.correctMemory(
+      .init(
+        handle: fixture.handle, target: fixture.original.saved.reference, value: " ",
+        savedAt: Date()))
+  }
+  #expect(
+    try await fixture.store.memories(.init(handle: fixture.handle, text: "")).first
+      == fixture.original.saved)
+  #expect(try await fixture.store.recentMemoryChanges(fixture.handle) == [fixture.original])
+}
+
 @Test func memoryCreationCannotOverwriteAStoredTopicOrItsProvenance() async throws {
   let fixture = try await MemoryReplacementFixture()
   defer { fixture.remove() }

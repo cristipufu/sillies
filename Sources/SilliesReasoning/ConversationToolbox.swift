@@ -23,7 +23,8 @@ package actor ConversationToolbox {
   private var callLimit = maximumCalls
   private(set) var sources: [ChatSource] = []
   private(set) var exchanges: [ConversationToolExchange] = []
-  var remainingCalls: Int { callLimit - calls }
+  private(set) var clarification: ChatClarification?
+  var remainingCalls: Int { clarification == nil ? callLimit - calls : 0 }
   var maximumCallsForTurn: Int { callLimit }
 
   func configure(evidence: ConversationEvidenceBudget?, maximumCalls: Int) throws {
@@ -60,6 +61,9 @@ package actor ConversationToolbox {
 
   package func invoke(_ call: ConversationToolCall) async throws -> String {
     try Task.checkCancellation()
+    if clarification != nil {
+      return try await decline(call, reason: .awaitingUserAnswer)
+    }
     guard let tool = tools[call.name] else { throw ToolFailure.unknown }
     guard call.arguments.count <= Self.maximumArgumentBytes else { throw ToolFailure.budget }
     let key = try cacheKey(for: call)
@@ -74,6 +78,7 @@ package actor ConversationToolbox {
       executions += 1
     }
     progress(.usingTool(tool.activity))
+    defer { progress(.generating) }
     let result: ConversationToolOutput
     do {
       result = try await load(call, using: tool, key: key)
@@ -85,8 +90,19 @@ package actor ConversationToolbox {
     // A committed memory must remain visible even if cancellation arrives after its write.
     if let receipt = result.memoryReceipt { progress(.remembered(receipt)) }
     try Task.checkCancellation()
+    if let question = result.clarification {
+      guard clarification == nil else {
+        return try await decline(call, reason: .awaitingUserAnswer)
+      }
+      clarification = question
+    }
     publish(result.sources)
-    return try await recordOutput(result, for: call)
+    do { return try await recordOutput(result, for: call) } catch {
+      if let question = result.clarification, clarification?.id == question.id {
+        clarification = nil
+      }
+      throw error
+    }
   }
 
   private func recordOutput(_ output: ConversationToolOutput, for call: ConversationToolCall)

@@ -1,0 +1,236 @@
+{
+  "version": 1,
+  "scope": "Reviewed shipping profiles, not a model leaderboard or proof of universal correctness. Changing a checkpoint, runtime revision or profile requires a new evidence review. Machine-specific prefill receipts are independently qualified.",
+  "requiredChecks": {
+    "toolProtocol": [
+      "Sources/SilliesTextInference/TextConversationSelfCheck.swift",
+      "Sources/SilliesTextInference/TextRejectedToolSelfCheck.swift"
+    ],
+    "reasoningChannels": [
+      "Sources/SilliesTextInference/TextReasoningSelfCheck.swift",
+      "Sources/SilliesTextInference/TextChannelBoundarySelfCheck.swift"
+    ],
+    "cancellation": [
+      "Sources/SilliesTextInference/TextPrefixLifecycleInspection.swift",
+      "Tests/SilliesTextModelsTests/TextRegistryTests.swift"
+    ],
+    "cacheOwnership": [
+      "Sources/SilliesTextInference/TextPrefixCacheSelfCheck.swift",
+      "Sources/SilliesTextInference/TextPrefixStateInspection.swift"
+    ],
+    "profileInvalidation": [
+      "Tests/SilliesTextModelsTests/TextRegistryTests.swift"
+    ]
+  },
+  "models": [
+    {
+      "modelID": "gemma-4-e4b",
+      "revision": "475b9088d29754a3379866cf5aeb6b41acd313c2",
+      "profileSHA256": "a16028405edd26e439ba2281acf19d1ecf834980f559e0e51f95b3757807085c",
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "cache": "nativeSession",
+      "reasoning": null,
+      "decision": "reviewed",
+      "stateOwnership": "serial-native-session",
+      "evidence": [
+        {
+          "path": "docs/reports/model-opportunities-2026-11-04.md",
+          "sha256": "de7e3207602438a0df0f2a2401e92524c5fd85e11779a78096785b275bfd138e"
+        }
+      ],
+      "limitations": "Bounded synthetic controls and reviewed workflows on one Mac; no universal quality or speed guarantee. The linked report records failed and unmeasured controls."
+    },
+    {
+      "modelID": "gemma-4-12b",
+      "revision": "73bcf09092aa277861d5a191b989b666f7f32e8f",
+      "profileSHA256": "802949d55a7ef6bc8af46795bd4dcf06aa20b63d13098073dae43b01c4b79855",
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "cache": "disabled",
+      "reasoning": null,
+      "decision": "held",
+      "stateOwnership": "generation-local",
+      "evidence": [
+        {
+          "path": "docs/reports/model-opportunities-2026-11-04.md",
+          "sha256": "de7e3207602438a0df0f2a2401e92524c5fd85e11779a78096785b275bfd138e"
+        }
+      ],
+      "limitations": "Bounded synthetic controls and reviewed workflows on one Mac; no universal quality or speed guarantee. The linked report records failed and unmeasured controls."
+    },
+    {
+      "modelID": "gemma-4-26b-a4b",
+      "revision": "0d77464eeb233a2da68ebf9d7dc4edaac7db956d",
+      "profileSHA256": "b7e134bedc10b20d1ae2375101e3b409e216d7947c5d141a5b7164bd5aee5f55",
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "cache": "prefixSnapshot",
+      "reasoning": null,
+      "decision": "reviewed",
+      "stateOwnership": "one-immutable-snapshot",
+      "evidence": [
+        {
+          "path": "docs/reports/cache-isolation-2026-11-04.md",
+          "sha256": "b8793643788010b98d63d73b535300e40e675b29ed61b8bd5f4018c17a2c5673"
+        }
+      ],
+      "limitations": "Bounded synthetic controls and reviewed workflows on one Mac; no universal quality or speed guarantee. The linked report records failed and unmeasured controls."
+    },
+    {
+      "modelID": "granite-4.2-3b",
+      "revision": "0c6f39b1827afd5eb2c1c3b13751929857434953",
+      "profileSHA256": "89a1a8678f0eea6748503a331b97da4b51065ff46b563994ffa83d1f898aa922",
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "cache": "nativeSession",
+      "reasoning": "switchableThinkTags",
+      "decision": "reviewed",
+      "stateOwnership": "serial-native-session",
+      "evidence": [
+        {
+          "path": "docs/reports/cache-memory-2026-11-04.md",
+          "sha256": "8ee4e72c3f58e9a37e8d92dde67514a13c97f74b24b4a129a25479897006b2c3"
+        }
+      ],
+      "limitations": "Bounded synthetic controls and reviewed workflows on one Mac; no universal quality or speed guarantee. The linked report records failed and unmeasured controls."
+    },
+    {
+      "modelID": "granite-4.2-8b",
+      "revision": "9047f073e46c527f70dade07bb55b1700d728e36",
+      "profileSHA256": "09754673c209923342ea27bc93271fe8d54380fd048f08217a06308bc3ef834b",
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "cache": "nativeSession",
+      "reasoning": "switchableThinkTags",
+      "decision": "reviewed",
+      "stateOwnership": "serial-native-session",
+      "evidence": [
+        {
+          "path": "docs/reports/native-conversation-integration-2026-11-04.md",
+          "sha256": "236ceed6e8f0f387a78b2131c987d85ef9443c53a7c7ae0c7baf3bc7655177c9"
+        }
+      ],
+      "limitations": "Bounded synthetic controls and reviewed workflows on one Mac; no universal quality or speed guarantee. The linked report records failed and unmeasured controls."
+    },
+    {
+      "modelID": "lfm-2.5-2.6b",
+      "revision": "04efa23776ce61ec34ec95ec34c859854c89542b",
+      "profileSHA256": "935baaf728ebb7c5c0f46145c08af2ff8ab6a265faa1d65ad5e29ce9dabaac08",
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "cache": "prefixSnapshot",
+      "reasoning": "alwaysOnThinkTags",
+      "decision": "reviewed",
+      "stateOwnership": "one-immutable-snapshot",
+      "evidence": [
+        {
+          "path": "docs/reports/cache-isolation-2026-11-04.md",
+          "sha256": "b8793643788010b98d63d73b535300e40e675b29ed61b8bd5f4018c17a2c5673"
+        }
+      ],
+      "limitations": "Bounded synthetic controls and reviewed workflows on one Mac; no universal quality or speed guarantee. The linked report records failed and unmeasured controls."
+    },
+    {
+      "modelID": "lfm-2.5-24b-a2b",
+      "revision": "667408d494bde191c2cb9dd4f4549827816b9275",
+      "profileSHA256": "87863d12c3e3594c6ec0394ca4a8920fba79cf2c03ff2e1563374a3dff0394fe",
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "cache": "prefixSnapshot",
+      "reasoning": "alwaysOnThinkTags",
+      "decision": "reviewed",
+      "stateOwnership": "one-immutable-snapshot",
+      "evidence": [
+        {
+          "path": "docs/reports/cache-isolation-2026-11-04.md",
+          "sha256": "b8793643788010b98d63d73b535300e40e675b29ed61b8bd5f4018c17a2c5673"
+        }
+      ],
+      "limitations": "Bounded synthetic controls and reviewed workflows on one Mac; no universal quality or speed guarantee. The linked report records failed and unmeasured controls."
+    },
+    {
+      "modelID": "ministral-3-8b",
+      "revision": "182f003f01daa75f9de0f2c4d379722fd0bc1c61",
+      "profileSHA256": "ca8c73fc14ad61597373a612540ebc7ce92610ea81d390f72c5ea645fe3a9392",
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "cache": "nativeSession",
+      "reasoning": null,
+      "decision": "reviewed",
+      "stateOwnership": "serial-native-session",
+      "evidence": [
+        {
+          "path": "docs/reports/cache-memory-2026-11-04.md",
+          "sha256": "8ee4e72c3f58e9a37e8d92dde67514a13c97f74b24b4a129a25479897006b2c3"
+        }
+      ],
+      "limitations": "Bounded synthetic controls and reviewed workflows on one Mac; no universal quality or speed guarantee. The linked report records failed and unmeasured controls."
+    },
+    {
+      "modelID": "nemotron-3.5-bolt-e4b",
+      "revision": "0c204a16b6b186d1434e70f5fc2ca2e30984a006",
+      "profileSHA256": "6e7c49eab9e464052cb1542d2748797a1eece40f91f0165b7bb6d2c604ad2c52",
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "cache": "nativeSession",
+      "reasoning": null,
+      "decision": "reviewed",
+      "stateOwnership": "serial-native-session",
+      "evidence": [
+        {
+          "path": "docs/reports/model-opportunities-2026-11-04.md",
+          "sha256": "de7e3207602438a0df0f2a2401e92524c5fd85e11779a78096785b275bfd138e"
+        }
+      ],
+      "limitations": "Bounded synthetic controls and reviewed workflows on one Mac; no universal quality or speed guarantee. The linked report records failed and unmeasured controls."
+    },
+    {
+      "modelID": "qwen-3.5-2b",
+      "revision": "674aaa7240b91e8012fcad5d791b7dfe5ba90207",
+      "profileSHA256": "9d2fdb401702c117175adb91e9e5e6c8f11a2db5a52522a94be2286262193163",
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "cache": "prefixSnapshot",
+      "reasoning": null,
+      "decision": "reviewed",
+      "stateOwnership": "one-immutable-snapshot",
+      "evidence": [
+        {
+          "path": "docs/reports/cache-isolation-2026-11-04.md",
+          "sha256": "b8793643788010b98d63d73b535300e40e675b29ed61b8bd5f4018c17a2c5673"
+        }
+      ],
+      "limitations": "Bounded synthetic controls and reviewed workflows on one Mac; no universal quality or speed guarantee. The linked report records failed and unmeasured controls."
+    },
+    {
+      "modelID": "qwen-3.5-4b",
+      "revision": "32f3e8ecf65426fc3306969496342d504bfa13f3",
+      "profileSHA256": "fa497dff4bf9674dc9a59133c57ddb75f2788fa1b821ab0228a97dcbee8a5c76",
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "cache": "prefixSnapshot",
+      "reasoning": null,
+      "decision": "reviewed",
+      "stateOwnership": "one-immutable-snapshot",
+      "evidence": [
+        {
+          "path": "docs/reports/cache-isolation-2026-11-04.md",
+          "sha256": "b8793643788010b98d63d73b535300e40e675b29ed61b8bd5f4018c17a2c5673"
+        }
+      ],
+      "limitations": "Bounded synthetic controls and reviewed workflows on one Mac; no universal quality or speed guarantee. The linked report records failed and unmeasured controls."
+    },
+    {
+      "modelID": "qwen-3.5-9b",
+      "revision": "938d8919941c6e7efd3c7150eff7fe9d12afa631",
+      "profileSHA256": "12a369a4fb0989713a7ccc8545df99318644e7d40f777f2b4c817edf395b2132",
+      "runtimeRevision": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+      "cache": "disabled",
+      "reasoning": null,
+      "decision": "held",
+      "stateOwnership": "generation-local",
+      "evidence": [
+        {
+          "path": "docs/reports/cache-isolation-2026-11-04.md",
+          "sha256": "b8793643788010b98d63d73b535300e40e675b29ed61b8bd5f4018c17a2c5673"
+        }
+      ],
+      "limitations": "Bounded synthetic controls and reviewed workflows on one Mac; no universal quality or speed guarantee. The linked report records failed and unmeasured controls."
+    }
+  ],
+  "dependencies": {
+    "mlx-swift": "19601207e9a0de51e03ee6ec0c3c5f3784275075",
+    "mlx-swift-lm": "3b339ad6e3b3f44c8121ecff5131c7fd55e075e6",
+    "swift-transformers": "b38443e44d93eca770f2eb68e2a4d0fa100f9aa2"
+  }
+}

@@ -8,7 +8,9 @@ struct AudioTranscriptView: View {
     @Bindable var session = model
     SessionTranscriptCard(
       text: model.transcript, isFinished: model.isFinished,
-      followsLive: $session.followsLiveTranscript
+      followsLive: $session.followsLiveTranscript,
+      presentation: model.kind == .participate && model.detailPane == .suggestions
+        ? .concealed : .visible
     ) {
       VStack(spacing: 10) {
         Image(systemName: "waveform").font(.system(size: 28)).foregroundStyle(

@@ -8,7 +8,6 @@ import SilliesCore
 
   init(presentation: ChatSession) { self.presentation = presentation }
   func start() {
-    presentation.showChat()
     Task { await presentation.restoreHistory() }
   }
   func tick(_ context: SkillTickContext) -> SkillTickDisposition {

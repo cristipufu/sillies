@@ -1,5 +1,8 @@
 # Architecture
 
+Guided setup, capability readiness, companion preferences and preview lifetimes are described
+in [Setup and companion preferences](contributing/setup.md).
+
 ## Data flow
 
 `SilliesDesign` owns bounded, validated JSON palettes and interface-language metadata without AppKit.
@@ -56,7 +59,7 @@ Vault pagination uses a stable `(createdAt, id)` cursor. Show more reads one fol
 
 `SilliesReasoning` owns the `LocalReasoning` capability, task prompts, validation, and inference admission. It has no dependency on the app, UI, audio, or persistence. `App/Composition/ReasoningServices` owns one `TextModelEnvironment` and supplies a backend resolver to `LocalReasoningService`. Skills and writing receive the capability explicitly; there are no shared reasoning/model-environment instances or default live services. Test-only composition supplies isolated fake backends.
 
-`SilliesChat` owns conversation state and joins utterance finalization with microphone teardown. It receives `ConversationCapture`, language discovery, `ConversationResponding`, and `ChatSpeechOutput` capabilities; it imports no UI or inference SDK. `ConversationActivity` adapts its visible Chat/Talk activation to the skill lifecycle; closing it does not create a Vault recording. `ConversationSessions` caches sessions by installed companion identity so failed saves remain recoverable. Character JSON supplies personality and preferred voices. The messenger UI uses native selectable text, preserves reading/selection during replies, and shares application theme and typed failure notices. Return-to-send respects input-method composition.
+`SilliesChat` owns conversation state and joins utterance finalization with microphone teardown. It receives `ConversationCapture`, language discovery, `ConversationResponding`, and `ChatSpeechOutput` capabilities; it imports no UI or inference SDK. `ChatTurnDelivery` uses Swift's `Synchronization.Mutex` for bounded playback receipts before UI delivery; no inference, device operation or I/O runs under that lock. `ChatSpeechReplay` consumes retained phrases with a fresh speech-attempt identity and cannot invoke reasoning or tools. `ConversationActivity` adapts its visible Chat/Talk activation to the skill lifecycle; closing it does not create a Vault recording. `ConversationSessions` caches sessions by installed companion identity so failed saves remain recoverable. Character JSON supplies personality and preferred voices. The messenger UI uses native selectable text, preserves reading/selection during replies, and shares application theme and typed failure notices. Return-to-send respects input-method composition.
 
 `LocalConversationService` receives `ConversationBackend` and `ConversationTool` capabilities. Apple and MLX adapters preserve native roles and call/result IDs. `ConversationToolbox` bounds tool execution and emits actual source references; `VaultSearchTool` and `VaultReadTool` own local retrieval in `SilliesVault`. Ranked FTS search reads headers and snippets without decoding every record. Source cards and image caching remain in the app UI. Vault retrieval tools are read-only; the separate memory tool can persist user facts with verified provenance. No tool has shell or network capability.
 
@@ -69,8 +72,26 @@ the first loaded message, and Latest appears only when newer messages are out of
 visible conversations show neither control. Plain outside clicks dismiss text Chat on mouse release
 through the existing session close/flush path, preserving drafts and history. Mouse drags leave it open,
 including host-window moves and resizes. Native menus and attached sheets belong to Chat. Talk requires
-explicit closure. Mouse-only monitors stop on close, session replacement, and switching to Talk; no focus-loss
+explicit closure; dismissing its optional transcript does not close the voice session. Mouse-only monitors stop on window close, session replacement, and switching to Talk; no focus-loss
 observer or window polling drives dismissal.
+
+Talk presents compact controls inside the shared thought-bubble artwork, with a tail pointing at
+the companion. Its panel follows the companion and shares its native window level. Starting Talk
+does not open the message window. Opening or dismissing the read-only transcript never changes
+the conversation mode or stops capture; only explicit Chat selection, End voice, or session teardown
+does that. Chat keeps the same header, with a single expanding input surface, native selectable
+message text, and bounded scrolling for long drafts. Bubble placement updates native geometry
+without remeasuring unchanged content during window movement.
+The shared failure notices expose recovery actions in either presentation without owning inference.
+
+`SilliesDiagnostics` owns a typed event contract, a bounded inbox and a journal actor. App composition
+injects its sink into Chat, speech selection, text/voice adapters and inference admission. The schema
+has no free-form message or payload field. UI and audio producers never perform journal I/O; worker
+assertions and package boundaries enforce this. Four rolling 2 MB files and one bounded atomic
+pruning file cap peak archive storage at 10 MB; startup, writes and export prune events older than
+seven days. Export is also bounded and re-encodes validated records. Native macOS error logging is
+separate from that app-owned archive. Shutdown joins startup and drains diagnostics through the
+modal-safe completion path. See [local diagnostics](contributing/diagnostics.md).
 
 `ConversationLibrary` retains individual messages in SQLite; `ChatSession` holds a bounded recent page.
 `ConversationHistoryPreparation` reads one durable checkpoint and one profile-bounded page ending
@@ -274,7 +295,7 @@ Clean Code principles guide implementation: intention-revealing names, focused r
 The current architecture is suitable for additional bundled vector characters and reactions. It is not yet a general animation-authoring product. New anatomy still needs a rig that meets the named-part and contact-anchor contract; sprite imports, transition choreography across multiple windows, and a timeline editor are separate capabilities. The session controller still coordinates placement and shared scheduling; extract another component when a concrete feature makes one of those responsibilities change independently.
 
 
-Meeting capture uses `MeetingAudioTimeline` in SilliesCore for bounded sample-time pairing and `MeetingAudioProcessor` on the audio worker for resampling, WebRTC AEC3, and recording mixdown. The vendored C bridge has no device or networking API. Listen and Participate share this path; only Participate generates suggestions. `MeetingSpeechBubbleController` owns its single nonactivating panel and finite content animation, while `SuggestionBubbleLayout` owns screen-constrained geometry. The HUD lifecycle hides and closes the bubble with its companion.
+Meeting capture uses `MeetingAudioTimeline` in SilliesCore for bounded sample-time pairing and `MeetingAudioProcessor` on the audio worker for resampling, WebRTC AEC3, and recording mixdown. The vendored C bridge has no device or networking API. Listen and Participate share this path; only Participate generates suggestions. `MeetingSpeechBubbleController` owns its single nonactivating panel and finite content animation, while `CompanionSpeechBubbleLayout` owns screen-constrained geometry. The HUD lifecycle hides and closes the bubble with its companion.
 
 
 At the audio window's minimum size, language controls, notices, and meeting suggestions can scroll independently when their combined height exceeds the available space. The header, finish controls, transcript viewport, and footer remain inside the window. `ViewThatFits` is confined to these short controls; it never measures or wraps the live native transcript. Failure-state guidance asks the user to save the available recording instead of claiming capture is still running.
@@ -340,6 +361,44 @@ The coordinator contributes deadlines and motion demand to the existing shared c
 `WritingHistory` stores at most 20 results separately from the Vault, including the original and edited text. Load failure never authorizes overwriting the existing file. Pause or termination preserves finalized interrupted dictation without inserting it. Persistence keeps one active write and the latest pending revision. The writing port exposes typed persistence state and flush receipts; Retry reloads unavailable storage or writes the latest unsaved text after a save failure. Active writing and history views share a warning and Retry control. Saving and retrying never block insertion or insert text again. Serial persistence and finalization callbacks use `MainRunLoopDelivery`, including AppKit's modal termination run loop.
 
 `VaultDatabase` owns authoritative bodies and a persistent FTS5 index with diacritic-insensitive word-prefix matching. Each changed record updates its body, header, and search document transactionally; untouched transcripts are not encoded or reindexed. Search is debounced and paged. `VaultOCRScheduler` admits one screenshot at a time and retains demand arriving during an in-flight queue read. Notes and OCR await persistence before admitting another body. Pause and deletion reject late results. Retention excludes deliberate Stashes and protected captures; the default never trims. `VaultMarkdownExporter` writes portable Markdown and owned attachments on the worker. Speaker edits load the current record and format structured transcript headers off-main.
+
+Vault schema 2 adds a derived semantic passage index. Record writes invalidate passages and vectors in
+the same transaction; revision comparisons reject stale embedding completions after edits or deletion.
+`VaultLibrary` prepares one Unicode-bounded document slice or embedding at a time, without decoding
+record bodies. `VaultSemanticSearchWorker` ranks on its own cancellable read connection, retaining only
+the best bounded record identities. Shared `SearchEmbeddingAccess` contracts keep both Vault and
+conversation-memory indexing independent of the selected Apple or downloadable provider. The app
+owns one helper and its installation lease; admission serializes the two producers. Busy or slow
+semantic lookups fall back to keyword search. Keyword and related-by-meaning results remain visibly
+distinct; similarity is a retrieval candidate, not evidence that a question has an answer.
+
+`ChatReadiness` checks the requirements for the selected conversation mode without loading inference
+or requesting permissions. Typed Chat does not require voice or microphone setup. Talk checks text,
+microphone authorization, synthesis and installed recognition languages before capture. Generation
+and mode checks prevent late readiness results from starting a cancelled conversation. Missing
+capabilities use the existing notice and Settings actions. Reply admission reports waiting separately
+from active generation.
+
+Each reply can persist `ReplyContextInspection`: counts of prepared messages/tools, the model's working
+context budget and the bounded conversation notes actually supplied. Sources and tool exchanges retain
+their existing provenance. The optional reply-details popover exposes those application inputs, never
+hidden reasoning. Diagnostic events retain only typed counts; they do not copy this private content.
+
+Optional prefill overrides are resolved by the app-owned `TextCalibrationStore`, not by views or model
+implementations. A qualification receipt binds a reviewed paired experiment to the exact checkpoint,
+base profile, helper digest and hardware/OS identity. Invalid or stale receipts leave catalog defaults
+in use. The generic profile applies batching; context and generation algorithms are unchanged. The
+[runtime qualification guide](contributing/runtime-qualification.md) describes the checked catalog
+matrix, bounded experiments and explicit content-free hardware exports. None automatically uploads
+data, runs benchmarks or changes model selection.
+
+Bound meeting capture has a lifetime separate from window visibility. The existing shared skill
+clock reads ordered occlusion metadata, then batches exact-ID queries for missing targets through
+`SilliesWindowMetadata`. Only a successful lookup without the original window (or a different owner
+for a recycled identifier) confirms closure. Hidden/minimized windows, metadata failures and partial
+responses do not end capture. `SkillCoordinator` finalizes a closed target through the normal audio
+drain and save path, preserving the original source while releasing its presentation attachment
+immediately. Completion cannot reattach the mascot to the closed window.
 
 
 The drop highlight stages its native backing invisibly at pickup. `conceal()` retains it while the pointer traverses the initial distance gate or an invalid target; `hide()` orders it out when the drag ends or is canceled. Presentation state is distinct from native ordering so an alpha-zero staged window is never reported as a visible highlight. It remains click-through throughout staging.

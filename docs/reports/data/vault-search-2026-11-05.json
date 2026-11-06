@@ -1,0 +1,466 @@
+{
+  "version": 1,
+  "scope": "synthetic-vault-retrieval",
+  "input": {
+    "scope": "vault",
+    "documents": [
+      {
+        "id": "launch",
+        "owner": "fixture",
+        "text": "Cedar review: the release was postponed because the payment workflow failed regression checks. Morgan owns the fix."
+      },
+      {
+        "id": "budget",
+        "owner": "fixture",
+        "text": "Finance approved a laptop allowance of 1800 euros per employee, renewed every three years."
+      },
+      {
+        "id": "travel",
+        "owner": "fixture",
+        "text": "The offsite booking is at the Riverside Inn. The shuttle departs from the railway station at 08:40."
+      },
+      {
+        "id": "terminal",
+        "owner": "fixture",
+        "text": "Screenshot text: Ghostty terminal. cargo test --workspace. All 48 tests passed."
+      },
+      {
+        "id": "food",
+        "owner": "fixture",
+        "text": "The dinner reservation is for six people. Priya avoids peanuts because of an allergy."
+      },
+      {
+        "id": "hiring",
+        "owner": "fixture",
+        "text": "Hiring plan: recruit two backend engineers and a product designer before the end of January."
+      },
+      {
+        "id": "late",
+        "owner": "fixture",
+        "text": "Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. Background chatter about ordinary calendar planning. The emergency recovery phrase is velvet-copper-728. Store it in the offline runbook."
+      },
+      {
+        "id": "french",
+        "owner": "fixture",
+        "text": "Réunion jardin : le rendez-vous pour planter les arbres est reporté au jeudi à cause de la pluie."
+      }
+    ],
+    "queries": [
+      {
+        "id": "delay",
+        "owner": "fixture",
+        "text": "Why did the software shipment slip?"
+      },
+      {
+        "id": "laptop",
+        "owner": "fixture",
+        "text": "How much can we spend on a new computer?"
+      },
+      {
+        "id": "hotel",
+        "owner": "fixture",
+        "text": "Where are we staying during the company retreat?"
+      },
+      {
+        "id": "shell",
+        "owner": "fixture",
+        "text": "Find the image showing a command-line test run"
+      },
+      {
+        "id": "allergy",
+        "owner": "fixture",
+        "text": "Who has a nut allergy?"
+      },
+      {
+        "id": "jobs",
+        "owner": "fixture",
+        "text": "Which roles are we recruiting?"
+      },
+      {
+        "id": "recovery",
+        "owner": "fixture",
+        "text": "emergency recovery phrase"
+      },
+      {
+        "id": "trees",
+        "owner": "fixture",
+        "text": "Quand allons-nous planter les arbres ?"
+      },
+      {
+        "id": "negative-space",
+        "owner": "fixture",
+        "text": "Which satellite landed on Neptune?"
+      },
+      {
+        "id": "negative-music",
+        "owner": "fixture",
+        "text": "Find our orchestra rehearsal recording"
+      }
+    ]
+  },
+  "expectedIDs": {
+    "delay": "launch",
+    "laptop": "budget",
+    "hotel": "travel",
+    "shell": "terminal",
+    "allergy": "food",
+    "jobs": "hiring",
+    "recovery": "late",
+    "trees": "french",
+    "negative-space": null,
+    "negative-music": null
+  },
+  "results": {
+    "keywords": {
+      "results": [
+        {
+          "seconds": 0.000297458,
+          "matches": [
+            "travel",
+            "launch",
+            "food",
+            "hiring",
+            "late"
+          ],
+          "id": "delay"
+        },
+        {
+          "seconds": 0.000256125,
+          "id": "laptop",
+          "matches": [
+            "late",
+            "food",
+            "budget",
+            "french",
+            "hiring"
+          ]
+        },
+        {
+          "seconds": 0.000184333,
+          "id": "hotel",
+          "matches": [
+            "travel",
+            "launch",
+            "food",
+            "hiring",
+            "late"
+          ]
+        },
+        {
+          "seconds": 0.000236875,
+          "matches": [
+            "terminal",
+            "late",
+            "travel",
+            "food",
+            "hiring"
+          ],
+          "id": "shell"
+        },
+        {
+          "matches": [
+            "food",
+            "late",
+            "budget",
+            "french",
+            "hiring"
+          ],
+          "seconds": 0.000185708,
+          "id": "allergy"
+        },
+        {
+          "seconds": 5.55e-05,
+          "matches": [],
+          "id": "jobs"
+        },
+        {
+          "matches": [
+            "late"
+          ],
+          "seconds": 8.9709e-05,
+          "id": "recovery"
+        },
+        {
+          "id": "trees",
+          "matches": [
+            "french"
+          ],
+          "seconds": 0.000100709
+        },
+        {
+          "seconds": 5.1916e-05,
+          "id": "negative-space",
+          "matches": []
+        },
+        {
+          "id": "negative-music",
+          "matches": [],
+          "seconds": 5.0958e-05
+        }
+      ],
+      "expectedInFirstResult": 5,
+      "expectedInTopFive": 7,
+      "positiveQueries": 8,
+      "negativeQueriesWithCandidates": 0,
+      "negativeQueries": 2,
+      "medianSeconds": 0.000142521
+    },
+    "apple": {
+      "results": [
+        {
+          "id": "delay",
+          "seconds": 0.016751458,
+          "matches": [
+            "travel",
+            "launch",
+            "food",
+            "hiring",
+            "late"
+          ]
+        },
+        {
+          "id": "laptop",
+          "matches": [
+            "late",
+            "food",
+            "budget",
+            "french",
+            "hiring"
+          ],
+          "seconds": 0.012663042
+        },
+        {
+          "id": "hotel",
+          "seconds": 0.011296417,
+          "matches": [
+            "travel",
+            "launch",
+            "food",
+            "hiring",
+            "late"
+          ]
+        },
+        {
+          "id": "shell",
+          "seconds": 0.012645541,
+          "matches": [
+            "terminal",
+            "late",
+            "travel",
+            "food",
+            "hiring"
+          ]
+        },
+        {
+          "matches": [
+            "food",
+            "late",
+            "budget",
+            "french",
+            "hiring"
+          ],
+          "seconds": 0.011731333,
+          "id": "allergy"
+        },
+        {
+          "id": "jobs",
+          "seconds": 0.012076292,
+          "matches": [
+            "hiring",
+            "food",
+            "travel",
+            "budget",
+            "late"
+          ]
+        },
+        {
+          "seconds": 0.011787833,
+          "id": "recovery",
+          "matches": [
+            "late",
+            "terminal",
+            "launch",
+            "food",
+            "hiring"
+          ]
+        },
+        {
+          "id": "trees",
+          "seconds": 0.011736041,
+          "matches": [
+            "french",
+            "food",
+            "hiring",
+            "travel",
+            "late"
+          ]
+        },
+        {
+          "id": "negative-space",
+          "matches": [
+            "launch",
+            "terminal",
+            "travel",
+            "hiring",
+            "food"
+          ],
+          "seconds": 0.012024209
+        },
+        {
+          "id": "negative-music",
+          "seconds": 0.012044833,
+          "matches": [
+            "terminal",
+            "launch",
+            "hiring",
+            "food",
+            "budget"
+          ]
+        }
+      ],
+      "expectedInFirstResult": 6,
+      "expectedInTopFive": 8,
+      "positiveQueries": 8,
+      "negativeQueriesWithCandidates": 2,
+      "negativeQueries": 2,
+      "medianSeconds": 0.012034521
+    },
+    "e5": {
+      "results": [
+        {
+          "id": "delay",
+          "seconds": 0.005354666,
+          "matches": [
+            "travel",
+            "launch",
+            "food",
+            "hiring",
+            "late"
+          ]
+        },
+        {
+          "id": "laptop",
+          "seconds": 0.004164792,
+          "matches": [
+            "late",
+            "food",
+            "budget",
+            "french",
+            "hiring"
+          ]
+        },
+        {
+          "seconds": 0.004247125,
+          "id": "hotel",
+          "matches": [
+            "travel",
+            "launch",
+            "food",
+            "hiring",
+            "late"
+          ]
+        },
+        {
+          "id": "shell",
+          "seconds": 0.005925083,
+          "matches": [
+            "terminal",
+            "late",
+            "travel",
+            "food",
+            "hiring"
+          ]
+        },
+        {
+          "id": "allergy",
+          "seconds": 0.003618458,
+          "matches": [
+            "food",
+            "late",
+            "budget",
+            "french",
+            "hiring"
+          ]
+        },
+        {
+          "id": "jobs",
+          "seconds": 0.003502417,
+          "matches": [
+            "hiring",
+            "late",
+            "food",
+            "french",
+            "budget"
+          ]
+        },
+        {
+          "id": "recovery",
+          "seconds": 0.00403025,
+          "matches": [
+            "late",
+            "french",
+            "terminal",
+            "budget",
+            "food"
+          ]
+        },
+        {
+          "id": "trees",
+          "matches": [
+            "french",
+            "late",
+            "launch",
+            "hiring",
+            "food"
+          ],
+          "seconds": 0.005362375
+        },
+        {
+          "id": "negative-space",
+          "seconds": 0.003843083,
+          "matches": [
+            "late",
+            "travel",
+            "french",
+            "food",
+            "terminal"
+          ]
+        },
+        {
+          "id": "negative-music",
+          "matches": [
+            "late",
+            "french",
+            "travel",
+            "launch",
+            "budget"
+          ],
+          "seconds": 0.003420209
+        }
+      ],
+      "expectedInFirstResult": 6,
+      "expectedInTopFive": 8,
+      "positiveQueries": 8,
+      "negativeQueriesWithCandidates": 2,
+      "negativeQueries": 2,
+      "medianSeconds": 0.004097521
+    }
+  },
+  "machine": {
+    "osVersion": "26.7.2",
+    "osBuild": "25G332",
+    "architecture": "arm64",
+    "processor": "Apple M4 Pro",
+    "memoryBytes": 51539607552,
+    "logicalProcessors": 14
+  },
+  "workerSHA256": "820ec9760bd369c99f88a1ec4fa420a9268e2935daf5489f1b44822918b317b9",
+  "helperSHA256": "8c76ec544c5b2e427abc119796761a2b7b9ae2a8d0721563683b180a8477cdad",
+  "e5Revision": "614241f622f53c4eeff9890bdc4f31cfecc418b3",
+  "appleRevision": "system-managed",
+  "limitations": [
+    "One query pass per engine, after indexing; one Mac; debug worker and release inference helper.",
+    "Hybrid search preserves keyword ordering and appends semantic candidates; this is not a standalone embedding leaderboard.",
+    "A nearest neighbor is not a confidence-qualified answer. Negative queries can return unrelated candidates."
+  ]
+}

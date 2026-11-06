@@ -12,6 +12,11 @@ struct SettingsView: View {
   var shortcuts: CommandShortcuts? = nil
   var loginItems: LoginItemSettings? = nil
   var writingTools: WritingTools? = nil
+  var diagnostics: DiagnosticsPresentation? = nil
+  var setup: SetupPresentation? = nil
+  var suggestions: SetupModelSuggestions? = nil
+  var companionPreferences: CompanionPreferences? = nil
+  var exportDiagnostics: () -> Void = {}
   @Bindable var navigation = SettingsNavigation()
   private var destination: SettingsDestination { navigation.destination }
 
@@ -19,15 +24,30 @@ struct SettingsView: View {
     HStack(spacing: 0) {
       sidebar
       Divider().overlay(theme.border)
-      ScrollView {
-        VStack(alignment: .leading, spacing: 22) {
-          VStack(alignment: .leading, spacing: 6) {
-            Text(destination.title).font(.system(size: 26, weight: .bold, design: .rounded))
-            Text(destination.explanation).font(.callout).foregroundStyle(theme.secondary)
-          }.padding(.bottom, 4)
-          page
-        }.padding(28).frame(maxWidth: .infinity, alignment: .topLeading)
-      }.id(destination)
+      if destination == .setup, let setup, let suggestions, let textModels, let voiceModels {
+        SetupView(
+          model: setup, registry: controller.renderers, textModels: textModels,
+          voiceModels: voiceModels, suggestions: suggestions
+        )
+        .task { setup.refresh() }
+        .onDisappear { setup.stop() }
+      } else {
+        ScrollView {
+          VStack(alignment: .leading, spacing: 22) {
+            if navigation.returnsToSetup {
+              Button("Back to setup", systemImage: "arrow.left") {
+                navigation.destination = .setup
+                navigation.returnsToSetup = false
+              }.buttonStyle(.plain).foregroundStyle(theme.accent)
+            }
+            VStack(alignment: .leading, spacing: 6) {
+              Text(destination.title).font(.system(size: 26, weight: .bold, design: .rounded))
+              Text(destination.explanation).font(.callout).foregroundStyle(theme.secondary)
+            }.padding(.bottom, 4)
+            page
+          }.padding(28).frame(maxWidth: .infinity, alignment: .topLeading)
+        }.id(destination)
+      }
     }
     .frame(
       minWidth: SettingsWindowLayout.minimumSize.width,
@@ -81,12 +101,21 @@ struct SettingsView: View {
 
   @ViewBuilder private var page: some View {
     switch destination {
+    case .setup:
+      Text("Open Sillies normally to set up your companions.")
     case .general:
-      GeneralSettingsPage(controller: controller, login: loginItems, language: language)
+      GeneralSettingsPage(
+        controller: controller, login: loginItems, language: language,
+        diagnostics: diagnostics, exportDiagnostics: exportDiagnostics)
     case .appearance:
       if let appearance { AppearanceSettingsPage(model: appearance) }
     case .companions:
       CompanionSettingsPage(controller: controller)
+      if let companionPreferences, let textModels, let voiceModels {
+        CompanionProfilesSettingsView(
+          characters: controller.catalog.characters, preferences: companionPreferences,
+          textModels: textModels, voiceModels: voiceModels)
+      }
     case .writing:
       if let writingTools {
         DictationSettingsView(

@@ -3,17 +3,28 @@ import SwiftUI
 struct AudioLanguagePicker: View {
   @Environment(\.silliesTheme) private var theme
   private static let pickerWidth: CGFloat = 270
+  private static let guidanceWidth: CGFloat = 320
   let model: AudioSessionPresentation
+  @State private var showsGuidance = false
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
       HStack(alignment: .center, spacing: 16) {
         VStack(alignment: .leading, spacing: 4) {
-          Label(
-            SpeechLanguageGuidance.title(for: model.model.capabilities.languageControl),
-            systemImage: "globe"
-          )
-          .font(.callout.weight(.semibold))
+          HStack(spacing: 6) {
+            Label(
+              SpeechLanguageGuidance.title(for: model.model.capabilities.languageControl),
+              systemImage: "globe"
+            )
+            .font(.callout.weight(.semibold))
+            Button {
+              showsGuidance.toggle()
+            } label: {
+              Image(systemName: "info.circle").foregroundStyle(theme.secondary)
+            }
+            .buttonStyle(.plain).accessibilityLabel("Show details")
+            .popover(isPresented: $showsGuidance) { guidance }
+          }
           Text(model.model.name)
             .font(.caption).foregroundStyle(theme.secondary)
         }
@@ -45,18 +56,21 @@ struct AudioLanguagePicker: View {
         )
         .font(.caption).foregroundStyle(theme.secondary)
         .fixedSize(horizontal: false, vertical: true)
-      } else {
-        Text(SpeechLanguageGuidance.detail(for: model.model.capabilities.languageControl))
-          .font(.caption).foregroundStyle(theme.secondary)
-      }
-      if let notice = model.reasoningNotice {
-        Text(notice).font(.caption).foregroundStyle(theme.secondary)
-          .textSelection(.enabled)
-          .fixedSize(horizontal: false, vertical: true)
       }
     }
     .padding(16).background(theme.card, in: RoundedRectangle(cornerRadius: 14))
     .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(theme.border, lineWidth: 1))
+  }
+
+  private var guidance: some View {
+    VStack(alignment: .leading, spacing: 10) {
+      Text(SpeechLanguageGuidance.title(for: model.model.capabilities.languageControl))
+        .font(.headline)
+      Text(SpeechLanguageGuidance.detail(for: model.model.capabilities.languageControl))
+        .font(.callout).foregroundStyle(theme.secondary)
+        .fixedSize(horizontal: false, vertical: true)
+        .textSelection(.enabled)
+    }.padding(18).frame(width: Self.guidanceWidth)
   }
 
   private var languageMenu: some View {

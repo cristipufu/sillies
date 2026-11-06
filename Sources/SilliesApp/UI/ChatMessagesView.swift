@@ -8,15 +8,28 @@ struct ChatMessagesView: View {
   let model: ChatSession
   let motion: ChatPresentationMotion
   var vault: ChatVaultPresentation? = nil
+  var focusComposer: () -> Void = {}
+  @Environment(\.chatReadingSize) private var readingSize
   @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
   private var reduceMotion: Bool { systemReduceMotion || motion == .reduced }
-  @State private var followsLatest = true
+  private enum ReadingPosition {
+    case latest, reading, question
+  }
+  @State private var readingPosition = ReadingPosition.latest
+  private var followsLatest: Bool {
+    if case .latest = readingPosition { true } else { false }
+  }
   @State private var nearBottom = true
   @State private var selectedMessages: Set<UUID> = []
   @State private var visibleMessages: Set<UUID> = []
   @State private var selectionReset: UUID?
   private static let bottomID = "latest-chat-message"
   private static let bottomThreshold: CGFloat = 48
+  private static let messageSpacing: CGFloat = 16
+  private static let contentInset: CGFloat = 16
+  private static let welcomeSpacing: CGFloat = 10
+  private static let welcomeTitleSize: CGFloat = 20
+  private static let welcomeInset: CGFloat = 8
   private var navigation: ConversationNavigation {
     .init(
       latestMessageID: model.messages.last?.id, hasEarlierMessages: model.hasEarlierMessages,
@@ -26,8 +39,15 @@ struct ChatMessagesView: View {
   var body: some View {
     ScrollViewReader { proxy in
       ScrollView {
-        LazyVStack(alignment: .leading, spacing: 14) {
+        LazyVStack(alignment: .leading, spacing: Self.messageSpacing) {
           if model.messages.isEmpty { welcome }
+          if model.browser.page?.entries.isEmpty == true {
+            Text("No messages from this date onward.").font(.callout).foregroundStyle(
+              theme.secondary)
+          }
+          if let failure = model.browser.failure {
+            Text(failure).font(.caption).foregroundStyle(theme.secondary).textSelection(.enabled)
+          }
           if let page = model.browser.page {
             if page.hasOlder || page.hasNewer {
               HStack {
@@ -66,15 +86,18 @@ struct ChatMessagesView: View {
           }
           if model.isWorking, model.browser.page == nil {
             Label(model.status, systemImage: "ellipsis.bubble.fill")
-              .font(.callout).foregroundStyle(theme.secondary).padding(12)
+              .font(.system(size: readingSize.points)).foregroundStyle(theme.secondary)
           }
           Color.clear.frame(height: 1).id(Self.bottomID)
-        }.padding(18)
+        }.padding(Self.contentInset)
           .environment(\.chatSelectionReset, selectionReset)
           .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: model.messages.count)
       }
-      .defaultScrollAnchor(.bottom, for: .initialOffset)
-      .defaultScrollAnchor(.bottom, for: .alignment)
+      .defaultScrollAnchor(
+        model.messages.isEmpty || model.pendingClarification != nil ? .top : .bottom,
+        for: .initialOffset
+      )
+      .defaultScrollAnchor(.top, for: .alignment)
       .onScrollGeometryChange(for: Viewport.self) { geometry in
         Viewport(
           contentHeight: geometry.contentSize.height,
@@ -82,7 +105,8 @@ struct ChatMessagesView: View {
             <= Self.bottomThreshold)
       } action: { previous, current in
         nearBottom = current.nearBottom
-        if current.contentHeight != previous.contentHeight, followsLatest, selectedMessages.isEmpty,
+        if current.contentHeight != previous.contentHeight, !model.messages.isEmpty, followsLatest,
+          selectedMessages.isEmpty,
           model.browser.page == nil
         {
           proxy.scrollTo(Self.bottomID, anchor: .bottom)
@@ -90,24 +114,39 @@ struct ChatMessagesView: View {
       }
       .onAppear {
         if let id = model.browser.focusedMessageID ?? model.history.checkpoint.readingMessageID {
-          followsLatest = false
+          readingPosition = .reading
           if model.messages.contains(where: { $0.id == id }) || model.browser.page != nil {
             proxy.scrollTo(id, anchor: .top)
           } else {
             Task { await model.browser.show(.around(id)) }
           }
+        } else {
+          showPendingQuestion(using: proxy)
         }
+      }
+      .onChange(of: model.pendingClarification?.id) { _, id in
+        if id == nil, case .question = readingPosition {
+          readingPosition = selectedMessages.isEmpty ? .latest : .reading
+          if followsLatest, model.browser.page == nil {
+            proxy.scrollTo(Self.bottomID, anchor: .bottom)
+          }
+          return
+        }
+        guard id != nil, followsLatest, selectedMessages.isEmpty, model.browser.page == nil else {
+          return
+        }
+        showPendingQuestion(using: proxy)
       }
       .onChange(of: model.browser.focusedMessageID) { _, id in
         guard let id else { return }
-        followsLatest = false
+        readingPosition = .reading
         proxy.scrollTo(id, anchor: .top)
         model.browser.rememberPosition(id)
       }
       .onScrollPhaseChange { _, phase in
-        if phase == .interacting { followsLatest = false }
+        if phase == .interacting { readingPosition = .reading }
         if phase == .idle, nearBottom, model.browser.page == nil {
-          followsLatest = true
+          readingPosition = .latest
           model.browser.rememberPosition(nil)
         }
       }
@@ -115,7 +154,7 @@ struct ChatMessagesView: View {
         if navigation.showsLatest {
           Button("Latest", systemImage: "arrow.down") {
             model.browser.showLatest()
-            followsLatest = true
+            readingPosition = .latest
             selectedMessages.removeAll()
             selectionReset = UUID()
             withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) {
@@ -132,6 +171,14 @@ struct ChatMessagesView: View {
     let nearBottom: Bool
   }
 
+  private func showPendingQuestion(using proxy: ScrollViewProxy) {
+    guard model.pendingClarification != nil, model.browser.page == nil,
+      let id = model.messages.last?.id
+    else { return }
+    readingPosition = .question
+    proxy.scrollTo(id, anchor: .top)
+  }
+
   private func bubble(_ message: ChatMessage) -> some View {
     ChatMessageBubble(model: model, original: message, vault: vault) { selected in
       if selected {
@@ -143,12 +190,15 @@ struct ChatMessagesView: View {
   }
 
   private var welcome: some View {
-    VStack(spacing: 12) {
-      Image(systemName: "bubble.left.and.bubble.right.fill")
-        .font(.system(size: 38)).foregroundStyle(theme.accent)
-      Text("A little company.").font(.system(size: 24, weight: .bold, design: .rounded))
-      Text("Say hello to \(model.companionName).\nPick up wherever you left off.")
-        .font(.callout).foregroundStyle(theme.secondary).multilineTextAlignment(.center)
-    }.frame(maxWidth: .infinity).padding(.vertical, 38)
+    VStack(alignment: .leading, spacing: Self.welcomeSpacing) {
+      Text("A little company.").font(
+        .system(size: Self.welcomeTitleSize, weight: .bold, design: .rounded))
+      Text("Pick an idea, or say hello.")
+        .font(.callout).foregroundStyle(theme.secondary)
+      if model.mode == .chat {
+        ConversationStartersView(model: model, selected: focusComposer).padding(
+          .top, Self.welcomeInset)
+      }
+    }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, Self.welcomeInset)
   }
 }

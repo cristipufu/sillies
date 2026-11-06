@@ -169,12 +169,69 @@ private func chatFinishPreservesFinalWordsBeforeSaving(_ timing: FinishTiming) a
   let voice = VoiceProbe(unavailableMessage: "Choose a downloaded voice for spoken replies.")
   let chat = session(reply: ReplyProbe(), voice: voice)
   await chat.refreshAvailability()
+  #expect(chat.notice == nil)
+  await chat.startTalk()
   #expect(chat.notice?.settingsDestination == .voices)
   #expect(chat.canCompose)
   #expect(await voice.requests.isEmpty)
-  chat.spokenReplies = false
+  chat.showChat()
   await chat.refreshAvailability()
   #expect(chat.notice == nil)
+  chat.finish {}
+}
+
+@Test @MainActor func companionProfileChangesWaitForTheCurrentReplyAndPreserveIt() async throws {
+  let reply = ReplyProbe(.delayed)
+  let chat = session(reply: reply, voice: VoiceProbe())
+  chat.spokenReplies = false
+  let original = chat.profile
+  chat.draft = "Hello"
+  chat.send()
+  try await waitFor { await reply.delayed != nil }
+  let updated = CharacterChatProfile(personality: "Thoughtful and calm", languageIdentifier: "fr")
+  chat.updateProfile(updated, languageOverride: "fr")
+  #expect(chat.profile == original && chat.language == "ro")
+  #expect(await reply.contexts.first?.profile == original)
+  await reply.resolve()
+  try await waitFor { chat.phase == .ready }
+  #expect(chat.profile == updated && chat.language == "fr")
+  #expect(chat.messages.last?.text == "Late reply")
+  chat.updateProfile(original)
+  #expect(chat.language == "ro")
+  chat.finish {}
+}
+
+private enum MissingTalkRequirement: CaseIterable { case microphone, recognition }
+
+@Test(arguments: MissingTalkRequirement.allCases) @MainActor
+private func talkReadinessOffersCorrectRecoveryWithoutStartingCapture(
+  _ requirement: MissingTalkRequirement
+) async {
+  let starts = Mutex(0)
+  let chat = ChatSession(
+    companionName: "Pogo", profile: .init(personality: "Playful", languageIdentifier: "en"),
+    services: .init(
+      captureFactory: { _, update in
+        starts.withLock { $0 += 1 }
+        return CaptureProbe(update: update)
+      },
+      loadLanguages: { .init(languages: []) },
+      conversation: ReplyProbe(), speech: VoiceProbe(),
+      deliver: { action in Task { @MainActor in action() } }, history: .transient,
+      microphonePermission: {
+        requirement == .microphone ? .permissionDenied(.openMicrophoneSettings) : nil
+      }))
+  await chat.startTalk()
+  #expect(starts.withLock { $0 } == 0)
+  #expect(!chat.isVoiceConversationActive)
+  switch requirement {
+  case .microphone: #expect(chat.failure?.recovery == .openMicrophoneSettings)
+  case .recognition: #expect(chat.notice?.settingsDestination == .recognition)
+  }
+  chat.showChat()
+  await chat.refreshAvailability()
+  #expect(chat.notice == nil && chat.failure == nil)
+  #expect(chat.canCompose)
   chat.finish {}
 }
 

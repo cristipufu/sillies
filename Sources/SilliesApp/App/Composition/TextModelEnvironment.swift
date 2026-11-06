@@ -1,4 +1,5 @@
 import Foundation
+import SilliesDiagnostics
 import SilliesModelStore
 import SilliesReasoning
 import SilliesTextModels
@@ -14,11 +15,18 @@ actor TextModelEnvironment {
   private var selected: String
   private let memoryPressure = MemoryPressureMonitor()
   private let apple = AppleReasoningBackend()
+  private let diagnostics: DiagnosticSink
+  private let calibration: TextCalibrationStore?
 
-  init(store: ModelStore, preference: TextModelPreference, providers: [any TextModelProvider]) {
+  init(
+    store: ModelStore, preference: TextModelPreference, providers: [any TextModelProvider],
+    diagnostics: DiagnosticSink = .disabled, calibration: TextCalibrationStore? = nil
+  ) {
     self.preference = preference
     selected = preference.selectedID
     self.store = store
+    self.diagnostics = diagnostics
+    self.calibration = calibration
     registry = Result { try TextModelRegistry(store: store, providers: providers) }
   }
 
@@ -42,7 +50,8 @@ actor TextModelEnvironment {
     await preference.save(id)
   }
 
-  func backend() async -> any ReasoningBackend {
+  func backend(overriding selection: String? = nil) async -> any ReasoningBackend {
+    let modelID = selection ?? selected
     do {
       let registry = try registry.get()
       await memoryPressure.start { [apple] pressure in
@@ -54,9 +63,13 @@ actor TextModelEnvironment {
     } catch {
       return UnavailableReasoningBackend(notice: error.localizedDescription)
     }
-    guard selected != Self.appleID else { return apple }
+    guard modelID != Self.appleID else {
+      diagnostics.record(
+        .init(.inference, .modelSelected).using(model: Self.appleID, provider: "apple"))
+      return apple
+    }
     do {
-      guard let manifest = try modelCatalog().manifests.first(where: { $0.modelID == selected })
+      guard let manifest = try modelCatalog().manifests.first(where: { $0.modelID == modelID })
       else {
         throw TextModelError.unavailable(
           String(
@@ -64,8 +77,11 @@ actor TextModelEnvironment {
               "The selected text model is no longer available. Choose another in Settings → Local AI."
           ))
       }
+      diagnostics.record(
+        .init(.inference, .modelSelected).using(
+          model: manifest.model.id, provider: manifest.model.providerID))
       return DownloadedReasoningBackend(
-        manifest: manifest, store: store, registry: try registry.get())
+        manifest: await calibrated(manifest), store: store, registry: try registry.get())
     } catch { return UnavailableReasoningBackend(notice: error.localizedDescription) }
   }
 
@@ -73,6 +89,14 @@ actor TextModelEnvironment {
     try await registry.get().stop()
     try await store.remove(manifest)
     if selected == manifest.modelID { try await select(Self.appleID) }
+  }
+
+  private func calibrated(_ manifest: TextModelManifest) async -> TextModelManifest {
+    guard let calibration else { return manifest }
+    do { return try await calibration.resolve(manifest) } catch {
+      fputs("Text calibration unavailable; using catalog settings: \(error)\n", stderr)
+      return manifest
+    }
   }
 
   func setActivity(_ activity: Activity) async {

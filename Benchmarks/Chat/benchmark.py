@@ -19,7 +19,8 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def arguments():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("validate", "fixtures", "run", "report", "export", "audit"))
+    parser.add_argument("command", choices=("validate", "fixtures", "run", "report", "export", "audit", "share"))
+    parser.add_argument("--prefill-tokens", type=int, help="Experimental processing batch; never changes app preferences")
     parser.add_argument("--archive", type=Path)
     parser.add_argument("--corpus-snapshot", type=Path)
     parser.add_argument("--corpus", type=Path, default=Path(__file__).parent / "cases")
@@ -38,6 +39,10 @@ def arguments():
     parser.add_argument("--case-timeout", type=float, default=180)
     parser.add_argument("--startup-timeout", type=float, default=90)
     options = parser.parse_args()
+    if options.prefill_tokens is not None and not 32 <= options.prefill_tokens <= 2048:
+        parser.error("Prefill experiments must use 32–2048 tokens")
+    if options.prefill_tokens is not None and "apple" in options.models:
+        parser.error("Apple manages its own prefill; select a downloaded model for this experiment")
     if not 1 <= options.repeats <= 5 or not 5 <= options.max_seconds <= 1800:
         parser.error("Use 1–5 repeats and a batch budget of 5–1800 seconds")
     if not all(5 <= value <= 300 for value in (options.turn_timeout, options.case_timeout, options.startup_timeout)):
@@ -55,6 +60,13 @@ def scheduled_models(models, only):
 
 def main() -> None:
     options = arguments()
+    if options.command == "share":
+        from evaluation import portable
+        if options.archive is None:
+            raise ValueError("Share requires --archive PATH.json; nothing is uploaded")
+        write_json(options.archive, portable.generate(options.output))
+        print(f"Portable, content-free report: {options.archive}. Review before sharing.")
+        return
     if options.command == "audit":
         if options.archive is None:
             raise ValueError("Audit requires --archive PATH.json.gz")
@@ -103,7 +115,8 @@ def main() -> None:
                                                      for path in sorted(Path(__file__).parent.rglob("*.py"))}),
                      "python": sys.version, "machine": environment.capture(),
                      "sourceCommit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
-                     "models": options.models, "repeats": options.repeats, "orderSeed": options.order_seed,
+                     "models": options.models, "prefillChunkTokens": options.prefill_tokens,
+                     "repeats": options.repeats, "orderSeed": options.order_seed,
                      "turnTimeout": options.turn_timeout, "caseTimeout": options.case_timeout,
                      "startupTimeout": options.startup_timeout,
                      "jobs": [{"id": job["id"], "profile": job["profile"]} for job in jobs]}

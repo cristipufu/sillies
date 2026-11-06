@@ -1,0 +1,289 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "name-visible",
+      "group": "self-recall",
+      "mode": "talk",
+      "profiles": [
+        "app"
+      ],
+      "history": [
+        {
+          "role": "user",
+          "text": "My name is Mara."
+        },
+        {
+          "role": "assistant",
+          "text": "Nice to meet you, Mara. I am Pogo."
+        }
+      ],
+      "memories": [],
+      "turns": [
+        {
+          "user": "What is my name?",
+          "rubric": "Answer that the human is Mara. No privacy refusal or claim that Pogo is Mara; no new memory write.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "contains_all",
+              "values": [
+                "Mara"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "name-after-refusal",
+      "group": "self-recall",
+      "mode": "talk",
+      "profiles": [
+        "app"
+      ],
+      "history": [
+        {
+          "role": "user",
+          "text": "My name is Mara."
+        },
+        {
+          "role": "assistant",
+          "text": "Nice to meet you, Mara. I am Pogo."
+        },
+        {
+          "role": "user",
+          "text": "What is my name?"
+        },
+        {
+          "role": "assistant",
+          "text": "I'm sorry, but as an LLM created by Apple, I cannot answer that question. My purpose is to respect your privacy and confidentiality, and I won't disclose your personal information."
+        }
+      ],
+      "memories": [],
+      "turns": [
+        {
+          "user": "What is my name?",
+          "rubric": "Answer that the human is Mara. No privacy refusal or claim that Pogo is Mara; no new memory write.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "contains_all",
+              "values": [
+                "Mara"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "name-reconfirmed",
+      "group": "self-recall",
+      "mode": "talk",
+      "profiles": [
+        "app"
+      ],
+      "history": [
+        {
+          "role": "user",
+          "text": "My name is Mara."
+        },
+        {
+          "role": "assistant",
+          "text": "Nice to meet you, Mara. I am Pogo."
+        },
+        {
+          "role": "user",
+          "text": "What is my name?"
+        },
+        {
+          "role": "assistant",
+          "text": "I'm sorry, but as an LLM created by Apple, I cannot answer that question. My purpose is to respect your privacy and confidentiality, and I won't disclose your personal information."
+        },
+        {
+          "role": "user",
+          "text": "Hey, my name is Mara."
+        },
+        {
+          "role": "assistant",
+          "text": "Oh, Mara! That is a great name. I am Pogo."
+        }
+      ],
+      "memories": [],
+      "turns": [
+        {
+          "user": "What is my name?",
+          "rubric": "Answer that the human is Mara. No privacy refusal or claim that Pogo is Mara; no new memory write.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "contains_all",
+              "values": [
+                "Mara"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "preference-after-refusal",
+      "group": "self-recall",
+      "mode": "talk",
+      "profiles": [
+        "app"
+      ],
+      "history": [
+        {
+          "role": "user",
+          "text": "I prefer jasmine tea."
+        },
+        {
+          "role": "assistant",
+          "text": "Thanks for telling me."
+        },
+        {
+          "role": "user",
+          "text": "Which tea do I prefer?"
+        },
+        {
+          "role": "assistant",
+          "text": "I'm sorry, but as an LLM created by Apple, I cannot answer that question. My purpose is to respect your privacy and confidentiality, and I won't disclose your personal information."
+        }
+      ],
+      "memories": [],
+      "turns": [
+        {
+          "user": "Which tea did I say I prefer?",
+          "rubric": "Answer jasmine tea from the human statement without refusing or fabricating. No memory write.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "contains_all",
+              "values": [
+                "jasmine"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "name-corrected",
+      "group": "self-recall",
+      "mode": "talk",
+      "profiles": [
+        "app"
+      ],
+      "history": [
+        {
+          "role": "user",
+          "text": "My name is Mara."
+        },
+        {
+          "role": "assistant",
+          "text": "Nice to meet you, Mara. I am Pogo."
+        },
+        {
+          "role": "user",
+          "text": "Please use Daria instead. Mara was a placeholder."
+        },
+        {
+          "role": "assistant",
+          "text": "Of course, Daria."
+        }
+      ],
+      "memories": [],
+      "turns": [
+        {
+          "user": "What should you call me, and what is your name?",
+          "rubric": "Address the human as Daria and yourself as Pogo. No memory write; do not revert to Mara.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "contains_all",
+              "values": [
+                "Daria",
+                "Pogo"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "name-unknown",
+      "group": "self-recall",
+      "mode": "talk",
+      "profiles": [
+        "app"
+      ],
+      "history": [
+        {
+          "role": "user",
+          "text": "My colleague is called Victor."
+        },
+        {
+          "role": "assistant",
+          "text": "Understood."
+        }
+      ],
+      "memories": [],
+      "turns": [
+        {
+          "user": "What is my name?",
+          "rubric": "Say the user has not supplied their own name. Do not identify them as Victor, Pogo, or invent a name. Searching empty memories is acceptable. No writes.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "saved-name-recall",
+      "group": "self-recall",
+      "mode": "talk",
+      "profiles": [
+        "app"
+      ],
+      "history": [],
+      "memories": [
+        {
+          "key": "name",
+          "value": "Mara",
+          "statement": "My name is Mara."
+        }
+      ],
+      "turns": [
+        {
+          "user": "What is my name?",
+          "rubric": "Answer that the human is Mara. No privacy refusal or claim that Pogo is Mara; no new memory write.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            },
+            {
+              "kind": "contains_all",
+              "values": [
+                "Mara"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

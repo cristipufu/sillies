@@ -4,6 +4,7 @@ import Foundation
 enum ArchitectureFixtures {
   private static func verifyPackageBoundaries() -> Bool {
     let valid = [
+      "let t = [.target(name: \"SilliesDiagnostics\")]",
       "let t = [.executableTarget(name: \"ChatModelBenchmark\", dependencies: [\"SilliesReasoning\", \"SilliesVault\"])]",
       "let t = [.target(name: \"SilliesWriting\", dependencies: [\"SilliesCore\", \"SilliesAudio\", \"SilliesReasoning\"]) ]",
 
@@ -13,6 +14,7 @@ enum ArchitectureFixtures {
       "let t = [.target(name: \"SilliesChat\", dependencies: [\"SilliesReasoning\", \"SilliesTTS\"])]",
     ]
     let invalid = [
+      "let t = [.target(name: \"SilliesDiagnostics\", dependencies: [\"SilliesApp\"])]",
       "let t = [.executableTarget(name: \"ChatModelBenchmark\", dependencies: [\"SilliesApp\"])]",
       "let t = [.target(name: \"SilliesWriting\", dependencies: [\"SilliesApp\"])]",
       "let t = [.target(name: \"SilliesWriting\", dependencies: [\"SilliesPersistence\"])]",
@@ -47,6 +49,12 @@ enum ArchitectureFixtures {
     let permission = "Sources/SilliesApp/Skills/WindowSnapshotService.swift"
     let rendering = "Sources/SilliesApp/Rendering/CompanionPanel.swift"
     let fixtures: [Fixture] = [
+      .init(
+        source: "import AppKit", path: "Sources/SilliesDiagnostics/Journal.swift",
+        rules: ["module-boundary"]),
+      .init(
+        source: "import SilliesVault", path: "Sources/SilliesDiagnostics/Journal.swift",
+        rules: ["module-boundary"]),
       .init(
         source: "func build() { let engine = AppleReasoningBackend() }",
         path: "Tools/ChatModelBenchmark/Composition/BenchmarkModel.swift", rules: []),
@@ -146,6 +154,9 @@ enum ArchitectureFixtures {
       .init(
         source: "import AppKit", path: "Sources/SilliesChat/Session.swift",
         rules: ["module-boundary"]),
+      .init(
+        source: "import Synchronization", path: "Sources/SilliesChat/ChatTurnDelivery.swift",
+        rules: []),
       .init(
         source: "import FluidAudio", path: "Sources/SilliesTTS/Provider.swift",
         rules: ["module-boundary"]),

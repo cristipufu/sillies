@@ -30,7 +30,7 @@ extension ConversationDatabase {
     try sql.execute("PRAGMA user_version=4")
   }
 
-  func prepareMemoryEmbeddings() throws {
+  func prepareSearchEmbeddings() throws {
     try sql.execute(
       """
       CREATE TABLE memory_embeddings(provider TEXT NOT NULL,id TEXT NOT NULL,

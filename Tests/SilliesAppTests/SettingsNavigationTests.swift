@@ -37,6 +37,7 @@ import Testing
       store: ModelStore(root: directory.appendingPathComponent("SearchModels")),
       conversations: ConversationLibrary(
         directory: directory.appendingPathComponent("Conversations")),
+      vault: controller.skills.vault.library,
       runtime: .init(inference: .init(), executable: directory.appendingPathComponent("unused")),
       selection: .init(id: SearchModelEnvironment.appleID, save: { _ in })))
   await search.downloads.load()

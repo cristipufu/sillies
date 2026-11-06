@@ -1,5 +1,6 @@
 import Foundation
 import SilliesCore
+import SilliesDiagnostics
 import SilliesReasoning
 import SilliesTTS
 
@@ -8,6 +9,7 @@ struct ChatTurnOperation: Sendable {
   enum Output: Sendable { case text, spoken }
   enum VoiceResult: Sendable {
     case finished
+    case preempted
     case notice(String)
     case failed(SessionFailure)
   }
@@ -20,6 +22,7 @@ struct ChatTurnOperation: Sendable {
     let text: @Sendable (String) async -> Void
     let textFinished: @Sendable () async -> Void
     let playback: @Sendable (SpeechPlaybackUpdate) -> Void
+    var plannedSpeech: @Sendable (String) -> Void = { _ in }
   }
   let services: ChatServices
   let delivery: Delivery
@@ -27,7 +30,8 @@ struct ChatTurnOperation: Sendable {
 
   func run(_ context: ChatContext, output: Output) async throws -> Result {
     let stream = ChatTurnStream(
-      receive: delivery.text, milestone: { delivery.playback(.milestone($0)) })
+      receive: delivery.text, milestone: { delivery.playback(.milestone($0)) },
+      plannedSpeech: delivery.plannedSpeech)
     let voice = Task { () -> VoiceResult in
       guard output == .spoken else {
         await stream.stopSpeech()
@@ -42,6 +46,9 @@ struct ChatTurnOperation: Sendable {
         return notice.map(VoiceResult.notice) ?? .finished
       } catch {
         await stream.stopSpeech()
+        if error is CancellationError { return .preempted }
+        services.diagnostics.record(
+          .init(.synthesis, .failed, operation: context.turnID).failing(error))
         return .failed(SessionFailure(error, category: .speechSynthesis))
       }
     }

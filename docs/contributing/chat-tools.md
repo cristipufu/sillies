@@ -53,12 +53,29 @@ including when cancellation arrives after commit. Duplicate topics require an ex
 the editor must not silently replace another fact.
 
 `ChatContext.mode` distinguishes written Chat from spoken Talk without changing the tool capabilities.
+Talk instructions request natural spoken sentences without Markdown or visual references. Capability
+instructions distinguish advice from actions the installed tools can actually perform. Preserve the
+user's request and native message roles; do not repair style by filtering generated sentences.
 Interrupted speech keeps the original assistant reply intact, with the existing incomplete-reply
 notice. Completed spoken phrases remain recorded separately, but the November 5 context experiments
 did not qualify a new model-facing delivery representation. Do not assume a model can infer where
 playback stopped. The latest user prompt stays unchanged.
 
 ## Add a capability
+
+The app also supplies `ConversationClarificationTool`. Its `request_clarification` result is typed
+interaction data, not a storage action. `ConversationToolbox` accepts one question per turn and refuses
+subsequent actions while it awaits an answer. The downloaded loop completes immediately with the
+model-authored question. The Apple adapter exits through `LanguageModelSession.ToolCallError` carrying
+`ConversationClarificationRequested`, preserves any text already streamed, and keeps the canonical
+call/result exchange. It does not retain the interrupted native session. This uses Apple's documented
+[tool error boundary](https://developer.apple.com/documentation/foundationmodels/expanding-generation-with-tool-calling).
+The next answer is a normal user turn; no helper or inference admission waits for a click.
+
+The model still decides when clarification is appropriate. Test ordinary dialogue as well as ambiguous
+requests, with the actual available tool set. A tool-only experiment can behave differently from the
+application's complete capabilities. [Conversation UI contracts](conversation-interface.md) cover
+saved question state, draft preservation, navigation and export.
 
 1. Implement `ConversationTool` in the feature that owns the data. Define a stable name, a concise
    description, typed parameter definitions, localized activity text, and `call(arguments:)`.
@@ -234,3 +251,13 @@ worker. Empty queries return recent facts. The model sees at most four search re
 `ChatMemoryBrowser` holds one 40-fact page with stable timestamp/identity cursors and rejects late
 reads after refresh, cancellation or dismissal. SQLite schema 2 adds the browsing index through an
 atomic version-1 upgrade; original facts and receipts remain unchanged.
+
+### Explicit memory corrections
+
+The Memories editor uses `CompanionMemoryEditing`, not an inference call. A correction carries
+the memory identity and revision; storage validates both in the same transaction as the fact,
+search-index update, Undo receipt and checkpoint invalidation. A stale editor cannot overwrite
+a newer correction. The original message remains accessible, but `MemorySource.attribution`
+marks a manual correction. Tool results use the edited fact as the user statement; never present
+the older quote as proof of the changed value. Model-authored `MemoryWrite` requests still require
+a real, matching user-message quote and cannot claim manual-correction provenance.

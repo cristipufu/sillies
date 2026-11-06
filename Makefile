@@ -28,6 +28,7 @@ lint:
 	bash -n scripts/build-app.sh scripts/embed-sparkle.sh scripts/test.sh scripts/toolchain.sh scripts/check-main-thread.sh scripts/test-stress.sh scripts/test-races.sh scripts/test-downloaded-speech.sh
 	python3 -B -m unittest discover -s Tests -p 'test_*.py'
 	python3 -B scripts/theme-fallback.py --check
+	python3 -B scripts/check-runtime-qualifications.py
 	python3 -B scripts/localize.py check --all --complete
 	bash scripts/check-main-thread.sh
 

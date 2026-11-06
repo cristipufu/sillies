@@ -72,8 +72,11 @@ actor AppleConversationSessions {
       // Preserve the framework-owned transcript, including native tool entries. Validate the next
       // request against our exact committed exchanges; do not reconstruct a completed native turn.
       let exchanges = await tools.exchanges
+      // A clarification exits native generation through a tool error; its canonical call/result
+      // is saved, but the interrupted framework transcript must not be retained for the next turn.
+      let awaitsAnswer = await tools.clarification != nil
       if let id = request.sessionID, let lifetime = lifetimes[id], await lifetime.isActive,
-        generation == epoch, retention == .available
+        generation == epoch, retention == .available, !awaitsAnswer
       {
         cached = Cached(
           id: id, session: session, invocation: invocation,

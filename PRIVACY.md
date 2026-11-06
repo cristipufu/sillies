@@ -126,10 +126,22 @@ folder can be uploaded by that folder's provider even though Sillies generated t
 
 ## Diagnostics and reports you share
 
-Sillies and its dependencies write local diagnostic messages, and macOS can create crash reports.
-Sillies does not automatically send these to the developer. System-level diagnostic sharing is controlled
-by your macOS settings. Logs can include operational details, app/window names, paths, model identifiers,
-or error context; review and redact them before sharing.
+Sillies keeps a small local diagnostic archive by default. Settings → General → Diagnostics lets you
+turn it off, clear it, or export a JSON report. Events include app/build and macOS versions, memory
+capacity, model/provider identifiers, operation IDs, lifecycle changes, cancellation causes, timing
+milestones and error identities. The archive does not contain messages, prompts, model replies,
+audio, Vault content, clipboard data, window titles or user file paths.
+
+The archive lives in `~/Library/Logs/Sillies/Diagnostics`. Four rolling files retain at most 8 MB;
+an additional bounded file used for atomic pruning keeps peak archive storage within **10 MB**.
+Entries older than **7 days** are pruned on startup, writes and export. Capacity limits may remove
+events sooner. The pending queue is also bounded; dropped events are disclosed. Exports are capped
+at 10 MB. Copies you explicitly export are yours to keep or delete and are not removed by Clear diagnostics.
+
+Content-free error events are also sent to Apple's unified logging system, whose retention macOS
+manages separately. Other system/dependency logs and macOS crash reports can include broader error
+context; they are not included in Sillies' export. Sillies does not automatically send diagnostics
+to the developer. System-level diagnostic sharing is controlled by your macOS settings.
 
 If you submit an issue, pull request, or diagnostic attachment, the information you choose to include is
 handled by GitHub and can be public. Use the [private security-reporting route](SECURITY.md) for sensitive

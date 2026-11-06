@@ -12,12 +12,12 @@ struct VoiceModelSettingsView: View {
         detail:
           String(
             localized:
-              "Choose a local voice model for Chat. Each companion has its own preferred voice and personality."
+              "Choose a local voice model for Talk. Each companion has its own preferred voice and personality."
           )
       ) {
         Label("Your conversations stay on this Mac.", systemImage: "lock.shield")
         Text(
-          "Download a model, then choose Use for Chat. First use takes longer while the voice loads. Speech & Meetings controls how Sillies listens; Local AI controls its replies."
+          "Download a voice for spoken conversations. Chat works without one. Speech & Meetings controls listening; Local AI controls replies."
         )
         .foregroundStyle(theme.secondary)
         Text("Each model lists its supported languages and voice options below.")
@@ -66,34 +66,13 @@ struct VoiceModelSettingsView: View {
       Text(state.label).font(.caption).foregroundStyle(theme.secondary).textSelection(
         .enabled)
       HStack {
-        actions(manifest, state: state)
+        ModelInstallationControls(
+          model: model, manifest: manifest,
+          selectionTitle: String(localized: "Use for Talk"), scope: .manage)
         Spacer(minLength: 0)
         Link("Model & license ↗", destination: manifest.model.sourceURL).font(.caption)
       }
     }
   }
 
-  @ViewBuilder private func actions(_ manifest: TTSModelManifest, state: ModelInstallationState)
-    -> some View
-  {
-    switch state {
-    case .downloaded, .ready:
-      if model.selectedModelID == manifest.modelID {
-        Label("Selected", systemImage: "checkmark.circle.fill").foregroundStyle(theme.accent)
-      } else {
-        Button("Use for Chat") { model.select(manifest.modelID) }
-          .buttonStyle(SoftButtonStyle()).disabled(model.activeID != nil)
-      }
-      Button("Remove", role: .destructive) { model.remove(manifest) }
-        .buttonStyle(SoftButtonStyle()).disabled(model.activeID != nil)
-    case .downloading, .verifying:
-      Button("Pause download") { model.pauseDownload() }.buttonStyle(SoftButtonStyle())
-    case .cancelling: ProgressView().controlSize(.small)
-    default:
-      Button(
-        state == .paused ? String(localized: "Resume download") : String(localized: "Download")
-      ) { model.download(manifest) }
-      .buttonStyle(SoftButtonStyle()).disabled(model.activeID != nil || !model.supports(manifest))
-    }
-  }
 }

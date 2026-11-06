@@ -21,6 +21,34 @@ def scenario():
 
 
 class ChatBenchmarkTests(unittest.TestCase):
+    def test_source_equality_requires_observed_evidence_and_rejects_extra_or_duplicate_cards(self):
+        rule = {"kind": "source_equals", "values": ["record-a"]}
+        for sources in [["record-b"], ["record-a", "record-b"], ["record-a", "record-a"], None]:
+            self.assertFalse(scoring.check_rule(rule, {"reply": "Found it", "sources": sources}, [])["passed"])
+        self.assertTrue(scoring.check_rule(rule, {"reply": "Found it", "sources": ["record-a"]}, [])["passed"])
+        empty = {"kind": "source_equals", "values": []}
+        self.assertFalse(scoring.check_rule(empty, {"reply": "No sources"}, [])["passed"])
+        self.assertTrue(scoring.check_rule(empty, {"reply": "No sources", "sources": []}, [])["passed"])
+
+    def test_tool_budget_counts_repeated_and_failed_calls_instead_of_distinct_names(self):
+        rule = {"kind": "tool_calls_at_most", "values": ["1"]}
+        calls = [{"name": "search_vault"}, {"name": "search_vault", "error": "failed"}]
+        self.assertFalse(scoring.check_rule(rule, {"reply": "No results"}, calls)["passed"])
+        self.assertTrue(scoring.check_rule(rule, {"reply": "No results"}, calls[:1])["passed"])
+        self.assertFalse(scoring.check_rule(rule, {"reply": None, "error": "timeout"}, [])["passed"])
+        for value in ["-1", "1.5", "", "201"]:
+            case = scenario()
+            case["turns"][0]["checks"] = [{"kind": "tool_calls_at_most", "values": [value]}]
+            with self.assertRaises(ValueError): corpus.validate(case)
+
+    def test_continuation_lexical_match_does_not_certify_sequence_or_semantic_review(self):
+        rule = {"kind": "contains_all", "values": ["leaves", "three minutes"]}
+        turn = {"reply": "After steeping for three minutes, now add the leaves."}
+        check = scoring.check_rule(rule, turn, [])
+        self.assertTrue(check["passed"])
+        self.assertEqual(check["category"], "lexical_anchor")
+        self.assertEqual(reviews.rubric_status([{}]), "pending")
+
     def test_mode_and_delivery_evidence_reach_worker_without_gold(self):
         case = scenario()
         case["mode"] = "talk"

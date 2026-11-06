@@ -197,3 +197,10 @@ matching continuations preserve the framework's native transcript, including too
 compaction, edits, session end and memory pressure invalidate reuse. Native sessions never own Vault
 storage or a long-lived turn budget. The bounded `TextModelBenchmark apple-context` and `tokens` modes
 measure session and input preparation separately; neither downloads models.
+
+## Runtime qualification and local tuning
+
+Catalog changes also update the [runtime qualification matrix](../../ModelProfiles/runtime-qualifications.json).
+See [qualification, bounded prefill experiments and portable hardware reports](runtime-qualification.md).
+Do not enable a faster cache or processing policy from latency alone. Per-Mac receipts are separate
+from the portable catalog; stale hardware/runtime/profile identities revert to the catalog setting.

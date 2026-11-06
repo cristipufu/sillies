@@ -30,6 +30,12 @@ enum ConversationToolLoop {
         .calling(response.calls, text: response.text, reasoningContent: response.reasoningContent))
       for call in response.calls {
         messages.append(.result(try await tools.invoke(call), for: call))
+        if await tools.clarification != nil { break }
+      }
+      if let question = await tools.clarification {
+        try await receive(question.question)
+        portions.append(question.question)
+        return portions.joined(separator: "\n")
       }
     }
     throw TextModelError.invalidResponse

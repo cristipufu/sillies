@@ -10,21 +10,25 @@ struct ChatMessageBubble: View {
   let original: ChatMessage
   let vault: ChatVaultPresentation?
   let selectionChanged: (Bool) -> Void
+  @State private var showsReplyDetails = false
+  private static let outgoingIndent: CGFloat = 36
+  private static let outgoingHorizontalInset: CGFloat = 16
+  private static let outgoingVerticalInset: CGFloat = 10
+  private static let cornerRadius: CGFloat = 12
+  private static let contentSpacing: CGFloat = 10
   var body: some View {
     let message = model.presentedMessage(original)
     let sources =
       model.browser.page == nil
       ? model.sourceCards(for: original) : model.browser.sourceCards(for: original)
     let fromUser = message.role == .user
+    let text = message.text.isEmpty ? message.clarification?.question ?? "" : message.text
     return HStack(alignment: .bottom, spacing: 0) {
-      if fromUser { Spacer(minLength: 52) }
-      VStack(alignment: .leading, spacing: 5) {
-        Text(fromUser ? String(localized: "You") : model.companionName)
-          .font(.system(size: 11, weight: .semibold, design: .rounded))
-          .foregroundStyle(fromUser ? theme.onAccent.opacity(0.8) : theme.secondary)
-        if !message.text.isEmpty {
+      if fromUser { Spacer(minLength: Self.outgoingIndent) }
+      VStack(alignment: .leading, spacing: Self.contentSpacing) {
+        if !text.isEmpty {
           ChatMessageText(
-            text: message.text, color: theme.native(fromUser ? .onAccent : .ink),
+            text: text, color: theme.native(.ink),
             selectionChanged: selectionChanged)
         }
         ForEach(model.history.memoryReceipts.filter { $0.saved.sourceMessageID == message.id }) {
@@ -44,19 +48,29 @@ struct ChatMessageBubble: View {
         if message.completion == .interrupted {
           Text("Stopped").font(.caption2).foregroundStyle(theme.secondary)
         }
+        if let question = message.clarification, model.pendingClarification?.id == question.id {
+          ChatClarificationView(question: question, model: model)
+        }
         if let vault, !sources.isEmpty {
           ChatSourcesView(sources: sources, vault: vault).padding(.top, 6)
         }
+        if !fromUser, message.contextInspection != nil || !message.exchanges.isEmpty {
+          Button {
+            showsReplyDetails = true
+          } label: {
+            Image(systemName: "info.circle").font(.callout).foregroundStyle(theme.secondary)
+          }.buttonStyle(.plain).help("Reply details").accessibilityLabel("Reply details")
+            .popover(isPresented: $showsReplyDetails) { ReplyDetailsView(message: message) }
+        }
       }
-      .padding(.horizontal, 14).padding(.vertical, 11)
+      .padding(.horizontal, fromUser ? Self.outgoingHorizontalInset : 0)
+      .padding(.vertical, fromUser ? Self.outgoingVerticalInset : 0)
       .background(
-        fromUser ? theme.accentFill : theme.card,
-        in: RoundedRectangle(cornerRadius: 18)
+        fromUser ? theme.accent.opacity(0.12) : Color.clear,
+        in: RoundedRectangle(cornerRadius: Self.cornerRadius)
       )
-      .overlay(
-        RoundedRectangle(cornerRadius: 18).strokeBorder(
-          fromUser ? Color.clear : theme.border)
-      )
+      .accessibilityElement(children: .contain)
+      .accessibilityLabel(fromUser ? String(localized: "You") : model.companionName)
       .contextMenu {
         if model.memoryEditor.canRemember(message) {
           Button("Remember this…", systemImage: "sparkles") { model.memoryEditor.begin(message) }
@@ -64,10 +78,10 @@ struct ChatMessageBubble: View {
         }
         Button("Copy message", systemImage: "doc.on.doc") {
           NSPasteboard.general.clearContents()
-          NSPasteboard.general.setString(message.text, forType: .string)
+          NSPasteboard.general.setString(text, forType: .string)
         }
       }
-      if !fromUser { Spacer(minLength: 52) }
+      if !fromUser { Spacer(minLength: 0) }
     }
   }
 }

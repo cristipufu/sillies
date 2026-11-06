@@ -13,15 +13,17 @@ struct ConversationMemoriesView: View {
         Spacer()
         Button("Done") { dismiss() }.buttonStyle(SoftButtonStyle())
       }
-      Text(
-        "Facts you shared with \(model.companionName). You can correct a fact in conversation or remove it here."
-      )
-      .font(.callout).foregroundStyle(theme.secondary)
+      Text("Facts you shared with \(model.companionName). Review, edit or remove them here.")
+        .font(.callout).foregroundStyle(theme.secondary)
       ScrollView {
         LazyVStack(alignment: .leading, spacing: 12) {
           ForEach(browser.page.facts) { fact in
             VStack(alignment: .leading, spacing: 6) {
               Text(fact.value).font(.body).textSelection(.enabled)
+              if fact.source.attribution == .userCorrection {
+                Label("Edited by you", systemImage: "pencil").font(.caption)
+                  .foregroundStyle(theme.secondary)
+              }
               Text(fact.sourceQuote).font(.caption).foregroundStyle(theme.secondary).textSelection(
                 .enabled)
               HStack {
@@ -32,6 +34,8 @@ struct ConversationMemoriesView: View {
                   }
                 }
                 Spacer()
+                Button("Edit") { model.memoryEditor.edit(fact) }
+                  .disabled(!model.canCompose || !model.memoryEditor.canEdit)
                 Button("Forget", role: .destructive) { Task { await model.forgetMemory(fact) } }
                   .disabled(!model.canCompose)
               }.buttonStyle(SoftButtonStyle())

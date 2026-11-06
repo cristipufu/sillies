@@ -1,6 +1,8 @@
 /// A refusal is explicit evidence of no operation, never an empty successful search or save.
 struct ToolNotExecutedResult: Encodable {
-  enum Reason: String, Encodable { case turnToolLimitReached, recoveryReplayOnly }
+  enum Reason: String, Encodable {
+    case turnToolLimitReached, recoveryReplayOnly, awaitingUserAnswer
+  }
   let status = "notExecuted"
   let reason: Reason
   var remainingCalls: Int? { reason == .turnToolLimitReached ? 0 : nil }
@@ -10,6 +12,8 @@ struct ToolNotExecutedResult: Encodable {
       "No operation was performed. The tool allowance for this turn is exhausted. Answer from the results already returned and state any missing evidence; do not request more tools."
     case .recoveryReplayOnly:
       "No operation was performed. This response is recovering from an invalid model response. Only identical previously completed tool calls can replay their results; new operations are unavailable. Use returned evidence and state what could not be completed."
+    case .awaitingUserAnswer:
+      "No operation was performed. A clarification is already awaiting the user's answer. Ask the pending question and stop; do not choose for the user."
     }
   }
   private enum CodingKeys: String, CodingKey { case status, reason, remainingCalls, coverage }

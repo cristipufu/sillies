@@ -2,7 +2,7 @@ import Foundation
 import SilliesCore
 
 extension ConversationLibrary {
-  package func useMemoryEmbeddings(_ access: MemoryEmbeddingAccess?) async throws {
+  package func useSearchEmbeddings(_ access: SearchEmbeddingAccess?) async throws {
     let generation = UUID()
     memoryIndexGeneration = generation
     let previous = memoryIndexTask
@@ -14,19 +14,19 @@ extension ConversationLibrary {
     memorySearchGeneration = UUID()
     memoryIndexFailure = nil
     if let access {
-      try storage().removeMemoryEmbeddings(except: access.identity)
+      try storage().removeSearchEmbeddings(except: access.identity)
       scheduleMemoryIndex()
     }
   }
 
   package func rebuildMemoryIndex() throws {
     guard let access = memoryEmbeddings else { return }
-    try storage().resetMemoryEmbeddings(provider: access.identity)
+    try storage().resetSearchEmbeddings(provider: access.identity)
     memoryIndexFailure = nil
     scheduleMemoryIndex()
   }
 
-  package func memoryIndexStatus() throws -> (MemoryIndexProgress?, String?) {
+  package func memoryIndexStatus() throws -> (SearchIndexProgress?, String?) {
     guard let access = memoryEmbeddings else { return (nil, memoryIndexFailure) }
     return (try storage().memoryIndexProgress(provider: access.identity), memoryIndexFailure)
   }
@@ -36,18 +36,18 @@ extension ConversationLibrary {
     memoryIndexTask = Task { [weak self] in await self?.prepareMemoryIndex(access) }
   }
 
-  private func prepareMemoryIndex(_ access: MemoryEmbeddingAccess) async {
+  private func prepareMemoryIndex(_ access: SearchEmbeddingAccess) async {
     defer { memoryIndexTask = nil }
     do {
       while true {
         try Task.checkCancellation()
-        let batch = try storage().pendingMemoryEmbeddings(provider: access.identity)
+        let batch = try storage().pendingSearchEmbeddings(provider: access.identity)
         guard !batch.isEmpty else { return }
         for item in batch {
           let vector = try await access.embed(.init(text: item.text, purpose: .passage))
           try Task.checkCancellation()
           guard memoryEmbeddings?.identity == access.identity else { return }
-          try storage().saveMemoryEmbedding(vector, for: item, provider: access.identity)
+          try storage().saveSearchEmbedding(vector, for: item, provider: access.identity)
           await Task.yield()
         }
       }

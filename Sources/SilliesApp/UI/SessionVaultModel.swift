@@ -24,7 +24,9 @@ final class SessionVaultModel {
   @ObservationIgnored private let transcriptWindow: SavedTranscriptWindow
   let pasteBack: PasteBackCoordinator?
   private var listing: VaultListing
-  var filteredRecords: [SessionRecordHeader] { listing.records }
+  private(set) var relatedRecords: [SessionRecordHeader] = []
+  var keywordRecords: [SessionRecordHeader] { listing.records }
+  var filteredRecords: [SessionRecordHeader] { listing.records + relatedRecords }
   private(set) var detail: SessionRecord?
   private(set) var detailError: String?
   private(set) var isLoadingDetail = false
@@ -95,13 +97,34 @@ final class SessionVaultModel {
     defer { if searchGeneration == token { isSearching = false } }
     do {
       let updated = try await refreshedListing(for: request)
-      guard !Task.isCancelled, searchGeneration == token, isPresented else { return }
+      let related = try await relatedRecords(
+        for: request, excluding: Set(updated.records.map(\.id)))
+      guard !Task.isCancelled, searchGeneration == token, searchIdentity == request, isPresented
+      else { return }
+      relatedRecords = related
       apply(updated, for: request)
     } catch {
       guard !Task.isCancelled, searchGeneration == token, isPresented else { return }
       searchError = String(localized: "Could not load the Vault: \(error.localizedDescription)")
       fputs("Vault query failed: \(error)\n", stderr)
     }
+  }
+
+  private func relatedRecords(for request: SearchIdentity, excluding ids: Set<UUID>) async throws
+    -> [SessionRecordHeader]
+  {
+    guard !request.search.query.isEmpty else { return [] }
+    let category: VaultSearchRequest.Category
+    switch request.kind {
+    case .listen, .participate, .record: category = .meetings
+    case .snap, .explain: category = .screenshots
+    case .stash: category = .stash
+    default: category = .all
+    }
+    return try await vault.library.relatedMatches(.init(query: request.query, category: category))
+      .map(\.header).filter {
+        !ids.contains($0.id) && (request.kind == nil || $0.kind == request.kind)
+      }
   }
 
   private func refreshedListing(for request: SearchIdentity) async throws -> VaultListing {
@@ -219,6 +242,7 @@ final class SessionVaultModel {
       selectedRecordID = remaining.isEmpty ? nil : remaining[min(index, remaining.count - 1)].id
     }
     listing.remove(id)
+    relatedRecords.removeAll { $0.id == id }
     if detail?.id == id { detail = nil }
     if lastStashID == id {
       lastStashID = nil

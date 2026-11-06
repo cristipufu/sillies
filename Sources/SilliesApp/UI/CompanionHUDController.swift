@@ -14,7 +14,7 @@ final class CompanionHUDController {
     width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
   private static let minPanelWidth: CGFloat = 220
   private static let minPanelHeight: CGFloat = 52
-  private static let headTopOffsetFactor: Double = 0.78
+  private static let headTopOffsetFactor: Double = 0.68
   private static let horizontalScreenInset: CGFloat = 6
   private static let bottomScreenInset: CGFloat = 6
   private static let topScreenInset: CGFloat = 2
@@ -23,6 +23,7 @@ final class CompanionHUDController {
 
   private enum LayoutKey: Equatable {
     case hidden
+    case talk(hasNotice: Bool)
     case active(skill: CompanionSkillKind, appName: String, normalizedDetail: String)
     case completed(skill: CompanionSkillKind, appName: String, summary: String)
 
@@ -66,6 +67,8 @@ final class CompanionHUDController {
   private var panel: SkillFloatingPanel?
   private(set) lazy var speechBubble = MeetingSpeechBubbleController(appearance: appearance)
   private var hostingController: ThemedHostingController<CompanionHUDView>?
+  private var background: CompanionSpeechBubbleBackground?
+  private(set) var bubbleLayout: CompanionSpeechBubbleLayout?
   private var lastLayoutKey: LayoutKey?
   private var cachedPanelSize: CGSize?
   private(set) var layoutMeasurements = 0
@@ -78,56 +81,54 @@ final class CompanionHUDController {
   func updatePresentation(_ presentation: SkillPresentation) {
     model.updatePresentation(presentation)
   }
+  func showsHUD(for state: CompanionBindingState) -> Bool { model.showsHUD(for: state) }
 
-  func update(
-    state: CompanionBindingState, companionPoint: CGPoint, characterSize: Double,
-    visibleFrame: CGRect
-  ) {
-    prepare(
-      state: state, companionPoint: companionPoint, characterSize: characterSize,
-      visibleFrame: visibleFrame)
-    guard state.showsTaskHUD else { return }
-    if state.isBound, let companionWindowID = companionWindow?.windowServerID {
+  func update(state: CompanionBindingState, anchor: CompanionSpeechBubbleLayout.Anchor) {
+    prepare(state: state, anchor: anchor)
+    guard showsHUD(for: state) else { return }
+    if let companionWindowID = companionWindow?.windowServerID {
       panel?.order(.above, relativeTo: Int(companionWindowID))
     } else if panel?.isVisible != true {
       panel?.orderFrontRegardless()
     }
-    updateSpeechBubble(
-      companionPoint: companionPoint, characterSize: characterSize, visibleFrame: visibleFrame)
+    updateSpeechBubble(anchor: anchor)
   }
 
   /// Updates content and geometry without ordering a window onto the screen.
-  func prepare(
-    state: CompanionBindingState, companionPoint: CGPoint, characterSize: Double,
-    visibleFrame: CGRect
-  ) {
+  func prepare(state: CompanionBindingState, anchor: CompanionSpeechBubbleLayout.Anchor) {
     updateModel(state)
-    guard state.showsTaskHUD else {
+    guard showsHUD(for: state) else {
       hide()
       return
     }
     ensurePanelCreated(for: state)
     updatePanelLevel(for: state)
     let panelSize = resolvePanelSize(for: state)
-    let frame = clampedFrame(
-      for: panelSize, companionPoint: companionPoint, characterSize: characterSize,
-      visibleFrame: visibleFrame)
+    let frame: CGRect
+    if model.surface(for: state) == .speechBubble {
+      let layout = CompanionSpeechBubbleLayout(
+        anchor: anchor, size: panelSize, placement: .aboveContact)
+      bubbleLayout = layout
+      frame = layout.frame
+    } else {
+      bubbleLayout = nil
+      background?.concealArtwork()
+      frame = clampedFrame(
+        for: panelSize, anchor: anchor)
+    }
     if panel?.frame != frame { panel?.setFrame(frame, display: false) }
+    if let bubbleLayout { background?.update(bubbleLayout) }
   }
 
-  private func updateSpeechBubble(
-    companionPoint: CGPoint, characterSize: Double, visibleFrame: CGRect
-  ) {
-    guard companionWindow != nil, panel != nil else {
+  private func updateSpeechBubble(anchor: CompanionSpeechBubbleLayout.Anchor) {
+    guard let companionWindow, let panel else {
       speechBubble.hide()
       return
     }
     speechBubble.update(
       suggestion: model.audioSession?.currentBubbleSuggestion,
       placement: .init(
-        anchor: .init(
-          companionPoint: companionPoint, characterSize: characterSize, visibleFrame: visibleFrame),
-        windowLayer: model.state.boundTarget?.windowLayer ?? attachedWindowLayer))
+        anchor: anchor, companionWindow: companionWindow, controlsFrame: panel.frame))
   }
 
   private func updateModel(_ state: CompanionBindingState) {
@@ -147,6 +148,8 @@ final class CompanionHUDController {
     panel?.close()
     panel = nil
     hostingController = nil
+    background = nil
+    bubbleLayout = nil
     lastLayoutKey = nil
     cachedPanelSize = nil
   }
@@ -161,7 +164,16 @@ final class CompanionHUDController {
       contentRect: CGRect(origin: .zero, size: Self.fallbackSize),
       ignoresMouseEvents: false,
       level: panelLevel(for: state))
-    created.contentViewController = host
+    let background = CompanionSpeechBubbleBackground(
+      frame: CGRect(origin: .zero, size: Self.fallbackSize))
+    appearance.observe(background) { view, palette in view.applyTheme(palette) }
+    background.concealArtwork()
+    host.view.frame = background.bounds
+    host.view.autoresizingMask = [.width, .height]
+    host.view.wantsLayer = true
+    background.addSubview(host.view)
+    created.contentView = background
+    self.background = background
     hostingController = host
     panel = created
   }
@@ -180,7 +192,16 @@ final class CompanionHUDController {
   }
 
   private func resolvePanelSize(for state: CompanionBindingState) -> CGSize {
-    let key = LayoutKey(state)
+    let key: LayoutKey
+    if case .active(_, .chat, _, _, _) = state,
+      let conversation = model.conversation, conversation.mode == .talk
+    {
+      key = .talk(
+        hasNotice: conversation.failure != nil || conversation.notice != nil
+          || conversation.history.failure != nil)
+    } else {
+      key = LayoutKey(state)
+    }
     if key == lastLayoutKey, let cachedPanelSize {
       return cachedPanelSize
     }
@@ -195,15 +216,16 @@ final class CompanionHUDController {
     return measured
   }
 
-  private func clampedFrame(
-    for panelSize: CGSize, companionPoint: CGPoint, characterSize: Double, visibleFrame: CGRect
-  ) -> CGRect {
-    let headTopOffset = characterSize * Self.headTopOffsetFactor
-    let unclampedX = companionPoint.x - panelSize.width / 2
+  private func clampedFrame(for panelSize: CGSize, anchor: CompanionSpeechBubbleLayout.Anchor)
+    -> CGRect
+  {
+    let visibleFrame = anchor.visibleFrame
+    let headTopOffset = anchor.characterSize * Self.headTopOffsetFactor
+    let unclampedX = anchor.companionPoint.x - panelSize.width / 2
     let clampedX = min(
       max(unclampedX, visibleFrame.minX + Self.horizontalScreenInset),
       visibleFrame.maxX - panelSize.width - Self.horizontalScreenInset)
-    let preferredY = companionPoint.y + headTopOffset
+    let preferredY = anchor.companionPoint.y + headTopOffset
     let clampedY = min(
       max(preferredY, visibleFrame.minY + Self.bottomScreenInset),
       visibleFrame.maxY - panelSize.height - Self.topScreenInset)

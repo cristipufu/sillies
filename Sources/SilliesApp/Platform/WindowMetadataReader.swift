@@ -20,4 +20,9 @@ enum WindowMetadataReader {
   static func copyInfo(_ options: CGWindowListOption, _ reference: CGWindowID) -> [[String: Any]] {
     snapshot(options, reference)?.entries ?? []
   }
+
+  static func snapshot(for windowIDs: Set<CGWindowID>) -> WindowMetadataSnapshot? {
+    dispatchPrecondition(condition: .notOnQueue(.main))
+    return client.read(.windows(windowIDs.sorted()))
+  }
 }

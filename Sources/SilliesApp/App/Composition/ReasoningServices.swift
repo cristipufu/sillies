@@ -1,5 +1,6 @@
 import Foundation
 import SilliesCore
+import SilliesDiagnostics
 import SilliesInference
 import SilliesModelStore
 import SilliesReasoning
@@ -16,7 +17,10 @@ import SilliesTextModels
     }
   }
 
-  init(defaults: UserDefaults = .standard, directory: URL? = nil) {
+  init(
+    defaults: UserDefaults = .standard, directory: URL? = nil,
+    diagnostics: DiagnosticSink = .disabled
+  ) {
     let support =
       directory
       ?? FileManager.default.homeDirectoryForCurrentUser
@@ -26,7 +30,11 @@ import SilliesTextModels
       save: { defaults.set($0, forKey: TextModelPreference.key) })
     let models = TextModelEnvironment(
       store: ModelStore(root: support), preference: preference,
-      providers: [MLXTextModelProvider()])
+      providers: [MLXTextModelProvider()], diagnostics: diagnostics,
+      calibration: TextCalibrationStore(
+        directory: support.appendingPathComponent("Calibration"),
+        helper: Bundle.main.bundleURL.appendingPathComponent(
+          "Contents/Helpers/SilliesTextInference.app/Contents/MacOS/SilliesTextInference")))
     self.models = models
     let service = LocalReasoningService(resolveBackend: { await models.backend() }, turns: turns)
     reasoning = service
@@ -34,10 +42,12 @@ import SilliesTextModels
   func makeConversation(
     tools: [any ConversationTool],
     history: any ConversationRepository,
-    historyTools: @escaping @Sendable (ChatContext) -> [any ConversationTool] = { _ in [] }
+    historyTools: @escaping @Sendable (ChatContext) -> [any ConversationTool] = { _ in [] },
+    modelSelection: @escaping @Sendable () async -> String? = { nil }
   ) -> any ConversationResponding {
     LocalConversationService(
-      resolveBackend: { [models] in await models.backend() }, tools: tools, turns: turns,
+      resolveBackend: { [models] in await models.backend(overriding: modelSelection()) },
+      tools: tools + [ConversationClarificationTool()], turns: turns,
       history: .init(repository: history, tools: historyTools))
   }
 

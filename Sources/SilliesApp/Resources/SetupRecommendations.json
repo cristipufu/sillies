@@ -1,0 +1,62 @@
+[
+  {
+    "modelID": "gemma-4-e4b",
+    "revision": "475b9088d29754a3379866cf5aeb6b41acd313c2",
+    "score": 66.2
+  },
+  {
+    "modelID": "gemma-4-12b",
+    "revision": "73bcf09092aa277861d5a191b989b666f7f32e8f",
+    "score": 83.8
+  },
+  {
+    "modelID": "gemma-4-26b-a4b",
+    "revision": "0d77464eeb233a2da68ebf9d7dc4edaac7db956d",
+    "score": 97.3
+  },
+  {
+    "modelID": "granite-4.2-3b",
+    "revision": "0c6f39b1827afd5eb2c1c3b13751929857434953",
+    "score": 55.4
+  },
+  {
+    "modelID": "granite-4.2-8b",
+    "revision": "9047f073e46c527f70dade07bb55b1700d728e36",
+    "score": 74.3
+  },
+  {
+    "modelID": "lfm-2.5-2.6b",
+    "revision": "04efa23776ce61ec34ec95ec34c859854c89542b",
+    "score": 82.4
+  },
+  {
+    "modelID": "lfm-2.5-24b-a2b",
+    "revision": "667408d494bde191c2cb9dd4f4549827816b9275",
+    "score": 85.1
+  },
+  {
+    "modelID": "ministral-3-8b",
+    "revision": "182f003f01daa75f9de0f2c4d379722fd0bc1c61",
+    "score": 71.6
+  },
+  {
+    "modelID": "nemotron-3.5-bolt-e4b",
+    "revision": "0c204a16b6b186d1434e70f5fc2ca2e30984a006",
+    "score": 78.4
+  },
+  {
+    "modelID": "qwen-3.5-2b",
+    "revision": "674aaa7240b91e8012fcad5d791b7dfe5ba90207",
+    "score": 39.2
+  },
+  {
+    "modelID": "qwen-3.5-4b",
+    "revision": "32f3e8ecf65426fc3306969496342d504bfa13f3",
+    "score": 63.5
+  },
+  {
+    "modelID": "qwen-3.5-9b",
+    "revision": "938d8919941c6e7efd3c7150eff7fe9d12afa631",
+    "score": 70.3
+  }
+]

@@ -10,6 +10,8 @@ final class DownloadHTTPFixture: Sendable {
   private let queue = DispatchQueue(label: "sillies.download-fixture")
   private let listener: NWListener
   private let connections = Mutex<[NWConnection]>([])
+  private let offsets = Mutex<[Int]>([])
+  var requestedOffsets: [Int] { offsets.withLock { $0 } }
 
   init() throws {
     let parameters = NWParameters.tcp
@@ -86,6 +88,7 @@ final class DownloadHTTPFixture: Sendable {
     let start =
       range.flatMap { Int($0.dropFirst("range: bytes=".count).split(separator: "-")[0]) } ?? 0
     let offset = min(data.count, max(0, start))
+    offsets.withLock { $0.append(offset) }
     let status = offset > 0 ? "206 Partial Content" : "200 OK"
     let contentRange =
       offset > 0 ? "Content-Range: bytes \(offset)-\(data.count - 1)/\(data.count)\r\n" : ""

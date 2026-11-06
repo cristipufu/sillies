@@ -7,14 +7,15 @@ import SilliesVault
   let environment: SearchModelEnvironment
   let models: SearchModelsPresentation
   init(
-    conversations: ConversationLibrary, defaults: UserDefaults = .standard, directory: URL? = nil
+    conversations: ConversationLibrary, vault: VaultLibrary, defaults: UserDefaults = .standard,
+    directory: URL? = nil
   ) {
     let root =
       directory
       ?? FileManager.default.homeDirectoryForCurrentUser
       .appendingPathComponent("Library/Application Support/Sillies/SearchModels", isDirectory: true)
     let environment = SearchModelEnvironment(
-      store: ModelStore(root: root), conversations: conversations,
+      store: ModelStore(root: root), conversations: conversations, vault: vault,
       runtime: .init(
         inference: .shared,
         executable: Bundle.main.bundleURL.appendingPathComponent(

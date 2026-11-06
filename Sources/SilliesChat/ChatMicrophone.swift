@@ -4,7 +4,7 @@ import SilliesCore
 import SilliesSpeech
 
 /// Joins utterance callbacks and device teardown through the injected run-loop delivery.
-@MainActor final class ChatMicrophone {
+@MainActor package final class ChatMicrophone {
   private let services: ChatServices
   private var capture: (any ConversationCapture)?
   private var delivery: AudioSessionUpdateDelivery?
@@ -16,9 +16,9 @@ import SilliesSpeech
   private var finalResult: AudioCaptureResult?
   private var finishWaiters: [@MainActor (AudioCaptureResult?) -> Void] = []
 
-  init(services: ChatServices) { self.services = services }
+  package init(services: ChatServices) { self.services = services }
 
-  func start(language: String, receive: @escaping @MainActor (AudioCaptureUpdate) -> Void) {
+  package func start(language: String, receive: @escaping @MainActor (AudioCaptureUpdate) -> Void) {
     guard capture == nil, preparation == nil, !isFinalizing else { return }
     let token = UUID()
     generation = token
@@ -82,7 +82,7 @@ import SilliesSpeech
     }
   }
 
-  func finish(_ completion: @escaping @MainActor (AudioCaptureResult?) -> Void) {
+  package func finish(_ completion: @escaping @MainActor (AudioCaptureResult?) -> Void) {
     finishWaiters.append(completion)
     guard !isFinalizing else { return }
     isFinalizing = true

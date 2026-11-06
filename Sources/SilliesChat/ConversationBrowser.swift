@@ -8,25 +8,31 @@ package final class ConversationBrowser {
   package private(set) var page: ConversationPage?
   package private(set) var matches: [ConversationSearchMatch] = []
   package private(set) var isLoading = false
+  package private(set) var isSearching = false
+  package private(set) var searchedQuery = ""
   package private(set) var failure: String?
   package private(set) var focusedMessageID: UUID?
   private var sourceOwners: [UUID: UUID] = [:]
   private var requestID = UUID()
+  private var searchID = UUID()
   private let history: ChatHistory
 
   package init(history: ChatHistory) { self.history = history }
-  package func show(_ position: ConversationPageRequest.Position) async {
+  @discardableResult
+  package func show(_ position: ConversationPageRequest.Position) async -> Bool {
     guard let repository = history.configuration.conversations, let handle = history.handle else {
-      return
+      return false
     }
     let request = UUID()
     requestID = request
     isLoading = true
+    failure = nil
     defer { if request == requestID { isLoading = false } }
     do {
       try await history.flush()
+      guard requestID == request, history.handle == handle, !Task.isCancelled else { return false }
       let result = try await repository.page(.init(handle: handle, position: position))
-      guard requestID == request, history.handle == handle, !Task.isCancelled else { return }
+      guard requestID == request, history.handle == handle, !Task.isCancelled else { return false }
       page = result
       sourceOwners.removeAll(keepingCapacity: true)
       for entry in result.entries {
@@ -40,21 +46,57 @@ package final class ConversationBrowser {
         focusedMessageID = result.entries.first?.id
       }
       failure = nil
+      return true
+    } catch is CancellationError {
+      return false
     } catch {
       if requestID == request, history.handle == handle, !Task.isCancelled { report(error) }
+      return false
     }
   }
 
   package func search(_ query: String) async {
+    let request = UUID()
+    searchID = request
+    searchedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+    let submittedQuery = searchedQuery
+    matches = []
+    failure = nil
+    isSearching = false
+    guard !searchedQuery.isEmpty else {
+      isSearching = false
+      return
+    }
     guard let repository = history.configuration.conversations, let handle = history.handle else {
       return
     }
+    isSearching = true
+    defer { if request == searchID { isSearching = false } }
     do {
-      let found = try await repository.search(.init(companionID: handle.companionID, query: query))
-      guard !Task.isCancelled, handle == history.handle else { return }
+      try await history.flush()
+      guard !Task.isCancelled, handle == history.handle, searchID == request else { return }
+      let found = try await repository.search(
+        .init(companionID: handle.companionID, query: submittedQuery))
+      guard !Task.isCancelled, handle == history.handle, searchID == request else { return }
       matches = found
       failure = nil
-    } catch { if !Task.isCancelled { report(error) } }
+    } catch is CancellationError {
+      return
+    } catch {
+      if !Task.isCancelled, handle == history.handle, searchID == request { report(error) }
+    }
+  }
+
+  package func cancelSearch() {
+    searchID = UUID()
+    isSearching = false
+    matches = []
+    searchedQuery = ""
+  }
+
+  package func cancelNavigation() {
+    requestID = UUID()
+    isLoading = false
   }
 
   package func showLatest() {
@@ -64,12 +106,12 @@ package final class ConversationBrowser {
 
   package func reset() {
     resetPage()
-    matches = []
+    cancelSearch()
     failure = nil
   }
 
   private func resetPage() {
-    requestID = UUID()
+    cancelNavigation()
     page = nil
     focusedMessageID = nil
     isLoading = false

@@ -16,7 +16,7 @@ struct BenchmarkMemorySearch: Sendable {
   private static let indexDeadline: Duration = .seconds(45)
   private static let modelBytes: Int64 = 512 * 1024 * 1024
   private let worker: EmbeddingWorkerSession?
-  private let access: MemoryEmbeddingAccess?
+  private let access: SearchEmbeddingAccess?
 
   static func prepare(_ configuration: Configuration?) async throws -> Self {
     guard let configuration else { return .init(worker: nil, access: nil) }
@@ -38,14 +38,14 @@ struct BenchmarkMemorySearch: Sendable {
   func withIndex(in library: ConversationLibrary, work: () async throws -> Void) async throws {
     guard let access else { return try await work() }
     do {
-      try await library.useMemoryEmbeddings(access)
+      try await library.useSearchEmbeddings(access)
       try await waitForIndex(in: library)
       try await work()
     } catch {
-      try await library.useMemoryEmbeddings(nil)
+      try await library.useSearchEmbeddings(nil)
       throw error
     }
-    try await library.useMemoryEmbeddings(nil)
+    try await library.useSearchEmbeddings(nil)
   }
 
   func stop() async { await worker?.stop() }

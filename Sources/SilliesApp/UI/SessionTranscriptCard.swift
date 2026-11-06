@@ -8,6 +8,7 @@ struct SessionTranscriptCard<EmptyContent: View>: View {
   let isFinished: Bool
   @Binding var followsLive: Bool
   var title: String? = nil
+  var presentation: LiveTranscriptTextView.Presentation = .visible
   @ViewBuilder let emptyContent: () -> EmptyContent
 
   var body: some View {
@@ -32,7 +33,7 @@ struct SessionTranscriptCard<EmptyContent: View>: View {
         if text.isEmpty {
           emptyContent()
         } else {
-          LiveTranscriptTextView(text: text, followsLive: $followsLive)
+          LiveTranscriptTextView(text: text, followsLive: $followsLive, presentation: presentation)
         }
       }.frame(minHeight: Self.minimumHeight, maxHeight: .infinity)
     }

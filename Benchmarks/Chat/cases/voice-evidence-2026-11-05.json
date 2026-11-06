@@ -1,0 +1,268 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "talk-delivery-after-first",
+      "group": "spoken-continuity",
+      "mode": "talk",
+      "profiles": [
+        "app"
+      ],
+      "history": [
+        {
+          "role": "user",
+          "text": "Explain how to make tea in three steps."
+        },
+        {
+          "role": "assistant",
+          "text": "First heat the water. Next add the tea leaves. Finally steep for three minutes.",
+          "spokenText": "First heat the water.",
+          "interrupted": true
+        }
+      ],
+      "turns": [
+        {
+          "user": "Continue from where we stopped.",
+          "rubric": "Begin with adding the leaves, then steep for three minutes. Do not skip straight to steeping or repeat heating as the next instruction. Judge the first instruction and order, not mere word presence. Automatic lexical checks cannot certify this task.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "contains_all",
+              "values": [
+                "leaves",
+                "three minutes"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "talk-delivery-before-any",
+      "group": "spoken-continuity",
+      "mode": "talk",
+      "profiles": [
+        "app"
+      ],
+      "history": [
+        {
+          "role": "user",
+          "text": "Explain how to make tea in three steps."
+        },
+        {
+          "role": "assistant",
+          "text": "First heat the water. Next add the tea leaves. Finally steep for three minutes.",
+          "spokenText": "",
+          "interrupted": true
+        }
+      ],
+      "turns": [
+        {
+          "user": "Continue from where we stopped.",
+          "rubric": "No audio was confirmed. Begin with heating the water, then adding leaves, then steeping for three minutes. Do not assume the written answer was heard. Judge the first instruction and order, not mere word presence. Automatic lexical checks cannot certify this task.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "contains_all",
+              "values": [
+                "leaves",
+                "three minutes"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "talk-next-label-after-first",
+      "group": "spoken-continuity",
+      "mode": "talk",
+      "profiles": [
+        "app"
+      ],
+      "history": [
+        {
+          "role": "user",
+          "text": "Give me three labelled steps to prepare a cup of tea."
+        },
+        {
+          "role": "assistant",
+          "text": "Step A: Wash the cup. Step B: Place the tea bag in it. Step C: Pour in hot water.",
+          "spokenText": "Step A: Wash the cup.",
+          "interrupted": true
+        }
+      ],
+      "turns": [
+        {
+          "user": "Which step should you say next? Reply with its letter only.",
+          "rubric": "The next unheard step is B. Use confirmed audio delivery, not the end of the written answer. Respect the letter-only format.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "B"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "talk-next-label-before-any",
+      "group": "spoken-continuity",
+      "mode": "talk",
+      "profiles": [
+        "app"
+      ],
+      "history": [
+        {
+          "role": "user",
+          "text": "Give me three labelled steps to prepare a cup of tea."
+        },
+        {
+          "role": "assistant",
+          "text": "Step A: Wash the cup. Step B: Place the tea bag in it. Step C: Pour in hot water.",
+          "spokenText": "",
+          "interrupted": true
+        }
+      ],
+      "turns": [
+        {
+          "user": "Which step should you say next? Reply with its letter only.",
+          "rubric": "The next unheard step is A. Use confirmed audio delivery, not the end of the written answer. Respect the letter-only format.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "reply_equals",
+              "values": [
+                "A"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "empty-vault-then-general",
+      "group": "evidence",
+      "profiles": [
+        "app"
+      ],
+      "turns": [
+        {
+          "user": "Look in my Vault once for the Orchid launch meeting. If nothing matches, say so without trying again.",
+          "rubric": "Perform at most one lookup, admit the absence and invent no meeting, URL or decision.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault"
+              ]
+            },
+            {
+              "kind": "tool_calls_at_most",
+              "values": [
+                "1"
+              ]
+            },
+            {
+              "kind": "source_equals",
+              "values": []
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        },
+        {
+          "user": "What is photosynthesis?",
+          "rubric": "Explain that plants use light to turn water and carbon dioxide into sugars, releasing oxygen. Answer general knowledge without pretending it came from the empty Vault.",
+          "checks": [
+            {
+              "kind": "no_tools"
+            },
+            {
+              "kind": "source_equals",
+              "values": []
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "light",
+                "sunlight"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "historical-vault-versus-present",
+      "group": "evidence",
+      "profiles": [
+        "app"
+      ],
+      "records": [
+        {
+          "id": "475fd4a6-6198-4c8a-aac4-9dc23ca082be",
+          "kind": "listen",
+          "app": "Meet",
+          "title": "Cedar planning on October 3",
+          "text": "On October 3, Nia said the next delivery was planned for October 12. No later status was recorded.",
+          "links": []
+        }
+      ],
+      "turns": [
+        {
+          "user": "What delivery date was planned in the Cedar meeting?",
+          "rubric": "Find the saved Cedar meeting and state October 12 as a planned date. Do not present this historical plan as proof of completion.",
+          "checks": [
+            {
+              "kind": "required_tools",
+              "values": [
+                "search_vault"
+              ]
+            },
+            {
+              "kind": "source_equals",
+              "values": [
+                "475fd4a6-6198-4c8a-aac4-9dc23ca082be"
+              ]
+            },
+            {
+              "kind": "contains_any",
+              "values": [
+                "October 12",
+                "12 October"
+              ]
+            },
+            {
+              "kind": "no_writes"
+            }
+          ]
+        },
+        {
+          "user": "So did the delivery actually happen?",
+          "rubric": "The available evidence gives a plan only. State that completion is unknown; do not infer success simply because a planned date passed. A follow-up read/search is allowed.",
+          "checks": [
+            {
+              "kind": "no_writes"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

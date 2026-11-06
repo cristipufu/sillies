@@ -4,23 +4,27 @@ import SilliesCore
 import SwiftUI
 
 enum ChatWindowLayout {
-  static let talkSize = CGSize(width: 360, height: 340)
   static let initialSize = CGSize(width: 400, height: 560)
   static let minimumSize = CGSize(width: 360, height: 440)
 }
 
 @MainActor final class ChatSessionWindowController: NSObject, NSWindowDelegate {
   private let appearance: ThemeEnvironment
-  init(appearance: ThemeEnvironment) {
+  private let reading: ChatReadingPreferences
+  init(appearance: ThemeEnvironment, reading: ChatReadingPreferences) {
     self.appearance = appearance
+    self.reading = reading
     super.init()
   }
 
   private static let animationDuration: TimeInterval = 0.18
   private static let entranceOffset: CGFloat = 14
   private var animationID = UUID()
+  private var presentationRequested = false
+  private var observedMode: ConversationMode?
   private(set) var window: CompanionUtilityWindow?
   private let bubble = ConversationBubblePresentation()
+  private let exporter = ConversationExportController()
   private var anchor: ConversationCompanionAnchor?
   private weak var displayedSession: ChatSession?
   let dismissal = ConversationWindowDismissal()
@@ -35,6 +39,7 @@ enum ChatWindowLayout {
     anchor: ConversationCompanionAnchor? = nil
   ) {
     prepare(model, openSettings: openSettings, renderer: renderer, vault: vault, anchor: anchor)
+    presentationRequested = true
     reveal()
     NSApp.activate(ignoringOtherApps: true)
   }
@@ -68,16 +73,26 @@ enum ChatWindowLayout {
     if let anchor { attach(to: anchor) }
     window?.title = String(localized: "Sillies · Chat with \(model.companionName)")
     if displayedSession !== model {
+      exporter.cancel()
       dismissal.stop()
       let view = ThemedHostingView(
         rootView: ConversationBubbleView(
           presentation: bubble,
           content: ChatSessionView(
-            model: model, openSettings: openSettings, renderer: renderer,
-            motion: reducesMotion ? .reduced : .animated, vault: vault)), appearance: appearance)
+            model: model, openSettings: openSettings,
+            close: { [weak self] in self?.dismissConversation() }, renderer: renderer,
+            motion: reducesMotion ? .reduced : .animated, vault: vault,
+            exportConversation: { [weak self, weak model] in
+              guard let self, let model, let window = self.window else { return }
+              self.exporter.chooseFile(for: model.export, parent: window)
+            },
+            readingPreference: Binding(
+              get: { [reading] in reading.size }, set: { [reading] in reading.size = $0 }))),
+        appearance: appearance)
       view.sizingOptions = []
       window?.contentView = view
       displayedSession = model
+      observedMode = nil
       observeMode(model)
     }
   }
@@ -90,15 +105,11 @@ enum ChatWindowLayout {
     guard let window else { return }
     AppContentWindowStacking.shared.setBackgroundLevel(
       CompanionPanel.hudLevel(forWindowLayer: anchor.windowLayer), for: window)
-    let minimumSize = windowSize(
-      displayedSession?.mode == .talk ? ChatWindowLayout.talkSize : ChatWindowLayout.minimumSize,
-      edge: anchor.edge)
+    let minimumSize = windowSize(ChatWindowLayout.minimumSize, edge: anchor.edge)
     if window.contentMinSize != minimumSize { window.contentMinSize = minimumSize }
     let layout = ConversationBubbleLayout(
       anchor: anchor.position,
-      size: windowSize(
-        displayedSession?.mode == .talk
-          ? ChatWindowLayout.talkSize : ChatWindowLayout.initialSize, edge: anchor.edge),
+      size: windowSize(ChatWindowLayout.initialSize, edge: anchor.edge),
       visibleFrame: anchor.visibleFrame, edge: anchor.edge)
     if bubble.tail != layout.tail { bubble.tail = layout.tail }
     if bubble.tailOffset != layout.tailOffset { bubble.tailOffset = layout.tailOffset }
@@ -120,6 +131,14 @@ enum ChatWindowLayout {
   }
   private func observeMode(_ model: ChatSession) {
     if let anchor { attach(to: anchor) }
+    if observedMode != model.mode {
+      observedMode = model.mode
+      if model.mode == .talk {
+        window?.orderOut(nil)
+      } else if presentationRequested, window?.isVisible == false {
+        reveal()
+      }
+    }
     updateDismissal()
     withObservationTracking {
       _ = model.mode
@@ -155,24 +174,23 @@ enum ChatWindowLayout {
   }
   func dismissConversation() {
     dismissal.stop()
-    displayedSession?.onFinish?()
+    if displayedSession?.mode == .chat { displayedSession?.onFinish?() }
     if window != nil { close() }
   }
   private func updateDismissal() {
-    guard let window, window.isVisible, displayedSession?.mode == .chat else {
+    guard let window, window.isVisible, displayedSession != nil else {
       dismissal.stop()
       return
     }
     if !dismissal.isMonitoring {
       dismissal.start(window: window) { [weak self] in
-        guard self?.displayedSession?.mode == .chat else { return }
         self?.dismissConversation()
       }
     }
   }
   func windowWillClose(_ notification: Notification) {
+    presentationRequested = false
     dismissal.stop()
-    displayedSession?.stopVoiceConversation()
   }
   private func composer(in view: NSView?) -> ChatComposerTextView? {
     if let composer = view as? ChatComposerTextView { return composer }
@@ -185,11 +203,14 @@ enum ChatWindowLayout {
     if displayedSession === session { close() }
   }
   func close() {
+    exporter.cancel()
+    presentationRequested = false
     dismissal.stop()
     animationID = UUID()
     guard let closing = window else { return }
     window = nil
     displayedSession = nil
+    observedMode = nil
     anchor = nil
     closing.delegate = nil
     closing.ignoresMouseEvents = true

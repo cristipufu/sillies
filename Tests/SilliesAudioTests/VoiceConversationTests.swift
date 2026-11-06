@@ -189,10 +189,11 @@ private final class ConversationRecognizer: LocalSpeechChannel {
   #expect(result.withLock { $0?.failure } == nil)
 }
 
-private enum ConversationSignal { case speech, silence }
+enum ConversationSignal { case speech, silence }
 
 /// Deterministic voiced harmonics exercise the real VAD and queue, without a device or model.
-private func conversationAudio(_ signal: ConversationSignal) throws -> AudioCaptureInputQueue.Packet
+func conversationAudio(_ signal: ConversationSignal, at time: TimeInterval = 100) throws
+  -> AudioCaptureInputQueue.Packet
 {
   let rate = 16_000
   let frames = rate
@@ -216,7 +217,7 @@ private func conversationAudio(_ signal: ConversationSignal) throws -> AudioCapt
       formatDescriptionOut: &description) == noErr)
   var timing = CMSampleTimingInfo(
     duration: CMTime(value: 1, timescale: Int32(rate)),
-    presentationTimeStamp: CMTime(seconds: 100, preferredTimescale: Int32(rate)),
+    presentationTimeStamp: CMTime(seconds: time, preferredTimescale: Int32(rate)),
     decodeTimeStamp: .invalid)
   var sample: CMSampleBuffer?
   #expect(

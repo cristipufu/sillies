@@ -132,9 +132,10 @@ import Testing
       NSApp.appearance = appearance.native
       let scheme: ColorScheme = appearance == .dark ? .dark : .light
       try renderSkillInterface(
-        ChatSessionView(model: session, openSettings: { _ in }, renderer: "cat").environment(
-          \.colorScheme, scheme
-        ).environment(\.silliesTheme, environment.palette),
+        ChatSessionView(model: session, openSettings: { _ in }, close: {}, renderer: "cat")
+          .environment(
+            \.colorScheme, scheme
+          ).environment(\.silliesTheme, environment.palette),
         size: ChatWindowLayout.minimumSize, name: "sillies-chat-\(theme.id)-\(appearance.rawValue)")
       try renderSkillInterface(
         ScrollView { AppearanceSettingsPage(model: preferences).padding(24) }

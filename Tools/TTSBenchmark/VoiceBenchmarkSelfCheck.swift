@@ -8,6 +8,7 @@ enum VoiceBenchmarkSelfCheck {
     "2dc6ad64a41cf5fa205222c306fccc1e62685dd486a3923bcff6657587119f4e"
 
   static func run() async throws {
+    try await InstallationSelfCheck.run()
     let origin = ProcessInfo.processInfo.systemUptime - 2
     let samples = VoiceProfileSamples(delivery: .drain, startedAt: origin)
     let first = Float(bitPattern: 0x3dcc_cccd)
@@ -33,10 +34,15 @@ enum VoiceBenchmarkSelfCheck {
     }
     try await checkTextEvidence()
     try VoiceConversationBenchmark.validateDelivery("One. Two!", phrases: ["One.", "Two!"])
-    do {
-      try VoiceConversationBenchmark.validateDelivery("One. Two!", phrases: ["One.", "One."])
-      throw TextModelError.invalidResponse
-    } catch TTSError.unavailable {}
+    try VoiceConversationBenchmark.validateDelivery(
+      "À 14:30, ouvre https://example.org/a. Ștefan arrive.",
+      phrases: ["À 14:30, ouvre https://example.org/a.", "Ștefan arrive."])
+    for broken in [["One.", "One."], ["Two!", "One."], ["One."], ["One.", "", "Two!"], []] {
+      do {
+        try VoiceConversationBenchmark.validateDelivery("One. Two!", phrases: broken)
+        throw TextModelError.invalidResponse
+      } catch TTSError.unavailable {}
+    }
     print("Voice benchmark timing, Float32 evidence and streamed-text validation: passed")
   }
 

@@ -17,27 +17,49 @@ extension ConversationDatabase {
       let saved = CompanionMemory(
         replacing: previous, fact: .init(key: previous?.key ?? key, value: request.value),
         source: request.source, savedAt: request.savedAt)
-      try writeMemory(saved, owner: request.handle.companionID)
-      let receipt = MemoryReceipt(
-        handle: request.handle, id: UUID(), previous: previous, saved: saved)
-      let receiptData = try encoder.encode(receipt)
-      guard receiptData.count <= Self.maximumMemoryReceiptBytes else {
-        throw ConversationStorageError.invalidData
-      }
-      try sql.execute(
-        "INSERT INTO memory_changes(id,owner,body) VALUES(?,?,?)",
-        [
-          .text(receipt.id.uuidString), .text(request.handle.companionID),
-          .data(receiptData),
-        ])
-      try sql.execute(
-        "DELETE FROM memory_changes WHERE owner=? AND sequence NOT IN (SELECT sequence FROM memory_changes WHERE owner=? ORDER BY sequence DESC LIMIT ?)",
-        [
-          .text(request.handle.companionID), .text(request.handle.companionID),
-          .integer(Int64(Self.maximumRecentMemoryChanges)),
-        ])
-      return receipt
+      return try recordMemory(saved, replacing: previous, handle: request.handle)
     }
+  }
+
+  public func correctMemory(_ correction: MemoryCorrection) throws -> MemoryCorrectionResult {
+    try sql.transaction {
+      try validate(correction.handle)
+      let previous = try replacementMemory(correction.target, handle: correction.handle)
+      let fact = MemoryFact(key: previous.key, value: correction.value)
+      guard fact.isValid else { throw ConversationStorageError.invalidData }
+      let saved = CompanionMemory(
+        replacing: previous, fact: fact, source: previous.source.correctedByUser(),
+        savedAt: correction.savedAt)
+      // Reject any background checkpoint prepared from the superseded fact.
+      try invalidateSummary(correction.handle.companionID)
+      let snapshot = try snapshot(correction.handle.companionID)
+      let receipt = try recordMemory(saved, replacing: previous, handle: snapshot.handle)
+      return .init(snapshot: snapshot, receipt: receipt)
+    }
+  }
+
+  private func recordMemory(
+    _ saved: CompanionMemory, replacing previous: CompanionMemory?, handle: ConversationHandle
+  ) throws -> MemoryReceipt {
+    try writeMemory(saved, owner: handle.companionID)
+    let receipt = MemoryReceipt(handle: handle, id: UUID(), previous: previous, saved: saved)
+    let receiptData = try encoder.encode(receipt)
+    guard receiptData.count <= Self.maximumMemoryReceiptBytes else {
+      throw ConversationStorageError.invalidData
+    }
+    try sql.execute(
+      "INSERT INTO memory_changes(id,owner,body) VALUES(?,?,?)",
+      [
+        .text(receipt.id.uuidString), .text(handle.companionID),
+        .data(receiptData),
+      ])
+    try sql.execute(
+      "DELETE FROM memory_changes WHERE owner=? AND sequence NOT IN (SELECT sequence FROM memory_changes WHERE owner=? ORDER BY sequence DESC LIMIT ?)",
+      [
+        .text(handle.companionID), .text(handle.companionID),
+        .integer(Int64(Self.maximumRecentMemoryChanges)),
+      ])
+    return receipt
   }
 
   public func forget(_ handle: ConversationHandle, id: UUID) throws -> ConversationSnapshot {
@@ -95,7 +117,7 @@ extension ConversationDatabase {
   }
 
   private func validateMemorySource(_ request: MemoryWrite) throws {
-    guard !request.sourceQuote.isEmpty,
+    guard request.source.attribution == .message, !request.sourceQuote.isEmpty,
       request.sourceQuote.count <= ChatContext.maximumMessageCharacters,
       request.sourceQuote.utf8.count <= ChatContext.maximumMessageBytes
     else {
@@ -122,7 +144,13 @@ extension ConversationDatabase {
       }
       return nil
     }
-    guard let previous = try memory(owner: request.handle.companionID, identity: .id(target.id)),
+    return try replacementMemory(target, handle: request.handle)
+  }
+
+  private func replacementMemory(
+    _ target: CompanionMemory.Reference, handle: ConversationHandle
+  ) throws -> CompanionMemory {
+    guard let previous = try memory(owner: handle.companionID, identity: .id(target.id)),
       previous.revision == target.revision
     else { throw MemoryMutationError.replacementChanged }
     return previous

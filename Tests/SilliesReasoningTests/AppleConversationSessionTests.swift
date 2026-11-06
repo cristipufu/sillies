@@ -162,3 +162,55 @@ private struct TurnTool: ConversationTool {
   let activity = "Reading"
   func call(arguments: Data) async throws -> ConversationToolOutput { .init(text: value) }
 }
+
+@Test func appleClarificationRebuildsNativeStateWhileKeepingTheCanonicalConversation() async throws
+{
+  let creations = Mutex(0)
+  let sessions = AppleConversationSessions { _, invocation in
+    creations.withLock { $0 += 1 }
+    return ClarificationSessionFixture(invocation: invocation)
+  }
+  let lifetime = TextModelLifetime()
+  await sessions.retain(for: lifetime)
+  let tool = ConversationClarificationTool()
+  func request(_ messages: [TextMessage]) -> TextGenerationRequest {
+    .init(
+      conversation: .init(
+        instructions: "Clarify ambiguity", messages: messages, tools: [tool.definition]),
+      maximumTokens: 100, style: .conversation
+    ).inSession(lifetime.id)
+  }
+  let first = request([.init(role: .user, content: "Ask")])
+  let tools = try ConversationToolbox(tools: [tool], progress: { _ in })
+  let answer = try await sessions.respond(first, tools: tools, receive: { _ in })
+  let exchanges = await tools.exchanges
+  #expect(await tools.clarification != nil && exchanges.count == 1)
+  let next = request(
+    first.messages + TextMessage.exchanging(exchanges) + [
+      .init(role: .assistant, content: answer), .init(role: .user, content: "Planning"),
+    ])
+  let followup = try await sessions.respond(
+    next, tools: .init(tools: [tool], progress: { _ in }), receive: { _ in })
+  #expect(creations.withLock { $0 } == 2)
+  #expect(followup == "Planning")
+  await lifetime.end()
+}
+
+private struct ClarificationSessionFixture: AppleChatSession {
+  let invocation: AppleToolInvocation
+  func respond(_ request: TextGenerationRequest, receive: @escaping TextDeltaSink) async throws
+    -> String
+  {
+    guard request.prompt == "Ask" else { return request.prompt }
+    do {
+      return try await invocation.invoke(
+        .init(
+          id: "question", name: ConversationClarificationTool.name,
+          arguments: Data(
+            #"{"question":"Which meeting?","first_choice":"Planning","second_choice":"Review"}"#
+              .utf8)))
+    } catch let requested as ConversationClarificationRequested {
+      return requested.question.question
+    }
+  }
+}

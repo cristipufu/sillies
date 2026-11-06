@@ -8,6 +8,8 @@ struct ControlCenterView: View {
     let openSettings: () -> Void
     var openVault: () -> Void = {}
     var openWriting: () -> Void = {}
+    var openConversation: (ConversationMode) -> Void = { _ in }
+    var openSetup: () -> Void = {}
     let quit: () -> Void
   }
   let controller: CompanionController
@@ -101,19 +103,19 @@ struct ControlCenterView: View {
         }
       }
 
-      Button {
-        controller.greet()
-      } label: {
-        HStack(spacing: 8) {
-          Image(systemName: "hand.wave.fill").font(.system(size: 13))
-          Text("Say hello").font(.system(size: 12, weight: .semibold))
-          Spacer()
-          Text("They’re happy you’re here.").font(.system(size: 10)).opacity(0.8)
-        }.padding(.horizontal, 14).frame(height: 41)
-          .foregroundStyle(theme.onAccent)
-          .background(theme.accentFill, in: RoundedRectangle(cornerRadius: 12))
-      }.buttonStyle(.plain).disabled(
-        settings.paused || controller.liveCount == 0 || controller.isExcluded)
+      HStack(spacing: 10) {
+        Button("Chat", systemImage: "text.bubble") { actions.openConversation(.chat) }
+        Button("Talk", systemImage: "waveform") { actions.openConversation(.talk) }
+        Spacer()
+        Button {
+          controller.greet()
+        } label: {
+          Image(systemName: "hand.wave")
+        }
+        .help("Say hello").accessibilityLabel("Say hello")
+      }.buttonStyle(SoftButtonStyle())
+      Text("Double-click a companion for Chat or Talk.")
+        .font(.caption).foregroundStyle(theme.secondary)
 
       VStack(spacing: 14) {
         HStack {
@@ -158,7 +160,7 @@ struct ControlCenterView: View {
             Text("Session Vault & Drop Skills").font(.system(size: 11, weight: .semibold))
             Text(
               controller.savedRecordCount == 0
-                ? String(localized: "Drop a sillie on any window to snap, transcribe, or focus.")
+                ? String(localized: "Drag a companion onto a window to capture or listen.")
                 : String(
                   localized: "\(controller.savedRecordCount) saved captures, transcripts & stashes",
                   comment: "plural")
@@ -189,6 +191,8 @@ struct ControlCenterView: View {
         Text("A little company. All on your Mac.").font(.system(size: 9)).foregroundStyle(
           theme.secondary)
         Spacer()
+        Button("Start here", action: actions.openSetup).buttonStyle(.plain)
+          .font(.caption).foregroundStyle(theme.accent)
         Button(action: actions.openSettings) {
           Image(systemName: "slider.horizontal.3").font(.system(size: 12))
         }

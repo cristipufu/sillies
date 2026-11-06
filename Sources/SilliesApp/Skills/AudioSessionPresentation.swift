@@ -10,6 +10,7 @@ final class AudioSessionPresentation {
     case preparing, capturing, paused, finishing, finished
     case failed(SessionFailure)
   }
+  enum DetailPane: Hashable { case transcript, suggestions }
   let kind: CompanionSkillKind
   var model: SpeechModelDescriptor = .apple
   var diarizationModel: SpeechModelDescriptor?
@@ -25,6 +26,8 @@ final class AudioSessionPresentation {
   var suggestionsEnabled: Bool
   var suggestions: [MeetingSuggestion] = []
   var hasUnreadSuggestion = false
+  private(set) var detailPane: DetailPane = .transcript
+  private var isShowingDetails = false
   var currentBubbleSuggestion: MeetingSuggestion? {
     guard kind == .participate, phase == .capturing, suggestionsEnabled else { return nil }
     return suggestions.last
@@ -45,6 +48,23 @@ final class AudioSessionPresentation {
     self.kind = kind
     self.sourceLabel = sourceLabel
     suggestionsEnabled = kind == .participate
+  }
+
+  func selectDetailPane(_ pane: DetailPane) {
+    detailPane = pane
+    if pane == .suggestions { hasUnreadSuggestion = false }
+  }
+
+  func showDetails() {
+    isShowingDetails = true
+    if hasUnreadSuggestion { selectDetailPane(.suggestions) }
+  }
+
+  func hideDetails() { isShowingDetails = false }
+
+  func updateSuggestions(_ suggestions: [MeetingSuggestion]) {
+    self.suggestions = suggestions
+    hasUnreadSuggestion = !suggestions.isEmpty && (!isShowingDetails || detailPane != .suggestions)
   }
 
   var selectedLanguage: SpeechLanguage? { languages.first { $0.id == selectedLanguageID } }

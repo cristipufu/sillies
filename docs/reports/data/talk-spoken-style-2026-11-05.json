@@ -1,0 +1,399 @@
+{
+  "plan": {
+    "objective": "Validate production Talk prose and capability grounding against the previous prompt, without changing model sampling or filtering output.",
+    "models": [
+      "apple",
+      "qwen-3.5-4b"
+    ],
+    "arms": [
+      "baseline",
+      "candidate"
+    ],
+    "repeats": 2,
+    "cases": [
+      "talk-capabilities",
+      "talk-instructions",
+      "talk-general-explanation"
+    ],
+    "budgetSeconds": 600,
+    "turnTimeoutSeconds": 45,
+    "caseTimeoutSeconds": 90,
+    "candidatesAllowed": 1,
+    "success": "Both models produce useful natural spoken answers and no unsupported action claims; inspect every raw answer. Lexical checks alone do not qualify. No leaderboard update from this screen.",
+    "exhaustion": "Stop at 600 cumulative supervised seconds; retain all partial/failed cases. No prompt retries to fit these three cases.",
+    "baselineWorker": "build/chat-voice-2026-11-05/candidate-final/ChatModelBenchmark",
+    "comparisonLimit": "Correctness only; this screen does not compare build-mode latency."
+  },
+  "workers": {
+    "build/talk-controls-2026-11-05/candidate/ChatModelBenchmark": "636c65d8e4720053355c60999d374470a5bc4dd7cb800d06e7af3e2a2a1d81f3",
+    "build/chat-voice-2026-11-05/candidate-final/ChatModelBenchmark": "54c18afa9984e378bf6736346ffa72d83a483bfa7f24a146ba7b7bf5516997c3",
+    "build/talk-controls-2026-11-05/SilliesTextInference.app/Contents/MacOS/SilliesTextInference": "28962e36483eac28574c4ed9ac89054b9e02b8dc40e58027d3274ca7dac63de3"
+  },
+  "execution": {
+    "limitSeconds": 600,
+    "runs": [
+      {
+        "index": 0,
+        "variant": "candidate-apple",
+        "command": [
+          "python3",
+          "Benchmarks/Chat/benchmark.py",
+          "run",
+          "--corpus",
+          "build/talk-controls-2026-11-05/corpus",
+          "--output",
+          "build/talk-controls-2026-11-05/candidate-results",
+          "--worker",
+          "build/talk-controls-2026-11-05/candidate/ChatModelBenchmark",
+          "--helper",
+          "build/talk-controls-2026-11-05/SilliesTextInference.app/Contents/MacOS/SilliesTextInference",
+          "--models",
+          "apple",
+          "qwen-3.5-4b",
+          "--only-models",
+          "apple",
+          "--models-root",
+          "/tmp/sillies-extra-models",
+          "--repeats",
+          "2",
+          "--turn-timeout",
+          "45",
+          "--case-timeout",
+          "90",
+          "--startup-timeout",
+          "30",
+          "--max-seconds",
+          "75"
+        ],
+        "startedAt": "2026-11-05T08:37:53.565868+00:00",
+        "reservedSeconds": 180,
+        "status": "completed",
+        "exitCode": 0,
+        "elapsedSeconds": 22.421334416023456,
+        "log": "batch-00-candidate-apple.log",
+        "logSHA256": "5b25e8f76a0fc87a899d21b25baf3f5fb08363a7eb401e7bc37120bfef0e7b8e"
+      },
+      {
+        "index": 1,
+        "variant": "baseline-apple",
+        "command": [
+          "python3",
+          "Benchmarks/Chat/benchmark.py",
+          "run",
+          "--corpus",
+          "build/talk-controls-2026-11-05/corpus",
+          "--output",
+          "build/talk-controls-2026-11-05/baseline-results",
+          "--worker",
+          "build/chat-voice-2026-11-05/candidate-final/ChatModelBenchmark",
+          "--helper",
+          "build/talk-controls-2026-11-05/SilliesTextInference.app/Contents/MacOS/SilliesTextInference",
+          "--models",
+          "apple",
+          "qwen-3.5-4b",
+          "--only-models",
+          "apple",
+          "--models-root",
+          "/tmp/sillies-extra-models",
+          "--repeats",
+          "2",
+          "--turn-timeout",
+          "45",
+          "--case-timeout",
+          "90",
+          "--startup-timeout",
+          "30",
+          "--max-seconds",
+          "75"
+        ],
+        "startedAt": "2026-11-05T08:38:51.904986+00:00",
+        "reservedSeconds": 180,
+        "status": "completed",
+        "exitCode": 0,
+        "elapsedSeconds": 21.868452541995794,
+        "log": "batch-01-baseline-apple.log",
+        "logSHA256": "612c20257310d28bed5967d8f212b4ad34b10d1a84a57af9c764f4b79061bdb6"
+      },
+      {
+        "index": 2,
+        "variant": "candidate-qwen",
+        "command": [
+          "python3",
+          "Benchmarks/Chat/benchmark.py",
+          "run",
+          "--corpus",
+          "build/talk-controls-2026-11-05/corpus",
+          "--output",
+          "build/talk-controls-2026-11-05/candidate-results",
+          "--worker",
+          "build/talk-controls-2026-11-05/candidate/ChatModelBenchmark",
+          "--helper",
+          "build/talk-controls-2026-11-05/SilliesTextInference.app/Contents/MacOS/SilliesTextInference",
+          "--models",
+          "apple",
+          "qwen-3.5-4b",
+          "--only-models",
+          "qwen-3.5-4b",
+          "--models-root",
+          "/tmp/sillies-extra-models",
+          "--repeats",
+          "2",
+          "--turn-timeout",
+          "45",
+          "--case-timeout",
+          "90",
+          "--startup-timeout",
+          "30",
+          "--max-seconds",
+          "75"
+        ],
+        "startedAt": "2026-11-05T08:39:38.563558+00:00",
+        "reservedSeconds": 180,
+        "status": "completed",
+        "exitCode": 0,
+        "elapsedSeconds": 28.036230084020644,
+        "log": "batch-02-candidate-qwen.log",
+        "logSHA256": "16e0b76d75bf46e8e34b451a03c3602f3daf5528aa7b3eadbbd813ef54cb11ab"
+      },
+      {
+        "index": 3,
+        "variant": "baseline-qwen",
+        "command": [
+          "python3",
+          "Benchmarks/Chat/benchmark.py",
+          "run",
+          "--corpus",
+          "build/talk-controls-2026-11-05/corpus",
+          "--output",
+          "build/talk-controls-2026-11-05/baseline-results",
+          "--worker",
+          "build/chat-voice-2026-11-05/candidate-final/ChatModelBenchmark",
+          "--helper",
+          "build/talk-controls-2026-11-05/SilliesTextInference.app/Contents/MacOS/SilliesTextInference",
+          "--models",
+          "apple",
+          "qwen-3.5-4b",
+          "--only-models",
+          "qwen-3.5-4b",
+          "--models-root",
+          "/tmp/sillies-extra-models",
+          "--repeats",
+          "2",
+          "--turn-timeout",
+          "45",
+          "--case-timeout",
+          "90",
+          "--startup-timeout",
+          "30",
+          "--max-seconds",
+          "75"
+        ],
+        "startedAt": "2026-11-05T08:41:53.176369+00:00",
+        "reservedSeconds": 180,
+        "status": "completed",
+        "exitCode": 0,
+        "elapsedSeconds": 25.083760874986183,
+        "log": "batch-03-baseline-qwen.log",
+        "logSHA256": "0b5705a9ebcc5b1001245dda7eac7b929be308a4f3cce42faf198b40530584c7"
+      }
+    ]
+  },
+  "audit": {
+    "baseline": {
+      "archiveSHA256": "db77d64d621c0edda7eaf85b9a6ada95c34316b79adf3b2e6631eb31131edc52",
+      "corpusHash": "43d93abe81c9ff1cbaf9d341e1cdcf9289054f6c0e1f3f5cd426eb5e28a7222b",
+      "integrity": "recorded checks and primary metrics reproduced",
+      "meaning": "Integrity is not semantic correctness, statistical confidence or release readiness.",
+      "models": {
+        "apple": {
+          "completedCases": 6,
+          "plannedCases": 6,
+          "observedTurns": 6,
+          "primary": {
+            "cases": 6,
+            "passed": 0,
+            "turns": 6,
+            "errors": 0,
+            "checks": {
+              "behavior": {
+                "passed": 12,
+                "total": 18
+              },
+              "exact_answer": {
+                "passed": 0,
+                "total": 0
+              },
+              "lexical_anchor": {
+                "passed": 7,
+                "total": 8
+              }
+            },
+            "firstTextP50": 2.9484911670000002,
+            "firstTextP95": 3.5418501669999998,
+            "totalP50": 3.462725208,
+            "totalP95": 3.933907958
+          },
+          "reviews": {
+            "pass": 0,
+            "fail": 0,
+            "uncertain": 0,
+            "primaryTurns": 6,
+            "primaryReviewedTurns": 0,
+            "primaryRubricReviewedTurns": 0,
+            "legacyReplyOnlyReviews": 0,
+            "rubricCases": {
+              "pass": 0,
+              "fail": 0,
+              "pending": 6
+            }
+          },
+          "publishedReviewSummaryVerified": true,
+          "contextAnswerLeakage": []
+        },
+        "qwen-3.5-4b": {
+          "completedCases": 6,
+          "plannedCases": 6,
+          "observedTurns": 6,
+          "primary": {
+            "cases": 6,
+            "passed": 4,
+            "turns": 6,
+            "errors": 0,
+            "checks": {
+              "behavior": {
+                "passed": 18,
+                "total": 18
+              },
+              "exact_answer": {
+                "passed": 0,
+                "total": 0
+              },
+              "lexical_anchor": {
+                "passed": 6,
+                "total": 8
+              }
+            },
+            "firstTextP50": 2.106988875,
+            "firstTextP95": 5.598606333,
+            "totalP50": 3.74100725,
+            "totalP95": 6.050941166
+          },
+          "reviews": {
+            "pass": 0,
+            "fail": 0,
+            "uncertain": 0,
+            "primaryTurns": 6,
+            "primaryReviewedTurns": 0,
+            "primaryRubricReviewedTurns": 0,
+            "legacyReplyOnlyReviews": 0,
+            "rubricCases": {
+              "pass": 0,
+              "fail": 0,
+              "pending": 6
+            }
+          },
+          "publishedReviewSummaryVerified": true,
+          "contextAnswerLeakage": []
+        }
+      }
+    },
+    "candidate": {
+      "archiveSHA256": "6bf8f902928f7d982be82d138fa12f1d40c21615254debef26d1300809c9b065",
+      "corpusHash": "43d93abe81c9ff1cbaf9d341e1cdcf9289054f6c0e1f3f5cd426eb5e28a7222b",
+      "integrity": "recorded checks and primary metrics reproduced",
+      "meaning": "Integrity is not semantic correctness, statistical confidence or release readiness.",
+      "models": {
+        "apple": {
+          "completedCases": 6,
+          "plannedCases": 6,
+          "observedTurns": 6,
+          "primary": {
+            "cases": 6,
+            "passed": 0,
+            "turns": 6,
+            "errors": 0,
+            "checks": {
+              "behavior": {
+                "passed": 12,
+                "total": 18
+              },
+              "exact_answer": {
+                "passed": 0,
+                "total": 0
+              },
+              "lexical_anchor": {
+                "passed": 6,
+                "total": 8
+              }
+            },
+            "firstTextP50": 3.069607625,
+            "firstTextP95": 4.067970166,
+            "totalP50": 3.589126292,
+            "totalP95": 4.714308708
+          },
+          "reviews": {
+            "pass": 0,
+            "fail": 0,
+            "uncertain": 0,
+            "primaryTurns": 6,
+            "primaryReviewedTurns": 0,
+            "primaryRubricReviewedTurns": 0,
+            "legacyReplyOnlyReviews": 0,
+            "rubricCases": {
+              "pass": 0,
+              "fail": 0,
+              "pending": 6
+            }
+          },
+          "publishedReviewSummaryVerified": true,
+          "contextAnswerLeakage": []
+        },
+        "qwen-3.5-4b": {
+          "completedCases": 6,
+          "plannedCases": 6,
+          "observedTurns": 6,
+          "primary": {
+            "cases": 6,
+            "passed": 6,
+            "turns": 6,
+            "errors": 0,
+            "checks": {
+              "behavior": {
+                "passed": 18,
+                "total": 18
+              },
+              "exact_answer": {
+                "passed": 0,
+                "total": 0
+              },
+              "lexical_anchor": {
+                "passed": 8,
+                "total": 8
+              }
+            },
+            "firstTextP50": 2.29054425,
+            "firstTextP95": 10.6226015,
+            "totalP50": 3.189873666,
+            "totalP95": 11.478986417
+          },
+          "reviews": {
+            "pass": 0,
+            "fail": 0,
+            "uncertain": 0,
+            "primaryTurns": 6,
+            "primaryReviewedTurns": 0,
+            "primaryRubricReviewedTurns": 0,
+            "legacyReplyOnlyReviews": 0,
+            "rubricCases": {
+              "pass": 0,
+              "fail": 0,
+              "pending": 6
+            }
+          },
+          "publishedReviewSummaryVerified": true,
+          "contextAnswerLeakage": []
+        }
+      }
+    }
+  }
+}

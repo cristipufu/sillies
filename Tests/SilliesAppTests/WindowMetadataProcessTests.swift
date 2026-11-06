@@ -1,8 +1,77 @@
 import AppKit
 import QuartzCore
 import Testing
+import WindowMetadataProtocol
 
 @testable import SilliesApp
+
+@Test(arguments: 1...6) @MainActor
+func metadataExactLookupDistinguishesUnshownWindowsFromDestroyedWindows(_ cycle: Int)
+  async throws
+{
+  let client = WindowMetadataClient()
+  let owner = NSObject()
+  client.start(owner: ObjectIdentifier(owner))
+  defer { client.stop(owner: ObjectIdentifier(owner)) }
+  let fixture = try autoreleasepool { try MetadataWindowFixture() }
+  defer { fixture.destroy() }
+  let id = fixture.id
+  CATransaction.flush()
+  let hidden = await Task.detached {
+    client.read(.windows([id]))?.entries.compactMap {
+      WindowServerSource.ParsedWindowEntry(dictionary: $0)?.id
+    }
+  }.value
+  #expect(hidden == [id])
+  autoreleasepool {
+    fixture.destroy()
+    CATransaction.flush()
+  }
+  let deadline = ContinuousClock.now.advanced(by: .seconds(2))
+  var closed: Bool?
+  repeat {
+    closed = await Task.detached { client.read(.windows([id]))?.entries.isEmpty }.value
+    if closed == true { break }
+    try await Task.sleep(for: .milliseconds(10))
+  } while ContinuousClock.now < deadline
+  #expect(fixture.isDestroyed, "Window fixture must release its window in cycle \(cycle).")
+  #expect(closed == true, "WindowServer must retire the destroyed window in cycle \(cycle).")
+}
+
+/// Native ownership stays in synchronous scopes, outside the asynchronous test's assertions.
+@MainActor private final class MetadataWindowFixture {
+  let id: CGWindowID
+  private var window: NSWindow?
+  private weak var observedWindow: NSWindow?
+  var isDestroyed: Bool { observedWindow == nil }
+
+  init() throws {
+    let window = NSWindow(
+      contentRect: CGRect(x: 140, y: 140, width: 600, height: 400), styleMask: [.titled],
+      backing: .buffered, defer: false)
+    window.isReleasedWhenClosed = false
+    id = try #require(window.windowServerID)
+    self.window = window
+    observedWindow = window
+  }
+
+  func destroy() {
+    window?.close()
+    window = nil
+  }
+}
+
+@Test func metadataExactLookupRejectsInvalidAndUnboundedIdentifiers() async {
+  let client = WindowMetadataClient()
+  let owner = NSObject()
+  client.start(owner: ObjectIdentifier(owner))
+  defer { client.stop(owner: ObjectIdentifier(owner)) }
+  for ids: [UInt32] in [
+    [], [0], [1, 1], Array(1...UInt32(WindowMetadataRequest.maximumTargetWindows + 1)),
+  ] {
+    #expect(client.read(.windows(ids)) == nil)
+  }
+}
 
 @Test @MainActor
 func metadataProcessReadsExactWindowAndStopsWithItsLastOwner() async throws {

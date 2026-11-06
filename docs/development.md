@@ -4,7 +4,8 @@ Read `AGENTS.md` and the relevant ownership contract before changing a subsystem
 
 For an extension, start with the dedicated guide: [companions](contributing/companions.md),
 [interactions](contributing/interactions.md), [skills](contributing/skills.md),
-[speech models](contributing/speech-models.md), or [text models](contributing/text-models.md).
+[speech models](contributing/speech-models.md), [text models](contributing/text-models.md),
+[setup](contributing/setup.md), or [conversation UI](contributing/conversation-interface.md).
 The repository's [contribution guide](../CONTRIBUTING.md), [security policy](../SECURITY.md),
 [privacy policy](../PRIVACY.md), and [license notices](../THIRD_PARTY_NOTICES.md) describe the shared
 contributor and user-facing obligations. Keep them aligned with changes in data handling or dependencies.

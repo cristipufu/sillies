@@ -1,6 +1,6 @@
 # Add a local search model
 
-Search models encode text into vectors. They help a companion find saved memories by meaning;
+Search models encode text into vectors. They help a companion find saved memories and Vault passages by meaning;
 they do not generate replies, create memories or change the selected chat model.
 
 Sillies uses Apple Natural Language assets by default. Multilingual E5 Small is an optional download
@@ -90,3 +90,28 @@ index inside each temporary fixture, waits for bounded preparation, then uses th
 tool. Omitting it preserves keyword-only controls. Freeze this configuration and its artifact
 hashes with the evaluator; it must never contain expected answers. See the
 [production validation report](../reports/search-memory-and-prefix-profiles-2026-11-04.md).
+
+## Vault passages
+
+The Vault uses the same `SearchEmbeddingAccess` capability as saved memories. SQLite schema 2
+adds revision-owned, overlapping passages of at most 1,200 Unicode scalars. The worker reads one
+slice from the indexed document, embeds one pending passage, and yields. It never decodes the
+full record body to index or rank it. The source retains the FTS row identity so advancing a long
+record does not scan every document. Keyword and semantic readers remain separate from writes.
+
+Updates invalidate passages in the record transaction; deletion cascades to vectors. A completed
+embedding must still match its passage revision. Progress survives restarts, and a provider change
+rebuilds incompatible vectors. Both durable producers share bounded helper admission; interactive
+queries use keywords when the helper is occupied or the 150 ms deadline expires.
+
+Vault search preserves keyword matches and fills remaining result slots with semantic candidates,
+with one best passage per record. Exact URL listing keeps its literal contract. The Vault browser
+shows additional candidates under **Related by meaning**. Tool output identifies semantic candidates
+and keeps their full bounded passage; it must not clip a distant detail to the keyword snippet length.
+Similarity is not factual confidence: an unrelated nearest neighbor can be returned. Report negative
+queries separately and do not invent a universal similarity cutoff across embedding models.
+
+`MemorySearchBenchmark` also accepts `"scope": "vault"` in its synthetic input. Expected results
+remain outside the worker. Run both stores' persistence/lifecycle tests, including shared admission,
+late Unicode passages, edit/delete races and version-one backfill. Index preparation uses an
+indeterminate progress indicator because total passage count is discovered incrementally.

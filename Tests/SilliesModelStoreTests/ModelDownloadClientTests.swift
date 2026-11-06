@@ -70,6 +70,9 @@ final class ModelDownloadClientTests: XCTestCase, @unchecked Sendable {
     defer { remove(file) }
     XCTAssertEqual(try Data(contentsOf: file), server.data)
     XCTAssertFalse(FileManager.default.fileExists(atPath: request.resumeFile.path))
+    XCTAssertEqual(server.requestedOffsets.first, 0)
+    XCTAssertGreaterThan(
+      try XCTUnwrap(server.requestedOffsets.last), 0, "Resume restarted the file")
   }
 
   func testOversizedTransferFailsWithoutPublishingOversizedProgress() async throws {

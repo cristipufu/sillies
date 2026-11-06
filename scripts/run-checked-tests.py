@@ -28,6 +28,9 @@ class NativeTestRunner:
         self.xctest = subprocess.check_output(["xcrun", "--find", "xctest"], text=True).strip()
         environment = dict(os.environ)
         environment["SILLIES_TEST_PRESENTATION"] = options.presentation
+        # Read the current build products, not stale resource copies embedded by an incremental
+        # SwiftPM test-bundle build. This is SwiftPM's supported debug resource lookup override.
+        environment["PACKAGE_RESOURCE_BUNDLE_PATH"] = str(options.bin_path)
         for key, location in [("DYLD_FRAMEWORK_PATH", platform / "Library/Frameworks"),
                               ("DYLD_LIBRARY_PATH", platform / "usr/lib")]:
             environment[key] = str(location) + (":" + environment[key] if environment.get(key) else "")

@@ -6,14 +6,14 @@ enum EmbeddingRuntimeFactory {
     -> any PreparedEmbeddingModel
   {
     switch configuration.provider {
-    case "apple": return AppleMemoryEmbedding()
+    case "apple": return AppleSearchEmbedding()
     case "e5":
       guard let directory = configuration.directory, directory.isFileURL else {
-        throw MemoryEmbeddingError.unavailable
+        throw SearchEmbeddingError.unavailable
       }
-      return try await E5MemoryEmbedding.load(
+      return try await E5SearchEmbedding.load(
         directory: directory, identity: configuration.identity)
-    default: throw MemoryEmbeddingError.unavailable
+    default: throw SearchEmbeddingError.unavailable
     }
   }
 }

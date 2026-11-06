@@ -125,13 +125,7 @@ package actor TTSModelRegistry {
         return false
       }
     case .synthesis:
-      guard
-        await activity.claimSynthesis(
-          id, reservation: reservation, cancel: { cancellation.cancel() })
-      else {
-        try Task.checkCancellation()
-        throw TTSError.busy
-      }
+      try await admitSynthesis(id, reservation: reservation, cancellation: cancellation)
     }
     do {
       try Task.checkCancellation()
@@ -146,6 +140,20 @@ package actor TTSModelRegistry {
       await activity.releaseSynthesis(id)
       try Task.checkCancellation()
       throw error
+    }
+  }
+
+  private func admitSynthesis(
+    _ id: UUID, reservation: InferenceReservation, cancellation: InferenceCancellation
+  ) async throws {
+    while true {
+      try Task.checkCancellation()
+      try await activity.waitForSynthesisAdmission()
+      if await activity.claimSynthesis(
+        id, reservation: reservation, cancel: { cancellation.cancel() })
+      {
+        return
+      }
     }
   }
 

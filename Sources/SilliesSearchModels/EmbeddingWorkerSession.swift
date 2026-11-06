@@ -18,6 +18,7 @@ package actor EmbeddingWorkerSession {
   var isBusy: Bool { operation != nil }
   private var stopped = false
   private var warming: Task<Void, Never>?
+  private let admission = EmbeddingAdmission()
 
   package init(
     configuration: EmbeddingConfiguration, executable: URL,
@@ -29,9 +30,9 @@ package actor EmbeddingWorkerSession {
     reservation = .init(modelBytes: modelBytes)
   }
 
-  package func access() async throws -> MemoryEmbeddingAccess {
+  package func access() async throws -> SearchEmbeddingAccess {
     _ = try await exchange(.prepare(configuration), timeout: Self.preparationTimeout)
-    guard let identity else { throw MemoryEmbeddingError.unavailable }
+    guard let identity else { throw SearchEmbeddingError.unavailable }
     return .init(
       identity: identity,
       embed: { [weak self] input in
@@ -40,11 +41,24 @@ package actor EmbeddingWorkerSession {
       })
   }
 
-  private func embed(_ input: MemoryEmbeddingInput) async throws -> MemoryEmbedding? {
+  private func embed(_ input: SearchEmbeddingInput) async throws -> SearchEmbedding? {
+    try await admission.acquire(input.purpose)
+    do {
+      try Task.checkCancellation()
+      let value = try await performEmbedding(input)
+      await admission.release()
+      return value
+    } catch {
+      await admission.release()
+      throw error
+    }
+  }
+
+  private func performEmbedding(_ input: SearchEmbeddingInput) async throws -> SearchEmbedding? {
     // Interactive queries use keywords if a model is cold or its worker is occupied.
     if input.purpose == .query, worker == nil || isBusy {
       if worker == nil, !isBusy, !stopped { warmInBackground() }
-      throw MemoryEmbeddingError.unavailable
+      throw SearchEmbeddingError.unavailable
     }
     if input.purpose == .passage, let warming {
       await withTaskCancellationHandler {
@@ -62,7 +76,7 @@ package actor EmbeddingWorkerSession {
     -> EmbeddingResponse
   {
     guard !stopped else { throw CancellationError() }
-    guard !isBusy else { throw MemoryEmbeddingError.unavailable }
+    guard !isBusy else { throw SearchEmbeddingError.unavailable }
     let pending = Task { try await admittedExchange(request, timeout: timeout) }
     operation = pending
     defer { operation = nil }
@@ -89,7 +103,7 @@ package actor EmbeddingWorkerSession {
       guard await activity.claimEmbedding(id, priority: priority, cancel: { cancellation.cancel() })
       else {
         if case .embed(let input) = request, input.purpose == .query {
-          throw MemoryEmbeddingError.unavailable
+          throw SearchEmbeddingError.unavailable
         }
         try await activity.waitForEmbeddingAdmission(priority)
         continue
@@ -128,7 +142,7 @@ package actor EmbeddingWorkerSession {
       try Task.checkCancellation()
       worker = try InferenceWorkerConnection(executable: executable)
     }
-    guard let worker else { throw MemoryEmbeddingError.unavailable }
+    guard let worker else { throw SearchEmbeddingError.unavailable }
     return try await withTaskCancellationHandler {
       do {
         if case .embed = request, identity != nil {
@@ -138,9 +152,9 @@ package actor EmbeddingWorkerSession {
         let response = try await send(request, worker: worker, timeout: timeout)
         if case .prepare = request {
           guard let value = response.identity, !value.isEmpty else {
-            throw MemoryEmbeddingError.unavailable
+            throw SearchEmbeddingError.unavailable
           }
-          guard identity == nil || identity == value else { throw MemoryEmbeddingError.unavailable }
+          guard identity == nil || identity == value else { throw SearchEmbeddingError.unavailable }
           identity = value
           prepared = true
         }
@@ -178,7 +192,7 @@ package actor EmbeddingWorkerSession {
   private func prepare(_ worker: InferenceWorkerConnection) async throws -> EmbeddingResponse {
     let response = try await send(
       .prepare(configuration), worker: worker, timeout: Self.preparationTimeout)
-    guard response.identity == identity else { throw MemoryEmbeddingError.unavailable }
+    guard response.identity == identity else { throw SearchEmbeddingError.unavailable }
     prepared = true
     return response
   }
@@ -209,6 +223,7 @@ package actor EmbeddingWorkerSession {
   }
   package func stop() async {
     stopped = true
+    await admission.stop()
     let pending = warming
     let active = operation
     pending?.cancel()

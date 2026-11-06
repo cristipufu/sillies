@@ -169,10 +169,17 @@ struct SessionVaultView: View {
       } else {
         ScrollView {
           LazyVStack(spacing: 9) {
-            ForEach(records) { record in
+            ForEach(model.keywordRecords) { record in
               recordRow(record, isSelected: selected?.id == record.id)
             }
             if model.hasMoreResults { Button("Show more") { model.showMore() } }
+            if !model.relatedRecords.isEmpty {
+              Text("Related by meaning").font(.caption).foregroundStyle(theme.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 8)
+              ForEach(model.relatedRecords) { record in
+                recordRow(record, isSelected: selected?.id == record.id)
+              }
+            }
           }
           .padding(.vertical, 3)
           .padding(.horizontal, 1)

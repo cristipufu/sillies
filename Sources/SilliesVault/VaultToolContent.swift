@@ -17,6 +17,7 @@ enum VaultToolContent {
     let kind: String
     let excerpt: String
     let links: [URL]
+    let retrieval: VaultSearchMatch.Retrieval
     init(_ source: ChatSource, excerptLimit: Int) {
       recordID = source.id
       hasImage = source.imageFilename != nil
@@ -24,12 +25,15 @@ enum VaultToolContent {
       kind = source.kind.rawValue
       excerpt = String(source.excerpt.prefix(excerptLimit))
       links = source.links
+      retrieval = source.retrieval
     }
   }
 
   private struct SearchPage: Encodable {
     enum Status: String, Encodable { case matches, noMatches }
     let scope = "Personal records saved by the user; not web or general-knowledge search."
+    let relevance =
+      "Ranked keyword and semantic candidates may be unrelated. Answer only from excerpts that support the request. A similar passage is not proof of a fact."
     let status: Status
     let query: String
     let category: VaultSearchRequest.Category

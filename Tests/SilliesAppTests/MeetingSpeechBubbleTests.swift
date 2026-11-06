@@ -30,7 +30,9 @@ import Testing
   let state = CompanionBindingState.active(target: target, skill: .participate, startedAt: 0)
   let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
   func update(_ point: CGPoint) {
-    hud.update(state: state, companionPoint: point, characterSize: 64, visibleFrame: screen)
+    hud.update(
+      state: state,
+      anchor: .init(companionPoint: point, characterSize: 64, visibleFrame: screen))
   }
   update(CGPoint(x: 500, y: 600))
   let id = try #require(hud.speechBubble.windowNumber)
@@ -38,8 +40,7 @@ import Testing
   #expect(hud.speechBubble.isVisible)
   #expect(bubble.ignoresMouseEvents && !bubble.canBecomeKey && !bubble.canBecomeMain)
   #expect(WindowTrackingExclusions.shared.contains(UInt32(id)))
-  #expect(bubble.level.rawValue > CompanionPanel.normalOverlayLevel.rawValue)
-  #expect(bubble.level.rawValue < NSWindow.Level.floating.rawValue)
+  #expect(bubble.level == window.level)
   #expect(bubble.frame.height < 150)
   for step in 0..<120 { update(CGPoint(x: 500 + step, y: 600)) }
   #expect(hud.speechBubble.contentUpdates == 1)
@@ -77,33 +78,44 @@ import Testing
   #expect(session.currentBubbleSuggestion == nil)
 }
 
-@Test @MainActor func suggestionBubbleWrapsItsTextAndStaysAboveWalkingCompanions() throws {
+@Test @MainActor func suggestionBubbleWrapsTextAndInheritsActualCompanionLevel() throws {
   _ = NSApplication.shared
   let bubble = MeetingSpeechBubbleController(appearance: ThemeEnvironment())
   defer { bubble.close() }
-  let anchor = SuggestionBubbleLayout.Anchor(
+  let companion = NSWindow(
+    contentRect: .zero, styleMask: [.borderless], backing: .buffered, defer: false)
+  companion.isReleasedWhenClosed = false
+  defer { companion.close() }
+  companion.level = .normal
+  let anchor = CompanionSpeechBubbleLayout.Anchor(
     companionPoint: CGPoint(x: 300, y: 500), characterSize: 64,
     visibleFrame: CGRect(x: 0, y: 0, width: 1440, height: 900))
-  bubble.update(
+  bubble.prepare(
     suggestion: MeetingSuggestion(question: "Who owns this?", evidence: "Unassigned.", elapsed: 60),
-    placement: .init(anchor: anchor, windowLayer: 0))
+    placement: .init(anchor: anchor, companionWindow: companion))
   let panel = try #require(bubble.windowNumber.flatMap { NSApp.window(withWindowNumber: $0) })
   let compactSize = panel.frame.size
   #expect(compactSize.width < 250 && compactSize.height < 110)
-  bubble.update(
+  bubble.prepare(
     suggestion: MeetingSuggestion(
       question:
         "Who will take ownership of the customer follow-up, confirm the review deadline, and coordinate the proposal with the rest of the team before Friday?",
-      evidence: "Unassigned.", elapsed: 120), placement: .init(anchor: anchor, windowLayer: 0))
+      evidence: "Unassigned.", elapsed: 120),
+    placement: .init(anchor: anchor, companionWindow: companion))
   #expect(panel.frame.height > compactSize.height)
   #expect(panel.frame.width <= 300)
-  #expect(panel.level.rawValue > CompanionPanel.normalOverlayLevel.rawValue)
-  bubble.update(
+  #expect(panel.level == .normal)
+  companion.level = .floating
+  bubble.prepare(
     suggestion: MeetingSuggestion(
       question: "Who owns this?", evidence: "Unassigned.", elapsed: 180),
-    placement: .init(anchor: anchor, windowLayer: NSWindow.Level.floating.rawValue))
-  #expect(panel.level.rawValue > CompanionPanel.floatingOverlayLevel.rawValue)
-  #expect(panel.level.rawValue < CompanionPanel.contentWindowLevel.rawValue)
+    placement: .init(anchor: anchor, companionWindow: companion))
+  #expect(panel.level == companion.level)
+  companion.level = .normal
+  bubble.prepare(
+    suggestion: MeetingSuggestion(question: "Still here?", evidence: "test", elapsed: 200),
+    placement: .init(anchor: anchor, companionWindow: companion))
+  #expect(panel.level == .normal)
 }
 
 @Test(.enabled(if: ProcessInfo.processInfo.environment["SILLIES_UI_PREVIEW"] == "1"))
@@ -115,11 +127,11 @@ import Testing
     let host = NSHostingController(rootView: MeetingSpeechBubbleView(suggestion: suggestion))
     host.sizingOptions = []
     let size = host.sizeThatFits(in: CGSize(width: 300, height: CGFloat.greatestFiniteMagnitude))
-    let layout = SuggestionBubbleLayout(
+    let layout = CompanionSpeechBubbleLayout(
       anchor: .init(
         companionPoint: CGPoint(x: 200, y: 400), characterSize: 70,
         visibleFrame: CGRect(x: 0, y: 0, width: 1200, height: 900)), size: size)
-    let view = MeetingSpeechBubbleBackground(
+    let view = CompanionSpeechBubbleBackground(
       frame: CGRect(origin: .zero, size: size))
     view.appearance = NSAppearance(named: appearance)
     host.view.frame = view.bounds

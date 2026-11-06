@@ -11,6 +11,12 @@ package struct ConversationToolOutput: Sendable {
     return ([text] + alternatives + [briefText]).filter { seen.insert($0).inserted }
   }
   package private(set) var memoryReceipt: MemoryReceipt?
+  package private(set) var clarification: ChatClarification?
+  package func asking(_ question: ChatClarification) -> Self {
+    var copy = self
+    copy.clarification = question
+    return copy
+  }
   package func remembering(_ receipt: MemoryReceipt) -> Self {
     var copy = self
     copy.memoryReceipt = receipt

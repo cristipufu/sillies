@@ -20,6 +20,7 @@ actor SearchModelEnvironment {
   private static let appleReservationBytes: Int64 = 512 * 1024 * 1024
   let store: ModelStore
   private let conversations: ConversationLibrary
+  private let vault: VaultLibrary
   private let inference: InferenceActivity
   private let executable: URL
   private let saveSelection: @MainActor @Sendable (String) -> Void
@@ -35,11 +36,12 @@ actor SearchModelEnvironment {
   private var failure: String?
 
   init(
-    store: ModelStore, conversations: ConversationLibrary,
+    store: ModelStore, conversations: ConversationLibrary, vault: VaultLibrary,
     runtime: Runtime, selection: Selection
   ) {
     self.store = store
     self.conversations = conversations
+    self.vault = vault
     inference = runtime.inference
     executable = runtime.executable
     selected = selection.id
@@ -89,6 +91,7 @@ actor SearchModelEnvironment {
       return
     }
     try await conversations.rebuildMemoryIndex()
+    try await vault.rebuildSearchIndex()
   }
   func status() async throws -> SearchIndexStatus {
     if let failure { return .failed(failure) }
@@ -96,7 +99,14 @@ actor SearchModelEnvironment {
     guard active, pressure == .normal else { return .paused }
     let (progress, failure) = try await conversations.memoryIndexStatus()
     if let failure { return .failed(failure) }
-    return progress.map { .indexed($0) } ?? .preparing
+    let (vaultProgress, vaultFailure) = try await vault.searchIndexStatus()
+    if let vaultFailure { return .failed(vaultFailure) }
+    guard let progress, let vaultProgress else { return .preparing }
+    return .indexed(
+      .init(
+        processed: progress.processed + vaultProgress.processed,
+        searchable: progress.searchable + vaultProgress.searchable,
+        total: progress.total + vaultProgress.total))
   }
   private func setPressure(_ pressure: MemoryPressureMonitor.Pressure) async {
     self.pressure = pressure
@@ -140,15 +150,21 @@ actor SearchModelEnvironment {
       let access = try await runtime.access()
       try Task.checkCancellation()
       guard token == generation else { return }
-      try await conversations.useMemoryEmbeddings(access)
+      try await conversations.useSearchEmbeddings(access)
+      try Task.checkCancellation()
+      guard token == generation else { return }
+      try await vault.useSearchEmbeddings(access)
     } catch is CancellationError { return } catch {
       guard token == generation else { return }
       failure = error.localizedDescription
-      fputs("Memory search preparation failed: \(error)\n", stderr)
+      fputs("Search preparation failed: \(error)\n", stderr)
       let failed = session
       let acquired = lease
       session = nil
       lease = nil
+      retiringRuntimes += 1
+      defer { retiringRuntimes -= 1 }
+      await detachIndexes()
       await failed?.stop()
       await acquired?.close()
     }
@@ -165,18 +181,25 @@ actor SearchModelEnvironment {
     session = nil
     lease = nil
     pending?.cancel()
-    do { try await conversations.useMemoryEmbeddings(nil) } catch {
-      fputs("Memory search shutdown failed: \(error)\n", stderr)
-    }
+    await detachIndexes()
     await previous?.stop()
     await pending?.value
     await acquired?.close()
     return token
   }
+
+  private func detachIndexes() async {
+    do { try await conversations.useSearchEmbeddings(nil) } catch {
+      fputs("Memory search shutdown failed: \(error)\n", stderr)
+    }
+    do { try await vault.useSearchEmbeddings(nil) } catch {
+      fputs("Vault search shutdown failed: \(error)\n", stderr)
+    }
+  }
 }
 
 enum SearchIndexStatus: Sendable {
   case paused, preparing
-  case indexed(MemoryIndexProgress)
+  case indexed(SearchIndexProgress)
   case failed(String)
 }

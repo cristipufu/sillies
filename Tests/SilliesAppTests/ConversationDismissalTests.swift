@@ -60,7 +60,8 @@ private struct DismissalReply: ConversationResponding {
 @Test @MainActor func outsideChatDismissalUsesTheSessionClosePathAndKeepsDraft() throws {
   let session = ChatWindowFixture.makeReadySession(conversation: DismissalReply())
   session.draft = "Keep my unfinished thought."
-  let controller = ChatSessionWindowController(appearance: ThemeEnvironment())
+  let controller = ChatSessionWindowController(
+    appearance: ThemeEnvironment(), reading: .init(size: .standard))
   controller.prefersReducedMotion = { true }
   defer {
     controller.close()
@@ -86,7 +87,8 @@ private struct DismissalReply: ConversationResponding {
 
 @Test @MainActor func chatNativeDismissalStopsMonitoringInTalkAndRestartsForChat() async throws {
   let session = ChatWindowFixture.makeReadySession(conversation: DismissalReply())
-  let controller = ChatSessionWindowController(appearance: ThemeEnvironment())
+  let controller = ChatSessionWindowController(
+    appearance: ThemeEnvironment(), reading: .init(size: .standard))
   controller.prefersReducedMotion = { true }
   defer {
     controller.close()

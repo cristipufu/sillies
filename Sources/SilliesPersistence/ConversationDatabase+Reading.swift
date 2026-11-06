@@ -3,6 +3,7 @@ import SQLite3
 import SilliesCore
 
 extension ConversationDatabase {
+  public func validateForExport(_ handle: ConversationHandle) throws { try validate(handle) }
   public func page(_ request: ConversationPageRequest) throws -> ConversationPage {
     try validate(request.handle)
     let owner = request.handle.companionID
@@ -32,6 +33,12 @@ extension ConversationDatabase {
     case .around(let id):
       predicate += " AND sequence>=?"
       values.append(.integer(try sequence(of: id, owner: owner)))
+      order = "ASC"
+    case .onOrAfter(let date):
+      guard date.timeIntervalSince1970.isFinite else { throw ConversationStorageError.invalidData }
+      predicate +=
+        " AND sequence>=(SELECT sequence FROM conversation_messages WHERE owner=? AND created>=? ORDER BY created,sequence LIMIT 1)"
+      values += [.text(owner), .real(date.timeIntervalSince1970)]
       order = "ASC"
     }
     let rows = ConversationRowDecoder()

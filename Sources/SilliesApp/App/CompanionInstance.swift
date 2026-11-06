@@ -30,6 +30,7 @@ final class CompanionInstance {
 
   private(set) var isChoosingDirectAction = false
   private var attachmentDisplay: CGRect?
+  private var attachmentWindow: CGRect?
   var onConversationAnchorChanged: ((ConversationCompanionAnchor) -> Void)?
   var conversationAnchor: ConversationCompanionAnchor? {
     guard let attachmentDisplay else { return nil }
@@ -193,6 +194,7 @@ final class CompanionInstance {
 
   func configureSurface(_ surface: PerchSurface, window: CGRect?, display: CGRect) -> Bool {
     attachmentDisplay = display
+    attachmentWindow = window
     let previousPose = view.rig.attachmentPose
     view.resize(to: surface.presentationSize)
     view.configureSurface(pose: surface.attachmentPose, window: window, display: display)
@@ -450,7 +452,7 @@ final class CompanionInstance {
   }
 
   func refreshHUD() {
-    guard bindingState.showsTaskHUD, isAttachmentVisible, panel.isVisible, !isPickedUp,
+    guard hud.showsHUD(for: bindingState), isAttachmentVisible, panel.isVisible, !isPickedUp,
       !isReturningFromDrop,
       !isWaitingForSpace
     else {
@@ -461,7 +463,9 @@ final class CompanionInstance {
     hud.attachedWindowLayer = attachedWindowLayer
     hud.companionWindow = panel
     hud.update(
-      state: bindingState, companionPoint: position, characterSize: view.characterSize,
-      visibleFrame: visibleFrame)
+      state: bindingState,
+      anchor: .init(
+        companionPoint: position, characterSize: view.characterSize, visibleFrame: visibleFrame,
+        windowFrame: attachmentWindow))
   }
 }

@@ -7,11 +7,11 @@ struct TextModelSettingsView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 20) {
       SettingsCard(
-        title: String(localized: "Notes that speak your language"),
+        title: String(localized: "A mind for every conversation"),
         detail:
           String(
             localized:
-              "Choose the model for summaries, meeting suggestions and writing tools. Speech recognition is configured separately in Speech & Meetings."
+              "Choose the app’s default reply model for Chat, Talk, meeting notes and writing. Companions can also have their own model."
           )
       ) {
         Label("Your recordings and text stay on this Mac.", systemImage: "lock.shield")
@@ -65,30 +65,12 @@ struct TextModelSettingsView: View {
       Text(state.label).font(.caption).foregroundStyle(theme.secondary).textSelection(
         .enabled)
       HStack(spacing: 12) {
-        actions(manifest, state: state)
+        ModelInstallationControls(
+          model: model, manifest: manifest,
+          selectionTitle: String(localized: "Use as app default"), scope: .manage)
         Spacer(minLength: 0)
         Link("Model details ↗", destination: manifest.model.sourceURL).font(.caption)
       }
-    }
-  }
-
-  @ViewBuilder private func actions(_ manifest: TextModelManifest, state: ModelInstallationState)
-    -> some View
-  {
-    switch state {
-    case .downloaded, .ready:
-      selectionButton(manifest.modelID)
-      Button("Remove", role: .destructive) { model.remove(manifest) }
-        .buttonStyle(SoftButtonStyle()).disabled(model.activeID != nil)
-    case .downloading, .verifying:
-      Button("Pause download") { model.pauseDownload() }.buttonStyle(SoftButtonStyle())
-    case .cancelling:
-      ProgressView().controlSize(.small)
-    default:
-      Button(
-        state == .paused ? String(localized: "Resume download") : String(localized: "Download")
-      ) { model.download(manifest) }
-      .buttonStyle(SoftButtonStyle()).disabled(model.activeID != nil || !model.supports(manifest))
     }
   }
 
@@ -96,7 +78,7 @@ struct TextModelSettingsView: View {
     if model.selectedModelID == id {
       Label("Selected", systemImage: "checkmark.circle.fill").foregroundStyle(theme.accent)
     } else {
-      Button("Use for notes & writing") { model.select(id) }.buttonStyle(SoftButtonStyle())
+      Button("Use as app default") { model.select(id) }.buttonStyle(SoftButtonStyle())
         .disabled(model.activeID != nil)
     }
   }

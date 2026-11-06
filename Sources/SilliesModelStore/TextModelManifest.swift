@@ -6,6 +6,12 @@ package struct TextModelManifest: Codable, Equatable, ModelArtifactManifest {
   package let artifacts: [ModelArtifact]
   package var modelID: String { model.id }
   package var revision: String { model.revision }
+  package func processingPrefill(inChunksOf tokens: Int) throws -> Self {
+    guard let model = model.processingPrefill(inChunksOf: tokens) else {
+      throw ModelStoreError.invalidManifest
+    }
+    return Self(model: model, artifacts: artifacts)
+  }
 
   package func validate() throws {
     try validateArtifacts()

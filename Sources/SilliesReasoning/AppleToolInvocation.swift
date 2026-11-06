@@ -9,6 +9,10 @@ actor AppleToolInvocation {
   func invoke(_ call: ConversationToolCall) async throws -> String {
     try Task.checkCancellation()
     guard let toolbox else { throw TextModelError.interrupted }
-    return try await toolbox.invoke(call)
+    let result = try await toolbox.invoke(call)
+    if let question = await toolbox.clarification {
+      throw ConversationClarificationRequested(question: question)
+    }
+    return result
   }
 }

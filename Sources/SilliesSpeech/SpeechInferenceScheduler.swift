@@ -12,11 +12,13 @@ package actor SpeechInferenceScheduler: SpeechWindowEngine {
   }
   private static let maximumPendingJobs = 4
   private let engine: any SpeechWindowEngine
+  private let activity: InferenceActivity
   private var pending: [Job] = []
   private var active: (id: UUID, task: Task<Void, Never>)?
 
-  package init(engine: any SpeechWindowEngine) {
+  package init(engine: any SpeechWindowEngine, activity: InferenceActivity = .shared) {
     self.engine = engine
+    self.activity = activity
     finalizationPolicy = engine.finalizationPolicy
   }
 
@@ -48,14 +50,16 @@ package actor SpeechInferenceScheduler: SpeechWindowEngine {
     let job = pending.removeFirst()
     let priority = job.request.context.priority.taskPriority
     let task = Task(priority: priority) {
-      await InferenceActivity.shared.beginSpeech()
+      await activity.beginSpeech()
+      let result: Result<SpeechWindowResult, any Error>
       do {
         try Task.checkCancellation()
-        let result = try await engine.transcribe(job.request)
+        let transcript = try await engine.transcribe(job.request)
         try Task.checkCancellation()
-        job.continuation.resume(returning: result)
-      } catch { job.continuation.resume(throwing: error) }
-      await InferenceActivity.shared.endSpeech()
+        result = .success(transcript)
+      } catch { result = .failure(error) }
+      await activity.endSpeech()
+      job.continuation.resume(with: result)
       completed(job.id)
     }
     active = (job.id, task)

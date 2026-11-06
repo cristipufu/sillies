@@ -28,21 +28,9 @@ struct MeetingSpeechBubbleView: View {
         .fixedSize(horizontal: false, vertical: true)
     }
     .padding(Self.textInset)
-    .padding(.horizontal, SuggestionBubbleLayout.tailDepth)
-    .padding(SuggestionBubbleLayout.shadowInset)
+    .padding(.horizontal, CompanionSpeechBubbleLayout.tailDepth)
+    .padding(CompanionSpeechBubbleLayout.shadowInset)
     .accessibilityElement(children: .combine)
     .accessibilityLabel("Meeting suggestion: \(suggestion.question)")
-  }
-}
-
-struct SpeechBubbleShape: Shape {
-  let tail: SuggestionBubbleLayout.Tail
-  let tailOffset: CGFloat
-
-  func path(in rect: CGRect) -> Path {
-    Path(
-      MascotBubbleContour.path(
-        in: rect, tail: tail == .left ? .left : .right,
-        offset: tailOffset, depth: SuggestionBubbleLayout.tailDepth))
   }
 }

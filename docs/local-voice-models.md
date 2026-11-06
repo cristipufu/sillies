@@ -86,3 +86,5 @@ checks. `SILLIES_CHAT_MODEL_CHECK=1` enables
 `appleChatHandlesTheReportedConversationWithoutRepeating` on Macs with Apple Intelligence ready.
 Neither check downloads weights. Fixture results do not substitute for testing loudspeaker volume,
 room acoustics, and interruption on the intended device.
+
+The [Chat and voice follow-up](reports/chat-voice-followup-2026-11-05.md) covers interruption recovery, paired startup measurements and their audio-quality limits. The production opening-phrase deadline remains 350 ms.

@@ -9,6 +9,35 @@ import Testing
 
 @testable import SilliesApp
 
+@Test @MainActor func chatReadingLayoutFitsBothThemesAndLongDrafts() async throws {
+  let session = ChatWindowFixture.makeSession()
+  defer { session.finish {} }
+  for _ in 0..<100 {
+    if session.phase == .ready { break }
+    try await Task.sleep(for: .milliseconds(5))
+  }
+  #expect(session.messages.count == 2)
+  for scheme in [ColorScheme.light, .dark] {
+    for (name, draft, size) in [
+      ("ready", "", ChatWindowLayout.initialSize),
+      ("draft", "A little help planning tomorrow?", ChatWindowLayout.initialSize),
+      (
+        "long-draft", String(repeating: "An unfinished thought with details.\n", count: 30),
+        ChatWindowLayout.minimumSize
+      ),
+    ] {
+      session.draft = draft
+      try renderSkillInterface(
+        ConversationBubbleView(
+          presentation: ConversationBubblePresentation(),
+          content: ChatSessionView(
+            model: session, openSettings: { _ in }, close: {}, renderer: "cat", motion: .reduced)
+        ).environment(\.colorScheme, scheme), size: size,
+        name: "sillies-chat-polished-\(name)-\(scheme)")
+    }
+  }
+}
+
 @Test @MainActor func reviewedMemoryUsesTheSharedEditorAndCanBeUndoneWithoutInference() async throws
 {
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -35,6 +64,27 @@ import Testing
   let receipt = try #require(session.history.memoryReceipts.first)
   #expect(receipt.saved.value == "The user prefers jasmine tea while reading.")
   #expect(receipt.saved.sourceMessageID == message.id)
+  editor.edit(receipt.saved)
+  #expect(editor.isEditing)
+  editor.value = "The user now prefers mint tea."
+  editor.allowsCorrection = { false }
+  await editor.save()
+  #expect(editor.isPresented && !editor.canSave)
+  #expect(session.history.memoryReceipts.first == receipt)
+  editor.allowsCorrection = { [weak session] in session?.canCompose == true }
+  for scheme in [ColorScheme.light, .dark] {
+    try renderSkillInterface(
+      ChatMemoryEditorView(editor: editor).environment(\.colorScheme, scheme),
+      size: CGSize(width: 400, height: 390), name: "sillies-edited-memory-\(scheme)")
+  }
+  await editor.save()
+  #expect(editor.failure == nil && !editor.isPresented)
+  #expect(session.canCompose)
+  let correction = try #require(session.history.memoryReceipts.first)
+  #expect(correction.saved.source.attribution == .userCorrection)
+  #expect(session.history.memories.page.facts.first?.value == "The user now prefers mint tea.")
+  await session.undoMemory(correction)
+  #expect(session.history.memories.page.facts.first == receipt.saved)
   await session.undoMemory(receipt)
   #expect(session.history.memoryReceipts.isEmpty)
   #expect(session.history.memories.page.facts.isEmpty)
@@ -64,7 +114,7 @@ import Testing
       ConversationBubbleView(
         presentation: ConversationBubblePresentation(),
         content: ChatSessionView(
-          model: session, openSettings: { _ in }, renderer: "cat", motion: .reduced)
+          model: session, openSettings: { _ in }, close: {}, renderer: "cat", motion: .reduced)
       ).environment(\.colorScheme, .light),
       size: ChatWindowLayout.initialSize,
       name: "sillies-chat-navigation-\(page.entries.isEmpty ? "empty" : "short")")
@@ -78,8 +128,18 @@ import Testing
   #expect(session.canCompose)
   #expect(session.messages.isEmpty)
   try renderSkillInterface(
-    ChatSessionView(model: session, openSettings: { _ in }), size: ChatWindowLayout.minimumSize,
+    ChatSessionView(model: session, openSettings: { _ in }, close: {}),
+    size: ChatWindowLayout.minimumSize,
     name: "sillies-chat-model-setup")
+  await session.startTalk()
+  #expect(session.mode == .talk && !session.isVoiceConversationActive)
+  #expect(session.notice?.settingsDestination == .textModels)
+  for scheme in [ColorScheme.light, .dark] {
+    try renderSkillInterface(
+      TalkHUDView(model: session, openTranscript: {}, openSettings: { _ in })
+        .padding(14).environment(\.colorScheme, scheme),
+      size: CGSize(width: 480, height: 80), name: "sillies-talk-model-setup-\(scheme)")
+  }
   session.finish {}
 }
 
@@ -106,7 +166,8 @@ private struct MissingChatModel: ConversationResponding {
   #expect(session.canRetry)
   session.draft = "My next thought is still editable."
   try renderSkillInterface(
-    ChatSessionView(model: session, openSettings: { _ in }), size: ChatWindowLayout.minimumSize,
+    ChatSessionView(model: session, openSettings: { _ in }, close: {}),
+    size: ChatWindowLayout.minimumSize,
     name: "sillies-chat-failure")
   session.finish {}
 }
@@ -146,7 +207,8 @@ private struct FailedChatReply: ConversationResponding {
     try await Task.sleep(for: .milliseconds(5))
   }
   #expect(session.messages.count == 2)
-  let controller = ChatSessionWindowController(appearance: ThemeEnvironment())
+  let controller = ChatSessionWindowController(
+    appearance: ThemeEnvironment(), reading: .init(size: .standard))
   controller.show(session, openSettings: { _ in }, renderer: "cat")
   let window = try #require(controller.window)
   defer { controller.close() }
@@ -161,16 +223,17 @@ private struct FailedChatReply: ConversationResponding {
   let rendered = messageTexts(in: content)
   for message in session.messages { #expect(rendered.contains(message.text)) }
   try renderSkillInterface(
-    ChatSessionView(model: session, openSettings: { _ in }, renderer: "cat"),
+    ChatSessionView(model: session, openSettings: { _ in }, close: {}, renderer: "cat"),
     size: ChatWindowLayout.minimumSize,
     name: "sillies-chat-minimum")
   try renderSkillInterface(
-    ChatSessionView(model: session, openSettings: { _ in }, renderer: "cat").environment(
+    ChatSessionView(model: session, openSettings: { _ in }, close: {}, renderer: "cat").environment(
       \.colorScheme, .light),
     size: ChatWindowLayout.initialSize, name: "sillies-chat-light")
   session.draft = String(repeating: "A longer thought with punctuation. ", count: 80)
   try renderSkillInterface(
-    ChatSessionView(model: session, openSettings: { _ in }), size: ChatWindowLayout.minimumSize,
+    ChatSessionView(model: session, openSettings: { _ in }, close: {}),
+    size: ChatWindowLayout.minimumSize,
     name: "sillies-chat-long-draft")
   session.finish {}
 }
@@ -193,7 +256,8 @@ private struct FailedChatReply: ConversationResponding {
 
 @Test @MainActor func chatRapidCloseAndReopenDoesNotLeaveAnInvisibleWindow() async throws {
   let session = ChatWindowFixture.makeSession()
-  let controller = ChatSessionWindowController(appearance: ThemeEnvironment())
+  let controller = ChatSessionWindowController(
+    appearance: ThemeEnvironment(), reading: .init(size: .standard))
   controller.show(session, openSettings: { _ in }, renderer: "cat")
   let window = try #require(controller.window)
   defer {
@@ -248,8 +312,10 @@ private struct VaultCardReply: ConversationResponding {
   let presentation = ChatVaultPresentation(store: store, openRecord: { _ in })
   for scheme in [ColorScheme.light, .dark] {
     try renderSkillInterface(
-      ChatSessionView(model: session, openSettings: { _ in }, motion: .reduced, vault: presentation)
-        .environment(\.colorScheme, scheme),
+      ChatSessionView(
+        model: session, openSettings: { _ in }, close: {}, motion: .reduced, vault: presentation
+      )
+      .environment(\.colorScheme, scheme),
       size: ChatWindowLayout.minimumSize, name: "sillies-chat-vault-\(scheme)")
   }
   session.finish {}
@@ -325,7 +391,8 @@ private actor StreamingInterfaceReply: ConversationResponding {
 {
   let reply = StreamingInterfaceReply()
   let session = ChatWindowFixture.makeSession(conversation: reply)
-  let controller = ChatSessionWindowController(appearance: ThemeEnvironment())
+  let controller = ChatSessionWindowController(
+    appearance: ThemeEnvironment(), reading: .init(size: .standard))
   controller.show(session, openSettings: { _ in }, renderer: "cat")
   let content = try #require(controller.window?.contentView)
   defer {
@@ -390,7 +457,7 @@ private actor StreamingInterfaceReply: ConversationResponding {
   layout.ensureLayout(for: container)
   let displayed = layout.usedRect(for: container)
   let size = container.containerSize
-  let measurement = ChatMessageLayout()
+  let measurement = ChatTextLayout()
   let narrow = try #require(measurement.size(of: view.attributedString(), width: 60))
   let wide = try #require(measurement.size(of: view.attributedString(), width: 300))
   #expect(narrow.height > wide.height)
@@ -436,14 +503,14 @@ private actor StreamingInterfaceReply: ConversationResponding {
   #expect(session.messages.count == 2)
   for scheme in [ColorScheme.light, .dark] {
     try renderSkillInterface(
-      ChatSessionView(model: session, openSettings: { _ in }, renderer: "cat")
+      ChatSessionView(model: session, openSettings: { _ in }, close: {}, renderer: "cat")
         .environment(\.colorScheme, scheme),
       size: ChatWindowLayout.initialSize,
       name: "sillies-chat-typography-\(scheme == .light ? "light" : "dark")")
   }
 }
 
-@Test @MainActor func conversationAttachedBubbleFitsBothModesWithoutNativePresentation()
+@Test @MainActor func conversationAttachedBubbleAndTalkControlsFitWithoutNativePresentation()
   async throws
 {
   let session = ChatWindowFixture.makeSession()
@@ -461,14 +528,50 @@ private actor StreamingInterfaceReply: ConversationResponding {
       try renderSkillInterface(
         ConversationBubbleView(
           presentation: presentation,
-          content: ChatSessionView(model: session, openSettings: { _ in }, renderer: "cat")
+          content: ChatSessionView(
+            model: session, openSettings: { _ in }, close: {}, renderer: "cat")
         )
         .environment(\.colorScheme, scheme), size: size,
         name: "sillies-continuous-chat-\(scheme)-\(tail)")
     }
   }
-  try renderSkillInterface(
-    TalkCaptionsView(model: session), size: CGSize(width: 360, height: 120),
-    name: "sillies-talk-captions")
+  await session.startTalk()
+  for scheme in [ColorScheme.light, .dark] {
+    try renderSkillInterface(
+      TalkHUDView(model: session, openTranscript: {}, openSettings: { _ in })
+        .padding(14).environment(\.colorScheme, scheme),
+      size: CGSize(width: 440, height: 80), name: "sillies-talk-hud-\(scheme)")
+  }
   session.finish {}
+}
+
+@Test @MainActor func replyDetailsFitTheConversationStyleInBothAppearances() throws {
+  let context = ChatContext(
+    companionName: "Pogo", profile: .init(personality: "Curious"),
+    messages: [.init(role: .user, text: "What did we decide about launch?")],
+    memory: .init(
+      summary: "The launch review was moved to Friday. Confirm against the original meeting."))
+  let record = SessionRecord(
+    kind: .listen,
+    origin: .init(
+      characterID: "pogo", characterName: "Pogo", source: .init(appName: "Project review")))
+  let source = ChatSource(
+    header: .init(record), excerpt: "The team agreed to review the launch plan on Friday.",
+    retrieval: .semantic)
+  let message = ChatMessage(
+    role: .companion, text: "The review is on Friday.",
+    evidence: .init(
+      sources: [source],
+      exchanges: [
+        .init(
+          call: .init(id: "test", name: "search_vault", arguments: Data()),
+          result: "Synthetic evidence")
+      ])
+  )
+  .inspecting(.init(context: context, availableTools: 5, workingContextTokens: 4096))
+  for scheme in [ColorScheme.light, .dark] {
+    try renderSkillInterface(
+      ReplyDetailsView(message: message).environment(\.colorScheme, scheme),
+      size: CGSize(width: 360, height: 420), name: "sillies-reply-details-\(scheme)")
+  }
 }

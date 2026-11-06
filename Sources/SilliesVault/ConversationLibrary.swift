@@ -3,13 +3,15 @@ import SilliesCore
 import SilliesPersistence
 
 /// Serial, lazy storage access. No UI actor or model runtime can own the database connection.
-package actor ConversationLibrary: ConversationRepository, CompanionMemoryRepository {
-  private let directory: URL
+package actor ConversationLibrary: ConversationRepository, CompanionMemoryRepository,
+  CompanionMemoryEditing
+{
+  let directory: URL
   private let searches: ConversationSearchWorker
   private var database: ConversationDatabase?
   private var searchGeneration = UUID()
   var memorySearchGeneration = UUID()
-  var memoryEmbeddings: MemoryEmbeddingAccess?
+  var memoryEmbeddings: SearchEmbeddingAccess?
   var memoryIndexTask: Task<Void, Never>?
   var memoryIndexGeneration = UUID()
   var memoryIndexFailure: String?
@@ -71,13 +73,13 @@ package actor ConversationLibrary: ConversationRepository, CompanionMemoryReposi
       !query.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     {
       do {
-        related = try await MemorySearchDeadline.perform { [searches] in
+        related = try await SemanticSearchDeadline.perform { [searches] in
           guard let embedding = try await access.embed(.init(text: query.text, purpose: .query))
           else { return [] }
           return try await searches.semanticMemories(
             query, embedding: embedding, provider: access.identity)
         }
-      } catch is CancellationError { try Task.checkCancellation() } catch MemoryEmbeddingError
+      } catch is CancellationError { try Task.checkCancellation() } catch SearchEmbeddingError
         .unavailable
       {
         // Keywords remain available during preparation or a deadline.
@@ -99,6 +101,12 @@ package actor ConversationLibrary: ConversationRepository, CompanionMemoryReposi
     memorySearchGeneration = UUID()
     scheduleMemoryIndex()
     return receipt
+  }
+  package func correctMemory(_ correction: MemoryCorrection) throws -> MemoryCorrectionResult {
+    let result = try storage().correctMemory(correction)
+    memorySearchGeneration = UUID()
+    scheduleMemoryIndex()
+    return result
   }
   package func forget(_ handle: ConversationHandle, id: UUID) throws -> ConversationSnapshot {
     let snapshot = try storage().forget(handle, id: id)

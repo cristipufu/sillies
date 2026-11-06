@@ -25,13 +25,25 @@ struct NativeAppleChatSession: AppleChatSession {
     var snapshot = TextStreamSnapshot()
     var batch = TextStreamBatch()
     var answer = ""
-    for try await update in session.streamResponse(
-      to: request.prompt, options: AppleGenerationOptions.make(request))
-    {
+    do {
+      for try await update in session.streamResponse(
+        to: request.prompt, options: AppleGenerationOptions.make(request))
+      {
+        try Task.checkCancellation()
+        let delta = try snapshot.append(update.content)
+        answer = update.content
+        if let text = batch.append(delta) { try await receive(text) }
+      }
+    } catch {
+      guard
+        let requested = AppleGenerationFailure.recoverable(error)
+          as? ConversationClarificationRequested
+      else { throw error }
       try Task.checkCancellation()
-      let delta = try snapshot.append(update.content)
-      answer = update.content
-      if let text = batch.append(delta) { try await receive(text) }
+      if let text = batch.flush() { try await receive(text) }
+      let suffix = (answer.isEmpty ? "" : "\n") + requested.question.question
+      try await receive(suffix)
+      return answer + suffix
     }
     if let text = batch.flush() { try await receive(text) }
     try Task.checkCancellation()

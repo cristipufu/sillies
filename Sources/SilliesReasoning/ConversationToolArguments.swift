@@ -25,6 +25,11 @@ package enum ConversationToolArguments {
     }
   }
 
+  package static func require<Value>(_ value: Value?, parameter: String? = nil) throws -> Value {
+    guard let value else { throw Failure(parameter: parameter) }
+    return value
+  }
+
   private static func parameter(in error: DecodingError) -> String? {
     switch error {
     case .keyNotFound(let key, let context):

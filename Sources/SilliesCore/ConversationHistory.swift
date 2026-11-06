@@ -112,6 +112,7 @@ public struct ConversationPageRequest: Sendable {
     case between(after: UUID?, before: UUID)
     case after(Int64)
     case around(UUID)
+    case onOrAfter(Date)
   }
   public static let defaultLimit = 60
   public static let maximumLimit = 128

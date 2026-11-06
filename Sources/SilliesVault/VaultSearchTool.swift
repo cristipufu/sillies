@@ -43,8 +43,10 @@ package struct VaultSearchTool: ConversationTool {
       }
       sources.append(
         .init(
-          header: match.header, excerpt: String(match.excerpt.prefix(Self.excerptCharacters)),
-          links: links))
+          header: match.header,
+          excerpt: match.retrieval == .semantic
+            ? match.excerpt : String(match.excerpt.prefix(Self.excerptCharacters)),
+          links: links, retrieval: match.retrieval))
     }
     return try VaultToolContent.searchOutput(sources, request: request)
   }

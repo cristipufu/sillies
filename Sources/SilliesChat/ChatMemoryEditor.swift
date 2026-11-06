@@ -9,6 +9,7 @@ package final class ChatMemoryEditor {
     let id = UUID()
     let handle: ConversationHandle
     let source: MemorySource
+    var replacement: CompanionMemory.Reference?
   }
   private let history: ChatHistory
   private var selection: Selection?
@@ -17,9 +18,15 @@ package final class ChatMemoryEditor {
   package private(set) var isSaving = false
   package private(set) var failure: String?
   package var isPresented: Bool { selection != nil }
+  package var isEditing: Bool { selection?.replacement != nil }
+  package var canEdit: Bool {
+    history.isLoaded && history.canEditMemories && !isSaving && allowsCorrection()
+  }
+  package var allowsCorrection: @MainActor () -> Bool = { true }
+  package var onCorrection: (@MainActor (ConversationSnapshot) -> Void)?
   package var sourceQuote: String { selection?.source.quote ?? "" }
   package var canSave: Bool {
-    selection != nil && !isSaving && fact.isValid
+    selection != nil && !isSaving && fact.isValid && (!isEditing || allowsCorrection())
   }
   private var fact: MemoryFact {
     .init(
@@ -42,6 +49,14 @@ package final class ChatMemoryEditor {
     failure = nil
   }
 
+  package func edit(_ memory: CompanionMemory) {
+    guard canEdit, let handle = history.handle else { return }
+    selection = .init(handle: handle, source: memory.source, replacement: memory.reference)
+    topic = memory.key
+    value = memory.value
+    failure = nil
+  }
+
   package func close() {
     guard !isSaving else { return }
     clearSelection()
@@ -59,8 +74,19 @@ package final class ChatMemoryEditor {
     isSaving = true
     defer { isSaving = false }
     do {
-      try await history.remember(
-        .init(handle: selected.handle, fact: fact, source: selected.source, savedAt: Date()))
+      if let target = selected.replacement {
+        if let result = try await history.correctMemory(
+          .init(handle: selected.handle, target: target, value: fact.value, savedAt: Date()))
+        {
+          onCorrection?(result.snapshot)
+          do { try await history.refreshMemories() } catch {
+            history.recordFailure(error)
+          }
+        }
+      } else {
+        try await history.remember(
+          .init(handle: selected.handle, fact: fact, source: selected.source, savedAt: Date()))
+      }
       guard selection?.id == selected.id else { return }
       clearSelection()
     } catch {

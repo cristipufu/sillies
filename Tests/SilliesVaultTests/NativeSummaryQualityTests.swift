@@ -70,6 +70,19 @@ private struct SummaryQualitySample {
             text: "If I moved to Oslo, what would winter be like? This is hypothetical."),
           .init(role: .companion, text: "Winters in Oslo can be cold and snowy."),
         ]),
+      .init(
+        id: "assistant-policy-is-not-user-fact",
+        messages: [
+          .init(role: .user, text: "My name is Alex, and I prefer jasmine tea."),
+          .init(role: .companion, text: "Nice to meet you, Alex."),
+          .init(role: .user, text: "What is my name?"),
+          .init(
+            role: .companion,
+            text: "I cannot disclose your name because I must respect your privacy."),
+        ],
+        memory: .init(
+          summary: "The assistant refuses to discuss the user's personal information.",
+          throughMessageID: UUID())),
     ]
   }
 }

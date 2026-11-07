@@ -2,6 +2,7 @@ import Foundation
 import SilliesCore
 
 extension VaultLibrary {
+  package var isPreparingSearch: Bool { indexTask != nil || contentTask != nil }
   package func useSearchEmbeddings(_ access: SearchEmbeddingAccess?) async throws {
     let token = UUID()
     indexGeneration = token
@@ -27,32 +28,58 @@ extension VaultLibrary {
   }
 
   package func searchIndexStatus() throws -> (SearchIndexProgress?, String?) {
-    guard let embeddings else { return (nil, indexFailure) }
-    return (try storage().vaultIndexProgress(provider: embeddings.identity), indexFailure)
+    let failure = contentFailure ?? indexFailure
+    guard let embeddings else { return (nil, failure) }
+    return (try storage().vaultIndexProgress(provider: embeddings.identity), failure)
+  }
+
+  package func retrySearchPreparation() {
+    resumeContentPreparation()
+    indexFailure = nil
+    scheduleIndex()
   }
 
   package func relatedMatches(_ request: VaultSearchRequest) async throws -> [VaultSearchMatch] {
+    try await relatedSearch(request).matches
+  }
+
+  package func relatedSearch(_ request: VaultSearchRequest) async throws -> VaultRelatedSearchResult
+  {
     guard !request.query.isEmpty, request.category != .links, let access = embeddings else {
-      return []
+      return .init(matches: [], availability: .unavailable)
     }
     _ = try storage()
     let generation = searchRevision
     do {
-      let matches = try await SemanticSearchDeadline.perform { [semanticSearches] in
+      let matches = try await SemanticSearchDeadline.perform(
+        purpose: request.consumer == .workspace ? .workspace : .assistant
+      ) { [semanticSearches, directory] in
         guard let vector = try await access.embed(.init(text: request.query, purpose: .query))
-        else { return [VaultSearchMatch]() }
+        else { throw SearchEmbeddingError.unavailable }
+        let usesGlobalRanking =
+          request.category == .all && request.workspaceQuery?.searchesAllActiveItems != false
+        let candidates =
+          usesGlobalRanking
+          ? try await access.vectorIndex?.search(
+            .init(directory: directory, embedding: vector, limit: 256)) : nil
         return try await semanticSearches.search(
-          request, embedding: vector, provider: access.identity)
+          request, embedding: vector, provider: access.identity, candidates: candidates)
       }
       try Task.checkCancellation()
-      guard generation == searchRevision else { return [] }
-      return matches
+      guard generation == searchRevision else { return .init(matches: [], availability: .changed) }
+      let progress = try storage().vaultIndexProgress(provider: access.identity)
+      return .init(
+        matches: matches, availability: progress.processed < progress.total ? .preparing : .ready)
     } catch is CancellationError {
       try Task.checkCancellation()
-      return []
-    } catch SearchEmbeddingError.unavailable { return [] } catch {
+      return .init(matches: [], availability: .unavailable)
+    } catch SemanticSearchDeadline.Failure.exceeded {
+      return .init(matches: [], availability: .timedOut)
+    } catch SearchEmbeddingError.unavailable {
+      return .init(matches: [], availability: .unavailable)
+    } catch {
       fputs("Vault semantic search unavailable: \(error)\n", stderr)
-      return []
+      return .init(matches: [], availability: .failed(error.localizedDescription))
     }
   }
 
@@ -63,6 +90,7 @@ extension VaultLibrary {
 
   private func prepareIndex(_ access: SearchEmbeddingAccess) async {
     defer { indexTask = nil }
+    var completed = 0
     do {
       while true {
         try Task.checkCancellation()
@@ -71,9 +99,14 @@ extension VaultLibrary {
           try Task.checkCancellation()
           guard embeddings?.identity == access.identity else { return }
           try storage().saveVaultEmbedding(vector, for: item, provider: access.identity)
+          completed += 1
+          if completed.isMultiple(of: 32) {
+            _ = try await access.vectorIndex?.advance(directory)
+            try storage().pruneVectorChanges()
+          }
         } else if let passage = try storage().pendingPassage() {
           try storage().savePassage(passage)
-        } else {
+        } else if try await access.vectorIndex?.advance(directory) != true {
           return
         }
         await Task.yield()

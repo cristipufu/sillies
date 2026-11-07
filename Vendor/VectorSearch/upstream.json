@@ -1,0 +1,19 @@
+{
+  "faiss": {
+    "tag": "v1.15.1",
+    "revision": "75c755c5a1fc854756aaf3bd1131213aeb21d8d1"
+  },
+  "openmp": {
+    "tag": "llvmorg-21.1.4",
+    "revision": "222fc11f2b8f25f6a0f4976272ef1bb7bf49521d"
+  },
+  "configuration": {
+    "target": "macOS arm64",
+    "deployment": "26.0",
+    "blas": "Accelerate",
+    "openmp": "static",
+    "gpu": false,
+    "ompt": false,
+    "hwloc": false
+  }
+}

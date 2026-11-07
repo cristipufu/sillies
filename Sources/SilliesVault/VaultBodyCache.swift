@@ -1,7 +1,7 @@
 import Foundation
 import SilliesCore
 
-/// The cost is encoded body bytes. Oversized details are returned to the caller without retention.
+/// Encoded bytes plus potentially overlaid text bound retention conservatively. This is not process RSS.
 struct VaultBodyCache {
   private struct Entry {
     let record: SessionRecord
@@ -24,14 +24,19 @@ struct VaultBodyCache {
   }
   mutating func insert(_ record: SessionRecord, cost: Int) {
     remove(record.id)
-    guard cost <= capacity else { return }
-    while retainedBytes > capacity - cost || entries.count >= maximumEntries {
+    guard cost >= 0, cost <= capacity else { return }
+    var retainedCost = cost
+    for text in [record.transcript, record.extractedText] + record.stashedItems {
+      guard text.utf8.count <= capacity - retainedCost else { return }
+      retainedCost += text.utf8.count
+    }
+    while retainedBytes > capacity - retainedCost || entries.count >= maximumEntries {
       guard let oldest = entries.min(by: { $0.value.access < $1.value.access })?.key else { break }
       remove(oldest)
     }
     access &+= 1
-    entries[record.id] = Entry(record: record, cost: cost, access: access)
-    retainedBytes += cost
+    entries[record.id] = Entry(record: record, cost: retainedCost, access: access)
+    retainedBytes += retainedCost
   }
   mutating func remove(_ id: UUID) {
     if let entry = entries.removeValue(forKey: id) { retainedBytes -= entry.cost }

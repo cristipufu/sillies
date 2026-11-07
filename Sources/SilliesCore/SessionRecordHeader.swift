@@ -21,7 +21,16 @@ public struct SessionRecordHeader: Codable, Identifiable, Equatable, Sendable {
   public let imageFilename: String?
   public let audioFilename: String?
   public let failure: SessionFailure?
+  public let notesNotice: String?
+  public let notesSource: SessionNotesSource?
+  public let processingNote: String?
+  public let languageIdentifier: String?
+  public let speechProvenance: SpeechProvenance?
+  public let diarizationProvenance: SpeechProvenance?
   public var requiresPermissionAccess: Bool { failure?.recovery != nil }
+  public var displayTitle: String {
+    SessionRecord.displayTitle(appName: appName, windowTitle: windowTitle, kind: kind)
+  }
 
   public init(_ record: SessionRecord) {
     id = record.id
@@ -41,6 +50,14 @@ public struct SessionRecordHeader: Codable, Identifiable, Equatable, Sendable {
     stashItemCount = record.stashedItems.count
     isProtected = record.isProtected
     summaryPending = record.summaryPending
+    notesNotice =
+      record.notesNotice.isEmpty ? nil : String(record.notesNotice.prefix(Self.labelLimit))
+    notesSource = record.notesSource
+    languageIdentifier = record.languageIdentifier
+    speechProvenance = record.speechProvenance
+    diarizationProvenance = record.diarizationProvenance
+    processingNote =
+      record.processingNote.isEmpty ? nil : String(record.processingNote.prefix(Self.labelLimit))
     screenshotTextState = record.screenshotTextState
     screenshotRevision = record.processingRevision.screenshot
     imageFilename = record.imageFilename

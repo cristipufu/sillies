@@ -30,9 +30,21 @@ import Testing
   defer { fixture.remove() }
   var record = fixture.record("We travel by bicycle.")
   try fixture.database.commit(.init(records: [.insert(record)]))
-  let passage = try #require(try fixture.database.pendingPassage())
-  try fixture.database.savePassage(passage)
-  let item = try #require(try fixture.database.pendingVaultEmbedding(provider: "test"))
+  var transcriptPassage: VaultPassage?
+  while let passage = try fixture.database.pendingPassage() {
+    try fixture.database.savePassage(passage)
+    if passage.text.contains("bicycle") { transcriptPassage = passage }
+  }
+  let passage = try #require(transcriptPassage)
+  var transcriptItem: VaultEmbeddingItem?
+  while let pending = try fixture.database.pendingVaultEmbedding(provider: "test") {
+    if pending.text.contains("bicycle") {
+      transcriptItem = pending
+      break
+    }
+    try fixture.database.saveVaultEmbedding(nil, for: pending, provider: "test")
+  }
+  let item = try #require(transcriptItem)
   let vector = try SearchEmbedding(space: "one", values: [1, 0])
   #expect(try fixture.database.saveVaultEmbedding(vector, for: item, provider: "test"))
   let reader = try VaultSemanticSearchDatabase(directory: fixture.directory)
@@ -62,17 +74,44 @@ import Testing
   defer { fixture.remove() }
   let record = fixture.record("A preserved meeting")
   try fixture.database.commit(.init(records: [.insert(record)]))
-  for name in ["record_passage_delete", "passage_delete"] {
-    try fixture.database.sql.execute("DROP TRIGGER \(name)")
+  // Recreate the schema that actually existed in version 1, not a newer schema with a changed label.
+  var workspaceTriggers: [String] = []
+  try fixture.database.sql.rows("SELECT name FROM sqlite_master WHERE type='trigger'") { row in
+    workspaceTriggers.append(try VaultSQLConnection.text(row))
+  }
+  for name in workspaceTriggers { try fixture.database.sql.execute("DROP TRIGGER \(name)") }
+  try fixture.database.sql.execute("DROP VIEW searchable_blocks")
+  try fixture.database.sql.execute("DROP VIEW available_records")
+  for name in [
+    "content_search", "content_blocks", "content_sections", "content_backfill", "vault_drafts",
+    "workspace", "document_identities", "vault_collections", "vault_collection_items", "vault_tags",
+    "vault_saved_searches", "library_counts", "trash_counts", "embedding_cursors",
+    "embedding_counts", "embedding_spaces", "semantic_counts", "vector_changes",
+    "content_substrings", "search_index_content", "vault_metadata_drafts", "source_facets",
+    "recording_bookmarks", "file_references", "pending_deletions", "vault_cleanup",
+    "cleanup_policy",
+  ] {
+    try fixture.database.sql.execute("DROP TABLE \(name)")
   }
   for name in ["passage_vectors", "passages", "passage_sources"] {
     try fixture.database.sql.execute("DROP TABLE \(name)")
   }
+  for name in [
+    "records_source_app", "records_source_companion", "records_source_language",
+    "records_retention", "records_modified", "records_visibility",
+  ] {
+    try fixture.database.sql.execute("DROP INDEX \(name)")
+  }
+  try fixture.database.sql.execute("ALTER TABLE records DROP COLUMN modified")
+  try fixture.database.sql.execute(
+    "INSERT INTO documents(id,body) VALUES(?,?)",
+    [.text(record.id.uuidString), .text(record.transcript)])
   try fixture.database.sql.execute("PRAGMA user_version=1")
   let migrated = try VaultDatabase(directory: fixture.directory)
-  #expect(try migrated.pendingPassage()?.recordID == record.id)
   #expect(try migrated.search(.init(query: "preserved")).map(\.header.id) == [record.id])
   #expect(migrated.metrics.loadedBodies == 0)
+  try migrated.prepareContent(id: record.id)
+  #expect(try migrated.pendingPassage()?.recordID == record.id)
 }
 
 @Test func vaultPassageRejectsOverflowAndOutOfBoundsOffsets() throws {
@@ -83,7 +122,7 @@ import Testing
       try fixture.database.savePassage(
         .init(
           recordID: UUID(), revision: "test", offset: offset,
-          text: "text", isLast: true))
+          text: "text", isLast: true, blockID: 1))
     }
   }
 }

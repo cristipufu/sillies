@@ -16,6 +16,10 @@ struct NewCompanionFixture: Sendable {
     .init(id: "lumi", renderer: "witch", signature: "lumi.conjure", flourish: "lumi.catchHat"),
     .init(id: "rook", renderer: "knight", signature: "rook.polish", flourish: "rook.visorSlip"),
     .init(id: "flick", renderer: "candle", signature: "flick.warmHands", flourish: "flick.glow"),
+    .init(id: "leon", renderer: "spartan", signature: "leon.training", flourish: "leon.victory"),
+    .init(id: "gizmo", renderer: "goblin", signature: "gizmo.tinker", flourish: "gizmo.mishap"),
+    .init(id: "orbit", renderer: "astronaut", signature: "orbit.check", flourish: "orbit.moonstep"),
+    .init(id: "mimo", renderer: "mime", signature: "mimo.glass", flourish: "mimo.bow"),
   ]
 }
 
@@ -75,7 +79,19 @@ struct NewCompanionFixture: Sendable {
   #expect(hitTester.containsArtwork(in: witch.root, at: CGPoint(x: 117, y: 75)))
   let candle = CandleRig()
   #expect(!hitTester.containsArtwork(in: candle.root, at: CGPoint(x: 89, y: 108)))
-  for rig in [alien, witch, candle, KnightRig()] as [CharacterRig] {
+  let goblin = GoblinRig()
+  goblin.steam.opacity = 1
+  goblin.steam.position = CGPoint(x: 117, y: 117)
+  #expect(!hitTester.containsArtwork(in: goblin.root, at: CGPoint(x: 117, y: 117)))
+  let astronaut = AstronautRig()
+  astronaut.thrusters.opacity = 1
+  #expect(!hitTester.containsArtwork(in: astronaut.root, at: CGPoint(x: 29, y: 30)))
+  let mime = MimeRig()
+  mime.contactMarks.opacity = 1
+  #expect(!hitTester.containsArtwork(in: mime.root, at: CGPoint(x: 19, y: 108)))
+  for rig in [alien, witch, candle, KnightRig(), SpartanRig(), goblin, astronaut, mime]
+    as [CharacterRig]
+  {
     #expect(hitTester.containsArtwork(in: rig.root, at: CGPoint(x: 64, y: 75)))
   }
 }

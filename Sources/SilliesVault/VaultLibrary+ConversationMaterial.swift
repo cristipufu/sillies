@@ -7,16 +7,15 @@ extension VaultLibrary: ConversationMaterialProviding {
   {
     try selection.ids.map { id in
       try Task.checkCancellation()
-      guard let record = try record(id: id) else {
+      guard let document = try reasoningDocument(id: id) else {
         return .init(
           id: id, title: String(localized: "Unavailable Vault item"), source: nil, isComplete: false
         )
       }
       let passage = try VaultRecordPassage.select(
-        in: record, query: query,
+        in: document.content, query: query,
         maximumCharacters: ConversationRecordContext.maximumExcerptCharacters)
-      let source = try ChatSource(
-        header: .init(record), excerpt: passage.text, links: VaultToolContent.links(in: record))
+      let source = document.source(excerpt: passage.text)
       return .init(
         id: id, title: source.title, source: source,
         isComplete: passage.coverage.isComplete)

@@ -9,6 +9,18 @@ struct VaultRecordPassage {
     let index: String.Index
     let offset: Int
   }
+  struct Source {
+    let text: String
+    let title: String
+    init(record: SessionRecord, notes: String = "", title: String? = nil) {
+      let captured =
+        ([record.transcript, record.extractedText] + record.stashedItems + [record.explanation])
+        .filter { !$0.isEmpty }
+      let sourceText = captured.isEmpty ? record.summary : captured.joined(separator: "\n\n")
+      text = [sourceText, notes].filter { !$0.isEmpty }.joined(separator: "\n\n")
+      self.title = title ?? record.windowTitle ?? record.appName
+    }
+  }
 
   struct Coverage: Encodable {
     let startOffset: Int
@@ -36,10 +48,14 @@ struct VaultRecordPassage {
   static func selectRelated(in record: SessionRecord, query: String, offset: Int? = nil) throws
     -> [Self]
   {
-    let first = try select(in: record, query: query, offset: offset)
+    try selectRelated(in: Source(record: record), query: query, offset: offset)
+  }
+
+  static func selectRelated(in source: Source, query: String, offset: Int? = nil) throws -> [Self] {
+    let first = try select(in: source, query: query, offset: offset)
     guard offset == nil else { return [first] }
-    let body = capturedText(in: record)
-    let terms = VaultPassageQuery(query: query, title: record.windowTitle ?? record.appName)
+    let body = source.text
+    let terms = VaultPassageQuery(query: query, title: source.title)
     var selected = [first]
     while selected.count < maximumPassages {
       try Task.checkCancellation()
@@ -59,9 +75,18 @@ struct VaultRecordPassage {
     in record: SessionRecord, query: String, offset: Int? = nil,
     maximumCharacters: Int = Self.maximumCharacters
   ) throws -> Self {
+    try select(
+      in: Source(record: record), query: query, offset: offset, maximumCharacters: maximumCharacters
+    )
+  }
+
+  static func select(
+    in source: Source, query: String, offset: Int? = nil,
+    maximumCharacters: Int = Self.maximumCharacters
+  ) throws -> Self {
     try Task.checkCancellation()
     let limit = min(Self.maximumCharacters, max(1, maximumCharacters))
-    let body = capturedText(in: record)
+    let body = source.text
     let count = body.count
     if let offset {
       guard (0...count).contains(offset) else { throw SelectionError.invalidOffset }
@@ -69,7 +94,7 @@ struct VaultRecordPassage {
       return passage(
         in: body, from: .init(index: start, offset: offset), count: count, limit: limit)
     }
-    let query = VaultPassageQuery(query: query, title: record.windowTitle ?? record.appName)
+    let query = VaultPassageQuery(query: query, title: source.title)
     return try bestPassage(in: body, query: query, count: count, limit: limit)
   }
 
@@ -122,13 +147,6 @@ struct VaultRecordPassage {
       text: text,
       coverage: .init(
         startOffset: cursor.offset, endOffset: cursor.offset + text.count, totalCharacters: count))
-  }
-
-  private static func capturedText(in record: SessionRecord) -> String {
-    let captured =
-      ([record.transcript, record.extractedText] + record.stashedItems
-      + [record.explanation]).filter { !$0.isEmpty }
-    return captured.isEmpty ? record.summary : captured.joined(separator: "\n\n")
   }
 
   enum SelectionError: Error { case invalidOffset }

@@ -22,6 +22,10 @@ final class RendererRegistry {
     register("witch", factory: WitchRig.init)
     register("knight", factory: KnightRig.init)
     register("candle", factory: CandleRig.init)
+    register("spartan", factory: SpartanRig.init)
+    register("goblin", factory: GoblinRig.init)
+    register("astronaut", factory: AstronautRig.init)
+    register("mime", factory: MimeRig.init)
   }
 
   func register(_ id: String, factory: @escaping Factory) { factories[id] = factory }

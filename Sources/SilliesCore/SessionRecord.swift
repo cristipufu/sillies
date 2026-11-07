@@ -78,6 +78,12 @@ public struct SessionRecord: Codable, Identifiable, Equatable, Sendable {
   }
 
   public var displayTitle: String {
+    Self.displayTitle(appName: appName, windowTitle: windowTitle, kind: kind)
+  }
+
+  public static func displayTitle(
+    appName: String, windowTitle: String?, kind: CompanionSkillKind
+  ) -> String {
     if let windowTitle, !windowTitle.isEmpty, windowTitle != appName {
       return "\(appName) — \(windowTitle)"
     }

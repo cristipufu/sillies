@@ -76,7 +76,7 @@ public struct VaultStorageMetrics: Sendable {
   public internal(set) var pageReads = 0
   public internal(set) var loadedHeaders = 0
   public internal(set) var writtenBodies = 0
-  public internal(set) var indexedDocuments = 0
+  public internal(set) var indexedSections = 0
   public init() {}
 }
 

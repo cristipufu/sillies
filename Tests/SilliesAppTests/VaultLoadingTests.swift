@@ -34,6 +34,7 @@ func vaultLoadingMergesEarlyChangesWithoutOverwritingSavedSessions() async throw
   clearing.clearAll()
   clearing.add(added)
   await clearing.flush()
+  #expect(clearing.persistenceError == nil)
   #expect(clearing.records.map(\.id) == [added.id])
   let final = SessionVaultStore(directory: directory)
   await final.waitUntilLoaded()

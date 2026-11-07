@@ -24,13 +24,16 @@ struct LaunchConfiguration {
   var runsWritingFixture: Bool { arguments.contains("--writing-fixture") }
   var runsInputFixture: Bool { arguments.contains("--input-fixture") }
   var usesDarkAppearance: Bool { arguments.contains("--dark") }
-  var usesAccessibility: Bool { !arguments.contains("--without-accessibility") }
+  var usesAccessibility: Bool {
+    !validatesCatalogOnly && !arguments.contains("--without-accessibility")
+  }
   var validatesCatalogOnly: Bool { arguments.contains("--validate-catalog") }
   var showsPreview: Bool {
     arguments.contains("--preview") || arguments.contains("--snapshot-dir")
   }
   var isAutomatedRun: Bool {
-    arguments.contains("--smoke-test") || arguments.contains("--snapshot-dir")
+    validatesCatalogOnly || runsWritingFixture || runsInputFixture
+      || arguments.contains("--smoke-test") || arguments.contains("--snapshot-dir")
       || arguments.contains("--performance-check") || arguments.contains("--window-test")
       || arguments.contains("--external-drag-test")
       || arguments.contains("--drag-latency-test")
@@ -101,9 +104,12 @@ final class AutomatedLaunchRunner {
     playfulPreview = nil
   }
 
-  func validateCatalog(characterCount: Int) {
+  func validateCatalog() {
     Task {
       do {
+        let assets = CompanionAssets()
+        let catalog = try assets.validatedCatalog()
+        try PlayfulSceneCatalog().validate(characters: catalog, animations: assets.animations)
         let models = try await Task.detached {
           (
             speech: try SpeechModelCatalog.bundled().manifests.count,
@@ -113,9 +119,10 @@ final class AutomatedLaunchRunner {
           )
         }.value
         print(
-          "Validated \(characterCount) character packs, all animation references, \(models.speech) downloadable speech models, \(models.text) downloadable text models, \(models.voice) downloadable voice models, and \(models.search) downloadable search models."
+          "Validated \(catalog.characters.count) character packs, all animation references, \(models.speech) downloadable speech models, \(models.text) downloadable text models, \(models.voice) downloadable voice models, and \(models.search) downloadable search models."
         )
-        NSApp.terminate(nil)
+        // This command deliberately never constructs application services or private storage.
+        exit(EXIT_SUCCESS)
       } catch {
         fputs("Catalog validation failed: \(error.localizedDescription)\n", stderr)
         exit(1)

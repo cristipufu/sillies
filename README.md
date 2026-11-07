@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Little companions. Useful superpowers.</strong><br>
-  Sixteen animated companions that live on your window edges.<br>
+  Twenty animated companions that live on your window edges.<br>
   Dictate a thought, capture a meeting, save something for later. All on your Mac.
 </p>
 
@@ -27,11 +27,11 @@
 ## Meet your crew
 
 <p align="center">
-  <img src="docs/images/crew.png" width="1000" alt="All sixteen Sillies companions: Mochi, Kiko, Pogo, Bolt, Boo, Bloop, Sprout, Pip, Pebble, Taro, Nib, Mallow, Novi, Lumi, Rook, and Flick, with their personality captions">
+  <img src="docs/images/crew.png" width="1000" alt="All twenty Sillies companions: Mochi, Kiko, Pogo, Bolt, Boo, Bloop, Sprout, Pip, Pebble, Taro, Nib, Mallow, Novi, Lumi, Rook, Flick, Leon, Gizmo, Orbit, and Mimo, with their personality captions">
 </p>
 
 Mochi naps on the title bar. Kiko takes the dramatic route. Pogo climbs the side of your window.
-Bolt is doing his very best. Pick your favorites from sixteen companions, each with its own artwork,
+Bolt is doing his very best. Pick your favorites from twenty companions, each with its own artwork,
 personality, and reactions.
 
 They ride along as you move and resize windows. In **Playful** mode, they might dance together, sweep
@@ -77,9 +77,13 @@ other tabs playing audio. [Capture details and permissions →](docs/skills.md)
   sends a message or runs a terminal command for you.
 - **Keep a Pocket Stash.** Drop text, links, or file references onto a companion, or explicitly save the
   clipboard. Search your saved snippets and paste them back into your work.
-- **Find it in the Vault.** Search transcripts, notes, and text inside screenshots. Play recordings,
-  protect important captures, and export Markdown with attachments. Captures stay until you delete
-  them unless you choose a retention limit; writing recovery has its own short history.
+- **Make the Vault your own.** Search transcripts, personal notes and screenshot text; find related
+  material by meaning. Save articles, X posts and YouTube links with a preview and your own notes.
+  Organize with stars, tags and collections, correct a transcript, and play its recording alongside it.
+  Export Markdown with attachments, make a local backup, or restore an item from Trash. Captures stay
+  until you choose a retention limit or delete them; writing recovery has its own short history.
+
+[Using and extending the Vault →](docs/contributing/vault.md)
 
 [Writing, shortcuts, and recovery →](docs/everyday-workflows.md)
 

@@ -10,6 +10,7 @@ final class SessionVaultModel {
   private static let searchDebounce: Duration = .milliseconds(120)
   private static let feedbackDuration: Duration = .milliseconds(1800)
   private let vault: SessionVaultStore
+  let workspace: VaultWorkspaceModel
   @ObservationIgnored private let loadDetail: @MainActor (UUID) async throws -> SessionRecord?
   var selectedFilter: CompanionSkillKind? {
     didSet { if selectedFilter != oldValue { requestedRecordID = nil } }
@@ -28,13 +29,21 @@ final class SessionVaultModel {
   private var requestedRecordID: UUID?
   private(set) var lastStashID: UUID?
   private(set) var feedback: String?
+  private(set) var keepsFeedbackVisible = false
   private(set) var discussionFailure: SessionFailure?
   @ObservationIgnored private var feedbackTask: Task<Void, Never>?
   @ObservationIgnored private var feedbackGeneration = UUID()
   @ObservationIgnored private let windowActions: VaultWindowActions?
   private var exportRequest: UUID?
+  private var fileCancellationRequest: UUID?
   private var discussionRequest: UUID?
-  var isExporting: Bool { exportRequest != nil }
+  private var transcriptRequest: UUID?
+  private var relinkRequest: UUID?
+  private var pasteRequest: UUID?
+  @ObservationIgnored private var pasteTask: Task<Void, Never>?
+  var isExporting: Bool { exportRequest != nil || fileCancellationRequest != nil }
+  var isPasting: Bool { pasteRequest != nil }
+  private(set) var fileOperationTitle = String(localized: "Saving your export…")
   private(set) var expandedTranscriptID: UUID?
   @ObservationIgnored private let speakerWorker = SessionSpeakerWorker()
   @ObservationIgnored private var speakerTask: Task<Void, Never>?
@@ -92,6 +101,7 @@ final class SessionVaultModel {
   ) {
     windowActions = presentation.windowActions
     self.vault = vault
+    workspace = VaultWorkspaceModel(vault: vault)
     self.loadDetail = loadDetail ?? { try await vault.record(id: $0) }
     listing = VaultListing(.init(records: vault.records, total: vault.recordCount, nextCursor: nil))
     self.pasteBack = presentation.pasteBack
@@ -103,6 +113,22 @@ final class SessionVaultModel {
   var hasMoreResults: Bool { listing.hasMore }
   var canExport: Bool { isPresented && windowActions != nil && !isExporting }
   var canPopOutTranscript: Bool { windowActions != nil }
+  var canCancelFileOperation: Bool {
+    exportRequest != nil && windowActions?.cancelFileOperation != nil
+  }
+
+  func cancelFileOperation() {
+    guard canCancelFileOperation, let cancel = windowActions?.cancelFileOperation else { return }
+    let request = UUID()
+    fileCancellationRequest = request
+    exportRequest = nil
+    fileOperationTitle = String(localized: "Cancelling…")
+    cancel { [weak self] in
+      guard let self, fileCancellationRequest == request else { return }
+      fileCancellationRequest = nil
+    }
+  }
+  func dismissFeedback() { clearFeedback() }
 
   func navigate(to recordID: UUID) {
     selectedFilter = nil
@@ -112,7 +138,10 @@ final class SessionVaultModel {
     expandedTranscriptID = nil
   }
 
-  func resume() { isPresented = true }
+  func resume() {
+    isPresented = true
+    workspace.resume()
+  }
   func showMore() {
     guard hasMoreResults, !isSearching else { return }
     pageRequest += 1
@@ -303,26 +332,76 @@ final class SessionVaultModel {
   func toggleProtection(_ record: SessionRecord) {
     performEdit(record.id, .protection(record.isProtected ? .unprotected : .protected))
   }
+  func removeProtection(id: UUID) { performEdit(id, .protection(.unprotected)) }
+  func keep(id: UUID) { performEdit(id, .protection(.protected)) }
+  func relink(_ reference: VaultFileReference) {
+    guard isPresented, relinkRequest == nil, let relink = windowActions?.relink else { return }
+    let request = UUID()
+    relinkRequest = request
+    relink(reference) { [weak self] message in
+      guard let self, relinkRequest == request else { return }
+      relinkRequest = nil
+      guard isPresented, let message else { return }
+      showPersistentFeedback(message)
+      vault.workspaceChanged([reference.recordID])
+      if workspace.document.header?.id == reference.recordID {
+        Task { await self.workspace.document.externalFiles.load(id: reference.recordID) }
+      }
+    }
+  }
   func export(_ records: [SessionRecord]) {
     exportSelection(.records(records.map(\.id)))
   }
+  func exportIDs(_ ids: [UUID]) { exportSelection(.records(ids)) }
+  func exportSelectedText() {
+    let text = workspace.document.editor.selectedText
+    guard !text.isEmpty, let export = windowActions?.exportText else { return }
+    beginExport { completion in export(text, completion) }
+  }
   func exportAll() { exportSelection(.all) }
+  func backup() {
+    guard let backup = windowActions?.backup else { return }
+    beginExport(backup)
+  }
+  func prepareRestore() {
+    guard let prepare = windowActions?.prepareRestore,
+      let request = beginFileOperation(
+        title: String(localized: "Preparing your backup for restoration…"))
+    else { return }
+    // Recovery remains available when the current archive cannot be flushed or opened.
+    performFileOperation(prepare, request: request)
+  }
   private func exportSelection(_ selection: VaultExportSelection) {
     guard let windowActions, canExport else { return }
-    let request = UUID()
-    exportRequest = request
+    beginExport { completion in windowActions.export(selection, completion) }
+  }
+  private func beginExport(_ action: @escaping (@escaping (String?) -> Void) -> Void) {
+    guard let request = beginFileOperation(title: String(localized: "Saving your export…")) else {
+      return
+    }
     vault.whenPersisted { [weak self] error in
       guard let self, self.isPresented, self.exportRequest == request else { return }
       if let error {
         self.exportRequest = nil
-        self.showFeedback(error)
+        self.showPersistentFeedback(error)
         return
       }
-      windowActions.export(selection) { [weak self] message in
-        guard let self, self.exportRequest == request else { return }
-        self.exportRequest = nil
-        if self.isPresented, let message { self.showFeedback(message) }
-      }
+      performFileOperation(action, request: request)
+    }
+  }
+  private func beginFileOperation(title: String) -> UUID? {
+    guard canExport else { return nil }
+    fileOperationTitle = title
+    let request = UUID()
+    exportRequest = request
+    return request
+  }
+  private func performFileOperation(_ action: (@escaping (String?) -> Void) -> Void, request: UUID)
+  {
+    action { [weak self] message in
+      guard let self, exportRequest == request else { return }
+      exportRequest = nil
+      if isPresented, let message { showPersistentFeedback(message) }
     }
   }
   func openTranscript(_ record: SessionRecord) {
@@ -330,6 +409,23 @@ final class SessionVaultModel {
   }
   func closeTranscript() { expandedTranscriptID = nil }
   func popOutTranscript(_ record: SessionRecord) { windowActions?.popOutTranscript(record) }
+  func popOutTranscript(id: UUID) async {
+    guard isPresented else { return }
+    let request = UUID()
+    transcriptRequest = request
+    defer { if transcriptRequest == request { transcriptRequest = nil } }
+    do {
+      guard let record = try await loadDetail(id), transcriptRequest == request,
+        isPresented, !Task.isCancelled
+      else {
+        return
+      }
+      popOutTranscript(record)
+    } catch {
+      guard transcriptRequest == request, isPresented, !Task.isCancelled else { return }
+      showPersistentFeedback(error.localizedDescription)
+    }
+  }
   func discuss(_ recordID: UUID, with companion: ConversationOwner) {
     guard let discussion, isPresented, discussionRequest == nil else { return }
     let request = UUID()
@@ -349,8 +445,12 @@ final class SessionVaultModel {
   }
   func dismissDiscussionFailure() { discussionFailure = nil }
   func regenerateNotes(_ record: SessionRecord) {
+    regenerateNotes(id: record.id)
+  }
+
+  func regenerateNotes(id: UUID) {
     performEdit(
-      record.id, .requestNotes,
+      id, .requestNotes,
       feedback: String(localized: "Refreshing notes with your selected local model"))
   }
 
@@ -374,7 +474,7 @@ final class SessionVaultModel {
         self.showFeedback(String(localized: "Speaker updated · Refreshing notes"))
       } catch {
         fputs("Could not rename the speaker: \(error)\n", stderr)
-        self?.showFeedback(
+        self?.showPersistentFeedback(
           String(localized: "Could not update the speaker: \(error.localizedDescription)"))
       }
     }
@@ -387,25 +487,58 @@ final class SessionVaultModel {
       case .success(false): break
       case .failure(let error):
         fputs("Vault edit failed: \(error)\n", stderr)
-        self?.showFeedback(
+        self?.showPersistentFeedback(
           String(localized: "Could not update this session: \(error.localizedDescription)"))
       }
     }
   }
-  func paste(_ record: SessionRecord) {
-    guard let pasteBack else { return }
-    Task { [weak self] in
+  func paste(id: UUID) {
+    guard isPresented, pasteRequest == nil, let pasteBack else { return }
+    let request = UUID()
+    let destinationID = pasteBack.destination?.id
+    pasteRequest = request
+    pasteTask = Task { [weak self] in
+      guard let self else { return }
+      defer {
+        if pasteRequest == request {
+          pasteRequest = nil
+          pasteTask = nil
+        }
+      }
       do {
+        await workspace.document.flush()
+        guard pasteRequest == request, isPresented, workspace.document.canNavigate,
+          !Task.isCancelled
+        else { return }
+        let record = try await loadDetail(id)
+        guard pasteRequest == request, isPresented, pasteBack.destination?.id == destinationID,
+          !Task.isCancelled
+        else { return }
+        guard let record else {
+          throw VaultStorageError(message: String(localized: "Unavailable Vault item"))
+        }
+        guard !record.primaryText.isEmpty else { return }
         try await pasteBack.paste(record.primaryText)
-        self?.showFeedback(String(localized: "Text pasted"))
-      } catch { self?.showFeedback(error.localizedDescription) }
+        guard pasteRequest == request, isPresented, !Task.isCancelled else { return }
+        showFeedback(String(localized: "Text pasted"))
+      } catch is CancellationError { return } catch {
+        guard pasteRequest == request, isPresented, !Task.isCancelled else { return }
+        showPersistentFeedback(error.localizedDescription)
+      }
     }
   }
 
   func stop() {
+    cancelFileOperation()
+    workspace.stop()
     isPresented = false
     exportRequest = nil
     discussionRequest = nil
+    transcriptRequest = nil
+    relinkRequest = nil
+    pasteRequest = nil
+    pasteTask?.cancel()
+    pasteTask = nil
     detailGeneration = UUID()
     searchGeneration = UUID()
     isSearching = false
@@ -419,12 +552,19 @@ final class SessionVaultModel {
     feedbackTask?.cancel()
     feedbackTask = nil
     feedback = nil
+    keepsFeedbackVisible = false
+  }
+
+  private func showPersistentFeedback(_ message: String) {
+    guard isPresented else { return }
+    clearFeedback()
+    feedback = message
+    keepsFeedbackVisible = true
   }
 
   private func showFeedback(_ message: String) {
     guard isPresented else { return }
-    feedbackTask?.cancel()
-    feedbackGeneration = UUID()
+    clearFeedback()
     feedback = message
     feedbackTask = Task { [weak self] in
       do { try await Task.sleep(for: Self.feedbackDuration) } catch { return }

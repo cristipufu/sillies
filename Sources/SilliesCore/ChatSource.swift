@@ -22,14 +22,20 @@ public struct ChatSource: Codable, Equatable, Identifiable, Sendable {
     header: SessionRecordHeader, excerpt: String, links: [URL] = [],
     retrieval: VaultSearchMatch.Retrieval = .keyword
   ) {
-    id = header.id
-    title = header.windowTitle.flatMap { $0.isEmpty ? nil : $0 } ?? header.appName
-    kind = header.kind
-    createdAt = header.createdAt
-    self.excerpt = excerpt
+    self.init(.init(header: header, excerpt: excerpt, retrieval: retrieval), links: links)
+  }
+
+  public init(_ match: VaultSearchMatch, links: [URL] = []) {
+    id = match.header.id
+    title =
+      match.documentTitle ?? match.header.windowTitle.flatMap { $0.isEmpty ? nil : $0 }
+      ?? match.header.appName
+    kind = match.header.kind
+    createdAt = match.header.createdAt
+    self.excerpt = match.excerpt
     self.links = links
-    imageFilename = header.imageFilename
-    retrievalMethod = retrieval
+    imageFilename = match.header.imageFilename
+    retrievalMethod = match.retrieval
   }
 }
 extension ChatSource: SessionAttachmentReference {}

@@ -1,0 +1,11 @@
+{
+  "vectors": 100000,
+  "dimensions": 384,
+  "recallAt10": 0.983,
+  "p50ms": 0.956,
+  "p95ms": 1.066,
+  "trainSeconds": 0.041,
+  "buildSeconds": 0.441,
+  "exactSeconds": 0.416,
+  "peakRSSBytes": 172425216
+}

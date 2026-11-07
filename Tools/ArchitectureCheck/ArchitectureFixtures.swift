@@ -4,6 +4,8 @@ import Foundation
 enum ArchitectureFixtures {
   private static func verifyPackageBoundaries() -> Bool {
     let valid = [
+      "let t = [.target(name: \"SilliesVectorIndex\", dependencies: [.product(name: \"LocalVectorIndex\", package: \"VectorSearch\")])]",
+      "let t = [.executableTarget(name: \"SilliesSearchInference\", dependencies: [\"SilliesVectorIndex\"])]",
       "let t = [.target(name: \"SilliesDiagnostics\")]",
       "let t = [.executableTarget(name: \"ChatModelBenchmark\", dependencies: [\"SilliesReasoning\", \"SilliesVault\"])]",
       "let t = [.target(name: \"SilliesWriting\", dependencies: [\"SilliesCore\", \"SilliesAudio\", \"SilliesReasoning\"]) ]",
@@ -14,6 +16,8 @@ enum ArchitectureFixtures {
       "let t = [.target(name: \"SilliesChat\", dependencies: [\"SilliesReasoning\", \"SilliesTTS\"])]",
     ]
     let invalid = [
+      "let t = [.executableTarget(name: \"SilliesApp\", dependencies: [\"SilliesVectorIndex\"])]",
+      "let t = [.executableTarget(name: \"SilliesApp\", dependencies: [.product(name: \"LocalVectorIndex\", package: \"VectorSearch\")])]",
       "let t = [.target(name: \"SilliesDiagnostics\", dependencies: [\"SilliesApp\"])]",
       "let t = [.executableTarget(name: \"ChatModelBenchmark\", dependencies: [\"SilliesApp\"])]",
       "let t = [.target(name: \"SilliesWriting\", dependencies: [\"SilliesApp\"])]",
@@ -49,6 +53,17 @@ enum ArchitectureFixtures {
     let permission = "Sources/SilliesApp/Skills/WindowSnapshotService.swift"
     let rendering = "Sources/SilliesApp/Rendering/CompanionPanel.swift"
     let fixtures: [Fixture] = [
+      .init(
+        source: "import CVectorSearch", path: "Sources/SilliesApp/Skills/Search.swift",
+        rules: ["inference-isolation"]),
+      .init(
+        source: "import SilliesVectorIndex", path: "Sources/SilliesApp/Skills/Search.swift",
+        rules: ["inference-isolation"]),
+      .init(
+        source: "import CVectorSearch", path: "Sources/SilliesVectorIndex/Index.swift", rules: []),
+      .init(
+        source: "import SilliesVectorIndex", path: "Sources/SilliesSearchInference/Search.swift",
+        rules: []),
       .init(
         source: "import AppKit", path: "Sources/SilliesDiagnostics/Journal.swift",
         rules: ["module-boundary"]),

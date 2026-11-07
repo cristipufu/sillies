@@ -42,11 +42,9 @@ package struct VaultSearchTool: ConversationTool {
         links = []
       }
       sources.append(
-        .init(
-          header: match.header,
-          excerpt: match.retrieval == .semantic
-            ? match.excerpt : String(match.excerpt.prefix(Self.excerptCharacters)),
-          links: links, retrieval: match.retrieval))
+        ChatSource(match, links: links).withExcerpt(
+          match.retrieval == .semantic
+            ? match.excerpt : String(match.excerpt.prefix(Self.excerptCharacters))))
     }
     return try VaultToolContent.searchOutput(sources, request: request)
   }

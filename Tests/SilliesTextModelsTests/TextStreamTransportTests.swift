@@ -6,6 +6,7 @@ import Testing
 @testable import SilliesTextModels
 
 private struct TextStreamFixture {
+  private static let releaseWriteBufferBytes = 64 * 1024
   enum Pace { case immediate, delayed }
   enum ReleaseResponse { case acknowledge, delayedAcknowledgement, exit }
   let url = FileManager.default.temporaryDirectory.appendingPathComponent(
@@ -52,7 +53,7 @@ private struct TextStreamFixture {
       let acknowledgement = releaseResponse == .exit ? "exit 0" : "printf '\(completion)'"
       let delay = releaseResponse == .delayedAcknowledgement ? "/bin/sleep 0.15" : ""
       release = """
-        /bin/dd bs=1 count=\(bytes) of='\(releasedFrame.path)' 2>/dev/null
+        /bin/dd ibs=1 obs=\(Self.releaseWriteBufferBytes) count=\(bytes) of='\(releasedFrame.path)' 2>/dev/null
         \(delay)
         \(acknowledgement)
         """

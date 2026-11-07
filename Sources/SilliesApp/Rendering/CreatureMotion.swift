@@ -3,6 +3,16 @@ import QuartzCore
 /// Shared limb mechanics; character clips compose these with their own local details.
 @MainActor
 enum CreatureMotion {
+  static func registerBiped(
+    characterID: String, in library: AnimationLibrary, walk: @escaping AnimationLibrary.Clip
+  ) {
+    library.register(.idle, characterID: characterID, clip: blink)
+    library.register(.walk, characterID: characterID, clip: walk)
+    library.register(.listen, characterID: characterID, clip: blink)
+    library.register(.climb, characterID: characterID, clip: climb)
+    library.register(.hangCatch, characterID: characterID, clip: catchLedge)
+  }
+
   private static let leftStep = RigAnimation.Oscillation(
     keyPath: "transform.rotation.z", from: -0.22, to: 0.22, duration: 0.3)
   private static let rightStep = RigAnimation.Oscillation(

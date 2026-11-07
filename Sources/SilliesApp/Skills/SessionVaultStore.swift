@@ -18,7 +18,10 @@ import SilliesVault
   var searchRevision: Int { changes.version }
   private(set) var retentionPolicy: VaultRetentionPolicy
   private(set) var pinnedRecordID: UUID?
-  private(set) var persistenceError: String?
+  private var writeError: String?
+  private(set) var restoredPreviousDirectory: URL?
+  private var draftErrors: [UUID: String] = [:]
+  var persistenceError: String? { writeError ?? draftErrors.values.first }
   private(set) var isLoading = true
   @ObservationIgnored private var loadState = LoadState.loading
   @ObservationIgnored private var loadCompletions: [@MainActor () -> Void] = []
@@ -28,9 +31,12 @@ import SilliesVault
   @ObservationIgnored private let media: VaultMediaStore
   @ObservationIgnored private let summaries: VaultSummaryScheduler
   @ObservationIgnored private let screenshotText = VaultOCRScheduler()
+  @ObservationIgnored private let linkPreviews: VaultLinkPreviewCoordinator
   @ObservationIgnored private var notesLoading: Task<Void, Never>?
   @ObservationIgnored private var notesGeneration = UUID()
   @ObservationIgnored private var backgroundEnabled = true
+  @ObservationIgnored private var draftFlushers: [UUID: (@escaping @MainActor () -> Void) -> Void] =
+    [:]
   let library: VaultLibrary
   let storageDirectory: URL
   typealias NotesGenerator = VaultSummaryScheduler.Generator
@@ -51,15 +57,18 @@ import SilliesVault
       directory
       ?? FileManager.default.homeDirectoryForCurrentUser
       .appendingPathComponent("Library/Application Support/Sillies/Vault", isDirectory: true)
-    let library = VaultLibrary(directory: storageDirectory)
+    let library = VaultLibrary(directory: storageDirectory, opening: .applicationLaunch)
     self.library = library
+    linkPreviews = VaultLinkPreviewCoordinator(
+      library: library, fetcher: SystemVaultLinkPreviewFetcher())
     writer = VaultWriteCoordinator(library: library)
     media = VaultMediaStore(
       directory: storageDirectory, pasteboard: pasteboard, queue: Self.imageQueue)
     summaries = VaultSummaryScheduler(
       load: { try await library.record(id: $0) }, generate: notesGenerator)
-    writer.report = { [weak self] in self?.persistenceError = $0 }
+    writer.report = { [weak self] in self?.writeError = $0 }
     writer.committed = { [weak self] in self?.receive($0) }
+    linkPreviews.changed = { [weak self] in self?.changes.record([$0]) }
     screenshotText.next = { [weak self, library] in
       guard let header = try await library.pendingScreenshot(),
         let url = self?.media.url(header.imageFilename)
@@ -83,7 +92,41 @@ import SilliesVault
         save: { [weak self] in
           self?.writer.save(.update($0))
           self?.present($0)
+        },
+        applyProtection: { [weak self] id, protection, completion in
+          guard let self else {
+            completion(.success(false))
+            return
+          }
+          self.applyProtection(protection, for: id, completion: completion)
         }))
+  }
+
+  private func applyProtection(
+    _ protection: VaultRecordProtection, for id: UUID,
+    completion: @escaping VaultRecordEditor.Completion
+  ) {
+    Task.detached { [weak self, library] in
+      let result: Result<VaultSnapshot?, Error>
+      do { result = .success(try await library.setProtection(protection, for: id)) } catch {
+        result = .failure(error)
+      }
+      MainRunLoopDelivery.perform {
+        do {
+          guard let self, let snapshot = try result.get(), !self.writer.isRemoved(id) else {
+            completion(.success(false))
+            return
+          }
+          if var pending = self.writer.record(id) {
+            pending.isProtected = protection == .protected
+            self.writer.save(.update(pending))
+          }
+          self.receive(snapshot)
+          self.changes.record([id])
+          completion(.success(true))
+        } catch { completion(.failure(error)) }
+      }
+    }
   }
 
   func page(_ request: VaultPageRequest) async throws -> VaultPage {
@@ -200,24 +243,39 @@ import SilliesVault
     Task.detached { [weak self, library] in
       let result: Result<VaultSnapshot, Error>
       do { result = .success(try await library.snapshot()) } catch { result = .failure(error) }
-      MainRunLoopDelivery.perform { self?.finishLoading(result) }
+      let restored = await library.restoreReceipt
+      MainRunLoopDelivery.perform {
+        if let restored { self?.receiveRestore(restored) }
+        self?.finishLoading(result)
+      }
     }
+  }
+  private func receiveRestore(_ receipt: VaultPreparedRestore.Receipt) {
+    restoredPreviousDirectory = receipt.previousDirectory
+    // Restoring must not immediately trim the recovered archive using an older local preference.
+    retentionPolicy = .keepAll
+    defaults.set(VaultRetentionPolicy.keepAll.rawValue, forKey: "vault.retention")
   }
   private func finishLoading(_ result: Result<VaultSnapshot, Error>) {
     isLoading = false
     switch result {
     case .success(let snapshot):
       loadState = .ready
-      persistenceError = nil
+      writeError = nil
       receive(snapshot)
       changes.reset()
       if retentionPolicy.limit != nil { writer.applyRetention(retentionPolicy) }
       writer.activate()
       resumePendingSummaries()
       screenshotText.pump()
+      if backgroundEnabled {
+        Task { await library.resumeContentPreparation() }
+        Task { await library.resumeCleanup() }
+        linkPreviews.pump()
+      }
     case .failure(let error):
       loadState = .failed
-      persistenceError =
+      writeError =
         String(
           localized:
             "Could not open the Vault. Existing files were preserved. \(error.localizedDescription)"
@@ -242,9 +300,33 @@ import SilliesVault
       loadCompletions.append { self.flushOnIOQueue(completion: completion) }
       return
     }
-    editor.flush { [writer] in
-      writer.flush {
-        Self.imageQueue.async { MainRunLoopDelivery.perform { completion() } }
+    flushDrafts {
+      self.editor.flush { [writer = self.writer] in
+        writer.flush {
+          Self.imageQueue.async { MainRunLoopDelivery.perform { completion() } }
+        }
+      }
+    }
+  }
+
+  func registerDraftFlusher(_ flush: @escaping (@escaping @MainActor () -> Void) -> Void) -> UUID {
+    let id = UUID()
+    draftFlushers[id] = flush
+    return id
+  }
+  func unregisterDraftFlusher(_ id: UUID) { draftFlushers.removeValue(forKey: id) }
+  func reportDraftFailure(_ message: String?, owner: UUID) { draftErrors[owner] = message }
+  private func flushDrafts(_ completion: @escaping @MainActor () -> Void) {
+    let flushers = Array(draftFlushers.values)
+    guard !flushers.isEmpty else {
+      completion()
+      return
+    }
+    var remaining = flushers.count
+    for flush in flushers {
+      flush {
+        remaining -= 1
+        if remaining == 0 { completion() }
       }
     }
   }
@@ -276,9 +358,16 @@ import SilliesVault
     notesGeneration = generation
     notesLoading = Task { [weak self, library] in
       do {
-        let ids = try await library.pendingSummaryIDs()
-        guard !Task.isCancelled, let self else { return }
-        for id in ids { self.scheduleSummary(id) }
+        var preceding: [UUID] = []
+        while !Task.isCancelled {
+          let ids = try await library.pendingSummaryIDs()
+          guard !Task.isCancelled, let self, self.notesGeneration == generation else { return }
+          guard !ids.isEmpty, ids != preceding else { break }
+          preceding = ids
+          for id in ids { self.scheduleSummary(id) }
+          await self.summaries.flush()
+          await Task.yield()
+        }
       } catch { fputs("Could not resume Vault notes: \(error)\n", stderr) }
       if self?.notesGeneration == generation { self?.notesLoading = nil }
     }
@@ -300,11 +389,17 @@ import SilliesVault
     backgroundEnabled = false
     cancelPendingSummaries()
     screenshotText.stop()
+    linkPreviews.stop()
+    Task { await library.stopContentPreparation() }
+    Task { await library.stopCleanup() }
   }
   func resumeBackgroundProcessing() {
     backgroundEnabled = true
     resumePendingSummaries()
     screenshotText.resume()
+    linkPreviews.resume()
+    Task { await library.resumeContentPreparation() }
+    Task { await library.resumeCleanup() }
   }
   private func completeScreenshotText(
     request: VaultOCRScheduler.Request, result: Result<String, Error>
@@ -348,4 +443,49 @@ import SilliesVault
     media.copyImage(record.imageFilename)
   }
   func copyText(_ text: String) { media.copyText(text) }
+
+  func workspaceChanged(_ ids: Set<UUID>) { changes.record(ids) }
+
+  func editWorkspace(id: UUID, _ edit: VaultDocumentEdit) async throws -> VaultDocumentHeader {
+    await flush()
+    if let persistenceError { throw VaultStorageError(message: persistenceError) }
+    let header = try await library.editDocument(id: id, edit: edit, at: Date())
+    changes.record([id])
+    receive(try await library.snapshot())
+    if backgroundEnabled { linkPreviews.pump() }
+    return header
+  }
+
+  func editWorkspace(ids: Set<UUID>, _ edit: VaultDocumentEdit) async throws {
+    await flush()
+    if let persistenceError { throw VaultStorageError(message: persistenceError) }
+    try await library.editDocuments(ids: ids, edit: edit, at: Date())
+    changes.record(ids)
+    receive(try await library.snapshot())
+  }
+
+  func emptyTrash() async throws {
+    await flush()
+    if let persistenceError { throw VaultStorageError(message: persistenceError) }
+    try await library.emptyTrash()
+    changes.reset()
+    receive(try await library.snapshot())
+  }
+
+  func createDocument(metadata: VaultDocumentMetadata, notes: String = "") async throws
+    -> VaultDocumentHeader
+  {
+    await waitUntilLoaded()
+    if let writeError { throw VaultStorageError(message: writeError) }
+    let record = SessionRecord(
+      kind: .stash,
+      origin: .init(
+        characterID: "vault", characterName: "",
+        source: .init(appName: "Sillies", windowTitle: metadata.title)))
+    let header = try await library.createDocument(record: record, metadata: metadata, notes: notes)
+    changes.record([record.id])
+    receive(try await library.snapshot())
+    if backgroundEnabled { linkPreviews.pump() }
+    return header
+  }
 }

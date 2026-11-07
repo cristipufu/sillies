@@ -4,6 +4,7 @@ struct ArchitecturePolicy {
   var uncheckedOwners: [String: String]
 
   static let imports: [String: Set<String>] = [
+    "VaultScaleBenchmark": ["Foundation", "SilliesCore", "SilliesPersistence", "SilliesVault"],
     "MemorySearchBenchmark": [
       "Foundation", "SilliesCore", "SilliesVault", "SilliesSearchModels", "SilliesInference",
     ],
@@ -46,9 +47,14 @@ struct ArchitecturePolicy {
       "Foundation", "CryptoKit", "Synchronization", "SilliesCore", "SilliesFileSystem",
     ],
     "SilliesSearchModels": ["Foundation", "SilliesCore", "SilliesInference"],
+    "SilliesVectorIndex": [
+      "Foundation", "CryptoKit", "CVectorSearch", "LocalVectorIndex", "SilliesCore",
+      "SilliesPersistence",
+    ],
     "SilliesSearchInference": [
       "Foundation", "Darwin", "NaturalLanguage", "MLX", "MLXEmbedders", "MLXHuggingFace",
       "MLXLMCommon", "SilliesCore", "SilliesSearchModels", "SilliesInference", "Tokenizers",
+      "SilliesVectorIndex",
     ],
     "SilliesDiagnostics": ["Foundation", "Synchronization", "OSLog"],
     "SilliesInference": ["Foundation", "Darwin", "SilliesDiagnostics"],
@@ -75,7 +81,7 @@ struct ArchitecturePolicy {
       "SilliesInference",
     ],
     "SilliesModelValidation": ["Foundation", "CoreML"],
-    "SilliesPersistence": ["Foundation", "Darwin", "SQLite3", "SilliesCore"],
+    "SilliesPersistence": ["Foundation", "Darwin", "SQLite3", "CryptoKit", "SilliesCore"],
     "SilliesAudio": [
       "Foundation", "AVFoundation", "CoreMedia", "CoreAudio", "SilliesSpeech",
       "ScreenCaptureKit", "CEchoCancellation", "SilliesCore", "Synchronization",

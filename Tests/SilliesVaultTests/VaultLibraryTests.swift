@@ -39,7 +39,7 @@ private func removeFixture(_ directory: URL) {
   let reopened = VaultLibrary(directory: directory)
   let matches = try await reopened.page(.init(search: .init(kind: .record, query: "stefan")))
   #expect(matches.total == 999)
-  #expect(try await reopened.metrics().indexedDocuments == 0)
+  #expect(try await reopened.metrics().indexedSections == 0)
   #expect(try await reopened.metrics().loadedBodies == 0)
   #expect(try await reopened.page(.init(after: first.nextCursor)).records.count == 200)
   _ = try await library.commit(.init(deletion: .records([edited.id])))
@@ -55,5 +55,20 @@ private func removeFixture(_ directory: URL) {
   let record = capture(0)
   _ = try await library.commit(.init(records: [.insert(record)]))
   #expect(try await library.record(id: record.id)?.transcript == record.transcript)
+  #expect(await library.retainedBodyBytes == 0)
+}
+
+@Test func largeAuthoredNotesCannotHideBehindASmallSourceBodyInTheDetailCache() async throws {
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { removeFixture(directory) }
+  let library = VaultLibrary(directory: directory, cacheBytes: 4_096)
+  _ = try await library.snapshot()
+  let record = SessionRecord(
+    kind: .stash,
+    origin: .init(characterID: "vault", characterName: "", source: .init(appName: "Fixture")))
+  let notes = String(repeating: "authored words ", count: 1_000)
+  _ = try await library.createDocument(
+    record: record, metadata: .init(kind: .note, modifiedAt: Date()), notes: notes)
+  #expect(try await library.record(id: record.id)?.stashedItems.contains(notes) == true)
   #expect(await library.retainedBodyBytes == 0)
 }

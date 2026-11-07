@@ -4,7 +4,7 @@ import SilliesReasoning
 
 /// Field-level commands never replace unrelated content from a stale UI snapshot.
 package enum VaultRecordEdit: Sendable {
-  package enum Protection: Sendable, Equatable { case protected, unprotected }
+  package typealias Protection = VaultRecordProtection
   package struct SpeakerEdit: Sendable {
     package let expectedRevision: UUID
     package let transcript: String

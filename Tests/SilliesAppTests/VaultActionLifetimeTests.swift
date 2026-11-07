@@ -110,6 +110,31 @@ private func actionRecord(_ title: String) -> SessionRecord {
     origin: .init(characterID: "pogo", characterName: "Pogo", source: .init(appName: title)))
 }
 
+@Test @MainActor func vaultPasteCannotContinueAfterCloseAndReopenWhileLoadingText() async throws {
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { removeTestFile(at: directory) }
+  let vault = SessionVaultStore(directory: directory)
+  await vault.waitUntilLoaded()
+  vault.suspendBackgroundProcessing()
+  var completion: CheckedContinuation<SessionRecord?, Never>?
+  let model = SessionVaultModel(
+    vault: vault, presentation: .init(pasteBack: PasteBackCoordinator()),
+    loadDetail: { _ in await withCheckedContinuation { completion = $0 } })
+  defer { model.stop() }
+  var record = actionRecord("Saved words")
+  record.transcript = "Words from the selected recording."
+  model.paste(id: record.id)
+  let deadline = ContinuousClock.now + .seconds(3)
+  while completion == nil, ContinuousClock.now < deadline { await Task.yield() }
+  let pending = try #require(completion)
+  #expect(model.isPasting)
+  model.stop()
+  model.resume()
+  pending.resume(returning: record)
+  for _ in 0..<20 { await Task.yield() }
+  #expect(!model.isPasting && model.feedback == nil)
+}
+
 @Test @MainActor func cancelledVaultConversationActionNeverStartsOpening() async {
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
   defer { removeTestFile(at: directory) }
@@ -125,4 +150,30 @@ private func actionRecord(_ title: String) -> SessionRecord {
   model.stop()
   for _ in 0..<20 { await Task.yield() }
   #expect(opens == 0 && !model.isOpening)
+}
+
+@Test @MainActor func vaultTranscriptRequestCannotReopenAWindowAfterCloseAndReopen() async throws {
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { removeTestFile(at: directory) }
+  let vault = SessionVaultStore(directory: directory)
+  await vault.waitUntilLoaded()
+  vault.suspendBackgroundProcessing()
+  var continuation: CheckedContinuation<SessionRecord?, Never>?
+  var opened = 0
+  let model = SessionVaultModel(
+    vault: vault,
+    presentation: .init(
+      windowActions: .init(export: { _, done in done(nil) }, popOutTranscript: { _ in opened += 1 })
+    ),
+    loadDetail: { _ in await withCheckedContinuation { continuation = $0 } })
+  let record = actionRecord("Saved transcript")
+  let pending = Task { await model.popOutTranscript(id: record.id) }
+  while continuation == nil { await Task.yield() }
+  model.stop()
+  model.resume()
+  continuation?.resume(returning: record)
+  await pending.value
+  #expect(opened == 0)
+  model.stop()
+  await vault.flush()
 }

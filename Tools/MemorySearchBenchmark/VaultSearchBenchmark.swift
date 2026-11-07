@@ -54,7 +54,9 @@ enum VaultSearchBenchmark {
     while ContinuousClock.now < deadline {
       let (progress, failure) = try await library.searchIndexStatus()
       if failure != nil { throw ProbeError.indexFailed }
-      if let progress, progress.processed == progress.total { return }
+      if let progress, progress.processed == progress.total, await !library.isPreparingSearch {
+        return
+      }
       try await Task.sleep(for: .milliseconds(20))
     }
     throw ProbeError.indexFailed

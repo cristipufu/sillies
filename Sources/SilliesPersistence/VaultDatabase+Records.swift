@@ -4,7 +4,9 @@ import SilliesCore
 extension VaultDatabase {
   public func page(_ request: VaultPageRequest) throws -> VaultPage {
     var filter = queryFilter(request.search)
-    let total = try sql.integer("SELECT count(*) FROM records r \(filter.sql)", filter.values)
+    let total = try totalMatching(request.search, filter: filter)
+    metrics.pageReads += 1
+    guard total > 0 else { return VaultPage(records: [], total: 0, nextCursor: nil) }
     if let cursor = request.after {
       filter.sql += filter.sql.isEmpty ? "WHERE " : " AND "
       filter.sql += "(created < ? OR (created = ? AND r.id < ?))"
@@ -12,9 +14,8 @@ extension VaultDatabase {
       filter.values += [.real(created), .real(created), .text(cursor.id.uuidString)]
     }
     let records = try headers(
-      "SELECT header FROM records r \(filter.sql) ORDER BY created DESC, id DESC LIMIT ?",
-      filter.values + [.integer(Int64(request.limit))])
-    metrics.pageReads += 1
+      "SELECT header FROM available_records r \(filter.sql) ORDER BY created DESC, id DESC LIMIT ?",
+      filter.values + [.integer(Int64(min(request.limit, total)))])
     return VaultPage(
       records: records, total: total,
       nextCursor: records.count == request.limit ? records.last.map(VaultPageCursor.init) : nil)
@@ -24,7 +25,7 @@ extension VaultDatabase {
     -> VaultHeaderMatches
   {
     let filter = queryFilter(search)
-    let total = try sql.integer("SELECT count(*) FROM records r \(filter.sql)", filter.values)
+    let total = try totalMatching(search, filter: filter)
     let identifiers = Array(ids)
     var matches: [SessionRecordHeader] = []
     let chunkSize = VaultPageRequest.maximumPageSize
@@ -33,7 +34,7 @@ extension VaultDatabase {
       let placeholders = Array(repeating: "?", count: chunk.count).joined(separator: ",")
       let conjunction = filter.sql.isEmpty ? "WHERE" : "AND"
       matches += try headers(
-        "SELECT header FROM records r \(filter.sql) \(conjunction) r.id IN (\(placeholders))",
+        "SELECT header FROM available_records r \(filter.sql) \(conjunction) r.id IN (\(placeholders))",
         filter.values + chunk.map { .text($0.uuidString) })
     }
     return .init(records: matches, total: total)
@@ -51,26 +52,61 @@ extension VaultDatabase {
     return records
   }
 
+  private func totalMatching(
+    _ search: SessionRecordSearch, filter: (sql: String, values: [VaultSQLConnection.Value])
+  ) throws -> Int {
+    guard search.query.isEmpty, try !cleanupProgress().isPending else {
+      return try sql.integer(
+        "SELECT count(*) FROM available_records r \(filter.sql)", filter.values)
+    }
+    return try sql.integer(
+      "SELECT coalesce(sum(c.total-coalesce(t.total,0)),0) FROM library_counts c LEFT JOIN trash_counts t ON t.kind=c.kind\(search.kind == nil ? "" : " WHERE c.kind=?")",
+      search.kind.map { [.text($0.rawValue)] } ?? [])
+  }
+
   public func record(id: UUID) throws -> SessionRecord? {
     var record: SessionRecord?
-    try sql.rows("SELECT body FROM records WHERE id=?", [.text(id.uuidString)]) {
+    try sql.rows("SELECT body,protected FROM available_records WHERE id=?", [.text(id.uuidString)])
+    {
       let data = try VaultSQLConnection.data($0)
       record = try decoder.decode(SessionRecord.self, from: data)
+      record?.isProtected = try VaultSQLConnection.text($0, column: 1) == "1"
       metrics.decodedBodyBytes += data.count
       metrics.loadedBodies += 1
     }
-    return record
+    if var updated = record {
+      let transcript = VaultBlockLocation(recordID: id, section: .transcript)
+      if try sectionState(transcript)?.isEdited == true {
+        updated.originalSpeakerTranscript = updated.originalSpeakerTranscript ?? updated.transcript
+        updated.transcript = try sectionText(transcript)
+      }
+      let screenshot = VaultBlockLocation(recordID: id, section: .screenshotText)
+      if try sectionState(screenshot)?.isEdited == true {
+        updated.extractedText = try sectionText(screenshot)
+      }
+      if updated.kind == .stash, let workspace = try documentHeader(id: id),
+        workspace.metadata.kind != .capture
+      {
+        let notes = try sectionText(.init(recordID: id, section: .notes))
+        updated.stashedItems = [
+          workspace.title, workspace.metadata.link?.url.absoluteString, notes,
+        ].compactMap { $0 }.filter { !$0.isEmpty }
+      }
+      return updated
+    }
+    return nil
   }
 
   public func pendingSummaryIDs() throws -> [UUID] {
     try identifiers(
-      "SELECT id FROM records WHERE pending_summary=1 ORDER BY created ASC, sequence ASC")
+      "SELECT id FROM available_records WHERE pending_summary=1 ORDER BY created ASC, sequence ASC LIMIT 100"
+    )
   }
 
   public func pendingScreenshot() throws -> SessionRecordHeader? {
     var header: SessionRecordHeader?
     try sql.rows(
-      "SELECT header FROM records WHERE screenshot_state=? ORDER BY sequence ASC LIMIT 1",
+      "SELECT header FROM available_records WHERE screenshot_state=? ORDER BY sequence ASC LIMIT 1",
       [.text(ScreenshotTextState.pending.rawValue)]
     ) {
       header = try decoder.decode(SessionRecordHeader.self, from: VaultSQLConnection.data($0))
@@ -79,13 +115,21 @@ extension VaultDatabase {
   }
 
   public func eligibleRetentionCount() throws -> Int {
+    if try cleanupProgress().isPending {
+      return try sql.integer(
+        "SELECT count(*) FROM available_records r WHERE kind!='stash' AND protected=0 AND NOT EXISTS(SELECT 1 FROM workspace WHERE record_id=r.id AND starred=1)"
+      )
+    }
+    return try sql.integer("SELECT coalesce(sum(eligible),0) FROM library_counts")
+  }
+
+  func isRecordAvailable(_ id: UUID) throws -> Bool {
     try sql.integer(
-      "SELECT count(*) FROM records WHERE kind != ? AND protected=0",
-      [.text(CompanionSkillKind.stash.rawValue)])
+      "SELECT EXISTS(SELECT 1 FROM available_records WHERE id=?)", [.text(id.uuidString)]) != 0
   }
 
   public func identifiers() throws -> [UUID] {
-    try identifiers("SELECT id FROM records ORDER BY created DESC, id DESC")
+    try identifiers("SELECT id FROM available_records ORDER BY created DESC, id DESC")
   }
 
   func identifiers(_ query: String, _ values: [VaultSQLConnection.Value] = []) throws -> [UUID] {
@@ -116,29 +160,17 @@ extension VaultDatabase {
         record.audioFilename.map(VaultSQLConnection.Value.text) ?? .null, .data(header),
         .data(body),
       ])
-    try sql.execute("DELETE FROM documents WHERE id=?", [.text(record.id.uuidString)])
-    try sql.execute(
-      "INSERT INTO documents(id,body) VALUES(?,?)",
-      [.text(record.id.uuidString), .text(Self.searchableText(record))])
-    let documentRowID = try sql.integer("SELECT last_insert_rowid()")
-    try invalidatePassages(for: record.id, documentRowID: documentRowID)
+    try updateSourceSections(record)
     metrics.encodedBodyBytes += body.count
     metrics.writtenBodies += 1
-    metrics.indexedDocuments += 1
-  }
-
-  private static func searchableText(_ record: SessionRecord) -> String {
-    ([
-      record.displayTitle, record.appName, record.summary, record.transcript, record.extractedText,
-      record.explanation,
-    ]
-      + record.actionItems + record.stashedItems).joined(separator: "\n")
   }
 
   private func queryFilter(_ request: SessionRecordSearch) -> (
     sql: String, values: [VaultSQLConnection.Value]
   ) {
-    var conditions: [String] = []
+    var conditions = [
+      "NOT EXISTS(SELECT 1 FROM workspace WHERE record_id=r.id AND trashed IS NOT NULL)"
+    ]
     var values: [VaultSQLConnection.Value] = []
     if let kind = request.kind {
       conditions.append("r.kind=?")
@@ -146,8 +178,10 @@ extension VaultDatabase {
     }
     if !request.query.isEmpty {
       if let expression = VaultSearchTerms.expression(request.query) {
-        conditions.append("r.id IN (SELECT id FROM documents WHERE documents MATCH ?)")
-        values.append(.text(expression))
+        conditions.append(
+          "(r.id IN (SELECT b.record_id FROM content_search JOIN content_blocks b ON b.id=content_search.rowid WHERE content_search MATCH ?) OR r.id IN (SELECT d.id FROM documents d JOIN content_backfill f ON f.record_id=d.id WHERE documents MATCH ?))"
+        )
+        values += [.text(expression), .text(expression)]
       } else {
         conditions.append("0")
       }

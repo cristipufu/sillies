@@ -203,7 +203,7 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
 
 @Test(arguments: [
   "mochi", "kiko", "pogo", "bolt", "boo", "bloop", "sprout", "pip", "pebble", "taro", "nib",
-  "mallow", "novi", "lumi", "rook", "flick",
+  "mallow", "novi", "lumi", "rook", "flick", "leon", "gizmo", "orbit", "mimo",
 ]) @MainActor
 func companionDragSmoothnessBudgetAndUnclippedMaskStability(characterID: String) throws {
   let diagnostics = DragFrameDiagnostics.fromEnvironment()
@@ -267,7 +267,7 @@ func companionDragSmoothnessBudgetAndUnclippedMaskStability(characterID: String)
 @MainActor
 private func enableFullCrewForTiming(in settings: AppSettings) throws {
   settings.enabledCharacters = Set(try CharacterCatalog().characters.map(\.id))
-  // Fit sixteen independent panels into the smallest resize fixture. Individual drag cases
+  // Fit the complete crew into the smallest resize fixture. Individual drag cases
   // retain the default size; all timing thresholds and native placement counts are unchanged.
   settings.size = AppSettings.minSize
 }

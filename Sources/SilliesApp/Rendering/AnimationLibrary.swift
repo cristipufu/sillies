@@ -33,6 +33,10 @@ final class AnimationLibrary {
     WitchAnimations.register(in: self)
     KnightAnimations.register(in: self)
     CandleAnimations.register(in: self)
+    SpartanAnimations.register(in: self)
+    GoblinAnimations.register(in: self)
+    AstronautAnimations.register(in: self)
+    MimeAnimations.register(in: self)
   }
 
   /// Local details accompany shared clips; a primary clip can override their motion by key.

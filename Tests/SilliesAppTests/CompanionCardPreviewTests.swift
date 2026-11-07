@@ -18,9 +18,13 @@ import Testing
       let isGallery = presentation == .gallery
       let view = CompanionCardPreview(
         characters: characters, registry: registry, presentation: presentation)
+      let width: CGFloat = isGallery ? 619 : 420
+      let measurement = NSHostingController(rootView: view)
+      // This artifact contains every row, including companions below the real scroll viewport.
+      let contentSize = measurement.sizeThatFits(in: CGSize(width: width, height: 0))
       try renderSkillInterface(
         view,
-        size: CGSize(width: isGallery ? 619 : 420, height: isGallery ? 930 : 1340),
+        size: CGSize(width: width, height: ceil(contentSize.height)),
         name: "sillies-crew-\(isGallery ? "gallery" : "picker")-\(appearance.rawValue)")
     }
   }

@@ -4,6 +4,27 @@ import Testing
 
 @testable import SilliesVault
 
+@Test func vaultSemanticTimeoutIsDistinctFromNoMatchesAndTextSearchRemainsAvailable() async throws {
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { do { try FileManager.default.removeItem(at: directory) } catch { Issue.record(error) } }
+  let library = VaultLibrary(directory: directory)
+  let record = SessionRecord(
+    kind: .record,
+    origin: .init(characterID: "pogo", characterName: "Pogo", source: .init(appName: "Fixture")),
+    content: .init(text: .init(transcript: "bicycle commute")))
+  _ = try await library.commit(.init(records: [.insert(record)]))
+  #expect(try await library.relatedSearch(.init(query: "bicycle")).availability == .unavailable)
+  try await library.useSearchEmbeddings(
+    .init(identity: "blocked") { input in
+      if input.purpose == .query { try await Task.sleep(for: .seconds(10)) }
+      return nil
+    })
+  let result = try await library.relatedSearch(.init(query: "bicycle"))
+  #expect(result.availability == .timedOut && result.matches.isEmpty)
+  #expect(try await library.workspacePage(.init(text: "bicycle")).records.map(\.id) == [record.id])
+  try await library.useSearchEmbeddings(nil)
+}
+
 @Test func vaultDeletionDuringEmbeddingCannotPublishAnObsoleteResult() async throws {
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
   defer {

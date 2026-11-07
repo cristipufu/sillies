@@ -53,7 +53,7 @@ The [renderer and attachment contract](../extending.md#add-a-character) covers d
 limb depth, hit testing, transitions, and example rigs. For new behavior, continue with
 [interactions](interactions.md). Follow the [development contract](../../AGENTS.md).
 
-Headless artwork review for Novi, Lumi, Rook and Flick (including animated GIFs sampled from the
+Headless artwork review for Novi, Lumi, Rook, Flick, Leon, Gizmo, Orbit and Mimo (including animated GIFs sampled from the
 registered layer curves):
 
 ```sh

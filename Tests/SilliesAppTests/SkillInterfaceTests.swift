@@ -95,7 +95,7 @@ import Testing
   await vaultModel.refreshSearch()
   await vaultModel.loadSelection()
   let vaultView = SessionVaultView(
-    vault: vault, conversations: nil, model: vaultModel, navigation: VaultNavigation())
+    vault: vault, conversations: nil, model: vaultModel)
   try renderSkillInterface(
     vaultView, size: CGSize(width: 980, height: 660), name: "sillies-vault-preview")
   vaultModel.openTranscript(record)
@@ -118,39 +118,87 @@ import Testing
   try renderSkillInterface(
     SessionVaultView(
       vault: vault, conversations: nil,
-      model: interruptedModel,
-      navigation: VaultNavigation()),
+      model: interruptedModel),
     size: CGSize(width: 980, height: 660), name: "sillies-vault-permission-preview")
   await vault.flush()
 }
 
 @MainActor func renderSkillInterface(_ rootView: some View, size: CGSize, name: String) throws {
-  let window = NSWindow(
-    contentRect: CGRect(origin: .zero, size: size), styleMask: [.borderless], backing: .buffered,
-    defer: false)
-  window.isReleasedWhenClosed = false
-  defer { window.close() }
-  let host = NSHostingController(rootView: rootView)
-  host.sizingOptions = []
-  window.contentViewController = host
-  let view = host.view
-  view.frame = CGRect(origin: .zero, size: size)
-  window.setContentSize(size)
-  view.layoutSubtreeIfNeeded()
-  #expect(view.bounds.size == size)
-  let fitting = host.sizeThatFits(in: size)
-  #expect(fitting.width <= size.width)
-  #expect(fitting.height <= size.height)
-  if let transcript = findTranscriptScrollView(in: view) {
-    let viewport = view.convert(transcript.bounds, from: transcript)
-    #expect(
-      view.bounds.contains(viewport),
-      "Transcript viewport must fit without clipping at minimum window size")
+  let fixture = SkillInterfaceRenderFixture(rootView: rootView, size: size)
+  defer { fixture.close() }
+  try fixture.capture(name: name)
+}
+
+/// Allows actual asynchronous view tasks to finish before reviewing their populated appearance.
+@MainActor func renderSettledSkillInterface(_ rootView: some View, size: CGSize, name: String)
+  async throws
+{
+  let fixture = SkillInterfaceRenderFixture(rootView: rootView, size: size)
+  defer { fixture.close() }
+  let initialPresentationDelay = Duration.milliseconds(250)
+  try await Task.sleep(for: initialPresentationDelay)
+  try fixture.capture(name: name)
+}
+
+@MainActor private final class SkillInterfaceRenderFixture<Content: View> {
+  private let window: NSWindow
+  private let host: NSHostingController<Content>
+  private let size: CGSize
+
+  init(rootView: Content, size: CGSize) {
+    self.size = size
+    window = NSWindow(
+      contentRect: CGRect(origin: .zero, size: size), styleMask: [.borderless],
+      backing: .buffered, defer: false)
+    window.isReleasedWhenClosed = false
+    host = NSHostingController(rootView: rootView)
+    host.sizingOptions = []
+    window.contentViewController = host
+    host.view.frame = CGRect(origin: .zero, size: size)
+    window.setContentSize(size)
   }
-  if ProcessInfo.processInfo.environment["SILLIES_SKILL_UI_SNAPSHOTS"] == "1" {
-    let rep = try #require(view.bitmapImageRepForCachingDisplay(in: view.bounds))
-    view.cacheDisplay(in: view.bounds, to: rep)
-    let data = try #require(rep.representation(using: .png, properties: [:]))
-    try data.write(to: FileManager.default.temporaryDirectory.appendingPathComponent("\(name).png"))
+
+  func close() { window.close() }
+
+  func capture(name: String) throws {
+    let view = host.view
+    view.layoutSubtreeIfNeeded()
+    #expect(view.bounds.size == size)
+    let fitting = host.sizeThatFits(in: size)
+    #expect(fitting.width <= size.width)
+    #expect(fitting.height <= size.height)
+    if let transcript = findTranscriptScrollView(in: view) {
+      let viewport = view.convert(transcript.bounds, from: transcript)
+      #expect(
+        view.bounds.contains(viewport),
+        "Transcript viewport must fit without clipping at minimum window size")
+    }
+    if let editor = findVaultEditor(in: view) {
+      let viewport = view.convert(editor.bounds, from: editor)
+      let minimumReadingHeight: CGFloat = 120
+      #expect(view.bounds.contains(viewport), "The Vault editor must remain inside the workspace.")
+      #expect(
+        viewport.height >= minimumReadingHeight, "Controls and errors must leave room to read.")
+    }
+    if ProcessInfo.processInfo.environment["SILLIES_SKILL_UI_SNAPSHOTS"] == "1" {
+      let snapshotLayoutInterval: TimeInterval = 0.05
+      RunLoop.main.run(until: Date().addingTimeInterval(snapshotLayoutInterval))
+      view.layoutSubtreeIfNeeded()
+      view.displayIfNeeded()
+      CATransaction.flush()
+      let rep = try #require(view.bitmapImageRepForCachingDisplay(in: view.bounds))
+      view.cacheDisplay(in: view.bounds, to: rep)
+      let data = try #require(rep.representation(using: .png, properties: [:]))
+      try data.write(
+        to: FileManager.default.temporaryDirectory.appendingPathComponent("\(name).png"))
+    }
+  }
+
+  private func findVaultEditor(in view: NSView) -> NSView? {
+    if view.identifier == VaultNativeTextEditor.scrollIdentifier { return view }
+    for child in view.subviews {
+      if let editor = findVaultEditor(in: child) { return editor }
+    }
+    return nil
   }
 }

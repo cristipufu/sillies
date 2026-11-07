@@ -1,0 +1,11 @@
+{
+  "records": 1000000,
+  "firstTimestamp": 0.0,
+  "lastTimestamp": 999999.0,
+  "firstID": "00000000-0000-4000-8000-000000000001",
+  "lastID": "00000000-0000-4000-8000-0000000F4240",
+  "schema": 3,
+  "validationSeconds": 2.7159039169782773,
+  "contentBlocks": 5000000,
+  "pendingBackfill": 0
+}

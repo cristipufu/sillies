@@ -9,6 +9,8 @@ final class RecordingPlaybackModel {
   var duration: Double = 0
   var position: Double = 0
   var isPlaying = false
+  private(set) var rate: Float = 1
+  static let rates: [Float] = [0.75, 1, 1.25, 1.5, 2]
   var error: String?
   @ObservationIgnored private var player: AVPlayer?
   @ObservationIgnored private var observer: Any?
@@ -52,7 +54,7 @@ final class RecordingPlaybackModel {
       player.pause()
     } else {
       if position >= duration { seek(to: 0) }
-      player.play()
+      player.playImmediately(atRate: rate)
     }
     isPlaying.toggle()
   }
@@ -61,6 +63,15 @@ final class RecordingPlaybackModel {
     guard seconds.isFinite else { return }
     position = min(duration, max(0, seconds))
     player?.seek(to: CMTime(seconds: position, preferredTimescale: 600))
+  }
+  func setRate(_ value: Float) {
+    guard Self.rates.contains(value) else { return }
+    rate = value
+    if isPlaying { player?.rate = value }
+  }
+  func play(from seconds: Double) {
+    seek(to: seconds)
+    if !isPlaying { togglePlayback() }
   }
 
   func stop() {
@@ -72,6 +83,9 @@ final class RecordingPlaybackModel {
     endObserver = nil
     player = nil
     isPlaying = false
+    position = 0
+    duration = 0
+    error = nil
   }
   isolated deinit { stop() }
 }

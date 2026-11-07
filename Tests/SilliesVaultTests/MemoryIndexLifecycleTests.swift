@@ -7,7 +7,7 @@ import Testing
 @Test func semanticDeadlineCancelsAndDrainsSlowWork() async throws {
   let stopped = AsyncStream<Void>.makeStream()
   let blocked = AsyncStream<Void>.makeStream()
-  await #expect(throws: SearchEmbeddingError.self) {
+  await #expect(throws: SemanticSearchDeadline.Failure.self) {
     try await SemanticSearchDeadline.perform {
       defer { stopped.continuation.yield(()) }
       for await _ in blocked.stream { break }

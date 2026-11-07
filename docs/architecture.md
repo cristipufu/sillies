@@ -43,17 +43,35 @@ flowchart LR
 
 `WindowTransitionObservation` and `WindowTransitionEvaluation` own pure transition decisions and virtual-time settlement. `WorkspaceTracker` applies those decisions; `WindowTrackingSchedule` owns heartbeat, housekeeping, settlement, transition polling, and discovery slots. `WindowRefreshScope` replaces discovery flags and prevents queued application discovery from overriding a manipulation read.
 
-`SilliesPersistence` depends only on `SilliesCore`. `VaultDatabase` owns the versioned SQLite Vault: bounded headers, individual record bodies, FTS5 documents, and the attachment-cleanup journal. Body and search updates commit in the same transaction; opening a Vault does not decode transcripts or rebuild its index. SQLite is the initial storage format for this unreleased app. There is no JSON archive migration.
+`SilliesPersistence` depends only on `SilliesCore`. Its schema-3 SQLite Vault separates original
+capture bodies, bounded headers, workspace metadata and editable content blocks. FTS5 and semantic
+invalidations share content transactions. Existing SQLite captures enter a durable, one-record-at-a-time
+backfill; there is no JSON archive importer.
 
-`SilliesVault` is the application boundary above persistence. Its `VaultLibrary` actor serializes I/O, reads header pages of at most 200 records, and loads a body only by ID. The detail cache retains at most 16 bodies and 8 MiB of encoded body content; larger records can be displayed without entering that cache. This is a content budget, not a process-memory measurement. Background summaries queue IDs and load the current record only when admitted. Exports read and write one record at a time.
+`SilliesVault.VaultLibrary` owns writes and bounded detail retention. Keyword ranking, selected-document
+reads, assistant retrieval, export and backup have independent readers so slow search cannot occupy the
+capture writer. Workspace pages contain 100 headers and reading pages contain 16 blocks. Full source
+bodies load only by explicit ID; the 8 MiB / 16-entry cache accounts conservatively for authored overlays.
 
-`VaultFileStorage` validates filenames and atomically writes attachment bytes. The SQLite cleanup journal records new filenames before writing them and retires old attachments only after their metadata transaction commits. Recovery checks current references before file-only unlink; it cannot recursively remove a directory or follow a symlink to delete its target. Corruption and unreadable storage remain errors. The app preserves unsaved edits and screenshot bytes for Retry, and flush includes error delivery through the modal-safe main run loop.
+`VaultWorkspaceModel` owns navigation, filters, page cursors and selection. `VaultDocumentModel` joins
+separate text, metadata and playback owners. Text commits compare section revisions; metadata drafts
+contain only changed fields. Recovery journals precede edits and flush through modal-safe run-loop
+delivery before quit. Original transcript text remains separate from corrections and is excluded from
+normal search. `SessionVaultWindowController` retains one native window and hosted root.
 
-`VaultWriteCoordinator` holds one active commit and one pending batch, coalescing successive changes to each record ID. An update to a deleted record cannot recreate it. `SessionVaultStore` owns the native adapter and recent headers; `SessionVaultModel` coordinates paged browsing and one selected detail, rejecting stale reads when selection changes or the window closes. `VaultListing` owns loaded-range merging, deduplication, and cursor advancement as a pure value; request loading, result application, and selection are separate steps.
+Canonical search vectors live in SQLite. An injected accelerator delegates to `SilliesVectorIndex` inside
+`SilliesSearchInference`; the app and feature targets never load Faiss or OpenMP. Its disposable native
+index uses exact search for small datasets and on-disk IVF-SQ8 for larger ones. Query-time work never
+trains/rebuilds an index. Epochs, revision validation, change cursors and dirty/opening markers protect
+restart, correction, deletion and provider replacement. The compiler/package policy enforces this edge.
 
-Existing records are edited through `VaultRecordEdit` field commands. `VaultRecordEditor` reads the latest body, revalidates against concurrent changes, and submits the mutation without another suspension. It preserves unrelated notes, speaker names, and protection. Notes and OCR carry separate processing revisions, so late work cannot overwrite a retry. Quit drains field edits before flushing writes, using the same modal-safe delivery as other native completions.
+`VaultFileStorage` owns filename validation and atomic attachment writes. A cleanup journal coordinates
+metadata with file-only unlink. Preview fetching is explicitly triggered by saving/refreshing a URL;
+network and image decoding remain outside views. Export streams section pages; SQLite online backup
+pins a source snapshot and publishes only after referenced files copy successfully.
 
-Vault pagination uses a stable `(createdAt, id)` cursor. Show more reads one following page, even if earlier rows were inserted or deleted. A bounded changed-ID journal refreshes affected headers and only invalidates selected detail when its own revision changes. Updates re-evaluate full-text search membership. A changed filter or an expired journal revision reloads the first page; normal saves preserve the loaded pages and selection.
+See [Vault extension and lifecycle contracts](contributing/vault.md) and the
+[scale qualification](reports/vault-workspace-2026-11-07.md).
 
 `SilliesWriting` owns reusable dictation and selection-command workflows. Capture/language discovery, insertion, transformation, preferences, history, and event delivery are required inputs. Native adapters stay in SilliesApp; no AppKit, SwiftUI, persistence, or concrete speech provider dependency can enter the target. The app supplies modal-safe scheduling to the coalesced audio delivery and capture-stop callbacks. Isolated lifecycle tests compile without the app.
 
@@ -360,9 +378,9 @@ The coordinator contributes deadlines and motion demand to the existing shared c
 
 `WritingHistory` stores at most 20 results separately from the Vault, including the original and edited text. Load failure never authorizes overwriting the existing file. Pause or termination preserves finalized interrupted dictation without inserting it. Persistence keeps one active write and the latest pending revision. The writing port exposes typed persistence state and flush receipts; Retry reloads unavailable storage or writes the latest unsaved text after a save failure. Active writing and history views share a warning and Retry control. Saving and retrying never block insertion or insert text again. Serial persistence and finalization callbacks use `MainRunLoopDelivery`, including AppKit's modal termination run loop.
 
-`VaultDatabase` owns authoritative bodies and a persistent FTS5 index with diacritic-insensitive word-prefix matching. Each changed record updates its body, header, and search document transactionally; untouched transcripts are not encoded or reindexed. Search is debounced and paged. `VaultOCRScheduler` admits one screenshot at a time and retains demand arriving during an in-flight queue read. Notes and OCR await persistence before admitting another body. Pause and deletion reject late results. Retention excludes deliberate Stashes and protected captures; the default never trims. `VaultMarkdownExporter` writes portable Markdown and owned attachments on the worker. Speaker edits load the current record and format structured transcript headers off-main.
+`VaultDatabase` owns authoritative bodies and a persistent FTS5 index with diacritic-insensitive word-prefix matching. Each changed record updates its body, header, and search document transactionally; untouched transcripts are not encoded or reindexed. Search is debounced and paged. `VaultOCRScheduler` admits one screenshot at a time and retains demand arriving during an in-flight queue read. Notes and OCR await persistence before admitting another body. Pause and deletion reject late results. Retention excludes deliberate Stashes and protected captures; the default never trims. `VaultWorkspaceExportWorker` streams section pages and owned attachments into portable Markdown folders on its independent worker. Speaker edits load the current record and format structured transcript headers off-main.
 
-Vault schema 2 adds a derived semantic passage index. Record writes invalidate passages and vectors in
+Vault schema 3 uses a derived semantic passage index keyed to editable content blocks. Changed blocks invalidate their passages and vectors in
 the same transaction; revision comparisons reject stale embedding completions after edits or deletion.
 `VaultLibrary` prepares one Unicode-bounded document slice or embedding at a time, without decoding
 record bodies. `VaultSemanticSearchWorker` ranks on its own cancellable read connection, retaining only

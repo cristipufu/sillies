@@ -45,6 +45,12 @@ final class PackageBoundaryCheck: SyntaxVisitor {
         literal(dependency.expression)
         ?? literal(product?.arguments.first { $0.label?.text == "name" }?.expression)
       let audioAdapter = name == "SilliesAudio" && target == "EchoCancellation"
+      if (target == "SilliesVectorIndex" && name != "SilliesSearchInference")
+        || (target == "LocalVectorIndex" && name != "SilliesVectorIndex")
+      {
+        failures.append("\(name) cannot load the native vector index outside the search helper.")
+        continue
+      }
       if target == "SilliesFishSpeech", name != "SilliesTTSInference" {
         failures.append("\(name) cannot load the Fish runtime outside its helper process.")
         continue

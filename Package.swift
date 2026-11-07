@@ -14,6 +14,7 @@ let package = Package(
     .package(url: "https://github.com/huggingface/swift-transformers", exact: "1.3.0"),
     .package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.10.0"),
     .package(path: "Vendor/AudioProcessing"),
+    .package(path: "Vendor/VectorSearch"),
     .package(url: "https://github.com/argmaxinc/argmax-oss-swift.git", exact: "1.1.1"),
     .package(
       url: "https://github.com/FluidInference/FluidAudio.git", exact: "0.18.0",
@@ -31,7 +32,7 @@ let package = Package(
     .executableTarget(
       name: "SilliesSearchInference",
       dependencies: [
-        "SilliesSearchModels", "SilliesCore", "SilliesInference",
+        "SilliesSearchModels", "SilliesCore", "SilliesInference", "SilliesVectorIndex",
         .product(name: "MLX", package: "mlx-swift"),
         .product(name: "MLXEmbedders", package: "mlx-swift-lm"),
         .product(name: "MLXHuggingFace", package: "mlx-swift-lm"),
@@ -39,6 +40,12 @@ let package = Package(
         .product(name: "MLXLMCommon", package: "mlx-swift-lm"),
       ]),
     .target(name: "SilliesFileSystem"),
+    .target(
+      name: "SilliesVectorIndex",
+      dependencies: [
+        "SilliesCore", "SilliesPersistence",
+        .product(name: "LocalVectorIndex", package: "VectorSearch"),
+      ]),
     .target(
       name: "SilliesTTS", dependencies: ["SilliesCore", "SilliesModelStore", "SilliesInference"]),
     .target(
@@ -167,6 +174,10 @@ let package = Package(
       name: "ConversationStorageProbe", dependencies: ["SilliesConversationTestSupport"],
       path: "Tools/ConversationStorageProbe"),
     .executableTarget(
+      name: "VaultScaleBenchmark",
+      dependencies: ["SilliesCore", "SilliesPersistence", "SilliesVault"],
+      path: "Tools/VaultScaleBenchmark"),
+    .executableTarget(
       name: "TTSBenchmark",
       dependencies: [
         "SilliesModelStore", "SilliesTTS", "SilliesInference", "SilliesTextModels",
@@ -183,6 +194,9 @@ let package = Package(
       dependencies: ["SilliesSearchModels", "SilliesCore", "SilliesInference"]),
     .testTarget(name: "SilliesCoreTests", dependencies: ["SilliesCore"]),
     .testTarget(name: "SilliesDesignTests", dependencies: ["SilliesDesign"]),
+    .testTarget(
+      name: "SilliesVectorIndexTests",
+      dependencies: ["SilliesVectorIndex", "SilliesPersistence", "SilliesCore"]),
     .testTarget(
       name: "SilliesVoicePlaybackTests", dependencies: ["SilliesVoicePlayback", "SilliesTTS"]),
     .testTarget(

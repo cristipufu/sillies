@@ -7,6 +7,7 @@ import SwiftUI
   enum Destination {
     case resume
     case record(UUID)
+    case source(VaultSourceReference)
     case stash, retention
   }
   struct Services {
@@ -14,15 +15,17 @@ import SwiftUI
     var conversations: VaultConversationPresentation?
     var discussion: VaultDiscussionPresentation?
   }
-  static let initialSize = CGSize(width: 980, height: 660)
-  static let minimumSize = CGSize(width: 880, height: 560)
+  static let initialSize = CGSize(width: 1180, height: 760)
+  static let minimumSize = CGSize(width: 760, height: 560)
   private let vault: SessionVaultStore
   private let appearance: ThemeEnvironment
   private let services: Services
   private let exporter: VaultExportController
+  private let fileReferences: VaultFileReferenceController
+  private let restore: VaultRestoreController
   private let transcript: SavedTranscriptWindow
+  private var sourceTask: Task<Void, Never>?
   let conversations: VaultConversationsModel?
-  let navigation = VaultNavigation()
   private(set) var window: NSWindow?
   private(set) lazy var model = SessionVaultModel(
     vault: vault,
@@ -38,6 +41,47 @@ import SwiftUI
         },
         popOutTranscript: { [weak self] record in
           self?.transcript.show(record.transcript, title: record.displayTitle, id: record.id)
+        },
+        backup: { [weak self] completion in
+          guard let self, let window = self.window else {
+            completion(nil)
+            return
+          }
+          self.exporter.chooseBackup(parent: window, completion: completion)
+        },
+        relink: { [weak self] reference, completion in
+          guard let self, let window = self.window else {
+            completion(nil)
+            return
+          }
+          self.fileReferences.relink(reference, parent: window, completion: completion)
+        },
+        exportText: { [weak self] text, completion in
+          guard let self, let window = self.window else {
+            completion(nil)
+            return
+          }
+          self.exporter.chooseTextExport(text, parent: window, completion: completion)
+        },
+        prepareRestore: { [weak self] completion in
+          guard let self, let window = self.window else {
+            completion(nil)
+            return
+          }
+          self.restore.chooseBackup(parent: window, completion: completion)
+        },
+        cancelFileOperation: { [weak self] completion in
+          guard let self else {
+            completion()
+            return
+          }
+          let exporting = self.exporter.cancel()
+          let restoring = self.restore.stop()
+          Task { @MainActor in
+            await exporting?.value
+            await restoring?.value
+            completion()
+          }
         }),
       discussion: services.discussion))
 
@@ -47,23 +91,37 @@ import SwiftUI
     self.services = services
     conversations = services.conversations.map(VaultConversationsModel.init)
     exporter = VaultExportController(library: vault.library)
+    fileReferences = VaultFileReferenceController(library: vault.library)
+    restore = VaultRestoreController(library: vault.library)
     transcript = SavedTranscriptWindow(appearance: appearance)
     super.init()
   }
 
   func prepare(_ destination: Destination = .resume) {
+    sourceTask?.cancel()
     if window == nil { makeWindow() }
     model.resume()
     switch destination {
     case .resume: break
+    case .source(let reference):
+      model.workspace.selectScope(.all)
+      conversations?.reader.clear()
+      sourceTask = Task { [weak self] in
+        guard let self else { return }
+        await vault.waitUntilLoaded()
+        guard !Task.isCancelled else { return }
+        await model.workspace.openSource(reference)
+      }
     case .record(let id):
-      navigation.section = .captures
+      conversations?.reader.clear()
       model.navigate(to: id)
+      model.workspace.reveal(id)
     case .stash:
-      navigation.section = .captures
+      conversations?.reader.clear()
       model.selectedFilter = .stash
       model.searchQuery = ""
-    case .retention: navigation.editor = .retention
+      model.workspace.selectScope(.links)
+    case .retention: model.workspace.showStorage()
     }
   }
 
@@ -81,7 +139,7 @@ import SwiftUI
     window.delegate = self
     let host = ThemedHostingController(
       rootView: SessionVaultView(
-        vault: vault, conversations: conversations, model: model, navigation: navigation),
+        vault: vault, conversations: conversations, model: model),
       appearance: appearance)
     host.sizingOptions = []
     window.contentViewController = host
@@ -105,9 +163,12 @@ import SwiftUI
   func windowDidMiniaturize(_ notification: Notification) { suspend() }
   func windowDidDeminiaturize(_ notification: Notification) { model.resume() }
   private func suspend() {
-    navigation.editor = nil
+    sourceTask?.cancel()
+    sourceTask = nil
     model.stop()
     exporter.cancel()
+    fileReferences.stop()
+    restore.stop()
     conversations?.stop()
   }
 

@@ -11,3 +11,16 @@ The package dependency policy and source import checks apply to every new file. 
 Use `VaultRecordEdit` field commands for existing records. The native `VaultRecordEditor` serializes reads and edits, validates each read against current per-record revisions, and drains through modal-safe delivery before persistence flush. Never restore a whole UI snapshot. Notes and OCR have independent generation tokens; a replaced producer cannot complete newer work. Header paging uses `(createdAt, id)` cursors so inserting/deleting earlier rows cannot skip unseen records. `VaultChangeJournal` retains a bounded invalidation history; overflow requests a conservative first-page reload.
 
 `VaultListing` owns the pure loaded-range merge, deduplication, cursor, and total-count rules. Keep debounce, request cancellation, selection, and error presentation in `SessionVaultModel`. Applying a new query result is one synchronous state change after the request's ownership check.
+
+The workspace uses independent read-only owners for ranking, visible document blocks, exports and
+assistant retrieval. Do not put a broad FTS query on the capture writer or selected-document reader.
+`VaultWorkspaceModel` retains one 100-header page; `VaultTextEditorModel` retains a bounded block
+range. Authored notes, corrected transcript/OCR and metadata drafts use revision/field commands,
+never source-body replacement. Flush draft journals through `MainRunLoopDelivery` before quit.
+A recovered conflict can be copied or saved as a new note; never force a stale revision.
+
+Native vector search is an optional injected capability. `SilliesVectorIndex` is loaded only by
+`SilliesSearchInference`; no C++ index or tensor SDK enters Vault or the app. Canonical vectors live
+in SQLite. Every native candidate is revalidated against current record/block/provider state.
+Interrupted caches rebuild; deletion and provider replacement retire derived files. Queries never
+train an index. See `docs/contributing/vault.md` and the native index lifecycle tests.

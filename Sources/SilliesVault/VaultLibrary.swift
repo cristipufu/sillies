@@ -4,26 +4,54 @@ import SilliesPersistence
 
 /// Serial application boundary for persistence, paging, and bounded detail retention. No UI imports.
 package actor VaultLibrary {
+  package enum Opening { case existing, applicationLaunch }
+  private enum StartupRecovery { case pending, completed }
+  private var startupRecovery: StartupRecovery
+  package private(set) var restoreReceipt: VaultPreparedRestore.Receipt?
   package static let defaultCacheBytes = 8 * 1_024 * 1_024
-  private let directory: URL
+  let directory: URL
   private var database: VaultDatabase?
-  private var cache: VaultBodyCache
+  var cache: VaultBodyCache
   let semanticSearches: VaultSemanticSearchWorker
+  let workspaceReader: VaultWorkspaceReader
+  let documentReader: VaultWorkspaceReader
+  let assistantReader: VaultWorkspaceReader
+  let workspaceExporter: VaultWorkspaceExportWorker
+  let backupWorker: VaultBackupWorker
+  let restoreWorker: VaultRestoreWorker
   var embeddings: SearchEmbeddingAccess?
   var indexTask: Task<Void, Never>?
   var indexGeneration = UUID()
   var searchRevision = UUID()
   var indexFailure: String?
+  var contentTask: Task<Void, Never>?
+  var contentGeneration = UUID()
+  var contentFailure: String?
+  var cleanupEnabled = false
+  var cleanupTask: Task<Void, Never>?
+  var cleanupGeneration = UUID()
+  var cleanupFailure: String?
 
-  package init(directory: URL, cacheBytes: Int = defaultCacheBytes) {
+  package init(directory: URL, cacheBytes: Int = defaultCacheBytes, opening: Opening = .existing) {
     self.directory = directory
+    startupRecovery = opening == .applicationLaunch ? .pending : .completed
     cache = VaultBodyCache(capacity: cacheBytes)
     semanticSearches = VaultSemanticSearchWorker(directory: directory)
+    workspaceReader = VaultWorkspaceReader(directory: directory)
+    documentReader = VaultWorkspaceReader(directory: directory)
+    assistantReader = VaultWorkspaceReader(directory: directory)
+    workspaceExporter = VaultWorkspaceExportWorker(directory: directory)
+    backupWorker = VaultBackupWorker(source: directory)
+    restoreWorker = VaultRestoreWorker(directory: directory)
   }
 
   func storage() throws -> VaultDatabase {
     dispatchPrecondition(condition: .notOnQueue(.main))
     if let database { return database }
+    if startupRecovery == .pending {
+      restoreReceipt = try VaultPreparedRestore(directory: directory).activate()
+      startupRecovery = .completed
+    }
     let opened = try VaultDatabase(directory: directory)
     database = opened
     return opened
@@ -41,12 +69,13 @@ package actor VaultLibrary {
   package func search(_ request: VaultSearchRequest) async throws -> [VaultSearchMatch] {
     try Task.checkCancellation()
     let revision = searchRevision
-    let keywords = try storage().search(request)
-    let semantic = try await relatedMatches(request)
-    guard revision == searchRevision else { return try storage().search(request) }
-    var seen: Set<UUID> = []
-    return Array(
-      (keywords + semantic).filter { seen.insert($0.header.id).inserted }.prefix(request.limit))
+    _ = try storage()
+    let candidates = request.rankingCandidates
+    let keywords = try await assistantReader.search(candidates)
+    let semantic = try await relatedMatches(candidates)
+    guard revision == searchRevision else { return try await assistantReader.search(request) }
+    return VaultRankFusion.merge(
+      [keywords, semantic], identifiedBy: \.header.id, limit: request.limit)
   }
   package func matchingHeaders(_ ids: Set<UUID>, search: SessionRecordSearch) throws
     -> VaultHeaderMatches
@@ -75,6 +104,7 @@ package actor VaultLibrary {
     }
     let removed = try database.commit(mutation)
     searchRevision = UUID()
+    scheduleCleanup()
     scheduleIndex()
     let current = try snapshot()
     return .init(
@@ -90,21 +120,15 @@ package actor VaultLibrary {
   package var retainedBodyBytes: Int { cache.retainedBytes }
 
   package func export(_ selection: VaultExportSelection, to destination: URL) async throws -> Int {
-    let ids: [UUID]
-    switch selection {
-    case .all: ids = try identifiers()
-    case .records(let selected): ids = selected
+    _ = try storage()
+    return try await workspaceExporter.export(selection, to: destination) { [self] id in
+      try await prepareDocument(id: id)
     }
-    let exporter = VaultMarkdownExporter(sourceDirectory: directory)
-    var completed = 0
-    for id in ids {
-      try Task.checkCancellation()
-      if let record = try storage().record(id: id) {
-        _ = try exporter.export(record, to: destination)
-        completed += 1
-      }
-      await Task.yield()
-    }
-    return completed
+  }
+  package nonisolated func backup(to destination: URL) async throws -> URL {
+    try await backupWorker.write(to: destination)
+  }
+  package nonisolated func storageUsage() async throws -> VaultStorageUsage {
+    try await backupWorker.usage()
   }
 }

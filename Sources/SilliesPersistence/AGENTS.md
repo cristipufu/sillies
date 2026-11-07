@@ -17,3 +17,14 @@ current identity and revision inside the write transaction; preserve original pr
 Memory ranking belongs on the independent read-only search connection and selects bounded identities
 before decoding bodies. Stored fact count must not become a prompt or UI array size: use
 `CompanionMemoryQuery` for bounded retrieval and cursor pages for browsing.
+
+Schema 3 separates source records from workspace metadata and editable section blocks. Stable block
+IDs own FTS and semantic invalidation; changing an ordinal must not regenerate unrelated embeddings.
+Preserve the original transcript when a corrected record is read, summarized or renamed. Original
+transcripts are available for review/export but excluded from normal search and embedding queues.
+
+Text/metadata drafts are durable before committing an edit. A revision conflict keeps the draft;
+deleting its record cannot recreate the record. Read saved bounds and identifiers defensively.
+SQLite online backup pins a read snapshot, copies bounded pages, closes the destination journal,
+and publishes only after its referenced attachments have copied. Export and backup must leave no
+successful partial result after cancellation. Never recursively delete a metadata-supplied path.

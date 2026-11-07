@@ -1,6 +1,6 @@
 # Privacy policy
 
-**Sillies for macOS · Last updated November 6, 2026**
+**Sillies for macOS · Last updated November 7, 2026**
 
 Sillies processes your conversations, screenshots, and writing on your Mac. There is no Sillies account,
 advertising, in-app analytics, telemetry, or cloud inference fallback. The developer does not receive
@@ -22,6 +22,7 @@ GitHub, model-hosting services, or another app into which you insert or export c
 | Dictation | Microphone audio during the session, recognized text, optional cleanup, destination information, and a short text recovery history. Dictation does not save an audio recording. |
 | Selection commands and insertion | The selected text and bounded focused-field/destination context needed to shorten, correct, translate, or insert text. |
 | Pocket Stash and paste-back | Text, links, clipboard items, or file references you explicitly save, plus temporary clipboard contents needed for a requested paste operation. |
+| Vault notes and saved links | Notes, titles, tags, collections, saved searches, editing drafts, corrected transcripts and link previews. Explicitly saving a URL requests preview metadata from that website and, for supported posts/videos, its public preview service. |
 | Preferences and dictionary | Companion choices, exclusions, shortcuts, languages, selected models, update settings, and words/replacements you add. |
 
 Ordinary window following does not take screenshots or read document contents. There is no automatic
@@ -54,7 +55,7 @@ The default application data lives under `~/Library/Application Support/Sillies/
 
 | Location | Contents |
 | --- | --- |
-| `Vault/` | Saved session metadata, recordings, screenshots, transcripts, recognized screenshot text, notes, speaker names, stash items, a separate `conversations.sqlite` containing per-companion messages, drafts, search indexes, context summaries and personal memories with source quotes and recent Undo payloads; a local SQLite database containing record bodies, listing metadata, full-text search documents, and an attachment-cleanup journal. Records can include source app/window titles and model revisions. |
+| `Vault/` | Saved session metadata, recordings, screenshots, transcripts, recognized screenshot text, notes, speaker names, stash items, a separate `conversations.sqlite` containing per-companion messages, drafts, search indexes, context summaries and personal memories with source quotes and recent Undo payloads; a local SQLite database containing record bodies, listing metadata, full-text search documents, editable content blocks, revision-checked drafts, Trash, link previews, and an attachment-cleanup journal. `VectorIndexes/` contains derived native search caches; canonical vectors remain in SQLite. Records can include source app/window titles and model revisions. |
 | `SpeechModels/` | Downloaded speech/speaker models, installation state, partial downloads/resume information, and model-update metadata. |
 | `TextModels/` | Downloaded text models and installation state, including partial downloads. |
 | `SearchModels/` | Optional downloaded embedding models, installation state and partial downloads. Memory search vectors are derived locally in the conversation database and invalidated when the corresponding memory changes or is deleted. |
@@ -73,8 +74,8 @@ of secure erasure from disk or backups.
 ## Retention and deletion
 
 - **Vault captures** are kept until you delete them by default. You can choose a limit of 200, 500, or
-  1,000 unprotected captures. Protected records and Pocket Stash items are exempt from automatic trimming.
-  Deleting captures removes their Sillies-owned attachments and updates the search index.
+  1,000 unprotected captures. Protected/starred records, authored notes, saved links and Pocket Stash items are exempt from automatic trimming.
+  Moving an item to Trash hides it from normal browsing and assistant retrieval; its files remain until permanent deletion. Permanent deletion removes Sillies-owned attachments and invalidates search entries. Automatic retention permanently removes eligible captures; it is an explicit preference.
 - **Pocket Stash** items remain until you delete them. A saved file reference points to the original file;
   removing the reference does not delete that original.
 - **Writing recovery** keeps up to 20 recent results independently of meeting retention. You can remove
@@ -91,6 +92,7 @@ of secure erasure from disk or backups.
   Vault search remains available. Deleting the Vault item makes that reference unavailable.
 - **Downloaded models** can be removed in Settings when unused. A speech-model update can retain the
   previous revision for rollback. Paused downloads can retain partial files for resuming.
+- **Vault backups** include captures, authored documents, drafts, organization and Trash, plus referenced attachments. Companion conversations are stored separately and have their own export controls. Downloaded models and disposable native search caches are excluded. Backup copies remain until you remove them. Preparing a restore creates a local staging copy. Restoration happens on the next app launch and preserves the previous Vault in a separate recovery folder; it does not replace companion conversations or downloaded models. These recovery copies also remain until you remove them.
 - **Exports and copies** remain wherever you save or paste them. Deleting the Vault record does not delete
   an exported folder, change another app's document, or clear all copies from the system clipboard.
 
@@ -126,6 +128,7 @@ is inserted into a destination app, that app's own storage and network behavior 
 - **App updates:** Sparkle can contact the GitHub Releases feed and download hosts. Automatic checks and
   automatic installation have separate settings. Requests can include app/system information and ordinary
   connection metadata; they do not contain your Vault or AI input. Feed availability depends on published releases.
+- **Saved-link previews:** explicitly saving or refreshing a URL fetches metadata and possibly an image from its website using Apple Link Presentation. Supported X posts and YouTube videos also use their public preview endpoints. These services receive the saved URL, IP address and ordinary request metadata. Notes, transcripts and AI prompts are not included. A failed preview does not prevent saving the URL. Sillies does not embed remote scripts or download video transcripts.
 - **Links you open:** opening documentation, a saved URL, or a model page hands the link to your browser
   or another application, which then follows its own privacy behavior.
 

@@ -12,22 +12,15 @@ extension VaultDatabase {
     let priorMetrics = metrics
     do {
       try sql.transaction {
-        switch mutation.deletion {
-        case .all:
-          try stageRetiredAttachments()
-          try sql.execute("DELETE FROM records")
-          try sql.execute("DELETE FROM documents")
-        case .records(let ids):
-          for id in ids {
-            try remove(id)
-            removed.insert(id)
-          }
-        }
+        try enqueueDeletion(mutation.deletion)
+        if case .records(let ids) = mutation.deletion { removed.formUnion(ids) }
         for write in mutation.records {
           let record = write.record
+          if case .insert = write { try retireHiddenRecordForInsertion(record.id) }
           if case .update = write,
             try sql.integer(
-              "SELECT count(*) FROM records WHERE id=?", [.text(record.id.uuidString)]) == 0
+              "SELECT count(*) FROM available_records WHERE id=?", [.text(record.id.uuidString)])
+              == 0
           {
             // Retention may have removed a record while its field edit was loading.
             // Invalidate optimistic headers/details even when there is no row left to update.
@@ -37,15 +30,8 @@ extension VaultDatabase {
           try stageRetiredAttachments(id: record.id)
           try store(record)
         }
-        if let limit = mutation.retention.limit {
-          let expired = try identifiers(
-            "SELECT id FROM records WHERE kind != ? AND protected=0 ORDER BY created DESC, id DESC LIMIT -1 OFFSET ?",
-            [.text(CompanionSkillKind.stash.rawValue), .integer(Int64(limit))])
-          for id in expired {
-            try remove(id)
-            removed.insert(id)
-          }
-        }
+        try requestRetention(mutation.retention)
+        removed.formUnion(try cleanupRecords())
       }
     } catch {
       metrics = priorMetrics
@@ -55,20 +41,16 @@ extension VaultDatabase {
     return removed
   }
 
-  private func remove(_ id: UUID) throws {
-    try stageRetiredAttachments(id: id)
-    try sql.execute("DELETE FROM records WHERE id=?", [.text(id.uuidString)])
-    try sql.execute("DELETE FROM documents WHERE id=?", [.text(id.uuidString)])
-  }
-
-  private func stageRetiredAttachments(id: UUID? = nil) throws {
-    let filter = id == nil ? "" : "WHERE id=?"
-    let values: [VaultSQLConnection.Value] = id.map { [.text($0.uuidString)] } ?? []
+  func stageRetiredAttachments(id: UUID) throws {
+    let values: [VaultSQLConnection.Value] = [.text(id.uuidString)]
     try sql.execute(
-      "INSERT OR IGNORE INTO attachment_cleanup SELECT image FROM records \(filter) \(id == nil ? "WHERE" : "AND") image IS NOT NULL",
+      "INSERT OR IGNORE INTO attachment_cleanup SELECT image FROM records WHERE id=? AND image IS NOT NULL",
       values)
     try sql.execute(
-      "INSERT OR IGNORE INTO attachment_cleanup SELECT audio FROM records \(filter) \(id == nil ? "WHERE" : "AND") audio IS NOT NULL",
+      "INSERT OR IGNORE INTO attachment_cleanup SELECT audio FROM records WHERE id=? AND audio IS NOT NULL",
+      values)
+    try sql.execute(
+      "INSERT OR IGNORE INTO attachment_cleanup SELECT preview_image FROM workspace WHERE preview_image IS NOT NULL AND record_id=?",
       values)
   }
 
@@ -78,15 +60,24 @@ extension VaultDatabase {
   }
 
   func recoverAttachments() throws {
+    let batchSize: Int64 = 128
+    _ = try recoverAttachmentBatch(limit: batchSize)
+  }
+
+  private func recoverAttachmentBatch(limit: Int64) throws -> Int {
     var filenames: [String] = []
-    try sql.rows("SELECT filename FROM attachment_cleanup") {
+    try sql.rows(
+      "SELECT filename FROM attachment_cleanup ORDER BY filename LIMIT ?", [.integer(limit)]
+    ) {
       filenames.append(try VaultSQLConnection.text($0))
     }
     for filename in filenames {
       let references = try sql.integer(
-        "SELECT count(*) FROM records WHERE image=? OR audio=?", [.text(filename), .text(filename)])
+        "SELECT (SELECT count(*) FROM records WHERE image=? OR audio=?) + (SELECT count(*) FROM workspace WHERE preview_image=?)",
+        [.text(filename), .text(filename), .text(filename)])
       if references == 0 { try files.removeAttachment(named: filename) }
       try sql.execute("DELETE FROM attachment_cleanup WHERE filename=?", [.text(filename)])
     }
+    return filenames.count
   }
 }

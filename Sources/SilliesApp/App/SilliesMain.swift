@@ -58,6 +58,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     self.showSettings()
   }
   private var vaultController: SessionVaultWindowController?
+  private var pendingVaultSource: VaultSourceReference?
   private var vaultWindow: NSWindow? { vaultController?.window }
   private var previewWindow: NSWindow?
   private var temporaryPreferencesDomain: String?
@@ -84,6 +85,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         diagnostics.start()
       }
       automatedRunner.armWatchdogIfNeeded(for: launch)
+      if launch.validatesCatalogOnly {
+        automatedRunner.validateCatalog()
+        return
+      }
       if launch.runsWritingFixture {
         automatedRunner.startWritingFixture()
         return
@@ -109,10 +114,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       if let speechServices {
         try configureChat(
           skills: skills, speech: speechServices, characters: controller.catalog.characters)
-      }
-      if launch.validatesCatalogOnly {
-        automatedRunner.validateCatalog(characterCount: controller.catalog.characters.count)
-        return
       }
       if launch.isAutomatedRun {
         settings.enabledCharacters = Set(controller.catalog.characters.map(\.id))
@@ -182,6 +183,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         controller: controller,
         openPlayground: { [unowned self] in self.openOrCreatePlayground(for: controller) },
         exportPreviews: { [weak self] directory in self?.exportPreviews(to: directory) })
+      openPendingVaultSource()
     } catch {
       diagnostics?.sink.record(.init(.app, .failed).failing(error))
       let alert = NSAlert()
@@ -637,6 +639,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     } else {
       presentVault(destination)
     }
+  }
+
+  func application(_ application: NSApplication, open urls: [URL]) {
+    guard let source = urls.lazy.compactMap({ VaultSourceReference(link: $0.absoluteString) }).first
+    else { return }
+    pendingVaultSource = source
+    openPendingVaultSource()
+  }
+
+  private func openPendingVaultSource() {
+    guard controller != nil, !isTerminating, let source = pendingVaultSource else { return }
+    pendingVaultSource = nil
+    showVault(.source(source))
   }
 
   private func presentVault(_ destination: SessionVaultWindowController.Destination) {

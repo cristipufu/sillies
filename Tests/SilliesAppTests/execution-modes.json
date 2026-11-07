@@ -332,5 +332,20 @@
   },
   "VaultActionLifetimeTests.swift": {
     "default": "headless"
+  },
+  "VaultWorkspaceExperienceTests.swift": {
+    "default": "headless"
+  },
+  "VaultLinkPreviewTests.swift": {
+    "default": "headless"
+  },
+  "LaunchConfigurationTests.swift": {
+    "default": "headless"
+  },
+  "VaultWorkspaceNavigationTests.swift": {
+    "default": "headless"
+  },
+  "VaultUsabilityAuditTests.swift": {
+    "default": "headless"
   }
 }

@@ -51,6 +51,11 @@ final class ArchitectureVisitor: SyntaxVisitor {
     if module == "SilliesFishSpeech", owner != "SilliesTTSInference" {
       report(node, "inference-isolation", "The Fish runtime must only be loaded by the TTS helper.")
     }
+    if (module == "SilliesVectorIndex" && owner != "SilliesSearchInference")
+      || (module == "CVectorSearch" && owner != "SilliesVectorIndex")
+    {
+      report(node, "inference-isolation", "The native vector index belongs in the search helper.")
+    }
     return .skipChildren
   }
 

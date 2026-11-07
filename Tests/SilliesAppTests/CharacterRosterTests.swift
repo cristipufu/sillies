@@ -4,14 +4,14 @@ import Testing
 
 @testable import SilliesApp
 
-@Test @MainActor func bundledCrewHasSixteenDistinctValidatedCharacters() throws {
+@Test @MainActor func bundledCrewHasTwentyDistinctValidatedCharacters() throws {
   let catalog = try CharacterCatalog()
   #expect(
     catalog.characters.map(\.id) == [
       "mochi", "kiko", "pogo", "bolt", "boo", "bloop", "sprout", "pip", "pebble", "taro", "nib",
-      "mallow", "novi", "lumi", "rook", "flick",
+      "mallow", "novi", "lumi", "rook", "flick", "leon", "gizmo", "orbit", "mimo",
     ])
-  #expect(Set(catalog.characters.map(\.renderer)).count == 16)
+  #expect(Set(catalog.characters.map(\.renderer)).count == 20)
   try catalog.validateAssets(
     renderers: RendererRegistry(), animations: AnimationLibrary(), transitions: TransitionLibrary())
 }
@@ -124,7 +124,7 @@ import Testing
   defaults.set(["kiko"], forKey: "characters")
   let settings = AppSettings(defaults: defaults)
   #expect(settings.enabledCharacters == ["kiko"])
-  #expect(try CharacterCatalog().characters.count == 16)
+  #expect(try CharacterCatalog().characters.count == 20)
 }
 
 @MainActor

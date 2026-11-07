@@ -32,18 +32,17 @@ package struct VaultReadTool: ConversationTool {
   }
   package func call(arguments: Data) async throws -> ConversationToolOutput {
     let args = try ConversationToolArguments.decode(Arguments.self, from: arguments)
-    guard let record = try await library.record(id: args.recordID) else {
+    guard let document = try await library.reasoningDocument(id: args.recordID) else {
       return .init(text: "The record is no longer available. It may have been deleted.")
     }
     try Task.checkCancellation()
     do {
       let passages = try VaultRecordPassage.selectRelated(
-        in: record, query: args.query, offset: args.offset)
+        in: document.content, query: args.query, offset: args.offset)
       guard let passage = passages.first else {
         throw VaultRecordPassage.SelectionError.invalidOffset
       }
-      let source = try ChatSource(
-        header: .init(record), excerpt: passage.text, links: VaultToolContent.links(in: record))
+      let source = document.source(excerpt: passage.text)
       return try VaultToolContent.readOutput(source, passages: passages)
     } catch VaultRecordPassage.SelectionError.invalidOffset {
       return .init(

@@ -7,6 +7,7 @@ package actor EmbeddingWorkerSession {
   private static let preparationTimeout: TimeInterval = 45
   private static let queryTimeout: TimeInterval = 2
   private static let passageTimeout: TimeInterval = 15
+  private static let minimumSearchWorkingBytes: Int64 = 64 * 1_024 * 1_024
   private let executable: URL
   private let configuration: EmbeddingConfiguration
   private let activity: InferenceActivity
@@ -27,7 +28,7 @@ package actor EmbeddingWorkerSession {
     self.configuration = configuration
     self.executable = executable
     self.activity = activity
-    reservation = .init(modelBytes: modelBytes)
+    reservation = .init(modelBytes: max(Self.minimumSearchWorkingBytes, modelBytes))
   }
 
   package func access() async throws -> SearchEmbeddingAccess {
@@ -35,6 +36,16 @@ package actor EmbeddingWorkerSession {
     guard let identity else { throw SearchEmbeddingError.unavailable }
     return .init(
       identity: identity,
+      vectorIndex: .init(
+        advance: { [weak self] directory in
+          guard let self else { throw CancellationError() }
+          return try await self.indexExchange(.advanceVaultIndex(directory), purpose: .passage)
+            .indexHasMore ?? false
+        },
+        search: { [weak self] query in
+          guard let self else { throw CancellationError() }
+          return try await self.indexExchange(.searchVaultIndex(query), purpose: .query).passageIDs
+        }),
       embed: { [weak self] input in
         guard let self else { throw CancellationError() }
         return try await self.embed(input)
@@ -54,13 +65,37 @@ package actor EmbeddingWorkerSession {
     }
   }
 
+  private func indexExchange(_ request: EmbeddingRequest, purpose: SearchEmbeddingInput.Purpose)
+    async throws -> EmbeddingResponse
+  {
+    try await admission.acquire(purpose)
+    do {
+      try Task.checkCancellation()
+      if purpose == .query, worker == nil || isBusy { throw SearchEmbeddingError.unavailable }
+      if purpose == .passage { try await awaitWarmup() }
+      let response = try await exchange(
+        request, timeout: purpose == .query ? Self.queryTimeout : Self.passageTimeout)
+      await admission.release()
+      return response
+    } catch {
+      await admission.release()
+      throw error
+    }
+  }
+
   private func performEmbedding(_ input: SearchEmbeddingInput) async throws -> SearchEmbedding? {
     // Interactive queries use keywords if a model is cold or its worker is occupied.
     if input.purpose == .query, worker == nil || isBusy {
       if worker == nil, !isBusy, !stopped { warmInBackground() }
       throw SearchEmbeddingError.unavailable
     }
-    if input.purpose == .passage, let warming {
+    if input.purpose == .passage { try await awaitWarmup() }
+    let timeout = input.purpose == .query ? Self.queryTimeout : Self.passageTimeout
+    return try await exchange(.embed(input), timeout: timeout).embedding
+  }
+
+  private func awaitWarmup() async throws {
+    if let warming {
       await withTaskCancellationHandler {
         await warming.value
       } onCancel: {
@@ -68,8 +103,6 @@ package actor EmbeddingWorkerSession {
       }
       try Task.checkCancellation()
     }
-    let timeout = input.purpose == .query ? Self.queryTimeout : Self.passageTimeout
-    return try await exchange(.embed(input), timeout: timeout).embedding
   }
 
   private func exchange(_ request: EmbeddingRequest, timeout: TimeInterval) async throws
@@ -91,7 +124,7 @@ package actor EmbeddingWorkerSession {
     -> EmbeddingResponse
   {
     let priority: InferenceActivity.EmbeddingPriority
-    if case .embed(let input) = request, input.purpose == .query {
+    if request.isInteractive {
       priority = .query
     } else {
       priority = .background
@@ -102,7 +135,7 @@ package actor EmbeddingWorkerSession {
       let cancellation = InferenceCancellation()
       guard await activity.claimEmbedding(id, priority: priority, cancel: { cancellation.cancel() })
       else {
-        if case .embed(let input) = request, input.purpose == .query {
+        if request.isInteractive {
           throw SearchEmbeddingError.unavailable
         }
         try await activity.waitForEmbeddingAdmission(priority)
@@ -125,7 +158,7 @@ package actor EmbeddingWorkerSession {
         guard !stopped else { throw CancellationError() }
         // Preemption is not an unsupported-language result. Retry background work after admission.
         if error is CancellationError {
-          if case .embed(let input) = request, input.purpose == .query { throw error }
+          if request.isInteractive { throw error }
           continue
         }
         throw error
@@ -145,7 +178,7 @@ package actor EmbeddingWorkerSession {
     guard let worker else { throw SearchEmbeddingError.unavailable }
     return try await withTaskCancellationHandler {
       do {
-        if case .embed = request, identity != nil {
+        if !request.isPreparation, identity != nil {
           // A pressure eviction may have discarded the prepared helper; preparation is idempotent.
           if !prepared { _ = try await prepare(worker) }
         }

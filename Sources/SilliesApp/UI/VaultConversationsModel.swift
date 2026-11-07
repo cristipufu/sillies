@@ -10,11 +10,18 @@ import SilliesCore
 @MainActor @Observable final class VaultConversationsModel {
   private static let searchDebounce: Duration = .milliseconds(250)
   private let presentation: VaultConversationPresentation
+  let reader: VaultConversationReaderModel
   var query = ""
+  var companionID: String?
+  struct SearchIdentity: Hashable {
+    let query: String
+    let companionID: String?
+  }
+  var searchIdentity: SearchIdentity { .init(query: query, companionID: companionID) }
   private(set) var headers: [ConversationHeader] = []
   private var matches: [ConversationSearchMatch] = []
-  private var appliedQuery: String?
-  var results: [ConversationSearchMatch] { appliedQuery == query ? matches : [] }
+  private var appliedQuery: SearchIdentity?
+  var results: [ConversationSearchMatch] { appliedQuery == searchIdentity ? matches : [] }
   private(set) var loadFailure: String?
   private(set) var openFailure: SessionFailure?
   private(set) var isLoading = false
@@ -22,25 +29,30 @@ import SilliesCore
   private var generation = UUID()
   @ObservationIgnored private var openTask: Task<Void, Never>?
 
-  init(presentation: VaultConversationPresentation) { self.presentation = presentation }
+  init(presentation: VaultConversationPresentation) {
+    self.presentation = presentation
+    reader = .init(repository: presentation.repository)
+  }
 
   func load() async {
+    reader.resume()
     let token = UUID()
     generation = token
-    let requestedQuery = query
+    let request = searchIdentity
     isLoading = true
     defer { if token == generation { isLoading = false } }
     do {
-      if requestedQuery.isEmpty {
+      if request.query.isEmpty {
         let loaded = try await presentation.repository.conversations()
-        guard token == generation, query == requestedQuery, !Task.isCancelled else { return }
-        headers = loaded
+        guard token == generation, searchIdentity == request, !Task.isCancelled else { return }
+        headers = loaded.filter { request.companionID == nil || $0.owner.id == request.companionID }
       } else {
         try await Task.sleep(for: Self.searchDebounce)
-        let loaded = try await presentation.repository.search(.init(query: requestedQuery))
-        guard token == generation, query == requestedQuery, !Task.isCancelled else { return }
+        let loaded = try await presentation.repository.search(
+          .init(companionID: request.companionID, query: request.query))
+        guard token == generation, searchIdentity == request, !Task.isCancelled else { return }
         matches = loaded
-        appliedQuery = requestedQuery
+        appliedQuery = request
       }
       loadFailure = nil
     } catch {
@@ -64,7 +76,15 @@ import SilliesCore
     }
   }
 
+  func companionChoices(matching text: String) async throws -> [VaultSourceFacet] {
+    try await presentation.repository.conversations()
+      .filter { text.isEmpty || $0.owner.name.localizedStandardContains(text) }
+      .prefix(VaultSourceFacet.maximumChoices)
+      .map { .init(id: $0.owner.id, title: $0.owner.name) }
+  }
+
   func stop() {
+    reader.stop()
     generation = UUID()
     isLoading = false
     isOpening = false

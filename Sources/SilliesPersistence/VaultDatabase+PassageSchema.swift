@@ -44,12 +44,4 @@ extension VaultDatabase {
     }
   }
 
-  func invalidatePassages(for id: UUID, documentRowID: Int) throws {
-    try sql.execute("DELETE FROM passages WHERE record_id=?", [.text(id.uuidString)])
-    try sql.execute(
-      """
-      INSERT INTO passage_sources(record_id,revision,document_rowid) VALUES(?,?,?)
-      ON CONFLICT(record_id) DO UPDATE SET revision=excluded.revision,document_rowid=excluded.document_rowid,next_offset=0,complete=0
-      """, [.text(id.uuidString), .text(UUID().uuidString), .integer(Int64(documentRowID))])
-  }
 }

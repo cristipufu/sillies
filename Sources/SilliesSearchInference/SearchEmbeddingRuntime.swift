@@ -1,11 +1,13 @@
 import Foundation
 import SilliesCore
 import SilliesSearchModels
+import SilliesVectorIndex
 
 actor SearchEmbeddingRuntime {
   private static let maximumInputBytes = 8192
   private var configuration: EmbeddingConfiguration?
   private var model: (any PreparedEmbeddingModel)?
+  private let index = VaultVectorIndexRuntime()
 
   func respond(to request: EmbeddingRequest) async throws -> EmbeddingResponse {
     switch request {
@@ -21,6 +23,13 @@ actor SearchEmbeddingRuntime {
         throw SearchEmbeddingError.unavailable
       }
       return try await .init(embedding: model.embed(input))
+    case .advanceVaultIndex(let directory):
+      guard let model else { throw SearchEmbeddingError.unavailable }
+      return try await .init(
+        indexHasMore: index.advance(directory: directory, provider: model.identity))
+    case .searchVaultIndex(let query):
+      guard let model else { throw SearchEmbeddingError.unavailable }
+      return try await .init(passageIDs: index.search(query, provider: model.identity))
     }
   }
 }

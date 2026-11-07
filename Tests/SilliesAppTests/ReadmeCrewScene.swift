@@ -6,7 +6,7 @@ import SwiftUI
 /// A character sheet using the same catalog, rig renderer, and names as the crew picker.
 struct ReadmeCrewScene: View {
   @Environment(\.silliesTheme) private var theme
-  private static let columns = Array(repeating: GridItem(.flexible(), spacing: 20), count: 4)
+  private static let columns = Array(repeating: GridItem(.flexible(), spacing: 20), count: 5)
   let characters: [CharacterDefinition]
 
   var body: some View {
@@ -15,7 +15,7 @@ struct ReadmeCrewScene: View {
         .font(.system(size: 11, weight: .semibold, design: .monospaced)).tracking(1.8)
         .foregroundStyle(theme.secondary)
       HStack(alignment: .firstTextBaseline) {
-        Text("Sixteen little personalities.")
+        Text("Twenty little personalities.")
           .font(.system(size: 38, weight: .bold, design: .rounded)).tracking(-1.3)
         Spacer()
         Text("Pick your crew.").font(.system(size: 16)).foregroundStyle(theme.secondary)

@@ -4,7 +4,7 @@ import SilliesCore
 /// Authoritative versioned storage. Confined to one worker, with bodies read only by explicit ID.
 public final class VaultDatabase {
   public static let filename = "vault.sqlite"
-  private static let schemaVersion = 2
+  private static let schemaVersion = 3
   private static let directoryPermissions = 0o700
   let sql: VaultSQLConnection
   let files: VaultFileStorage
@@ -12,17 +12,34 @@ public final class VaultDatabase {
   let decoder: JSONDecoder
   public internal(set) var metrics = VaultStorageMetrics()
 
-  public init(directory: URL) throws {
+  public convenience init(directory: URL) throws {
+    try self.init(directory: directory, access: .readWrite)
+  }
+
+  public convenience init(reading directory: URL) throws {
+    try self.init(directory: directory, access: .readOnly)
+  }
+
+  private init(directory: URL, access: VaultSQLConnection.Access) throws {
     dispatchPrecondition(condition: .notOnQueue(.main))
     files = VaultFileStorage(directory: directory)
-    try FileManager.default.createDirectory(
-      at: directory, withIntermediateDirectories: true,
-      attributes: [.posixPermissions: Self.directoryPermissions])
-    sql = try VaultSQLConnection(url: directory.appendingPathComponent(Self.filename))
+    if access == .readWrite {
+      try FileManager.default.createDirectory(
+        at: directory, withIntermediateDirectories: true,
+        attributes: [.posixPermissions: Self.directoryPermissions])
+    }
+    sql = try VaultSQLConnection(
+      url: directory.appendingPathComponent(Self.filename), access: access)
     encoder = JSONEncoder()
     encoder.dateEncodingStrategy = .secondsSince1970
     decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .secondsSince1970
+    guard access == .readWrite else {
+      guard try sql.integer("PRAGMA user_version") == Self.schemaVersion else {
+        throw CocoaError(.fileReadCorruptFile)
+      }
+      return
+    }
     try sql.execute("PRAGMA journal_mode=WAL")
     try sql.execute("PRAGMA synchronous=FULL")
     try sql.execute("PRAGMA secure_delete=ON")
@@ -41,6 +58,7 @@ public final class VaultDatabase {
     }
     if version == 0 { try prepareInitialSchema() }
     if version < 2 { try preparePassageSchema() }
+    if version < 3 { try prepareWorkspaceSchema() }
   }
 
   private func prepareInitialSchema() throws {

@@ -14,6 +14,11 @@
     <key>LSUIElement</key><true/>
     <key>NSHighResolutionCapable</key><true/>
     <key>NSPrincipalClass</key><string>NSApplication</string>
+    <key>CFBundleURLTypes</key>
+    <array><dict>
+        <key>CFBundleURLName</key><string>app.sillies.vault-source</string>
+        <key>CFBundleURLSchemes</key><array><string>sillies-vault</string></array>
+    </dict></array>
     <key>UTExportedTypeDeclarations</key>
     <array>
         <dict>

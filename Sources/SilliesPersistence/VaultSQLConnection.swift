@@ -31,6 +31,9 @@ final class VaultSQLConnection {
     sqlite3_busy_timeout(opened, Self.busyTimeoutMilliseconds)
   }
   deinit { sqlite3_close(connection) }
+  func startBackup(to destination: VaultSQLConnection) -> OpaquePointer? {
+    sqlite3_backup_init(destination.connection, "main", connection, "main")
+  }
 
   /// Scope interruption to reads; cancellation must never interrupt transaction rollback.
   func cancellableRead<T>(_ read: () throws -> T) throws -> T {
@@ -57,6 +60,16 @@ final class VaultSQLConnection {
 
   func transaction<T>(_ work: () throws -> T) throws -> T {
     try execute("BEGIN IMMEDIATE")
+    return try finishTransaction(work)
+  }
+
+  /// A multi-statement reader sees one revision without reserving the write lock.
+  func readSnapshot<T>(_ read: () throws -> T) throws -> T {
+    try execute("BEGIN")
+    return try finishTransaction(read)
+  }
+
+  private func finishTransaction<T>(_ work: () throws -> T) throws -> T {
     do {
       let result = try work()
       try execute("COMMIT")
@@ -131,11 +144,28 @@ final class VaultSQLConnection {
     return try consume(.init(start: bytes, count: Int(count)))
   }
 
-  static func text(_ row: OpaquePointer, column: Int32 = 0) throws -> String {
-    guard let text = sqlite3_column_text(row, column) else {
+  static func text(_ row: OpaquePointer, column: Int32 = 0, maximumBytes: Int = Int.max) throws
+    -> String
+  {
+    let count = sqlite3_column_bytes(row, column)
+    guard count >= 0, count <= maximumBytes,
+      let text = sqlite3_column_text(row, column),
+      let value = String(
+        bytes: UnsafeBufferPointer(start: text, count: Int(count)), encoding: .utf8)
+    else {
       throw CocoaError(.fileReadCorruptFile)
     }
-    return String(cString: text)
+    return value
+  }
+
+  /// Preserve all bits of cursor values. SQLite's text rendering of REAL values rounds them.
+  static func real(_ row: OpaquePointer, column: Int32) throws -> Double {
+    let type = sqlite3_column_type(row, column)
+    let value = sqlite3_column_double(row, column)
+    guard type == SQLITE_FLOAT || type == SQLITE_INTEGER, value.isFinite else {
+      throw CocoaError(.fileReadCorruptFile)
+    }
+    return value
   }
 
   private func check(_ result: Int32, expected: Int32) throws {

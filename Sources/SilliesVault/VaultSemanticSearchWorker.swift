@@ -7,11 +7,15 @@ actor VaultSemanticSearchWorker {
   private var database: VaultSemanticSearchDatabase?
   init(directory: URL) { self.directory = directory }
 
-  func search(_ request: VaultSearchRequest, embedding: SearchEmbedding, provider: String) throws
+  func search(
+    _ request: VaultSearchRequest, embedding: SearchEmbedding, provider: String,
+    candidates: [Int64]? = nil
+  ) throws
     -> [VaultSearchMatch]
   {
     dispatchPrecondition(condition: .notOnQueue(.main))
-    return try storage().search(request, embedding: embedding, provider: provider)
+    return try storage().search(
+      request, embedding: embedding, provider: provider, candidates: candidates)
   }
 
   private func storage() throws -> VaultSemanticSearchDatabase {

@@ -9,6 +9,7 @@ import SilliesVault
     let pending: (UUID) -> SessionRecord?
     let isRemoved: (UUID) -> Bool
     let save: (SessionRecord) -> Void
+    var applyProtection: ((UUID, VaultRecordProtection, @escaping Completion) -> Void)? = nil
   }
   typealias Completion = @MainActor (Result<Bool, Error>) -> Void
   private struct Request {
@@ -51,6 +52,10 @@ import SilliesVault
     }
     if let record = context.pending(request.id) {
       apply(request, to: record)
+      return
+    }
+    if case .protection(let protection) = request.edit, let apply = context.applyProtection {
+      apply(request.id, protection) { [weak self] in self?.finish($0) }
       return
     }
     let revision = context.revision(request.id)

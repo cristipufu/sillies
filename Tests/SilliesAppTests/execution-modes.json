@@ -1,4 +1,7 @@
 {
+  "VaultNativeInteractionTests.swift": {
+    "default": "gui"
+  },
   "AnimationContinuityTests.swift": {
     "default": "headless",
     "tests": {

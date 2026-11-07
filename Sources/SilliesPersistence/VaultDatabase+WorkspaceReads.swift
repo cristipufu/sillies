@@ -61,6 +61,7 @@ extension VaultDatabase {
       return .init(records: [], next: nil)
     }
     let filter = VaultWorkspaceFilter(query)
+    let records = supportsSearchMetadata ? "available_search_records" : "available_records"
     let usesRank = query.ordering == .relevance
     let selectedValue =
       usesRank
@@ -72,19 +73,21 @@ extension VaultDatabase {
     let continuation =
       cursor == nil ? "" : "AND (score\(comparison)? OR (score=? AND d.record_id\(comparison)?))"
     var matches: [VaultWorkspaceMatch] = []
-    // Materialize FTS scores once per block, before grouping.
+    // Stream FTS scores before grouping instead of materializing all matching blocks twice.
+    // LIMIT -1 is SQLite's unlimited co-routine boundary: it prevents flattening from moving
+    // the FTS rank function into an invalid aggregate context, without truncating candidates.
     // Apply record-level filters once per document, then decode only the visible headers.
     try sql.rows(
       """
-      WITH scored AS MATERIALIZED (
-        SELECT rowid AS block_id,rank AS relevance FROM \(plan.table) WHERE \(plan.table) MATCH ?),
+      WITH scored AS (
+        SELECT b.record_id,rank AS relevance,b.id AS block_id
+        FROM \(plan.table) JOIN content_blocks b INDEXED BY content_block_identity ON b.id=\(plan.table).rowid
+        WHERE \(plan.table) MATCH ? LIMIT -1),
       documents AS (
-        SELECT b.record_id,min(s.relevance) AS relevance,b.id AS block_id
-        FROM scored s JOIN content_blocks b INDEXED BY content_block_identity ON b.id=s.block_id
-        GROUP BY b.record_id),
+        SELECT record_id,min(relevance) AS relevance,block_id FROM scored GROUP BY record_id),
       matches AS (
         SELECT d.record_id,\(selectedValue) AS score,d.block_id
-        FROM documents d JOIN available_records r ON r.id=d.record_id
+        FROM documents d JOIN \(records) r ON r.id=d.record_id
         LEFT JOIN workspace w ON w.record_id=r.id
         WHERE \(filter.sql) \(continuation)
         ORDER BY score \(direction),d.record_id \(direction) LIMIT ?)

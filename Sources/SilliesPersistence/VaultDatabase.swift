@@ -4,12 +4,13 @@ import SilliesCore
 /// Authoritative versioned storage. Confined to one worker, with bodies read only by explicit ID.
 public final class VaultDatabase {
   public static let filename = "vault.sqlite"
-  private static let schemaVersion = 3
+  private static let schemaVersion = 4
   private static let directoryPermissions = 0o700
   let sql: VaultSQLConnection
   let files: VaultFileStorage
   let encoder: JSONEncoder
   let decoder: JSONDecoder
+  let supportsSearchMetadata: Bool
   public internal(set) var metrics = VaultStorageMetrics()
 
   public convenience init(directory: URL) throws {
@@ -34,8 +35,11 @@ public final class VaultDatabase {
     encoder.dateEncodingStrategy = .secondsSince1970
     decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .secondsSince1970
+    let storedVersion = try sql.integer("PRAGMA user_version")
+    supportsSearchMetadata = access == .readWrite || storedVersion >= 4
     guard access == .readWrite else {
-      guard try sql.integer("PRAGMA user_version") == Self.schemaVersion else {
+      // A previous workspace backup can be copied before launch upgrades its private copy.
+      guard (3...Self.schemaVersion).contains(storedVersion) else {
         throw CocoaError(.fileReadCorruptFile)
       }
       return
@@ -59,6 +63,7 @@ public final class VaultDatabase {
     if version == 0 { try prepareInitialSchema() }
     if version < 2 { try preparePassageSchema() }
     if version < 3 { try prepareWorkspaceSchema() }
+    if version < 4 { try prepareSearchMetadataSchema() }
   }
 
   private func prepareInitialSchema() throws {

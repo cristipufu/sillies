@@ -20,6 +20,7 @@ constexpr size_t maximum_neighbors = 256;
 constexpr int worker_threads = 2;
 constexpr int training_iterations = 12;
 constexpr int training_seed = 13;
+constexpr size_t maximum_partition_probes = 96;
 
 void report(char* buffer, size_t capacity, const char* message) {
     if (buffer && capacity) std::snprintf(buffer, capacity, "%s", message);
@@ -75,7 +76,7 @@ SilliesVectorIndex* svi_create(int dimensions, int partitions, const float* trai
         auto lists = std::make_unique<faiss::OnDiskInvertedLists>(index->nlist, index->code_size, backing_path);
         lists->prefetch_nthread = 1;
         index->replace_invlists(lists.release(), true);
-        index->nprobe = std::min(size_t(24), index->nlist);
+        index->nprobe = std::min(maximum_partition_probes, index->nlist);
         result->index = std::move(index);
     });
     return result && result->index ? result.release() : nullptr;
@@ -90,7 +91,7 @@ SilliesVectorIndex* svi_open(const char* path, int dimensions, char* error, size
         result->index.reset(faiss::read_index(path, faiss::IO_FLAG_ONDISK_SAME_DIR));
         if (result->index->d != dimensions) throw std::invalid_argument("Index dimension changed.");
         if (auto* ivf = dynamic_cast<faiss::IndexIVF*>(result->index.get())) {
-            ivf->nprobe = std::min(size_t(24), ivf->nlist);
+            ivf->nprobe = std::min(maximum_partition_probes, ivf->nlist);
             if (auto* disk = dynamic_cast<faiss::OnDiskInvertedLists*>(ivf->invlists)) disk->prefetch_nthread = 1;
         }
     });

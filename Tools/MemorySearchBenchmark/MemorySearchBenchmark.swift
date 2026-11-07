@@ -8,6 +8,10 @@ import SilliesVault
 @main enum MemorySearchBenchmark {
   static func main() async throws {
     let arguments = CommandLine.arguments
+    if arguments.dropFirst().first == "--vault-workspace" {
+      try await VaultRetrievalBenchmark.run(Array(arguments.dropFirst(2)))
+      return
+    }
     guard arguments.count == 5 || arguments.count == 6 else {
       throw ProbeError.usage
     }

@@ -23,10 +23,7 @@ extension VaultDatabase {
     try sql.execute(
       """
       CREATE VIEW available_records AS SELECT r.* FROM records r
-      WHERE r.sequence>\(VaultCleanupSelection.visibleSequenceBoundary)
-        AND NOT EXISTS(SELECT 1 FROM pending_deletions WHERE record_id=r.id)
-        AND \(VaultCleanupSelection.retention.exclusion)
-        AND \(VaultCleanupSelection.trash.exclusion)
+      WHERE \(VaultCleanupSelection.recordVisibility)
       """)
     try sql.execute(
       """

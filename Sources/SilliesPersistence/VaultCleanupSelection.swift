@@ -5,6 +5,14 @@ enum VaultCleanupSelection: String, CaseIterable {
   static let visibleSequenceBoundary =
     "coalesce((SELECT through_sequence FROM vault_cleanup WHERE kind='all'),0)"
 
+  static var recordVisibility: String {
+    """
+    r.sequence>\(visibleSequenceBoundary)
+      AND NOT EXISTS(SELECT 1 FROM pending_deletions WHERE record_id=r.id)
+      AND \(retention.exclusion) AND \(trash.exclusion)
+    """
+  }
+
   var predicate: String {
     let sequence = "r.sequence<=j.through_sequence"
     switch self {

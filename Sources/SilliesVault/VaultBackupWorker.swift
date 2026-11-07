@@ -44,14 +44,14 @@ actor VaultBackupWorker {
 
   private func copyAttachments(to directory: URL) async throws {
     let snapshot = try VaultDatabase(reading: directory)
-    var sequence: Int64 = 0
-    while let batch = try snapshot.backupAttachments(after: sequence) {
+    var recordID: UUID?
+    while let batch = try snapshot.backupAttachments(after: recordID) {
       try Task.checkCancellation()
       for name in batch.filenames {
         try VaultAttachmentCopy.copy(
           name, from: .init(directory: source), to: .init(directory: directory))
       }
-      sequence = batch.sequence
+      recordID = batch.lastRecordID
       await Task.yield()
     }
   }

@@ -82,6 +82,7 @@ import Testing
   for name in workspaceTriggers { try fixture.database.sql.execute("DROP TRIGGER \(name)") }
   try fixture.database.sql.execute("DROP VIEW searchable_blocks")
   try fixture.database.sql.execute("DROP VIEW available_records")
+  try fixture.database.sql.execute("DROP VIEW available_search_records")
   for name in [
     "content_search", "content_blocks", "content_sections", "content_backfill", "vault_drafts",
     "workspace", "document_identities", "vault_collections", "vault_collection_items", "vault_tags",
@@ -98,7 +99,8 @@ import Testing
   }
   for name in [
     "records_source_app", "records_source_companion", "records_source_language",
-    "records_retention", "records_modified", "records_visibility",
+    "records_retention", "records_modified", "records_visibility", "records_search_metadata",
+    "records_backup_files",
   ] {
     try fixture.database.sql.execute("DROP INDEX \(name)")
   }

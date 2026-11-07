@@ -1,0 +1,56 @@
+{
+  "meetings.restored": {
+    "records": 0,
+    "content_blocks": 0,
+    "content_search": 0,
+    "passages": 0,
+    "passage_vectors": 0,
+    "vault_cleanup": 0,
+    "attachment_cleanup": 0,
+    "remainingFiles": 0
+  },
+  "scale-production.restored": {
+    "records": 1000000,
+    "content_blocks": 5000000,
+    "content_search": 4000000,
+    "passages": 0,
+    "passage_vectors": 0,
+    "vault_cleanup": 0,
+    "attachment_cleanup": 0
+  },
+  "retrieval-recovery": {
+    "records": 5198,
+    "content_blocks": 16093,
+    "content_search": 16093,
+    "passages": 19198,
+    "passage_vectors": 19198,
+    "vault_cleanup": 0,
+    "attachment_cleanup": 0
+  },
+  "scale-cleanup": {
+    "records": 0,
+    "workspace": 0,
+    "content_sections": 0,
+    "content_blocks": 0,
+    "search_index_content": 0,
+    "content_search": 0,
+    "content_substrings": 0,
+    "documents": 0,
+    "passages": 0,
+    "passage_vectors": 0,
+    "file_references": 0,
+    "pending_deletions": 0,
+    "vault_cleanup": 0,
+    "attachment_cleanup": 0,
+    "vault_drafts": 0,
+    "vault_metadata_drafts": 0,
+    "searchMatches": 0,
+    "quickCheck": [
+      "ok"
+    ],
+    "databaseBytes": 8956354560,
+    "freePages": 1796123,
+    "totalPages": 2186610,
+    "verificationSeconds": 31.183352292049676
+  }
+}

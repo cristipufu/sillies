@@ -28,3 +28,9 @@ deleting its record cannot recreate the record. Read saved bounds and identifier
 SQLite online backup pins a read snapshot, copies bounded pages, closes the destination journal,
 and publishes only after its referenced attachments have copied. Export and backup must leave no
 successful partial result after cancellation. Never recursively delete a metadata-supplied path.
+
+Schema 4 keeps relevance filtering on a covering metadata index and backup file discovery on two
+ordered partial indexes. Preserve exact ranking/cursor behavior and shared cleanup visibility.
+Backup reference pages merge source-file owners with preview-only owners by record ID. Do not add
+a whole-library sort, walk fileless records, or let the preview join start from all source records;
+`VaultBackupReferenceTests` exercises the real query plan as well as complete file traversal.

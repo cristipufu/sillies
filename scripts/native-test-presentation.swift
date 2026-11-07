@@ -9,6 +9,13 @@ import ObjectiveC
 
   static func configure() {
     if ProcessInfo.processInfo.environment["SILLIES_TEST_PRESENTATION"] == "gui" {
+      guard NSWorkspace.shared.frontmostApplication?.bundleIdentifier != "com.apple.loginwindow"
+      else {
+        fputs(
+          "Native GUI tests require an unlocked desktop. Unlock this Mac and rerun; focus and stacking cannot be validated behind the lock screen.\n",
+          stderr)
+        exit(EXIT_FAILURE)
+      }
       NSApplication.shared.setActivationPolicy(.accessory)
       return
     }

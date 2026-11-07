@@ -2,6 +2,9 @@
 
 **November 7, 2026 · Apple M4 Pro, 48 GiB memory · macOS 26.7.2 (25G332)**
 
+Follow-up: [larger-corpus, lifecycle and native interaction qualification](vault-qualification-2026-11-07.md).
+The measurements below remain the original baseline; the follow-up records subsequent changes.
+
 The Vault now has an adaptive sidebar/list/document workspace, authored notes, revision-safe editing,
 collections/tags/saved searches, local semantic retrieval, recoverable Trash, streaming Markdown export,
 local backup/restore and explicit URL/X/YouTube saving with asynchronous previews. Existing source captures and

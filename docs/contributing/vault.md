@@ -94,6 +94,12 @@ existing source bodies are projected one record at a time, outside the main thre
 old record prepares that record immediately. Canonical record IDs remain stable. This is a SQLite
 schema upgrade, not an importer for a pre-release JSON archive.
 
+Schema 4 adds covering metadata and attachment-reference indexes. The relevance reader uses
+`available_search_records` so filtering a large matching set does not fetch source-body pages.
+Both visibility views share `VaultCleanupSelection.recordVisibility`. Read-only schema-3 backups
+remain copyable; launch upgrades the installed copy. Changes to indexes require a transactional
+schema version and migration coverage, including the preceding backup format.
+
 - Workspace pages contain at most **100 headers**. Source bodies are never decoded for list rendering.
 - Reading pages contain at most **16 blocks**, each at most **2,048 Unicode scalars**. A growing edit is
   bounded to **128 blocks / 131,072 scalars**. Normal extended graphemes remain together at boundaries.
@@ -135,7 +141,9 @@ Word search uses Unicode tokenization; Exact text uses an additional FTS5 trigra
 least three characters, and preserves punctuation for identifiers/URLs and non-Latin substrings. Exact
 modes currently apply to saved notes and captures; Words & meaning also includes conversations.
 Date ordering uses sparse posting lists or 256-record chronological slices with stable continuation;
-Best match materializes each matched block score once and ranks the full matching set. Visible
+Best match streams each matched block score into document grouping and ranks the full matching set.
+SQLite's unlimited subquery boundary prevents flattening from placing its FTS rank function inside
+an aggregate; it does not cap candidates or approximate keyword ranking. Visible
 excerpts are fetched as one bounded batch, never one repeated broad FTS query per row. The UI preserves the chosen date order when typing. Empty
 search slices yield and remain cancellable rather than becoming a false “no matches” result.
 
@@ -153,8 +161,8 @@ canonical exact ranking; semantic deadlines keep slow inference/search from dela
 results indefinitely.
 
 Approximate search is not a promise of perfect recall. Broad relevance queries still scale with the
-number of matching blocks. The [qualification report](../reports/vault-workspace-2026-11-07.md)
-distinguishes database latency, synthetic ANN recall and actual embedding-model retrieval.
+number of matching blocks. The [qualification report](../reports/vault-qualification-2026-11-07.md)
+distinguishes database latency, index fidelity, actual model retrieval and passage coverage.
 
 ## Export and backup
 
@@ -163,6 +171,9 @@ one complete item folder at a time. Earlier completed items remain valid if a la
 user cancels. Individual exports retain original and corrected transcripts.
 
 A Vault backup uses SQLite's online backup API with a pinned source snapshot and bounded page copies.
+Referenced files are enumerated in batches of 128 owning records by merging ordered partial indexes
+for source files and preview-only files. Fileless records do not require a per-record call or sort;
+tests assert both complete traversal and the actual SQLite query plan.
 It finalizes its private destination in rollback-journal mode before publishing, without WAL/SHM
 sidecars. It includes `vault.sqlite`, drafts, Trash, collections and referenced attachments. An attachment removed
 concurrently causes an explicit failed backup, not a successful folder with missing files. It excludes
@@ -210,3 +221,6 @@ On separate disposable copies of the completed fixture, `retention` measures a k
 `clear` measures a clear-all request, including the resulting snapshot and first workspace page.
 These commands change the supplied synthetic archive. They measure acknowledgement while physical
 cleanup remains pending; they do not measure the duration of a complete million-record purge.
+Use resumable `drain` slices to verify completion, followed by physical row, search and attachment
+checks. The [qualification procedure](../../Benchmarks/Vault/README.md) also covers complete backup,
+next-launch restore, interrupted indexing, real embeddings and explicit native interaction checks.

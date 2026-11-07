@@ -1,0 +1,379 @@
+{
+  "documents": [
+    {
+      "id": "EB779B34-D50D-51FB-975E-C6512A39B7C8",
+      "title": "Release review",
+      "text": "Mara will sign off the desktop release after the keyboard navigation fixes pass. Dan owns the installer packaging. The rollout date is June 18.",
+      "tag": "work"
+    },
+    {
+      "id": "6B06A73D-D2E7-5B07-9170-CD1534138179",
+      "title": "Recovery exercise",
+      "text": "The backup includes recordings and attachments. Restore the copy into an empty directory, verify two transcripts and compare attachment checksums before deleting the original.",
+      "tag": "work"
+    },
+    {
+      "id": "B27AD92F-DF65-5D3C-B8E5-3878677CA2D8",
+      "title": "Rail journey",
+      "text": "The night train leaves Vienna at 19:42 from platform seven. Tickets are saved in the red folder. Book a sleeper compartment rather than reclining seats.",
+      "tag": "personal"
+    },
+    {
+      "id": "69245BB5-3271-50E3-87E0-293E15756A5E",
+      "title": "Dinner notes",
+      "text": "Roast the aubergines until soft, scoop out their flesh and mix with tahini, lemon and salt. The smoky dip should cool before serving with flatbread.",
+      "tag": "personal"
+    },
+    {
+      "id": "C8C5E403-CAC9-5076-8835-4EB20500893C",
+      "title": "Build failure screenshot notes",
+      "text": "The terminal reported linker failure: undefined symbol _sqlite3_open_v2. The fix is to link the SQLite library in the target, then rebuild.",
+      "tag": "work"
+    },
+    {
+      "id": "7713112F-33A0-5B72-AE02-ACE5FE7EB347",
+      "title": "Projektbesprechung",
+      "text": "Lea übernimmt die Prüfung der Barrierefreiheit. Die Veröffentlichung wartet auf die Tastaturnavigation und den Test mit VoiceOver.",
+      "tag": "work"
+    },
+    {
+      "id": "129D0754-0D43-555A-B0C8-A6BB0985B1A5",
+      "title": "Notes de jardin",
+      "text": "Le basilic doit rester près de la fenêtre et recevoir de petites quantités d’eau. Ne pas laisser les racines tremper dans la soucoupe.",
+      "tag": "personal"
+    },
+    {
+      "id": "D8FF2ADD-F4ED-5535-8866-C2E0F99A9FF5",
+      "title": "Viaje de verano",
+      "text": "El apartamento de Lisboa se puede ocupar a partir de las cuatro de la tarde. La llave está en una caja junto a la puerta azul.",
+      "tag": "personal"
+    },
+    {
+      "id": "D9891AA5-8E68-508E-8C41-3D03FDC43CAE",
+      "title": "Plan pentru conferință",
+      "text": "Ioana rezervă sala pentru conferință. Andrei pregătește demonstrația, iar testul de sunet este joi la ora zece.",
+      "tag": "work"
+    },
+    {
+      "id": "9722D57A-0C37-5AAA-A5C2-91087EF3AFA2",
+      "title": "旅行のメモ",
+      "text": "京都のホテルは午後三時からチェックインできます。荷物は午前中でもフロントに預けられます。",
+      "tag": "personal"
+    },
+    {
+      "id": "EE6096FB-3C0D-558F-BA5E-2D46BE925F1E",
+      "title": "Apple pie",
+      "text": "Slice six apples, toss with cinnamon and bake in a pastry shell. Let the pie cool for half an hour.",
+      "tag": "personal"
+    },
+    {
+      "id": "D5ADCD4B-89F3-5545-A8D5-86F614428892",
+      "title": "Apple laptop repair",
+      "text": "The laptop battery was replaced at the repair shop. Keep the service receipt with the warranty documents.",
+      "tag": "personal"
+    },
+    {
+      "id": "9D6682FA-9EDB-57A9-9086-7E07C7CDA15D",
+      "title": "Release owner",
+      "text": "Nina is responsible for the final release approval and signs the deployment checklist.",
+      "tag": "blue"
+    },
+    {
+      "id": "D788AB61-4E75-5E2A-90A4-7D4AFA1E7783",
+      "title": "Release owner",
+      "text": "Owen is responsible for the final release approval and signs the deployment checklist.",
+      "tag": "green"
+    },
+    {
+      "id": "354B34BE-11BE-59F9-8DB5-359016B31CFF",
+      "title": "Retired server secret",
+      "text": "The retired appliance used the label violet comet. This record was moved to Trash.",
+      "trashed": true
+    }
+  ],
+  "queries": [
+    {
+      "id": "release-all",
+      "text": "Who is responsible for approving the desktop release?",
+      "group": "everyday",
+      "relevant": {
+        "EB779B34-D50D-51FB-975E-C6512A39B7C8": 1
+      }
+    },
+    {
+      "id": "release-filtered",
+      "text": "Who is responsible for approving the desktop release?",
+      "tag": "work",
+      "group": "filters",
+      "relevant": {
+        "EB779B34-D50D-51FB-975E-C6512A39B7C8": 1
+      }
+    },
+    {
+      "id": "backup-all",
+      "text": "How do we verify our backup can actually be restored?",
+      "group": "everyday",
+      "relevant": {
+        "6B06A73D-D2E7-5B07-9170-CD1534138179": 1
+      }
+    },
+    {
+      "id": "backup-filtered",
+      "text": "How do we verify our backup can actually be restored?",
+      "tag": "work",
+      "group": "filters",
+      "relevant": {
+        "6B06A73D-D2E7-5B07-9170-CD1534138179": 1
+      }
+    },
+    {
+      "id": "travel-all",
+      "text": "Where did I put the tickets for the overnight train?",
+      "group": "everyday",
+      "relevant": {
+        "B27AD92F-DF65-5D3C-B8E5-3878677CA2D8": 1
+      }
+    },
+    {
+      "id": "travel-filtered",
+      "text": "Where did I put the tickets for the overnight train?",
+      "tag": "personal",
+      "group": "filters",
+      "relevant": {
+        "B27AD92F-DF65-5D3C-B8E5-3878677CA2D8": 1
+      }
+    },
+    {
+      "id": "recipe-all",
+      "text": "How did I make that smoky eggplant dip?",
+      "group": "everyday",
+      "relevant": {
+        "69245BB5-3271-50E3-87E0-293E15756A5E": 1
+      }
+    },
+    {
+      "id": "recipe-filtered",
+      "text": "How did I make that smoky eggplant dip?",
+      "tag": "personal",
+      "group": "filters",
+      "relevant": {
+        "69245BB5-3271-50E3-87E0-293E15756A5E": 1
+      }
+    },
+    {
+      "id": "terminal-all",
+      "text": "Find the terminal error about the missing database symbol.",
+      "group": "everyday",
+      "relevant": {
+        "C8C5E403-CAC9-5076-8835-4EB20500893C": 1
+      }
+    },
+    {
+      "id": "terminal-filtered",
+      "text": "Find the terminal error about the missing database symbol.",
+      "tag": "work",
+      "group": "filters",
+      "relevant": {
+        "C8C5E403-CAC9-5076-8835-4EB20500893C": 1
+      }
+    },
+    {
+      "id": "german-all",
+      "text": "Wer prüft, ob die Anwendung barrierefrei ist?",
+      "group": "everyday",
+      "relevant": {
+        "7713112F-33A0-5B72-AE02-ACE5FE7EB347": 1
+      }
+    },
+    {
+      "id": "german-filtered",
+      "text": "Wer prüft, ob die Anwendung barrierefrei ist?",
+      "tag": "work",
+      "group": "filters",
+      "relevant": {
+        "7713112F-33A0-5B72-AE02-ACE5FE7EB347": 1
+      }
+    },
+    {
+      "id": "french-all",
+      "text": "Comment faut-il arroser le basilic ?",
+      "group": "everyday",
+      "relevant": {
+        "129D0754-0D43-555A-B0C8-A6BB0985B1A5": 1
+      }
+    },
+    {
+      "id": "french-filtered",
+      "text": "Comment faut-il arroser le basilic ?",
+      "tag": "personal",
+      "group": "filters",
+      "relevant": {
+        "129D0754-0D43-555A-B0C8-A6BB0985B1A5": 1
+      }
+    },
+    {
+      "id": "spanish-all",
+      "text": "¿Dónde recogemos la llave del apartamento?",
+      "group": "everyday",
+      "relevant": {
+        "D8FF2ADD-F4ED-5535-8866-C2E0F99A9FF5": 1
+      }
+    },
+    {
+      "id": "spanish-filtered",
+      "text": "¿Dónde recogemos la llave del apartamento?",
+      "tag": "personal",
+      "group": "filters",
+      "relevant": {
+        "D8FF2ADD-F4ED-5535-8866-C2E0F99A9FF5": 1
+      }
+    },
+    {
+      "id": "romanian-all",
+      "text": "Cine se ocupă de rezervarea sălii?",
+      "group": "everyday",
+      "relevant": {
+        "D9891AA5-8E68-508E-8C41-3D03FDC43CAE": 1
+      }
+    },
+    {
+      "id": "romanian-filtered",
+      "text": "Cine se ocupă de rezervarea sălii?",
+      "tag": "work",
+      "group": "filters",
+      "relevant": {
+        "D9891AA5-8E68-508E-8C41-3D03FDC43CAE": 1
+      }
+    },
+    {
+      "id": "japanese-all",
+      "text": "ホテルのチェックイン前に荷物を預けられますか？",
+      "group": "everyday",
+      "relevant": {
+        "9722D57A-0C37-5AAA-A5C2-91087EF3AFA2": 1
+      }
+    },
+    {
+      "id": "japanese-filtered",
+      "text": "ホテルのチェックイン前に荷物を預けられますか？",
+      "tag": "personal",
+      "group": "filters",
+      "relevant": {
+        "9722D57A-0C37-5AAA-A5C2-91087EF3AFA2": 1
+      }
+    },
+    {
+      "id": "ambiguous-fruit-all",
+      "text": "Find the recipe with apples and cinnamon.",
+      "group": "everyday",
+      "relevant": {
+        "EE6096FB-3C0D-558F-BA5E-2D46BE925F1E": 1
+      }
+    },
+    {
+      "id": "ambiguous-fruit-filtered",
+      "text": "Find the recipe with apples and cinnamon.",
+      "tag": "personal",
+      "group": "filters",
+      "relevant": {
+        "EE6096FB-3C0D-558F-BA5E-2D46BE925F1E": 1
+      }
+    },
+    {
+      "id": "ambiguous-device-all",
+      "text": "Where should I keep the receipt for the laptop repair?",
+      "group": "everyday",
+      "relevant": {
+        "D5ADCD4B-89F3-5545-A8D5-86F614428892": 1
+      }
+    },
+    {
+      "id": "ambiguous-device-filtered",
+      "text": "Where should I keep the receipt for the laptop repair?",
+      "tag": "personal",
+      "group": "filters",
+      "relevant": {
+        "D5ADCD4B-89F3-5545-A8D5-86F614428892": 1
+      }
+    },
+    {
+      "id": "blue-owner",
+      "text": "Who signs off the release?",
+      "tag": "blue",
+      "group": "filters",
+      "relevant": {
+        "9D6682FA-9EDB-57A9-9086-7E07C7CDA15D": 1
+      }
+    },
+    {
+      "id": "green-owner",
+      "text": "Who signs off the release?",
+      "tag": "green",
+      "group": "filters",
+      "relevant": {
+        "D788AB61-4E75-5E2A-90A4-7D4AFA1E7783": 1
+      }
+    },
+    {
+      "id": "empty-tag",
+      "text": "Who signs off the release?",
+      "tag": "nonexistent-collection",
+      "group": "empty_filter",
+      "relevant": {}
+    },
+    {
+      "id": "deleted",
+      "text": "What was the retired appliance label?",
+      "group": "absent",
+      "relevant": {}
+    },
+    {
+      "id": "unknown-account",
+      "text": "What is the password for my new bank account?",
+      "group": "absent",
+      "relevant": {}
+    },
+    {
+      "id": "unknown-decision",
+      "text": "Which supplier did we select for the Mars habitat?",
+      "group": "absent",
+      "relevant": {}
+    },
+    {
+      "id": "unknown-date",
+      "text": "When is my appointment with the dentist?",
+      "group": "absent",
+      "relevant": {}
+    },
+    {
+      "id": "unknown-name",
+      "text": "What is the name of my childhood piano teacher?",
+      "group": "absent",
+      "relevant": {}
+    },
+    {
+      "id": "cross-en-de",
+      "text": "Who owns the accessibility review?",
+      "group": "cross_language",
+      "relevant": {
+        "7713112F-33A0-5B72-AE02-ACE5FE7EB347": 1
+      }
+    },
+    {
+      "id": "cross-en-ro",
+      "text": "Who is booking the room for the conference?",
+      "group": "cross_language",
+      "relevant": {
+        "D9891AA5-8E68-508E-8C41-3D03FDC43CAE": 1
+      }
+    },
+    {
+      "id": "cross-en-ja",
+      "text": "Can we leave our luggage at the hotel before check-in?",
+      "group": "cross_language",
+      "relevant": {
+        "9722D57A-0C37-5AAA-A5C2-91087EF3AFA2": 1
+      }
+    }
+  ]
+}

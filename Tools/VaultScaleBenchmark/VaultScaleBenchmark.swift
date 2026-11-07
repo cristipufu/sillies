@@ -24,11 +24,17 @@ import SilliesVault
     _ = try await library.snapshot()
     switch arguments[1] {
     case "seed": try await seed(library, target: count, seconds: seconds)
+    case "seed-meetings":
+      try await VaultMeetingFixture.seed(library, target: count, seconds: seconds)
     case "query": try await query(library)
     case "concurrency": try await concurrency(library)
     case "long-document": try await longDocument(library)
     case "retention": try await maintenance(library, mutation: .init(retention: .recent200))
     case "clear": try await maintenance(library, mutation: .init(deletion: .all))
+    case "drain": try await VaultLifecycleProbe.drain(library, seconds: seconds)
+    case "backup": try await VaultLifecycleProbe.backup(library, directory: directory)
+    case "restore": try await VaultLifecycleProbe.restore(directory: directory)
+    case "verify-restore": try await VaultLifecycleProbe.verifyRestore(directory: directory)
     default: throw ProbeError.usage
     }
   }

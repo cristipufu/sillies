@@ -1,0 +1,160 @@
+{
+  "machine": "Apple M4 Pro, 48 GiB",
+  "system": "26.7.2",
+  "baseCommit": "9ed7df2abdb9a9e766677c647c78831c57270ae3",
+  "scope": "Synthetic scale and long-meeting fixtures; public SciFact abstracts plus authored regression cases; no personal Vault data",
+  "retainedPolicy": {
+    "partitionProbes": 96,
+    "maximumCandidates": 256,
+    "indexWorkers": 2
+  },
+  "latencies": {
+    "e5": {
+      "keywordSeconds": {
+        "medianMilliseconds": 52.9065,
+        "p95Milliseconds": 100.323791
+      },
+      "semanticSeconds": {
+        "medianMilliseconds": 12.796958,
+        "p95Milliseconds": 21.284291
+      },
+      "exactSemanticSeconds": {
+        "medianMilliseconds": 38.030792,
+        "p95Milliseconds": 42.671542
+      }
+    },
+    "e5-rebuilt": {
+      "keywordSeconds": {
+        "medianMilliseconds": 57.348375,
+        "p95Milliseconds": 127.92166599999999
+      },
+      "semanticSeconds": {
+        "medianMilliseconds": 13.363,
+        "p95Milliseconds": 78.285834
+      },
+      "exactSemanticSeconds": {
+        "medianMilliseconds": 38.64975,
+        "p95Milliseconds": 145.20308300000002
+      }
+    },
+    "apple": {
+      "keywordSeconds": {
+        "medianMilliseconds": 52.531042,
+        "p95Milliseconds": 101.53820800000001
+      },
+      "semanticSeconds": {
+        "medianMilliseconds": 16.708707999999998,
+        "p95Milliseconds": 27.856417
+      },
+      "exactSemanticSeconds": {
+        "medianMilliseconds": 52.579125,
+        "p95Milliseconds": 55.031292
+      }
+    }
+  },
+  "embeddingCoverage": {
+    "e5": [
+      {
+        "provider": "e5-614241f622f53c4eeff9890bdc4f31cfecc418b3",
+        "space": "",
+        "dimensions": 0,
+        "passages": 6
+      },
+      {
+        "provider": "e5-614241f622f53c4eeff9890bdc4f31cfecc418b3",
+        "space": "e5-614241f622f53c4eeff9890bdc4f31cfecc418b3",
+        "dimensions": 384,
+        "passages": 19192
+      }
+    ],
+    "apple": [
+      {
+        "provider": "apple-contextual-mean-v1/12784592-5D67-4F4C-83D6-A346519146AE:1:true;54877656-5B75-40D8-95C8-75759FCBEF2F:1:false;5C45D94E-BAB4-4927-94B6-8B5745C46289:1:true;8D8CD1B6-1D0E-4ADF-8D75-B5FD5F125186:1:false;FC4A7469-2001-45D6-9AD7-A7110800DBCA:1:false;FCDCF262-68F6-4446-8C4E-371491BC04A2:1:false",
+        "space": "",
+        "dimensions": 0,
+        "passages": 3067
+      },
+      {
+        "provider": "apple-contextual-mean-v1/12784592-5D67-4F4C-83D6-A346519146AE:1:true;54877656-5B75-40D8-95C8-75759FCBEF2F:1:false;5C45D94E-BAB4-4927-94B6-8B5745C46289:1:true;8D8CD1B6-1D0E-4ADF-8D75-B5FD5F125186:1:false;FC4A7469-2001-45D6-9AD7-A7110800DBCA:1:false;FCDCF262-68F6-4446-8C4E-371491BC04A2:1:false",
+        "space": "12784592-5D67-4F4C-83D6-A346519146AE:1:mean-v1",
+        "dimensions": 512,
+        "passages": 2
+      },
+      {
+        "provider": "apple-contextual-mean-v1/12784592-5D67-4F4C-83D6-A346519146AE:1:true;54877656-5B75-40D8-95C8-75759FCBEF2F:1:false;5C45D94E-BAB4-4927-94B6-8B5745C46289:1:true;8D8CD1B6-1D0E-4ADF-8D75-B5FD5F125186:1:false;FC4A7469-2001-45D6-9AD7-A7110800DBCA:1:false;FCDCF262-68F6-4446-8C4E-371491BC04A2:1:false",
+        "space": "5C45D94E-BAB4-4927-94B6-8B5745C46289:1:mean-v1",
+        "dimensions": 512,
+        "passages": 16129
+      }
+    ]
+  },
+  "cleanup": {
+    "million": {
+      "complete": true,
+      "removed": 1000000,
+      "clearCommitMilliseconds": 54.949208,
+      "drainProcesses": 40,
+      "totalProcessSeconds": 808.9497098764405,
+      "pageSamples": 6059,
+      "pageMedianMilliseconds": 0.043792,
+      "pageP95Milliseconds": 0.063833
+    },
+    "meetings": {
+      "complete": true,
+      "removed": 1000,
+      "clearCommitMilliseconds": 75.464334,
+      "drainProcesses": 1,
+      "totalProcessSeconds": 11.36416954093147,
+      "pageSamples": 78,
+      "pageMedianMilliseconds": 0.038104,
+      "pageP95Milliseconds": 0.070459
+    }
+  },
+  "validation": {
+    "makeCheck": {
+      "passed": true,
+      "nativeSelectedTests": 1041,
+      "nativeRuns": 21,
+      "pythonTests": 120,
+      "logSHA256": "9691a633235224e508e7a9bf94f760bc655a6ec4132c1e4c76cd76422fb059dd"
+    },
+    "nativeUnlocked": {
+      "passed": true,
+      "tests": 4
+    },
+    "appWindowLifecycle": {
+      "passed": true
+    },
+    "scorerAudit": {
+      "passed": true,
+      "focusedTests": 8,
+      "pythonSuiteTests": 120,
+      "publishedResultSetsRescoredIdentically": 9
+    },
+    "nativeAuditRerun": {
+      "executed": false,
+      "reason": "Desktop locked again; checked window-ID test-helper change compiled. Earlier unlocked native run passed; no product UI change intervened."
+    }
+  },
+  "failedRuns": [
+    {
+      "stage": "initialMillionRestore",
+      "timeoutSeconds": 240,
+      "result": "Process deadline exceeded; installation had finished. Independent verification and a fresh full restore were subsequently completed."
+    },
+    {
+      "stage": "initialNativeInteraction",
+      "result": "Desktop locked; not counted as evidence. Repeated on unlocked desktop with 4 tests passing."
+    }
+  ],
+  "paths": "Lifecycle archive/directory fields are redacted to disposable-fixture labels; no captured personal data is included.",
+  "appleEmptyOutcomeReplay": {
+    "reasons": {
+      "no_detected_language": 2,
+      "sequence_limit_256": 3061,
+      "unavailable_language_ca": 3,
+      "unavailable_language_is": 1
+    },
+    "next": 3067
+  }
+}

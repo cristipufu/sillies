@@ -20,6 +20,9 @@ batches and worker count and converts native exceptions into recoverable failure
 - Exact inner-product search is used for small indexes. Larger indexes use an on-disk IVF scalar
   quantizer. Query-time work never trains an index. See the [Vault guide](../../docs/contributing/vault.md).
 - OpenMP uses two workers; on-disk prefetch uses one. Accelerate may manage its own BLAS workers.
+- IVF queries probe up to 96 partitions and return at most 256 candidates. The
+  [retrieval qualification](../../docs/reports/vault-qualification-2026-11-07.md) compares this policy
+  with 24 and 64 probes using real embeddings and a separate million-vector latency check.
 - `-g0` on the OpenMP target avoids an Xcode 27 debug-note linker failure observed with the static
   upstream runtime. It does not disable Swift diagnostics or change the runtime's source.
 - Native stdout is redirected to stderr inside the search helper before loading Faiss. Diagnostic

@@ -53,9 +53,7 @@ import AppKit
           else {
             throw Failure("Opening an app window stopped the companions.")
           }
-          guard
-            window.level.rawValue
-              > CompanionPanel.hudLevel(forWindowLayer: NSWindow.Level.floating.rawValue).rawValue
+          guard window.level.rawValue >= CompanionPanel.contentWindowLevel.rawValue
           else { throw Failure("Companion overlays can cover the app window.") }
           if repetition == 0 {
             try await AppWindowSnapshot.save(window, index: index)

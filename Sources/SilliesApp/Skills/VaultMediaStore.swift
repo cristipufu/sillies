@@ -4,6 +4,11 @@ import SilliesPersistence
 
 /// Native previews and clipboard ownership stay outside the Vault application module.
 @MainActor final class VaultMediaStore {
+  enum ImageState {
+    case loading
+    case available(NSImage)
+    case unavailable
+  }
   private let cache = VaultImageCache()
   private let staged = VaultPreviewBuffer()
   private var pending: Set<String> = []
@@ -41,19 +46,31 @@ import SilliesPersistence
     drain()
     return filename.flatMap { cache.image(named: $0) }
   }
+  func imageState(_ filename: String?) -> ImageState {
+    if let image = image(filename) { return .available(image) }
+    guard let filename, url(filename) != nil, !cache.isUnavailable(filename) else {
+      return .unavailable
+    }
+    return .loading
+  }
   func prepare(_ filename: String?) {
     guard let filename, !pending.contains(filename), cache.image(named: filename) == nil,
       let url = url(filename)
     else { return }
+    cache.remove(named: filename)
     removed.remove(filename)
     pending.insert(filename)
     queue.async { [weak self, staged] in
-      if let image = VaultImageCodec.decodePreview(at: url) {
+      let image = VaultImageCodec.decodePreview(at: url)
+      if let image {
         staged.append(filename: filename, image: image)
       }
       MainRunLoopDelivery.perform {
         self?.pending.remove(filename)
         self?.drain()
+        if image == nil, let self, self.removed.remove(filename) == nil {
+          self.cache.recordFailure(named: filename)
+        }
       }
     }
   }

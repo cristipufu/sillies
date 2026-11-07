@@ -216,6 +216,11 @@ def vector_licenses(root):
     return introduction + "\n" + notice_section("Faiss — MIT", folder / "FAISS-LICENSE") + notice_section("LLVM OpenMP — Apache 2.0 with LLVM exceptions", folder / "OPENMP-LICENSE")
 
 
+def html_character_reference_license(root):
+    introduction = "## HTML character references\n\nSaved-link previews use a generated lookup of the [WHATWG HTML named character references](https://html.spec.whatwg.org/entities.json). The table is compiled into SilliesCore; it performs no file I/O or network access. Source attribution and its snapshot checksum are retained in `HTMLNamedCharacterReferences.swift`. Incorporated source portions use the BSD 3-Clause License.\n\n"
+    return introduction + notice_section("WHATWG HTML — incorporated character-reference data", root / "Resources/Licenses/WHATWG-HTML.txt")
+
+
 def render(root):
     pins = resolved_packages(root)
     fish = "## Fish runtime references and model license\n\nThe Sillies Fish implementation was informed by Fish Audio's S2 Pro architecture and the MIT-licensed Swift reference at Blaizzy/mlx-audio-swift, revision d4fa7be1c2fef65ed13a4f73bd58e0a23a0ba307. Runtime code, bounds, ownership, and validation live in SilliesFishSpeech. The reference package is not a dependency.\n\n"
@@ -223,7 +228,7 @@ def render(root):
     fish += notice_section("Fish S2 Pro — model license", root / "Resources/Licenses/FishS2Pro-Research.txt")
     localization = "## Localization tooling and palette references\n\nThe JSON catalog workflow, shared interface translations, and palette conventions were adapted from [Strata Files](https://github.com/cristipufu/strata), under the MIT license. Sillies supplies its own product copy, validation, semantic roles, and native integration.\n\n"
     localization += notice_section("Strata Files — MIT attribution", root / "Resources/Licenses/Strata-Localization-MIT.txt")
-    return INTRODUCTION + model_inventory(root) + package_inventory(pins) + MAINTENANCE + package_licenses(root, pins) + audio_licenses(root) + vector_licenses(root) + fish + localization + template_licenses(root)
+    return INTRODUCTION + model_inventory(root) + package_inventory(pins) + MAINTENANCE + package_licenses(root, pins) + audio_licenses(root) + vector_licenses(root) + fish + localization + template_licenses(root) + html_character_reference_license(root)
 
 
 def write_atomic(destination, content):

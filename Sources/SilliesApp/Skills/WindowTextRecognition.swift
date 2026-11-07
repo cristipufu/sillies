@@ -7,25 +7,20 @@ enum WindowTextRecognition {
   @concurrent static func recognize(_ image: CGImage) async throws -> String {
     dispatchPrecondition(condition: .notOnQueue(.main))
     try Task.checkCancellation()
-    return try render(await request().perform(on: image))
+    return try RecognizedDocumentText.render(await request().perform(on: image))
   }
 
   @concurrent static func recognize(_ url: URL) async throws -> String {
     dispatchPrecondition(condition: .notOnQueue(.main))
     try Task.checkCancellation()
-    return try render(await request().perform(on: url))
+    return try RecognizedDocumentText.render(await request().perform(on: url))
   }
 
-  private static func request() -> RecognizeTextRequest {
-    var request = RecognizeTextRequest()
-    request.recognitionLevel = .accurate
-    request.automaticallyDetectsLanguage = true
-    request.usesLanguageCorrection = true
+  private static func request() -> RecognizeDocumentsRequest {
+    var request = RecognizeDocumentsRequest()
+    request.textRecognitionOptions.automaticallyDetectLanguage = true
+    request.textRecognitionOptions.useLanguageCorrection = true
+    request.barcodeDetectionOptions.enabled = false
     return request
-  }
-
-  private static func render(_ observations: [RecognizedTextObservation]) throws -> String {
-    try Task.checkCancellation()
-    return observations.compactMap { $0.topCandidates(1).first?.string }.joined(separator: "\n")
   }
 }

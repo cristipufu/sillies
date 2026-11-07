@@ -13,6 +13,8 @@ struct VaultNativeTextEditor: NSViewRepresentable {
   private static let fontSize: CGFloat = 14
   private static let textInset = NSSize(width: 22, height: 20)
   private static let paragraphSpacing: CGFloat = 5
+  private static let screenshotFontSize: CGFloat = 13
+  private static let screenshotLineSpacing: CGFloat = 3
 
   func makeCoordinator() -> Coordinator { Coordinator(model: model) }
   func makeNSView(context: Context) -> NSScrollView {
@@ -50,6 +52,17 @@ struct VaultNativeTextEditor: NSViewRepresentable {
     text.isSelectable = isPresented
     text.textColor = NSColor(theme.ink)
     text.insertionPointColor = NSColor(theme.accent)
+    let isScreenshotText = model.location?.section == .screenshotText
+    let font: NSFont =
+      isScreenshotText
+      ? .monospacedSystemFont(ofSize: Self.screenshotFontSize, weight: .regular)
+      : .systemFont(ofSize: Self.fontSize)
+    if text.font != font {
+      text.font = font
+      let paragraph = NSMutableParagraphStyle()
+      paragraph.lineSpacing = isScreenshotText ? Self.screenshotLineSpacing : Self.paragraphSpacing
+      text.defaultParagraphStyle = paragraph
+    }
     text.setAccessibilityLabel(model.location?.section.title ?? String(localized: "My notes"))
     if context.coordinator.identity != model.identity {
       context.coordinator.isRestoring = true

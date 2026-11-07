@@ -45,6 +45,36 @@ heading. Add UI labels/translations, indexing rules and failure/cancellation tes
 whole-record editor or put filesystem work in a view. A new preview provider implements the existing
 fetch contract; keep URL classification, network access and rendering separate.
 
+oEmbed refreshes replace provider-owned titles and descriptions while preserving a custom document
+title. HTML excerpts decode terminated character references once using a generated WHATWG lookup.
+The table is pure compiled data in Core, with no runtime file or network access. To update it, download
+`https://html.spec.whatwg.org/entities.json` and run
+`python3 scripts/generate-html-character-references.py /path/to/entities.json`, then format the generated
+Swift file. Review its recorded checksum, the retained WHATWG license and the excerpt/refresh regressions.
+
+Document list rows show a title and date without a repeated description or empty text slot. Search
+passages remain available on demand. Keep ordinary rows compact at narrow widths; the layout fixture
+also covers long titles, stars, absent descriptions and light/dark appearance.
+
+Screenshot records open on the image; explicit search matches open their matching text section.
+`VaultDocumentPane` owns the selected surface independently of the last loaded text section. Image,
+text and attachment navigation must flush pending edits and disable actions for concealed text.
+Previews use the bounded media cache and worker decoding, with a retryable missing-image state.
+
+Screenshot OCR uses Vision document recognition on a worker. The native adapter passes recognized fragments,
+bounds, writing direction and detected tables into Core's `ScreenshotTextLayout`. Vision observations
+can split a physical line into separate words or labels. Reassemble aligned fragments before adding
+indentation; whitespace cuts keep independent columns separate. Never treat each observation as a
+complete reading line or reconstruct global X offsets as padding for every word. The native text editor preserves indentation with a monospaced
+font. Layout recognition is best effort, and the original image remains available. OCR completion
+refreshes the visible text after the persistence barrier; retries must preserve authored corrections.
+Keep image-first navigation, missing-file recovery, OCR cancellation and late-completion regressions
+in `VaultScreenshotTests`, with geometry boundaries in `ScreenshotTextLayoutTests`.
+`VaultOCRReadingTests` verifies native recognition through the actual Vault editor. For a private
+capture review, run it with `SILLIES_SKILL_UI_SNAPSHOTS=1` and `SILLIES_OCR_REVIEW_IMAGE=/path/to/image.png`;
+the optional preview stays in the temporary snapshot directory. Do not add private captures to fixtures.
+Review physical reading lines and their rendered appearance, not indentation or paragraph counts alone.
+
 Library scopes, Storage, composition and source quotations must go through the workspace navigation
 methods. Do not add independent editor/section flags to the view or native controller. A same-section
 selection still dismisses compact navigation, without adding a duplicate history entry. Deferred creation

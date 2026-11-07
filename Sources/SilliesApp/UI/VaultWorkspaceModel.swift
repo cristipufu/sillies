@@ -74,7 +74,9 @@ import SilliesVault
       document: selectedID.map {
         .init(
           id: $0,
-          location: document.editor.location?.recordID == $0 ? document.editor.location : nil)
+          pane: document.header?.id == $0 ? document.pane : nil,
+          location: document.visibleTextLocation?.recordID == $0
+            ? document.visibleTextLocation : nil)
       },
       composition: composer.map { _ in
         .init(title: composeTitle, link: composeLink, notes: composeNotes)
@@ -279,7 +281,9 @@ import SilliesVault
     open(id)
   }
 
-  private func open(_ id: UUID, at destination: VaultBlockLocation? = nil) {
+  private func open(
+    _ id: UUID, at destination: VaultBlockLocation? = nil, restoring pane: VaultDocumentPane? = nil
+  ) {
     let request = UUID()
     openingRequest = request
     isOpening = true
@@ -287,13 +291,14 @@ import SilliesVault
     selectedIDs = [id]
     selectionTask?.cancel()
     let match =
-      destination ?? (document.header?.id == id ? document.editor.location : nil)
-      ?? (records + related).first { $0.id == id }?.match
-      ?? document.editor.readingState.latestLocation(recordID: id)
+      destination ?? (records + related).first { $0.id == id }?.match
+      ?? (document.header?.id == id ? document.visibleTextLocation : nil)
+    let restoredPane =
+      pane ?? (match == nil && document.header?.id == id ? document.pane : nil)
     selectionTask = Task { [weak self] in
       guard let self else { return }
       defer { if openingRequest == request { isOpening = false } }
-      await document.open(id, match: match)
+      await document.open(id, match: match, restoring: restoredPane)
       guard !Task.isCancelled, selectedID == id else { return }
       if document.header?.id != id {
         // Keep a failed first selection available for Retry; no unrelated document replaced it.
@@ -330,7 +335,9 @@ import SilliesVault
     if let selected = destination.document {
       selectedID = selected.id
       selectedIDs = [selected.id]
-      if destination.page == .library { open(selected.id, at: selected.location) }
+      if destination.page == .library {
+        open(selected.id, at: selected.location, restoring: selected.pane)
+      }
     }
   }
 

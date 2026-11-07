@@ -436,6 +436,9 @@ import SilliesVault
   func cachedImage(for record: some SessionAttachmentReference) -> NSImage? {
     media.image(record.imageFilename)
   }
+  func imageState(for record: some SessionAttachmentReference) -> VaultMediaStore.ImageState {
+    media.imageState(record.imageFilename)
+  }
   func prepareImage(for record: some SessionAttachmentReference) {
     media.prepare(record.imageFilename)
   }

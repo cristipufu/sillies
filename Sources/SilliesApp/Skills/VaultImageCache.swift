@@ -8,6 +8,7 @@ final class VaultImageCache {
   private static let maximumImages = 16
   private static let bytesPerPixel = 4
   private var images: [String: NSImage] = [:]
+  private var unavailable: Set<String> = []
   @ObservationIgnored private var costs: [String: Int] = [:]
   @ObservationIgnored private var order: [String] = []
   @ObservationIgnored private(set) var totalBytes = 0
@@ -35,6 +36,15 @@ final class VaultImageCache {
     order.append(filename)
   }
 
+  func isUnavailable(_ filename: String) -> Bool { unavailable.contains(filename) }
+
+  func recordFailure(named filename: String) {
+    remove(named: filename)
+    makeRoom(for: 0)
+    unavailable.insert(filename)
+    order.append(filename)
+  }
+
   private func makeRoom(for cost: Int) {
     while !order.isEmpty
       && (totalBytes + cost > Self.maximumBytes || order.count >= Self.maximumImages)
@@ -46,12 +56,14 @@ final class VaultImageCache {
 
   func remove(named filename: String) {
     images.removeValue(forKey: filename)
+    unavailable.remove(filename)
     totalBytes -= costs.removeValue(forKey: filename) ?? 0
     order.removeAll { $0 == filename }
   }
 
   func removeAll() {
     images.removeAll()
+    unavailable.removeAll()
     costs.removeAll()
     order.removeAll()
     totalBytes = 0

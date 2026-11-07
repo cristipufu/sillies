@@ -14,8 +14,24 @@ import SilliesCore
   private(set) var isLoading = false
   private(set) var error: String?
   private(set) var speakerRecord: SessionRecord?
-  var section = VaultDocumentSection.notes
-  var showsFiles = false
+  private(set) var section = VaultDocumentSection.notes
+  private(set) var pane = VaultDocumentPane.text(.notes)
+  var visibleTextLocation: VaultBlockLocation? {
+    guard pane == .text(section), speakerRecord == nil, editor.location?.recordID == header?.id
+    else { return nil }
+    return editor.location
+  }
+  var panes: [VaultDocumentPane] {
+    guard let header else { return [] }
+    var result: [VaultDocumentPane] = header.source.imageFilename == nil ? [] : [.screenshot]
+    result += sections.filter { $0 != .files }.map(VaultDocumentPane.text)
+    if header.source.imageFilename != nil || header.source.audioFilename != nil
+      || sections.contains(.files)
+    {
+      result.append(.files)
+    }
+    return result
+  }
   var title: String {
     get { metadata.title }
     set { metadata.title = newValue }
@@ -38,7 +54,9 @@ import SilliesCore
     editor.onInteraction = { [weak recording] in recording?.pauseFollowing() }
   }
 
-  func open(_ id: UUID, match: VaultBlockLocation? = nil) async {
+  func open(
+    _ id: UUID, match: VaultBlockLocation? = nil, restoring restoredPane: VaultDocumentPane? = nil
+  ) async {
     let token = UUID()
     generation = token
     isLoading = true
@@ -59,16 +77,14 @@ import SilliesCore
       metadata.load(header, recovered: recovered)
       self.header = header
       speakerRecord = nil
-      sections = [.notes] + kinds.filter { ![.notes, .title, .labels].contains($0) }
+      sections = readingSections(kinds, source: header?.source)
       let preferred =
         kinds.contains(.notes) || header?.metadata.kind != .capture
         ? .notes
         : [.summary, .explanation, .transcript, .screenshotText, .stash].first(
           where: kinds.contains) ?? .notes
-      section = match.map { sections.contains($0.section) ? $0.section : preferred } ?? preferred
-      showsFiles = false
+      let ordinal = prepareReadingPane(preferred: preferred, match: match, restoring: restoredPane)
       error = nil
-      let ordinal = match.flatMap { $0.section == section ? $0.ordinal : nil } ?? 0
       await editor.load(.init(recordID: id, section: section, ordinal: ordinal))
       guard token == generation, !Task.isCancelled, let header else { return }
       vault.prepareImage(for: header.source)
@@ -85,8 +101,12 @@ import SilliesCore
   }
 
   @discardableResult func selectSection(_ section: VaultDocumentSection) async -> Bool {
+    await selectPane(.init(section: section))
+  }
+
+  @discardableResult func selectPane(_ pane: VaultDocumentPane) async -> Bool {
     recording.pauseFollowing()
-    guard let header, !isLoading else { return false }
+    guard let header, !isLoading, panes.contains(pane) else { return false }
     let token = generation
     let request = UUID()
     sectionRequest = request
@@ -94,14 +114,15 @@ import SilliesCore
     guard editor.canNavigate, generation == token, self.header?.id == header.id,
       sectionRequest == request, !Task.isCancelled
     else { return false }
-    await editor.load(.init(recordID: header.id, section: section))
-    guard generation == token, sectionRequest == request, !Task.isCancelled,
-      editor.location?.recordID == header.id, editor.location?.section == section
-    else {
-      return false
+    if case .text(let section) = pane {
+      await editor.load(.init(recordID: header.id, section: section))
+      guard generation == token, sectionRequest == request, !Task.isCancelled,
+        editor.location?.recordID == header.id, editor.location?.section == section
+      else { return false }
+      self.section = section
     }
-    self.section = section
-    showsFiles = false
+    hideSpeakers()
+    self.pane = pane
     return true
   }
 
@@ -144,8 +165,11 @@ import SilliesCore
   func refreshHeader() async {
     guard let id = header?.id else { return }
     let token = generation
+    await vault.flush()
+    guard generation == token, header?.id == id, !Task.isCancelled else { return }
     do {
       let updated = try await vault.library.documentHeader(id: id)
+      let kinds = try await vault.library.sectionKinds(recordID: id)
       guard generation == token, header?.id == id, !Task.isCancelled else { return }
       if updated == nil, !canNavigate {
         error = String(
@@ -153,9 +177,16 @@ import SilliesCore
         return
       }
       if let updated { metadata.refresh(updated) }
+      let receivedScreenshot =
+        header?.source.screenshotTextState != .complete
+        && updated?.source.screenshotTextState == .complete
       header = updated
+      sections = readingSections(kinds, source: updated?.source)
       if updated == nil { playback.stop() }
       if let link = updated?.metadata.link { vault.prepareImage(for: link) }
+      if receivedScreenshot, pane == .text(.screenshotText), !editor.isDirty {
+        await editor.load(.init(recordID: id, section: .screenshotText))
+      }
     } catch is CancellationError { return } catch {
       guard generation == token, header?.id == id, !Task.isCancelled else { return }
       self.error = error.localizedDescription
@@ -163,6 +194,35 @@ import SilliesCore
   }
   func saveTags() async {
     await metadata.flush()
+  }
+
+  private func prepareReadingPane(
+    preferred: VaultDocumentSection, match: VaultBlockLocation?,
+    restoring restoredPane: VaultDocumentPane?
+  ) -> Int {
+    let remembered = header.flatMap { header in
+      header.source.imageFilename == nil
+        ? editor.readingState.latestLocation(recordID: header.id) : nil
+    }
+    let location = match ?? remembered
+    section = location.map { sections.contains($0.section) ? $0.section : preferred } ?? preferred
+    if case .text(let restoredSection) = restoredPane, sections.contains(restoredSection) {
+      section = restoredSection
+    }
+    let initialPane: VaultDocumentPane =
+      match == nil && header?.source.imageFilename != nil ? .screenshot : .init(section: section)
+    pane = restoredPane.flatMap { panes.contains($0) ? $0 : nil } ?? initialPane
+    return location.flatMap { $0.section == section ? $0.ordinal : nil } ?? 0
+  }
+
+  private func readingSections(_ kinds: [VaultDocumentSection], source: SessionRecordHeader?)
+    -> [VaultDocumentSection]
+  {
+    var sections = [.notes] + kinds.filter { ![.notes, .title, .labels].contains($0) }
+    if source?.imageFilename != nil, !sections.contains(.screenshotText) {
+      sections.append(.screenshotText)
+    }
+    return sections
   }
   func showSpeakers() async {
     guard let id = header?.id else { return }

@@ -12,6 +12,26 @@ import Testing
       == "<script>ordinary words</script>")
 }
 
+@Test(arguments: [
+  ("&mdash; &ndash; &hellip;", "— – …"),
+  ("&ldquo;caf&eacute;&rdquo; &Aogon; &alpha;", "“café” Ą α"),
+  ("&CounterClockwiseContourIntegral; &NotEqualTilde;", "∳ ≂\u{338}"),
+  ("A&nbsp;B &apos; &quot;", "A\u{A0}B ' \""),
+  ("&#8212; &#x2014; &#x1F31E;", "— — 🌞"),
+  ("&amp;mdash; &amp;lt;", "&mdash; &lt;"),
+  ("&unknown; &mdash &#xD800; &#x110000;", "&unknown; &mdash &#xD800; &#x110000;"),
+])
+func vaultHTMLReferencesDecodeStandardNamesWithoutReinterpretingLiteralText(
+  html: String, expected: String
+) {
+  #expect(VaultHTMLExcerpt.text(html) == expected)
+}
+
+@Test func vaultHTMLReferencesPreserveLongMalformedInput() {
+  let malformed = String(repeating: "&", count: 32_768) + "&notACharacterReference;"
+  #expect(VaultHTMLExcerpt.text(malformed) == malformed)
+}
+
 @Test func vaultTextBlocksPreserveLongMultilingualDocuments() throws {
   let text = String(repeating: "An idea 🌳 e\u{301} — 記録 — ملاحظة\n", count: 2_000)
   var blocks: [String] = []

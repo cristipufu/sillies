@@ -166,26 +166,6 @@ struct VaultWorkspaceList: View {
   }
 
   private func row(_ header: VaultDocumentHeader) -> some View {
-    HStack(alignment: .top, spacing: 10) {
-      Image(systemName: header.symbol).font(.system(size: 15)).foregroundStyle(theme.accent)
-        .frame(width: 25, height: 26).background(
-          theme.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 6))
-      VStack(alignment: .leading, spacing: 5) {
-        HStack(alignment: .firstTextBaseline) {
-          Text(header.title).font(.system(size: 13, weight: .semibold)).lineLimit(2)
-          if header.metadata.isStarred {
-            Image(systemName: "star.fill").font(.system(size: 10)).foregroundStyle(theme.accent)
-          }
-        }
-        Text(header.excerpt.isEmpty ? header.source.preview : header.excerpt)
-          .font(.system(size: 12)).foregroundStyle(theme.secondary).lineLimit(2)
-        HStack(spacing: 5) {
-          Text(header.source.createdAt.formatted(date: .abbreviated, time: .omitted))
-          if !header.source.characterName.isEmpty { Text("· \(header.source.characterName)") }
-        }.font(.system(size: 10.5)).foregroundStyle(theme.secondary)
-        VaultPassageMatchesView(header: header, workspace: model)
-      }
-    }.padding(.vertical, 9).frame(maxWidth: .infinity, alignment: .leading)
-      .draggable(VaultRecordTransfer(id: header.id))
+    VaultDocumentListRow(header: header, workspace: model)
   }
 }

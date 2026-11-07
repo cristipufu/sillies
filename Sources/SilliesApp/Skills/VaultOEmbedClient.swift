@@ -5,15 +5,6 @@ import SilliesCore
 struct VaultOEmbedClient: Sendable {
   private static let maximumResponseBytes = 256 * 1_024
   private static let timeout: TimeInterval = 15
-  private struct Response: Decodable {
-    let title: String?
-    let authorName: String?
-    let html: String?
-    private enum CodingKeys: String, CodingKey {
-      case title, html
-      case authorName = "author_name"
-    }
-  }
 
   func fetch(_ link: VaultLink) async throws -> VaultLink {
     guard let endpoint = endpoint(for: link) else { return link }
@@ -35,17 +26,8 @@ struct VaultOEmbedClient: Sendable {
       }
       data.append(byte)
     }
-    let metadata = try JSONDecoder().decode(Response.self, from: data)
-    var updated = link
-    if let title = metadata.title { updated.title = String(title.prefix(1_024)) }
-    updated.author = String((metadata.authorName ?? "").prefix(256))
-    if link.kind == .post, let html = metadata.html {
-      updated.description = String(VaultHTMLExcerpt.text(html).prefix(8_192))
-      if updated.title == link.url.host { updated.title = String(updated.description.prefix(120)) }
-    }
-    updated.previewState = .available
-    updated.fetchedAt = Date()
-    return updated
+    return try JSONDecoder().decode(VaultOEmbedMetadata.self, from: data)
+      .preview(for: link, fetchedAt: Date())
   }
 
   private func endpoint(for link: VaultLink) -> URL? {

@@ -5,6 +5,39 @@ import Testing
 
 @testable import SilliesApp
 
+@Test func vaultOEmbedRefreshReplacesCachedTitlesWhilePreservingCustomDocumentTitles() async throws
+{
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { removeTestFile(at: directory) }
+  let library = VaultLibrary(directory: directory)
+  _ = try await library.snapshot()
+  var cached = try VaultLink(url: #require(URL(string: "https://x.com/example/status/123")))
+  cached.title = "Old &mdash; cached title"
+  cached.previewState = .available
+  let response = try JSONDecoder().decode(
+    VaultOEmbedMetadata.self,
+    from: Data(
+      #"{"author_name":"Example","html":"<blockquote><p>A new idea &mdash; caf&eacute;.</p>&mdash; Example</blockquote>"}"#
+        .utf8))
+  let fetchedAt = Date(timeIntervalSince1970: 42)
+  let refreshed = response.preview(for: cached, fetchedAt: fetchedAt)
+  let expected = "A new idea — café.\n— Example"
+  #expect(refreshed.title == expected && refreshed.description == expected)
+  #expect(refreshed.author == "Example" && refreshed.fetchedAt == fetchedAt)
+  #expect(refreshed.url == cached.url && refreshed.sourceID == cached.sourceID)
+  for title in [cached.title, "My own title"] {
+    var metadata = VaultDocumentMetadata(kind: .link, title: title, modifiedAt: fetchedAt)
+    metadata.link = cached
+    let record = SessionRecord(
+      kind: .stash,
+      origin: .init(characterID: "vault", characterName: "", source: .init(appName: "Fixture")))
+    _ = try await library.createDocument(record: record, metadata: metadata)
+    let saved = try await library.saveLinkPreview(.init(link: refreshed), id: record.id)
+    #expect(saved?.title == (title == cached.title ? expected : title))
+    #expect(saved?.metadata.link?.description == expected)
+  }
+}
+
 private actor SuspendedLinkPreview: VaultLinkPreviewFetching {
   private var pending: CheckedContinuation<VaultLinkPreview, Never>?
   private var link: VaultLink?

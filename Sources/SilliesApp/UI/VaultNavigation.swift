@@ -21,6 +21,7 @@ import SilliesCore
   }
   struct ReadingDestination: Equatable {
     let id: UUID
+    let pane: VaultDocumentPane?
     let location: VaultBlockLocation?
   }
   struct Checkpoint: Equatable {

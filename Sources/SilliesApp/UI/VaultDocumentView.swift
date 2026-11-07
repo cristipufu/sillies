@@ -40,7 +40,9 @@ struct VaultDocumentView: View {
             }
             Spacer()
           }.padding(24).frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if model.showsFiles {
+        } else if model.pane == .screenshot {
+          VaultScreenshotView(vault: vault, source: header.source)
+        } else if model.pane == .files {
           files(header)
         } else {
           readingPane(header)
@@ -120,11 +122,14 @@ struct VaultDocumentView: View {
               Task { await actions.popOutTranscript(id: header.id) }
             }
           }
-          if header.source.screenshotTextState == .failed {
-            Button("Retry screenshot text recognition") { actions.retryScreenshotText(header.id) }
-          }
           if header.source.imageFilename != nil {
             Button("Copy Image") { vault.copyImage(for: header.source) }
+            Button(
+              header.source.screenshotTextState == .failed
+                ? String(localized: "Retry screenshot text recognition")
+                : String(localized: "Recognize text again")
+            ) { actions.retryScreenshotText(header.id) }
+            .disabled(header.source.screenshotTextState == .pending || model.editor.isDirty)
           }
           if let link = header.metadata.link {
             Button("Copy link") { vault.copyText(link.url.absoluteString) }
@@ -160,6 +165,7 @@ struct VaultDocumentView: View {
             }
           }
           Button("Copy visible text") { vault.copyText(model.editor.text) }
+            .disabled(model.visibleTextLocation == nil)
           if header.metadata.kind == .capture, let pasteBack = actions.pasteBack,
             pasteBack.destination != nil
           {
@@ -167,12 +173,13 @@ struct VaultDocumentView: View {
               .disabled(actions.isPasting || pasteBack.isPasting)
           }
           Button("Copy selection") { vault.copyText(model.editor.selectedText) }.disabled(
-            model.editor.selectedText.isEmpty)
+            model.editor.selectedText.isEmpty || model.visibleTextLocation == nil)
           Button("Export selection…") { actions.exportSelectedText() }.disabled(
-            !actions.canExport || model.editor.selectedText.isEmpty)
+            !actions.canExport || model.editor.selectedText.isEmpty
+              || model.visibleTextLocation == nil)
           Button("Quote selection into notes…") { Task { await workspace.quoteSelection() } }
             .disabled(
-              model.editor.selectedText.isEmpty)
+              model.editor.selectedText.isEmpty || model.visibleTextLocation == nil)
           Button("Export Markdown & attachments…") { actions.exportIDs([header.id]) }.disabled(
             !actions.canExport)
           if header.metadata.trashedAt == nil {
@@ -205,9 +212,9 @@ struct VaultDocumentView: View {
       Picker(
         "Section",
         selection: Binding(
-          get: { model.section }, set: { section in Task { await model.selectSection(section) } })
+          get: { model.pane }, set: { pane in Task { await model.selectPane(pane) } })
       ) {
-        ForEach(model.sections, id: \.self) { section in Text(section.title).tag(section) }
+        ForEach(model.panes, id: \.self) { pane in Text(pane.title).tag(pane) }
       }.labelsHidden().fixedSize()
       Spacer()
       if model.editor.isSaving || model.metadata.isSaving { ProgressView().controlSize(.mini) }
@@ -217,11 +224,6 @@ struct VaultDocumentView: View {
           ? String(localized: "Unsaved changes") : String(localized: "Saved on this Mac")
       )
       .font(.system(size: 10.5)).foregroundStyle(theme.secondary)
-      if header.source.audioFilename != nil || header.source.imageFilename != nil
-        || model.sections.contains(.files)
-      {
-        Button("Files", systemImage: "paperclip") { model.showsFiles.toggle() }.buttonStyle(.plain)
-      }
     }.font(.system(size: 12)).padding(.horizontal, 24).padding(.vertical, 10)
   }
 

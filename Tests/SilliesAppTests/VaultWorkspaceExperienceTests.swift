@@ -337,8 +337,11 @@ func vaultWorkspaceReadingInteractionPausesAudioFollowingAndNavigationRemembersP
   model.workspace.select(file.id)
   try await waitForWorkspaceDocument(model.workspace, id: file.id)
   await model.workspace.document.externalFiles.load(id: file.id)
-  model.workspace.document.showsFiles = true
+  await model.workspace.document.selectPane(.files)
   #expect(model.workspace.document.externalFiles.references.count == 1)
+  await model.workspace.document.open(file.id, match: .init(recordID: file.id, section: .files))
+  #expect(model.workspace.document.pane == .files)
+  #expect(model.workspace.document.panes.contains(model.workspace.document.pane))
   try await renderSettledSkillInterface(
     root.preferredColorScheme(.light), size: SessionVaultWindowController.minimumSize,
     name: "sillies-vault-files-compact")

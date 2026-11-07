@@ -339,6 +339,9 @@
   "VaultLinkPreviewTests.swift": {
     "default": "headless"
   },
+  "VaultListLayoutTests.swift": {
+    "default": "headless"
+  },
   "LaunchConfigurationTests.swift": {
     "default": "headless"
   },
@@ -346,6 +349,12 @@
     "default": "headless"
   },
   "VaultUsabilityAuditTests.swift": {
+    "default": "headless"
+  },
+  "VaultScreenshotTests.swift": {
+    "default": "headless"
+  },
+  "VaultOCRReadingTests.swift": {
     "default": "headless"
   }
 }

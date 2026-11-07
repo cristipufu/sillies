@@ -14,7 +14,14 @@ struct VaultDocumentNotices: View {
           Text(error).font(.caption).foregroundStyle(theme.warning).textSelection(.enabled)
         }
         if let failure = header.source.failure { SessionFailureNotice(failure: failure) }
-        if model.section == .summary {
+        if model.pane == .text(.screenshotText) {
+          if header.source.screenshotTextState == .pending {
+            ProgressView("Screenshot text").controlSize(.small)
+          } else if let notice = header.source.processingNote {
+            Text(notice).font(.caption).foregroundStyle(theme.secondary).textSelection(.enabled)
+          }
+        }
+        if model.pane == .text(.summary) {
           if let notice = header.source.notesNotice {
             Text(notice).font(.caption).foregroundStyle(theme.secondary).textSelection(.enabled)
           }

@@ -42,14 +42,18 @@ final class ArchitectureVisitor: SyntaxVisitor {
     }
     if ["MLX", "MLXLLM", "MLXLMCommon", "MLXEmbedders", "MLXHuggingFace", "Tokenizers"].contains(
       module),
-      !["SilliesTextInference", "SilliesSearchInference", "SilliesFishSpeech"].contains(owner)
+      !ArchitecturePolicy.tensorRuntimeTargets.contains(owner)
     {
       report(
         node, "inference-isolation",
         "Inference SDKs belong in helper processes and their isolated runtime targets.")
     }
-    if module == "SilliesFishSpeech", owner != "SilliesTTSInference" {
-      report(node, "inference-isolation", "The Fish runtime must only be loaded by the TTS helper.")
+    if ArchitecturePolicy.voiceRuntimeTargets.contains(module), owner != "SilliesTTSInference" {
+      report(node, "inference-isolation", "Voice runtimes must only be loaded by the TTS helper.")
+    }
+    if module == "CWoofArchive", owner != "SilliesWoofSpeech" {
+      report(
+        node, "inference-isolation", "The Woof archive reader belongs in its isolated runtime.")
     }
     if (module == "SilliesVectorIndex" && owner != "SilliesSearchInference")
       || (module == "CVectorSearch" && owner != "SilliesVectorIndex")

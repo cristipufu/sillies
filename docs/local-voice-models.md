@@ -1,11 +1,11 @@
 # Local voices and Chat
 
-Chat is a companion skill. Start it from the skill wheel or a companion's menu, then type a message
-or choose **Voice**. Return sends a typed message; Shift–Return adds a new line. Voice starts an
-explicit conversation: speech detection finalizes and sends each utterance after a natural pause,
-and the microphone stays live during replies so you can interrupt. **Send now** ends a turn early;
-**End voice** stops capture and keeps unfinished words in the composer. Closing the Chat window also
-ends voice mode. **Finish & Save** stores the conversation and any unsent words in the Vault.
+Double-click a companion and choose **Chat** to type or **Talk** to speak. Each companion keeps one
+continuous conversation that you can return to later. Return sends a typed message; Shift–Return
+adds a new line. Talk uses a compact bubble above the companion, with speech detection that finalizes
+and sends each utterance after a natural pause. The microphone stays live during replies so you can
+interrupt. Stopping Talk preserves the conversation and unfinished words. Opening its transcript
+leaves Talk running.
 
 The compact messenger window uses the companion's portrait and selectable message bubbles. Reading
 older messages or selecting text holds your place; **Latest** returns to the conversation's end.
@@ -26,6 +26,13 @@ Choosing a different model takes effect on a later request. Downloading does not
 | Pocket TTS | FluidAudio / Core ML | English in the supported pack | 8 supplied voices |
 | Qwen3-TTS | Argmax TTSKit / Core ML | Chinese, English, French, German, Italian, Japanese, Korean, Portuguese, Russian, Spanish | 9 supplied voices |
 | Fish S2 Pro | Sillies / Apple MLX | [Publisher's supported languages](https://huggingface.co/fishaudio/s2-pro#supported-languages); the full list appears in Settings | Automatic voice; may vary between phrases |
+| Woof | Sillies / Apple MLX | English | Juno and Mira |
+| VibeVoice Realtime 0.5B | Sillies / Apple MLX, 8-bit weights | English in the supported pack | Carter, Davis, Emma, Frank, Grace and Mike |
+
+Woof downloads about 41 MB; VibeVoice downloads about 1.15 GB including voice presets and its
+tokenizer. Both install directly without a Hugging Face account, Python, or another application.
+Woof's model and generated audio use the Underdog Non-Commercial License 1.0, with a visible
+**Voice by Underdog Woof** credit. VibeVoice uses MIT terms and an Apache 2.0 tokenizer.
 
 Companion personality and preferred provider voices live in character JSON (`chat.personality`,
 `chat.languageIdentifier`, `chat.preferredVoices`). The conversation language can be changed before a
@@ -33,14 +40,14 @@ turn. Runtime support can be narrower than a base model's training-language list
 remain separate from the app's MIT license; see [third-party notices](../THIRD_PARTY_NOTICES.md).
 
 Replies appear progressively and can start speaking before the full answer is ready. Pocket, Qwen,
-and Fish stream audio; Kokoro speaks completed short phrases. If the selected text and voice models
+Fish, Woof and VibeVoice stream audio; Kokoro speaks completed short phrases. If the selected text and voice models
 exceed the overlap budget, text finishes first so the two models do not compete for that memory.
 Interruptions preserve the visible partial reply; a voice failure leaves the written answer available.
 
 Voice inference runs in a separate process with bounded messages and killable cancellation. Playback
 buffers at most 0.75 seconds ahead, and its amplitude drives native mouth/head animation. No mascot
 owns an inference model, audio engine, or animation timer. One downloaded voice model is loaded at a
-time and released after inactivity. Recognition takes priority over synthesis and background text work.
+time, retained for the explicit conversation lifetime, and evicted under memory pressure. Recognition takes priority over synthesis and background text work.
 
 Chat uses the existing local WebRTC AEC3 echo canceller and WebRTC voice detection. The reference comes
 from each output device render quantum, aligned with the microphone on the host clock. Resampling
@@ -59,6 +66,8 @@ discover voice-model updates. No weights ship inside the app. Installing a voice
 an installed, complete model runs locally without it.
 
 See [adding a voice model](contributing/voice-models.md) for provider contracts and bounded validation.
+The [Woof and VibeVoice qualification](reports/native-voice-providers-2026-11-08.md) records the 8-bit
+choice, speech-content checks, measured latency and the unresolved cold-start timeout.
 
 ## Short local checks
 

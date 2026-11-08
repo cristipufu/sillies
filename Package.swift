@@ -55,6 +55,18 @@ let package = Package(
         .product(name: "MLX", package: "mlx-swift"),
         .product(name: "Tokenizers", package: "swift-transformers"),
       ]),
+    .target(name: "CWoofArchive", linkerSettings: [.linkedLibrary("z")]),
+    .target(
+      name: "SilliesWoofSpeech",
+      dependencies: [
+        "CWoofArchive", "SilliesTTS", .product(name: "MLX", package: "mlx-swift"),
+      ]),
+    .target(
+      name: "SilliesVibeVoice",
+      dependencies: [
+        "SilliesTTS", .product(name: "MLX", package: "mlx-swift"),
+        .product(name: "Tokenizers", package: "swift-transformers"),
+      ]),
     .target(name: "SilliesVoicePlayback", dependencies: ["SilliesTTS", "SilliesCore"]),
     .target(
       name: "SilliesChat",
@@ -66,6 +78,7 @@ let package = Package(
       name: "SilliesTTSInference",
       dependencies: [
         "SilliesTTS", "SilliesInference", "SilliesModelStore", "SilliesFishSpeech",
+        "SilliesWoofSpeech", "SilliesVibeVoice",
         .product(name: "FluidAudio", package: "FluidAudio"),
         .product(name: "TTSKit", package: "argmax-oss-swift"),
       ]),
@@ -202,6 +215,18 @@ let package = Package(
     .testTarget(
       name: "SilliesFishSpeechTests",
       dependencies: ["SilliesFishSpeech", .product(name: "MLX", package: "mlx-swift")],
+      resources: [.copy("Fixtures")]),
+    .testTarget(
+      name: "SilliesWoofSpeechTests",
+      dependencies: [
+        "SilliesWoofSpeech", "SilliesTTS", .product(name: "MLX", package: "mlx-swift"),
+      ],
+      resources: [.copy("Fixtures")]),
+    .testTarget(
+      name: "SilliesVibeVoiceTests",
+      dependencies: [
+        "SilliesVibeVoice", "SilliesTTS", .product(name: "MLX", package: "mlx-swift"),
+      ],
       resources: [.copy("Fixtures")]),
     .testTarget(name: "SilliesDiagnosticsTests", dependencies: ["SilliesDiagnostics"]),
     .testTarget(

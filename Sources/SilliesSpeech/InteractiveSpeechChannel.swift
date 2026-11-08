@@ -15,6 +15,7 @@ package final class InteractiveSpeechChannel: LocalSpeechChannel {
     activity: InferenceActivity = .shared,
     _ create: @Sendable () async throws -> any LocalSpeechChannel
   ) async throws -> any LocalSpeechChannel {
+    try Task.checkCancellation()
     await activity.beginSpeech()
     let reservation = SpeechReservation { await activity.endSpeech() }
     do {

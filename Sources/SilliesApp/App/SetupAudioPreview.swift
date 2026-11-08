@@ -14,6 +14,7 @@ import SilliesCore
   private(set) var transcript = ""
   private(set) var failure: String?
   private(set) var heardVoice = false
+  private(set) var voiceAttribution: ModelAttribution?
   @ObservationIgnored private var microphone: ChatMicrophone?
   @ObservationIgnored private var speech: (any ChatSpeechOutput)?
   @ObservationIgnored private var operation: Task<Void, Never>?
@@ -58,11 +59,20 @@ import SilliesCore
     heardVoice = false
     operation = Task { [weak self] in
       do {
+        let attribution = await services.speech.modelAttribution()
+        guard let self, self.generation == token, !Task.isCancelled else { return }
+        self.voiceAttribution = attribution
         let notice = try await services.speech.speak(
           .init(
             id: token, text: String(text.prefix(Self.maximumPreviewCharacters)), profile: profile),
-          receive: { _ in })
-        guard let self, self.generation == token, !Task.isCancelled else { return }
+          receive: { [weak self] update in
+            guard case .attribution(let attribution) = update else { return }
+            services.deliver { [weak self] in
+              guard let self, self.generation == token else { return }
+              self.voiceAttribution = attribution
+            }
+          })
+        guard self.generation == token, !Task.isCancelled else { return }
         self.failure = notice
         self.heardVoice = notice == nil
         self.stop()
@@ -86,6 +96,7 @@ import SilliesCore
     generation = UUID()
     failure = nil
     level = 0
+    voiceAttribution = nil
     self.phase = phase
     return true
   }

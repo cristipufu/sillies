@@ -97,17 +97,21 @@ class TestEvidenceTests(unittest.TestCase):
 
     def test_default_workflow_batches_cover_every_bundle_and_test_once(self):
         script = Path(__file__).resolve().parents[1] / "scripts/test.sh"
-        batch_line = next(line for line in script.read_text().splitlines() if "for test_skip in" in line)
-        patterns = re.findall(r"'([^']+)'", batch_line)
-        self.assertEqual(len(patterns), 2)
-        for bundle in ["SilliesAppTests", "SilliesPersistenceTests", "SilliesNewFeatureTests",
-                       "FutureLibraryTests"]:
+        batch = script.read_text().split("for test_skip in", 1)[1].split("; do", 1)[0]
+        patterns = re.findall(r"'([^']+)'", batch)
+        self.assertEqual(len(patterns), 4)
+        assigned = {}
+        for bundle in ["SilliesAppTests", "SilliesAudioTests", "SilliesPersistenceTests",
+                       "SilliesCoreTests", "SilliesNewFeatureTests", "FutureLibraryTests"]:
             selected = [pattern for pattern in patterns if not re.fullmatch(pattern, bundle)]
             self.assertEqual(len(selected), 1, bundle)
+            assigned[bundle] = selected[0]
             for identifier in [bundle + ".testExample()", bundle + ".Suite/testExample"]:
                 self.assertEqual(selected_tests({identifier}, [], selected), {identifier})
                 excluded = [pattern for pattern in patterns if pattern not in selected]
                 self.assertEqual(selected_tests({identifier}, [], excluded), set())
+        self.assertEqual(len({assigned[bundle] for bundle in [
+            "SilliesAppTests", "SilliesAudioTests", "SilliesPersistenceTests", "SilliesCoreTests"]}), 4)
 
     def test_race_workflow_batches_keep_native_and_voice_checks_disjoint(self):
         script = Path(__file__).resolve().parents[1] / "scripts/test-races.sh"

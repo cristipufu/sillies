@@ -159,7 +159,28 @@ enum ArchitectureFixtures {
         source: "import MLX", path: "Sources/SilliesApp/Skills/Text.swift",
         rules: ["inference-isolation"]),
       .init(source: "import MLX", path: "Sources/SilliesTextInference/Runtime.swift", rules: []),
+      .init(
+        source: "import CoreML", path: "Sources/SilliesSpeechParakeet/Runtime.swift", rules: []),
       .init(source: "import MLX", path: "Sources/SilliesFishSpeech/Runtime.swift", rules: []),
+      .init(source: "import MLX", path: "Sources/SilliesWoofSpeech/Runtime.swift", rules: []),
+      .init(source: "import MLX", path: "Sources/SilliesVibeVoice/Runtime.swift", rules: []),
+      .init(
+        source: "import SilliesVibeVoice", path: "Sources/SilliesTTSInference/Runtime.swift",
+        rules: []),
+      .init(
+        source: "import SilliesVibeVoice", path: "Sources/SilliesApp/App/Composition/Voice.swift",
+        rules: ["inference-isolation"]),
+      .init(
+        source: "import CWoofArchive", path: "Sources/SilliesWoofSpeech/Runtime.swift", rules: []),
+      .init(
+        source: "import SilliesWoofSpeech", path: "Sources/SilliesTTSInference/Runtime.swift",
+        rules: []),
+      .init(
+        source: "import SilliesWoofSpeech", path: "Sources/SilliesApp/App/Composition/Voice.swift",
+        rules: ["inference-isolation"]),
+      .init(
+        source: "import CWoofArchive", path: "Sources/SilliesChat/Archive.swift",
+        rules: ["module-boundary", "inference-isolation"]),
       .init(
         source: "import SilliesFishSpeech", path: "Sources/SilliesTTSInference/Runtime.swift",
         rules: []),

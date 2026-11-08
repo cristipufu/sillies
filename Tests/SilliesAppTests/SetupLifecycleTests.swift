@@ -1,4 +1,5 @@
 import AppKit
+import SilliesAudio
 import SilliesChat
 import SilliesCore
 import SilliesModelStore
@@ -174,6 +175,29 @@ import Testing
   model.testVoice(text: "Try again")
   try await awaitSetup { model.audio.phase == .idle && model.audio.heardVoice }
   #expect(await fixture.voice.starts == 2 && model.audio.failure == nil)
+}
+
+@Test @MainActor func setupVoiceCreditFollowsPlaybackAndRejectsStoppedCallbacks() async throws {
+  let fixture = try SetupFixture()
+  defer { fixture.close() }
+  let model = fixture.makePresentation()
+  defer { model.stop() }
+  model.chooseActivity(.talk)
+  try await awaitSetup { !model.isChecking }
+  await fixture.voice.holdSpeech()
+  model.testVoice(text: "Hello!")
+  try await awaitSetup { await fixture.voice.starts == 1 }
+  let credit = ModelAttribution(
+    text: "Voice by Underdog Woof", url: try #require(URL(string: "https://underdog.ai")))
+  await fixture.voice.emitPlayback(.attribution(credit))
+  try await awaitSetup { model.audio.voiceAttribution == credit }
+  model.audio.stop()
+  try await awaitSetup { model.audio.phase == .idle }
+  await fixture.voice.emitPlayback(.attribution(nil))
+  await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+    MainRunLoopDelivery.perform { continuation.resume() }
+  }
+  #expect(model.audio.voiceAttribution == credit)
 }
 
 @Test @MainActor func companionBackendOverrideNeverChangesTheAppDefault() async throws {

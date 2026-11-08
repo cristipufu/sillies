@@ -113,6 +113,9 @@ struct ChatSessionView: View {
             ? { navigation.show(.vault) } : nil
         ).padding(16)
       }
+      if let attribution = model.voiceAttribution {
+        ModelAttributionLink(attribution: attribution).padding(.horizontal, 16).padding(.bottom, 8)
+      }
     }
     .dropDestination(for: VaultRecordTransfer.self) { items, _ in
       guard showsConversation, model.mode == .chat, model.selectedRecords.canAdd else {

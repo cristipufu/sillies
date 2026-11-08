@@ -26,7 +26,7 @@ import SilliesVoicePlayback
     let executable = Bundle.main.bundleURL
       .appendingPathComponent(
         "Contents/Helpers/SilliesTTSInference.app/Contents/MacOS/SilliesTTSInference")
-    let providers = ["kokoro", "pocket-tts", "qwen3-tts", "fish-speech"].map {
+    let providers = ["kokoro", "pocket-tts", "qwen3-tts", "fish-speech", "woof", "vibevoice"].map {
       WorkerTTSProvider(id: $0, executable: executable)
     }
     let registry = try TTSModelRegistry(store: store, providers: providers, activity: .shared)

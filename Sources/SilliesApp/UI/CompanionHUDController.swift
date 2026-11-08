@@ -23,7 +23,7 @@ final class CompanionHUDController {
 
   private enum LayoutKey: Equatable {
     case hidden
-    case talk(hasNotice: Bool)
+    case talk(hasNotice: Bool, voiceCredit: String?)
     case active(skill: CompanionSkillKind, appName: String, normalizedDetail: String)
     case completed(skill: CompanionSkillKind, appName: String, summary: String)
 
@@ -198,7 +198,8 @@ final class CompanionHUDController {
     {
       key = .talk(
         hasNotice: conversation.failure != nil || conversation.notice != nil
-          || conversation.history.failure != nil)
+          || conversation.history.failure != nil,
+        voiceCredit: conversation.voiceAttribution?.text)
     } else {
       key = LayoutKey(state)
     }

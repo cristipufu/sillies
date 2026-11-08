@@ -1,0 +1,69 @@
+{
+  "model": "mlx-community/VibeVoice-Realtime-0.5B-8bit",
+  "revision": "ae6a233e1b2d6d5e2315e7030581323cc8191bb3",
+  "modelSHA256": "cf6fef128bade2f818ca2cff8168749407297a02d0d2fa9e2905181df42fa22b",
+  "source": "https://github.com/microsoft/VibeVoice",
+  "sourceRevision": "16fb2cb1217c9934a886e1948ffb06120caa2df5",
+  "torch": "2.9.1",
+  "transformers": "4.57.6",
+  "diffusers": "0.36.0",
+  "precision": "float32",
+  "guidance": 1.5,
+  "diffusionSteps": 5,
+  "utterance": "Hello! I am your little window companion.",
+  "utteranceVoice": "en-Carter_man",
+  "utteranceNoise": "MLX RandomState seed 1; one normal [1,64] draw per frame; exact noise replayed in PyTorch",
+  "stageVoice": "en-Emma_woman",
+  "referenceSequenceRelativeRMS": 0.00010720911196261005,
+  "format": "Little-endian Float32 PCM/tensors; audio at 24000 Hz, mono",
+  "artifacts": {
+    "codec-input.f32": {
+      "bytes": 768,
+      "sha256": "e2d1505f73fdd2a7c30f6fe572cd08168c5371a6918b56eac2b3383cb1cac640"
+    },
+    "codec-output-0.f32": {
+      "bytes": 12800,
+      "sha256": "cc10a68a60ae9d4aac69b3d94ac8cd76258b2c1724a58d1be2a43bee1f0c5646"
+    },
+    "codec-output-1.f32": {
+      "bytes": 12800,
+      "sha256": "78dcbed6bc2cd3333ddc9f93d21effb89b2a99417216be42c27d32ae5cf2256f"
+    },
+    "codec-output-2.f32": {
+      "bytes": 12800,
+      "sha256": "61d1e5095a6c45f627c4c21a39a7bacc00688e205292ae76f75cd185d4405e9d"
+    },
+    "diffusion-latent.f32": {
+      "bytes": 256,
+      "sha256": "8adbd2cea9412d08d7647d9eee57594c4c63c6cc3faff37ef3a483163de565b3"
+    },
+    "diffusion-noise.f32": {
+      "bytes": 256,
+      "sha256": "2a5abb8d547bb7cbfa539cf5e8590af00d759a2c99807b6a7a65b4c3e0732af5"
+    },
+    "negative-condition.f32": {
+      "bytes": 3584,
+      "sha256": "f2c7742eb3d1fa3de787b6ac84201aeefafdf7b642b5df0ec14d444bc1c8d08a"
+    },
+    "report.json": {
+      "bytes": 734,
+      "sha256": "6b9c814af119d39a5681f4029d234e90dab485faf71bc84acfbbc0bf724c03cc"
+    },
+    "schedule.json": {
+      "bytes": 2949,
+      "sha256": "d9267f6b859e7fbe2a9c69e9433dfe71083901fcd115af50a829f8022edec462"
+    },
+    "speech-hidden.f32": {
+      "bytes": 17920,
+      "sha256": "4811bd2232be5cea495bd3b3192fd9d53298c17a2d2eeb189b1b42de1a8e679a"
+    },
+    "text-hidden.f32": {
+      "bytes": 17920,
+      "sha256": "f0ffeb5c64bf7b3dcc722f84ef5eceb6dabe2114531e27219fa1beb3ae1cd2a7"
+    },
+    "utterance-carter-seed-1.f32": {
+      "bytes": 409600,
+      "sha256": "2e4301f1edb1078aa1b1df01c6cb5389e85910effc7a0149b47d3a2722e95477"
+    }
+  }
+}

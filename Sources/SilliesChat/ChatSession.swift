@@ -38,6 +38,7 @@ package final class ChatSession {
   package private(set) var failure: SessionFailure?
   package private(set) var notice: ChatNotice?
   package private(set) var readiness = ChatReadiness.unchecked
+  package private(set) var voiceAttribution: ModelAttribution?
   @ObservationIgnored private var readinessGeneration = UUID()
   package private(set) var audioLevel = 0.0
   package var draft = "" { didSet { saveCheckpoint() } }
@@ -54,6 +55,7 @@ package final class ChatSession {
   @ObservationIgnored private var voiceActivation = UUID()
   private static let maximumLoadedMessages = ConversationPageRequest.maximumLimit
   private var toolActivity: String?
+  private var microphonePreparationStatus: String?
   package var onChange: (@MainActor () -> Void)?
   package var onFinish: (@MainActor () -> Void)?
   @ObservationIgnored private let services: ChatServices
@@ -216,7 +218,8 @@ package final class ChatSession {
       } else {
         mode == .talk ? String(localized: "Start talking") : String(localized: "Ready to chat")
       }
-    case .preparingMicrophone: String(localized: "Getting the microphone ready…")
+    case .preparingMicrophone:
+      microphonePreparationStatus ?? String(localized: "Getting voice conversation ready…")
     case .listening: String(localized: "Listening…")
     case .finalizing: String(localized: "Finishing your words…")
     case .thinking:
@@ -273,12 +276,15 @@ package final class ChatSession {
     defer {
       if readinessGeneration == generation, case .checking = readiness { readiness = .unchecked }
     }
+    async let attribution = services.speech.modelAttribution()
     let result = await ChatReadiness.resolve(
       services: services, language: requestedLanguage, mode: requestedMode)
+    let voiceAttribution = await attribution
     guard !Task.isCancelled, phase == .ready, language == requestedLanguage,
       mode == requestedMode, turnID == requestedTurn, readinessGeneration == generation
     else { return }
     readiness = result
+    self.voiceAttribution = voiceAttribution
     notice = result.notice
     if case .permissionRequired(let permission) = result {
       failure = permission
@@ -290,6 +296,7 @@ package final class ChatSession {
   package func startListening() {
     guard canCompose, draft.isEmpty else { return }
     failure = nil
+    microphonePreparationStatus = nil
     isVoiceConversationActive = true
     setPhase(.preparingMicrophone)
     microphone.start(language: language) { [weak self] in self?.receiveCapture($0) }
@@ -751,6 +758,10 @@ package final class ChatSession {
   private func receiveCapture(_ update: AudioCaptureUpdate) {
     guard isVoiceConversationActive else { return }
     switch update {
+    case .preparing(let status):
+      guard phase == .preparingMicrophone else { return }
+      microphonePreparationStatus = status
+      onChange?()
     case .capturing: setPhase(.listening)
     case .speechStarted:
       diagnostics.record(.speechDetected, turn: turnID)
@@ -791,6 +802,7 @@ package final class ChatSession {
   private func receivePlayback(_ update: SpeechPlaybackUpdate, token: UUID, attempt: UUID) {
     guard turnID == token, speechID == attempt, phase != .finished else { return }
     switch update {
+    case .attribution(let attribution): voiceAttribution = attribution
     case .milestone:
       diagnostics.delivery(spokenDelivery?.snapshot, turn: token)
       return

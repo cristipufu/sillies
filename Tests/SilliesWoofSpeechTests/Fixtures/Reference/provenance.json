@@ -1,0 +1,21 @@
+{
+  "model": "ConwayResearch/Underdog-Woof",
+  "revision": "be702960539777fc3f698e54335276a8391b00f9",
+  "modelSHA256": "d895fbbe84b8f4f461e3e94ab48b1164353b1988ce8d365f5aa8263d0de1203e",
+  "runtime": "underdog_woof/runtime.py from the pinned model repository",
+  "numpy": "2.3.5",
+  "seed": 0,
+  "text": "Hello! I am your little window companion.",
+  "attribution": "Voice by Underdog Woof \u2014 https://underdog.ai",
+  "format": "Little-endian Float32 PCM/tensors; audio at 24000 Hz, mono",
+  "artifacts": {
+    "juno.f32": {
+      "bytes": 272640,
+      "sha256": "50a4376fa4ac52e257f52aa97f385ccc170f83c85086cb3a5068455abecc29e6"
+    },
+    "mira.f32": {
+      "bytes": 368640,
+      "sha256": "2b3a11bf253737084d4aa86b2cfcb8f26529fcd253ade0386a536804b79de7af"
+    }
+  }
+}

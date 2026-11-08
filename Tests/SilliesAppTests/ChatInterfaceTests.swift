@@ -191,7 +191,7 @@ private struct FailedChatReply: ConversationResponding {
   let services = try VoiceServices(defaults: defaults, directory: directory)
   #expect(await services.speech.availabilityNotice(language: "en") != nil)
   await services.models.load()
-  #expect(services.models.manifests.count == 5)
+  #expect(services.models.manifests.count == 7)
   #expect(services.models.error == nil)
   try renderSkillInterface(
     ScrollView { VoiceModelSettingsView(model: services.models).padding(20) }.background(

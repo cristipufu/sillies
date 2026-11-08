@@ -59,6 +59,14 @@ weights and does not claim authorship of them.
   requires a separate license. The original model license and Swift-reference attribution are retained below.
   Sillies implements its own native inference module using existing MLX and tokenizer dependencies.
   It does not depend on or bundle the mlx-audio-swift package.
+- **Woof:** Conway / Underdog; [Underdog Non-Commercial License 1.0](https://huggingface.co/ConwayResearch/Underdog-Woof/blob/be702960539777fc3f698e54335276a8391b00f9/LICENSE).
+  [Voice by Underdog Woof](https://underdog.ai). The optional model provides the Juno and Mira voices.
+  Sillies supplies a native Swift runtime for the published architecture and unchanged int8 archive;
+  the upstream Python runtime is not distributed. The model and generated audio are for non-commercial
+  use; commercial use requires a separate license. The original license and notices are retained below.
+- **VibeVoice Realtime 0.5B:** Microsoft; MIT. Optional 8-bit MLX data conversion and six English
+  voice presets are downloaded from mlx-community. Qwen2.5 tokenizer files use Apache 2.0.
+  The app-owned Swift runtime uses Apple MLX; no Python or community runtime package is bundled.
 
 Apple Speech and Apple Intelligence assets are managed by macOS and remain subject to Apple's terms.
 Review the upstream model cards and applicable license before redistributing weights or conversions.
@@ -86,6 +94,8 @@ Review the upstream model cards and applicable license before redistributing wei
 | Qwen3-TTS 0.6B | Apache 2.0 | [Model card](https://huggingface.co/argmaxinc/ttskit-coreml) | [065712357592](https://huggingface.co/argmaxinc/ttskit-coreml/tree/065712357592bc0d194cf7cd91852c5cde3eb1b8) |
 | Qwen3-TTS 1.7B | Apache 2.0 | [Model card](https://huggingface.co/argmaxinc/ttskit-coreml) | [065712357592](https://huggingface.co/argmaxinc/ttskit-coreml/tree/065712357592bc0d194cf7cd91852c5cde3eb1b8) |
 | Fish S2 Pro | Fish Audio Research License (non-commercial) | [Model card](https://huggingface.co/fishaudio/s2-pro) | [c8d4481b3f7c](https://huggingface.co/mlx-community/fish-audio-s2-pro-8bit/tree/c8d4481b3f7cbfe64d855c8b7cda7739502fc3ff) |
+| Woof | Underdog Non-Commercial 1.0 | [Model card](https://huggingface.co/ConwayResearch/Underdog-Woof) | [be7029605397](https://huggingface.co/ConwayResearch/Underdog-Woof/tree/be702960539777fc3f698e54335276a8391b00f9) |
+| VibeVoice Realtime 0.5B | MIT; tokenizer Apache 2.0 | [Model card](https://huggingface.co/microsoft/VibeVoice-Realtime-0.5B) | [ae6a233e1b2d](https://huggingface.co/mlx-community/VibeVoice-Realtime-0.5B-8bit/tree/ae6a233e1b2d6d5e2315e7030581323cc8191bb3) |
 | Multilingual E5 Small | MIT | [Model card](https://huggingface.co/intfloat/multilingual-e5-small) | [614241f622f5](https://huggingface.co/intfloat/multilingual-e5-small/tree/614241f622f53c4eeff9890bdc4f31cfecc418b3) |
 
 ## Resolved software
@@ -95,7 +105,7 @@ Review the upstream model cards and applicable license before redistributing wei
 | [argmax-oss-swift](https://github.com/argmaxinc/argmax-oss-swift/tree/1bbc57cb7fe6410248a685b1c5a3c6d56adc2ed4) | 1.1.1 | WhisperKit recognition and TTSKit speech synthesis |
 | [EventSource](https://github.com/mattt/EventSource/tree/86b5096ac59ab46e66bd1f6377c604bc1dab0bc2) | 1.5.1 | Transitive Hugging Face dependency; no cloud inference is enabled |
 | [FluidAudio](https://github.com/FluidInference/FluidAudio/tree/e15287985625dbf544a343df679436789ffb03fb) | 0.18.0 | Parakeet/Nemotron recognition, speaker detection, and Core ML speech synthesis |
-| [mlx-swift](https://github.com/ml-explore/mlx-swift/tree/19601207e9a0de51e03ee6ec0c3c5f3784275075) | 0.32.3 | Native text and Fish speech inference with Metal kernels |
+| [mlx-swift](https://github.com/ml-explore/mlx-swift/tree/19601207e9a0de51e03ee6ec0c3c5f3784275075) | 0.32.3 | Native text and speech inference with Metal kernels |
 | [mlx-swift-lm](https://github.com/ml-explore/mlx-swift-lm/tree/3b339ad6e3b3f44c8121ecff5131c7fd55e075e6) | 3.32.3 | Text model loading and generation |
 | [Sparkle](https://github.com/sparkle-project/Sparkle/tree/eef1a539a373c1f1a320624b1130fc5de7b2e100) | 2.10.0 | App updates; includes Sparkle's embedded third-party notices |
 | [swift-argument-parser](https://github.com/apple/swift-argument-parser/tree/6a52f3251125d74daf04fcbd5e6f08a75d074382) | 1.8.2 | Command-line and dependency tooling |
@@ -6694,6 +6704,413 @@ This Agreement will be governed by and construed in accordance with the laws of 
 **"Fish Audio Materials"** means, collectively, Fish Audio's proprietary Models, Software and Documentation (and any portion or combination thereof) made available under this Agreement.
 
 **"Trade Control Laws"** means any applicable U.S. and non-U.S. export control and trade sanctions laws and regulations.
+````
+
+</details>
+
+## Woof model license and attribution
+
+The weights, voice data and decoder are supplied by Underdog. Sillies' independently written native runtime implements the published tensor format and streaming architecture without bundling a Python runtime. The optional model's use and outputs remain subject to its license.
+
+<details>
+<summary>Underdog Woof — Non-Commercial License 1.0</summary>
+
+````text
+# Underdog Non-Commercial License 1.0
+
+Copyright 2026 Conway ("Underdog", "we", "us").
+
+This license covers each model Underdog releases under it, as named in that model's card (for example, Underdog Woof).
+By downloading, running, copying or building on the Model, you ("you") agree to these terms.
+
+## The short version
+
+- **Free for non-commercial use.** Personal projects, research, teaching and non-profits can use the Model and publish
+  what it makes.
+- **Credit Underdog.** Put "Underdog Woof" or "underdog.ai" in the title or description of anything you publish with
+  its audio, and show "Voice by Underdog Woof" in any app or product that uses it.
+- **Commercial use needs a license.** Using the Model or its audio in a paid product, an ad, a monetized video, a
+  company's work or anything else that earns money needs a commercial license: license@conway.tech.
+- **No training on Woof.** Don't use the Model or its audio to train, fine-tune or distill another model that makes
+  speech or audio.
+- **Free inside Underdog.** Using the Model through underdog.ai and Underdog's own apps is always free.
+
+The terms below are the full license. Where they differ from this summary, the terms below apply.
+
+## 1. Definitions
+
+- **Model**: the weights, code, configuration, voices and documentation we release under this license, in any format.
+- **Outputs**: audio or other content made with the Model or a Derivative.
+- **Derivative**: any modified version of the Model, including fine-tunes, merges and converted versions; any model
+  created, initialized, improved or trained, in whole or in part, from the Model's weights, activations or Outputs; and
+  any dataset made up of, or built mainly from, Outputs.
+- **Commercial Use**: any use by or for a company or other for-profit organization, and any use that earns money or
+  supports something that does, directly or indirectly. This includes using the Model or Outputs in a paid or
+  ad-supported product or service, in advertising or sponsored or monetized content, as a hosted service or API, and
+  in a business's internal operations.
+- **Non-Commercial Use**: personal projects, academic research, teaching, and work by non-profit organizations, in
+  each case where nothing is sold, licensed or monetized.
+- **Underdog Products**: underdog.ai and the apps, services and features that Underdog itself operates.
+
+## 2. What you may do for free
+
+Subject to these terms, we grant you a worldwide, non-exclusive, non-transferable, royalty-free license to use, run,
+copy and modify the Model, to share the Model and your modified versions of it, and to use and publish Outputs, for
+Non-Commercial Use only.
+
+Anyone may also use the Model free of charge through Underdog Products, including for commercial purposes. That covers
+the product as we provide it, not taking the Model out of an Underdog Product to run it elsewhere.
+
+A company may test the Model internally for up to 30 days to decide whether to buy a commercial license. Testing
+means trying it out, not running it in production or for customers.
+
+## 3. Commercial Use needs a commercial license
+
+Any Commercial Use of the Model, a Derivative or Outputs requires a separate written commercial license from
+Underdog. Write to license@conway.tech. Without one, this license grants no commercial rights.
+
+## 4. Credit
+
+If you use the Model or a Derivative under this license, you must credit Underdog:
+
+- **Published audio.** When you publish or share Outputs, include "Underdog Woof" or "underdog.ai" in the title or
+  description where the audio is posted.
+- **Apps and products.** Wherever Outputs are played or the feature is offered, show "Voice by Underdog Woof" with a
+  link to underdog.ai, where users can see it. An audio-only product puts it in its about or settings screen and in its
+  listing.
+- **Model cards, READMEs, papers and listings.** Say that the work is, or is derived from, Underdog Woof, and link to
+  this license.
+- **Sharing the Model or a modified version.** Include this license and the NOTICE file unchanged, and say what you
+  changed.
+
+A commercial license may set different credit terms in writing.
+
+## 5. Outputs and training
+
+As between you and Underdog, you own the Outputs you make, to the extent the law allows, and you may use them for
+Non-Commercial Use under this license, or for Commercial Use under a commercial license.
+
+You may not use the Model, a Derivative or any Outputs to train, fine-tune, distill or otherwise improve any other
+model that generates speech or audio, unless a commercial license from Underdog allows it. Every Derivative is covered
+by this license; if you share one, you must share it under this license, and you may not add terms that take away any
+of these conditions.
+
+Outputs may not be unique, and the Model may make the same or similar Outputs for others. You are responsible for your
+inputs and your Outputs. Underdog does not review Outputs and makes no promise about their accuracy or fitness for any
+purpose.
+
+## 6. Responsible use
+
+Don't use the Model, a Derivative or Outputs to impersonate a real person without their consent, to deceive people
+about whether they are hearing a machine, to commit fraud, or for anything illegal. Don't use them to clone or imitate
+a real person's voice without that person's consent. Follow all laws that apply to your use.
+
+## 7. Third-party components
+
+Parts of the Model come from work by others under their own licenses, listed in the NOTICE file. Underdog Woof's audio
+decoder is adapted from Kyutai's Mimi, and its training data includes LibriTTS-R and Emilia-YODAS, all CC-BY 4.0. This
+license doesn't restrict any rights you have in those works under their own licenses, and you must follow those
+licenses too.
+
+## 8. Names and trademarks
+
+This license doesn't grant permission to use Underdog's names, logos or trademarks, except for the credit in section 4
+and for reproducing the NOTICE file. Don't suggest that Underdog endorses, sponsors or is affiliated with you or your
+product.
+
+## 9. Ending the license
+
+If you break these terms, your rights under this license end automatically. If it is your first breach and you fix it
+within 30 days of learning about it, your rights come back. If you sue anyone claiming that the Model infringes your
+rights, your license ends on the day you file.
+
+## 10. No warranty; limited liability
+
+Unless required by applicable law or agreed to in writing, Underdog provides the Model, its Outputs and any Derivative
+"AS IS", WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied, including any warranties or
+conditions of TITLE, NON-INFRINGEMENT, MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. You are solely responsible
+for deciding whether to use the Model and assume all risks of doing so.
+
+IN NO EVENT AND UNDER NO LEGAL THEORY, WHETHER IN TORT (INCLUDING NEGLIGENCE), CONTRACT OR OTHERWISE, UNLESS REQUIRED
+BY APPLICABLE LAW OR AGREED TO IN WRITING, WILL UNDERDOG BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY DIRECT, INDIRECT,
+SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING FROM THIS LICENSE OR FROM THE USE OR INABILITY TO USE THE MODEL,
+ITS OUTPUTS OR ANY DERIVATIVE, EVEN IF UNDERDOG HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+## 11. General
+
+This license is governed by the laws of California, and disputes go to the courts of San Francisco County. If part of
+it can't be enforced, the rest still applies. We may publish new versions of this license; a Model released under a
+version stays available to you under that version.
+
+Questions and commercial licensing: license@conway.tech.
+````
+
+</details>
+
+<details>
+<summary>Underdog Woof — NOTICE</summary>
+
+````text
+Underdog Woof
+Copyright 2026 Conway
+
+Licensed under the Underdog Non-Commercial License 1.0 (see LICENSE). Free for non-commercial use with credit: put
+"Underdog Woof" or "underdog.ai" in the title or description of anything you publish with its audio, and show
+"Voice by Underdog Woof" in any app that uses it. Commercial use needs a commercial license: license@conway.tech.
+
+This product includes material derived from the following works:
+
+Mimi, by Kyutai (https://huggingface.co/kyutai/mimi), licensed under CC-BY 4.0
+(https://creativecommons.org/licenses/by/4.0/). The audio decoder in this repository is adapted from Mimi's decoder
+and has been changed.
+
+LibriTTS-R, by Yuma Koizumi et al. (https://www.openslr.org/141/), licensed under CC-BY 4.0. Used as training data.
+
+Emilia-YODAS, by the Amphion team (https://huggingface.co/datasets/amphion/Emilia-Dataset), licensed under CC-BY 4.0.
+Used as training data.
+````
+
+</details>
+
+## VibeVoice native runtime and model license
+
+The native runtime implements Microsoft's published realtime architecture, revision `16fb2cb1217c9934a886e1948ffb06120caa2df5`. Its DPM-Solver++ scheduler is adapted from the Apache-licensed TSAIL / Hugging Face implementation. Numerical fixtures compare the Swift stages with those reference implementations. The optional 8-bit weights and voice states are data, not executable code. Qwen2.5 tokenizer terms are included with the download.
+
+<details>
+<summary>Microsoft VibeVoice — MIT</summary>
+
+````text
+MIT License
+
+Copyright (c) 2025 Microsoft
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+````
+
+</details>
+
+<details>
+<summary>DPM-Solver++ — Copyright 2024 TSAIL Team and The HuggingFace Team; Apache 2.0</summary>
+
+````text
+
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
+
+   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
+
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
+
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
+
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
+
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
+
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
+
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
+
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
+
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
+
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
+
+   2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
+
+   3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
+
+   4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
+
+      (a) You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.
+
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
+
+   5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
+
+   6. Trademarks. This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
+
+   7. Disclaimer of Warranty. Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or redistributing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
+
+   8. Limitation of Liability. In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or consequential damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or any and all
+      other commercial damages or losses), even if such Contributor
+      has been advised of the possibility of such damages.
+
+   9. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
+
+   END OF TERMS AND CONDITIONS
+
+   APPENDIX: How to apply the Apache License to your work.
+
+      To apply the Apache License to your work, attach the following
+      boilerplate notice, with the fields enclosed by brackets "[]"
+      replaced with your own identifying information. (Don't include
+      the brackets!)  The text should be enclosed in the appropriate
+      comment syntax for the file format. We also recommend that a
+      file or class name and description of purpose be included on the
+      same "printed page" as the copyright notice for easier
+      identification within third-party archives.
+
+   Copyright 2024 Alibaba Cloud
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 ````
 
 </details>

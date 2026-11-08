@@ -51,14 +51,20 @@ final class PackageBoundaryCheck: SyntaxVisitor {
         failures.append("\(name) cannot load the native vector index outside the search helper.")
         continue
       }
-      if target == "SilliesFishSpeech", name != "SilliesTTSInference" {
-        failures.append("\(name) cannot load the Fish runtime outside its helper process.")
+      if let target, ArchitecturePolicy.voiceRuntimeTargets.contains(target),
+        name != "SilliesTTSInference"
+      {
+        failures.append("\(name) cannot load a voice runtime outside its helper process.")
+        continue
+      }
+      if target == "CWoofArchive", name != "SilliesWoofSpeech" {
+        failures.append("\(name) cannot load the Woof archive reader outside its runtime.")
         continue
       }
       if let target,
         ["MLX", "MLXLLM", "MLXLMCommon", "MLXEmbedders", "MLXHuggingFace", "Tokenizers"].contains(
           target),
-        !["SilliesTextInference", "SilliesSearchInference", "SilliesFishSpeech"].contains(name)
+        !ArchitecturePolicy.tensorRuntimeTargets.contains(name)
       {
         failures.append("\(name) cannot load native inference SDKs outside a helper process.")
         continue

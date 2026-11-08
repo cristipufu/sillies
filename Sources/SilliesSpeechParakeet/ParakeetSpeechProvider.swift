@@ -13,6 +13,11 @@ package struct ParakeetSpeechProvider: SpeechProvider {
     }
     let engine = ParakeetWindowEngine()
     try await engine.load(directory)
-    return WindowSpeechModel(engine: SpeechInferenceScheduler(engine: engine))
+    let model = WindowSpeechModel(engine: SpeechInferenceScheduler(engine: engine))
+    // Core ML may compile prediction kernels after loading. Exercise a bounded silent
+    // window before capture so the user's first words do not pay that cost or time out.
+    try await model.validate()
+    try Task.checkCancellation()
+    return model
   }
 }

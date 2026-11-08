@@ -44,11 +44,21 @@ actor SetupVoiceProbe: ChatSpeechOutput {
   private var holdsStop = false
   private var cancelsNextSpeech = false
   private var pendingStop: CheckedContinuation<Void, Never>?
+  private var holdsSpeech = false
+  private var pendingSpeech: CheckedContinuation<Void, Never>?
+  private var playback: (@Sendable (SpeechPlaybackUpdate) -> Void)?
   private(set) var starts = 0
   init(notice: String? = nil) { self.notice = notice }
   func setNotice(_ notice: String?) { self.notice = notice }
   func holdStop() { holdsStop = true }
   func cancelNextSpeech() { cancelsNextSpeech = true }
+  func holdSpeech() { holdsSpeech = true }
+  func emitPlayback(_ update: SpeechPlaybackUpdate) { playback?(update) }
+  private func releaseSpeech() {
+    holdsSpeech = false
+    pendingSpeech?.resume()
+    pendingSpeech = nil
+  }
   func releaseStop() {
     holdsStop = false
     pendingStop?.resume()
@@ -60,13 +70,16 @@ actor SetupVoiceProbe: ChatSpeechOutput {
     _ request: ChatSpeechRequest, receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void
   ) async throws -> String? {
     starts += 1
+    playback = receive
     if cancelsNextSpeech {
       cancelsNextSpeech = false
       throw CancellationError()
     }
+    if holdsSpeech { await withCheckedContinuation { pendingSpeech = $0 } }
     return notice
   }
   func stop(id: UUID) async {
+    releaseSpeech()
     if holdsStop { await withCheckedContinuation { pendingStop = $0 } }
   }
   func pause(id: UUID) async {}

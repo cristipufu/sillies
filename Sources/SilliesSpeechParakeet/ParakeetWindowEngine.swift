@@ -1,8 +1,12 @@
+import CoreML
 import FluidAudio
 import Foundation
 import SilliesSpeech
 
 actor ParakeetWindowEngine: SpeechWindowEngine {
+  // Keep this encoder off the ANE and MPSGraph specialization paths. CPU inference
+  // leaves the GPU available for the interface and starts without accelerator compilation.
+  private static let encoderComputeUnits: MLComputeUnits = .cpuOnly
   nonisolated var finalizationPolicy: SpeechFinalizationPolicy { .reuseUnchangedDraft }
   nonisolated private let executor = SpeechWorkerExecutor()
   nonisolated var unownedExecutor: UnownedSerialExecutor { executor.asUnownedSerialExecutor() }
@@ -13,7 +17,8 @@ actor ParakeetWindowEngine: SpeechWindowEngine {
   func load(_ directory: URL) async throws {
     dispatchPrecondition(condition: .notOnQueue(.main))
     try Task.checkCancellation()
-    let models = try AsrModels.loadLocal(from: directory, version: .ultra)
+    let models = try AsrModels.loadLocal(
+      from: directory, version: .ultra, encoderComputeUnits: Self.encoderComputeUnits)
     try await manager.loadModels(models)
     try Task.checkCancellation()
   }

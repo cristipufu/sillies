@@ -10,9 +10,13 @@ export SILLIES_METADATA_HELPER="$test_binary_directory/SilliesWindowMetadata"
 if (( $# > 0 )); then
   python3 -B scripts/run-checked-tests.py --bin-path "$test_binary_directory" "$@"
 else
-  # Give native workflows and reusable modules separate bounded runs. Every bundle belongs
-  # to exactly one batch, including future targets; every selected test still needs its receipt.
-  for test_skip in '^SilliesAppTests([./]|$)' '^(?!SilliesAppTests([./]|$)).*'; do
+  # Audio DSP, storage scale, and native workflows each get their own bounded run.
+  # Every bundle belongs to exactly one batch, including future targets; all need receipts.
+  for test_skip in \
+    '^Sillies(Audio|Persistence|App)Tests([./]|$)' \
+    '^(?!SilliesAudioTests([./]|$)).*' \
+    '^(?!SilliesPersistenceTests([./]|$)).*' \
+    '^(?!SilliesAppTests([./]|$)).*'; do
     python3 -B scripts/run-checked-tests.py --bin-path "$test_binary_directory" --skip "$test_skip"
   done
 fi

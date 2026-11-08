@@ -123,10 +123,14 @@ Settings → **Voices**
 | **Pocket TTS** | ~530 MB | English |
 | **Qwen3-TTS 0.6B / 1.7B** | ~1.33 / 2.53 GB | Chinese, English, French, German, Italian, Japanese, Korean, Portuguese, Russian, Spanish |
 | **Fish S2 Pro** | ~6.73 GB | [80+ languages](https://huggingface.co/fishaudio/s2-pro#supported-languages) |
+| **Woof** | ~41 MB | English · 2 voices |
+| **VibeVoice Realtime 0.5B** | ~1.15 GB | English · 6 voices |
 
 Voices are optional. Chat works in text without one. Each model lists its memory requirements and
 license in Settings. Fish uses an automatic voice that can vary between replies; the other packs
 offer supplied voices. All run locally, with no Python environment or server to manage.
+Woof and Fish have non-commercial model terms; the app remains MIT-licensed. None of the voice
+downloads require a Hugging Face account.
 
 [Voice models and Chat →](docs/local-voice-models.md)
 

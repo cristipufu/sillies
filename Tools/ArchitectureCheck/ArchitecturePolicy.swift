@@ -3,6 +3,12 @@ import Foundation
 struct ArchitecturePolicy {
   var uncheckedOwners: [String: String]
 
+  static let voiceRuntimeTargets: Set<String> = [
+    "SilliesFishSpeech", "SilliesWoofSpeech", "SilliesVibeVoice",
+  ]
+  static let tensorRuntimeTargets: Set<String> =
+    voiceRuntimeTargets.union(["SilliesTextInference", "SilliesSearchInference"])
+
   static let imports: [String: Set<String>] = [
     "VaultScaleBenchmark": ["Foundation", "SilliesCore", "SilliesPersistence", "SilliesVault"],
     "MemorySearchBenchmark": [
@@ -37,7 +43,7 @@ struct ArchitecturePolicy {
     "SilliesSpeechWhisper": [
       "Foundation", "NaturalLanguage", "CoreML", "WhisperKit", "SilliesSpeech",
     ],
-    "SilliesSpeechParakeet": ["Foundation", "FluidAudio", "SilliesSpeech"],
+    "SilliesSpeechParakeet": ["Foundation", "CoreML", "FluidAudio", "SilliesSpeech"],
     "SilliesSpeechNemotron": [
       "Foundation", "AVFoundation", "CoreML", "FluidAudio", "SilliesSpeech",
     ],
@@ -65,12 +71,16 @@ struct ArchitecturePolicy {
     ],
     "SilliesTTS": ["Foundation", "SilliesCore", "SilliesModelStore", "SilliesInference"],
     "SilliesFishSpeech": ["Foundation", "MLX", "Tokenizers", "SilliesTTS"],
+    "CWoofArchive": [],
+    "SilliesWoofSpeech": ["Foundation", "CWoofArchive", "MLX", "SilliesTTS"],
+    "SilliesVibeVoice": ["Foundation", "MLX", "Tokenizers", "SilliesTTS"],
     "SilliesVoicePlayback": [
       "Foundation", "AVFoundation", "AudioToolbox", "Synchronization", "SilliesTTS", "SilliesCore",
     ],
     "SilliesTTSInference": [
       "Foundation", "Darwin", "Synchronization", "FluidAudio", "TTSKit", "SilliesTTS",
-      "SilliesInference", "SilliesModelStore", "SilliesFishSpeech",
+      "SilliesInference", "SilliesModelStore", "SilliesFishSpeech", "SilliesWoofSpeech",
+      "SilliesVibeVoice",
     ],
     "SilliesTextModels": [
       "Foundation", "Darwin", "SilliesCore", "SilliesModelStore", "SilliesInference",

@@ -52,6 +52,15 @@ or runtime-specific discovery; discovery must not install assets or prepare a re
 cancellation before preparation or discovery starts. The registry selects the provider and owns leases;
 it does not call a particular provider's discovery implementation directly.
 
+Preparation waiters must cancel without awaiting an uncooperative native load. The registry keeps
+one pending native load per identity until it returns, rejects duplicate retries during cancellation,
+and discards cancelled results. Apple Speech can still prepare while a downloaded model is loading.
+Talk reports speech preparation separately from microphone setup and bounds startup to 45 seconds;
+late success must never reopen a stopped microphone. Use the startup/cancellation regressions and
+the opt-in `downloadedConversationStartupReachesListeningAndReleasesAdmission` check with
+`SILLIES_CONVERSATION_STARTUP_CHECK=1` and `SILLIES_STT_STORE` pointing to a verified local installation.
+That check exercises the actual Parakeet warmup chain with a fake microphone and no room capture.
+
 Speaker detection is a separate capability with `DiarizationProvider` and `PreparedDiarizationModel`.
 Do not imply an STT engine identifies speakers just because its transcript has source labels.
 

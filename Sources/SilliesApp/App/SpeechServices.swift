@@ -111,8 +111,10 @@ final class SpeechServices {
   func conversationCaptureFactory(reference: VoicePlaybackReference) -> ConversationCaptureFactory {
     { [dictationRuntime, vocabulary, diagnostics] configuration, update in
       let selected = configuration.model
+      let operation = UUID()
       diagnostics.record(
-        .init(.recognition, .modelSelected).using(model: selected.id, provider: selected.providerID)
+        .init(.recognition, .modelSelected, operation: operation)
+          .using(model: selected.id, provider: selected.providerID)
       )
       let dictionary = vocabulary.snapshot()
       var configuration = configuration
@@ -122,8 +124,19 @@ final class SpeechServices {
         configuration: configuration, reference: reference,
         speech: .init(
           warm: {
-            try await InferenceActivity.shared.prepareSpeechRuntime {
-              try await dictationRuntime.prepare(model: model)
+            diagnostics.record(.init(.recognition, .started, operation: operation))
+            do {
+              try await InferenceActivity.shared.prepareSpeechRuntime {
+                try await dictationRuntime.prepare(model: model)
+              }
+              diagnostics.record(.init(.recognition, .completed, operation: operation))
+            } catch {
+              diagnostics.record(
+                .init(
+                  .recognition, error is CancellationError ? .cancelled : .failed,
+                  operation: operation
+                ).failing(error))
+              throw error
             }
           },
           makeChannel: { language, output, failure in

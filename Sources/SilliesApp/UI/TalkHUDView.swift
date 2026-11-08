@@ -5,6 +5,7 @@ import SwiftUI
 struct TalkHUDView: View {
   private static let contentWidth: CGFloat = 206
   private static let noticePadding: CGFloat = 16
+  private static let attributionSpacing: CGFloat = 4
   private static let noticeSize = CGSize(width: 320, height: 200)
   @Environment(\.silliesTheme) private var theme
   let model: ChatSession
@@ -17,6 +18,17 @@ struct TalkHUDView: View {
   }
 
   var body: some View {
+    VStack(alignment: .leading, spacing: Self.attributionSpacing) {
+      controls
+      if let attribution = model.voiceAttribution {
+        ModelAttributionLink(attribution: attribution)
+          .frame(maxWidth: Self.contentWidth, alignment: .leading)
+          .fixedSize(horizontal: false, vertical: true)
+      }
+    }.padding(SessionHUDMetrics.contentInset)
+  }
+
+  private var controls: some View {
     HStack(spacing: SessionHUDMetrics.spacing) {
       SessionAudioIndicator(level: model.audioLevel, isCapturing: model.isVoiceConversationActive)
       SessionHUDLabel(
@@ -36,7 +48,6 @@ struct TalkHUDView: View {
         width: Self.contentWidth
           + (notice == nil ? 0 : SessionHUDMetrics.controlSize + SessionHUDMetrics.spacing)
       )
-      .padding(SessionHUDMetrics.contentInset)
   }
 
   private var noticeButton: some View {

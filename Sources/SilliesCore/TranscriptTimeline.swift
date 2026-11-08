@@ -55,7 +55,11 @@ public struct TranscriptTimeline: Sendable {
     let ordered = entries.sorted(by: TranscriptSourceTimeline.Entry.chronologicalOrder)
     for entry in ordered.reversed() {
       let count = min(remaining, entry.characterCount)
-      fragments.append(entry.renderedText.suffix(count))
+      // Whole passages already have a cached character count; only the boundary needs truncation.
+      let visibleText =
+        count == entry.characterCount
+        ? entry.renderedText[...] : entry.renderedText.suffix(count)
+      fragments.append(visibleText)
       remaining -= count
       if remaining <= 0 { break }
       remaining -= 1

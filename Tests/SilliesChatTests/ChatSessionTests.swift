@@ -31,16 +31,21 @@ private actor VoiceProbe: ChatSpeechOutput {
   var requests: [ChatSpeechRequest] = []
   let fails: Bool
   let unavailableMessage: String?
-  init(fails: Bool = false, unavailableMessage: String? = nil) {
+  let attribution: ModelAttribution?
+  init(fails: Bool = false, unavailableMessage: String? = nil, attribution: ModelAttribution? = nil)
+  {
     self.fails = fails
     self.unavailableMessage = unavailableMessage
+    self.attribution = attribution
   }
   func availabilityNotice(language: String) async -> String? { unavailableMessage }
+  func modelAttribution() async -> ModelAttribution? { attribution }
   func speak(
     _ request: ChatSpeechRequest, receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void
   ) async throws -> String? {
     requests.append(request)
     if fails { throw TTSError.invalidAudio }
+    receive(.attribution(attribution))
     receive(.speaking(level: 0.5))
     receive(.milestone(.audibleOutput(ProcessInfo.processInfo.systemUptime)))
     receive(.finished)
@@ -56,10 +61,17 @@ private final class CaptureProbe: ConversationCapture, Sendable {
   let started = Mutex(0)
   let stopped = Mutex(0)
   let update: @Sendable (AudioCaptureUpdate) -> Void
-  init(update: @escaping @Sendable (AudioCaptureUpdate) -> Void) { self.update = update }
+  private let startupUpdate: AudioCaptureUpdate
+  init(
+    update: @escaping @Sendable (AudioCaptureUpdate) -> Void,
+    startupUpdate: AudioCaptureUpdate = .capturing("Listening")
+  ) {
+    self.update = update
+    self.startupUpdate = startupUpdate
+  }
   func start() {
     started.withLock { $0 += 1 }
-    update(.capturing("Listening"))
+    update(startupUpdate)
   }
   func finishTurn(completion: @escaping @Sendable (AudioCaptureResult) -> Void) {
     completion(takeResult())
@@ -111,6 +123,37 @@ private final class FinalizingCaptureProbe: ConversationCapture, Sendable {
 }
 
 private enum FinishTiming: CaseIterable { case listening, finalizing }
+
+@Test @MainActor func chatReportsTheActualVoicePreparationStageAndRecoversFromStartupFailure()
+  async throws
+{
+  let captured = Mutex<CaptureProbe?>(nil)
+  let chat = session(
+    reply: ReplyProbe(), voice: VoiceProbe(),
+    capture: { _, update in
+      let probe = CaptureProbe(update: update, startupUpdate: .preparing("Preparing recognition"))
+      probe.words.withLock { $0 = "" }
+      captured.withLock { $0 = probe }
+      return probe
+    })
+  chat.startListening()
+  try await waitFor { chat.status == "Preparing recognition" }
+  #expect(chat.phase == .preparingMicrophone)
+  let probe = try #require(captured.withLock { $0 })
+  probe.update(.preparing("Opening microphone"))
+  try await waitFor { chat.status == "Opening microphone" }
+  let failure = SessionFailure(category: .transcription, message: "Model startup timed out")
+  probe.update(.failed(failure))
+  try await waitFor { chat.phase == .ready }
+  #expect(chat.failure == failure)
+  #expect(chat.recoverySettingsDestination == .recognition)
+  #expect(!chat.isVoiceConversationActive)
+  #expect(probe.stopped.withLock { $0 } == 1)
+  probe.update(.capturing("Late native callback"))
+  try await Task.sleep(for: .milliseconds(10))
+  #expect(chat.phase == .ready)
+  #expect(chat.canCompose)
+}
 
 @Test(arguments: FinishTiming.allCases) @MainActor
 private func chatFinishPreservesFinalWordsBeforeSaving(_ timing: FinishTiming) async throws {
@@ -177,6 +220,22 @@ private func chatFinishPreservesFinalWordsBeforeSaving(_ timing: FinishTiming) a
   chat.showChat()
   await chat.refreshAvailability()
   #expect(chat.notice == nil)
+  chat.finish {}
+}
+
+@Test @MainActor func chatShowsTheSelectedVoiceCreditWithoutStartingPlayback() async throws {
+  let attribution = ModelAttribution(
+    text: "Voice by Underdog Woof", url: try #require(URL(string: "https://underdog.ai")))
+  let voice = VoiceProbe(attribution: attribution)
+  let chat = session(reply: ReplyProbe(), voice: voice)
+  await chat.refreshAvailability()
+  #expect(chat.voiceAttribution == attribution)
+  #expect(await voice.requests.isEmpty)
+  chat.draft = "Hello"
+  chat.send()
+  try await waitFor { chat.phase == .ready && chat.messages.count == 2 }
+  #expect(chat.voiceAttribution == attribution)
+  #expect(await voice.requests.count == 1)
   chat.finish {}
 }
 

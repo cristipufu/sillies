@@ -180,6 +180,9 @@
       "downloadedSpeechModelsKeepAllInteractionPathsWithinBudget()": "gui"
     }
   },
+  "ConversationStartupIntegrationTests.swift": {
+    "default": "headless"
+  },
   "MeetingEchoIntegrationTests.swift": {
     "default": "gui"
   },

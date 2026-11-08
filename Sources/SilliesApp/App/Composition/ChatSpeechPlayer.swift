@@ -47,6 +47,13 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
     } catch { return error.localizedDescription }
   }
 
+  func modelAttribution() async -> ModelAttribution? {
+    do { return try await models.selectedModel()?.model.attribution } catch {
+      // Availability owns the visible error; missing catalog metadata never starts playback.
+      return nil
+    }
+  }
+
   func speak(
     _ request: ChatSpeechRequest,
     receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void
@@ -119,6 +126,7 @@ actor ChatSpeechPlayer: ChatSpeechOutput {
       .init(.synthesis, .modelSelected, operation: request.id)
         .using(model: manifest.model.id, provider: manifest.model.providerID))
     let language = request.profile.languageIdentifier
+    receive(.attribution(manifest.model.attribution))
     guard manifest.model.supports(language: language) else {
       return
         String(

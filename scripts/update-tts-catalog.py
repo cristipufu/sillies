@@ -27,6 +27,12 @@ QWEN_VOICES = ["ryan", "aiden", "ono-anna", "sohee", "eric", "dylan", "serena", 
 QWEN_LANGUAGES = ["en", "zh", "ja", "ko", "de", "fr", "ru", "pt", "es", "it"]
 FISH_REPO = "mlx-community/fish-audio-s2-pro-8bit"
 FISH_REVISION = "c8d4481b3f7cbfe64d855c8b7cda7739502fc3ff"
+WOOF_REPO = "ConwayResearch/Underdog-Woof"
+WOOF_REVISION = "be702960539777fc3f698e54335276a8391b00f9"
+VIBEVOICE_REPO = "mlx-community/VibeVoice-Realtime-0.5B-8bit"
+VIBEVOICE_REVISION = "ae6a233e1b2d6d5e2315e7030581323cc8191bb3"
+VIBEVOICE_TOKENIZER_REVISION = "060db6499f32faf8b98477b0a26969ef7d8b9987"
+VIBEVOICE_VOICES = ["en-Carter_man", "en-Davis_man", "en-Emma_woman", "en-Frank_man", "en-Grace_woman", "en-Mike_man"]
 FISH_LANGUAGES = ["en", "ro", "ja", "zh", "ko", "es", "pt", "ar", "ru", "fr", "de", "sv", "it", "tr", "no", "nl", "cy", "eu", "ca", "da", "gl", "ta", "hu", "fi", "pl", "et", "hi", "la", "ur", "th", "vi", "jv", "bn", "yo", "cs", "sw", "nn", "he", "ms", "uk", "id", "kk", "bg", "lv", "my", "tl", "sk", "ne", "fa", "af", "el", "bo", "hr", "sn", "mi", "yi", "am", "be", "km", "is", "az", "sd", "br", "sq", "ps", "mn", "ht", "ml", "sr", "sa", "te", "ka", "bs", "pa", "lt", "kn", "si", "hy", "mr", "as", "gu", "fo"]
 
 
@@ -116,8 +122,40 @@ def fish():
     return manifest(dict(id="fish-s2-pro-8bit", providerID="fish-speech", family="Fish", runtimeVariant="s2-pro-8bit", name="Fish S2 Pro", detail="Multilingual speech with an automatic voice that can vary between replies. Slower first audio; requires more memory.", revision=FISH_REVISION, license="Fish Audio Research License (non-commercial)", sourceURL="https://huggingface.co/fishaudio/s2-pro", minimumMemoryGB=24, languages=FISH_LANGUAGES, voices=[dict(id="automatic", name="Automatic voice", languages=FISH_LANGUAGES)], streamsAudio=True, outputSampleRate=44100), parts)
 
 
+def woof():
+    required = {"woof_int8.npz", "LICENSE", "NOTICE"}
+    parts = [component(WOOF_REPO, WOOF_REVISION, "", "", lambda path: path in required)]
+    return manifest(dict(
+        id="woof-two-voices-int8", providerID="woof", family="Woof",
+        runtimeVariant="two-voices-int8", name="Woof",
+        detail="Two English voices, Juno and Mira, in a compact download. Native streaming inference.",
+        revision=WOOF_REVISION, license="Underdog Non-Commercial 1.0",
+        sourceURL=f"https://huggingface.co/{WOOF_REPO}", minimumMemoryGB=8,
+        languages=["en"], voices=voices(["juno", "mira"], ["en"]),
+        streamsAudio=True, outputSampleRate=24000,
+        attribution=dict(text="Voice by Underdog Woof", url="https://underdog.ai")), parts)
+
+
+def vibevoice():
+    required = {"config.json", "model.safetensors"}
+    required.update(f"voices/{voice}.safetensors" for voice in VIBEVOICE_VOICES)
+    parts = [
+        component(VIBEVOICE_REPO, VIBEVOICE_REVISION, "", "", lambda path: path in required),
+        component("Qwen/Qwen2.5-0.5B", VIBEVOICE_TOKENIZER_REVISION, "", "tokenizer",
+                  lambda path: path in {"config.json", "tokenizer.json", "tokenizer_config.json", "LICENSE"}),
+    ]
+    presets = [dict(id=voice, name=voice.removeprefix("en-").split("_")[0], languages=["en"]) for voice in VIBEVOICE_VOICES]
+    return manifest(dict(
+        id="vibevoice-realtime-0.5b-8bit", providerID="vibevoice", family="VibeVoice",
+        runtimeVariant="realtime-0.5b-8bit", name="VibeVoice Realtime 0.5B",
+        detail="Streaming English speech with six voices. Native inference with 8-bit weights.",
+        revision=VIBEVOICE_REVISION, license="MIT; tokenizer Apache 2.0",
+        sourceURL="https://huggingface.co/microsoft/VibeVoice-Realtime-0.5B", minimumMemoryGB=8,
+        languages=["en"], voices=presets, streamsAudio=True, outputSampleRate=24000), parts)
+
+
 if __name__ == "__main__":
-    models = [kokoro(), pocket(), qwen("0.6b"), qwen("1.7b"), fish()]
+    models = [kokoro(), pocket(), qwen("0.6b"), qwen("1.7b"), fish(), woof(), vibevoice()]
     destination = ROOT / "Sources/SilliesModelStore/Resources/tts-models.json"
     destination.write_text(json.dumps(dict(manifests=models), ensure_ascii=False, indent=2) + "\n")
     for item in models:

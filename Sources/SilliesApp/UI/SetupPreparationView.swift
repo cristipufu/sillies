@@ -125,6 +125,9 @@ struct SetupPreparationView: View {
         Label("Voice preview complete", systemImage: "checkmark.circle")
           .font(.caption).foregroundStyle(theme.success)
       }
+      if let attribution = model.audio.voiceAttribution {
+        ModelAttributionLink(attribution: attribution)
+      }
       if let failure = model.audio.failure {
         SessionWarningNotice(message: failure) {}
       }

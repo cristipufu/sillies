@@ -41,7 +41,7 @@ actor SpeechRuntimeRegistry {
   private let diarizationProviders: [String: any DiarizationProvider]
   private var catalog: SpeechModelCatalog?
   private weak var loaded: Runtime?
-  private struct Identity: Equatable {
+  private struct Identity: Hashable {
     let id: String
     let revision: String
     init(_ model: SpeechModelDescriptor) {
@@ -52,11 +52,12 @@ actor SpeechRuntimeRegistry {
   private var loadedIdentity: Identity?
   private var validating = false
   private struct Preparation {
-    let identity: Identity
-    let task: Task<Runtime, Error>
-    var waiters: Set<UUID>
+    let task: Task<Void, Never>
+    var waiters: [UUID: CheckedContinuation<Runtime, Error>]
   }
-  private var preparation: Preparation?
+  // At most one downloaded runtime and an independent Apple fallback may load together.
+  // A cancelled native load keeps its slot until it returns, preventing duplicate compiles.
+  private var preparations: [Identity: Preparation] = [:]
 
   init(
     store: ModelStore, providers: [any SpeechProvider],
@@ -104,7 +105,7 @@ actor SpeechRuntimeRegistry {
   }
 
   func validateAndActivate(_ candidate: SpeechModelManifest) async throws {
-    guard preparation == nil, !validating else { throw ModelStoreError.busy }
+    guard preparations.isEmpty, !validating else { throw ModelStoreError.busy }
     validating = true
     defer { validating = false }
     let baseline = try modelCatalog().manifest(for: candidate.model.id)
@@ -168,10 +169,13 @@ actor SpeechRuntimeRegistry {
     let identity = Identity(manifest?.model ?? .apple)
     if loadedIdentity == identity, let loaded { return loaded }
     let token = UUID()
-    let task = try startPreparation(manifest, waiter: token)
     return try await withTaskCancellationHandler {
-      defer { releaseWaiter(token) }
-      let runtime = try await task.value
+      try Task.checkCancellation()
+      let runtime = try await withCheckedThrowingContinuation { continuation in
+        do { try startPreparation(manifest, waiter: token, continuation: continuation) } catch {
+          continuation.resume(throwing: error)
+        }
+      }
       try Task.checkCancellation()
       return runtime
     } onCancel: {
@@ -179,48 +183,48 @@ actor SpeechRuntimeRegistry {
     }
   }
 
-  private func startPreparation(_ manifest: SpeechModelManifest?, waiter: UUID) throws -> Task<
-    Runtime, Error
-  > {
+  private func startPreparation(
+    _ manifest: SpeechModelManifest?, waiter: UUID,
+    continuation: CheckedContinuation<Runtime, Error>
+  ) throws {
     let identity = Identity(manifest?.model ?? .apple)
-    // Native speech must remain usable while a downloaded model specializes.
-    if preparation != nil || validating, preparation?.identity != identity, manifest == nil {
-      guard let provider = providers[SpeechModelDescriptor.apple.providerID] else {
-        throw ModelStoreError.unknownModel
-      }
-      return Task(priority: .utility) {
-        Runtime(model: try await provider.prepare(.init(model: .apple, directory: nil)), lease: nil)
-      }
+    if var preparation = preparations[identity] {
+      guard !preparation.task.isCancelled else { throw ModelStoreError.busy }
+      preparation.waiters[waiter] = continuation
+      preparations[identity] = preparation
+      return
     }
-    guard !validating else { throw ModelStoreError.busy }
-    if var preparation {
-      guard preparation.identity == identity else { throw ModelStoreError.busy }
-      preparation.waiters.insert(waiter)
-      self.preparation = preparation
-      return preparation.task
+    // Native speech remains usable while a downloaded model specializes or is validated.
+    guard manifest == nil || (preparations.isEmpty && !validating) else {
+      throw ModelStoreError.busy
     }
-    let store = store
     let task = Task(priority: .utility) {
-      defer { preparation = nil }
-      let lease: InstalledModelLease?
-      let descriptor: SpeechModelDescriptor
-      if let manifest {
-        descriptor = manifest.model
-        lease = try await store.acquire(manifest)
-      } else {
-        descriptor = .apple
-        lease = nil
+      do {
+        let runtime = try await loadRuntime(manifest)
+        try Task.checkCancellation()
+        completePreparation(identity, result: .success(runtime))
+      } catch {
+        completePreparation(identity, result: .failure(error))
       }
-      let request = SpeechPreparation(model: descriptor, directory: lease?.directory)
-      let engine = try await prepareEngine(request)
-      try Task.checkCancellation()
-      let runtime = Runtime(engine: engine, lease: lease)
+    }
+    preparations[identity] = Preparation(task: task, waiters: [waiter: continuation])
+  }
+
+  private func loadRuntime(_ manifest: SpeechModelManifest?) async throws -> Runtime {
+    let lease: InstalledModelLease?
+    if let manifest { lease = try await store.acquire(manifest) } else { lease = nil }
+    try Task.checkCancellation()
+    let request = SpeechPreparation(model: manifest?.model ?? .apple, directory: lease?.directory)
+    return Runtime(engine: try await prepareEngine(request), lease: lease)
+  }
+
+  private func completePreparation(_ identity: Identity, result: Result<Runtime, Error>) {
+    guard let preparation = preparations.removeValue(forKey: identity) else { return }
+    if !preparation.waiters.isEmpty, case .success(let runtime) = result {
       loaded = runtime
       loadedIdentity = identity
-      return runtime
     }
-    preparation = Preparation(identity: identity, task: task, waiters: [waiter])
-    return task
+    for waiter in preparation.waiters.values { waiter.resume(with: result) }
   }
 
   private func prepareEngine(_ request: SpeechPreparation) async throws -> Runtime.Engine {
@@ -237,11 +241,24 @@ actor SpeechRuntimeRegistry {
   }
 
   private func releaseWaiter(_ token: UUID) {
-    guard preparation?.waiters.remove(token) != nil else { return }
-    if preparation?.waiters.isEmpty == true { preparation?.task.cancel() }
+    for identity in Array(preparations.keys) {
+      guard let waiter = preparations[identity]?.waiters.removeValue(forKey: token) else {
+        continue
+      }
+      waiter.resume(throwing: CancellationError())
+      if preparations[identity]?.waiters.isEmpty == true { preparations[identity]?.task.cancel() }
+      return
+    }
   }
 
-  func cancelPreparation() { preparation?.task.cancel() }
+  func cancelPreparation() {
+    for identity in Array(preparations.keys) {
+      guard let preparation = preparations[identity] else { continue }
+      preparation.task.cancel()
+      preparations[identity]?.waiters.removeAll()
+      for waiter in preparation.waiters.values { waiter.resume(throwing: CancellationError()) }
+    }
+  }
 
   private func checkHardware(_ model: SpeechModelDescriptor) throws {
     #if !arch(arm64)

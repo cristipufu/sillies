@@ -24,6 +24,7 @@ package struct ChatSpeechRequest: Sendable {
 /// Returns a text-only explanation when no installed voice supports the conversation.
 package protocol ChatSpeechOutput: Sendable {
   func availabilityNotice(language: String) async -> String?
+  func modelAttribution() async -> ModelAttribution?
   func speak(
     _ request: ChatSpeechRequest,
     receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void
@@ -54,6 +55,7 @@ extension ChatSpeechOutput {
     return nil
   }
   package func availabilityNotice(language: String) async -> String? { nil }
+  package func modelAttribution() async -> ModelAttribution? { nil }
 }
 
 package struct ChatServices: Sendable {

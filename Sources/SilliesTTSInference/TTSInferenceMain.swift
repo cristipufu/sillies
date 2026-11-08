@@ -27,7 +27,9 @@ import SilliesTTS
         fputs("TTS GPU self-test failed: \(error.localizedDescription)\n", stderr)
         exit(EXIT_FAILURE)
       }
-      print("Native TTS helper and GPU: available (Kokoro, Pocket TTS, Qwen3-TTS, Fish S2 Pro)")
+      print(
+        "Native TTS helper and GPU: available (Kokoro, Pocket TTS, Qwen3-TTS, Fish S2 Pro, Woof, VibeVoice)"
+      )
       return
     }
     // Vendor diagnostics may write to stdout. Reserve a private descriptor for framed messages.
@@ -42,6 +44,8 @@ import SilliesTTS
       "pocket-tts": { try await PocketTTSModel(configuration: $0) },
       "qwen3-tts": { try await QwenTTSModel(configuration: $0) },
       "fish-speech": { try FishTTSModel(configuration: $0) },
+      "woof": { try WoofTTSModel(configuration: $0) },
+      "vibevoice": { try VibeVoiceTTSModel(configuration: $0) },
     ])
     while true {
       let request: TTSInferenceCommand

@@ -13,6 +13,9 @@ inference SDK. Recognition, reasoning, synthesis, playback, and artwork have sep
    codec, and voice resource. Each artifact needs an immutable revision, size, and SHA-256 digest.
 3. Set truthful language, memory, voice, and streaming capabilities. Do not advertise fixed voices
    for a model that generates a different voice on each request.
+   If the license requires visible attribution, supply the optional `attribution` text and HTTPS URL.
+   Settings, setup previews, Chat and Talk render that same metadata. A credit arriving or clearing
+   during a turn must invalidate the Talk bubble's measured size without resetting the conversation.
 4. Validate a complete installation with networking denied. SDKs must not silently download missing
    support files during generation. Downloading and selecting remain separate user actions.
 5. Run short real-audio checks in the languages you intend to support. Check intelligibility,
@@ -143,6 +146,43 @@ The implementation was informed by Fish Audio's published architecture and the M
 reference. Attribution and the separate model terms are in [third-party notices](../../THIRD_PARTY_NOTICES.md).
 The conversion is downloaded as data; it does not execute code from the model repository.
 
+## Native Woof and VibeVoice implementations
+
+`SilliesWoofSpeech` reads Underdog's numeric NPZ archive using a bounded ZIP/NPY reader and the
+system zlib. It never extracts files or accepts pickled objects. Typed parameter records separate
+the archive's positional representation from inference. Speech generation, flow sampling, streaming
+attention, causal convolutions, decoding and text preparation have separate owners. The two English
+voices reuse model state; decoder history resets for every bounded text chunk and on cancellation.
+The frontend normalizes common typographic punctuation and splits at word/sentence boundaries; it
+does not include the publisher's full number/pronunciation rewriting frontend.
+
+`SilliesVibeVoice` implements the realtime 0.5B architecture with a four-layer text stack, a
+twenty-layer speech stack, five-step guided diffusion and a causal audio decoder. The five-step,
+guidance-1.5 profile follows Microsoft's realtime demo. The downloaded 8-bit conversion and voice
+caches are safe tensor data. The native runtime does not execute model-repository code or deserialize
+Python objects. Immutable voice prompts seed fresh per-utterance attention caches. Token counts,
+generated audio duration, tensor shapes and supported configuration fields are bounded before use.
+
+Both runtimes stay behind `NativeTTSModel` in the helper. The application keeps the same model
+registry, admission, cancellation, acknowledgements and playback interfaces. They use no Python,
+community TTS runtime dependency, server, or microphone during synthesis.
+
+Opt-in numerical checks use downloaded weights and checked-in, independently generated reference
+fixtures with model/source revisions and SHA-256 provenance. They do not require Python:
+
+```sh
+SILLIES_WOOF_MODEL=/path/to/woof \
+SILLIES_VIBEVOICE_MODEL=/path/to/vibevoice \
+  bash scripts/test.sh --filter 'Sillies(WoofSpeech|VibeVoice)Tests'
+```
+
+Woof checks both voices on CPU and GPU against the published NumPy runtime with seed zero.
+VibeVoice compares text/speech hidden states, fixed-noise diffusion and three consecutive decoder
+frames with Microsoft's PyTorch implementation, plus a complete seeded utterance and its stopping
+frame. The scheduler and streaming convolution fixtures
+also run without downloaded weights. Cancellation checks must generate another valid utterance
+after stopping; non-silent output alone does not establish intelligibility.
+
 ## Checks
 
 Run headless `make check BUILD_DIR=/tmp/sillies-check` and relevant cancellation/race checks.
@@ -152,7 +192,7 @@ death alone terminates the helper. Thread Sanitizer runs Swift Testing in two di
 bundles, then XCTest and the audio signal matrices separately. Each run has a 90-second execution
 watchdog; compilation is outside those deadlines. The groups retain all selected tests and each run
 verifies completion receipts against discovery.
-The app, capture, admission, process transport, and playback tests remain instrumented. Fish's GPU
+The app, capture, admission, process transport, and playback tests remain instrumented. The Fish, Woof and VibeVoice GPU
 numerical suite runs in normal `make check` and the real-model checks: MLX's own
 [build configuration](https://github.com/ml-explore/mlx/blob/main/CMakeLists.txt) rejects Thread
 Sanitizer on macOS. Instrumenting its Metal completion bridge produces a vendor-level diagnostic even

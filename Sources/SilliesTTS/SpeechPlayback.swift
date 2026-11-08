@@ -1,4 +1,5 @@
 import Foundation
+import SilliesCore
 
 package enum SpeechDeliveryMilestone: Sendable {
   case phraseReady, preparationStarted, voicePrepared, firstPCM
@@ -6,6 +7,7 @@ package enum SpeechDeliveryMilestone: Sendable {
 }
 
 package enum SpeechPlaybackUpdate: Sendable {
+  case attribution(ModelAttribution?)
   case speaking(level: Double)
   case finished
   case interrupted

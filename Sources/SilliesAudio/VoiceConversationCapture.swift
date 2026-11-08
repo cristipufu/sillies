@@ -8,6 +8,7 @@ package final class VoiceConversationCapture: ConversationCapture {
   struct Resources: Sendable {
     let audio: AudioCaptureDependencies
     let warmSpeech: @Sendable () async throws -> Void
+    var startupTimeout: TimeInterval = 45
   }
   private static let preRollFrames = 40
   private static let publicationInterval: TimeInterval = 0.1
@@ -31,15 +32,24 @@ package final class VoiceConversationCapture: ConversationCapture {
     var stoppingSequence: Int?
     var failure: SessionFailure?
     var startTime: TimeInterval?
+    var startupStage: VoiceCaptureStartupStage?
+    var startupDeadline: DispatchWorkItem?
     var stopDeadline: DispatchWorkItem?
     var microphoneStopped = false
     var finishWaiters: [@Sendable (AudioCaptureResult) -> Void] = []
     var finalResult: AudioCaptureResult?
+
+    func endStartup() {
+      startupStage = nil
+      startupDeadline?.cancel()
+      startupDeadline = nil
+    }
   }
   private let configuration: AudioCaptureConfiguration
   private let reference: VoicePlaybackReference
   private let dependencies: AudioCaptureDependencies
   private let warmSpeech: @Sendable () async throws -> Void
+  private let startupTimeout: TimeInterval
   private let update: @Sendable (AudioCaptureUpdate) -> Void
   private let input: AudioCaptureInputQueue
   private let storage: SerialQueueStorage<State>
@@ -64,6 +74,7 @@ package final class VoiceConversationCapture: ConversationCapture {
     let dependencies = resources.audio
     self.dependencies = dependencies
     warmSpeech = resources.warmSpeech
+    startupTimeout = resources.startupTimeout
     self.update = update
     input = AudioCaptureInputQueue(queue: dependencies.queue)
     storage = SerialQueueStorage(queue: dependencies.queue, makeValue: State.init)
@@ -81,7 +92,7 @@ package final class VoiceConversationCapture: ConversationCapture {
             { [weak self] packet in
               self?.enqueue(packet)
             }, { [weak self] failure in self?.report(failure) })
-          update(.preparing(String(localized: "Getting voice conversation ready…")))
+          beginStartup(state)
           startMicrophone()
         } catch { report(SessionFailure(error, category: .audioProcessing)) }
       }
@@ -92,18 +103,53 @@ package final class VoiceConversationCapture: ConversationCapture {
     guard let microphone = storage.withValue({ $0.stopped ? nil : $0.microphone }) else { return }
     preparation.launch { [weak self, warmSpeech] in
       do {
-        try await warmSpeech()
         try Task.checkCancellation()
+        do { try await warmSpeech() } catch {
+          throw SessionFailure(error, category: .transcription)
+        }
+        try Task.checkCancellation()
+        self?.dependencies.queue.async { [weak self] in
+          self?.prepareMicrophone()
+        }
         let label = try await microphone.start()
         try Task.checkCancellation()
         self?.dependencies.queue.async { [weak self] in
-          guard let self, !self.storage.withValue({ $0.stopped }) else { return }
-          self.update(.capturing(label))
+          self?.completeStartup(label)
         }
       } catch {
         if !Task.isCancelled { self?.report(SessionFailure(error, category: .captureUnavailable)) }
       }
     }
+  }
+
+  private func prepareMicrophone() {
+    storage.withValue { state in
+      guard !state.stopped, state.startupStage != nil else { return }
+      state.startupStage = .microphone
+      update(.preparing(VoiceCaptureStartupStage.microphone.status))
+    }
+  }
+
+  private func completeStartup(_ label: String) {
+    storage.withValue { state in
+      guard !state.stopped, state.startupStage != nil else { return }
+      state.endStartup()
+      update(.capturing(label))
+    }
+  }
+
+  private func beginStartup(_ state: State) {
+    state.startupStage = .speech
+    update(.preparing(VoiceCaptureStartupStage.speech.status))
+    let deadline = DispatchWorkItem { [weak self] in
+      self?.storage.withValue { state in
+        guard !state.stopped, let stage = state.startupStage else { return }
+        state.endStartup()
+        self?.report(stage.timeoutFailure)
+      }
+    }
+    state.startupDeadline = deadline
+    dependencies.queue.asyncAfter(deadline: .now() + startupTimeout, execute: deadline)
   }
 
   private func enqueue(_ packet: AudioCaptureInputQueue.Packet) {
@@ -242,6 +288,7 @@ package final class VoiceConversationCapture: ConversationCapture {
           return
         }
         state.stopped = true
+        state.endStartup()
         reference.stop()
         flushPendingAudio(state)
         state.processor = nil

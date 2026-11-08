@@ -22,7 +22,7 @@ package actor InferenceActivity {
   private let overlapBudget: UInt64
   private let residency: InferenceModelResidency
   private var synthesisWaiter: CheckedContinuation<Void, Never>?
-  private var speechWaiters: [CheckedContinuation<Void, Never>] = []
+  private var speechWaiters: [UUID: CheckedContinuation<Void, Never>] = [:]
   private var idleWaiters: [UUID: CheckedContinuation<Void, any Error>] = [:]
 
   package init(
@@ -122,6 +122,7 @@ package actor InferenceActivity {
   package func forgetVoiceModel(_ id: UUID) async { await residency.forget(.voice, id: id) }
 
   package func prepareSpeechRuntime(_ prepare: @Sendable () async throws -> Void) async throws {
+    try Task.checkCancellation()
     await beginSpeech()
     defer { endSpeech() }
     try Task.checkCancellation()
@@ -134,7 +135,13 @@ package actor InferenceActivity {
     preempt(synthesis, because: .recognitionPriority)
     preempt(embedding, because: .recognitionPriority)
     guard text != nil || synthesis != nil || embedding != nil else { return }
-    await withCheckedContinuation { speechWaiters.append($0) }
+    let id = UUID()
+    await withTaskCancellationHandler {
+      guard !Task.isCancelled else { return }
+      await withCheckedContinuation { speechWaiters[id] = $0 }
+    } onCancel: {
+      Task { await self.cancelSpeechWaiter(id) }
+    }
   }
 
   package func endSpeech() {
@@ -266,9 +273,13 @@ package actor InferenceActivity {
 
   private func resumeSpeechWaiters() {
     guard text == nil, synthesis == nil, embedding == nil else { return }
-    let waiters = speechWaiters
+    let waiters = speechWaiters.values
     speechWaiters.removeAll()
     for waiter in waiters { waiter.resume() }
+  }
+
+  private func cancelSpeechWaiter(_ id: UUID) {
+    speechWaiters.removeValue(forKey: id)?.resume()
   }
 
   private func resumeIdleWaiters() {

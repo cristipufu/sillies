@@ -2059,6 +2059,224 @@
           "sha256": "b8d149343ae425b0da67e6708686aceb51be7815d9792f265fc12ff04d5e9856"
         }
       ]
+    },
+    {
+      "model": {
+        "id": "woof-two-voices-int8",
+        "providerID": "woof",
+        "family": "Woof",
+        "runtimeVariant": "two-voices-int8",
+        "name": "Woof",
+        "detail": "Two English voices, Juno and Mira, in a compact download. Native streaming inference.",
+        "revision": "be702960539777fc3f698e54335276a8391b00f9",
+        "license": "Underdog Non-Commercial 1.0",
+        "sourceURL": "https://huggingface.co/ConwayResearch/Underdog-Woof",
+        "minimumMemoryGB": 8,
+        "languages": [
+          "en"
+        ],
+        "voices": [
+          {
+            "id": "juno",
+            "name": "Juno",
+            "languages": [
+              "en"
+            ]
+          },
+          {
+            "id": "mira",
+            "name": "Mira",
+            "languages": [
+              "en"
+            ]
+          }
+        ],
+        "streamsAudio": true,
+        "outputSampleRate": 24000,
+        "attribution": {
+          "text": "Voice by Underdog Woof",
+          "url": "https://underdog.ai"
+        }
+      },
+      "components": [
+        {
+          "directory": "",
+          "repository": "ConwayResearch/Underdog-Woof",
+          "revision": "be702960539777fc3f698e54335276a8391b00f9",
+          "sourceDirectory": ""
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "LICENSE",
+          "url": "https://huggingface.co/ConwayResearch/Underdog-Woof/resolve/be702960539777fc3f698e54335276a8391b00f9/LICENSE",
+          "byteCount": 7612,
+          "sha256": "784c4a353d15f370ff387f74bde64f50a2041df9c6f2338c3d8a2f781b944de5"
+        },
+        {
+          "path": "NOTICE",
+          "url": "https://huggingface.co/ConwayResearch/Underdog-Woof/resolve/be702960539777fc3f698e54335276a8391b00f9/NOTICE",
+          "byteCount": 919,
+          "sha256": "0849de251c109869d24f8a0b520260afa10594334ae3d0c06b75e68be1e2c623"
+        },
+        {
+          "path": "woof_int8.npz",
+          "url": "https://huggingface.co/ConwayResearch/Underdog-Woof/resolve/be702960539777fc3f698e54335276a8391b00f9/woof_int8.npz",
+          "byteCount": 40595426,
+          "sha256": "d895fbbe84b8f4f461e3e94ab48b1164353b1988ce8d365f5aa8263d0de1203e"
+        }
+      ]
+    },
+    {
+      "model": {
+        "id": "vibevoice-realtime-0.5b-8bit",
+        "providerID": "vibevoice",
+        "family": "VibeVoice",
+        "runtimeVariant": "realtime-0.5b-8bit",
+        "name": "VibeVoice Realtime 0.5B",
+        "detail": "Streaming English speech with six voices. Native inference with 8-bit weights.",
+        "revision": "ae6a233e1b2d6d5e2315e7030581323cc8191bb3",
+        "license": "MIT; tokenizer Apache 2.0",
+        "sourceURL": "https://huggingface.co/microsoft/VibeVoice-Realtime-0.5B",
+        "minimumMemoryGB": 8,
+        "languages": [
+          "en"
+        ],
+        "voices": [
+          {
+            "id": "en-Carter_man",
+            "name": "Carter",
+            "languages": [
+              "en"
+            ]
+          },
+          {
+            "id": "en-Davis_man",
+            "name": "Davis",
+            "languages": [
+              "en"
+            ]
+          },
+          {
+            "id": "en-Emma_woman",
+            "name": "Emma",
+            "languages": [
+              "en"
+            ]
+          },
+          {
+            "id": "en-Frank_man",
+            "name": "Frank",
+            "languages": [
+              "en"
+            ]
+          },
+          {
+            "id": "en-Grace_woman",
+            "name": "Grace",
+            "languages": [
+              "en"
+            ]
+          },
+          {
+            "id": "en-Mike_man",
+            "name": "Mike",
+            "languages": [
+              "en"
+            ]
+          }
+        ],
+        "streamsAudio": true,
+        "outputSampleRate": 24000
+      },
+      "components": [
+        {
+          "directory": "",
+          "repository": "mlx-community/VibeVoice-Realtime-0.5B-8bit",
+          "revision": "ae6a233e1b2d6d5e2315e7030581323cc8191bb3",
+          "sourceDirectory": ""
+        },
+        {
+          "directory": "tokenizer",
+          "repository": "Qwen/Qwen2.5-0.5B",
+          "revision": "060db6499f32faf8b98477b0a26969ef7d8b9987",
+          "sourceDirectory": ""
+        }
+      ],
+      "artifacts": [
+        {
+          "path": "config.json",
+          "url": "https://huggingface.co/mlx-community/VibeVoice-Realtime-0.5B-8bit/resolve/ae6a233e1b2d6d5e2315e7030581323cc8191bb3/config.json",
+          "byteCount": 2655,
+          "sha256": "b3d8168bca540f8458c46b355f112cd2d311d8e5ebe983a77b83301cd625d05a"
+        },
+        {
+          "path": "model.safetensors",
+          "url": "https://huggingface.co/mlx-community/VibeVoice-Realtime-0.5B-8bit/resolve/ae6a233e1b2d6d5e2315e7030581323cc8191bb3/model.safetensors",
+          "byteCount": 1120555546,
+          "sha256": "cf6fef128bade2f818ca2cff8168749407297a02d0d2fa9e2905181df42fa22b"
+        },
+        {
+          "path": "tokenizer/LICENSE",
+          "url": "https://huggingface.co/Qwen/Qwen2.5-0.5B/resolve/060db6499f32faf8b98477b0a26969ef7d8b9987/LICENSE",
+          "byteCount": 11343,
+          "sha256": "832dd9e00a68dd83b3c3fb9f5588dad7dcf337a0db50f7d9483f310cd292e92e"
+        },
+        {
+          "path": "tokenizer/config.json",
+          "url": "https://huggingface.co/Qwen/Qwen2.5-0.5B/resolve/060db6499f32faf8b98477b0a26969ef7d8b9987/config.json",
+          "byteCount": 681,
+          "sha256": "479dcf0c5286339e41ad3992cd08ae88a467c4187587936248e2b7c96283484b"
+        },
+        {
+          "path": "tokenizer/tokenizer.json",
+          "url": "https://huggingface.co/Qwen/Qwen2.5-0.5B/resolve/060db6499f32faf8b98477b0a26969ef7d8b9987/tokenizer.json",
+          "byteCount": 7031645,
+          "sha256": "c0382117ea329cdf097041132f6d735924b697924d6f6fc3945713e96ce87539"
+        },
+        {
+          "path": "tokenizer/tokenizer_config.json",
+          "url": "https://huggingface.co/Qwen/Qwen2.5-0.5B/resolve/060db6499f32faf8b98477b0a26969ef7d8b9987/tokenizer_config.json",
+          "byteCount": 7228,
+          "sha256": "c91efca15ceff6e9ee9424db58a6f59cd41294e550a86cbd07e3c1fb500b34f9"
+        },
+        {
+          "path": "voices/en-Carter_man.safetensors",
+          "url": "https://huggingface.co/mlx-community/VibeVoice-Realtime-0.5B-8bit/resolve/ae6a233e1b2d6d5e2315e7030581323cc8191bb3/voices/en-Carter_man.safetensors",
+          "byteCount": 4241352,
+          "sha256": "1b3efb89bc26bc14d86095da9b26b0aaf5989e8ed75e39efa958088bf301160c"
+        },
+        {
+          "path": "voices/en-Davis_man.safetensors",
+          "url": "https://huggingface.co/mlx-community/VibeVoice-Realtime-0.5B-8bit/resolve/ae6a233e1b2d6d5e2315e7030581323cc8191bb3/voices/en-Davis_man.safetensors",
+          "byteCount": 2456752,
+          "sha256": "6d689ac3f6f630fd1617814a15ab165544772a208ce305d3779feb08f033f1e0"
+        },
+        {
+          "path": "voices/en-Emma_woman.safetensors",
+          "url": "https://huggingface.co/mlx-community/VibeVoice-Realtime-0.5B-8bit/resolve/ae6a233e1b2d6d5e2315e7030581323cc8191bb3/voices/en-Emma_woman.safetensors",
+          "byteCount": 3328696,
+          "sha256": "8572620ccf3384529c8fce7b211871482cfa1fc8e3068f80576b7ea15257e819"
+        },
+        {
+          "path": "voices/en-Frank_man.safetensors",
+          "url": "https://huggingface.co/mlx-community/VibeVoice-Realtime-0.5B-8bit/resolve/ae6a233e1b2d6d5e2315e7030581323cc8191bb3/voices/en-Frank_man.safetensors",
+          "byteCount": 3345080,
+          "sha256": "869af2fd5e83b3f70cdc23b28fdc1ef82c11e7122c387adb8bc56902b323efb2"
+        },
+        {
+          "path": "voices/en-Grace_woman.safetensors",
+          "url": "https://huggingface.co/mlx-community/VibeVoice-Realtime-0.5B-8bit/resolve/ae6a233e1b2d6d5e2315e7030581323cc8191bb3/voices/en-Grace_woman.safetensors",
+          "byteCount": 2758064,
+          "sha256": "7b0cb4438eb8a2cc0d45eb8c4d724d27fb459f999a8ea0bf9ab221e67cb92ba6"
+        },
+        {
+          "path": "voices/en-Mike_man.safetensors",
+          "url": "https://huggingface.co/mlx-community/VibeVoice-Realtime-0.5B-8bit/resolve/ae6a233e1b2d6d5e2315e7030581323cc8191bb3/voices/en-Mike_man.safetensors",
+          "byteCount": 1993376,
+          "sha256": "10524823aa1f90cd4cec05828f16d20d090d83ac3eb682646aa43e45c1f9dc0a"
+        }
+      ]
     }
   ]
 }

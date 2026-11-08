@@ -64,6 +64,9 @@ struct VoiceModelSettingsView: View {
         .font(.caption).foregroundStyle(theme.secondary)
       }
       Text(manifest.model.license).font(.caption).foregroundStyle(theme.secondary)
+      if let attribution = manifest.model.attribution {
+        ModelAttributionLink(attribution: attribution)
+      }
 
       if !model.supports(manifest) {
         Label("This Mac has less memory than this model requires.", systemImage: "memorychip").font(

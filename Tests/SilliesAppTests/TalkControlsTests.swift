@@ -217,14 +217,16 @@ import Testing
   return view is ChatComposerTextView || view.subviews.contains { containsComposer($0) }
 }
 
-@MainActor private func makeTalkSession(captures: TalkControlCaptureFactory) -> ChatSession {
+@MainActor private func makeTalkSession(
+  captures: TalkControlCaptureFactory, voice: any ChatSpeechOutput = TalkControlVoice()
+) -> ChatSession {
   ChatSession(
     companionName: "Mochi",
     profile: .init(personality: "Warm and playful", languageIdentifier: "en"),
     services: .init(
       captureFactory: { _, update in captures.make(update: update) },
       loadLanguages: { .init(languages: [.init(id: "en-US", name: "English", isInstalled: true)]) },
-      conversation: TalkControlReply(), speech: TalkControlVoice(),
+      conversation: TalkControlReply(), speech: voice,
       deliver: { MainRunLoopDelivery.perform($0) }, history: .transient), companionID: "mochi")
 }
 
@@ -272,6 +274,58 @@ private struct TalkControlVoice: ChatSpeechOutput {
   func stop(id: UUID) async {}
   func pause(id: UUID) async {}
   func resume(id: UUID) async {}
+}
+
+private actor AttributedTalkVoice: ChatSpeechOutput {
+  var attribution: ModelAttribution?
+  func select(_ attribution: ModelAttribution?) { self.attribution = attribution }
+  func modelAttribution() async -> ModelAttribution? { attribution }
+  func speak(
+    _ request: ChatSpeechRequest, receive: @escaping @Sendable (SpeechPlaybackUpdate) -> Void
+  ) async throws -> String? {
+    receive(.attribution(attribution))
+    return nil
+  }
+  func stop(id: UUID) async {}
+  func pause(id: UUID) async {}
+  func resume(id: UUID) async {}
+}
+
+@Test @MainActor func talkBubbleRemeasuresWhenVoiceCreditArrivesAndClears() async throws {
+  let captures = TalkControlCaptureFactory()
+  let voice = AttributedTalkVoice()
+  let session = makeTalkSession(captures: captures, voice: voice)
+  await session.startTalk()
+  try await talkControlWait { session.phase == .listening }
+  let hud = CompanionHUDController(appearance: ThemeEnvironment())
+  defer {
+    hud.close()
+    session.finish {}
+  }
+  hud.model.conversation = session
+  let state = CompanionBindingState.active(target: nil, skill: .chat, startedAt: 0)
+  let anchor = CompanionSpeechBubbleLayout.Anchor(
+    companionPoint: CGPoint(x: 300, y: 400), characterSize: 84,
+    visibleFrame: CGRect(x: 0, y: 0, width: 1200, height: 900))
+  hud.prepare(state: state, anchor: anchor)
+  let initial = try #require(hud.currentPanelSize)
+  let device = try #require(captures.current.withLock { $0 })
+  let credit = ModelAttribution(
+    text: "Voice by Underdog Woof", url: try #require(URL(string: "https://underdog.ai")))
+  for (turn, selected) in [Optional(credit), nil].enumerated() {
+    await voice.select(selected)
+    device.words.withLock { $0 = "Hello again" }
+    session.finishListening()
+    try await talkControlWait {
+      session.messages.count == (turn + 1) * 2 && session.phase == .listening
+    }
+    #expect(session.voiceAttribution == selected)
+    hud.prepare(state: state, anchor: anchor)
+    let size = try #require(hud.currentPanelSize)
+    #expect(selected == nil ? size == initial : size.height > initial.height)
+    #expect(hud.layoutMeasurements == turn + 2)
+    #expect(!hud.isVisible)
+  }
 }
 
 private final class TalkControlCaptureFactory: Sendable {

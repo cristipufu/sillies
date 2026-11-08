@@ -5,7 +5,7 @@ import SilliesModelStore
 import SilliesTTS
 import Testing
 
-@Test(arguments: ["kokoro", "pocket-tts", "qwen3-tts", "fish-speech"])
+@Test(arguments: ["kokoro", "pocket-tts", "qwen3-tts", "fish-speech", "woof", "vibevoice"])
 func voicePreparationReusesTheInstalledRuntimeAcrossTurns(providerID: String) async throws {
   let fixture = try VoiceRegistryFixture(providerID: providerID)
   defer { fixture.remove() }

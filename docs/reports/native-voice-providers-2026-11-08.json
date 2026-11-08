@@ -1,0 +1,427 @@
+{
+  "date": "2026-11-08",
+  "baseCommit": "750a086a9c4ca8a30d01cd272d48e69e936e40f2",
+  "hardware": "Apple M4 Pro, 48 GB",
+  "macOS": "26.7.2",
+  "build": "release",
+  "delivery": "silent unpaced sink; no audio device or microphone",
+  "network": "denied during synthesis and recognition",
+  "latencyDefinition": "Time from synthesis request to first PCM callback, including leading silence; not audible device latency",
+  "recognizer": "Parakeet Ultra 95eaa59a39d4394f047a4dc5cce480388a60d1b6",
+  "qualification": [
+    {
+      "model": "woof-two-voices-int8",
+      "voice": "juno",
+      "case": "question",
+      "expected": "What would you like to talk about today?",
+      "transcript": "What would you like to talk about today?",
+      "wordsMatchIgnoringPunctuation": true,
+      "wavSHA256": "ab81a1a2b40977c719baec58630ae617ff4a6448a6e8b9d8ade2d58daaa822af"
+    },
+    {
+      "model": "woof-two-voices-int8",
+      "voice": "juno",
+      "case": "reply",
+      "expected": "I found the notes from your meeting. We can review the decisions together, or look for a saved link.",
+      "transcript": "I found the notes from your meeting. We can review the decisions together, or look for a saved link.",
+      "wordsMatchIgnoringPunctuation": true,
+      "wavSHA256": "760a572b78a20000368e08f3c5e3d97ed277505d7839cca1d90a4eb8aab32520"
+    },
+    {
+      "model": "woof-two-voices-int8",
+      "voice": "mira",
+      "case": "question",
+      "expected": "What would you like to talk about today?",
+      "transcript": "What would you like to talk about today?",
+      "wordsMatchIgnoringPunctuation": true,
+      "wavSHA256": "97f4a9b2603e738aa42d9fc4ed69365f5e09273220f604560b2888d19065756a"
+    },
+    {
+      "model": "woof-two-voices-int8",
+      "voice": "mira",
+      "case": "reply",
+      "expected": "I found the notes from your meeting. We can review the decisions together, or look for a saved link.",
+      "transcript": "I found the notes from your meeting. We can review the decisions together, or look for a saved link.",
+      "wordsMatchIgnoringPunctuation": true,
+      "wavSHA256": "9dc069cff7d0b268a38e7eb3189602d535961ef4801f9641db6a3ce4e2844fa9"
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "voice": "en-Carter_man",
+      "case": "question",
+      "expected": "What would you like to talk about today?",
+      "transcript": "What would you like to talk about today?",
+      "wordsMatchIgnoringPunctuation": true,
+      "wavSHA256": "8d67efb3f386c81872e119b1b6585d68b848636729cd4cdec29df7eebb726c19"
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "voice": "en-Carter_man",
+      "case": "reply",
+      "expected": "I found the notes from your meeting. We can review the decisions together, or look for a saved link.",
+      "transcript": "I found the notes from your meeting. We can review the decisions together or look for a saved link.",
+      "wordsMatchIgnoringPunctuation": true,
+      "wavSHA256": "d260d93b881fcff4f55443121e3a22a9c7d54b542ac1101f4295a887e69e5981"
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "voice": "en-Davis_man",
+      "case": "question",
+      "expected": "What would you like to talk about today?",
+      "transcript": "What would you like to talk about today?",
+      "wordsMatchIgnoringPunctuation": true,
+      "wavSHA256": "afa605654df860b06a7283e24269c6ccb88a65cca84a46680bee74b654192e7c"
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "voice": "en-Davis_man",
+      "case": "reply",
+      "expected": "I found the notes from your meeting. We can review the decisions together, or look for a saved link.",
+      "transcript": "I found the notes from your meeting. We can review the decisions together or look for a saved link.",
+      "wordsMatchIgnoringPunctuation": true,
+      "wavSHA256": "55bedc19113f2484b50cdc7cae268fc5283b3aae3dfba55e409505f82d3ba2b5"
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "voice": "en-Emma_woman",
+      "case": "question",
+      "expected": "What would you like to talk about today?",
+      "transcript": "What would you like to talk about today?",
+      "wordsMatchIgnoringPunctuation": true,
+      "wavSHA256": "12be3b9620b6eceb1b34aa10f3cccbe604a41a6ef0a571cb233e856d72679667"
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "voice": "en-Emma_woman",
+      "case": "reply",
+      "expected": "I found the notes from your meeting. We can review the decisions together, or look for a saved link.",
+      "transcript": "I found the notes from your meeting. We can review the decisions together, or look for a saved link.",
+      "wordsMatchIgnoringPunctuation": true,
+      "wavSHA256": "83a8ace11a4170cf39b7558c49229617c40b5a6762da6514b1e780abf0d67155"
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "voice": "en-Frank_man",
+      "case": "question",
+      "expected": "What would you like to talk about today?",
+      "transcript": "What would you like to talk about today?",
+      "wordsMatchIgnoringPunctuation": true,
+      "wavSHA256": "2670b4d2b1002376a7e8419fa73a40711c09f75821de5a3cff4c19ee71447122"
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "voice": "en-Frank_man",
+      "case": "reply",
+      "expected": "I found the notes from your meeting. We can review the decisions together, or look for a saved link.",
+      "transcript": "I found the notes from your meeting. We can review the decisions together or look for a saved link.",
+      "wordsMatchIgnoringPunctuation": true,
+      "wavSHA256": "e34b7b199a5a81c4bcf6d522db3aacdaeddc998442708b4eb2bf75440a71ab8f"
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "voice": "en-Grace_woman",
+      "case": "question",
+      "expected": "What would you like to talk about today?",
+      "transcript": "What would you like to talk about today?",
+      "wordsMatchIgnoringPunctuation": true,
+      "wavSHA256": "453f97e691dad58a3a20148e8ff77541b0fc01119d2cac54c44b07fe79661157"
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "voice": "en-Grace_woman",
+      "case": "reply",
+      "expected": "I found the notes from your meeting. We can review the decisions together, or look for a saved link.",
+      "transcript": "I found the notes from your meeting. We can review the decisions together or look for a saved link.",
+      "wordsMatchIgnoringPunctuation": true,
+      "wavSHA256": "ff2352f13413353a729965a448a11298cccd79196f39459cc1b9bc98c887085c"
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "voice": "en-Mike_man",
+      "case": "question",
+      "expected": "What would you like to talk about today?",
+      "transcript": "What would you like to talk about today?",
+      "wordsMatchIgnoringPunctuation": true,
+      "wavSHA256": "38f414050a234b2e9353e7ce5b29981b7b7fce1e6aea218464ecf001229b18b5"
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "voice": "en-Mike_man",
+      "case": "reply",
+      "expected": "I found the notes from your meeting. We can review the decisions together, or look for a saved link.",
+      "transcript": "I found the notes from your meeting. We can review the decisions together or look for a saved link.",
+      "wordsMatchIgnoringPunctuation": true,
+      "wavSHA256": "8990905ce6c03deafebfcd014ed97a0e3a0ac3cd2cd6d1e7fa044fcd0c61cb18"
+    }
+  ],
+  "latency": [
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "trial": 1,
+      "state": "cold",
+      "firstPCMSeconds": 2.805305833,
+      "audioSeconds": 2.933333333333333,
+      "synthesisSeconds": 6.926897708,
+      "transcript": "Hello, I am your little window companion.",
+      "wavSHA256": "b8db08ff905c07c367ceab27c56637b1108b68e32d4269baffdc068db9e3aa19"
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "trial": 1,
+      "state": "prepared",
+      "firstPCMSeconds": 0.2459495,
+      "audioSeconds": 2.533333333333333,
+      "synthesisSeconds": 3.23066875,
+      "transcript": "Hello. I am your little window companion.",
+      "wavSHA256": "664cbe1854068af0b12ceb91ac53e3f50ed847c035e565f6ff61f1b0da1b18b4"
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "trial": 1,
+      "state": "reused",
+      "firstPCMSeconds": 0.190411833,
+      "audioSeconds": 3.066666666666667,
+      "synthesisSeconds": 3.534854125,
+      "transcript": "Hello, I am your little window companion.",
+      "wavSHA256": "57ac07d6d73bf2e5816974e53f68d5e95e68a3c55e7baa78eb1865aa0be31f11"
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "trial": 2,
+      "state": "cold",
+      "firstPCMSeconds": 2.066552042,
+      "audioSeconds": 3.2,
+      "synthesisSeconds": 5.619286791,
+      "transcript": "Hello. I am your little window companion.",
+      "wavSHA256": "2352c599ca95cce30a88add75c69aee33e3909de25b8088ae92850940ba461c9"
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "trial": 2,
+      "state": "prepared",
+      "firstPCMSeconds": 0.3050995,
+      "audioSeconds": 2.8,
+      "synthesisSeconds": 3.257158,
+      "transcript": "Hello, I am your little window companion.",
+      "wavSHA256": "8cc2d8d1cf5f135c594e9dce4943a687bd53569c5a0f8e9a153cc569f92b8bdf"
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "trial": 2,
+      "state": "reused",
+      "firstPCMSeconds": 0.095217833,
+      "audioSeconds": 2.8,
+      "synthesisSeconds": 3.026495084,
+      "transcript": "Hello, I am your little window companion.",
+      "wavSHA256": "4c1093e90b5a84102dcd7fb70c6e375e57f4d5c77709b74342c25f11f3a8dda0"
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "trial": 3,
+      "state": "cold",
+      "firstPCMSeconds": 2.03470575,
+      "audioSeconds": 2.8,
+      "synthesisSeconds": 4.553190417,
+      "transcript": "Hello, I am your little window companion.",
+      "wavSHA256": "1d1648defbc5e31d6dc6bcc0b09910889711c35725e5e04dbd7eb01ebb1c9e31"
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "trial": 3,
+      "state": "prepared",
+      "firstPCMSeconds": 0.194239041,
+      "audioSeconds": 3.2,
+      "synthesisSeconds": 3.035703167,
+      "transcript": "Hello, I'm your little window companion.",
+      "wavSHA256": "0c70d8f402e38c265dbc8642173dd59dd146857708dba5eeafffe432068207e6"
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "trial": 3,
+      "state": "reused",
+      "firstPCMSeconds": 0.073540166,
+      "audioSeconds": 3.7333333333333334,
+      "synthesisSeconds": 2.626660166,
+      "transcript": "Hello, I am your little window companion.",
+      "wavSHA256": "b8e308b09094b84caeef43c34188b0d77fea7d4743fe3719a7735c2bc3a12a5e"
+    },
+    {
+      "model": "woof-two-voices-int8",
+      "trial": 1,
+      "state": "cold",
+      "firstPCMSeconds": 0.33080175,
+      "audioSeconds": 2.88,
+      "synthesisSeconds": 1.890592541,
+      "transcript": "Hello, I am your little window companion.",
+      "wavSHA256": "c83e5e45c7cf80073a9a47de06fde5a41991bc5b7740ce446f9f28160e2efa81"
+    },
+    {
+      "model": "woof-two-voices-int8",
+      "trial": 1,
+      "state": "prepared",
+      "firstPCMSeconds": 0.068703292,
+      "audioSeconds": 2.92,
+      "synthesisSeconds": 1.7541965,
+      "transcript": "Hello, I am your little window companion.",
+      "wavSHA256": "099583ea997304239e247f38ef8d2d40b43077670dde96be0d294c3a011fd0dc"
+    },
+    {
+      "model": "woof-two-voices-int8",
+      "trial": 1,
+      "state": "reused",
+      "firstPCMSeconds": 0.04423425,
+      "audioSeconds": 2.92,
+      "synthesisSeconds": 1.6698745,
+      "transcript": "Hello, I am your little window companion.",
+      "wavSHA256": "99f1b7765b3bd795844ee98d6d8f4a0cd9d93fecb7fa4399a45714d44f47d90d"
+    },
+    {
+      "model": "woof-two-voices-int8",
+      "trial": 2,
+      "state": "cold",
+      "firstPCMSeconds": 0.275028791,
+      "audioSeconds": 2.88,
+      "synthesisSeconds": 3.3487225,
+      "transcript": "Hello, I am your little window companion.",
+      "wavSHA256": "a2268b595f8e229c8dd8513c0aff1646aed23c94bd600e4ef31bf0b4d7d744c6"
+    },
+    {
+      "model": "woof-two-voices-int8",
+      "trial": 2,
+      "state": "prepared",
+      "firstPCMSeconds": 0.131458459,
+      "audioSeconds": 2.88,
+      "synthesisSeconds": 3.807235708,
+      "transcript": "Hello, I am your little window companion.",
+      "wavSHA256": "d076d9d5267de5615d8d9b9d875272185506978746b10b0a574845e0954cf2cf"
+    },
+    {
+      "model": "woof-two-voices-int8",
+      "trial": 2,
+      "state": "reused",
+      "firstPCMSeconds": 0.033687709,
+      "audioSeconds": 2.88,
+      "synthesisSeconds": 2.000484958,
+      "transcript": "Hello, I am your little window companion.",
+      "wavSHA256": "1c0247add394f471cf8544e8bcce84c899af8ed07add5b3f3b13050f36f3286b"
+    },
+    {
+      "model": "woof-two-voices-int8",
+      "trial": 3,
+      "state": "cold",
+      "firstPCMSeconds": 0.491595375,
+      "audioSeconds": 2.88,
+      "synthesisSeconds": 1.865524417,
+      "transcript": "Hello, I am your little window companion.",
+      "wavSHA256": "56c2e0b0e372ff9cef6e41d8e25a0fb6732b6a50133dd036a5f6f41c48933764"
+    },
+    {
+      "model": "woof-two-voices-int8",
+      "trial": 3,
+      "state": "prepared",
+      "firstPCMSeconds": 0.056348291,
+      "audioSeconds": 2.84,
+      "synthesisSeconds": 1.84281875,
+      "transcript": "Hello, I am your little window companion.",
+      "wavSHA256": "ac79a3fee4f122d981b4c628a4c90c6310d02682ca3cfaf1a5bb7bfe9a4daf4a"
+    },
+    {
+      "model": "woof-two-voices-int8",
+      "trial": 3,
+      "state": "reused",
+      "firstPCMSeconds": 0.042754042,
+      "audioSeconds": 2.96,
+      "synthesisSeconds": 1.783716666,
+      "transcript": "Hello, I am your little window companion.",
+      "wavSHA256": "8c88f4b9c7ecbc7b766f698a1fa9cdf2e110d6e1cf7fd8233c7a96fb9fd166a0"
+    }
+  ],
+  "exceptions": [
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "voice": "en-Emma_woman",
+      "case": "question",
+      "status": "Initial provider process exceeded 45 seconds; first retry completed in 9.855 seconds. Eight subsequent direct-helper traced repetitions all finished. Original cause remains unresolved."
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-4bit",
+      "status": "Rejected candidate: one of six controlled seeds returned only Hello in recognition; independent reference replay had identical sample count and relative RMS error 0.000208177. Two earlier latency samples also omitted the main sentence."
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "status": "Controlled six-seed comparison preserved the main sentence six times; recognition omitted Hello in two. This is not a claim of perfect speech generation."
+    },
+    {
+      "model": "vibevoice-realtime-0.5b-8bit",
+      "status": "Packaged debug recovery exceeded 75 seconds. Packaged release recovery and voice-switch checks passed without a code/deadline change. First packaged release Emma synthesis delivered PCM after 14.176895 seconds, completing in 18.474148 seconds. The cause of cold-start variance is not established."
+    }
+  ],
+  "repositoryValidation": {
+    "command": "make check",
+    "selectedTests": 1100,
+    "receipts": [
+      "run-j8sqdd0q",
+      "run-iug0b_b_",
+      "run-x9hn0sza",
+      "run-nk54p_pu"
+    ],
+    "visibleGUI": "not run",
+    "humanListening": "not run"
+  },
+  "packagedReleaseValidation": [
+    {
+      "name": "packaged-release-emma-probe",
+      "exitCode": 0,
+      "elapsedSeconds": 18.727109082974494
+    },
+    {
+      "name": "packaged-release-woof-two-voices-int8-recovery",
+      "exitCode": 0,
+      "elapsedSeconds": 8.150826207944192
+    },
+    {
+      "name": "packaged-release-woof-two-voices-int8-voices",
+      "exitCode": 0,
+      "elapsedSeconds": 6.870602250099182
+    },
+    {
+      "name": "packaged-release-vibevoice-realtime-0.5b-8bit-recovery",
+      "exitCode": 0,
+      "elapsedSeconds": 9.521628583897837
+    },
+    {
+      "name": "packaged-release-vibevoice-realtime-0.5b-8bit-voices",
+      "exitCode": 0,
+      "elapsedSeconds": 8.374513457994908
+    }
+  ],
+  "packagedReleaseEmmaProbe": {
+    "attempt": 0,
+    "status": {
+      "finished": {}
+    },
+    "samples": 60800,
+    "elapsed": 18.47414804098662,
+    "chunks": [
+      14.1768949580146,
+      15.224489583051763,
+      15.343214082997292,
+      15.471084207994863,
+      15.588581458083354,
+      15.75490741606336,
+      15.941899499972351,
+      16.099439540994354,
+      16.252801666036248,
+      16.505808833055198,
+      16.65976283303462,
+      16.815078458050266,
+      16.964003624976613,
+      17.13710854097735,
+      17.44733429106418,
+      17.58267545804847,
+      17.785644541028887,
+      17.907324915984645,
+      18.296033916063607
+    ]
+  }
+}

@@ -21,7 +21,7 @@ PACKAGES = {
     "argmax-oss-swift": PackageNotices("argmax-oss-swift", "WhisperKit recognition and TTSKit speech synthesis", ("LICENSE", "NOTICES")),
     "eventsource": PackageNotices("EventSource", "Transitive Hugging Face dependency; no cloud inference is enabled", ("LICENSE.md",)),
     "fluidaudio": PackageNotices("FluidAudio", "Parakeet/Nemotron recognition, speaker detection, and Core ML speech synthesis", ("LICENSE", "ThirdPartyLicenses/fastcluster-LICENSE.md", "ThirdPartyLicenses/vbx-LICENSE.md", "ThirdPartyLicenses/JapaneseG2P-LICENSE.md", "ThirdPartyLicenses/LuxTtsEnglishG2P-LICENSE.md", "ThirdPartyLicenses/KokoroAneSpanishFrenchG2P-LICENSE.md", "ThirdPartyLicenses/KokoroANE-v3/conversion-LICENSE", "ThirdPartyLicenses/KokoroANE-v3/NOTICE", "ThirdPartyLicenses/KokoroANE-v3/mattmireles-LICENSE")),
-    "mlx-swift": PackageNotices("mlx-swift", "Native text and Fish speech inference with Metal kernels", (
+    "mlx-swift": PackageNotices("mlx-swift", "Native text and speech inference with Metal kernels", (
         "LICENSE", "ACKNOWLEDGMENTS.md", "Source/Cmlx/mlx/LICENSE", "Source/Cmlx/mlx/ACKNOWLEDGMENTS.md",
         "Source/Cmlx/mlx-c/LICENSE", "Source/Cmlx/mlx-c/ACKNOWLEDGMENTS.md", "Source/Cmlx/metal-cpp/LICENSE.txt",
         "Source/Cmlx/fmt/LICENSE", "Source/Cmlx/json/LICENSE.MIT")),
@@ -107,6 +107,14 @@ weights and does not claim authorship of them.
   requires a separate license. The original model license and Swift-reference attribution are retained below.
   Sillies implements its own native inference module using existing MLX and tokenizer dependencies.
   It does not depend on or bundle the mlx-audio-swift package.
+- **Woof:** Conway / Underdog; [Underdog Non-Commercial License 1.0](https://huggingface.co/ConwayResearch/Underdog-Woof/blob/be702960539777fc3f698e54335276a8391b00f9/LICENSE).
+  [Voice by Underdog Woof](https://underdog.ai). The optional model provides the Juno and Mira voices.
+  Sillies supplies a native Swift runtime for the published architecture and unchanged int8 archive;
+  the upstream Python runtime is not distributed. The model and generated audio are for non-commercial
+  use; commercial use requires a separate license. The original license and notices are retained below.
+- **VibeVoice Realtime 0.5B:** Microsoft; MIT. Optional 8-bit MLX data conversion and six English
+  voice presets are downloaded from mlx-community. Qwen2.5 tokenizer files use Apache 2.0.
+  The app-owned Swift runtime uses Apple MLX; no Python or community runtime package is bundled.
 
 Apple Speech and Apple Intelligence assets are managed by macOS and remain subject to Apple's terms.
 Review the upstream model cards and applicable license before redistributing weights or conversions.
@@ -226,9 +234,15 @@ def render(root):
     fish = "## Fish runtime references and model license\n\nThe Sillies Fish implementation was informed by Fish Audio's S2 Pro architecture and the MIT-licensed Swift reference at Blaizzy/mlx-audio-swift, revision d4fa7be1c2fef65ed13a4f73bd58e0a23a0ba307. Runtime code, bounds, ownership, and validation live in SilliesFishSpeech. The reference package is not a dependency.\n\n"
     fish += notice_section("Swift reference — MIT attribution", root / "Resources/Licenses/FishSwiftReference-MIT.txt")
     fish += notice_section("Fish S2 Pro — model license", root / "Resources/Licenses/FishS2Pro-Research.txt")
+    woof = "## Woof model license and attribution\n\nThe weights, voice data and decoder are supplied by Underdog. Sillies' independently written native runtime implements the published tensor format and streaming architecture without bundling a Python runtime. The optional model's use and outputs remain subject to its license.\n\n"
+    woof += notice_section("Underdog Woof — Non-Commercial License 1.0", root / "Resources/Licenses/Underdog-Woof-LICENSE.txt")
+    woof += notice_section("Underdog Woof — NOTICE", root / "Resources/Licenses/Underdog-Woof-NOTICE.txt")
+    vibe = "## VibeVoice native runtime and model license\n\nThe native runtime implements Microsoft's published realtime architecture, revision `16fb2cb1217c9934a886e1948ffb06120caa2df5`. Its DPM-Solver++ scheduler is adapted from the Apache-licensed TSAIL / Hugging Face implementation. Numerical fixtures compare the Swift stages with those reference implementations. The optional 8-bit weights and voice states are data, not executable code. Qwen2.5 tokenizer terms are included with the download.\n\n"
+    vibe += notice_section("Microsoft VibeVoice — MIT", root / "Resources/Licenses/VibeVoice-MIT.txt")
+    vibe += notice_section("DPM-Solver++ — Copyright 2024 TSAIL Team and The HuggingFace Team; Apache 2.0", root / "Resources/Licenses/VibeVoice-DPMSolver-Apache-2.0.txt")
     localization = "## Localization tooling and palette references\n\nThe JSON catalog workflow, shared interface translations, and palette conventions were adapted from [Strata Files](https://github.com/cristipufu/strata), under the MIT license. Sillies supplies its own product copy, validation, semantic roles, and native integration.\n\n"
     localization += notice_section("Strata Files — MIT attribution", root / "Resources/Licenses/Strata-Localization-MIT.txt")
-    return INTRODUCTION + model_inventory(root) + package_inventory(pins) + MAINTENANCE + package_licenses(root, pins) + audio_licenses(root) + vector_licenses(root) + fish + localization + template_licenses(root) + html_character_reference_license(root)
+    return INTRODUCTION + model_inventory(root) + package_inventory(pins) + MAINTENANCE + package_licenses(root, pins) + audio_licenses(root) + vector_licenses(root) + fish + woof + vibe + localization + template_licenses(root) + html_character_reference_license(root)
 
 
 def write_atomic(destination, content):

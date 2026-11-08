@@ -60,7 +60,7 @@ final class ChatTurnDelivery: Sendable {
       switch update {
       case .milestone(let milestone): record(milestone, in: &state.snapshot)
       case .utteranceFinished(let phrase): state.snapshot.speech.completed(phrase)
-      case .speaking, .finished, .interrupted: break
+      case .speaking, .finished, .interrupted, .attribution: break
       }
       return true
     }

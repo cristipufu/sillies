@@ -8,6 +8,7 @@ public struct TTSModelDescriptor: Codable, Equatable, Identifiable, Sendable {
   public let runtimeVariant: String
   public let name: String
   public var family: String? = nil
+  public var attribution: ModelAttribution? = nil
   public let detail: String
   public let revision: String
   public let license: String

@@ -104,8 +104,10 @@ private final class ConversationHarness: Sendable {
   let capturing = Mutex(0)
   let warmed = Mutex(0)
   let channels = Mutex(0)
+  let updates = Mutex<[AudioCaptureUpdate]>([])
   func makeCapture(
-    finishTimeout: TimeInterval = 1, warm: @escaping @Sendable () async throws -> Void = {}
+    finishTimeout: TimeInterval = 1, startupTimeout: TimeInterval = 45,
+    warm: @escaping @Sendable () async throws -> Void = {}
   ) -> VoiceConversationCapture {
     VoiceConversationCapture(
       configuration: .init(kind: .chat, target: nil, recordingURL: nil, language: fixtureEnglish),
@@ -126,8 +128,9 @@ private final class ConversationHarness: Sendable {
         warmSpeech: { [self] in
           warmed.withLock { $0 += 1 }
           try await warm()
-        }),
+        }, startupTimeout: startupTimeout),
       update: { [self] event in
+        updates.withLock { $0.append(event) }
         if case .capturing = event { capturing.withLock { $0 += 1 } }
       })
   }
@@ -150,8 +153,10 @@ private final class ConversationMicrophone: MicrophoneCapture {
   let starts = Mutex(0)
   let stops = Mutex(0)
   let failure = Mutex<AudioCaptureDependencies.Failure?>(nil)
+  let startup = Mutex<(@Sendable () async -> Void)?>(nil)
   func start() async throws -> String {
     starts.withLock { $0 += 1 }
+    if let startup = startup.withLock({ $0 }) { await startup() }
     return "Fixture microphone"
   }
   func stop(completion: @escaping @Sendable () -> Void) {
@@ -256,10 +261,81 @@ func conversationAudio(_ signal: ConversationSignal, at time: TimeInterval = 100
 
 private actor SuspendedConversationWarmup {
   private var continuation: CheckedContinuation<Void, Never>?
+  private var isComplete = false
   var hasStarted: Bool { continuation != nil }
-  func wait() async { await withCheckedContinuation { continuation = $0 } }
+  func wait() async {
+    guard !isComplete else { return }
+    await withCheckedContinuation { continuation = $0 }
+  }
   func complete() {
+    isComplete = true
     continuation?.resume()
     continuation = nil
   }
+}
+
+@Test func voiceConversationStartupDeadlineStopsUnresponsiveSpeechAndRejectsLateSuccess()
+  async throws
+{
+  let harness = ConversationHarness()
+  let warmup = SuspendedConversationWarmup()
+  let capture = harness.makeCapture(startupTimeout: 0.05, warm: { await warmup.wait() })
+  capture.start()
+  try await harness.wait { harness.microphone.stops.withLock { $0 } == 1 }
+  let result = Mutex<AudioCaptureResult?>(nil)
+  capture.finish { value in result.withLock { $0 = value } }
+  try await harness.wait { result.withLock { $0 != nil } }
+  #expect(result.withLock { $0?.failure?.category } == .transcription)
+  await warmup.complete()
+  await withCheckedContinuation { continuation in harness.queue.async { continuation.resume() } }
+  #expect(harness.microphone.starts.withLock { $0 } == 0)
+  #expect(harness.capturing.withLock { $0 } == 0)
+  let statuses = harness.updates.withLock {
+    $0.compactMap { update -> String? in
+      if case .preparing(let status) = update { return status }
+      return nil
+    }
+  }
+  #expect(statuses == [VoiceCaptureStartupStage.speech.status])
+}
+
+@Test func voiceConversationMicrophoneDeadlineUsesDeviceRecoveryAndRejectsLateStart()
+  async throws
+{
+  let harness = ConversationHarness()
+  let startup = SuspendedConversationWarmup()
+  harness.microphone.startup.withLock { $0 = { await startup.wait() } }
+  let capture = harness.makeCapture(startupTimeout: 0.05)
+  capture.start()
+  try await harness.wait { harness.microphone.stops.withLock { $0 } == 1 }
+  let result = Mutex<AudioCaptureResult?>(nil)
+  capture.finish { value in result.withLock { $0 = value } }
+  try await harness.wait { result.withLock { $0 != nil } }
+  await startup.complete()
+  #expect(result.withLock { $0?.failure?.category } == .captureUnavailable)
+  #expect(harness.microphone.starts.withLock { $0 } == 1)
+  #expect(harness.capturing.withLock { $0 } == 0)
+  let statuses = harness.updates.withLock {
+    $0.compactMap { update -> String? in
+      if case .preparing(let status) = update { return status }
+      return nil
+    }
+  }
+  #expect(
+    statuses == [
+      VoiceCaptureStartupStage.speech.status, VoiceCaptureStartupStage.microphone.status,
+    ])
+}
+
+@Test func voiceConversationSuccessfulStartupCancelsItsDeadline() async throws {
+  let harness = ConversationHarness()
+  let capture = harness.makeCapture(startupTimeout: 0.05)
+  capture.start()
+  try await harness.wait { harness.capturing.withLock { $0 } == 1 }
+  try await Task.sleep(for: .milliseconds(100))
+  #expect(harness.microphone.stops.withLock { $0 } == 0)
+  let result = Mutex<AudioCaptureResult?>(nil)
+  capture.finish { value in result.withLock { $0 = value } }
+  try await harness.wait { result.withLock { $0 != nil } }
+  #expect(result.withLock { $0?.failure } == nil)
 }

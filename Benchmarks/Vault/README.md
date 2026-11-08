@@ -107,6 +107,22 @@ check canonical vector counts and completed native checkpoints. Never terminate 
 Check cancellation/deletion/provider-switch tests alongside real embeddings; index throughput alone
 does not establish lifecycle correctness.
 
+### Fixture retention
+
+A million-record SQLite fixture can occupy about 8 GiB. Separate retention, clear, backup and restore
+experiments can accumulate many copies; APFS clones still grow as those copies are modified. Treat
+these databases and native vector indexes as disposable working data, not as the evidence archive.
+
+When a comparison finishes, retain its generator revision, input/checksum manifests, raw query results,
+scores, completion receipts and report. Then remove its generated databases, indexes, backup directories
+and restored copies after confirming that no probe uses them. Preserve frozen inputs and results kept
+beside a database. Recreate fixtures for later experiments with the commands above rather than keeping
+every historical working copy. Keep only the current app bundle and one rollback build.
+
+Measure both workspace usage and available disk space before and after cleanup: shared APFS blocks
+mean the sum of directory sizes is not the amount of physical space reclaimed. Never include the
+person's Application Support Vault or installed model stores in a build-artifact cleanup.
+
 ## Native interaction
 
 `VaultNativeInteractionTests` exercises real search-field focus, editing, reopening, resizing and

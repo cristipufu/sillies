@@ -1,0 +1,6 @@
+{
+  "Sources/SilliesPersistence/VaultDatabase+WorkspaceReads.swift": "4470a14038d9d93c91c57251d64a6e4e8d3c879b2e1f0f35ff6935b67cdd6075",
+  "Sources/SilliesPersistence/VaultTextSearchPlan.swift": "f2589c8370aa8dcb45fb1c1cf381dce1ed6fb002f07132fd0d5be8bcad607763",
+  "Sources/SilliesPersistence/VaultSearchRankBoundary.swift": "6b055fd66e356e67f4771cb60b1e8d7f34ea1805abb973b5a2e3f96db604a243",
+  "Sources/SilliesPersistence/VaultDatabase+WorkspaceExcerpts.swift": "381067489bf34501f7e7cac47e65bcc7d4b26bc050ce65c16788d7622a7c30cc"
+}

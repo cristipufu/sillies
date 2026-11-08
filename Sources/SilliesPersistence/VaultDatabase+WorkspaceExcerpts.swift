@@ -14,18 +14,17 @@ extension VaultDatabase {
     }
     let ids = matches.prefix(VaultWorkspacePage.maximumCount).map(\.blockID)
     guard let first = ids.min(), let last = ids.max() else { return [] }
-    let placeholders = Array(repeating: "(?)", count: ids.count).joined(separator: ",")
+    try prepareWorkspaceExcerptSelection(ids)
     var excerpts: [Int64: String] = [:]
-    // CROSS JOIN deliberately keeps FTS outermost so SQLite cannot restart MATCH per wanted ID.
+    // Keep one FTS cursor and an indexed membership lookup. A VALUES-only CTE makes SQLite
+    // scan every wanted ID for each matching passage when the selected blocks are far apart.
     try sql.rows(
       """
-      WITH wanted(id) AS MATERIALIZED (VALUES \(placeholders))
       SELECT \(plan.table).rowid,snippet(\(plan.table),0,'','',' … ',\(Self.workspaceExcerptTokens))
-      FROM \(plan.table) CROSS JOIN wanted ON wanted.id=\(plan.table).rowid
+      FROM \(plan.table) CROSS JOIN temp.workspace_excerpt_selection wanted ON wanted.id=\(plan.table).rowid
       WHERE \(plan.table) MATCH ? AND \(plan.table).rowid>=? AND \(plan.table).rowid<=?
       """,
-      ids.map(VaultSQLConnection.Value.integer)
-        + [.text(plan.expression), .integer(first), .integer(last)]
+      [.text(plan.expression), .integer(first), .integer(last)]
     ) { row in
       guard let id = Int64(try VaultSQLConnection.text(row)) else {
         throw CocoaError(.fileReadCorruptFile)
@@ -33,5 +32,17 @@ extension VaultDatabase {
       excerpts[id] = try VaultSQLConnection.text(row, column: 1)
     }
     return matches.map { $0.excerpt(excerpts[$0.blockID] ?? "") }
+  }
+
+  private func prepareWorkspaceExcerptSelection(_ ids: [Int64]) throws {
+    // TEMP belongs only to this serialized reader, including when the archive is read-only.
+    // Recreate after a rolled-back first read; retain no flag that can outlive the SQL schema.
+    try sql.execute(
+      "CREATE TEMP TABLE IF NOT EXISTS workspace_excerpt_selection(id INTEGER PRIMARY KEY)")
+    try sql.execute("DELETE FROM temp.workspace_excerpt_selection")
+    let placeholders = Array(repeating: "(?)", count: ids.count).joined(separator: ",")
+    try sql.execute(
+      "INSERT INTO temp.workspace_excerpt_selection VALUES \(placeholders)",
+      ids.map(VaultSQLConnection.Value.integer))
   }
 }

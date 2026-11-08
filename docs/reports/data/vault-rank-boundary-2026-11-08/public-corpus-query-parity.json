@@ -1,0 +1,149 @@
+{
+  "sqlite": "3.50.4",
+  "cases": [
+    {
+      "table": "content_search",
+      "expression": "\"study\"*",
+      "returned": 101,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_search",
+      "expression": "\"study\"",
+      "returned": 101,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_substrings",
+      "expression": "\"study\"",
+      "returned": 101,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_search",
+      "expression": "\"clinical\"*",
+      "returned": 101,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_search",
+      "expression": "\"clinical\"",
+      "returned": 101,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_substrings",
+      "expression": "\"clinical\"",
+      "returned": 101,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_search",
+      "expression": "\"cells\"*",
+      "returned": 101,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_search",
+      "expression": "\"cells\"",
+      "returned": 101,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_substrings",
+      "expression": "\"cells\"",
+      "returned": 101,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_search",
+      "expression": "\"human\"*",
+      "returned": 101,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_search",
+      "expression": "\"human\"",
+      "returned": 101,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_substrings",
+      "expression": "\"human\"",
+      "returned": 101,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_search",
+      "expression": "\"meeting\"*",
+      "returned": 23,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_search",
+      "expression": "\"meeting\"",
+      "returned": 16,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_substrings",
+      "expression": "\"meeting\"",
+      "returned": 23,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_search",
+      "expression": "\"code\"*",
+      "returned": 38,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_search",
+      "expression": "\"code\"",
+      "returned": 16,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_substrings",
+      "expression": "\"code\"",
+      "returned": 101,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_search",
+      "expression": "\"randomized\"* OR \"trial\"*",
+      "returned": 101,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_search",
+      "expression": "\"randomized trial\"",
+      "returned": 19,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_substrings",
+      "expression": "\"randomized trial\"",
+      "returned": 37,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_search",
+      "expression": "\"nonexistentquasar\"*",
+      "returned": 0,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_search",
+      "expression": "\"nonexistentquasar\"",
+      "returned": 0,
+      "exactRowsAndScores": true
+    },
+    {
+      "table": "content_substrings",
+      "expression": "\"nonexistentquasar\"",
+      "returned": 0,
+      "exactRowsAndScores": true
+    }
+  ]
+}

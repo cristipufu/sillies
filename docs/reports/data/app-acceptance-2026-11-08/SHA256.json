@@ -1,0 +1,20 @@
+{
+  "README.md": "58fcd6af280a674c7a1625ae17c19a0cf356fbcd7fe36d3a1af3f5d9269f56c8",
+  "adaptive-apple-results.jsonl": "99ad0e4806f64a3e90c935e88f8ca89c3f51f0ef027c7dcb9e96764edf84b0e0",
+  "adaptive-apple-run.json": "e944ef6cf49e6b8fc7a192e7001ecb8d98973c6b5af92eb416c51345222a2722",
+  "adaptive-apple-scores.json": "39adaa19b51f80b34821ebce40b64cf0b377f00a360e03a5101e29a7e544e7c5",
+  "adaptive-e5-results.jsonl": "9264a19af330b3b05a6147ee9709b90fdba49d78c34245d0ab6008fbf50251a1",
+  "adaptive-e5-run.json": "c4d91193c53293d8dc4b215e377ef5f53257bbad2ffefdba862bd17366bf73b9",
+  "adaptive-e5-scores.json": "0267827c4072b834b36cc8979ae1eb4828c2f75f2f98521c1f67332ec69aa742",
+  "baseline.sql": "e9415aaefb9c1c26b87319ac1008c93a72a0ba1801157553bb8b79b4543e6c2b",
+  "comparison.json": "d0e342056e50f5aa97491393635a70276c2d1c483e581b7f7affc312d59b13a0",
+  "materialized.sql": "11e31694a16a43c1f1c7a748b6d0660aa7d4ffcbfb57a169c82019b976f2ac8c",
+  "no-cleanup.sql": "c95e566b42556fb4dfb7712156da24296a64313ca6396261ef34ab2a117af10e",
+  "provenance.json": "0cb1bdaa0c5f21462f7f14289f6d65bc6dfa8631ca96ba3822c31cf9e82f5f41",
+  "sql-cleanup-experiments.jsonl": "3e3a89c7b188157040e74de54867cbcc52b334bda3abc4a556afd9590bb1171a",
+  "sql-experiments.jsonl": "b965e04f0c633badb6a1375aae5b8c7f01269d77f5d3648cbdb76ba4eb623835",
+  "sql-probe.c": "1b984686c9c944d1bd338f4436157942c256dce6742943d31c301877480c5efd",
+  "validation.json": "e7f033f817821fd0d80467e20b650a4021f78e5e3fa59d8a14bfd0895fc3eae3",
+  "vector-policy-million.jsonl": "6596b4752cb0b43a7f10b49000f764d2dfc5158f2ff495756a9715630e4bc07e",
+  "vector-policy-probe.cpp": "e245a5f350947c748e5593a75c672623eb7a95fbefb9fb10a688569684619540"
+}

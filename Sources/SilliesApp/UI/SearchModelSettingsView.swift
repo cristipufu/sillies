@@ -46,9 +46,7 @@ struct SearchModelSettingsView: View {
             isSelected: downloads.selectedModelID == manifest.modelID,
             model: manifest)
         }, content: card)
-      if let error = downloads.error {
-        Text(error).foregroundStyle(theme.secondary).textSelection(.enabled)
-      }
+      ModelCatalogNotice(model: downloads)
     }.task { await model.observeStatus() }
   }
   @ViewBuilder private var indexStatus: some View {

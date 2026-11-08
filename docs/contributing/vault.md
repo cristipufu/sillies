@@ -141,11 +141,19 @@ Word search uses Unicode tokenization; Exact text uses an additional FTS5 trigra
 least three characters, and preserves punctuation for identifiers/URLs and non-Latin substrings. Exact
 modes currently apply to saved notes and captures; Words & meaning also includes conversations.
 Date ordering uses sparse posting lists or 256-record chronological slices with stable continuation;
-Best match streams each matched block score into document grouping and ranks the full matching set.
-SQLite's unlimited subquery boundary prevents flattening from placing its FTS rank function inside
-an aggregate; it does not cap candidates or approximate keyword ranking. Visible
-excerpts are fetched as one bounded batch, never one repeated broad FTS query per row. The UI preserves the chosen date order when typing. Empty
-search slices yield and remain cancellable rather than becoming a false “no matches” result.
+Best match scores every matching block. Its first page can prune grouping using a proven boundary
+from 101 distinct eligible records found in a bounded preparation sample. The sample never caps the
+final scan. Incomplete samples and continuation pages retain full grouping; cursor filtering follows
+each record's best passage so weaker passages cannot repeat an earlier result. SQLite's unlimited
+subquery boundary prevents flattening from placing its FTS rank function inside an aggregate.
+
+Visible excerpts use one FTS cursor and a connection-local TEMP table containing at most 100 block
+IDs with integer primary-key lookup. An unindexed VALUES cross join scans all wanted IDs for every
+matching passage and becomes expensive when selected records are scattered through the archive.
+Replace the selection on each read, recreate it after rollback, and never write it into the archive.
+The UI preserves the chosen date order when typing. Empty search slices yield and remain cancellable
+rather than becoming a false “no matches” result. See the
+[ranking and preview qualification](../reports/vault-rank-boundary-2026-11-08.md).
 
 Embeddings come from the selected local provider: Apple by default, or an optional downloaded search
 model. Canonical vectors, provider identities and change cursors live in SQLite. Keyword and semantic
@@ -154,7 +162,9 @@ matches separately. Search misses never erase the keyword results.
 
 The optional native index uses exact search while its vectors fit the small-index budget. Larger
 indexes use **Faiss IVF-SQ8 with memory-mapped inverted lists**, bounded training input and two OpenMP
-workers. Maintenance runs in slices; queries never rebuild/train an index. Dirty/opening markers,
+workers. IVF queries scan every partition while encoded vector codes plus row IDs fit 32 MiB;
+larger indexes probe at most 96 partitions. This budget does not make SQ8 distances exact. The
+canonical reranking candidate limit remains 256. Maintenance runs in slices; queries never rebuild/train an index. Dirty/opening markers,
 provider epochs, change-log coverage and canonical row validation make stale or interrupted caches
 rebuildable. Deleted/provider-retired index files are removed during maintenance. Filters can use
 canonical exact ranking; semantic deadlines keep slow inference/search from delaying visible keyword
@@ -165,7 +175,9 @@ number of matching blocks. The [qualification report](../reports/vault-qualifica
 distinguishes database latency, index fidelity, actual model retrieval and passage coverage.
 The [search follow-up](../reports/vault-search-refinement-2026-11-08.md) adds provider-aware capacity
 handling, expanded multilingual evidence checks, scoped semantic retrieval and rejected exact-ranking
-experiments. Broad Best match remains the slow path at million-record scale.
+experiments. The [app acceptance follow-up](../reports/app-acceptance-2026-11-08.md) records adaptive
+small-index coverage, canonical saved-link evidence and lifecycle regressions. Broad Best match
+remains the slow path at million-record scale.
 
 ## Export and backup
 
@@ -205,6 +217,9 @@ access outside the search helper. `scripts/verify-vector-vendor.py` checks pinne
 For bounded qualification, build `VaultScaleBenchmark` in release mode. `seed` creates only synthetic
 records in the supplied directory and stops after the specified time slice; repeat until its target
 is reached. Never use your personal Vault directory.
+The probe's `loadedBodies` field comes from the library writer's metrics, not an aggregate of its
+independent readers. Use the read-only persistence regressions for the search-reader body-loading
+invariant; neither counter measures resident memory or native display latency.
 
 ```sh
 swift build -c release --product VaultScaleBenchmark

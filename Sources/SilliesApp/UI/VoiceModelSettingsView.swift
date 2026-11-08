@@ -47,9 +47,7 @@ struct VoiceModelSettingsView: View {
             isSelected: model.selectedModelID == manifest.modelID,
             model: manifest)
         }, content: card)
-      if let error = model.error {
-        Label(error, systemImage: "exclamationmark.triangle").textSelection(.enabled)
-      }
+      ModelCatalogNotice(model: model)
     }.task { await model.load() }
   }
 

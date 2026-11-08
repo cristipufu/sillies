@@ -19,6 +19,16 @@ import Testing
   cache.finishRoleRefresh(nil, for: 42, generation: try #require(stale.refresh), at: 21)
   #expect(cache.requestRole(for: 42, at: 22).snapshot == verified)
   #expect(cache.requestRole(for: 42, at: 22).refresh == nil)
+
+  let unreadable = try #require(cache.requestRole(for: 42, at: 40).refresh)
+  cache.finishRoleRefresh(
+    AccessibilityWindowRoleSnapshot(), for: 42, generation: unreadable, at: 41)
+  #expect(cache.roleSnapshot(for: 42) == verified)
+
+  // A successful empty list is evidence of closure, not an unavailable response.
+  let closed = AccessibilityWindowRoleSnapshot(hasVerifiedWindowList: true)
+  cache.storeRole(closed, for: 42, at: 42)
+  #expect(cache.roleSnapshot(for: 42) == closed)
 }
 
 @Test func candidateCacheDistinguishesMissingFromRejectedAndDoesNotExtendFrameFreshness() {

@@ -1,0 +1,52 @@
+{
+  "apple": {
+    "baseline": {
+      "queries": 433,
+      "availability": {
+        "ready": 427,
+        "unavailable": 6
+      },
+      "exactComparisonQueries": 424,
+      "meanExactTop5Overlap": 0.9924528301886792,
+      "semanticMedianMilliseconds": 17.208958,
+      "semanticP95Milliseconds": 45.239583,
+      "timedQueries": 427
+    },
+    "adaptive": {
+      "queries": 433,
+      "availability": {
+        "ready": 427,
+        "unavailable": 6
+      },
+      "exactComparisonQueries": 424,
+      "meanExactTop5Overlap": 1.0,
+      "semanticMedianMilliseconds": 18.624167,
+      "semanticP95Milliseconds": 44.608374999999995,
+      "timedQueries": 427
+    }
+  },
+  "e5": {
+    "baseline": {
+      "queries": 433,
+      "availability": {
+        "ready": 433
+      },
+      "exactComparisonQueries": 430,
+      "meanExactTop5Overlap": 0.9683720930232558,
+      "semanticMedianMilliseconds": 12.271875,
+      "semanticP95Milliseconds": 25.00925,
+      "timedQueries": 433
+    },
+    "adaptive": {
+      "queries": 433,
+      "availability": {
+        "ready": 433
+      },
+      "exactComparisonQueries": 430,
+      "meanExactTop5Overlap": 1.0,
+      "semanticMedianMilliseconds": 13.671125,
+      "semanticP95Milliseconds": 25.865417,
+      "timedQueries": 433
+    }
+  }
+}

@@ -37,6 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   private var companionPreferences: CompanionPreferences?
   private var speechServices: SpeechServices?
   private var voiceServices: VoiceServices?
+  private var modelActivity: ModelActivityCoordinator?
   private var appearancePreferences: AppearancePreferences?
   private var languagePreferences: LanguagePreferences?
   private let appearance = ThemeEnvironment()
@@ -230,20 +231,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     withObservationTracking {
       let active = controller.shouldRun && controller.liveCount > 0
       updates.setActivity(active ? .active : .suspended)
-      Task {
-        [
-          models = reasoningServices.models, voices = voiceServices?.environment,
-          search = searchServices?.environment
-        ] in
-        await models.setActivity(active ? .active : .suspended)
-        if active {
-          await voices?.resume()
-          await search?.resume()
-        } else {
-          await voices?.stop()
-          await search?.stop()
-        }
-      }
+      modelActivity?.setActivity(active ? .active : .suspended)
     } onChange: { [weak self] in
       Task { @MainActor in self?.observeModelUpdateActivity() }
     }
@@ -273,7 +261,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     companionPreferences = preferences
     let conversations = ConversationLibrary(directory: skills.vault.storageDirectory)
     self.conversations = conversations
-    searchServices = SearchServices(conversations: conversations, vault: skills.vault.library)
+    let search = SearchServices(conversations: conversations, vault: skills.vault.library)
+    searchServices = search
+    modelActivity = ModelActivityCoordinator {
+      [models = reasoningServices.models, voices = voices.environment, search = search.environment]
+      activity in
+      switch activity {
+      case .active:
+        await models.setActivity(.active)
+        await voices.resume()
+        await search.resume()
+      case .suspended:
+        await models.setActivity(.suspended)
+        await voices.stop()
+        await search.stop()
+      }
+    }
     let composition = ConversationComposition(
       dependencies: .init(
         speech: speech, voices: voices, reasoning: reasoningServices, conversations: conversations,
@@ -412,6 +415,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       return .terminateNow
     }
     isTerminating = true
+    modelActivity?.stop()
     setup?.stop()
     vaultController?.close()
     diagnosticsExport.cancel()
@@ -470,6 +474,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
   }
 
   func applicationWillTerminate(_ notification: Notification) {
+    modelActivity?.stop()
     setup?.stop()
     vaultController?.close()
     diagnosticsExport.cancel()

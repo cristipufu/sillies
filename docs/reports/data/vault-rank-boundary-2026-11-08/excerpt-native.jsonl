@@ -1,0 +1,8 @@
+{"variant": "baseline", "seconds": 0.364321, "rows": 100, "fingerprint": "7dc075322c005e9d", "sqliteResult": 101, "sqliteVersion": "3.51.0", "scale": "100k"}
+{"variant": "indexed", "seconds": 0.014302, "rows": 100, "fingerprint": "7dc075322c005e9d", "sqliteResult": 101, "sqliteVersion": "3.51.0", "scale": "100k"}
+{"variant": "indexed", "seconds": 0.014131, "rows": 100, "fingerprint": "7dc075322c005e9d", "sqliteResult": 101, "sqliteVersion": "3.51.0", "scale": "100k"}
+{"variant": "baseline", "seconds": 0.362487, "rows": 100, "fingerprint": "7dc075322c005e9d", "sqliteResult": 101, "sqliteVersion": "3.51.0", "scale": "100k"}
+{"variant": "baseline", "seconds": 3.717255, "rows": 100, "fingerprint": "1efaf6f60463e3d4", "sqliteResult": 101, "sqliteVersion": "3.51.0", "scale": "1m"}
+{"variant": "indexed", "seconds": 0.13846, "rows": 100, "fingerprint": "1efaf6f60463e3d4", "sqliteResult": 101, "sqliteVersion": "3.51.0", "scale": "1m"}
+{"variant": "indexed", "seconds": 0.153227, "rows": 100, "fingerprint": "1efaf6f60463e3d4", "sqliteResult": 101, "sqliteVersion": "3.51.0", "scale": "1m"}
+{"variant": "baseline", "seconds": 3.885629, "rows": 100, "fingerprint": "1efaf6f60463e3d4", "sqliteResult": 101, "sqliteVersion": "3.51.0", "scale": "1m"}

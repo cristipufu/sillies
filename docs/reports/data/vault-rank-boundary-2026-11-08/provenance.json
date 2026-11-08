@@ -1,0 +1,24 @@
+{
+  "baselineCommit": "926b0266b86684e2bba482a826bbb164068f5094",
+  "baselineQueryMatchesPriorReference": true,
+  "sourceSHA256": {
+    "Sources/SilliesPersistence/VaultDatabase+WorkspaceReads.swift": "4470a14038d9d93c91c57251d64a6e4e8d3c879b2e1f0f35ff6935b67cdd6075",
+    "Sources/SilliesPersistence/VaultTextSearchPlan.swift": "f2589c8370aa8dcb45fb1c1cf381dce1ed6fb002f07132fd0d5be8bcad607763",
+    "Sources/SilliesPersistence/VaultSearchRankBoundary.swift": "6b055fd66e356e67f4771cb60b1e8d7f34ea1805abb973b5a2e3f96db604a243",
+    "Sources/SilliesPersistence/VaultDatabase+WorkspaceExcerpts.swift": "02f8ee9f9f5e4baef203b593f3ff1c657605501590922ca0d63627bb4a5dd50b",
+    "Tests/SilliesPersistenceTests/VaultSearchRankBoundaryTests.swift": "6081112d953d1c4cd3a7cd11ab5c461415da8dbdf10b38a4305052cb32751875",
+    "Tests/SilliesPersistenceTests/VaultWorkspaceSearchSnapshotTests.swift": "df12c0f36ca24b991a59996fbad87f5817da4c531ec763e496b0fa653585b767",
+    "Tools/VaultScaleBenchmark/VaultScaleBenchmark.swift": "e654088d96af15f4111ca3fc8c2fa4638eae993e87257dfdebab1be179a52804",
+    "Tools/VaultScaleBenchmark/VaultWorkloadProbe.swift": "5189e105a7b65fbc3d3af9b2b732c6b90520e1bbc4cf5644327106172372687a"
+  },
+  "executableSHA256": {
+    "baseline": "4ec29a4856b3d5ee0a4d51d5847b230a688ebaa33b69f8c986f6a8f760100720",
+    "boundaryOnly": "34707fe2b62e010462c5e352fa5572bffb358fc5c0069d8f2ad78e20c66ddfd0",
+    "combined": "f75f466b1e4a4db53052b3c1bcd381e852334399a3a15dc8313726168f8710bd"
+  },
+  "hardware": "Apple M4 Pro",
+  "memoryBytes": 51539607552,
+  "macOS": "26.7.2",
+  "timingPolicy": "Two runs of 15 samples per condition, ABBA order, all initial and slow samples retained. Pooled median and nearest-rank p95. Shared working Mac; no concurrent compilation or test suite owned by this task during measurement.",
+  "bodyMetricScope": "Writer-owned counter only; separate read-only persistence regressions assert the search reader does not decode source bodies."
+}

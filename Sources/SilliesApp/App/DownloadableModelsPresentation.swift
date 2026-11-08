@@ -13,6 +13,7 @@ final class DownloadableModelsPresentation<Manifest: ModelArtifactManifest> {
   @ObservationIgnored private let environment: DownloadableModelAccess<Manifest>
   @ObservationIgnored private var operation: Task<Void, Never>?
   @ObservationIgnored private var loading: Task<Void, Never>?
+  @ObservationIgnored private var loadGeneration = UUID()
   private(set) var activeID: String?
 
   init(environment: DownloadableModelAccess<Manifest>, selectedID: String) {
@@ -22,21 +23,45 @@ final class DownloadableModelsPresentation<Manifest: ModelArtifactManifest> {
   }
 
   func start() {
-    guard loading == nil else { return }
-    loading = Task { await load() }
+    guard manifests.isEmpty, loading == nil else { return }
+    let generation = UUID()
+    loadGeneration = generation
+    isLoading = true
+    error = nil
+    loading = Task { [weak self] in await self?.loadCatalog(generation: generation) }
   }
   func load() async {
-    guard manifests.isEmpty, !isLoading else { return }
-    isLoading = true
-    defer { isLoading = false }
+    guard !Task.isCancelled else { return }
+    start()
+    await loading?.value
+  }
+
+  private func loadCatalog(generation: UUID) async {
+    defer {
+      if generation == loadGeneration {
+        isLoading = false
+        loading = nil
+      }
+    }
     do {
-      manifests = try await environment.catalog()
-      selectedModelID = await environment.selectedID()
-      for manifest in manifests {
-        states[manifest.modelID] =
+      let catalog = try await environment.catalog()
+      try Task.checkCancellation()
+      let selection = await environment.selectedID()
+      var installations: [String: ModelInstallationState] = [:]
+      for manifest in catalog {
+        try Task.checkCancellation()
+        installations[manifest.modelID] =
           try await environment.store.isInstalled(manifest) ? .downloaded : .absent
       }
-    } catch { report(error) }
+      try Task.checkCancellation()
+      guard generation == loadGeneration else { return }
+      manifests = catalog
+      selectedModelID = selection
+      states = installations
+    } catch is CancellationError {
+    } catch {
+      if generation == loadGeneration { report(error) }
+    }
   }
 
   func state(for id: String) -> ModelInstallationState { states[id] ?? .absent }
@@ -94,10 +119,11 @@ final class DownloadableModelsPresentation<Manifest: ModelArtifactManifest> {
     operation?.cancel()
   }
   func stop() {
+    loadGeneration = UUID()
     loading?.cancel()
     loading = nil
+    isLoading = false
     operation?.cancel()
-    Task.detached(priority: .utility) { [environment] in await environment.stop() }
   }
 
   private func perform(_ id: String, action: @escaping @Sendable () async throws -> Void) {

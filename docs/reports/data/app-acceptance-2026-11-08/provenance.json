@@ -1,0 +1,62 @@
+{
+  "baseline": "926b0266b86684e2bba482a826bbb164068f5094",
+  "hardware": "Apple M4 Pro, 48 GiB RAM",
+  "macOS": "26.7.2",
+  "sourceSHA256": {
+    "Benchmarks/Vault/scoring.py": "350b60f9336b26b22989641f91001c9e12d600a4d2693a54561779cfa131e2a8",
+    "Sources/SilliesApp/App/Composition/ModelActivityCoordinator.swift": "94c6baff6ae9939a427f80feecc33159ba604ab8e8950ad43a89989af973ff01",
+    "Sources/SilliesApp/App/DownloadableModelAccess.swift": "c22d5e2f5546abdae323c0b54f72e9e28be6d7c3d706065982f96de1cce28361",
+    "Sources/SilliesApp/App/DownloadableModelsPresentation.swift": "ee0e963823de0b70c7d66dd7235068657202a83b52f49beb9c8272750e6caf3c",
+    "Sources/SilliesApp/App/SearchModelsPresentation.swift": "e4b84e0a2f3e0caf0d21b3539b4d1d5573f511d4135709a33b2632b983a5d84b",
+    "Sources/SilliesApp/App/SilliesMain.swift": "b8b1a56f660c9269b02f516688cfb827b79f2943fa460cb4da1da0dbeddca18e",
+    "Sources/SilliesApp/App/TextModelsPresentation.swift": "57a6a029955e0c052c4f468ef0ed5ad9edbd097bc731c3a8e70b558490112a6b",
+    "Sources/SilliesApp/App/VoiceModelsPresentation.swift": "9b5818576f4ff84afe048284201655a1833894ce01eadef2832dceb9a790fc97",
+    "Sources/SilliesApp/Platform/AGENTS.md": "a6f5b411c060ba9e4d7523a1a47819c8d7fcd385696eda19b31a4addb5cf0789",
+    "Sources/SilliesApp/Platform/AccessibilityWindowInspection.swift": "482046694c87023b440ead1db1789396854d3d6b6edb6953143b6229fc0c2fcf",
+    "Sources/SilliesApp/Platform/AccessibilityWindowSource.swift": "a5fa659ac527c1a0a45ea871ce4047ba1a4f1919c49c901cbfcef28b7aa30d20",
+    "Sources/SilliesApp/Platform/WindowTargetCache.swift": "2b402bb68fe46fa78cdc3883f1401ef01baf3e00d35eeba9ab9d29e31c00e677",
+    "Sources/SilliesApp/Skills/SkillCoordinator.swift": "713a0fd4c0eb0801f4af5e8f4d65f8e3a651c4d1213ad6463971b9ea0e35b6ca",
+    "Sources/SilliesApp/UI/ModelCatalogNotice.swift": "2cbf897690fdc12b93e753a04323b387a7c0dd3e9a30b585b2f1256456b40461",
+    "Sources/SilliesApp/UI/SearchModelSettingsView.swift": "4b8d9c4bfd36b9f141fbf67a6dd57446b8ed0b0a2263bfee02cbfc3c33021283",
+    "Sources/SilliesApp/UI/TextModelSettingsView.swift": "f377314a5e13e4ee0cbc26f45be2ec0ed754e51a1c78a412cdb1669d4315d808",
+    "Sources/SilliesApp/UI/VoiceModelSettingsView.swift": "2f7c56156487276dc669cd0dc24299f201d69576fe628e7bc2e480d365ff8d33",
+    "Sources/SilliesVault/VaultReasoningDocument.swift": "93c62eacfceca2ea8b1842559316d6d4503fdde3dd2b4af68c309b4fd6e6efca",
+    "Sources/SilliesVault/VaultSearchTool.swift": "c27ca40fd64d60b9d9f9de4920acd8b2fce14f4fd469a00c8e536ff592a39e96",
+    "Tests/SilliesAppTests/AccessibilityWindowInspectionTests.swift": "d90798783fa702a0c9fa22b38b462604d71af688afb540682451f56cec1a4cf1",
+    "Tests/SilliesAppTests/ConversationReopeningTests.swift": "ae44b3882bc6e763071b5a85c2e619348e88f8ccac89f655ef555b4a0c38cbf7",
+    "Tests/SilliesAppTests/ModelActivityTests.swift": "58aa0871a07f790850eca9dd58abbf1d0a1cf7f8f728e2ed515580956d18cee8",
+    "Tests/SilliesAppTests/ModelCatalogLoadingTests.swift": "a109c07f69139c76e8a11de3705753dfd140df0cbb805d3c4effc169cd780e0b",
+    "Tests/SilliesAppTests/WindowTargetCacheTests.swift": "230065314762ba2655c9d3a687e386eef9d3d2441ec96f359e2c16501d048a6b",
+    "Tests/SilliesAppTests/execution-modes.json": "31e41a95f7fda68735e560f71ceac969da2599ee7a32e727cca646c7070236e2",
+    "Tests/SilliesVaultTests/VaultLinkEvidenceTests.swift": "9606c714929f2a640b7ebbc8ab3287803bb7bc2e2877c0d0301c9188cb507c2f",
+    "Tests/SilliesVectorIndexTests/SmallIndexCoverageTests.swift": "ccb4e46af0ef8ad19171ea886487154ea6369544f6f21f5ed132da36b3c0de1e",
+    "Tests/test_test_evidence.py": "ecf58e1f8e617eaa7c484787e8000ffd7eb1cbba299e809716715b82737b2814",
+    "Vendor/VectorSearch/VectorSearch.cpp": "d4e9d5d185090163355106b169162fc18ca84fbc8227f840832946359bda15fd",
+    "scripts/test-races.sh": "21a93176ecef431972124be29ebf58ddc3445269be8b789196edb13c52237a0e",
+    "scripts/test-stress.sh": "4b9679cb865b90db8d17876f3027b004dce5a787aab1f650add988daeea20e32",
+    "scripts/test.sh": "f7890b50f076bfdd970a4d1564b96c517b660871b52cc2771ab55d2225d7198e"
+  },
+  "timingPolicy": "Available semantic queries; median and nearest-rank p95; all raw samples retained. First samples are not controlled cold starts.",
+  "startupValidation": {
+    "originalProductionReader": {
+      "apiStatus": 0,
+      "verified": true,
+      "standardFrames": 0,
+      "nonStandardFrames": 0
+    },
+    "fixedProductionReader": {
+      "verified": false,
+      "standardFrames": 0,
+      "nonStandardFrames": 0
+    },
+    "fixedAppNormalLaunch": {
+      "accessibilityDisabledArgument": false,
+      "visibleCompanions": 4
+    }
+  },
+  "retrievalScorerReplay": {
+    "apple": true,
+    "e5": true
+  },
+  "retrievalBuildScope": "Baseline 926b026 plus the adaptive Vendor/VectorSearch/VectorSearch.cpp policy; subsequent app lifecycle, UI and startup changes are outside that retrieval-only measurement build."
+}

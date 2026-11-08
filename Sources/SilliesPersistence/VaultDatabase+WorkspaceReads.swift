@@ -63,6 +63,9 @@ extension VaultDatabase {
     let filter = VaultWorkspaceFilter(query)
     let records = supportsSearchMetadata ? "available_search_records" : "available_records"
     let usesRank = query.ordering == .relevance
+    let boundary =
+      usesRank && cursor == nil
+      ? try firstPageRankBoundary(plan, filter: filter) : nil
     let selectedValue =
       usesRank
       ? "d.relevance"
@@ -80,11 +83,10 @@ extension VaultDatabase {
     try sql.rows(
       """
       WITH scored AS (
-        SELECT b.record_id,rank AS relevance,b.id AS block_id
-        FROM \(plan.table) JOIN content_blocks b INDEXED BY content_block_identity ON b.id=\(plan.table).rowid
-        WHERE \(plan.table) MATCH ? LIMIT -1),
+        \(plan.scoredBlocksSQL) LIMIT -1),
       documents AS (
-        SELECT record_id,min(relevance) AS relevance,block_id FROM scored GROUP BY record_id),
+        SELECT record_id,min(relevance) AS relevance,block_id FROM scored
+        \(boundary?.predicate ?? "") GROUP BY record_id),
       matches AS (
         SELECT d.record_id,\(selectedValue) AS score,d.block_id
         FROM documents d JOIN \(records) r ON r.id=d.record_id
@@ -96,7 +98,7 @@ extension VaultDatabase {
       LEFT JOIN workspace w ON w.record_id=r.id JOIN content_blocks b ON b.id=m.block_id
       ORDER BY m.score \(direction),m.record_id \(direction)
       """,
-      [.text(plan.expression)] + filter.values + cursorValues(cursor)
+      [.text(plan.expression)] + (boundary?.values ?? []) + filter.values + cursorValues(cursor)
         + [.integer(Int64(VaultWorkspacePage.maximumCount + 1))]
     ) { row in
       matches.append(try workspaceMatch(row))

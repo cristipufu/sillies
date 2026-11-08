@@ -44,12 +44,7 @@ struct TextModelSettingsView: View {
             isSelected: model.selectedModelID == manifest.modelID,
             model: manifest)
         }, content: modelCard)
-      if let error = model.error {
-        Label(error, systemImage: "exclamationmark.triangle").foregroundStyle(
-          theme.secondary
-        )
-        .textSelection(.enabled)
-      }
+      ModelCatalogNotice(model: model)
     }.task { await model.load() }
   }
 

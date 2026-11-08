@@ -6,6 +6,14 @@ struct VaultTextSearchPlan {
   static let maximumQueryScalars = 512
   let table: String
   let expression: String
+  var scoredBlocksSQL: String {
+    """
+    SELECT b.record_id,rank AS relevance,b.id AS block_id
+    FROM \(table) JOIN content_blocks b INDEXED BY content_block_identity ON b.id=\(table).rowid
+    WHERE \(table) MATCH ?
+    """
+  }
+
   init?(_ query: VaultWorkspaceQuery) throws {
     let text = query.text.trimmingCharacters(in: .whitespacesAndNewlines)
     guard text.unicodeScalars.count <= Self.maximumQueryScalars else {

@@ -4,6 +4,39 @@ import Testing
 
 @testable import SilliesPersistence
 
+@Test func workspaceExcerptSelectionRecoversAfterRollbackOnAReadOnlyArchive() throws {
+  let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+  defer { do { try FileManager.default.removeItem(at: directory) } catch { Issue.record(error) } }
+  let writer = try VaultDatabase(directory: directory)
+  let records = (0..<130).map { index in
+    SessionRecord(
+      kind: .record,
+      origin: .init(characterID: "pogo", characterName: "Pogo", source: .init(appName: "Fixture")),
+      content: .init(text: .init(transcript: "Meeting receipt\(index) contains the decision.")))
+  }
+  try writer.commit(.init(records: records.map(VaultRecordWrite.insert)))
+  let reader = try VaultDatabase(reading: directory)
+  let query = VaultWorkspaceQuery(text: "meeting", ordering: .relevance)
+  #expect(throws: CancellationError.self) {
+    try reader.sql.readSnapshot {
+      let page = try reader.rankedWorkspacePage(query, after: nil)
+      #expect(page.records.count == 100)
+      #expect(
+        try reader.sql.integer("SELECT count(*) FROM temp.workspace_excerpt_selection") == 100)
+      throw CancellationError()
+    }
+  }
+  #expect(
+    try reader.sql.integer(
+      "SELECT count(*) FROM sqlite_temp_master WHERE name='workspace_excerpt_selection'") == 0)
+  let first = try reader.workspacePage(query)
+  let second = try reader.workspacePage(query, after: #require(first.next))
+  #expect((first.records + second.records).allSatisfy { $0.excerpt.contains("receipt") })
+  #expect(Set((first.records + second.records).map(\.id)) == Set(records.map(\.id)))
+  #expect(try reader.sql.integer("SELECT count(*) FROM temp.workspace_excerpt_selection") == 30)
+  #expect(reader.metrics.loadedBodies == 0)
+}
+
 @Test func workspaceSearchExcerptsKeepTheirOwnSourceAndTimestampAcrossPages() throws {
   let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
   defer { do { try FileManager.default.removeItem(at: directory) } catch { Issue.record(error) } }

@@ -1,0 +1,8 @@
+{"variant": "baseline", "seconds": 0.425446, "rows": 101, "fingerprint": "f4f34318193daa75", "sqliteResult": 101, "sqliteVersion": "3.51.0", "scale": "100k"}
+{"variant": "no-cleanup", "seconds": 0.40131, "rows": 101, "fingerprint": "f4f34318193daa75", "sqliteResult": 101, "sqliteVersion": "3.51.0", "scale": "100k"}
+{"variant": "baseline", "seconds": 0.425982, "rows": 101, "fingerprint": "f4f34318193daa75", "sqliteResult": 101, "sqliteVersion": "3.51.0", "scale": "100k"}
+{"variant": "no-cleanup", "seconds": 0.411053, "rows": 101, "fingerprint": "f4f34318193daa75", "sqliteResult": 101, "sqliteVersion": "3.51.0", "scale": "100k"}
+{"variant": "baseline", "seconds": 3.466226, "rows": 101, "fingerprint": "292f97504e415e59", "sqliteResult": 101, "sqliteVersion": "3.51.0", "scale": "1m"}
+{"variant": "no-cleanup", "seconds": 3.2358, "rows": 101, "fingerprint": "292f97504e415e59", "sqliteResult": 101, "sqliteVersion": "3.51.0", "scale": "1m"}
+{"variant": "baseline", "seconds": 3.44408, "rows": 101, "fingerprint": "292f97504e415e59", "sqliteResult": 101, "sqliteVersion": "3.51.0", "scale": "1m"}
+{"variant": "no-cleanup", "seconds": 3.172988, "rows": 101, "fingerprint": "292f97504e415e59", "sqliteResult": 101, "sqliteVersion": "3.51.0", "scale": "1m"}

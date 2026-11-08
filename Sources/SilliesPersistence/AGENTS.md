@@ -34,3 +34,15 @@ ordered partial indexes. Preserve exact ranking/cursor behavior and shared clean
 Backup reference pages merge source-file owners with preview-only owners by record ID. Do not add
 a whole-library sort, walk fileless records, or let the preview join start from all source records;
 `VaultBackupReferenceTests` exercises the real query plan as well as complete file traversal.
+
+First-page relevance pruning must have an exact bound from a complete page plus lookahead of
+distinct, eligible records in the same read snapshot. Sampling may establish the bound; it must
+never cap the final matching passage scan. Preserve BM25 scores and the record-ID tie break. If
+the seed cannot establish a bound, use complete aggregation. Continuation pages must aggregate
+each record's best passage before applying the cursor, so weaker passages cannot repeat records.
+Keep independent full-ranking parity, late-match, filter and insufficient-seed regressions.
+
+Page excerpts use one FTS cursor and a connection-local TEMP table with integer primary-key
+membership. Keep that selection at most one visible page, replace it on every excerpt read, and
+recreate it after transaction rollback. Do not restore a VALUES cross join that scans the whole
+selection for each matching passage, or reopen a prefix search separately for every preview.

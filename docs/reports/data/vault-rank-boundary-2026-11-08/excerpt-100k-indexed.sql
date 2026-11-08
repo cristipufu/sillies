@@ -1,0 +1,1 @@
+SELECT content_search.rowid,snippet(content_search,0,'','',' … ',24) FROM content_search CROSS JOIN temp.workspace_excerpt_selection wanted ON wanted.id=content_search.rowid WHERE content_search MATCH ? AND content_search.rowid>=1 AND content_search.rowid<=495001

@@ -189,7 +189,8 @@ final class SkillCoordinator {
     _ mode: ConversationMode, for id: String, name: String, destination: ConversationDestination
   ) -> SessionFailure? {
     let selectedRecord = destination.recordID
-    if selectedRecord != nil, let session = activeChatSession, session.companionID == id,
+    let current = (sessions[id] as? ConversationActivity)?.presentation
+    if selectedRecord != nil, let session = current,
       session.phase != .loading || session.history.isLoaded, !session.canCompose
     {
       return .init(
@@ -204,11 +205,12 @@ final class SkillCoordinator {
     }
     let token = UUID()
     pendingConversation = token
-    if let previous = activeChatSession, previous.companionID != id {
+    // Closing sessions retain capture and persistence ownership until their final save completes.
+    if let previous = activeChatSession, previous !== current {
       stopSkill(for: previous.companionID)
       whenFinished { [weak self] in
         guard let self, self.pendingConversation == token else { return }
-        self.startConversation(mode, for: id, name: name, destination: destination)
+        _ = self.startConversation(mode, for: id, name: name, destination: destination)
       }
       return nil
     }

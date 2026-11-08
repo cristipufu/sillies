@@ -119,6 +119,9 @@
   "ConversationExportShutdownTests.swift": {
     "default": "headless"
   },
+  "ConversationReopeningTests.swift": {
+    "default": "headless"
+  },
   "ConversationContextInterfaceTests.swift": {
     "default": "headless"
   },
@@ -333,6 +336,12 @@
   "ModelCatalogNavigationTests.swift": {
     "default": "headless"
   },
+  "ModelCatalogLoadingTests.swift": {
+    "default": "headless"
+  },
+  "ModelActivityTests.swift": {
+    "default": "headless"
+  },
   "VaultActionLifetimeTests.swift": {
     "default": "headless"
   },
@@ -358,6 +367,9 @@
     "default": "headless"
   },
   "VaultOCRReadingTests.swift": {
+    "default": "headless"
+  },
+  "AccessibilityWindowInspectionTests.swift": {
     "default": "headless"
   }
 }

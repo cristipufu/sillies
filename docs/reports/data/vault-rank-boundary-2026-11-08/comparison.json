@@ -1,0 +1,462 @@
+{
+  "boundary-only": {
+    "100k": {
+      "baseline": {
+        "runs": [
+          {
+            "file": "boundary-only/100k-0-baseline.jsonl",
+            "medians": {
+              "recent": 1.503833,
+              "broad_newest": 24.801084,
+              "recently_edited": 1.465,
+              "broad_relevance": 872.312125,
+              "rare": 0.284125
+            }
+          },
+          {
+            "file": "boundary-only/100k-3-baseline.jsonl",
+            "medians": {
+              "recent": 1.613541,
+              "broad_newest": 25.043625,
+              "recently_edited": 1.595916,
+              "broad_relevance": 910.797833,
+              "rare": 0.229209
+            }
+          }
+        ],
+        "pooled": {
+          "recent": {
+            "samples": 30,
+            "medianMilliseconds": 1.570583,
+            "p95Milliseconds": 3.184625,
+            "maximumMilliseconds": 3.899834
+          },
+          "broad_newest": {
+            "samples": 30,
+            "medianMilliseconds": 24.8978125,
+            "p95Milliseconds": 27.126167,
+            "maximumMilliseconds": 116.852459
+          },
+          "recently_edited": {
+            "samples": 30,
+            "medianMilliseconds": 1.500438,
+            "p95Milliseconds": 2.851,
+            "maximumMilliseconds": 2.969166
+          },
+          "broad_relevance": {
+            "samples": 30,
+            "medianMilliseconds": 878.5305835,
+            "p95Milliseconds": 1898.483375,
+            "maximumMilliseconds": 2200.869917
+          },
+          "rare": {
+            "samples": 30,
+            "medianMilliseconds": 0.2497915,
+            "p95Milliseconds": 0.562,
+            "maximumMilliseconds": 2.158708
+          }
+        }
+      },
+      "boundary": {
+        "runs": [
+          {
+            "file": "boundary-only/100k-1-boundary.jsonl",
+            "medians": {
+              "recent": 1.497125,
+              "broad_newest": 24.952625,
+              "recently_edited": 1.4715,
+              "broad_relevance": 774.956625,
+              "rare": 0.34725
+            }
+          },
+          {
+            "file": "boundary-only/100k-2-boundary.jsonl",
+            "medians": {
+              "recent": 1.543625,
+              "broad_newest": 25.356959,
+              "recently_edited": 1.529917,
+              "broad_relevance": 793.789292,
+              "rare": 0.357166
+            }
+          }
+        ],
+        "pooled": {
+          "recent": {
+            "samples": 30,
+            "medianMilliseconds": 1.5273539999999999,
+            "p95Milliseconds": 2.718375,
+            "maximumMilliseconds": 3.474333
+          },
+          "broad_newest": {
+            "samples": 30,
+            "medianMilliseconds": 25.1138125,
+            "p95Milliseconds": 26.642917,
+            "maximumMilliseconds": 26.99
+          },
+          "recently_edited": {
+            "samples": 30,
+            "medianMilliseconds": 1.5164374999999999,
+            "p95Milliseconds": 1.924458,
+            "maximumMilliseconds": 1.930291
+          },
+          "broad_relevance": {
+            "samples": 30,
+            "medianMilliseconds": 785.7517495,
+            "p95Milliseconds": 859.82375,
+            "maximumMilliseconds": 1686.566417
+          },
+          "rare": {
+            "samples": 30,
+            "medianMilliseconds": 0.350291,
+            "p95Milliseconds": 1.411125,
+            "maximumMilliseconds": 1.605042
+          }
+        }
+      }
+    },
+    "1m": {
+      "baseline": {
+        "runs": [
+          {
+            "file": "boundary-only/1m-0-baseline.jsonl",
+            "medians": {
+              "recent": 1.630125,
+              "broad_newest": 157.615792,
+              "recently_edited": 1.493375,
+              "broad_relevance": 4712.209667,
+              "rare": 0.231708
+            }
+          },
+          {
+            "file": "boundary-only/1m-3-baseline.jsonl",
+            "medians": {
+              "recent": 1.644708,
+              "broad_newest": 172.779084,
+              "recently_edited": 2.294459,
+              "broad_relevance": 4657.830792,
+              "rare": 0.224959
+            }
+          }
+        ],
+        "pooled": {
+          "recent": {
+            "samples": 30,
+            "medianMilliseconds": 1.6383545,
+            "p95Milliseconds": 3.266459,
+            "maximumMilliseconds": 3.758084
+          },
+          "broad_newest": {
+            "samples": 30,
+            "medianMilliseconds": 163.16612500000002,
+            "p95Milliseconds": 256.731833,
+            "maximumMilliseconds": 284.357583
+          },
+          "recently_edited": {
+            "samples": 30,
+            "medianMilliseconds": 1.6962709999999999,
+            "p95Milliseconds": 4.341792,
+            "maximumMilliseconds": 5.076
+          },
+          "broad_relevance": {
+            "samples": 30,
+            "medianMilliseconds": 4680.9575,
+            "p95Milliseconds": 13507.376291,
+            "maximumMilliseconds": 15470.599375
+          },
+          "rare": {
+            "samples": 30,
+            "medianMilliseconds": 0.22802050000000001,
+            "p95Milliseconds": 0.812084,
+            "maximumMilliseconds": 3.205625
+          }
+        }
+      },
+      "boundary": {
+        "runs": [
+          {
+            "file": "boundary-only/1m-1-boundary.jsonl",
+            "medians": {
+              "recent": 1.713667,
+              "broad_newest": 540.019667,
+              "recently_edited": 1.606709,
+              "broad_relevance": 8524.099083,
+              "rare": 0.389458
+            }
+          },
+          {
+            "file": "boundary-only/1m-2-boundary.jsonl",
+            "medians": {
+              "recent": 1.70275,
+              "broad_newest": 240.672417,
+              "recently_edited": 1.636583,
+              "broad_relevance": 4092.798375,
+              "rare": 0.374416
+            }
+          }
+        ],
+        "pooled": {
+          "recent": {
+            "samples": 30,
+            "medianMilliseconds": 1.7082085,
+            "p95Milliseconds": 8.519833,
+            "maximumMilliseconds": 11.507375
+          },
+          "broad_newest": {
+            "samples": 30,
+            "medianMilliseconds": 407.926604,
+            "p95Milliseconds": 717.435875,
+            "maximumMilliseconds": 849.751167
+          },
+          "recently_edited": {
+            "samples": 30,
+            "medianMilliseconds": 1.6252710000000001,
+            "p95Milliseconds": 4.698667,
+            "maximumMilliseconds": 60.708416
+          },
+          "broad_relevance": {
+            "samples": 30,
+            "medianMilliseconds": 4759.485457999999,
+            "p95Milliseconds": 12270.546,
+            "maximumMilliseconds": 14272.144875
+          },
+          "rare": {
+            "samples": 30,
+            "medianMilliseconds": 0.383958,
+            "p95Milliseconds": 1.272625,
+            "maximumMilliseconds": 9.296916
+          }
+        }
+      }
+    }
+  },
+  "combined": {
+    "100k": {
+      "baseline": {
+        "runs": [
+          {
+            "file": "combined/100k-0-baseline.jsonl",
+            "medians": {
+              "recent": 1.564833,
+              "broad_newest": 25.561542,
+              "recently_edited": 1.559791,
+              "broad_relevance": 942.352375,
+              "rare": 0.234542
+            }
+          },
+          {
+            "file": "combined/100k-3-baseline.jsonl",
+            "medians": {
+              "recent": 1.610959,
+              "broad_newest": 26.238458,
+              "recently_edited": 1.638458,
+              "broad_relevance": 948.739417,
+              "rare": 0.236958
+            }
+          }
+        ],
+        "pooled": {
+          "recent": {
+            "samples": 30,
+            "medianMilliseconds": 1.586583,
+            "p95Milliseconds": 4.036792,
+            "maximumMilliseconds": 6.204959
+          },
+          "broad_newest": {
+            "samples": 30,
+            "medianMilliseconds": 25.77525,
+            "p95Milliseconds": 31.329167,
+            "maximumMilliseconds": 151.637875
+          },
+          "recently_edited": {
+            "samples": 30,
+            "medianMilliseconds": 1.6266665,
+            "p95Milliseconds": 2.228375,
+            "maximumMilliseconds": 2.995167
+          },
+          "broad_relevance": {
+            "samples": 30,
+            "medianMilliseconds": 943.9432710000001,
+            "p95Milliseconds": 1077.615209,
+            "maximumMilliseconds": 2885.833833
+          },
+          "rare": {
+            "samples": 30,
+            "medianMilliseconds": 0.23575000000000002,
+            "p95Milliseconds": 0.5865,
+            "maximumMilliseconds": 1.941459
+          }
+        }
+      },
+      "boundary": {
+        "runs": [
+          {
+            "file": "combined/100k-1-boundary.jsonl",
+            "medians": {
+              "recent": 1.628042,
+              "broad_newest": 27.556459,
+              "recently_edited": 1.593,
+              "broad_relevance": 424.254875,
+              "rare": 0.383041
+            }
+          },
+          {
+            "file": "combined/100k-2-boundary.jsonl",
+            "medians": {
+              "recent": 1.539292,
+              "broad_newest": 23.90475,
+              "recently_edited": 1.653834,
+              "broad_relevance": 413.060875,
+              "rare": 0.381417
+            }
+          }
+        ],
+        "pooled": {
+          "recent": {
+            "samples": 30,
+            "medianMilliseconds": 1.5790625,
+            "p95Milliseconds": 2.651958,
+            "maximumMilliseconds": 3.776042
+          },
+          "broad_newest": {
+            "samples": 30,
+            "medianMilliseconds": 26.279979,
+            "p95Milliseconds": 30.518834,
+            "maximumMilliseconds": 31.146916
+          },
+          "recently_edited": {
+            "samples": 30,
+            "medianMilliseconds": 1.6050624999999998,
+            "p95Milliseconds": 2.100542,
+            "maximumMilliseconds": 2.429667
+          },
+          "broad_relevance": {
+            "samples": 30,
+            "medianMilliseconds": 416.25804200000005,
+            "p95Milliseconds": 440.004959,
+            "maximumMilliseconds": 456.110333
+          },
+          "rare": {
+            "samples": 30,
+            "medianMilliseconds": 0.38222900000000004,
+            "p95Milliseconds": 1.162667,
+            "maximumMilliseconds": 1.3205
+          }
+        }
+      }
+    },
+    "1m": {
+      "baseline": {
+        "runs": [
+          {
+            "file": "combined/1m-0-baseline.jsonl",
+            "medians": {
+              "recent": 1.736084,
+              "broad_newest": 156.1135,
+              "recently_edited": 1.637916,
+              "broad_relevance": 4982.649541,
+              "rare": 0.268334
+            }
+          },
+          {
+            "file": "combined/1m-3-baseline.jsonl",
+            "medians": {
+              "recent": 1.630292,
+              "broad_newest": 165.012875,
+              "recently_edited": 1.638375,
+              "broad_relevance": 4769.835125,
+              "rare": 0.237167
+            }
+          }
+        ],
+        "pooled": {
+          "recent": {
+            "samples": 30,
+            "medianMilliseconds": 1.6326875,
+            "p95Milliseconds": 3.808708,
+            "maximumMilliseconds": 4.96475
+          },
+          "broad_newest": {
+            "samples": 30,
+            "medianMilliseconds": 161.6228955,
+            "p95Milliseconds": 174.229792,
+            "maximumMilliseconds": 285.525209
+          },
+          "recently_edited": {
+            "samples": 30,
+            "medianMilliseconds": 1.6381454999999998,
+            "p95Milliseconds": 2.387875,
+            "maximumMilliseconds": 3.560708
+          },
+          "broad_relevance": {
+            "samples": 30,
+            "medianMilliseconds": 4887.925083,
+            "p95Milliseconds": 7178.544458,
+            "maximumMilliseconds": 24358.340292
+          },
+          "rare": {
+            "samples": 30,
+            "medianMilliseconds": 0.240458,
+            "p95Milliseconds": 0.829,
+            "maximumMilliseconds": 4.653916
+          }
+        }
+      },
+      "boundary": {
+        "runs": [
+          {
+            "file": "combined/1m-1-boundary.jsonl",
+            "medians": {
+              "recent": 1.648291,
+              "broad_newest": 159.391875,
+              "recently_edited": 1.624459,
+              "broad_relevance": 3901.896083,
+              "rare": 0.378041
+            }
+          },
+          {
+            "file": "combined/1m-2-boundary.jsonl",
+            "medians": {
+              "recent": 1.635292,
+              "broad_newest": 157.052958,
+              "recently_edited": 1.6125,
+              "broad_relevance": 3959.847334,
+              "rare": 0.362083
+            }
+          }
+        ],
+        "pooled": {
+          "recent": {
+            "samples": 30,
+            "medianMilliseconds": 1.643396,
+            "p95Milliseconds": 3.673791,
+            "maximumMilliseconds": 4.116417
+          },
+          "broad_newest": {
+            "samples": 30,
+            "medianMilliseconds": 158.9038545,
+            "p95Milliseconds": 162.7605,
+            "maximumMilliseconds": 163.902084
+          },
+          "recently_edited": {
+            "samples": 30,
+            "medianMilliseconds": 1.6184795,
+            "p95Milliseconds": 2.160125,
+            "maximumMilliseconds": 2.207625
+          },
+          "broad_relevance": {
+            "samples": 30,
+            "medianMilliseconds": 3910.8939375,
+            "p95Milliseconds": 5991.993375,
+            "maximumMilliseconds": 9489.728708999999
+          },
+          "rare": {
+            "samples": 30,
+            "medianMilliseconds": 0.372375,
+            "p95Milliseconds": 1.033416,
+            "maximumMilliseconds": 2.015125
+          }
+        }
+      }
+    }
+  }
+}

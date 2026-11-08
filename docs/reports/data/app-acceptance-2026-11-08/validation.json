@@ -1,0 +1,478 @@
+{
+  "make-check-final": [
+    {
+      "id": "run-iq9nwxhh",
+      "verified": [
+        {
+          "bundle": "SilliesAudioTests",
+          "framework": "swift-testing",
+          "tests": 43,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesChatTests",
+          "framework": "swift-testing",
+          "tests": 53,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesCoreTests",
+          "framework": "swift-testing",
+          "tests": 186,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesDesignTests",
+          "framework": "swift-testing",
+          "tests": 5,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesDiagnosticsTests",
+          "framework": "swift-testing",
+          "tests": 7,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesFishSpeechTests",
+          "framework": "swift-testing",
+          "tests": 14,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesModelStoreTests",
+          "framework": "swift-testing",
+          "tests": 4,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesModelStoreTests",
+          "framework": "xctest",
+          "tests": 28
+        },
+        {
+          "bundle": "SilliesPersistenceTests",
+          "framework": "swift-testing",
+          "tests": 82,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesReasoningTests",
+          "framework": "swift-testing",
+          "tests": 68,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesSearchModelsTests",
+          "framework": "swift-testing",
+          "tests": 18,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesSpeechTests",
+          "framework": "swift-testing",
+          "tests": 6,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesSpeechTests",
+          "framework": "xctest",
+          "tests": 31
+        },
+        {
+          "bundle": "SilliesTTSTests",
+          "framework": "swift-testing",
+          "tests": 24,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesTextModelsTests",
+          "framework": "swift-testing",
+          "tests": 41,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesTextModelsTests",
+          "framework": "xctest",
+          "tests": 1
+        },
+        {
+          "bundle": "SilliesVaultTests",
+          "framework": "swift-testing",
+          "tests": 95,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesVectorIndexTests",
+          "framework": "swift-testing",
+          "tests": 6,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesVoicePlaybackTests",
+          "framework": "swift-testing",
+          "tests": 14,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesWritingTests",
+          "framework": "swift-testing",
+          "tests": 9,
+          "presentation": "headless"
+        }
+      ]
+    },
+    {
+      "id": "run-hq85zdit",
+      "verified": [
+        {
+          "bundle": "SilliesAppTests",
+          "framework": "swift-testing",
+          "tests": 328,
+          "presentation": "headless"
+        }
+      ]
+    }
+  ],
+  "search-tests": [
+    {
+      "id": "run-6i25hvk1",
+      "verified": [
+        {
+          "bundle": "SilliesVectorIndexTests",
+          "framework": "swift-testing",
+          "tests": 6,
+          "presentation": "headless"
+        }
+      ]
+    }
+  ],
+  "workflow-tests": [
+    {
+      "id": "run-lx9h7r5r",
+      "verified": [
+        {
+          "bundle": "SilliesAppTests",
+          "framework": "swift-testing",
+          "tests": 12,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesWritingTests",
+          "framework": "swift-testing",
+          "tests": 9,
+          "presentation": "headless"
+        }
+      ]
+    }
+  ],
+  "evidence-tests": [
+    {
+      "id": "run-st8pa5w7",
+      "verified": [
+        {
+          "bundle": "SilliesReasoningTests",
+          "framework": "swift-testing",
+          "tests": 5,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesVaultTests",
+          "framework": "swift-testing",
+          "tests": 13,
+          "presentation": "headless"
+        }
+      ]
+    }
+  ],
+  "setup-tests": [
+    {
+      "id": "run-qbhs2jsk",
+      "verified": [
+        {
+          "bundle": "SilliesAppTests",
+          "framework": "swift-testing",
+          "tests": 13,
+          "presentation": "headless"
+        }
+      ]
+    }
+  ],
+  "recovery-tests": [
+    {
+      "id": "run-p44bo0xs",
+      "verified": [
+        {
+          "bundle": "SilliesAppTests",
+          "framework": "swift-testing",
+          "tests": 11,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesChatTests",
+          "framework": "swift-testing",
+          "tests": 8,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesModelStoreTests",
+          "framework": "swift-testing",
+          "tests": 4,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesModelStoreTests",
+          "framework": "xctest",
+          "tests": 28
+        },
+        {
+          "bundle": "SilliesVoicePlaybackTests",
+          "framework": "swift-testing",
+          "tests": 3,
+          "presentation": "headless"
+        }
+      ]
+    }
+  ],
+  "startup-tests": [
+    {
+      "id": "run-8ksxen80",
+      "verified": [
+        {
+          "bundle": "SilliesAppTests",
+          "framework": "swift-testing",
+          "tests": 4,
+          "presentation": "headless"
+        }
+      ]
+    }
+  ],
+  "memory-isolated": [
+    {
+      "id": "run-ec904ddn",
+      "verified": [
+        {
+          "bundle": "SilliesPersistenceTests",
+          "framework": "swift-testing",
+          "tests": 1,
+          "presentation": "headless"
+        }
+      ]
+    }
+  ],
+  "stress": [
+    {
+      "id": "run-yrdptv1i",
+      "verified": [
+        {
+          "bundle": "SilliesAppTests",
+          "framework": "swift-testing",
+          "tests": 104,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesAudioTests",
+          "framework": "swift-testing",
+          "tests": 34,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesChatTests",
+          "framework": "swift-testing",
+          "tests": 31,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesCoreTests",
+          "framework": "swift-testing",
+          "tests": 11,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesDiagnosticsTests",
+          "framework": "swift-testing",
+          "tests": 7,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesPersistenceTests",
+          "framework": "swift-testing",
+          "tests": 13,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesReasoningTests",
+          "framework": "swift-testing",
+          "tests": 15,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesSearchModelsTests",
+          "framework": "swift-testing",
+          "tests": 3,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesSpeechTests",
+          "framework": "xctest",
+          "tests": 22
+        },
+        {
+          "bundle": "SilliesTTSTests",
+          "framework": "swift-testing",
+          "tests": 17,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesVaultTests",
+          "framework": "swift-testing",
+          "tests": 18,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesVoicePlaybackTests",
+          "framework": "swift-testing",
+          "tests": 14,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesWritingTests",
+          "framework": "swift-testing",
+          "tests": 9,
+          "presentation": "headless"
+        }
+      ]
+    }
+  ],
+  "race-check-final": [
+    {
+      "id": "run-bvxsey17",
+      "verified": [
+        {
+          "bundle": "SilliesAudioTests",
+          "framework": "swift-testing",
+          "tests": 35,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesCoreTests",
+          "framework": "swift-testing",
+          "tests": 8,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesDiagnosticsTests",
+          "framework": "swift-testing",
+          "tests": 7,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesPersistenceTests",
+          "framework": "swift-testing",
+          "tests": 13,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesReasoningTests",
+          "framework": "swift-testing",
+          "tests": 16,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesSearchModelsTests",
+          "framework": "swift-testing",
+          "tests": 3,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesVaultTests",
+          "framework": "swift-testing",
+          "tests": 19,
+          "presentation": "headless"
+        }
+      ]
+    },
+    {
+      "id": "run-jao2olx8",
+      "verified": [
+        {
+          "bundle": "SilliesAppTests",
+          "framework": "swift-testing",
+          "tests": 130,
+          "presentation": "headless"
+        }
+      ]
+    },
+    {
+      "id": "run-rn6ptopd",
+      "verified": [
+        {
+          "bundle": "SilliesChatTests",
+          "framework": "swift-testing",
+          "tests": 41,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesTTSTests",
+          "framework": "swift-testing",
+          "tests": 22,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesTextModelsTests",
+          "framework": "swift-testing",
+          "tests": 9,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesVoicePlaybackTests",
+          "framework": "swift-testing",
+          "tests": 14,
+          "presentation": "headless"
+        },
+        {
+          "bundle": "SilliesWritingTests",
+          "framework": "swift-testing",
+          "tests": 9,
+          "presentation": "headless"
+        }
+      ]
+    },
+    {
+      "id": "run-_15e6r6q",
+      "verified": [
+        {
+          "bundle": "SilliesSpeechTests",
+          "framework": "xctest",
+          "tests": 17
+        }
+      ]
+    },
+    {
+      "id": "run-6n__i1vh",
+      "verified": [
+        {
+          "bundle": "SilliesAudioTests",
+          "framework": "swift-testing",
+          "tests": 3,
+          "presentation": "headless"
+        }
+      ]
+    },
+    {
+      "id": "run-azc33obj",
+      "verified": [
+        {
+          "bundle": "SilliesAudioTests",
+          "framework": "swift-testing",
+          "tests": 2,
+          "presentation": "headless"
+        }
+      ]
+    }
+  ],
+  "python-final": {
+    "tests": 127,
+    "result": "passed"
+  }
+}

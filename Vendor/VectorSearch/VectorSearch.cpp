@@ -21,6 +21,16 @@ constexpr int worker_threads = 2;
 constexpr int training_iterations = 12;
 constexpr int training_seed = 13;
 constexpr size_t maximum_partition_probes = 96;
+constexpr size_t maximum_exhaustive_code_bytes = 32 * 1024 * 1024;
+
+size_t partition_probes(const faiss::IndexIVF& index) {
+    const size_t identity_bytes = sizeof(faiss::idx_t);
+    const bool fits_complete_scan = index.ntotal >= 0 &&
+        index.code_size <= maximum_exhaustive_code_bytes - identity_bytes &&
+        static_cast<uint64_t>(index.ntotal) <=
+            maximum_exhaustive_code_bytes / (index.code_size + identity_bytes);
+    return fits_complete_scan ? index.nlist : std::min(maximum_partition_probes, index.nlist);
+}
 
 void report(char* buffer, size_t capacity, const char* message) {
     if (buffer && capacity) std::snprintf(buffer, capacity, "%s", message);
@@ -76,7 +86,6 @@ SilliesVectorIndex* svi_create(int dimensions, int partitions, const float* trai
         auto lists = std::make_unique<faiss::OnDiskInvertedLists>(index->nlist, index->code_size, backing_path);
         lists->prefetch_nthread = 1;
         index->replace_invlists(lists.release(), true);
-        index->nprobe = std::min(maximum_partition_probes, index->nlist);
         result->index = std::move(index);
     });
     return result && result->index ? result.release() : nullptr;
@@ -91,7 +100,6 @@ SilliesVectorIndex* svi_open(const char* path, int dimensions, char* error, size
         result->index.reset(faiss::read_index(path, faiss::IO_FLAG_ONDISK_SAME_DIR));
         if (result->index->d != dimensions) throw std::invalid_argument("Index dimension changed.");
         if (auto* ivf = dynamic_cast<faiss::IndexIVF*>(result->index.get())) {
-            ivf->nprobe = std::min(maximum_partition_probes, ivf->nlist);
             if (auto* disk = dynamic_cast<faiss::OnDiskInvertedLists*>(ivf->invlists)) disk->prefetch_nthread = 1;
         }
     });
@@ -121,7 +129,13 @@ int svi_search(SilliesVectorIndex* handle, const float* query, size_t count, int
         if (!handle || !ids || !scores || count == 0 || count > maximum_neighbors)
             throw std::invalid_argument("Invalid search request.");
         validate_vectors(query, 1, handle->index->d);
-        handle->index->search(1, query, static_cast<faiss::idx_t>(count), scores, ids);
+        if (auto* ivf = dynamic_cast<faiss::IndexIVF*>(handle->index.get())) {
+            faiss::SearchParametersIVF parameters;
+            parameters.nprobe = partition_probes(*ivf);
+            ivf->search(1, query, static_cast<faiss::idx_t>(count), scores, ids, &parameters);
+        } else {
+            handle->index->search(1, query, static_cast<faiss::idx_t>(count), scores, ids);
+        }
     });
 }
 int svi_checkpoint(SilliesVectorIndex* handle, const char* path, char* error, size_t capacity) {

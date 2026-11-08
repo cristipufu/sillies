@@ -35,8 +35,8 @@ package struct VaultSearchTool: ConversationTool {
     for match in matches {
       try Task.checkCancellation()
       let links: [URL]
-      if args.category == .links, let record = try await library.record(id: match.header.id) {
-        links = try VaultToolContent.links(in: record)
+      if args.category == .links {
+        links = try await library.savedLinks(id: match.header.id)
         if links.isEmpty { continue }
       } else {
         links = []

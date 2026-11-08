@@ -1,0 +1,494 @@
+{
+  "queries": 433,
+  "documents": 5247,
+  "availability": {
+    "ready": 427,
+    "unavailable": 6
+  },
+  "exactComparisonQueries": 424,
+  "meanExactTop5Overlap": 1.0,
+  "groups": {
+    "absent/exactSemantic": {
+      "queries": 5,
+      "positiveQueries": 0,
+      "absentQueries": 5,
+      "absentQueriesReturningSuggestions": 5
+    },
+    "absent/fused": {
+      "queries": 5,
+      "positiveQueries": 0,
+      "absentQueries": 5,
+      "absentQueriesReturningSuggestions": 5
+    },
+    "absent/keywords": {
+      "queries": 5,
+      "positiveQueries": 0,
+      "absentQueries": 5,
+      "absentQueriesReturningSuggestions": 5
+    },
+    "absent/semantic": {
+      "queries": 5,
+      "positiveQueries": 0,
+      "absentQueries": 5,
+      "absentQueriesReturningSuggestions": 5
+    },
+    "absent-detail/exactSemantic": {
+      "queries": 22,
+      "positiveQueries": 0,
+      "absentQueries": 22,
+      "absentQueriesReturningSuggestions": 20
+    },
+    "absent-detail/fused": {
+      "queries": 22,
+      "positiveQueries": 0,
+      "absentQueries": 22,
+      "absentQueriesReturningSuggestions": 22
+    },
+    "absent-detail/keywords": {
+      "queries": 22,
+      "positiveQueries": 0,
+      "absentQueries": 22,
+      "absentQueriesReturningSuggestions": 19
+    },
+    "absent-detail/semantic": {
+      "queries": 22,
+      "positiveQueries": 0,
+      "absentQueries": 22,
+      "absentQueriesReturningSuggestions": 20
+    },
+    "cross_language/exactSemantic": {
+      "queries": 3,
+      "positiveQueries": 3,
+      "absentQueries": 0,
+      "hitAt5": 0.0,
+      "recallAt5": 0.0,
+      "precisionAt5": 0.0,
+      "mrrAt5": 0.0,
+      "ndcgAt5": 0.0
+    },
+    "cross_language/fused": {
+      "queries": 3,
+      "positiveQueries": 3,
+      "absentQueries": 0,
+      "hitAt5": 0.0,
+      "recallAt5": 0.0,
+      "precisionAt5": 0.0,
+      "mrrAt5": 0.0,
+      "ndcgAt5": 0.0
+    },
+    "cross_language/keywords": {
+      "queries": 3,
+      "positiveQueries": 3,
+      "absentQueries": 0,
+      "hitAt5": 0.0,
+      "recallAt5": 0.0,
+      "precisionAt5": 0.0,
+      "mrrAt5": 0.0,
+      "ndcgAt5": 0.0
+    },
+    "cross_language/semantic": {
+      "queries": 3,
+      "positiveQueries": 3,
+      "absentQueries": 0,
+      "hitAt5": 0.0,
+      "recallAt5": 0.0,
+      "precisionAt5": 0.0,
+      "mrrAt5": 0.0,
+      "ndcgAt5": 0.0
+    },
+    "empty_filter/exactSemantic": {
+      "queries": 1,
+      "positiveQueries": 0,
+      "absentQueries": 1,
+      "absentQueriesReturningSuggestions": 0
+    },
+    "empty_filter/fused": {
+      "queries": 1,
+      "positiveQueries": 0,
+      "absentQueries": 1,
+      "absentQueriesReturningSuggestions": 0
+    },
+    "empty_filter/keywords": {
+      "queries": 1,
+      "positiveQueries": 0,
+      "absentQueries": 1,
+      "absentQueriesReturningSuggestions": 0
+    },
+    "empty_filter/semantic": {
+      "queries": 1,
+      "positiveQueries": 0,
+      "absentQueries": 1,
+      "absentQueriesReturningSuggestions": 0
+    },
+    "everyday/exactSemantic": {
+      "queries": 12,
+      "positiveQueries": 12,
+      "absentQueries": 0,
+      "hitAt5": 0.8333333333333334,
+      "recallAt5": 0.8333333333333334,
+      "precisionAt5": 0.16666666666666666,
+      "mrrAt5": 0.7361111111111112,
+      "ndcgAt5": 0.7609108127976215
+    },
+    "everyday/fused": {
+      "queries": 12,
+      "positiveQueries": 12,
+      "absentQueries": 0,
+      "hitAt5": 1.0,
+      "recallAt5": 1.0,
+      "precisionAt5": 0.20000000000000004,
+      "mrrAt5": 0.8888888888888888,
+      "ndcgAt5": 0.9166666666666666
+    },
+    "everyday/keywords": {
+      "queries": 12,
+      "positiveQueries": 12,
+      "absentQueries": 0,
+      "hitAt5": 0.8333333333333334,
+      "recallAt5": 0.8333333333333334,
+      "precisionAt5": 0.16666666666666666,
+      "mrrAt5": 0.8333333333333334,
+      "ndcgAt5": 0.8333333333333334
+    },
+    "everyday/semantic": {
+      "queries": 12,
+      "positiveQueries": 12,
+      "absentQueries": 0,
+      "hitAt5": 0.8333333333333334,
+      "recallAt5": 0.8333333333333334,
+      "precisionAt5": 0.16666666666666666,
+      "mrrAt5": 0.7361111111111112,
+      "ndcgAt5": 0.7609108127976215
+    },
+    "filtered-absence/exactSemantic": {
+      "queries": 2,
+      "positiveQueries": 0,
+      "absentQueries": 2,
+      "absentQueriesReturningSuggestions": 0
+    },
+    "filtered-absence/fused": {
+      "queries": 2,
+      "positiveQueries": 0,
+      "absentQueries": 2,
+      "absentQueriesReturningSuggestions": 0
+    },
+    "filtered-absence/keywords": {
+      "queries": 2,
+      "positiveQueries": 0,
+      "absentQueries": 2,
+      "absentQueriesReturningSuggestions": 0
+    },
+    "filtered-absence/semantic": {
+      "queries": 2,
+      "positiveQueries": 0,
+      "absentQueries": 2,
+      "absentQueriesReturningSuggestions": 0
+    },
+    "filtered-evidence/exactSemantic": {
+      "queries": 2,
+      "positiveQueries": 2,
+      "absentQueries": 0,
+      "hitAt5": 1.0,
+      "recallAt5": 1.0,
+      "precisionAt5": 0.2,
+      "mrrAt5": 1.0,
+      "ndcgAt5": 1.0
+    },
+    "filtered-evidence/fused": {
+      "queries": 2,
+      "positiveQueries": 2,
+      "absentQueries": 0,
+      "hitAt5": 1.0,
+      "recallAt5": 1.0,
+      "precisionAt5": 0.2,
+      "mrrAt5": 1.0,
+      "ndcgAt5": 1.0
+    },
+    "filtered-evidence/keywords": {
+      "queries": 2,
+      "positiveQueries": 2,
+      "absentQueries": 0,
+      "hitAt5": 1.0,
+      "recallAt5": 1.0,
+      "precisionAt5": 0.2,
+      "mrrAt5": 1.0,
+      "ndcgAt5": 1.0
+    },
+    "filtered-evidence/semantic": {
+      "queries": 2,
+      "positiveQueries": 2,
+      "absentQueries": 0,
+      "hitAt5": 1.0,
+      "recallAt5": 1.0,
+      "precisionAt5": 0.2,
+      "mrrAt5": 1.0,
+      "ndcgAt5": 1.0
+    },
+    "filters/exactSemantic": {
+      "queries": 14,
+      "positiveQueries": 14,
+      "absentQueries": 0,
+      "hitAt5": 1.0,
+      "recallAt5": 1.0,
+      "precisionAt5": 0.2,
+      "mrrAt5": 0.9285714285714286,
+      "ndcgAt5": 0.9472756790816368
+    },
+    "filters/fused": {
+      "queries": 14,
+      "positiveQueries": 14,
+      "absentQueries": 0,
+      "hitAt5": 1.0,
+      "recallAt5": 1.0,
+      "precisionAt5": 0.2,
+      "mrrAt5": 0.9642857142857143,
+      "ndcgAt5": 0.9736378395408184
+    },
+    "filters/keywords": {
+      "queries": 14,
+      "positiveQueries": 14,
+      "absentQueries": 0,
+      "hitAt5": 0.9285714285714286,
+      "recallAt5": 0.9285714285714286,
+      "precisionAt5": 0.18571428571428572,
+      "mrrAt5": 0.8928571428571429,
+      "ndcgAt5": 0.902209268112247
+    },
+    "filters/semantic": {
+      "queries": 14,
+      "positiveQueries": 14,
+      "absentQueries": 0,
+      "hitAt5": 1.0,
+      "recallAt5": 1.0,
+      "precisionAt5": 0.2,
+      "mrrAt5": 0.9285714285714286,
+      "ndcgAt5": 0.9472756790816368
+    },
+    "late-evidence/exactSemantic": {
+      "queries": 6,
+      "positiveQueries": 6,
+      "absentQueries": 0,
+      "hitAt5": 0.3333333333333333,
+      "recallAt5": 0.3333333333333333,
+      "precisionAt5": 0.06666666666666667,
+      "mrrAt5": 0.11666666666666665,
+      "ndcgAt5": 0.16963042680099985
+    },
+    "late-evidence/fused": {
+      "queries": 6,
+      "positiveQueries": 6,
+      "absentQueries": 0,
+      "hitAt5": 0.8333333333333334,
+      "recallAt5": 0.8333333333333334,
+      "precisionAt5": 0.16666666666666666,
+      "mrrAt5": 0.5888888888888889,
+      "ndcgAt5": 0.6478088012057569
+    },
+    "late-evidence/keywords": {
+      "queries": 6,
+      "positiveQueries": 6,
+      "absentQueries": 0,
+      "hitAt5": 0.8333333333333334,
+      "recallAt5": 0.8333333333333334,
+      "precisionAt5": 0.16666666666666666,
+      "mrrAt5": 0.638888888888889,
+      "ndcgAt5": 0.6884882922619097
+    },
+    "late-evidence/semantic": {
+      "queries": 6,
+      "positiveQueries": 6,
+      "absentQueries": 0,
+      "hitAt5": 0.3333333333333333,
+      "recallAt5": 0.3333333333333333,
+      "precisionAt5": 0.06666666666666667,
+      "mrrAt5": 0.11666666666666665,
+      "ndcgAt5": 0.16963042680099985
+    },
+    "multilingual-cross-language/exactSemantic": {
+      "queries": 22,
+      "positiveQueries": 22,
+      "absentQueries": 0,
+      "hitAt5": 0.045454545454545456,
+      "recallAt5": 0.045454545454545456,
+      "precisionAt5": 0.009090909090909092,
+      "mrrAt5": 0.022727272727272728,
+      "ndcgAt5": 0.02867862516233898
+    },
+    "multilingual-cross-language/fused": {
+      "queries": 22,
+      "positiveQueries": 22,
+      "absentQueries": 0,
+      "hitAt5": 0.6818181818181818,
+      "recallAt5": 0.6818181818181818,
+      "precisionAt5": 0.13636363636363635,
+      "mrrAt5": 0.4295454545454545,
+      "ndcgAt5": 0.492784017254262
+    },
+    "multilingual-cross-language/keywords": {
+      "queries": 22,
+      "positiveQueries": 22,
+      "absentQueries": 0,
+      "hitAt5": 0.7272727272727273,
+      "recallAt5": 0.7272727272727273,
+      "precisionAt5": 0.14545454545454548,
+      "mrrAt5": 0.5696969696969697,
+      "ndcgAt5": 0.6095714464327441
+    },
+    "multilingual-cross-language/semantic": {
+      "queries": 22,
+      "positiveQueries": 22,
+      "absentQueries": 0,
+      "hitAt5": 0.045454545454545456,
+      "recallAt5": 0.045454545454545456,
+      "precisionAt5": 0.009090909090909092,
+      "mrrAt5": 0.022727272727272728,
+      "ndcgAt5": 0.02867862516233898
+    },
+    "multilingual-native/exactSemantic": {
+      "queries": 22,
+      "positiveQueries": 22,
+      "absentQueries": 0,
+      "hitAt5": 0.9090909090909091,
+      "recallAt5": 0.9090909090909091,
+      "precisionAt5": 0.18181818181818182,
+      "mrrAt5": 0.75,
+      "ndcgAt5": 0.7916594670454639
+    },
+    "multilingual-native/fused": {
+      "queries": 22,
+      "positiveQueries": 22,
+      "absentQueries": 0,
+      "hitAt5": 1.0,
+      "recallAt5": 1.0,
+      "precisionAt5": 0.2,
+      "mrrAt5": 0.8863636363636364,
+      "ndcgAt5": 0.9161203985389677
+    },
+    "multilingual-native/keywords": {
+      "queries": 22,
+      "positiveQueries": 22,
+      "absentQueries": 0,
+      "hitAt5": 0.8636363636363636,
+      "recallAt5": 0.8636363636363636,
+      "precisionAt5": 0.17272727272727273,
+      "mrrAt5": 0.8181818181818182,
+      "ndcgAt5": 0.8300845230519507
+    },
+    "multilingual-native/semantic": {
+      "queries": 22,
+      "positiveQueries": 22,
+      "absentQueries": 0,
+      "hitAt5": 0.9090909090909091,
+      "recallAt5": 0.9090909090909091,
+      "precisionAt5": 0.18181818181818182,
+      "mrrAt5": 0.75,
+      "ndcgAt5": 0.7916594670454639
+    },
+    "multilingual-paraphrase/exactSemantic": {
+      "queries": 22,
+      "positiveQueries": 22,
+      "absentQueries": 0,
+      "hitAt5": 0.9090909090909091,
+      "recallAt5": 0.9090909090909091,
+      "precisionAt5": 0.18181818181818182,
+      "mrrAt5": 0.6590909090909091,
+      "ndcgAt5": 0.7245557858766379
+    },
+    "multilingual-paraphrase/fused": {
+      "queries": 22,
+      "positiveQueries": 22,
+      "absentQueries": 0,
+      "hitAt5": 1.0,
+      "recallAt5": 1.0,
+      "precisionAt5": 0.2,
+      "mrrAt5": 0.7727272727272727,
+      "ndcgAt5": 0.8322407970779352
+    },
+    "multilingual-paraphrase/keywords": {
+      "queries": 22,
+      "positiveQueries": 22,
+      "absentQueries": 0,
+      "hitAt5": 0.8636363636363636,
+      "recallAt5": 0.8636363636363636,
+      "precisionAt5": 0.17272727272727273,
+      "mrrAt5": 0.7045454545454546,
+      "ndcgAt5": 0.7462049215909183
+    },
+    "multilingual-paraphrase/semantic": {
+      "queries": 22,
+      "positiveQueries": 22,
+      "absentQueries": 0,
+      "hitAt5": 0.9090909090909091,
+      "recallAt5": 0.9090909090909091,
+      "precisionAt5": 0.18181818181818182,
+      "mrrAt5": 0.6590909090909091,
+      "ndcgAt5": 0.7245557858766379
+    },
+    "scifact/exactSemantic": {
+      "queries": 300,
+      "positiveQueries": 300,
+      "absentQueries": 0,
+      "hitAt5": 0.16333333333333333,
+      "recallAt5": 0.1476111111111111,
+      "precisionAt5": 0.03333333333333333,
+      "mrrAt5": 0.11777777777777779,
+      "ndcgAt5": 0.12076653434570403
+    },
+    "scifact/fused": {
+      "queries": 300,
+      "positiveQueries": 300,
+      "absentQueries": 0,
+      "hitAt5": 0.6533333333333333,
+      "recallAt5": 0.6305555555555555,
+      "precisionAt5": 0.134,
+      "mrrAt5": 0.4232777777777778,
+      "ndcgAt5": 0.46835385273766605
+    },
+    "scifact/keywords": {
+      "queries": 300,
+      "positiveQueries": 300,
+      "absentQueries": 0,
+      "hitAt5": 0.7533333333333333,
+      "recallAt5": 0.7309444444444444,
+      "precisionAt5": 0.15933333333333335,
+      "mrrAt5": 0.6001111111111112,
+      "ndcgAt5": 0.6284140426190982
+    },
+    "scifact/semantic": {
+      "queries": 300,
+      "positiveQueries": 300,
+      "absentQueries": 0,
+      "hitAt5": 0.16333333333333333,
+      "recallAt5": 0.1476111111111111,
+      "precisionAt5": 0.03333333333333333,
+      "mrrAt5": 0.11777777777777779,
+      "ndcgAt5": 0.12076653434570403
+    }
+  },
+  "exactAvailability": {
+    "ready": 427,
+    "unavailable": 6
+  },
+  "relatedButInsufficient": {
+    "keywords": {
+      "queries": 88,
+      "relatedAt1": 23,
+      "relatedAt5": 72
+    },
+    "semantic": {
+      "queries": 88,
+      "relatedAt1": 28,
+      "relatedAt5": 61
+    },
+    "fused": {
+      "queries": 88,
+      "relatedAt1": 30,
+      "relatedAt5": 78
+    },
+    "exactSemantic": {
+      "queries": 88,
+      "relatedAt1": 28,
+      "relatedAt5": 61
+    }
+  }
+}

@@ -1,6 +1,7 @@
 """The checked runner must reject an early successful exit and accept explicit skips."""
 import json
 import os
+import re
 from pathlib import Path
 import sys
 import tempfile
@@ -93,6 +94,45 @@ class TestEvidenceTests(unittest.TestCase):
         with self.assertRaises(TimeoutError):
             TestProcess(0.1, dict(os.environ)).run(
                 [sys.executable, "-c", "import time; time.sleep(10)"], path.with_suffix(".log"))
+
+    def test_default_workflow_batches_cover_every_bundle_and_test_once(self):
+        script = Path(__file__).resolve().parents[1] / "scripts/test.sh"
+        batch_line = next(line for line in script.read_text().splitlines() if "for test_skip in" in line)
+        patterns = re.findall(r"'([^']+)'", batch_line)
+        self.assertEqual(len(patterns), 2)
+        for bundle in ["SilliesAppTests", "SilliesPersistenceTests", "SilliesNewFeatureTests",
+                       "FutureLibraryTests"]:
+            selected = [pattern for pattern in patterns if not re.fullmatch(pattern, bundle)]
+            self.assertEqual(len(selected), 1, bundle)
+            for identifier in [bundle + ".testExample()", bundle + ".Suite/testExample"]:
+                self.assertEqual(selected_tests({identifier}, [], selected), {identifier})
+                excluded = [pattern for pattern in patterns if pattern not in selected]
+                self.assertEqual(selected_tests({identifier}, [], excluded), set())
+
+    def test_race_workflow_batches_keep_native_and_voice_checks_disjoint(self):
+        script = Path(__file__).resolve().parents[1] / "scripts/test-races.sh"
+        text = script.read_text()
+        variables = dict(re.findall(r"^([a-z_]+)=['\"]([^'\"]+)['\"]", text, re.MULTILINE))
+
+        def expanded(value):
+            return re.sub(r"\$(\w+)", lambda match: expanded(variables[match[1]]), value)
+
+        batch = text.split("for race_skip in", 1)[1].split("; do", 1)[0]
+        patterns = [expanded(value) for value in re.findall(r"['\"]([^'\"]+)['\"]", batch)]
+        self.assertEqual(len(patterns), 3)
+        bundles = ["App", "Audio", "Core", "Persistence", "Reasoning", "Search", "Speech",
+                   "Chat", "TTS", "TextModels", "VoicePlayback", "Writing", "NewFeature"]
+        for bundle in [*("Sillies" + name + "Tests" for name in bundles), "FutureLibraryTests"]:
+            selected = [pattern for pattern in patterns if not re.fullmatch(pattern, bundle)]
+            self.assertEqual(len(selected), 1, bundle)
+            identifier = bundle + ".example()"
+            self.assertEqual(selected_tests({identifier}, [], selected), {identifier})
+            self.assertEqual(sum(not re.search(pattern, identifier) for pattern in patterns), 1)
+        self.assertTrue(all(re.fullmatch(pattern, "SilliesFishSpeechTests") for pattern in patterns))
+        # The separate PCM matrices must not also run in a general batch.
+        for name in ["voiceConversationResamplesDeviceQuantaWithoutSelfInterruption",
+                     "voiceConversationRejectsEchoAcrossAcousticDelays"]:
+            self.assertTrue(all(re.search(pattern, "SilliesAudioTests." + name) for pattern in patterns))
 
 
 if __name__ == "__main__":

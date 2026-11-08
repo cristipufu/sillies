@@ -17,7 +17,7 @@ typealias SearchModelDownloads = DownloadableModelsPresentation<SearchModelManif
         selectedID: { await environment.selectedID() },
         select: { try await environment.select($0) },
         remove: { try await environment.remove($0) },
-        stop: { await environment.stop() }, minimumMemoryGB: { $0.model.minimumMemoryGB }),
+        minimumMemoryGB: { $0.model.minimumMemoryGB }),
       selectedID: SearchModelEnvironment.appleID)
   }
   func observeStatus() async {

@@ -70,8 +70,9 @@ final class WindowTargetCache: Sendable {
     _ snapshot: AccessibilityWindowRoleSnapshot?, for pid: pid_t,
     at time: TimeInterval, in state: inout State
   ) {
-    // Preserve verified roles on timeout and back off before attempting another refresh.
-    let retained = snapshot ?? state.roles[pid]?.value
+    // Preserve known roles on timeout or malformed AX responses, then back off before retrying.
+    let usableSnapshot = snapshot.flatMap { $0.isUnavailable ? nil : $0 }
+    let retained = usableSnapshot ?? state.roles[pid]?.value
     if state.roles.count >= maximumRoles { state.roles.removeAll(keepingCapacity: true) }
     state.roles[pid] = Entry(value: retained, capturedAt: time)
   }

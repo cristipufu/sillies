@@ -1,0 +1,151 @@
+{
+  "makeCheck": {
+    "exitCode": 0,
+    "runs": [
+      {
+        "run": "run-hjfi4oi4",
+        "receipts": [
+          {
+            "bundle": "SilliesAudioTests",
+            "framework": "swift-testing",
+            "tests": 43,
+            "presentation": "headless"
+          },
+          {
+            "bundle": "SilliesChatTests",
+            "framework": "swift-testing",
+            "tests": 53,
+            "presentation": "headless"
+          },
+          {
+            "bundle": "SilliesCoreTests",
+            "framework": "swift-testing",
+            "tests": 186,
+            "presentation": "headless"
+          },
+          {
+            "bundle": "SilliesDesignTests",
+            "framework": "swift-testing",
+            "tests": 5,
+            "presentation": "headless"
+          },
+          {
+            "bundle": "SilliesDiagnosticsTests",
+            "framework": "swift-testing",
+            "tests": 7,
+            "presentation": "headless"
+          },
+          {
+            "bundle": "SilliesFishSpeechTests",
+            "framework": "swift-testing",
+            "tests": 14,
+            "presentation": "headless"
+          },
+          {
+            "bundle": "SilliesModelStoreTests",
+            "framework": "swift-testing",
+            "tests": 4,
+            "presentation": "headless"
+          },
+          {
+            "bundle": "SilliesModelStoreTests",
+            "framework": "xctest",
+            "tests": 28
+          },
+          {
+            "bundle": "SilliesPersistenceTests",
+            "framework": "swift-testing",
+            "tests": 87,
+            "presentation": "headless"
+          },
+          {
+            "bundle": "SilliesReasoningTests",
+            "framework": "swift-testing",
+            "tests": 68,
+            "presentation": "headless"
+          },
+          {
+            "bundle": "SilliesSearchModelsTests",
+            "framework": "swift-testing",
+            "tests": 18,
+            "presentation": "headless"
+          },
+          {
+            "bundle": "SilliesSpeechTests",
+            "framework": "swift-testing",
+            "tests": 6,
+            "presentation": "headless"
+          },
+          {
+            "bundle": "SilliesSpeechTests",
+            "framework": "xctest",
+            "tests": 31
+          },
+          {
+            "bundle": "SilliesTTSTests",
+            "framework": "swift-testing",
+            "tests": 24,
+            "presentation": "headless"
+          },
+          {
+            "bundle": "SilliesTextModelsTests",
+            "framework": "swift-testing",
+            "tests": 41,
+            "presentation": "headless"
+          },
+          {
+            "bundle": "SilliesTextModelsTests",
+            "framework": "xctest",
+            "tests": 1
+          },
+          {
+            "bundle": "SilliesVaultTests",
+            "framework": "swift-testing",
+            "tests": 95,
+            "presentation": "headless"
+          },
+          {
+            "bundle": "SilliesVectorIndexTests",
+            "framework": "swift-testing",
+            "tests": 6,
+            "presentation": "headless"
+          },
+          {
+            "bundle": "SilliesVoicePlaybackTests",
+            "framework": "swift-testing",
+            "tests": 14,
+            "presentation": "headless"
+          },
+          {
+            "bundle": "SilliesWritingTests",
+            "framework": "swift-testing",
+            "tests": 9,
+            "presentation": "headless"
+          }
+        ]
+      },
+      {
+        "run": "run-gzs80020",
+        "receipts": [
+          {
+            "bundle": "SilliesAppTests",
+            "framework": "swift-testing",
+            "tests": 328,
+            "presentation": "headless"
+          }
+        ]
+      }
+    ],
+    "selectedTests": 1068
+  },
+  "focusedPersistence": [
+    {
+      "bundle": "SilliesPersistenceTests",
+      "framework": "swift-testing",
+      "tests": 87,
+      "presentation": "headless"
+    }
+  ],
+  "gui": "not requested",
+  "stressAndRace": "previous acceptance pass; not repeated for this SQL follow-up"
+}

@@ -9,6 +9,10 @@ struct AccessibilityWindowRoleSnapshot: Sendable, Equatable {
   var hasExactStandardWindowFrames = false
   var focusedStandardWindowFrame: CGRect?
 
+  var isUnavailable: Bool {
+    !hasVerifiedWindowList && standardWindowFrames.isEmpty && nonStandardWindowFrames.isEmpty
+  }
+
   init(
     standardWindowFrames: [CGRect] = [],
     nonStandardWindowFrames: [CGRect] = [],
@@ -39,36 +43,6 @@ final class AccessibilityWindowSource: @unchecked Sendable {
   private static let messagingTimeoutSeconds: Float = 0.10
   private static let lookupMessagingTimeoutSeconds: Float = 0.05
   private static let maxInspectedWindowCount = 12
-
-  private enum InspectedAttribute: Int, CaseIterable {
-    case role = 0
-    case subrole
-    case modal
-    case minimized
-    case closeButton
-    case minimizeButton
-    case zoomButton
-    case fullScreenButton
-    case position
-    case size
-
-    var key: String {
-      switch self {
-      case .role: kAXRoleAttribute
-      case .subrole: kAXSubroleAttribute
-      case .modal: kAXModalAttribute
-      case .minimized: kAXMinimizedAttribute
-      case .closeButton: kAXCloseButtonAttribute
-      case .minimizeButton: kAXMinimizeButtonAttribute
-      case .zoomButton: kAXZoomButtonAttribute
-      case .fullScreenButton: kAXFullScreenButtonAttribute
-      case .position: kAXPositionAttribute
-      case .size: kAXSizeAttribute
-      }
-    }
-  }
-
-  private static let inspectedWindowAttributes: [String] = InspectedAttribute.allCases.map(\.key)
 
   private struct InspectedWindow {
     let element: AXUIElement
@@ -237,10 +211,7 @@ final class AccessibilityWindowSource: @unchecked Sendable {
       timeout: Self.messagingTimeoutSeconds)
     guard isCurrentRequestedProcess(processID) else { return }
     let isTransientUnverifiedRead =
-      !evaluation.roleSnapshot.hasVerifiedWindowList
-      && evaluation.targetWindow == nil
-      && evaluation.roleSnapshot.standardWindowFrames.isEmpty
-      && evaluation.roleSnapshot.nonStandardWindowFrames.isEmpty
+      evaluation.roleSnapshot.isUnavailable && evaluation.targetWindow == nil
     if isTransientUnverifiedRead, let cachedRoleSnapshot {
       publish(reason: reason, roleSnapshot: cachedRoleSnapshot)
       return
@@ -430,48 +401,16 @@ final class AccessibilityWindowSource: @unchecked Sendable {
     guard
       AXUIElementCopyMultipleAttributeValues(
         window,
-        inspectedWindowAttributes as CFArray,
+        AccessibilityWindowInspection.attributeKeys as CFArray,
         [],
         &rawValues) == .success,
       let values = rawValues as? [AnyObject],
-      values.count == inspectedWindowAttributes.count
+      let inspection = AccessibilityWindowInspection(values: values)
     else { return nil }
-
-    let frame = extractFrame(
-      positionRef: attributeValue(.position, in: values),
-      sizeRef: attributeValue(.size, in: values))
-    let role = attributeValue(.role, in: values) as? String
-    let subrole = attributeValue(.subrole, in: values) as? String
-    let isModal = (attributeValue(.modal, in: values) as? Bool) == true
-    let isMinimized = (attributeValue(.minimized, in: values) as? Bool) == true
-    let hasCloseButton = isUIElementAttributeValue(attributeValue(.closeButton, in: values))
-    let hasWindowControl =
-      isUIElementAttributeValue(attributeValue(.minimizeButton, in: values))
-      || isUIElementAttributeValue(attributeValue(.zoomButton, in: values))
-      || isUIElementAttributeValue(attributeValue(.fullScreenButton, in: values))
-    let isStandardWindow =
-      frame != nil
-      && role == kAXWindowRole
-      && subrole == kAXStandardWindowSubrole
-      && !isModal
-      && !isMinimized
-      && hasCloseButton
-      && hasWindowControl
     return InspectedWindow(
       element: window,
-      frame: frame ?? .zero,
-      isStandardWindow: isStandardWindow)
-  }
-
-  private static func attributeValue(
-    _ attribute: InspectedAttribute,
-    in values: [AnyObject]
-  ) -> AnyObject {
-    values[attribute.rawValue]
-  }
-
-  private static func isUIElementAttributeValue(_ value: AnyObject) -> Bool {
-    CFGetTypeID(value) == AXUIElementGetTypeID()
+      frame: inspection.frame,
+      isStandardWindow: inspection.isStandardWindow)
   }
 
   private static func copyWindowAttribute(
@@ -501,18 +440,4 @@ final class AccessibilityWindowSource: @unchecked Sendable {
     return (elements, true)
   }
 
-  private static func extractFrame(positionRef: AnyObject, sizeRef: AnyObject) -> CGRect? {
-    guard CFGetTypeID(positionRef) == AXValueGetTypeID(),
-      CFGetTypeID(sizeRef) == AXValueGetTypeID()
-    else { return nil }
-    var origin = CGPoint.zero
-    var size = CGSize.zero
-    let posValue = unsafeDowncast(positionRef, to: AXValue.self)
-    let sizeValue = unsafeDowncast(sizeRef, to: AXValue.self)
-    guard AXValueGetValue(posValue, .cgPoint, &origin),
-      AXValueGetValue(sizeValue, .cgSize, &size),
-      size.width > 0, size.height > 0
-    else { return nil }
-    return CGRect(origin: origin, size: size)
-  }
 }

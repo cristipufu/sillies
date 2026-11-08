@@ -13,6 +13,19 @@ struct VaultReasoningDocument {
 }
 
 extension VaultLibrary {
+  func savedLinks(id: UUID) throws -> [URL] {
+    guard let header = try storage().documentHeader(id: id), header.metadata.trashedAt == nil else {
+      return []
+    }
+    return try savedLinks(in: header)
+  }
+
+  private func savedLinks(in header: VaultDocumentHeader) throws -> [URL] {
+    if let link = header.metadata.link { return [link.url] }
+    guard let record = try record(id: header.id) else { return [] }
+    return try VaultToolContent.links(in: record)
+  }
+
   func reasoningDocument(id: UUID) throws -> VaultReasoningDocument? {
     let storage = try storage()
     try storage.prepareContent(id: id)
@@ -23,6 +36,6 @@ extension VaultLibrary {
     let notes = header.metadata.kind == .capture ? try storage.authoredNotes(recordID: id) : ""
     return try .init(
       header: header, content: .init(record: record, notes: notes, title: header.title),
-      links: header.metadata.link.map { [$0.url] } ?? VaultToolContent.links(in: record))
+      links: savedLinks(in: header))
   }
 }

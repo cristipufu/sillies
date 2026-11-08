@@ -20,26 +20,9 @@ struct SpeechModelSettingsView: View {
   }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 14) {
-      if scope != .speakers {
-        LabeledContent(
-          "App default",
-          value: model.manifests.first { $0.modelID == model.selectedModelID }?.model.name
-            ?? String(localized: "Apple Speech"))
-        HStack {
-          VStack(alignment: .leading, spacing: 4) {
-            Text("Apple Speech").fontWeight(.semibold)
-            Text("Uses languages installed by macOS.").font(.caption).foregroundStyle(
-              theme.secondary)
-          }
-          Spacer()
-          if model.selectedModelID == SpeechModelDescriptor.apple.id {
-            selectedLabel
-          } else {
-            Button("Use") { model.useApple() }.buttonStyle(SoftButtonStyle())
-          }
-        }
-      }
+    VStack(alignment: .leading, spacing: 20) {
+      overview
+      if model.isLoading { ProgressView("Checking models…") }
       ModelCatalogBrowser(
         entries: manifests.map { manifest in
           .init(
@@ -48,27 +31,63 @@ struct SpeechModelSettingsView: View {
             state: model.state(for: manifest.modelID), isSelected: model.isSelected(manifest),
             model: manifest)
         }, content: modelRow)
-      if model.isLoading { ProgressView("Checking models…").controlSize(.small) }
       if scope == .all, let updates = model.updates {
         Divider()
         ModelUpdateSettingsView(model: updates)
       }
       if let error = model.error {
         Text(error).font(.caption).foregroundStyle(theme.danger).fixedSize(
-          horizontal: false, vertical: true)
+          horizontal: false, vertical: true
+        ).textSelection(.enabled)
       }
-      Text(
-        "Changes apply to your next session. Downloads need internet; your audio and transcripts stay on this Mac."
-      )
-      .font(.caption).foregroundStyle(theme.secondary).fixedSize(
-        horizontal: false, vertical: true)
     }
     .task { await model.load() }
   }
 
-  private var selectedLabel: some View {
-    Label("Selected", systemImage: "checkmark.circle.fill")
-      .font(.caption.weight(.medium)).foregroundStyle(theme.accent)
+  @ViewBuilder private var overview: some View {
+    if scope == .speakers {
+      SettingsCard(
+        title: String(localized: "Who said what?"),
+        detail: String(
+          localized:
+            "Optional speaker detection separates voices in meetings. It doesn’t identify people by name."
+        )
+      ) {
+        modelInformation
+      }
+    } else {
+      SettingsCard(
+        title: String(localized: "Turn speech into words"),
+        detail: String(
+          localized:
+            "The selected model is shared by Talk, dictation, Listen, Participate and Record. Changes apply to your next session."
+        )
+      ) {
+        LabeledContent(
+          "App default",
+          value: model.manifests.first { $0.modelID == model.selectedModelID }?.model.name
+            ?? String(localized: "Apple Speech"))
+        if model.selectedModelID != SpeechModelDescriptor.apple.id {
+          HStack {
+            Text("Apple Speech")
+            Spacer()
+            Button("Use as app default") { model.useApple() }.buttonStyle(SoftButtonStyle())
+          }
+        }
+        modelInformation
+      }
+    }
+  }
+
+  private var modelInformation: some View {
+    DisclosureGroup("Model information") {
+      VStack(alignment: .leading, spacing: 10) {
+        if scope != .speakers { Text("Uses languages installed by macOS.") }
+        Text(
+          "Changes apply to your next session. Downloads need internet; your audio and transcripts stay on this Mac."
+        )
+      }.font(.caption).foregroundStyle(theme.secondary).padding(.top, 8)
+    }
   }
 
   private func downloadDescription(_ manifest: SpeechModelManifest) -> String {
@@ -83,11 +102,9 @@ struct SpeechModelSettingsView: View {
 
   private func modelRow(_ manifest: SpeechModelManifest) -> some View {
     let state = model.state(for: manifest.model.id)
-    return VStack(alignment: .leading, spacing: 8) {
-      Text(LocalizedCatalogText.value(manifest.model.detail)).font(.caption).foregroundStyle(
-        theme.secondary
-      )
-      .fixedSize(horizontal: false, vertical: true)
+    return VStack(alignment: .leading, spacing: 12) {
+      Text(LocalizedCatalogText.value(manifest.model.detail)).font(.callout)
+        .fixedSize(horizontal: false, vertical: true)
       if let fraction = state.downloadFraction {
         ProgressView(value: fraction).accessibilityLabel("Model download")
       }

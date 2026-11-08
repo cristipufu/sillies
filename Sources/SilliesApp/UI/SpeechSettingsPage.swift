@@ -25,29 +25,11 @@ struct SpeechSettingsPage: View {
     }.pickerStyle(.segmented)
     switch section {
     case .transcription:
-      SettingsCard(
-        title: String(localized: "Turn speech into words"),
-        detail:
-          String(
-            localized:
-              "The selected model is shared by Talk, dictation, Listen, Participate and Record. Changes apply to your next session."
-          )
-      ) {
-        SpeechModelSettingsView(model: model, activeModelID: activeModelID, scope: .transcription)
-      }
+      SpeechModelSettingsView(model: model, activeModelID: activeModelID, scope: .transcription)
     case .speakers:
-      SettingsCard(
-        title: String(localized: "Who said what?"),
-        detail:
-          String(
-            localized:
-              "Optional speaker detection separates voices in meetings. It doesn’t identify people by name."
-          )
-      ) {
-        SpeechModelSettingsView(
-          model: model, activeModelID: activeModelID,
-          activeDiarizationModelID: activeDiarizationModelID, scope: .speakers)
-      }
+      SpeechModelSettingsView(
+        model: model, activeModelID: activeModelID,
+        activeDiarizationModelID: activeDiarizationModelID, scope: .speakers)
     case .updates:
       if let updates = model.updates {
         SettingsCard(title: String(localized: "Keep your downloaded models current")) {

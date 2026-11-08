@@ -18,30 +18,36 @@ struct SearchModelSettingsView: View {
           "App default",
           value: downloads.manifests.first { $0.modelID == downloads.selectedModelID }?.model.name
             ?? String(localized: "Apple Natural Language"))
-        Label("Your recordings and text stay on this Mac.", systemImage: "lock.shield")
-          .foregroundStyle(theme.secondary)
-        Text(
-          "Search includes meeting transcripts, screenshot text and Stash items. It does not change your chat model or create new memories."
-        )
-        .foregroundStyle(theme.secondary)
+        if downloads.selectedModelID != SearchModelEnvironment.appleID {
+          HStack {
+            Text("Apple Natural Language")
+            Spacer()
+            selectionButton(SearchModelEnvironment.appleID)
+          }
+        }
+        DisclosureGroup("Model information") {
+          VStack(alignment: .leading, spacing: 10) {
+            Label("Your recordings and text stay on this Mac.", systemImage: "lock.shield")
+            Text(
+              "Search includes meeting transcripts, screenshot text and Stash items. It does not change your chat model or create new memories."
+            )
+            Text("Uses available macOS language assets. Unsupported languages use keyword search.")
+          }.font(.caption).foregroundStyle(theme.secondary).padding(.top, 8)
+        }
         indexStatus
         Button("Rebuild search index") { Task { await model.rebuild() } }
           .buttonStyle(SoftButtonStyle()).disabled(downloads.activeID != nil)
       }
-      SettingsCard(
-        title: String(localized: "Apple Natural Language"),
-        detail: String(
-          localized:
-            "Uses available macOS language assets. Unsupported languages use keyword search.")
-      ) {
-        selectionButton(SearchModelEnvironment.appleID)
-      }
+      if downloads.isLoading { ProgressView("Checking installed models…") }
       ModelCatalogBrowser(
         entries: downloads.manifests.map { manifest in
           .init(
             id: manifest.modelID, family: manifest.model.name,
             name: manifest.model.name,
-            detail: LocalizedCatalogText.value(manifest.model.languagesDescription),
+            detail: String(
+              localized:
+                "\(ByteCountFormatter.string(fromByteCount: manifest.downloadBytes, countStyle: .file)) download · \(manifest.model.minimumMemoryGB) GB memory required"
+            ),
             state: downloads.state(for: manifest.modelID),
             isSelected: downloads.selectedModelID == manifest.modelID,
             model: manifest)
@@ -74,10 +80,8 @@ struct SearchModelSettingsView: View {
   private func card(_ manifest: SearchModelManifest) -> some View {
     let state = downloads.state(for: manifest.modelID)
     return VStack(alignment: .leading, spacing: 12) {
-      Text(
-        "\(ByteCountFormatter.string(fromByteCount: manifest.downloadBytes, countStyle: .file)) download · \(manifest.model.minimumMemoryGB) GB memory required"
-      )
-      .font(.caption).foregroundStyle(theme.secondary)
+      Text(LocalizedCatalogText.value(manifest.model.languagesDescription)).foregroundStyle(
+        theme.secondary)
       if let fraction = state.downloadFraction { ProgressView(value: fraction) }
       Text(state.label).font(.caption).foregroundStyle(theme.secondary).textSelection(.enabled)
       HStack {

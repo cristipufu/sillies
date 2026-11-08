@@ -2,7 +2,6 @@ import AVFoundation
 import AppKit
 import SilliesAudioTestSupport
 import SilliesCore
-import SwiftUI
 import Testing
 
 @testable import SilliesApp
@@ -19,8 +18,12 @@ import Testing
   model.languages = [fixtureEnglish]
   model.selectedLanguageID = fixtureEnglish.id
   model.followsLiveTranscript = true
-  let view = NSHostingView(rootView: AudioSessionView(model: model))
-  view.frame = CGRect(x: 0, y: 0, width: 640, height: 760)
+  let controller = AudioSessionWindowController(appearance: ThemeEnvironment(), openTextModels: {})
+  controller.prepare(model)
+  defer { controller.close() }
+  let window = try #require(controller.window)
+  let view = try #require(window.contentView)
+  #expect(!window.isVisible)
   view.layoutSubtreeIfNeeded()
   let delivery = AudioSessionUpdateDelivery {
     if case .transcript(let text, let level, let elapsed) = $0 {
@@ -50,7 +53,7 @@ import Testing
   #expect(result.duration == Double(AudioEnduranceWorker.durationSeconds))
   #expect(result.transcript.contains("History passage 0."))
   #expect(result.transcript.contains("Live passage 599."))
-  #expect(scrollSamples.count > 10)
+  try #require(scrollSamples.count > 10)
   scrollSamples.sort()
   let p95 = scrollSamples[Int(Double(scrollSamples.count) * 0.95)]
   #expect(p95 < .milliseconds(16))

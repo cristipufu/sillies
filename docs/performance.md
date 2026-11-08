@@ -1,6 +1,6 @@
 # Performance
 
-Current test modes: routine checks render offscreen. Live WindowServer/frame measurements below require explicit `make gui-check` or `scripts/test.sh --presentation gui`; headless success does not measure compositor timing.
+Current test modes: routine checks render offscreen. Timing, scale and endurance checks run on demand through `make performance-check`. Live WindowServer/frame measurements require explicit `make performance-gui-check` or `scripts/test.sh --configuration release --suite performance --presentation gui`; headless success does not measure compositor timing. Functional native workflows remain in `make gui-check`.
 
 The [Fish S2 Pro profiling report](reports/fish-tts-profile-2026-11-01.md) separates model verification, first PCM, transformer execution, waveform decoding, and playback pacing, with reproducible diagnostics and measurement data. The [follow-up optimization report](reports/voice-optimization-2026-11-01.md) covers shared verification reuse and measured Fish improvements.
 
@@ -32,6 +32,27 @@ search. These controls do not establish factual reliability merely because infer
 ## Validation
 
 `make check` runs Swift and shell lint, core and app tests, a debug build, and pack validation. `make gui-check` adds lifecycle, presentation, real-window tracking, and live move/resize attachment checks.
+
+### November 8, 2026 test-runner profiling
+
+On the M4 Pro with 48 GB memory, macOS 26.7.2 and Swift 6.4.2, profiling found avoidable fixture writes, repeated runner setup and compiler-cache invalidation. Performance selection is now explicit and independent of permission to show native windows; structural bounds and functional failure/cancellation coverage remain in the standard suite.
+
+| Measured work | Before | After | Change |
+| --- | --- | --- | --- |
+| Keyword-memory scale fixture setup, debug | 35.021 s | 1.553 s | Seed fixture rows in one transaction |
+| Semantic-memory scale fixture setup, debug | 40.264 s | 1.847 s | Seed fixture rows in one transaction |
+| Native host compilation and presentation-boundary preflight per full invocation | Four times | Once | Reuse setup across four bounded test batches |
+| Compiler localization extraction | Changed normal build flags, causing a 264 s rebuild | Isolated cache; next normal build reused outputs | Keep extraction flags in a separate build directory |
+
+The first two rows measure setup, not production search latency. Public-write, correction and recovery regressions still exercise production persistence. A controlled normal-build → localization-extraction → normal-build sequence confirmed cache reuse: the final build reported 4.65 s of build work (14.81 s command wall time), with no Swift recompilation. Extraction itself took 19.5 s on its warm cache. These are individual samples, not universal timing guarantees.
+
+The complete routine check passed with 1,091 selected test entries across 23 framework/bundle runs, including opt-in skips. Its checked-runner phase took 199.56 s; the full command took 495.76 s before extraction-cache isolation. Two externally gated Vault measurements were subsequently classified as performance-only, so the current standard selection has 1,089 entries. Runner regressions verify both partitions and completion evidence.
+
+Cold optimized builds remain expensive: the first complete performance command took 2,050 s including compilation and a failed endurance check. Optimized test imports have their own `.build/performance` cache so they do not invalidate the shipped app's release build. Changing the large AppKit test target still took about seven minutes to compile under whole-module optimization. Targeted commands avoid compiling unrelated test targets, but do not make a changed target free to rebuild. See the [verification commands](development.md#verification).
+
+The performance suite is **not fully passing**. In its first optimized run, the enabled Core, Vault and persistence measurements passed, but accelerated audio exceeded its 60 s deadline. The audio fixture then revealed two differences from production: utility-priority processing and an unattached hosting view with automatic sizing. It now uses live capture's user-initiated priority and the production `AudioSessionWindowController`, prepared without showing its window. The measured workload and limits are unchanged. A missing set of scroll samples now fails the test before percentile indexing instead of risking a trap.
+
+With priority matched but the old view setup, ten simulated minutes completed in 58.11 s and scroll p95 was 103.18 ms. Sampling a separate diagnostic run placed about 98% of samples inside the measured scroll operation in layout; that instrumented run exceeded the deadline. With the production window setup, ten simulated minutes completed in 58.17 s and scroll p95 was 27.28 ms, still above the 16 ms budget (`run-av54gpni`). These are individual headless measurements on a working desktop, not a demonstrated app-speed improvement or proof of visible scrolling latency. The corrected fixture remains a failing on-demand check; no budget was relaxed, no failure was suppressed, and no full performance pass is claimed. Visible timing/focus/stacking checks were not run.
 
 Budget failures include the slowest measured frame's stage timings: targeting, surfaces, screen geometry, surface configuration, arrangement, native placement, behavior, interaction, and clocks. Nested timings are inclusive, so they must not be added together. Reports also include thermal and Low Power Mode state. Only one stage trace per interactive path is retained; diagnostics add no timer and collect nothing while metrics are disabled. The timing limits remain unchanged.
 

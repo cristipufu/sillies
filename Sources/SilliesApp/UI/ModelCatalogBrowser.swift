@@ -52,9 +52,8 @@ struct ModelCatalogBrowser<Model, Content: View>: View {
       }
       ForEach(families, id: \.self) { family in
         VStack(alignment: .leading, spacing: 8) {
-          if visible.contains(where: { $0.family == family && $0.name != family }) {
-            Text(family).font(.callout.weight(.semibold)).foregroundStyle(theme.secondary)
-          }
+          Text(family).font(.callout.weight(.semibold)).foregroundStyle(theme.secondary)
+            .accessibilityAddTraits(.isHeader)
           ForEach(visible.filter { $0.family == family }) { entry in
             ModelCatalogRow(entry: entry, content: content)
           }

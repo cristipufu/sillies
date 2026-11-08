@@ -30,7 +30,7 @@ import Testing
       id: "progress", family: "Example", name: "Downloading model", detail: "4 GB · 16 GB memory",
       state: .verifying(0.72), isSelected: false, model: "Checking downloaded files"),
     .init(
-      id: "failure", family: "Another family", name: "Recoverable model",
+      id: "failure", family: "Standalone", name: "Standalone",
       detail: "Multiple languages",
       state: .failed("Download interrupted"), isSelected: false, model: "Try again"),
   ]

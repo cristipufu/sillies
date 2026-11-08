@@ -6,6 +6,7 @@ import re
 import shlex
 import subprocess
 import sys
+import time
 
 
 def extraction_arguments(arguments):
@@ -39,16 +40,24 @@ def compile_strings(root, directory):
     frontend = prepare_frontend(directory)
     # Dependency scanning must use toolchain headers, not the wrapper's directory.
     clang_resources = subprocess.check_output(["xcrun", "clang", "--print-resource-dir"], text=True).strip()
-    command = ["swift", "build", "--product", "Sillies", "-Xswiftc", "-emit-localized-strings",
+    # Extraction changes every Swift compiler invocation. Keep its build graph separate so
+    # normal test/app builds do not invalidate these artifacts, or vice versa.
+    # Swift Build 6.4.2 fails a cold extraction build while copying the ABI descriptor of
+    # FluidAudio's resource module. Use SwiftPM's supported native backend for this check.
+    command = ["swift", "build", "--build-system", "native",
+               "--scratch-path", str(directory / "build"),
+               "--product", "Sillies", "-Xswiftc", "-emit-localized-strings",
                "-Xswiftc", "-emit-localized-strings-path", "-Xswiftc", str(output),
                "-Xswiftc", "-driver-use-frontend-path", "-Xswiftc", str(frontend),
                "-Xswiftc", "-Xcc", "-Xswiftc", "-resource-dir",
                "-Xswiftc", "-Xcc", "-Xswiftc", clang_resources]
-    result = subprocess.run(command, cwd=root, capture_output=True, text=True)
     log = directory / "build.log"
-    log.write_text(result.stdout + result.stderr)
+    started = time.monotonic()
+    with log.open("w") as stream:
+        result = subprocess.run(command, cwd=root, stdout=stream, stderr=subprocess.STDOUT)
+    print(f"Localization build: {time.monotonic() - started:.1f} seconds. Log: {log}", file=sys.stderr)
     if result.returncode != 0:
-        raise RuntimeError(f"The build failed (full output: {log}):\n" + result.stderr[-4000:] + result.stdout[-4000:])
+        raise RuntimeError(f"The build failed (full output: {log}):\n" + log.read_text()[-4000:])
     paths = sorted(output.glob("*/*.stringsdata"))
     if not paths or any(output.glob("*.stringsdata")):
         raise RuntimeError("The compiler did not emit module-scoped localization files.")

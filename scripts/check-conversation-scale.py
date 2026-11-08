@@ -86,7 +86,7 @@ class ConversationScaleRun:
     def native_tests(self, name, variable, directory, filters, markers):
         command = [sys.executable, "-B", "scripts/run-checked-tests.py", "--bin-path",
                    str(self.options.bin_path.resolve()), "--framework", "swift-testing",
-                   "--timeout", str(self.TEST_DEADLINE)]
+                   "--timeout", str(self.TEST_DEADLINE), "--suite", "all"]
         for selection in filters:
             command.extend(["--filter", selection])
         environment = dict(os.environ)

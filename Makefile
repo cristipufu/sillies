@@ -1,6 +1,6 @@
 BUILD_DIR ?= build
 
-.PHONY: build debug run preview test check gui-check playful-gui-check lint stress race-check clean
+.PHONY: build debug run preview test check performance-check performance-gui-check gui-check playful-gui-check lint stress race-check clean
 
 build:
 	SILLIES_BUILD_DIRECTORY="$(abspath $(BUILD_DIR))" bash scripts/build-app.sh release
@@ -16,6 +16,13 @@ preview: debug
 
 test:
 	bash scripts/test.sh
+
+performance-check:
+	bash scripts/test.sh --configuration release --suite performance
+
+performance-gui-check: build
+	bash scripts/test.sh --configuration release --suite performance --presentation gui --bundle SilliesAppTests
+	$(BUILD_DIR)/Sillies.app/Contents/MacOS/Sillies --drag-latency-test --without-accessibility
 
 stress:
 	bash scripts/test-stress.sh
@@ -50,7 +57,6 @@ gui-check: check
 	$(BUILD_DIR)/Sillies.app/Contents/MacOS/Sillies --smoke-test
 	$(BUILD_DIR)/Sillies.app/Contents/MacOS/Sillies --presentation-test
 	$(BUILD_DIR)/Sillies.app/Contents/MacOS/Sillies --window-test --without-accessibility
-	$(BUILD_DIR)/Sillies.app/Contents/MacOS/Sillies --drag-latency-test --without-accessibility
 
 playful-gui-check: debug
 	python3 scripts/test-playful-scenes.py

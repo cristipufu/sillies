@@ -51,6 +51,7 @@ actor ContinuityBackend: ConversationBackend {
   private(set) var measurements = 0
   private(set) var lastRequest: TextGenerationRequest?
   let started = AsyncStream<Void>.makeStream()
+  let cancelled = AsyncStream<Void>.makeStream()
   init(_ behavior: SummaryBehavior = .immediate) { self.behavior = behavior }
   func availabilityNotice(localeIdentifier: String?) -> String? { nil }
   func inputTokenCount(_ request: TextGenerationRequest) throws -> Int {
@@ -66,6 +67,7 @@ actor ContinuityBackend: ConversationBackend {
     case .waiting:
       do { try await Task.sleep(for: .seconds(30)) } catch {
         cancelledSummaries += 1
+        cancelled.continuation.yield(())
         throw error
       }
     case .immediate: break

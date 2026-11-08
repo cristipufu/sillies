@@ -93,7 +93,7 @@ recall separately from negative-query candidates and check end-to-end answer gro
 claiming improved conversational accuracy.
 
 For fast scale checks, build `SilliesPersistenceTests` in release with `-Xswiftc -enable-testing`
-and run `memoryVectorRankingMatchesScalarOracleAtScale` with `SILLIES_MEMORY_SCALE_CHECK=1`.
+and run `bash scripts/test.sh --configuration release --suite performance --bundle SilliesPersistenceTests --filter memoryVectorRankingMatchesScalarOracleAtScale`.
 It compares 1K, 10K and 100K synthetic vectors against an independent scalar oracle. Setup is outside
 the timer; these are database-ranking measurements, not embedding or end-to-end reply latency.
 See the [scale measurements](../reports/cache-memory-followup-2026-11-04.md).

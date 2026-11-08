@@ -6,9 +6,7 @@ import Testing
 
 /// Optional release measurements use synthetic vectors and an independent scalar oracle.
 /// Setup is outside the timer; every query still reads the production SQLite index.
-@Test(
-  .enabled(if: ProcessInfo.processInfo.environment["SILLIES_MEMORY_SCALE_CHECK"] == "1"),
-  arguments: [1_000, 10_000, 100_000])
+@Test(arguments: [1_000, 10_000, 100_000])
 func memoryVectorRankingMatchesScalarOracleAtScale(_ count: Int) async throws {
   let fixture = try MemoryVectorScaleFixture(count: count)
   defer { fixture.remove() }
@@ -57,7 +55,7 @@ private struct MemoryVectorScaleFixture {
     query = try SearchEmbedding(space: Self.provider, values: random.vector(Self.dimensions))
     let source = MemorySource(messageID: UUID(), quote: "Synthetic measurement fixture.")
     var best: [(key: String, score: Double)] = []
-    let owner = handle.companionID
+    let rows = MemorySearchFixtureRows(database: database, owner: handle.companionID)
     let queryValues = query.values
     // Bulk fixture insertion avoids measuring fsync and receipt maintenance as vector ranking.
     try database.sql.transaction {
@@ -67,18 +65,8 @@ private struct MemoryVectorScaleFixture {
           source: source, savedAt: .distantPast)
         let vector = try SearchEmbedding(
           space: Self.provider, values: random.vector(Self.dimensions))
-        try database.sql.execute(
-          "INSERT INTO companion_memories(id,owner,key,updated,body) VALUES(?,?,?,0,?)",
-          [
-            .text(memory.id.uuidString), .text(owner), .text(memory.key),
-            .data(try database.encoder.encode(memory)),
-          ])
-        try database.sql.execute(
-          "INSERT INTO memory_embeddings(provider,id,owner,space,vector) VALUES(?,?,?,?,?)",
-          [
-            .text(Self.provider), .text(memory.id.uuidString), .text(owner), .text(Self.provider),
-            .data(SearchVectorStorage.encode(vector.values)),
-          ])
+        try rows.insertMemory(memory)
+        try rows.indexEmbedding(vector, memory: memory, provider: Self.provider)
         // Deliberately independent of the production scoring and top-k implementations.
         var dot = 0.0
         var norm = 0.0

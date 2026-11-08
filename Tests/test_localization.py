@@ -14,7 +14,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from localization_catalog import metadata_problems, plural_rules
-from localization_compiler import extraction_arguments, prepare_frontend
+from localization_compiler import compile_strings, extraction_arguments, prepare_frontend
 from localization_formats import placeholder_problem
 from localization_validation import Coverage, catalog_problems
 
@@ -24,6 +24,29 @@ spec.loader.exec_module(localize)
 
 
 class LocalizationTests(unittest.TestCase):
+    def test_extraction_uses_its_own_build_cache_and_keeps_the_build_log(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            workspace = root / "localization"
+            workspace.mkdir()
+            emitted = workspace / "module-strings/Example/Label.stringsdata"
+
+            def build(command, *, cwd, stdout, stderr):
+                self.assertEqual(cwd, root)
+                self.assertEqual(command[command.index("--scratch-path") + 1], str(workspace / "build"))
+                self.assertEqual(stderr, subprocess.STDOUT)
+                stdout.write("Compiler build output\n")
+                emitted.parent.mkdir(parents=True)
+                emitted.write_text("{}")
+                return subprocess.CompletedProcess(command, 0)
+
+            with patch("localization_compiler.prepare_frontend", return_value=workspace / "swift-frontend"), \
+                 patch("localization_compiler.subprocess.check_output", return_value="/toolchain/resources"), \
+                 patch("localization_compiler.subprocess.run", side_effect=build):
+                self.assertEqual(compile_strings(root, workspace), [emitted])
+            self.assertEqual((workspace / "build.log").read_text(), "Compiler build output\n")
+            self.assertFalse((root / ".build").exists())
+
     def test_compiler_preserves_same_named_sources_in_both_modules(self):
         with tempfile.TemporaryDirectory(prefix="sillies extraction ") as folder:
             root = Path(folder)

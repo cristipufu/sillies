@@ -145,8 +145,9 @@ The opt-in `nativeLongHistoryAndCheckpointPreemption` test seeds 10,000 syntheti
 answers with the real backend, interrupts a live checkpoint and measures the next reply. Set
 `SILLIES_CONTINUITY_MODEL` to `apple` or a catalog model ID. Downloaded models also require
 `SILLIES_CONTINUITY_MODEL_ROOT` and `SILLIES_CONTINUITY_HELPER` pointing to existing weights and the
-packaged release helper. Run it through `scripts/test.sh` (or the checked runner after building tests),
-with an external deadline. It does not download weights or touch app preferences. Separate this
+packaged release helper. Run it through `scripts/test.sh --configuration release --suite performance
+--bundle SilliesVaultTests --filter nativeLongHistoryAndCheckpointPreemption`, with an external
+deadline. It does not download weights or touch app preferences. Separate this
 native cancellation control from ordinary deterministic scale tests and semantic recall evaluations.
 
 See [runtime ownership and limits](../local-text-models.md) and [the development contract](../../AGENTS.md).

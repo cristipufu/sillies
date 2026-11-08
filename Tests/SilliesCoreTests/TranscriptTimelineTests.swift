@@ -65,7 +65,9 @@ import Testing
     #expect(preview.count == 8_192)
   }
   samples.sort()
-  #expect(samples[47] < .milliseconds(4))
+  let publicationP95 = samples[47]
+  print("TRANSCRIPT PUBLICATION: four hours of history; p95 \(publicationP95)")
+  #expect(publicationP95 < .milliseconds(4))
   #expect(timeline.text.contains("passage with its owner and deadline 0."))
 }
 

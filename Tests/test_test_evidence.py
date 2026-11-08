@@ -9,6 +9,7 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from checked_test_process import TestProcess
+from test_suites import test_batches
 from test_evidence import (IncompleteTestRun, selected_tests, swift_inventory, swift_test_name,
                            verify_swift_run, verify_xctest_run, xctest_inventory)
 
@@ -96,22 +97,15 @@ class TestEvidenceTests(unittest.TestCase):
                 [sys.executable, "-c", "import time; time.sleep(10)"], path.with_suffix(".log"))
 
     def test_default_workflow_batches_cover_every_bundle_and_test_once(self):
-        script = Path(__file__).resolve().parents[1] / "scripts/test.sh"
-        batch = script.read_text().split("for test_skip in", 1)[1].split("; do", 1)[0]
-        patterns = re.findall(r"'([^']+)'", batch)
-        self.assertEqual(len(patterns), 4)
-        assigned = {}
-        for bundle in ["SilliesAppTests", "SilliesAudioTests", "SilliesPersistenceTests",
-                       "SilliesCoreTests", "SilliesNewFeatureTests", "FutureLibraryTests"]:
-            selected = [pattern for pattern in patterns if not re.fullmatch(pattern, bundle)]
-            self.assertEqual(len(selected), 1, bundle)
-            assigned[bundle] = selected[0]
-            for identifier in [bundle + ".testExample()", bundle + ".Suite/testExample"]:
-                self.assertEqual(selected_tests({identifier}, [], selected), {identifier})
-                excluded = [pattern for pattern in patterns if pattern not in selected]
-                self.assertEqual(selected_tests({identifier}, [], excluded), set())
-        self.assertEqual(len({assigned[bundle] for bundle in [
-            "SilliesAppTests", "SilliesAudioTests", "SilliesPersistenceTests", "SilliesCoreTests"]}), 4)
+        bundles = [Path(name + ".xctest") for name in [
+            "SilliesAppTests", "SilliesAudioTests", "SilliesPersistenceTests",
+            "SilliesCoreTests", "SilliesNewFeatureTests", "FutureLibraryTests"]]
+        batches = test_batches(bundles)
+        self.assertEqual(len(batches), 4)
+        self.assertCountEqual([bundle for batch in batches for bundle in batch], bundles)
+        for bundle in bundles[:3]:
+            self.assertIn([bundle], batches)
+        self.assertEqual(test_batches([]), [])
 
     def test_race_workflow_batches_keep_native_and_voice_checks_disjoint(self):
         script = Path(__file__).resolve().parents[1] / "scripts/test-races.sh"

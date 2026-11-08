@@ -9,9 +9,11 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 
 from checked_test_process import TestProcess
 from test_presentation import TestPresentation
+from test_suites import TestSuites, test_batches
 from test_evidence import (IncompleteTestRun, selected_tests, swift_inventory, swift_test_name,
                            verify_swift_run, verify_xctest_run, xctest_inventory)
 
@@ -20,6 +22,8 @@ class NativeTestRunner:
     def __init__(self, options, results):
         self.options = options
         self.results = results
+        self.suites = TestSuites()
+        self.timings = []
         developer = Path(subprocess.check_output(["xcode-select", "-p"], text=True).strip())
         developer = Path(os.environ.get("DEVELOPER_DIR", developer))
         platform = developer / "Platforms/MacOSX.platform/Developer"
@@ -40,9 +44,15 @@ class NativeTestRunner:
             if not runtime.is_file():
                 raise IncompleteTestRun("Thread Sanitizer runtime is unavailable")
             environment["DYLD_INSERT_LIBRARIES"] = str(runtime)
+        started = time.monotonic()
         self.native_host = self.build_native_host(options.bin_path, platform, options.sanitizer)
-        self.process = TestProcess(options.timeout, environment)
+        self.timings.append(dict(phase="native-host-build", seconds=time.monotonic() - started))
+        self.environment = environment
+        self.process = self.new_process_batch()
         self.receipts = []
+
+    def new_process_batch(self):
+        return TestProcess(self.options.timeout, self.environment, self.timings)
 
     @staticmethod
     def build_native_host(directory, platform, sanitizer):
@@ -62,26 +72,38 @@ class NativeTestRunner:
         return executable
 
     def run(self):
+        bundles = self.selected_bundles()
         if self.options.presentation == "headless":
             self.verify_presentation_boundary()
-        bundles = sorted(self.options.bin_path.glob("*.xctest"))
-        if not bundles:
-            raise IncompleteTestRun("No built test bundles found")
-        for bundle in bundles:
-            if self.options.presentation == "gui" and bundle.stem != "SilliesAppTests":
-                continue
-            # Avoid loading deliberately excluded GPU libraries in TSAN processes.
-            if any(re.fullmatch(pattern, bundle.stem) for pattern in self.options.skip):
-                continue
-            if self.options.framework in {"all", "swift-testing"}:
-                self.run_swift(bundle)
-            if self.options.framework in {"all", "xctest"}:
-                self.run_xctest(bundle)
+        targeted = self.options.filter or self.options.skip or self.options.bundle
+        batches = [bundles] if targeted else test_batches(bundles)
+        for batch in batches:
+            self.process = self.new_process_batch()
+            for bundle in batch:
+                if self.options.framework in {"all", "swift-testing"}:
+                    self.run_swift(bundle)
+                if self.options.framework in {"all", "xctest"}:
+                    self.run_xctest(bundle)
         if not self.receipts:
-            raise IncompleteTestRun("No tests matched the selection")
+            raise IncompleteTestRun("No tests matched the selection; benchmarks require --suite performance")
         (self.results / "verified.json").write_text(json.dumps(self.receipts, indent=2) + "\n")
         count = sum(receipt["tests"] for receipt in self.receipts)
         print(f"Verified completion of {count} selected tests across {len(self.receipts)} runs.")
+
+    def selected_bundles(self):
+        bundles = sorted(self.options.bin_path.glob("*.xctest"))
+        if not bundles:
+            raise IncompleteTestRun("No built test bundles found")
+        available = {bundle.stem for bundle in bundles}
+        if missing := set(self.options.bundle) - available:
+            raise IncompleteTestRun(f"Requested test bundles are not built: {sorted(missing)}")
+        if not self.options.bundle:
+            self.suites.validate_bundles(available)
+        return [bundle for bundle in bundles
+                if (not self.options.bundle or bundle.stem in self.options.bundle)
+                and (self.options.presentation != "gui" or bundle.stem == "SilliesAppTests")
+                # Do not load deliberately excluded GPU libraries in TSAN processes.
+                and not any(re.fullmatch(pattern, bundle.stem) for pattern in self.options.skip)]
 
     def verify_presentation_boundary(self):
         for operation in ["front", "back", "key", "regardless", "relative", "activate",
@@ -93,8 +115,19 @@ class NativeTestRunner:
             if expected and "Headless test rejected visible UI" not in log.read_text():
                 raise IncompleteTestRun(f"Presentation boundary did not reject {operation}")
 
-    def select(self, tests, name=lambda value: value):
-        return selected_tests(tests, self.options.filter, self.options.skip, name)
+    def select(self, bundle, framework, tests, prefix):
+        groups = self.suites.partition(bundle.stem, framework, tests)
+        name = swift_test_name if framework == "swift-testing" else lambda value: value
+        matching = selected_tests(tests, self.options.filter, self.options.skip, name)
+        selected = matching & groups[self.options.suite]
+        deferred = matching - selected
+        prefix.with_suffix(".suite.json").write_text(json.dumps(
+            dict(suite=self.options.suite, selected=sorted(selected), deferred=sorted(deferred)),
+            indent=2) + "\n")
+        if matching:
+            print(f"{bundle.stem} {framework}: {len(selected)} {self.options.suite} tests; "
+                  f"{len(deferred)} deferred by suite selection.", flush=True)
+        return selected
 
     def run_swift(self, bundle):
         prefix = self.results / (bundle.stem + "-swift")
@@ -110,7 +143,7 @@ class NativeTestRunner:
         discovered = swift_inventory(inventory)
         if code == 69 and discovered:
             raise IncompleteTestRun("Empty-discovery exit code contradicts its inventory")
-        expected = self.select(discovered, swift_test_name)
+        expected = self.select(bundle, "swift-testing", discovered, prefix)
         if bundle.stem == "SilliesAppTests":
             groups = TestPresentation().partition(discovered)
             deferred = expected - groups[self.options.presentation]
@@ -131,14 +164,15 @@ class NativeTestRunner:
         self.execute(command + ["--no-parallel", "--event-stream-output-path", str(events)] + selection, log)
         count = verify_swift_run(events, expected)
         self.receipts.append(dict(bundle=bundle.stem, framework="swift-testing", tests=count,
-                                  presentation=self.options.presentation))
+                                  presentation=self.options.presentation, suite=self.options.suite,
+                                  configuration=self.options.configuration))
 
     def run_xctest(self, bundle):
         prefix = self.results / (bundle.stem + "-xctest")
         inventory = prefix.with_suffix(".inventory.json")
         self.process.run([str(self.helpers / "swiftpm-xctest-helper"), str(bundle), str(inventory)],
                          prefix.with_suffix(".discovery.log"))
-        expected = self.select(xctest_inventory(json.loads(inventory.read_text())))
+        expected = self.select(bundle, "xctest", xctest_inventory(json.loads(inventory.read_text())), prefix)
         if bundle.stem == "SilliesAppTests" and expected:
             raise IncompleteTestRun("Native AppKit tests must use Swift Testing presentation classification")
         if self.options.presentation == "gui":
@@ -148,7 +182,8 @@ class NativeTestRunner:
         log = prefix.with_suffix(".log")
         self.execute([self.xctest, "-XCTest", ",".join(sorted(expected)), str(bundle)], log)
         count = verify_xctest_run(log.read_text(), expected)
-        self.receipts.append(dict(bundle=bundle.stem, framework="xctest", tests=count))
+        self.receipts.append(dict(bundle=bundle.stem, framework="xctest", tests=count,
+                                 suite=self.options.suite, configuration=self.options.configuration))
 
     def execute(self, command, log):
         try:
@@ -161,11 +196,17 @@ class NativeTestRunner:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bin-path", type=Path, required=True)
+    parser.add_argument("--configuration", choices=["debug", "release"], default="debug",
+                        help="test build configuration selected by scripts/test.sh")
     parser.add_argument("--sanitizer", choices=["thread"])
     parser.add_argument("--timeout", type=float, default=180)
     parser.add_argument("--filter", action="append", default=[])
     parser.add_argument("--skip", action="append", default=[])
     parser.add_argument("--framework", choices=["all", "swift-testing", "xctest"], default="all")
+    parser.add_argument("--suite", choices=["standard", "performance", "all"], default="standard",
+                        help="performance and scale measurements are opt-in")
+    parser.add_argument("--bundle", action="append", default=[],
+                        help="discover only this built test target; may be repeated")
     parser.add_argument("--presentation", choices=["headless", "gui"], default="headless",
                         help="headless by default; gui explicitly permits visible native tests")
     options = parser.parse_args()
@@ -174,11 +215,16 @@ def main():
     root.mkdir(parents=True, exist_ok=True)
     results = Path(tempfile.mkdtemp(prefix="run-", dir=root)).resolve()
     print(f"Test receipts: {results}", flush=True)
+    runner = None
     try:
-        NativeTestRunner(options, results).run()
+        runner = NativeTestRunner(options, results)
+        runner.run()
     except (IncompleteTestRun, OSError, ValueError, subprocess.CalledProcessError, TimeoutError) as error:
         print(f"Test verification failed: {error}. Receipts: {results}", file=sys.stderr)
         return 1
+    finally:
+        if runner is not None:
+            (results / "timings.json").write_text(json.dumps(runner.timings, indent=2) + "\n")
     return 0
 
 

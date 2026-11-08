@@ -122,7 +122,7 @@ def extract(mode="update"):
     """Builds the app with the compiler's string extraction on, then rewrites en.json: new strings added (as their own
     English), gone ones removed, plural forms and translators' notes kept."""
     with extraction_workspace() as scratch:
-        print("Building to find every string (a minute or two)…", file=sys.stderr)
+        print("Checking compiler-extracted strings with the separate localization build cache…", file=sys.stderr)
         try:
             paths = compile_strings(ROOT, scratch)
         except RuntimeError as error:

@@ -124,15 +124,19 @@ private struct MemoryScaleFixture {
       role: .user, text: "Synthetic project courier details for storage testing.")
     try database.save(
       .init(handle: handle, messages: [source], checkpoint: .init(), savedAt: .distantPast))
-    for index in 0..<count {
-      let fact =
-        index < Self.topicCount
-        ? MemoryFact(key: "project_\(index)", value: "project\(index) courier Selma")
-        : MemoryFact(key: "packing_\(index)", value: "courier packing label \(index)")
-      _ = try database.remember(
-        .init(
-          handle: handle, fact: fact, source: .init(messageID: source.id, quote: source.text),
-          savedAt: Date(timeIntervalSince1970: index < Self.topicCount ? 1 : 2)))
+    let rows = MemorySearchFixtureRows(database: database, owner: handle.companionID)
+    try database.sql.transaction {
+      for index in 0..<count {
+        let fact =
+          index < Self.topicCount
+          ? MemoryFact(key: "project_\(index)", value: "project\(index) courier Selma")
+          : MemoryFact(key: "packing_\(index)", value: "courier packing label \(index)")
+        let memory = CompanionMemory(
+          replacing: nil, fact: fact, source: .init(messageID: source.id, quote: source.text),
+          savedAt: Date(timeIntervalSince1970: index < Self.topicCount ? 1 : 2))
+        try rows.insertMemory(memory)
+        try rows.indexKeywords(memory)
+      }
     }
     let other = try database.open(.init(id: "bolt", name: "Bolt")).handle
     let otherSource = ChatMessage(role: .user, text: "Synthetic foreign courier.")

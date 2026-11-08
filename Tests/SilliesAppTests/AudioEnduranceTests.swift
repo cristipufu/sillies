@@ -8,7 +8,7 @@ import Testing
 @testable import SilliesApp
 @testable import SilliesAudio
 
-@Test(.enabled(if: ProcessInfo.processInfo.environment["SILLIES_LONG_AUDIO_CHECK"] == "1"))
+@Test
 @MainActor func sustainedAudioEncodingKeepsTranscriptScrollingResponsive() async throws {
   let destination = FileManager.default.temporaryDirectory.appendingPathComponent(
     "sillies-endurance-\(UUID().uuidString).m4a")

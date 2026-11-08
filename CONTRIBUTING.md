@@ -73,7 +73,7 @@ the module you change, and [the development guide](docs/development.md).
 
 ```sh
 swift format format --in-place path/to/ChangedFile.swift
-bash scripts/test.sh --filter RelevantTest
+bash scripts/test.sh --bundle RelevantTests --filter RelevantTest
 make check BUILD_DIR=/tmp/sillies-check
 ```
 
@@ -85,6 +85,11 @@ real triggering workflow; Settings/menu/window changes need native lifecycle cov
 them as not run otherwise. Classify native test files and overrides in
 `Tests/SilliesAppTests/execution-modes.json`; the test host fails accidental presentation before windows
 appear.
+
+Timing budgets, large scale fixtures and endurance measurements belong in
+`Tests/performance-tests.json` and run on demand with `make performance-check`.
+Use `make performance-gui-check` for explicitly requested visible frame measurements.
+Routine checks retain functional regressions, cancellation and structural bounds.
 
 Use focused tests for observable behavior, failure, cancellation, and recovery. Do not add tests that merely
 repeat the implementation. Bounded, accelerated workloads replace multi-hour tests. Routine checks do not

@@ -43,7 +43,8 @@ import Testing
   print("CONTINUITY PREEMPTION: \(elapsed)")
 }
 
-@Test func checkpointDeadlineLeavesArchiveAndMemoryRecoverable() async throws {
+@Test(.timeLimit(.minutes(1)))
+func checkpointDeadlineLeavesArchiveAndMemoryRecoverable() async throws {
   let fixture = ConversationContinuityFixture()
   defer { fixture.remove() }
   let store = fixture.library
@@ -58,9 +59,10 @@ import Testing
     schedule: .init(idleDelay: .zero, sliceDeadline: .milliseconds(250)))
   await maintenance.retain(for: lifetime)
   let began = await backend.started.stream
+  let cancelled = await backend.cancelled.stream
   await maintenance.enqueue(context)
   for await _ in began { break }
-  try await Task.sleep(for: .milliseconds(350))
+  for await _ in cancelled { break }
   #expect(await backend.cancelledSummaries == 1)
   #expect(try await store.checkpoint(handle) == before)
   #expect(try await store.conversations().first?.messageCount == 41)

@@ -1,0 +1,34 @@
+{
+  "swift-testing": {
+    "SilliesCoreTests": {
+      "SilliesCoreTests.longSessionTranscriptPublicationStaysWithinItsWorkerBudget()": "Four-hour transcript workload and worker latency budget."
+    },
+    "SilliesPersistenceTests": {
+      "SilliesPersistenceTests.memorySearchRanksRelevantOlderFactsWithBoundedPages(_:)": "Search relevance and complete cursor traversal at up to ten thousand memories.",
+      "SilliesPersistenceTests.semanticMemorySearchKeepsBodiesAndResultsBoundedAtScale(_:)": "Semantic retrieval at one and ten thousand memories.",
+      "SilliesPersistenceTests.memoryVectorRankingMatchesScalarOracleAtScale(_:)": "Synthetic vector ranking through one hundred thousand memories.",
+      "SilliesPersistenceTests.broadDateSearchPagesAllMatchesWithShuffledInsertionOrderAndEqualDates()": "Complete broad-search pagination across thousands of records."
+    },
+    "SilliesVaultTests": {
+      "SilliesVaultTests.largeArchiveKeepsReplyReadsMemoryAndMainActorWorkBounded()": "Ten thousand messages, fifty replies, resident memory and main-actor latency.",
+      "SilliesVaultTests.growingStoredHistoryKeepsRepliesPagingAndSearchBounded()": "One hundred growing turns against an explicitly supplied large archive.",
+      "SilliesVaultTests.nativeLongHistoryAndCheckpointPreemption()": "Native inference and checkpoint latency against ten thousand archived messages; requires an explicitly supplied model.",
+      "SilliesVaultTests.broadConversationSearchYieldsToWritesAndCancellation()": "Foreground write and cancellation budgets against an explicitly supplied million-message archive."
+    },
+    "SilliesAppTests": {
+      "SilliesAppTests.blockedUIKeepsOnlyLatestProgressAndOneScheduledDelivery()": "One hundred thousand queued updates with measured delivery throughput.",
+      "SilliesAppTests.sustainedAudioEncodingKeepsTranscriptScrollingResponsive()": "Accelerated audio endurance and transcript scroll latency.",
+      "SilliesAppTests.populatedTranscriptWindowKeepsUpdatesWithinAFrame(_:size:)": "Native transcript frame-budget measurements.",
+      "SilliesAppTests.windowDragSmoothnessBudgetAndSinglePassPlacement()": "Native full-crew window-drag frame budgets.",
+      "SilliesAppTests.windowResizeSmoothnessBudgetAndCompactionQuantization()": "Native full-crew window-resize frame budgets.",
+      "SilliesAppTests.windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition()": "Native full-crew window-switch frame budgets.",
+      "SilliesAppTests.companionDragSmoothnessBudgetAndUnclippedMaskStability(characterID:)": "Native display-frame sampling during companion dragging.",
+      "SilliesAppTests.playfulTravelUsesBoundedNativeFrameWork()": "Playful scene native frame latency.",
+      "SilliesAppTests.playfulSharedTravelUsesBoundedNativeFrameWork()": "Shared playful scene native frame latency.",
+      "SilliesAppTests.vaultNativeResizeAndScrollKeepAReadableViewport()": "Native Vault resize and scrolling frame measurements.",
+      "SilliesAppTests.localModelsAndAACEncodingKeepAllInteractionPathsWithinBudget()": "Native frame budgets under opt-in local inference and audio encoding.",
+      "SilliesAppTests.downloadedSpeechModelsKeepAllInteractionPathsWithinBudget()": "Native frame budgets under opt-in downloaded speech inference."
+    }
+  },
+  "xctest": {}
+}

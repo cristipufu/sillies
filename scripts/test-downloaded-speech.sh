@@ -20,7 +20,7 @@ SILLIES_STT_PREPARE_ONLY=1 python3 -B scripts/run-checked-tests.py --timeout 300
   --filter prepareDownloadedSpeechModelForIntegration
 if [[ "${3:-}" == "--gui" ]]; then
   SILLIES_DOWNLOADED_STT_CHECK=1 python3 -B scripts/run-checked-tests.py --timeout 90 --bin-path "$(swift build --show-bin-path)" \
-    --presentation gui --filter downloadedSpeechModelsKeepAllInteractionPathsWithinBudget
+    --suite performance --presentation gui --filter downloadedSpeechModelsKeepAllInteractionPathsWithinBudget
 else
   SILLIES_LOCAL_AI_CHECK=1 python3 -B scripts/run-checked-tests.py --timeout 90 --bin-path "$(swift build --show-bin-path)" \
     --filter localSpeechHandlesFrequentCallbacksWithoutLosingAudio

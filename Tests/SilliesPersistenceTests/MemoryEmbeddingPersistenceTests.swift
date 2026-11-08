@@ -13,11 +13,17 @@ func semanticMemorySearchKeepsBodiesAndResultsBoundedAtScale(_ count: Int) async
     space: "scale", values: [0, 1] + Array(repeating: 0, count: dimensions - 2))
   let target = try SearchEmbedding(
     space: "scale", values: [1, 0] + Array(repeating: 0, count: dimensions - 2))
-  for index in 0..<count {
-    let receipt = try fixture.save(key: "fact_\(index)", value: "Synthetic fact \(index)")
-    try fixture.database.saveSearchEmbedding(
-      index == count / 2 ? target : ordinary,
-      for: .init(owner: fixture.handle.companionID, memory: receipt.saved), provider: "scale")
+  let rows = MemorySearchFixtureRows(database: fixture.database, owner: fixture.handle.companionID)
+  try fixture.database.sql.transaction {
+    for index in 0..<count {
+      let memory = CompanionMemory(
+        replacing: nil, fact: .init(key: "fact_\(index)", value: "Synthetic fact \(index)"),
+        source: fixture.source, savedAt: Date())
+      try rows.insertMemory(memory)
+      try rows.indexKeywords(memory)
+      try rows.indexEmbedding(
+        index == count / 2 ? target : ordinary, memory: memory, provider: "scale")
+    }
   }
   let reader = try ConversationSearchDatabase(directory: fixture.directory)
   let started = ContinuousClock.now

@@ -31,7 +31,8 @@ import Testing
   }
   defer { delivery.stop() }
   let progress = EnduranceProgress()
-  let worker = Task.detached(priority: .utility) {
+  // Match the live capture queue owned by AudioCaptureDependencies.
+  let worker = Task.detached(priority: .userInitiated) {
     defer { progress.complete() }
     return try AudioEnduranceWorker(destination: destination, delivery: delivery).run()
   }

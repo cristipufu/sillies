@@ -264,19 +264,27 @@ private struct FailedChatReply: ConversationResponding {
     controller.close()
     session.finish {}
   }
-  window.performClose(nil)
+  controller.dismissConversation()
   controller.show(session, openSettings: { _ in }, renderer: "cat")
+  let reopened = try #require(controller.window)
+  #expect(reopened !== window)
   try DisplayFrameSequence.run(count: 30) { _ in }
-  #expect(window.isVisible)
-  #expect(window.alphaValue == 1)
-  window.performClose(nil)
+  try await waitForChatWindowToClose(window)
+  #expect(reopened.isVisible)
+  #expect(reopened.alphaValue == 1)
+  controller.dismissConversation()
+  try await waitForChatWindowToClose(reopened)
+  #expect(controller.window == nil)
+  #expect(session.phase != .finished)
+}
+
+@MainActor private func waitForChatWindowToClose(_ window: NSWindow) async throws {
   let deadline = ContinuousClock.now.advanced(by: .seconds(2))
   while window.isVisible, ContinuousClock.now < deadline {
-    try DisplayFrameSequence.presentCreatedWindows()
-    await Task.yield()
+    // Yield the main actor so AppKit's animation completion can finish the close.
+    try await Task.sleep(for: .milliseconds(10))
   }
   #expect(!window.isVisible)
-  #expect(session.phase != .finished)
 }
 
 private struct VaultCardReply: ConversationResponding {

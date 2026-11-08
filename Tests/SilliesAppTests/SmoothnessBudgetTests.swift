@@ -22,7 +22,7 @@ func windowDragSmoothnessBudgetAndSinglePassPlacement() throws {
   controller.start()
   defer { controller.stop() }
 
-  let initialWindow = CGRect(x: 180, y: 180, width: 1120, height: 520)
+  let initialWindow = try fullCrewTimingWindow(settings: settings)
   controller.tracker.simulateTrackedWindow(initialWindow, windowID: 101)
   controller.tracker.stop()
   try DisplayFrameSequence.presentCreatedWindows()
@@ -39,7 +39,7 @@ func windowDragSmoothnessBudgetAndSinglePassPlacement() throws {
   try DisplayFrameSequence.run(count: frameCount) { frameIndex in
     let progress = Double(frameIndex) / Double(frameCount)
     let movedWindow = initialWindow.offsetBy(
-      dx: sin(progress * .pi * 4) * 140 + 0.33,
+      dx: sin(progress * .pi * 4) * TimingWindowLayout.horizontalTravel + 0.33,
       dy: cos(progress * .pi * 2) * 45 - 0.17)
     controller.tracker.simulateTrackedWindow(movedWindow, windowID: 101)
 
@@ -85,7 +85,7 @@ func windowResizeSmoothnessBudgetAndCompactionQuantization() throws {
   controller.start()
   defer { controller.stop() }
 
-  let initialWindow = CGRect(x: 160, y: 160, width: 1160, height: 500)
+  let initialWindow = try fullCrewTimingWindow(settings: settings)
   controller.tracker.simulateTrackedWindow(initialWindow, windowID: 202)
   controller.tracker.stop()
   try DisplayFrameSequence.presentCreatedWindows()
@@ -95,7 +95,7 @@ func windowResizeSmoothnessBudgetAndCompactionQuantization() throws {
   let frameCount = 120
 
   try DisplayFrameSequence.run(count: frameCount) { frameIndex in
-    let deltaWidth = sin(Double(frameIndex) * 0.1) * 120
+    let deltaWidth = sin(Double(frameIndex) * 0.1) * TimingWindowLayout.horizontalTravel
     let deltaHeight = cos(Double(frameIndex) * 0.1) * 40
     let resizedWindow = CGRect(
       x: initialWindow.minX,
@@ -142,7 +142,7 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
   controller.start()
   defer { controller.stop() }
 
-  let firstWindow = CGRect(x: 120, y: 150, width: 1120, height: 520)
+  let firstWindow = try fullCrewTimingWindow(settings: settings)
   controller.tracker.simulateTrackedWindow(firstWindow, windowID: 301)
   #expect(controller.attachmentDiagnostics.allSatisfy { $0.visible })
   let initialInstallations = controller.interactionMonitorInstallations
@@ -165,10 +165,10 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
 
   try DisplayFrameSequence.run(count: switchCount) { switchIndex in
     let nextWindow = CGRect(
-      x: 100 + Double((switchIndex % 5) * 70),
-      y: 120 + Double((switchIndex % 3) * 50),
-      width: 1120 + Double((switchIndex % 4) * 30),
-      height: 500)
+      x: firstWindow.minX + Double((switchIndex % 5) * 10),
+      y: firstWindow.minY + Double((switchIndex % 3) * 20),
+      width: firstWindow.width + Double((switchIndex % 4) * 10),
+      height: firstWindow.height)
     controller.tracker.simulateTrackedWindow(
       nextWindow,
       windowID: CGWindowID(301 + switchIndex))
@@ -189,10 +189,10 @@ func windowSwitchSmoothnessBudgetAndZeroFlickerAppTransition() throws {
   try DisplayFrameSequence.run(count: 20) { cycle in
     controller.tracker.simulateTrackedWindow(nil, windowID: nil)
     let restoredWindow = CGRect(
-      x: 160 + Double((cycle % 4) * 50),
-      y: 140 + Double((cycle % 3) * 40),
-      width: 1120,
-      height: 520)
+      x: firstWindow.minX + Double((cycle % 4) * 10),
+      y: firstWindow.minY + Double((cycle % 3) * 20),
+      width: firstWindow.width,
+      height: firstWindow.height)
     controller.tracker.simulateTrackedWindow(restoredWindow, windowID: CGWindowID(500 + cycle))
   }
   #expect(controller.smoothnessMetrics.sampleCount(for: .windowSwitch) == 40)
@@ -270,4 +270,37 @@ private func enableFullCrewForTiming(in settings: AppSettings) throws {
   // Fit the complete crew into the smallest resize fixture. Individual drag cases
   // retain the default size; all timing thresholds and native placement counts are unchanged.
   settings.size = AppSettings.minSize
+}
+
+private enum TimingWindowLayout {
+  static let horizontalInset: CGFloat = 72
+  static let horizontalTravel: CGFloat = 40
+  static let bottomInset: CGFloat = 100
+  static let reservedHeadroom: CGFloat = 200
+  static let maximumHeight: CGFloat = 500
+}
+
+/// Keep every character visible throughout the timing workload. The old fixed-width windows
+/// could no longer hold the expanded roster and measured overflow transitions instead of movement.
+@MainActor private func fullCrewTimingWindow(settings: AppSettings) throws -> CGRect {
+  let screen = try #require(NSScreen.main ?? NSScreen.screens.first)
+  let visible = CompanionPanel.visibleFrame(for: screen)
+  let frame = CGRect(
+    x: visible.minX + TimingWindowLayout.horizontalInset,
+    y: visible.minY + TimingWindowLayout.bottomInset,
+    width: visible.width - 2 * TimingWindowLayout.horizontalInset,
+    height: min(
+      TimingWindowLayout.maximumHeight, visible.height - TimingWindowLayout.reservedHeadroom)
+  )
+  let smallest = CGRect(
+    origin: frame.origin,
+    size: CGSize(width: frame.width - TimingWindowLayout.horizontalTravel, height: frame.height))
+  let surface = PerchSurface(window: smallest, visibleFrame: visible, characterSize: settings.size)
+  let requiredSpan =
+    Double(settings.enabledCharacters.count - 1)
+    * PerchSpacing.separation(between: settings.size, and: settings.size)
+  try #require(
+    surface.edge == .top && surface.spanLength >= requiredSpan,
+    "The display must fit the complete crew before measuring one placement per visible companion.")
+  return frame
 }

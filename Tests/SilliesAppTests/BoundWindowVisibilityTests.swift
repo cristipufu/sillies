@@ -247,7 +247,15 @@ func windowMetadataRequiresAnExplicitOnScreenFlag(_ onScreen: Bool?) throws {
     contentRect: .zero, styleMask: [.titled], backing: .buffered, defer: false)
   transcript.isReleasedWhenClosed = false
   defer { transcript.close() }
+  let stacking = AppContentWindowStacking()
+  stacking.register(transcript)
+  stacking.update(.foreground)
+  #expect(transcript.level == CompanionPanel.contentWindowLevel)
+  #expect(transcript.level.rawValue < pet.panel.level.rawValue)
+  pet.endPickup()
   #expect(transcript.level.rawValue > pet.panel.level.rawValue)
+  stacking.update(.background)
+  #expect(transcript.level == .normal)
 }
 
 private func windowEntry(id: UInt32, frame: CGRect) -> [String: Any] {

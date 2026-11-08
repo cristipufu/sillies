@@ -234,11 +234,16 @@ package actor EmbeddingWorkerSession {
     _ request: EmbeddingRequest, worker: InferenceWorkerConnection,
     timeout: TimeInterval
   ) async throws -> EmbeddingResponse {
-    let response = try await Task.detached {
-      let deadline = InferenceDeadline(timeout: timeout)
-      try worker.send(request, timeout: deadline.remaining())
-      return try worker.receive(EmbeddingResponse.self, timeout: deadline.remaining())
-    }.value
+    let response: EmbeddingResponse
+    do {
+      response = try await Task.detached {
+        let deadline = InferenceDeadline(timeout: timeout)
+        try worker.send(request, timeout: deadline.remaining())
+        return try worker.receive(EmbeddingResponse.self, timeout: deadline.remaining())
+      }.value
+    } catch InferenceWorkerError.timedOut {
+      throw SearchEmbeddingError.timedOut
+    }
     try Task.checkCancellation()
     if let failure = response.failure {
       throw EmbeddingWorkerFailure(message: failure)

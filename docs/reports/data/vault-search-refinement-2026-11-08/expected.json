@@ -1,0 +1,3159 @@
+{
+  "scifact-1": {
+    "group": "scifact",
+    "relevant": {
+      "F599C375-B487-512A-947F-F6B5D280AC51": 1
+    }
+  },
+  "scifact-3": {
+    "group": "scifact",
+    "relevant": {
+      "F39262AE-921B-521F-9B5D-7252201F9F43": 1
+    }
+  },
+  "scifact-5": {
+    "group": "scifact",
+    "relevant": {
+      "8CBDA18F-FBCA-555D-8B2B-9E1061ED6F6D": 1
+    }
+  },
+  "scifact-13": {
+    "group": "scifact",
+    "relevant": {
+      "5ED300B1-C90A-5CBA-A72D-2E9A86DDA78C": 1
+    }
+  },
+  "scifact-36": {
+    "group": "scifact",
+    "relevant": {
+      "9B22E185-7E9F-5150-92E7-2AE77D2680E9": 1,
+      "2EA8E51E-8B1D-5F8F-96E3-201C8933312C": 1
+    }
+  },
+  "scifact-42": {
+    "group": "scifact",
+    "relevant": {
+      "2F160261-10B0-5C5D-A740-5DE6035BD195": 1
+    }
+  },
+  "scifact-48": {
+    "group": "scifact",
+    "relevant": {
+      "8CBDA18F-FBCA-555D-8B2B-9E1061ED6F6D": 1
+    }
+  },
+  "scifact-49": {
+    "group": "scifact",
+    "relevant": {
+      "75F7EDBF-BAF6-5DB4-8D9C-EF9AB528571B": 1
+    }
+  },
+  "scifact-50": {
+    "group": "scifact",
+    "relevant": {
+      "EFE3E9D5-D070-5962-9C42-BF9C8066CDF2": 1
+    }
+  },
+  "scifact-51": {
+    "group": "scifact",
+    "relevant": {
+      "372D9F16-1AB5-5583-B0FC-9154915E73BE": 1
+    }
+  },
+  "scifact-53": {
+    "group": "scifact",
+    "relevant": {
+      "372D9F16-1AB5-5583-B0FC-9154915E73BE": 1
+    }
+  },
+  "scifact-54": {
+    "group": "scifact",
+    "relevant": {
+      "E3B15FEF-3BC6-5B35-8307-31E301A00CA1": 1
+    }
+  },
+  "scifact-56": {
+    "group": "scifact",
+    "relevant": {
+      "BD62B995-8EB3-5BFA-BE73-C02F4A27C9DF": 1
+    }
+  },
+  "scifact-57": {
+    "group": "scifact",
+    "relevant": {
+      "BD62B995-8EB3-5BFA-BE73-C02F4A27C9DF": 1
+    }
+  },
+  "scifact-70": {
+    "group": "scifact",
+    "relevant": {
+      "1C2813F1-5C48-5794-9DE7-F01B91695708": 1,
+      "6E5E0C55-421A-5C75-9640-C3450D0C04D2": 1
+    }
+  },
+  "scifact-72": {
+    "group": "scifact",
+    "relevant": {
+      "A657E63C-71A0-5969-ADBC-3815C07BDC72": 1
+    }
+  },
+  "scifact-75": {
+    "group": "scifact",
+    "relevant": {
+      "FD248C52-797C-59B3-9705-B43835BB636F": 1
+    }
+  },
+  "scifact-94": {
+    "group": "scifact",
+    "relevant": {
+      "765EB221-7CFA-5F8B-91A8-57DAB0F225C5": 1
+    }
+  },
+  "scifact-99": {
+    "group": "scifact",
+    "relevant": {
+      "1884629B-AD58-58E4-AF21-A9CDF54CFB73": 1
+    }
+  },
+  "scifact-100": {
+    "group": "scifact",
+    "relevant": {
+      "EB5F95EF-9EC4-54A7-ACEC-24E36069C1BF": 1
+    }
+  },
+  "scifact-113": {
+    "group": "scifact",
+    "relevant": {
+      "A29F460B-CEE3-5A05-809A-618C51502A18": 1
+    }
+  },
+  "scifact-115": {
+    "group": "scifact",
+    "relevant": {
+      "AE268BF8-2627-5DE6-8D02-0893B57EF999": 1
+    }
+  },
+  "scifact-118": {
+    "group": "scifact",
+    "relevant": {
+      "1CEA55B5-7088-56B9-BD57-0C7D87133B12": 1
+    }
+  },
+  "scifact-124": {
+    "group": "scifact",
+    "relevant": {
+      "C8348D41-D449-576D-88F4-7F3D2186158B": 1
+    }
+  },
+  "scifact-127": {
+    "group": "scifact",
+    "relevant": {
+      "00BCF31F-D4CA-5670-9E13-37AEF0E829D8": 1
+    }
+  },
+  "scifact-128": {
+    "group": "scifact",
+    "relevant": {
+      "42425991-4130-5E65-8209-191066E51726": 1
+    }
+  },
+  "scifact-129": {
+    "group": "scifact",
+    "relevant": {
+      "40D1BF3A-71A4-50D5-AC08-732E2DADA206": 1
+    }
+  },
+  "scifact-130": {
+    "group": "scifact",
+    "relevant": {
+      "40D1BF3A-71A4-50D5-AC08-732E2DADA206": 1
+    }
+  },
+  "scifact-132": {
+    "group": "scifact",
+    "relevant": {
+      "97B1891E-DA62-5B74-88CA-B5E8EA1DB447": 1
+    }
+  },
+  "scifact-133": {
+    "group": "scifact",
+    "relevant": {
+      "6FF99337-3B32-5098-8797-EB3B54997374": 1,
+      "74FBDB3F-908E-5979-BA94-88983C3518EC": 1,
+      "1E0533A6-6492-5D12-AF9A-6EBC80B740D2": 1,
+      "E30FD49C-2EEF-5EA3-8FC8-5A4A74FFBB70": 1,
+      "4892BC41-A002-5873-AF09-B0BEECBFECC9": 1
+    }
+  },
+  "scifact-137": {
+    "group": "scifact",
+    "relevant": {
+      "7E68F118-C635-5CC5-B06C-8957D63755DB": 1
+    }
+  },
+  "scifact-141": {
+    "group": "scifact",
+    "relevant": {
+      "B2F025AA-69D4-5E07-93E5-A88D00192ED7": 1,
+      "1F6660B8-964F-50FD-902F-24F1CDB050CA": 1
+    }
+  },
+  "scifact-142": {
+    "group": "scifact",
+    "relevant": {
+      "97B76E8B-0B30-58D5-A93A-4BD16698C616": 1
+    }
+  },
+  "scifact-143": {
+    "group": "scifact",
+    "relevant": {
+      "97B76E8B-0B30-58D5-A93A-4BD16698C616": 1
+    }
+  },
+  "scifact-146": {
+    "group": "scifact",
+    "relevant": {
+      "97B76E8B-0B30-58D5-A93A-4BD16698C616": 1
+    }
+  },
+  "scifact-148": {
+    "group": "scifact",
+    "relevant": {
+      "0EC82EB4-8E5C-5DE8-ABC4-B79A6E9B2941": 1
+    }
+  },
+  "scifact-163": {
+    "group": "scifact",
+    "relevant": {
+      "2829317C-28B3-50F7-BF50-7BF84F8AD625": 1
+    }
+  },
+  "scifact-171": {
+    "group": "scifact",
+    "relevant": {
+      "F212C04D-1AE3-562D-B98A-1E4F4BD88142": 1
+    }
+  },
+  "scifact-179": {
+    "group": "scifact",
+    "relevant": {
+      "3A3DD34D-B6D9-5AC1-93CA-12C16420251C": 1,
+      "7CACF5BE-9855-5B92-A5FB-B4DD30BE7C35": 1,
+      "766DAFC0-CD1D-5B9E-94DF-36B98F7099E2": 1,
+      "07C124B9-5535-58D8-9D02-3D321733C866": 1
+    }
+  },
+  "scifact-180": {
+    "group": "scifact",
+    "relevant": {
+      "0BE1D4D1-4118-52FD-9B00-424AA12D26E5": 1
+    }
+  },
+  "scifact-183": {
+    "group": "scifact",
+    "relevant": {
+      "633283C1-CA93-5FB9-B701-2A42DDFC3C5F": 1
+    }
+  },
+  "scifact-185": {
+    "group": "scifact",
+    "relevant": {
+      "04BA9183-5630-5404-AD0F-A3A9C312DBED": 1
+    }
+  },
+  "scifact-198": {
+    "group": "scifact",
+    "relevant": {
+      "DE50915D-3F6F-5536-A260-9D77FA3197DC": 1
+    }
+  },
+  "scifact-208": {
+    "group": "scifact",
+    "relevant": {
+      "0D21B67E-085D-57FF-B2A1-E3A7E8ECDA5A": 1
+    }
+  },
+  "scifact-212": {
+    "group": "scifact",
+    "relevant": {
+      "AA04F841-958D-5244-BC7C-8E4618143BF4": 1
+    }
+  },
+  "scifact-213": {
+    "group": "scifact",
+    "relevant": {
+      "0A9E6029-5BF7-59CD-929C-FEEAA27734D9": 1
+    }
+  },
+  "scifact-216": {
+    "group": "scifact",
+    "relevant": {
+      "31CC8AAE-3774-5B6A-BE07-71365467981B": 1
+    }
+  },
+  "scifact-217": {
+    "group": "scifact",
+    "relevant": {
+      "31CC8AAE-3774-5B6A-BE07-71365467981B": 1
+    }
+  },
+  "scifact-218": {
+    "group": "scifact",
+    "relevant": {
+      "31CC8AAE-3774-5B6A-BE07-71365467981B": 1
+    }
+  },
+  "scifact-219": {
+    "group": "scifact",
+    "relevant": {
+      "31CC8AAE-3774-5B6A-BE07-71365467981B": 1
+    }
+  },
+  "scifact-230": {
+    "group": "scifact",
+    "relevant": {
+      "D0370516-0954-5775-904E-ADE03FD5E3F0": 1
+    }
+  },
+  "scifact-232": {
+    "group": "scifact",
+    "relevant": {
+      "4471C5BF-A925-59D2-B394-20BDDEEA1B3A": 1
+    }
+  },
+  "scifact-233": {
+    "group": "scifact",
+    "relevant": {
+      "7E750FFB-7951-59A5-93D1-2B8ACEFD7F4B": 1
+    }
+  },
+  "scifact-236": {
+    "group": "scifact",
+    "relevant": {
+      "7E750FFB-7951-59A5-93D1-2B8ACEFD7F4B": 1
+    }
+  },
+  "scifact-237": {
+    "group": "scifact",
+    "relevant": {
+      "43FE6C06-41E4-5AE7-8B9D-7CD2339CAAED": 1
+    }
+  },
+  "scifact-238": {
+    "group": "scifact",
+    "relevant": {
+      "4C1683B5-0AD8-5D72-8755-71DB855B1566": 1
+    }
+  },
+  "scifact-239": {
+    "group": "scifact",
+    "relevant": {
+      "38979BBE-544D-501F-BE60-CC0628F561EC": 1
+    }
+  },
+  "scifact-248": {
+    "group": "scifact",
+    "relevant": {
+      "4E147D28-5728-5593-BDA3-FA73E7C4A818": 1
+    }
+  },
+  "scifact-249": {
+    "group": "scifact",
+    "relevant": {
+      "4E147D28-5728-5593-BDA3-FA73E7C4A818": 1
+    }
+  },
+  "scifact-261": {
+    "group": "scifact",
+    "relevant": {
+      "DDFB21BA-4905-542A-822C-4FB8C72FA651": 1,
+      "8885A2DA-4C21-5D92-AACB-74A2B9829B3D": 1
+    }
+  },
+  "scifact-268": {
+    "group": "scifact",
+    "relevant": {
+      "705462D7-74EC-5779-86B6-92FC50A1C3B6": 1
+    }
+  },
+  "scifact-269": {
+    "group": "scifact",
+    "relevant": {
+      "705462D7-74EC-5779-86B6-92FC50A1C3B6": 1
+    }
+  },
+  "scifact-274": {
+    "group": "scifact",
+    "relevant": {
+      "7C626388-FFF2-5BB6-8D80-28EF67FC23B4": 1
+    }
+  },
+  "scifact-275": {
+    "group": "scifact",
+    "relevant": {
+      "6FD5B687-2288-5D09-A102-40B85BCC8018": 1,
+      "59FA4E9F-7379-55C2-BEFC-6541A8053FB9": 1,
+      "E4EC6FAD-DE2C-55BD-8589-86EA0429A6D0": 1
+    }
+  },
+  "scifact-279": {
+    "group": "scifact",
+    "relevant": {
+      "7A413D12-9F99-589F-A416-8B1447E727F2": 1
+    }
+  },
+  "scifact-294": {
+    "group": "scifact",
+    "relevant": {
+      "2423D8D9-A6BE-5326-8B19-174036A54B14": 1
+    }
+  },
+  "scifact-295": {
+    "group": "scifact",
+    "relevant": {
+      "7171F6FB-E400-5056-8F4D-265ABB557ADB": 1
+    }
+  },
+  "scifact-298": {
+    "group": "scifact",
+    "relevant": {
+      "2ED2100B-BF31-575A-ABEB-659435378258": 1
+    }
+  },
+  "scifact-300": {
+    "group": "scifact",
+    "relevant": {
+      "3F3D4ABB-3873-5B59-B87C-FBD450C69861": 1
+    }
+  },
+  "scifact-303": {
+    "group": "scifact",
+    "relevant": {
+      "7E750FFB-7951-59A5-93D1-2B8ACEFD7F4B": 1
+    }
+  },
+  "scifact-312": {
+    "group": "scifact",
+    "relevant": {
+      "77AC6560-F254-5E57-82B5-1E63D3A75F28": 1
+    }
+  },
+  "scifact-314": {
+    "group": "scifact",
+    "relevant": {
+      "9CC832E4-5E17-5687-8DFC-CF197E3C7253": 1
+    }
+  },
+  "scifact-324": {
+    "group": "scifact",
+    "relevant": {
+      "376F3F91-70D9-526C-9AA3-24A870ABDC2E": 1
+    }
+  },
+  "scifact-327": {
+    "group": "scifact",
+    "relevant": {
+      "2D76EE09-9BDF-50E4-BCCD-2C8A157129D5": 1
+    }
+  },
+  "scifact-338": {
+    "group": "scifact",
+    "relevant": {
+      "4CC6890A-0533-5726-8CD2-D2EF9AECE870": 1
+    }
+  },
+  "scifact-343": {
+    "group": "scifact",
+    "relevant": {
+      "EDFC0F88-D741-5E08-9D00-0F353EABECAB": 1,
+      "C653C45D-E668-5F5F-BFD4-26D2C332D445": 1
+    }
+  },
+  "scifact-350": {
+    "group": "scifact",
+    "relevant": {
+      "DE0A74EA-B63F-54D8-A632-A11395D4C38A": 1
+    }
+  },
+  "scifact-354": {
+    "group": "scifact",
+    "relevant": {
+      "EFBD17CC-CFF8-5F90-B4CD-07BF53987F60": 1
+    }
+  },
+  "scifact-362": {
+    "group": "scifact",
+    "relevant": {
+      "47C131F3-6541-586F-91C5-21DCD21761E8": 1
+    }
+  },
+  "scifact-380": {
+    "group": "scifact",
+    "relevant": {
+      "4C00ED36-DECA-587A-8356-516C3613C90A": 1
+    }
+  },
+  "scifact-384": {
+    "group": "scifact",
+    "relevant": {
+      "EE2AD20E-99B3-5ECF-8F2E-F88B3A5EA40A": 1
+    }
+  },
+  "scifact-385": {
+    "group": "scifact",
+    "relevant": {
+      "45675636-56BB-58A5-A5BD-80334F31ACD3": 1,
+      "EE7FF675-A601-5A51-BE17-F87EF9A7B1D6": 1
+    }
+  },
+  "scifact-386": {
+    "group": "scifact",
+    "relevant": {
+      "3710AFFE-7EF1-5BD4-90EE-6D604D04B2B8": 1
+    }
+  },
+  "scifact-388": {
+    "group": "scifact",
+    "relevant": {
+      "B1393B54-9C1A-5CFA-B287-84AD89E914A4": 1
+    }
+  },
+  "scifact-399": {
+    "group": "scifact",
+    "relevant": {
+      "2DCF32E3-5CE4-59B0-B809-EB59C018F20F": 1
+    }
+  },
+  "scifact-410": {
+    "group": "scifact",
+    "relevant": {
+      "C7CF406A-879C-5F9B-8770-92DFEA39ED4C": 1
+    }
+  },
+  "scifact-411": {
+    "group": "scifact",
+    "relevant": {
+      "C7CF406A-879C-5F9B-8770-92DFEA39ED4C": 1
+    }
+  },
+  "scifact-415": {
+    "group": "scifact",
+    "relevant": {
+      "6F6AD1AC-1113-5944-B088-34D5E92FE800": 1
+    }
+  },
+  "scifact-421": {
+    "group": "scifact",
+    "relevant": {
+      "C80403D0-E274-57E2-AC53-AF4B62C1AB20": 1
+    }
+  },
+  "scifact-431": {
+    "group": "scifact",
+    "relevant": {
+      "78D4CA63-5D13-592B-855B-1AB86B387E6A": 1
+    }
+  },
+  "scifact-436": {
+    "group": "scifact",
+    "relevant": {
+      "EED12C17-6787-5C1D-A69E-E55331B4263A": 1
+    }
+  },
+  "scifact-437": {
+    "group": "scifact",
+    "relevant": {
+      "9B9C8436-AD92-5F84-B56C-76BA3FAC3FC3": 1
+    }
+  },
+  "scifact-439": {
+    "group": "scifact",
+    "relevant": {
+      "DEA5CC4D-C45E-58DB-B08B-515FDE0DAB6B": 1
+    }
+  },
+  "scifact-440": {
+    "group": "scifact",
+    "relevant": {
+      "DEA5CC4D-C45E-58DB-B08B-515FDE0DAB6B": 1
+    }
+  },
+  "scifact-443": {
+    "group": "scifact",
+    "relevant": {
+      "25BDB11B-58D1-5B46-A339-C08568EBCBAD": 1
+    }
+  },
+  "scifact-452": {
+    "group": "scifact",
+    "relevant": {
+      "FAEC1388-6E57-5F55-848C-75B384D6042D": 1,
+      "DEC2D0C1-6A72-5ACE-8159-34125304A705": 1
+    }
+  },
+  "scifact-475": {
+    "group": "scifact",
+    "relevant": {
+      "4F06570C-F191-5E3B-B076-2525BB6B5CE9": 1
+    }
+  },
+  "scifact-478": {
+    "group": "scifact",
+    "relevant": {
+      "1C4AF0E4-5C73-5362-AC3F-E70BBD641905": 1
+    }
+  },
+  "scifact-491": {
+    "group": "scifact",
+    "relevant": {
+      "7E4FB5E5-48C8-5EB9-A3F9-8FBFF905CFFD": 1
+    }
+  },
+  "scifact-501": {
+    "group": "scifact",
+    "relevant": {
+      "5D5906F2-4277-5151-9D06-8ACBA02B6BBD": 1
+    }
+  },
+  "scifact-502": {
+    "group": "scifact",
+    "relevant": {
+      "F98C1B22-DE4E-50E5-8EC7-20B423A69F6E": 1
+    }
+  },
+  "scifact-507": {
+    "group": "scifact",
+    "relevant": {
+      "2477EF5F-6872-5450-BCBF-7326B1EA4E29": 1
+    }
+  },
+  "scifact-508": {
+    "group": "scifact",
+    "relevant": {
+      "01944B51-D509-5725-B020-137545C6CF56": 1
+    }
+  },
+  "scifact-513": {
+    "group": "scifact",
+    "relevant": {
+      "017C3879-AD66-53A0-9FA9-556E07D652A9": 1
+    }
+  },
+  "scifact-514": {
+    "group": "scifact",
+    "relevant": {
+      "0D28F0DD-7F44-5301-B804-690CE2958F80": 1
+    }
+  },
+  "scifact-516": {
+    "group": "scifact",
+    "relevant": {
+      "4970986E-BDB5-59DB-A81F-57C2CC025E1D": 1
+    }
+  },
+  "scifact-517": {
+    "group": "scifact",
+    "relevant": {
+      "D211EFB2-A5C0-578B-B2EE-2A0BECF447B5": 1
+    }
+  },
+  "scifact-521": {
+    "group": "scifact",
+    "relevant": {
+      "9B559507-468D-5B1A-AE2C-A6CA9D272AFF": 1
+    }
+  },
+  "scifact-525": {
+    "group": "scifact",
+    "relevant": {
+      "DCD72E1A-3523-5527-90A8-102C42A64CBC": 1
+    }
+  },
+  "scifact-527": {
+    "group": "scifact",
+    "relevant": {
+      "D3212650-F74F-5016-A37E-174F8E31AF5C": 1
+    }
+  },
+  "scifact-528": {
+    "group": "scifact",
+    "relevant": {
+      "A01EC6E7-0414-5BF3-A5DA-69BC02348EDF": 1
+    }
+  },
+  "scifact-532": {
+    "group": "scifact",
+    "relevant": {
+      "16E7FF52-5674-5BD0-8C95-9DFB0EFA2604": 1
+    }
+  },
+  "scifact-533": {
+    "group": "scifact",
+    "relevant": {
+      "16E7FF52-5674-5BD0-8C95-9DFB0EFA2604": 1
+    }
+  },
+  "scifact-535": {
+    "group": "scifact",
+    "relevant": {
+      "7FF32A69-EA57-5CD8-8DB1-3036DE447FC5": 1
+    }
+  },
+  "scifact-536": {
+    "group": "scifact",
+    "relevant": {
+      "D59EA76A-D862-5F19-9C71-04615C206F81": 1
+    }
+  },
+  "scifact-539": {
+    "group": "scifact",
+    "relevant": {
+      "6C3B09F3-CCEB-5293-B392-268BAC2B487B": 1
+    }
+  },
+  "scifact-540": {
+    "group": "scifact",
+    "relevant": {
+      "3A4D7AC5-3C76-5ED7-B9F7-2A5010371356": 1,
+      "D1FDF444-99B9-5E3D-9D85-252E78E64FC3": 1
+    }
+  },
+  "scifact-544": {
+    "group": "scifact",
+    "relevant": {
+      "266A2A1B-EF11-58FA-9FE2-FA6B43329D0E": 1
+    }
+  },
+  "scifact-549": {
+    "group": "scifact",
+    "relevant": {
+      "32AFB0D0-3742-58C7-B3DB-5A5C5F86F2FA": 1
+    }
+  },
+  "scifact-551": {
+    "group": "scifact",
+    "relevant": {
+      "8653A5BB-D196-55D7-9457-20ECE4B90DC6": 1
+    }
+  },
+  "scifact-552": {
+    "group": "scifact",
+    "relevant": {
+      "30E254EA-B246-5B97-8045-3445827321E0": 1
+    }
+  },
+  "scifact-554": {
+    "group": "scifact",
+    "relevant": {
+      "89EF5F04-AF0A-57D1-A376-39599B334081": 1
+    }
+  },
+  "scifact-560": {
+    "group": "scifact",
+    "relevant": {
+      "1D7AC3BD-0108-5E81-B454-2F4924A3820C": 1
+    }
+  },
+  "scifact-569": {
+    "group": "scifact",
+    "relevant": {
+      "3EF39FB1-E278-57FF-BCC9-80D8F44276AC": 1
+    }
+  },
+  "scifact-575": {
+    "group": "scifact",
+    "relevant": {
+      "17C152CE-6260-50B0-B6FD-2C80546FC0D4": 1
+    }
+  },
+  "scifact-577": {
+    "group": "scifact",
+    "relevant": {
+      "A4827E2E-2D3E-5253-8C4E-7AB3914B47C1": 1
+    }
+  },
+  "scifact-578": {
+    "group": "scifact",
+    "relevant": {
+      "4532D0B8-4F04-5AD4-8B02-A6C9EC10EA0F": 1
+    }
+  },
+  "scifact-587": {
+    "group": "scifact",
+    "relevant": {
+      "BE09AEC2-0258-5B8D-A1EC-9FA733F123E4": 1
+    }
+  },
+  "scifact-589": {
+    "group": "scifact",
+    "relevant": {
+      "AA31233F-81E9-580F-83E0-EFBE0E9D3732": 1
+    }
+  },
+  "scifact-593": {
+    "group": "scifact",
+    "relevant": {
+      "9818FC41-DE7C-5A21-8571-60E996788224": 1
+    }
+  },
+  "scifact-597": {
+    "group": "scifact",
+    "relevant": {
+      "1B107144-E98A-571A-A601-7A76D457A6CA": 1,
+      "F19F625F-E42F-5734-BBBD-010E524B7356": 1,
+      "CD969E44-56C8-5DFA-9998-B2E1AC175CDE": 1
+    }
+  },
+  "scifact-598": {
+    "group": "scifact",
+    "relevant": {
+      "CD969E44-56C8-5DFA-9998-B2E1AC175CDE": 1
+    }
+  },
+  "scifact-613": {
+    "group": "scifact",
+    "relevant": {
+      "7D55B485-312D-5F70-8597-19CD8B89BAC4": 1
+    }
+  },
+  "scifact-619": {
+    "group": "scifact",
+    "relevant": {
+      "C7DAFC6D-8E8D-5D79-860A-B91C44F16839": 1,
+      "89D9B225-913E-5037-B023-70D4F2FB3D36": 1
+    }
+  },
+  "scifact-623": {
+    "group": "scifact",
+    "relevant": {
+      "C9C2D760-83D1-5DF0-8832-62CC1D138DF5": 1
+    }
+  },
+  "scifact-628": {
+    "group": "scifact",
+    "relevant": {
+      "8F5C817D-A74E-5B70-BC1E-5DB54C234637": 1
+    }
+  },
+  "scifact-636": {
+    "group": "scifact",
+    "relevant": {
+      "1E5F13B0-8C4A-584B-B190-34D5902184C4": 1
+    }
+  },
+  "scifact-637": {
+    "group": "scifact",
+    "relevant": {
+      "EBB821BC-CB5B-53CD-B8DF-204B16B15D27": 1
+    }
+  },
+  "scifact-641": {
+    "group": "scifact",
+    "relevant": {
+      "09D79E47-A501-5700-B8B8-A61DFC644442": 1,
+      "A0165B6A-D876-5A52-88B0-DE295D1430F1": 1
+    }
+  },
+  "scifact-644": {
+    "group": "scifact",
+    "relevant": {
+      "F1BAA572-42A5-5B27-97AA-F9BF87502EE4": 1
+    }
+  },
+  "scifact-649": {
+    "group": "scifact",
+    "relevant": {
+      "CFACBB92-9816-5868-9504-E8345A8FC7BD": 1
+    }
+  },
+  "scifact-659": {
+    "group": "scifact",
+    "relevant": {
+      "765EB221-7CFA-5F8B-91A8-57DAB0F225C5": 1
+    }
+  },
+  "scifact-660": {
+    "group": "scifact",
+    "relevant": {
+      "765EB221-7CFA-5F8B-91A8-57DAB0F225C5": 1
+    }
+  },
+  "scifact-674": {
+    "group": "scifact",
+    "relevant": {
+      "C5BF87CE-F119-5286-9FA4-C99FBEE71A3B": 1
+    }
+  },
+  "scifact-684": {
+    "group": "scifact",
+    "relevant": {
+      "43FE6C06-41E4-5AE7-8B9D-7CD2339CAAED": 1
+    }
+  },
+  "scifact-690": {
+    "group": "scifact",
+    "relevant": {
+      "DDDF0D92-4F27-5A3D-9B8B-C51D105F6480": 1
+    }
+  },
+  "scifact-691": {
+    "group": "scifact",
+    "relevant": {
+      "E317C831-4EE1-517E-9392-B846644EEF24": 1
+    }
+  },
+  "scifact-692": {
+    "group": "scifact",
+    "relevant": {
+      "7C8E3A47-0D0E-5728-A6EF-35E110E77F8C": 1
+    }
+  },
+  "scifact-693": {
+    "group": "scifact",
+    "relevant": {
+      "7C8E3A47-0D0E-5728-A6EF-35E110E77F8C": 1
+    }
+  },
+  "scifact-700": {
+    "group": "scifact",
+    "relevant": {
+      "1ABED0D7-7BCC-5819-B49B-349710BA363B": 1
+    }
+  },
+  "scifact-702": {
+    "group": "scifact",
+    "relevant": {
+      "1ABED0D7-7BCC-5819-B49B-349710BA363B": 1
+    }
+  },
+  "scifact-715": {
+    "group": "scifact",
+    "relevant": {
+      "4EB19F90-E586-5E37-93A9-DE3E9AB9487B": 1
+    }
+  },
+  "scifact-716": {
+    "group": "scifact",
+    "relevant": {
+      "4EB19F90-E586-5E37-93A9-DE3E9AB9487B": 1
+    }
+  },
+  "scifact-718": {
+    "group": "scifact",
+    "relevant": {
+      "19292605-27F6-55E4-BFA8-4E67AD087994": 1
+    }
+  },
+  "scifact-721": {
+    "group": "scifact",
+    "relevant": {
+      "436A3439-5808-5499-8C78-533B1D4B8A32": 1
+    }
+  },
+  "scifact-723": {
+    "group": "scifact",
+    "relevant": {
+      "1D7032F7-02AA-58CC-BCEC-1479D61AA2A2": 1
+    }
+  },
+  "scifact-727": {
+    "group": "scifact",
+    "relevant": {
+      "499279B2-EAEE-5D2C-AA4E-D7CCA2B84273": 1
+    }
+  },
+  "scifact-728": {
+    "group": "scifact",
+    "relevant": {
+      "499279B2-EAEE-5D2C-AA4E-D7CCA2B84273": 1,
+      "956E16C8-1DA2-5D9C-B6C3-A3B692409DB8": 1
+    }
+  },
+  "scifact-729": {
+    "group": "scifact",
+    "relevant": {
+      "C23406F9-320A-5CEC-BDDE-65BF9FBAE8EC": 1
+    }
+  },
+  "scifact-742": {
+    "group": "scifact",
+    "relevant": {
+      "67BF59CE-0415-5122-9013-B0C66726E5A7": 1
+    }
+  },
+  "scifact-743": {
+    "group": "scifact",
+    "relevant": {
+      "67BF59CE-0415-5122-9013-B0C66726E5A7": 1
+    }
+  },
+  "scifact-744": {
+    "group": "scifact",
+    "relevant": {
+      "B055953A-42B9-5E51-AF18-7443B95EED73": 1
+    }
+  },
+  "scifact-756": {
+    "group": "scifact",
+    "relevant": {
+      "6369A6B1-4CA4-5E7B-9582-8405B8696AB5": 1
+    }
+  },
+  "scifact-759": {
+    "group": "scifact",
+    "relevant": {
+      "B04070D8-D6B8-5054-BC93-83B5C55E14B1": 1
+    }
+  },
+  "scifact-768": {
+    "group": "scifact",
+    "relevant": {
+      "29289C26-3AF6-5A46-97A8-56244C25EDA0": 1
+    }
+  },
+  "scifact-770": {
+    "group": "scifact",
+    "relevant": {
+      "533C2C11-B068-5807-AF79-756EAC30570A": 1
+    }
+  },
+  "scifact-775": {
+    "group": "scifact",
+    "relevant": {
+      "E1CD1035-AC64-57F5-8FB5-32FE172DA69F": 1
+    }
+  },
+  "scifact-781": {
+    "group": "scifact",
+    "relevant": {
+      "757F3127-7623-5F80-A2AD-4224AC89BC01": 1
+    }
+  },
+  "scifact-783": {
+    "group": "scifact",
+    "relevant": {
+      "F8EDC48E-30AE-5689-89DA-AA3A579C2028": 1
+    }
+  },
+  "scifact-784": {
+    "group": "scifact",
+    "relevant": {
+      "DCF081F9-1958-5551-B958-ED4147C07AF7": 1
+    }
+  },
+  "scifact-785": {
+    "group": "scifact",
+    "relevant": {
+      "89DB4F9D-1D27-596C-BC50-0A9E42BCA94C": 1
+    }
+  },
+  "scifact-793": {
+    "group": "scifact",
+    "relevant": {
+      "FA8DF543-4502-5C3B-8B04-53F30044C72B": 1
+    }
+  },
+  "scifact-800": {
+    "group": "scifact",
+    "relevant": {
+      "7B9A3C7F-DBF4-58C1-827D-D2B33EE8ADDA": 1
+    }
+  },
+  "scifact-805": {
+    "group": "scifact",
+    "relevant": {
+      "D1AFCC71-7A68-5B99-9BC2-448BF29D3D5B": 1
+    }
+  },
+  "scifact-808": {
+    "group": "scifact",
+    "relevant": {
+      "AA1C200E-D046-5B7D-8605-F9731154D3E0": 1
+    }
+  },
+  "scifact-811": {
+    "group": "scifact",
+    "relevant": {
+      "3C1C9818-B30C-536D-BF06-FC63C0ED268B": 1
+    }
+  },
+  "scifact-814": {
+    "group": "scifact",
+    "relevant": {
+      "963E90AC-2E80-5C87-9598-94D42D0FBA96": 1
+    }
+  },
+  "scifact-820": {
+    "group": "scifact",
+    "relevant": {
+      "602DAFB7-7146-52EB-B69F-9587CCFC2D80": 1
+    }
+  },
+  "scifact-821": {
+    "group": "scifact",
+    "relevant": {
+      "602DAFB7-7146-52EB-B69F-9587CCFC2D80": 1
+    }
+  },
+  "scifact-823": {
+    "group": "scifact",
+    "relevant": {
+      "E81DA2D0-3E18-5D54-BCB9-1698B5399E7C": 1
+    }
+  },
+  "scifact-830": {
+    "group": "scifact",
+    "relevant": {
+      "E1E307DE-A37A-585A-893C-DBB170D0A3C4": 1
+    }
+  },
+  "scifact-831": {
+    "group": "scifact",
+    "relevant": {
+      "E1E307DE-A37A-585A-893C-DBB170D0A3C4": 1
+    }
+  },
+  "scifact-832": {
+    "group": "scifact",
+    "relevant": {
+      "844079EB-2299-5C6A-AE0C-AA34A7BFFBE0": 1
+    }
+  },
+  "scifact-834": {
+    "group": "scifact",
+    "relevant": {
+      "2E85A461-DDF4-5839-9C0D-0852AA3D301D": 1
+    }
+  },
+  "scifact-837": {
+    "group": "scifact",
+    "relevant": {
+      "10F5F40D-9047-5DD7-896E-74AD6D373A01": 1
+    }
+  },
+  "scifact-839": {
+    "group": "scifact",
+    "relevant": {
+      "7E80D76B-FF63-53C8-AFFD-FEEE765CFAE9": 1
+    }
+  },
+  "scifact-845": {
+    "group": "scifact",
+    "relevant": {
+      "19603B92-1412-5E08-B4CE-46C03719218B": 1
+    }
+  },
+  "scifact-847": {
+    "group": "scifact",
+    "relevant": {
+      "D07C2F2E-9C24-5CDB-AE0B-B230D747E1F5": 1
+    }
+  },
+  "scifact-852": {
+    "group": "scifact",
+    "relevant": {
+      "CB3E8688-0DA2-50BF-B8FF-07B2E6FBC743": 1
+    }
+  },
+  "scifact-859": {
+    "group": "scifact",
+    "relevant": {
+      "4A061C9D-498D-509C-8236-64800139EE77": 1
+    }
+  },
+  "scifact-870": {
+    "group": "scifact",
+    "relevant": {
+      "7BE29116-334C-5855-B6C3-D2994242B426": 1
+    }
+  },
+  "scifact-873": {
+    "group": "scifact",
+    "relevant": {
+      "72670806-F645-5D71-844A-544A121A0D9E": 1,
+      "4CCE7DF9-F592-5A09-B5DA-F63750244B81": 1,
+      "D9F83EBD-8C24-5FF4-BFB5-B6E38E750AC8": 1,
+      "2F45018D-4D10-5D80-BD29-DBEF1DC19D4E": 1,
+      "74119EA2-AE87-5FA8-BB04-6400EDD58747": 1
+    }
+  },
+  "scifact-879": {
+    "group": "scifact",
+    "relevant": {
+      "543504E4-400F-569A-BAE0-F9D8845C1DA8": 1
+    }
+  },
+  "scifact-880": {
+    "group": "scifact",
+    "relevant": {
+      "543504E4-400F-569A-BAE0-F9D8845C1DA8": 1
+    }
+  },
+  "scifact-882": {
+    "group": "scifact",
+    "relevant": {
+      "CD67AC2A-87D3-5417-BB6F-46F28E9FFC5E": 1
+    }
+  },
+  "scifact-887": {
+    "group": "scifact",
+    "relevant": {
+      "AD5F6C5E-392D-566B-A5BA-EBDEB2FCFB7E": 1
+    }
+  },
+  "scifact-903": {
+    "group": "scifact",
+    "relevant": {
+      "F4D52309-F8BD-5152-B387-0AD612E38E82": 1
+    }
+  },
+  "scifact-904": {
+    "group": "scifact",
+    "relevant": {
+      "37F70F94-1491-5294-BF21-0B3799C9796B": 1
+    }
+  },
+  "scifact-907": {
+    "group": "scifact",
+    "relevant": {
+      "D186B30E-0C54-57AB-8883-984D25EBB34E": 1
+    }
+  },
+  "scifact-911": {
+    "group": "scifact",
+    "relevant": {
+      "6794F911-C8BE-5161-A8E1-2D070763E511": 1
+    }
+  },
+  "scifact-913": {
+    "group": "scifact",
+    "relevant": {
+      "74C77A73-6222-5BB0-A6BE-20490C975ED9": 1
+    }
+  },
+  "scifact-914": {
+    "group": "scifact",
+    "relevant": {
+      "74C77A73-6222-5BB0-A6BE-20490C975ED9": 1
+    }
+  },
+  "scifact-921": {
+    "group": "scifact",
+    "relevant": {
+      "36946EDB-FF0B-578D-957F-D153D4CE8F5C": 1
+    }
+  },
+  "scifact-922": {
+    "group": "scifact",
+    "relevant": {
+      "36DB23E0-EEBA-5146-9476-495492B6AEED": 1
+    }
+  },
+  "scifact-936": {
+    "group": "scifact",
+    "relevant": {
+      "2E85A461-DDF4-5839-9C0D-0852AA3D301D": 1
+    }
+  },
+  "scifact-956": {
+    "group": "scifact",
+    "relevant": {
+      "B5EEDA44-4AF3-52D5-B953-3601693D4107": 1
+    }
+  },
+  "scifact-957": {
+    "group": "scifact",
+    "relevant": {
+      "6A6D0196-AEAC-558E-A449-521827103BE7": 1
+    }
+  },
+  "scifact-960": {
+    "group": "scifact",
+    "relevant": {
+      "2AF4ADC1-7D25-5E11-834E-3DD5DE5547E0": 1
+    }
+  },
+  "scifact-967": {
+    "group": "scifact",
+    "relevant": {
+      "048F759B-DF67-5F07-96A4-D555339C5A1B": 1,
+      "2A52389B-4B55-52FC-AE8D-9D45E36521F6": 1
+    }
+  },
+  "scifact-971": {
+    "group": "scifact",
+    "relevant": {
+      "B0759AB2-E919-5DC3-A8E0-07F5C371D108": 1,
+      "4E35980C-6668-555B-8066-CFCDB266DC31": 1,
+      "A077566D-32D0-5148-A9BF-B1466711603C": 1,
+      "64F00FD0-3958-575C-9E5F-A68370579C81": 1
+    }
+  },
+  "scifact-975": {
+    "group": "scifact",
+    "relevant": {
+      "37F34104-0F37-5493-B2BA-B4F7CD826038": 1
+    }
+  },
+  "scifact-982": {
+    "group": "scifact",
+    "relevant": {
+      "ECF94273-5C5D-519D-AF7A-78892D3F8ED0": 1
+    }
+  },
+  "scifact-985": {
+    "group": "scifact",
+    "relevant": {
+      "29CA1D00-053B-551C-8BAD-67F6A010BC40": 1
+    }
+  },
+  "scifact-993": {
+    "group": "scifact",
+    "relevant": {
+      "B2CE9482-7708-5AF0-8E99-979A42D78265": 1
+    }
+  },
+  "scifact-1012": {
+    "group": "scifact",
+    "relevant": {
+      "2E3D059C-36FD-5E40-8F96-451FE374DA11": 1
+    }
+  },
+  "scifact-1014": {
+    "group": "scifact",
+    "relevant": {
+      "C83A905E-6293-53C4-A6D7-D5D6F76CB7E0": 1
+    }
+  },
+  "scifact-1019": {
+    "group": "scifact",
+    "relevant": {
+      "F2612715-6FE6-595A-9F81-E7E6EDA73384": 1
+    }
+  },
+  "scifact-1020": {
+    "group": "scifact",
+    "relevant": {
+      "32AFB0D0-3742-58C7-B3DB-5A5C5F86F2FA": 1
+    }
+  },
+  "scifact-1021": {
+    "group": "scifact",
+    "relevant": {
+      "32AFB0D0-3742-58C7-B3DB-5A5C5F86F2FA": 1
+    }
+  },
+  "scifact-1024": {
+    "group": "scifact",
+    "relevant": {
+      "71D0A733-7C82-5647-9F37-D82AAB687773": 1
+    }
+  },
+  "scifact-1029": {
+    "group": "scifact",
+    "relevant": {
+      "39989DEA-20B8-5397-8940-C136D4C64E45": 1,
+      "EC1650A1-4620-5E5E-A102-D4859B687839": 1,
+      "43773331-42B1-5A9C-AC58-6CAB7B491E76": 1
+    }
+  },
+  "scifact-1041": {
+    "group": "scifact",
+    "relevant": {
+      "5F05CEC7-BA28-53B5-A7CC-8FA682526055": 1,
+      "F0A12D71-D23D-5A61-9AEC-8E12B03BCC7C": 1
+    }
+  },
+  "scifact-1049": {
+    "group": "scifact",
+    "relevant": {
+      "3A8E9C10-BEF2-5ED6-B0FF-36B7C7A64978": 1
+    }
+  },
+  "scifact-1062": {
+    "group": "scifact",
+    "relevant": {
+      "58A3B086-3BB0-57E6-B615-8C129927043F": 1
+    }
+  },
+  "scifact-1086": {
+    "group": "scifact",
+    "relevant": {
+      "1008DB6C-FE52-5A96-9B86-AD416EC556AB": 1
+    }
+  },
+  "scifact-1088": {
+    "group": "scifact",
+    "relevant": {
+      "3A1E2BC4-1467-588E-8655-15AFD36578DD": 1
+    }
+  },
+  "scifact-1089": {
+    "group": "scifact",
+    "relevant": {
+      "F65C3FBC-5782-5E5C-A73A-78D5FB47C7EA": 1
+    }
+  },
+  "scifact-1099": {
+    "group": "scifact",
+    "relevant": {
+      "0169BC06-9230-56A8-9B19-9A6CF86E1E11": 1
+    }
+  },
+  "scifact-1100": {
+    "group": "scifact",
+    "relevant": {
+      "0169BC06-9230-56A8-9B19-9A6CF86E1E11": 1
+    }
+  },
+  "scifact-1104": {
+    "group": "scifact",
+    "relevant": {
+      "4397A015-5E76-5102-A5E7-2FC9534CFE6F": 1
+    }
+  },
+  "scifact-1107": {
+    "group": "scifact",
+    "relevant": {
+      "2BEE9900-A35B-59A3-8223-2B3B4DDA2B03": 1
+    }
+  },
+  "scifact-1110": {
+    "group": "scifact",
+    "relevant": {
+      "EE2AD20E-99B3-5ECF-8F2E-F88B3A5EA40A": 1
+    }
+  },
+  "scifact-1121": {
+    "group": "scifact",
+    "relevant": {
+      "2C608F08-2BA1-59AA-9D55-ED95FFE76CE7": 1
+    }
+  },
+  "scifact-1130": {
+    "group": "scifact",
+    "relevant": {
+      "2D76EE09-9BDF-50E4-BCCD-2C8A157129D5": 1
+    }
+  },
+  "scifact-1132": {
+    "group": "scifact",
+    "relevant": {
+      "8653A5BB-D196-55D7-9457-20ECE4B90DC6": 1,
+      "6B73DDC0-66A6-5DB3-B3E1-2C01F723DC8E": 1
+    }
+  },
+  "scifact-1137": {
+    "group": "scifact",
+    "relevant": {
+      "F31907C6-1C6A-5568-98A1-A0C2C9313CE3": 1
+    }
+  },
+  "scifact-1140": {
+    "group": "scifact",
+    "relevant": {
+      "F5B34393-3F5E-5398-A31F-EC7F323D3AD7": 1
+    }
+  },
+  "scifact-1144": {
+    "group": "scifact",
+    "relevant": {
+      "682B667C-2171-5181-8E61-8F4274770EB1": 1
+    }
+  },
+  "scifact-1146": {
+    "group": "scifact",
+    "relevant": {
+      "631F2E84-BA2D-51E7-9F0E-F8316E929AD0": 1
+    }
+  },
+  "scifact-1150": {
+    "group": "scifact",
+    "relevant": {
+      "E092BE54-6C47-5AF4-A038-DF1CD8C01229": 1
+    }
+  },
+  "scifact-1163": {
+    "group": "scifact",
+    "relevant": {
+      "C4CDCC37-CFE4-57F8-A0F4-B22357327C6F": 1
+    }
+  },
+  "scifact-1175": {
+    "group": "scifact",
+    "relevant": {
+      "854ABADB-1B21-5618-8376-DE8341FC2D3F": 1
+    }
+  },
+  "scifact-1179": {
+    "group": "scifact",
+    "relevant": {
+      "854ABADB-1B21-5618-8376-DE8341FC2D3F": 1
+    }
+  },
+  "scifact-1180": {
+    "group": "scifact",
+    "relevant": {
+      "854ABADB-1B21-5618-8376-DE8341FC2D3F": 1
+    }
+  },
+  "scifact-1185": {
+    "group": "scifact",
+    "relevant": {
+      "E642D17D-5F0E-52CF-8093-642BF24B46D3": 1
+    }
+  },
+  "scifact-1187": {
+    "group": "scifact",
+    "relevant": {
+      "94AB1D50-7427-5D38-8F68-E6C9D83ABB6C": 1
+    }
+  },
+  "scifact-1191": {
+    "group": "scifact",
+    "relevant": {
+      "B8E3D71C-F814-5A00-B7B3-C7682AB39B2C": 1
+    }
+  },
+  "scifact-1194": {
+    "group": "scifact",
+    "relevant": {
+      "8AA6B91C-BC21-5A80-BCA1-9B836C41BA48": 1
+    }
+  },
+  "scifact-1196": {
+    "group": "scifact",
+    "relevant": {
+      "EBB821BC-CB5B-53CD-B8DF-204B16B15D27": 1
+    }
+  },
+  "scifact-1197": {
+    "group": "scifact",
+    "relevant": {
+      "EBB821BC-CB5B-53CD-B8DF-204B16B15D27": 1
+    }
+  },
+  "scifact-1199": {
+    "group": "scifact",
+    "relevant": {
+      "779A25BF-2903-5826-B63B-5706FBAFE90C": 1
+    }
+  },
+  "scifact-1200": {
+    "group": "scifact",
+    "relevant": {
+      "0FAF0CBC-7683-5C90-B698-79444804F289": 1
+    }
+  },
+  "scifact-1202": {
+    "group": "scifact",
+    "relevant": {
+      "486FA17E-580B-5A1C-BE02-8486C438BBA5": 1
+    }
+  },
+  "scifact-1204": {
+    "group": "scifact",
+    "relevant": {
+      "0049B564-CED4-57A9-B864-7854443727AE": 1
+    }
+  },
+  "scifact-1207": {
+    "group": "scifact",
+    "relevant": {
+      "0309A426-4CDF-555A-803D-C7847C139B8D": 1
+    }
+  },
+  "scifact-1213": {
+    "group": "scifact",
+    "relevant": {
+      "A6BBB371-3EF0-58F1-8EE5-49190C2B7B8E": 1
+    }
+  },
+  "scifact-1216": {
+    "group": "scifact",
+    "relevant": {
+      "4D8C04E1-65F2-5B20-91DB-73EC051550FF": 1
+    }
+  },
+  "scifact-1221": {
+    "group": "scifact",
+    "relevant": {
+      "FEE6743B-C2D9-5FB3-A8A8-38174458831B": 1
+    }
+  },
+  "scifact-1225": {
+    "group": "scifact",
+    "relevant": {
+      "84610F6D-1BBE-52FA-8F76-D472B78B2D18": 1
+    }
+  },
+  "scifact-1226": {
+    "group": "scifact",
+    "relevant": {
+      "3ADCF29B-E955-5235-A0A7-689C7CC6851B": 1
+    }
+  },
+  "scifact-1232": {
+    "group": "scifact",
+    "relevant": {
+      "3E124F27-398C-5B1F-A1A9-3967E35DB9B3": 1
+    }
+  },
+  "scifact-1241": {
+    "group": "scifact",
+    "relevant": {
+      "57232843-A7EF-5ED7-BE22-C5AACB7E8472": 1
+    }
+  },
+  "scifact-1245": {
+    "group": "scifact",
+    "relevant": {
+      "4547BCCA-3BB9-54CD-A21C-63DC1DFFAC9C": 1
+    }
+  },
+  "scifact-1259": {
+    "group": "scifact",
+    "relevant": {
+      "FA57C4F5-23E2-517E-A641-975E0423B71E": 1
+    }
+  },
+  "scifact-1262": {
+    "group": "scifact",
+    "relevant": {
+      "1F166E7D-A2A2-5E82-A291-B412AADFC89C": 1
+    }
+  },
+  "scifact-1266": {
+    "group": "scifact",
+    "relevant": {
+      "44C66F18-8C37-5283-BA9C-0C75C3B1EF3D": 1
+    }
+  },
+  "scifact-1270": {
+    "group": "scifact",
+    "relevant": {
+      "2C87D5DF-E182-594F-BE26-9D9C94097FC4": 1
+    }
+  },
+  "scifact-1271": {
+    "group": "scifact",
+    "relevant": {
+      "D6544C9E-0EBE-513B-A0F8-01A5F2B605B3": 1
+    }
+  },
+  "scifact-1272": {
+    "group": "scifact",
+    "relevant": {
+      "DB0ACD16-45CE-5FD2-BB69-33C5D869EAB2": 1
+    }
+  },
+  "scifact-1273": {
+    "group": "scifact",
+    "relevant": {
+      "FB446922-0081-5363-A05B-724F85E2C937": 1
+    }
+  },
+  "scifact-1274": {
+    "group": "scifact",
+    "relevant": {
+      "A9879DE1-17BA-5124-89A7-C447383A1D39": 1,
+      "54833901-7224-5897-AED3-C1E468928585": 1,
+      "2D19413A-0A04-5FCB-8A34-0E06CCC82CFF": 1
+    }
+  },
+  "scifact-1278": {
+    "group": "scifact",
+    "relevant": {
+      "F4D03042-78A0-5FAF-9954-A635CBFC290F": 1
+    }
+  },
+  "scifact-1279": {
+    "group": "scifact",
+    "relevant": {
+      "F4D03042-78A0-5FAF-9954-A635CBFC290F": 1
+    }
+  },
+  "scifact-1280": {
+    "group": "scifact",
+    "relevant": {
+      "FD248C52-797C-59B3-9705-B43835BB636F": 1
+    }
+  },
+  "scifact-1281": {
+    "group": "scifact",
+    "relevant": {
+      "FD248C52-797C-59B3-9705-B43835BB636F": 1
+    }
+  },
+  "scifact-1282": {
+    "group": "scifact",
+    "relevant": {
+      "6C69C874-A3AD-5589-A246-D8FF91FC3EA6": 1
+    }
+  },
+  "scifact-1290": {
+    "group": "scifact",
+    "relevant": {
+      "D1897F24-9294-5180-9880-F40274F1FFA1": 1
+    }
+  },
+  "scifact-1292": {
+    "group": "scifact",
+    "relevant": {
+      "7E4FB5E5-48C8-5EB9-A3F9-8FBFF905CFFD": 1
+    }
+  },
+  "scifact-1298": {
+    "group": "scifact",
+    "relevant": {
+      "42DC7038-7356-56B4-966C-9D7AF6039475": 1
+    }
+  },
+  "scifact-1303": {
+    "group": "scifact",
+    "relevant": {
+      "5B7BDFB5-A0F8-58CC-BD52-05F365FDCABA": 1
+    }
+  },
+  "scifact-1316": {
+    "group": "scifact",
+    "relevant": {
+      "7886D585-1697-5018-BC6A-FE62DECFE61A": 1
+    }
+  },
+  "scifact-1319": {
+    "group": "scifact",
+    "relevant": {
+      "BAE1A1A9-A96A-5F1B-922D-018910D8E2E4": 1
+    }
+  },
+  "scifact-1320": {
+    "group": "scifact",
+    "relevant": {
+      "BAE1A1A9-A96A-5F1B-922D-018910D8E2E4": 1
+    }
+  },
+  "scifact-1332": {
+    "group": "scifact",
+    "relevant": {
+      "37F34104-0F37-5493-B2BA-B4F7CD826038": 1
+    }
+  },
+  "scifact-1335": {
+    "group": "scifact",
+    "relevant": {
+      "7886D585-1697-5018-BC6A-FE62DECFE61A": 1
+    }
+  },
+  "scifact-1336": {
+    "group": "scifact",
+    "relevant": {
+      "7886D585-1697-5018-BC6A-FE62DECFE61A": 1
+    }
+  },
+  "scifact-1337": {
+    "group": "scifact",
+    "relevant": {
+      "24226EC4-AD38-5938-B7E7-18448868CAE9": 1
+    }
+  },
+  "scifact-1339": {
+    "group": "scifact",
+    "relevant": {
+      "C73E0826-893A-57D4-8C0B-DB5D1071BA5D": 1
+    }
+  },
+  "scifact-1344": {
+    "group": "scifact",
+    "relevant": {
+      "3E229A2B-242A-59BB-8255-F9DDC82AA8ED": 1
+    }
+  },
+  "scifact-1352": {
+    "group": "scifact",
+    "relevant": {
+      "7CAA9016-635C-550E-80AA-DF26F832E4E9": 1
+    }
+  },
+  "scifact-1359": {
+    "group": "scifact",
+    "relevant": {
+      "7C626388-FFF2-5BB6-8D80-28EF67FC23B4": 1
+    }
+  },
+  "scifact-1362": {
+    "group": "scifact",
+    "relevant": {
+      "42425991-4130-5E65-8209-191066E51726": 1
+    }
+  },
+  "scifact-1363": {
+    "group": "scifact",
+    "relevant": {
+      "42425991-4130-5E65-8209-191066E51726": 1
+    }
+  },
+  "scifact-1368": {
+    "group": "scifact",
+    "relevant": {
+      "344F8182-A62A-5643-A79B-F5EE02251B32": 1
+    }
+  },
+  "scifact-1370": {
+    "group": "scifact",
+    "relevant": {
+      "344F8182-A62A-5643-A79B-F5EE02251B32": 1
+    }
+  },
+  "scifact-1379": {
+    "group": "scifact",
+    "relevant": {
+      "3A3DD34D-B6D9-5AC1-93CA-12C16420251C": 1,
+      "7CACF5BE-9855-5B92-A5FB-B4DD30BE7C35": 1,
+      "766DAFC0-CD1D-5B9E-94DF-36B98F7099E2": 1,
+      "07C124B9-5535-58D8-9D02-3D321733C866": 1
+    }
+  },
+  "scifact-1382": {
+    "group": "scifact",
+    "relevant": {
+      "D81A807E-6387-5ECC-A76D-F129E4C161D2": 1
+    }
+  },
+  "scifact-1385": {
+    "group": "scifact",
+    "relevant": {
+      "42FC2F82-4174-5D90-AE7B-D34A885C027A": 1
+    }
+  },
+  "scifact-1389": {
+    "group": "scifact",
+    "relevant": {
+      "972576CA-9DC7-55B5-8D72-81D199D115B1": 1
+    }
+  },
+  "scifact-1395": {
+    "group": "scifact",
+    "relevant": {
+      "764D1A23-1448-567E-B230-506843EAFF38": 1
+    }
+  },
+  "release-all": {
+    "group": "everyday",
+    "relevant": {
+      "EB779B34-D50D-51FB-975E-C6512A39B7C8": 1
+    }
+  },
+  "release-filtered": {
+    "group": "filters",
+    "relevant": {
+      "EB779B34-D50D-51FB-975E-C6512A39B7C8": 1
+    }
+  },
+  "backup-all": {
+    "group": "everyday",
+    "relevant": {
+      "6B06A73D-D2E7-5B07-9170-CD1534138179": 1
+    }
+  },
+  "backup-filtered": {
+    "group": "filters",
+    "relevant": {
+      "6B06A73D-D2E7-5B07-9170-CD1534138179": 1
+    }
+  },
+  "travel-all": {
+    "group": "everyday",
+    "relevant": {
+      "B27AD92F-DF65-5D3C-B8E5-3878677CA2D8": 1
+    }
+  },
+  "travel-filtered": {
+    "group": "filters",
+    "relevant": {
+      "B27AD92F-DF65-5D3C-B8E5-3878677CA2D8": 1
+    }
+  },
+  "recipe-all": {
+    "group": "everyday",
+    "relevant": {
+      "69245BB5-3271-50E3-87E0-293E15756A5E": 1
+    }
+  },
+  "recipe-filtered": {
+    "group": "filters",
+    "relevant": {
+      "69245BB5-3271-50E3-87E0-293E15756A5E": 1
+    }
+  },
+  "terminal-all": {
+    "group": "everyday",
+    "relevant": {
+      "C8C5E403-CAC9-5076-8835-4EB20500893C": 1
+    }
+  },
+  "terminal-filtered": {
+    "group": "filters",
+    "relevant": {
+      "C8C5E403-CAC9-5076-8835-4EB20500893C": 1
+    }
+  },
+  "german-all": {
+    "group": "everyday",
+    "relevant": {
+      "7713112F-33A0-5B72-AE02-ACE5FE7EB347": 1
+    }
+  },
+  "german-filtered": {
+    "group": "filters",
+    "relevant": {
+      "7713112F-33A0-5B72-AE02-ACE5FE7EB347": 1
+    }
+  },
+  "french-all": {
+    "group": "everyday",
+    "relevant": {
+      "129D0754-0D43-555A-B0C8-A6BB0985B1A5": 1
+    }
+  },
+  "french-filtered": {
+    "group": "filters",
+    "relevant": {
+      "129D0754-0D43-555A-B0C8-A6BB0985B1A5": 1
+    }
+  },
+  "spanish-all": {
+    "group": "everyday",
+    "relevant": {
+      "D8FF2ADD-F4ED-5535-8866-C2E0F99A9FF5": 1
+    }
+  },
+  "spanish-filtered": {
+    "group": "filters",
+    "relevant": {
+      "D8FF2ADD-F4ED-5535-8866-C2E0F99A9FF5": 1
+    }
+  },
+  "romanian-all": {
+    "group": "everyday",
+    "relevant": {
+      "D9891AA5-8E68-508E-8C41-3D03FDC43CAE": 1
+    }
+  },
+  "romanian-filtered": {
+    "group": "filters",
+    "relevant": {
+      "D9891AA5-8E68-508E-8C41-3D03FDC43CAE": 1
+    }
+  },
+  "japanese-all": {
+    "group": "everyday",
+    "relevant": {
+      "9722D57A-0C37-5AAA-A5C2-91087EF3AFA2": 1
+    }
+  },
+  "japanese-filtered": {
+    "group": "filters",
+    "relevant": {
+      "9722D57A-0C37-5AAA-A5C2-91087EF3AFA2": 1
+    }
+  },
+  "ambiguous-fruit-all": {
+    "group": "everyday",
+    "relevant": {
+      "EE6096FB-3C0D-558F-BA5E-2D46BE925F1E": 1
+    }
+  },
+  "ambiguous-fruit-filtered": {
+    "group": "filters",
+    "relevant": {
+      "EE6096FB-3C0D-558F-BA5E-2D46BE925F1E": 1
+    }
+  },
+  "ambiguous-device-all": {
+    "group": "everyday",
+    "relevant": {
+      "D5ADCD4B-89F3-5545-A8D5-86F614428892": 1
+    }
+  },
+  "ambiguous-device-filtered": {
+    "group": "filters",
+    "relevant": {
+      "D5ADCD4B-89F3-5545-A8D5-86F614428892": 1
+    }
+  },
+  "blue-owner": {
+    "group": "filters",
+    "relevant": {
+      "9D6682FA-9EDB-57A9-9086-7E07C7CDA15D": 1
+    }
+  },
+  "green-owner": {
+    "group": "filters",
+    "relevant": {
+      "D788AB61-4E75-5E2A-90A4-7D4AFA1E7783": 1
+    }
+  },
+  "empty-tag": {
+    "group": "empty_filter",
+    "relevant": {}
+  },
+  "deleted": {
+    "group": "absent",
+    "relevant": {}
+  },
+  "unknown-account": {
+    "group": "absent",
+    "relevant": {}
+  },
+  "unknown-decision": {
+    "group": "absent",
+    "relevant": {}
+  },
+  "unknown-date": {
+    "group": "absent",
+    "relevant": {}
+  },
+  "unknown-name": {
+    "group": "absent",
+    "relevant": {}
+  },
+  "cross-en-de": {
+    "group": "cross_language",
+    "relevant": {
+      "7713112F-33A0-5B72-AE02-ACE5FE7EB347": 1
+    }
+  },
+  "cross-en-ro": {
+    "group": "cross_language",
+    "relevant": {
+      "D9891AA5-8E68-508E-8C41-3D03FDC43CAE": 1
+    }
+  },
+  "cross-en-ja": {
+    "group": "cross_language",
+    "relevant": {
+      "9722D57A-0C37-5AAA-A5C2-91087EF3AFA2": 1
+    }
+  },
+  "multilingual-cs-native": {
+    "group": "multilingual-native",
+    "language": "cs",
+    "relevant": {
+      "F48B8B29-9F5D-5BE2-BCF3-68B9ABFA6DB4": 1
+    },
+    "evidence": {
+      "F48B8B29-9F5D-5BE2-BCF3-68B9ABFA6DB4": "420 eur"
+    },
+    "relatedButInsufficient": [
+      "D647D831-E3EB-521E-BDB3-755A66C4499D"
+    ]
+  },
+  "multilingual-cs-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "cs",
+    "relevant": {
+      "F48B8B29-9F5D-5BE2-BCF3-68B9ABFA6DB4": 1
+    },
+    "evidence": {
+      "F48B8B29-9F5D-5BE2-BCF3-68B9ABFA6DB4": "420 eur"
+    },
+    "relatedButInsufficient": [
+      "D647D831-E3EB-521E-BDB3-755A66C4499D"
+    ]
+  },
+  "multilingual-cs-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "cs",
+    "relevant": {
+      "F48B8B29-9F5D-5BE2-BCF3-68B9ABFA6DB4": 1
+    },
+    "evidence": {
+      "F48B8B29-9F5D-5BE2-BCF3-68B9ABFA6DB4": "420 eur"
+    },
+    "relatedButInsufficient": [
+      "D647D831-E3EB-521E-BDB3-755A66C4499D"
+    ]
+  },
+  "multilingual-cs-absent": {
+    "group": "absent-detail",
+    "language": "cs",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "F48B8B29-9F5D-5BE2-BCF3-68B9ABFA6DB4"
+    ]
+  },
+  "multilingual-da-native": {
+    "group": "multilingual-native",
+    "language": "da",
+    "relevant": {
+      "726BF53D-F461-5FDA-B56A-288CBD1889E0": 1
+    },
+    "evidence": {
+      "726BF53D-F461-5FDA-B56A-288CBD1889E0": "650 kroner"
+    },
+    "relatedButInsufficient": [
+      "48E7A3D5-0CDA-5B3D-80C7-8AC9475E8AA8"
+    ]
+  },
+  "multilingual-da-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "da",
+    "relevant": {
+      "726BF53D-F461-5FDA-B56A-288CBD1889E0": 1
+    },
+    "evidence": {
+      "726BF53D-F461-5FDA-B56A-288CBD1889E0": "650 kroner"
+    },
+    "relatedButInsufficient": [
+      "48E7A3D5-0CDA-5B3D-80C7-8AC9475E8AA8"
+    ]
+  },
+  "multilingual-da-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "da",
+    "relevant": {
+      "726BF53D-F461-5FDA-B56A-288CBD1889E0": 1
+    },
+    "evidence": {
+      "726BF53D-F461-5FDA-B56A-288CBD1889E0": "650 kroner"
+    },
+    "relatedButInsufficient": [
+      "48E7A3D5-0CDA-5B3D-80C7-8AC9475E8AA8"
+    ]
+  },
+  "multilingual-da-absent": {
+    "group": "absent-detail",
+    "language": "da",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "726BF53D-F461-5FDA-B56A-288CBD1889E0"
+    ]
+  },
+  "multilingual-de-native": {
+    "group": "multilingual-native",
+    "language": "de",
+    "relevant": {
+      "A257D2FA-DC6E-58AE-92F7-6EE4759FFEBC": 1
+    },
+    "evidence": {
+      "A257D2FA-DC6E-58AE-92F7-6EE4759FFEBC": "760 Euro"
+    },
+    "relatedButInsufficient": [
+      "58DA9365-5DEB-558E-9F7D-7E9255DBC680"
+    ]
+  },
+  "multilingual-de-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "de",
+    "relevant": {
+      "A257D2FA-DC6E-58AE-92F7-6EE4759FFEBC": 1
+    },
+    "evidence": {
+      "A257D2FA-DC6E-58AE-92F7-6EE4759FFEBC": "760 Euro"
+    },
+    "relatedButInsufficient": [
+      "58DA9365-5DEB-558E-9F7D-7E9255DBC680"
+    ]
+  },
+  "multilingual-de-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "de",
+    "relevant": {
+      "A257D2FA-DC6E-58AE-92F7-6EE4759FFEBC": 1
+    },
+    "evidence": {
+      "A257D2FA-DC6E-58AE-92F7-6EE4759FFEBC": "760 Euro"
+    },
+    "relatedButInsufficient": [
+      "58DA9365-5DEB-558E-9F7D-7E9255DBC680"
+    ]
+  },
+  "multilingual-de-absent": {
+    "group": "absent-detail",
+    "language": "de",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "A257D2FA-DC6E-58AE-92F7-6EE4759FFEBC"
+    ]
+  },
+  "multilingual-en-native": {
+    "group": "multilingual-native",
+    "language": "en",
+    "relevant": {
+      "BA2F8E15-42D4-5E54-A3AE-3613F349431A": 1
+    },
+    "evidence": {
+      "BA2F8E15-42D4-5E54-A3AE-3613F349431A": "980 dollars"
+    },
+    "relatedButInsufficient": [
+      "1BE26FFE-3501-52BB-8D18-EAF3A60B9F1F"
+    ]
+  },
+  "multilingual-en-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "en",
+    "relevant": {
+      "BA2F8E15-42D4-5E54-A3AE-3613F349431A": 1
+    },
+    "evidence": {
+      "BA2F8E15-42D4-5E54-A3AE-3613F349431A": "980 dollars"
+    },
+    "relatedButInsufficient": [
+      "1BE26FFE-3501-52BB-8D18-EAF3A60B9F1F"
+    ]
+  },
+  "multilingual-en-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "en",
+    "relevant": {
+      "BA2F8E15-42D4-5E54-A3AE-3613F349431A": 1
+    },
+    "evidence": {
+      "BA2F8E15-42D4-5E54-A3AE-3613F349431A": "980 dollars"
+    },
+    "relatedButInsufficient": [
+      "1BE26FFE-3501-52BB-8D18-EAF3A60B9F1F"
+    ]
+  },
+  "multilingual-en-absent": {
+    "group": "absent-detail",
+    "language": "en",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "BA2F8E15-42D4-5E54-A3AE-3613F349431A"
+    ]
+  },
+  "multilingual-es-native": {
+    "group": "multilingual-native",
+    "language": "es",
+    "relevant": {
+      "E44DE6E1-7FE6-58E0-8DD4-F8C5708C0C3B": 1
+    },
+    "evidence": {
+      "E44DE6E1-7FE6-58E0-8DD4-F8C5708C0C3B": "530 euros"
+    },
+    "relatedButInsufficient": [
+      "E05FD289-D682-5782-9B6F-71423EC70D02"
+    ]
+  },
+  "multilingual-es-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "es",
+    "relevant": {
+      "E44DE6E1-7FE6-58E0-8DD4-F8C5708C0C3B": 1
+    },
+    "evidence": {
+      "E44DE6E1-7FE6-58E0-8DD4-F8C5708C0C3B": "530 euros"
+    },
+    "relatedButInsufficient": [
+      "E05FD289-D682-5782-9B6F-71423EC70D02"
+    ]
+  },
+  "multilingual-es-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "es",
+    "relevant": {
+      "E44DE6E1-7FE6-58E0-8DD4-F8C5708C0C3B": 1
+    },
+    "evidence": {
+      "E44DE6E1-7FE6-58E0-8DD4-F8C5708C0C3B": "530 euros"
+    },
+    "relatedButInsufficient": [
+      "E05FD289-D682-5782-9B6F-71423EC70D02"
+    ]
+  },
+  "multilingual-es-absent": {
+    "group": "absent-detail",
+    "language": "es",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "E44DE6E1-7FE6-58E0-8DD4-F8C5708C0C3B"
+    ]
+  },
+  "multilingual-fr-native": {
+    "group": "multilingual-native",
+    "language": "fr",
+    "relevant": {
+      "055E41B6-F314-5BDA-A3F6-5A67A7ED6F70": 1
+    },
+    "evidence": {
+      "055E41B6-F314-5BDA-A3F6-5A67A7ED6F70": "340 euros"
+    },
+    "relatedButInsufficient": [
+      "A98278B1-E175-51A4-99B1-991DC7CD4749"
+    ]
+  },
+  "multilingual-fr-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "fr",
+    "relevant": {
+      "055E41B6-F314-5BDA-A3F6-5A67A7ED6F70": 1
+    },
+    "evidence": {
+      "055E41B6-F314-5BDA-A3F6-5A67A7ED6F70": "340 euros"
+    },
+    "relatedButInsufficient": [
+      "A98278B1-E175-51A4-99B1-991DC7CD4749"
+    ]
+  },
+  "multilingual-fr-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "fr",
+    "relevant": {
+      "055E41B6-F314-5BDA-A3F6-5A67A7ED6F70": 1
+    },
+    "evidence": {
+      "055E41B6-F314-5BDA-A3F6-5A67A7ED6F70": "340 euros"
+    },
+    "relatedButInsufficient": [
+      "A98278B1-E175-51A4-99B1-991DC7CD4749"
+    ]
+  },
+  "multilingual-fr-absent": {
+    "group": "absent-detail",
+    "language": "fr",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "055E41B6-F314-5BDA-A3F6-5A67A7ED6F70"
+    ]
+  },
+  "multilingual-hu-native": {
+    "group": "multilingual-native",
+    "language": "hu",
+    "relevant": {
+      "F43E1DF8-0C7D-59C6-BA99-FED14FBE5CDF": 1
+    },
+    "evidence": {
+      "F43E1DF8-0C7D-59C6-BA99-FED14FBE5CDF": "86000 forintot"
+    },
+    "relatedButInsufficient": [
+      "3AAB7041-A9AA-59D5-A73A-52FC2988F91B"
+    ]
+  },
+  "multilingual-hu-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "hu",
+    "relevant": {
+      "F43E1DF8-0C7D-59C6-BA99-FED14FBE5CDF": 1
+    },
+    "evidence": {
+      "F43E1DF8-0C7D-59C6-BA99-FED14FBE5CDF": "86000 forintot"
+    },
+    "relatedButInsufficient": [
+      "3AAB7041-A9AA-59D5-A73A-52FC2988F91B"
+    ]
+  },
+  "multilingual-hu-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "hu",
+    "relevant": {
+      "F43E1DF8-0C7D-59C6-BA99-FED14FBE5CDF": 1
+    },
+    "evidence": {
+      "F43E1DF8-0C7D-59C6-BA99-FED14FBE5CDF": "86000 forintot"
+    },
+    "relatedButInsufficient": [
+      "3AAB7041-A9AA-59D5-A73A-52FC2988F91B"
+    ]
+  },
+  "multilingual-hu-absent": {
+    "group": "absent-detail",
+    "language": "hu",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "F43E1DF8-0C7D-59C6-BA99-FED14FBE5CDF"
+    ]
+  },
+  "multilingual-it-native": {
+    "group": "multilingual-native",
+    "language": "it",
+    "relevant": {
+      "71C026BE-EA87-589C-9ABB-7EF2CCE3DB9F": 1
+    },
+    "evidence": {
+      "71C026BE-EA87-589C-9ABB-7EF2CCE3DB9F": "470 euro"
+    },
+    "relatedButInsufficient": [
+      "61D340C4-4F60-5CF8-8EF8-E1F28282E1DC"
+    ]
+  },
+  "multilingual-it-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "it",
+    "relevant": {
+      "71C026BE-EA87-589C-9ABB-7EF2CCE3DB9F": 1
+    },
+    "evidence": {
+      "71C026BE-EA87-589C-9ABB-7EF2CCE3DB9F": "470 euro"
+    },
+    "relatedButInsufficient": [
+      "61D340C4-4F60-5CF8-8EF8-E1F28282E1DC"
+    ]
+  },
+  "multilingual-it-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "it",
+    "relevant": {
+      "71C026BE-EA87-589C-9ABB-7EF2CCE3DB9F": 1
+    },
+    "evidence": {
+      "71C026BE-EA87-589C-9ABB-7EF2CCE3DB9F": "470 euro"
+    },
+    "relatedButInsufficient": [
+      "61D340C4-4F60-5CF8-8EF8-E1F28282E1DC"
+    ]
+  },
+  "multilingual-it-absent": {
+    "group": "absent-detail",
+    "language": "it",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "71C026BE-EA87-589C-9ABB-7EF2CCE3DB9F"
+    ]
+  },
+  "multilingual-ja-native": {
+    "group": "multilingual-native",
+    "language": "ja",
+    "relevant": {
+      "02E7F29C-F945-56E6-A44C-A744D415FB0F": 1
+    },
+    "evidence": {
+      "02E7F29C-F945-56E6-A44C-A744D415FB0F": "三万円"
+    },
+    "relatedButInsufficient": [
+      "9AB516AE-6E11-515A-B08C-1C9B8A1BF6D8"
+    ]
+  },
+  "multilingual-ja-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "ja",
+    "relevant": {
+      "02E7F29C-F945-56E6-A44C-A744D415FB0F": 1
+    },
+    "evidence": {
+      "02E7F29C-F945-56E6-A44C-A744D415FB0F": "三万円"
+    },
+    "relatedButInsufficient": [
+      "9AB516AE-6E11-515A-B08C-1C9B8A1BF6D8"
+    ]
+  },
+  "multilingual-ja-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "ja",
+    "relevant": {
+      "02E7F29C-F945-56E6-A44C-A744D415FB0F": 1
+    },
+    "evidence": {
+      "02E7F29C-F945-56E6-A44C-A744D415FB0F": "三万円"
+    },
+    "relatedButInsufficient": [
+      "9AB516AE-6E11-515A-B08C-1C9B8A1BF6D8"
+    ]
+  },
+  "multilingual-ja-absent": {
+    "group": "absent-detail",
+    "language": "ja",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "02E7F29C-F945-56E6-A44C-A744D415FB0F"
+    ]
+  },
+  "multilingual-ko-native": {
+    "group": "multilingual-native",
+    "language": "ko",
+    "relevant": {
+      "7D8958D1-21BF-574A-AAFB-D1A241834977": 1
+    },
+    "evidence": {
+      "7D8958D1-21BF-574A-AAFB-D1A241834977": "18만 원"
+    },
+    "relatedButInsufficient": [
+      "C6EF6DFC-9C12-5423-ABB0-4BB2BB9D3095"
+    ]
+  },
+  "multilingual-ko-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "ko",
+    "relevant": {
+      "7D8958D1-21BF-574A-AAFB-D1A241834977": 1
+    },
+    "evidence": {
+      "7D8958D1-21BF-574A-AAFB-D1A241834977": "18만 원"
+    },
+    "relatedButInsufficient": [
+      "C6EF6DFC-9C12-5423-ABB0-4BB2BB9D3095"
+    ]
+  },
+  "multilingual-ko-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "ko",
+    "relevant": {
+      "7D8958D1-21BF-574A-AAFB-D1A241834977": 1
+    },
+    "evidence": {
+      "7D8958D1-21BF-574A-AAFB-D1A241834977": "18만 원"
+    },
+    "relatedButInsufficient": [
+      "C6EF6DFC-9C12-5423-ABB0-4BB2BB9D3095"
+    ]
+  },
+  "multilingual-ko-absent": {
+    "group": "absent-detail",
+    "language": "ko",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "7D8958D1-21BF-574A-AAFB-D1A241834977"
+    ]
+  },
+  "multilingual-nb-native": {
+    "group": "multilingual-native",
+    "language": "nb",
+    "relevant": {
+      "F1BAD594-974D-5BED-B571-F76001E9B7A0": 1
+    },
+    "evidence": {
+      "F1BAD594-974D-5BED-B571-F76001E9B7A0": "1250 kroner"
+    },
+    "relatedButInsufficient": [
+      "5FC76EBE-6059-5F5F-9DBD-4C447B2A389A"
+    ]
+  },
+  "multilingual-nb-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "nb",
+    "relevant": {
+      "F1BAD594-974D-5BED-B571-F76001E9B7A0": 1
+    },
+    "evidence": {
+      "F1BAD594-974D-5BED-B571-F76001E9B7A0": "1250 kroner"
+    },
+    "relatedButInsufficient": [
+      "5FC76EBE-6059-5F5F-9DBD-4C447B2A389A"
+    ]
+  },
+  "multilingual-nb-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "nb",
+    "relevant": {
+      "F1BAD594-974D-5BED-B571-F76001E9B7A0": 1
+    },
+    "evidence": {
+      "F1BAD594-974D-5BED-B571-F76001E9B7A0": "1250 kroner"
+    },
+    "relatedButInsufficient": [
+      "5FC76EBE-6059-5F5F-9DBD-4C447B2A389A"
+    ]
+  },
+  "multilingual-nb-absent": {
+    "group": "absent-detail",
+    "language": "nb",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "F1BAD594-974D-5BED-B571-F76001E9B7A0"
+    ]
+  },
+  "multilingual-nl-native": {
+    "group": "multilingual-native",
+    "language": "nl",
+    "relevant": {
+      "C666B60E-3513-5742-959B-A3D9412AD0A8": 1
+    },
+    "evidence": {
+      "C666B60E-3513-5742-959B-A3D9412AD0A8": "390 euro"
+    },
+    "relatedButInsufficient": [
+      "BBF7EAB3-0D75-5093-AB65-E6850BC6C4B6"
+    ]
+  },
+  "multilingual-nl-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "nl",
+    "relevant": {
+      "C666B60E-3513-5742-959B-A3D9412AD0A8": 1
+    },
+    "evidence": {
+      "C666B60E-3513-5742-959B-A3D9412AD0A8": "390 euro"
+    },
+    "relatedButInsufficient": [
+      "BBF7EAB3-0D75-5093-AB65-E6850BC6C4B6"
+    ]
+  },
+  "multilingual-nl-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "nl",
+    "relevant": {
+      "C666B60E-3513-5742-959B-A3D9412AD0A8": 1
+    },
+    "evidence": {
+      "C666B60E-3513-5742-959B-A3D9412AD0A8": "390 euro"
+    },
+    "relatedButInsufficient": [
+      "BBF7EAB3-0D75-5093-AB65-E6850BC6C4B6"
+    ]
+  },
+  "multilingual-nl-absent": {
+    "group": "absent-detail",
+    "language": "nl",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "C666B60E-3513-5742-959B-A3D9412AD0A8"
+    ]
+  },
+  "multilingual-pl-native": {
+    "group": "multilingual-native",
+    "language": "pl",
+    "relevant": {
+      "044CEADB-DA63-5C19-A5A5-32F566E62199": 1
+    },
+    "evidence": {
+      "044CEADB-DA63-5C19-A5A5-32F566E62199": "920 złotych"
+    },
+    "relatedButInsufficient": [
+      "040EA3E8-D45F-513A-BFD5-D2DE2BA8E6C0"
+    ]
+  },
+  "multilingual-pl-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "pl",
+    "relevant": {
+      "044CEADB-DA63-5C19-A5A5-32F566E62199": 1
+    },
+    "evidence": {
+      "044CEADB-DA63-5C19-A5A5-32F566E62199": "920 złotych"
+    },
+    "relatedButInsufficient": [
+      "040EA3E8-D45F-513A-BFD5-D2DE2BA8E6C0"
+    ]
+  },
+  "multilingual-pl-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "pl",
+    "relevant": {
+      "044CEADB-DA63-5C19-A5A5-32F566E62199": 1
+    },
+    "evidence": {
+      "044CEADB-DA63-5C19-A5A5-32F566E62199": "920 złotych"
+    },
+    "relatedButInsufficient": [
+      "040EA3E8-D45F-513A-BFD5-D2DE2BA8E6C0"
+    ]
+  },
+  "multilingual-pl-absent": {
+    "group": "absent-detail",
+    "language": "pl",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "044CEADB-DA63-5C19-A5A5-32F566E62199"
+    ]
+  },
+  "multilingual-pt-BR-native": {
+    "group": "multilingual-native",
+    "language": "pt-BR",
+    "relevant": {
+      "80FFEE08-150D-530F-8938-90BB905A8564": 1
+    },
+    "evidence": {
+      "80FFEE08-150D-530F-8938-90BB905A8564": "680 reais"
+    },
+    "relatedButInsufficient": [
+      "E67053D4-5F31-57A4-87FE-346210141B64"
+    ]
+  },
+  "multilingual-pt-BR-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "pt-BR",
+    "relevant": {
+      "80FFEE08-150D-530F-8938-90BB905A8564": 1
+    },
+    "evidence": {
+      "80FFEE08-150D-530F-8938-90BB905A8564": "680 reais"
+    },
+    "relatedButInsufficient": [
+      "E67053D4-5F31-57A4-87FE-346210141B64"
+    ]
+  },
+  "multilingual-pt-BR-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "pt-BR",
+    "relevant": {
+      "80FFEE08-150D-530F-8938-90BB905A8564": 1
+    },
+    "evidence": {
+      "80FFEE08-150D-530F-8938-90BB905A8564": "680 reais"
+    },
+    "relatedButInsufficient": [
+      "E67053D4-5F31-57A4-87FE-346210141B64"
+    ]
+  },
+  "multilingual-pt-BR-absent": {
+    "group": "absent-detail",
+    "language": "pt-BR",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "80FFEE08-150D-530F-8938-90BB905A8564"
+    ]
+  },
+  "multilingual-pt-PT-native": {
+    "group": "multilingual-native",
+    "language": "pt-PT",
+    "relevant": {
+      "9D25E71C-8BA5-5B00-92A8-9EBCB503F94A": 1
+    },
+    "evidence": {
+      "9D25E71C-8BA5-5B00-92A8-9EBCB503F94A": "285 euros"
+    },
+    "relatedButInsufficient": [
+      "98B27B5A-6550-5643-9251-D1B63A9E141F"
+    ]
+  },
+  "multilingual-pt-PT-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "pt-PT",
+    "relevant": {
+      "9D25E71C-8BA5-5B00-92A8-9EBCB503F94A": 1
+    },
+    "evidence": {
+      "9D25E71C-8BA5-5B00-92A8-9EBCB503F94A": "285 euros"
+    },
+    "relatedButInsufficient": [
+      "98B27B5A-6550-5643-9251-D1B63A9E141F"
+    ]
+  },
+  "multilingual-pt-PT-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "pt-PT",
+    "relevant": {
+      "9D25E71C-8BA5-5B00-92A8-9EBCB503F94A": 1
+    },
+    "evidence": {
+      "9D25E71C-8BA5-5B00-92A8-9EBCB503F94A": "285 euros"
+    },
+    "relatedButInsufficient": [
+      "98B27B5A-6550-5643-9251-D1B63A9E141F"
+    ]
+  },
+  "multilingual-pt-PT-absent": {
+    "group": "absent-detail",
+    "language": "pt-PT",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "9D25E71C-8BA5-5B00-92A8-9EBCB503F94A"
+    ]
+  },
+  "multilingual-ro-native": {
+    "group": "multilingual-native",
+    "language": "ro",
+    "relevant": {
+      "D8DE66BE-2151-503A-8B25-8F9D4CE4D02B": 1
+    },
+    "evidence": {
+      "D8DE66BE-2151-503A-8B25-8F9D4CE4D02B": "740 de lei"
+    },
+    "relatedButInsufficient": [
+      "05FC283D-4977-5D83-B5CC-CC2E77612074"
+    ]
+  },
+  "multilingual-ro-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "ro",
+    "relevant": {
+      "D8DE66BE-2151-503A-8B25-8F9D4CE4D02B": 1
+    },
+    "evidence": {
+      "D8DE66BE-2151-503A-8B25-8F9D4CE4D02B": "740 de lei"
+    },
+    "relatedButInsufficient": [
+      "05FC283D-4977-5D83-B5CC-CC2E77612074"
+    ]
+  },
+  "multilingual-ro-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "ro",
+    "relevant": {
+      "D8DE66BE-2151-503A-8B25-8F9D4CE4D02B": 1
+    },
+    "evidence": {
+      "D8DE66BE-2151-503A-8B25-8F9D4CE4D02B": "740 de lei"
+    },
+    "relatedButInsufficient": [
+      "05FC283D-4977-5D83-B5CC-CC2E77612074"
+    ]
+  },
+  "multilingual-ro-absent": {
+    "group": "absent-detail",
+    "language": "ro",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "D8DE66BE-2151-503A-8B25-8F9D4CE4D02B"
+    ]
+  },
+  "multilingual-ru-native": {
+    "group": "multilingual-native",
+    "language": "ru",
+    "relevant": {
+      "6D55AD94-85EF-5554-A37C-D70B829B1D65": 1
+    },
+    "evidence": {
+      "6D55AD94-85EF-5554-A37C-D70B829B1D65": "5600 рублей"
+    },
+    "relatedButInsufficient": [
+      "A6DD3801-4E52-50B8-BDD2-F230FCF5B699"
+    ]
+  },
+  "multilingual-ru-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "ru",
+    "relevant": {
+      "6D55AD94-85EF-5554-A37C-D70B829B1D65": 1
+    },
+    "evidence": {
+      "6D55AD94-85EF-5554-A37C-D70B829B1D65": "5600 рублей"
+    },
+    "relatedButInsufficient": [
+      "A6DD3801-4E52-50B8-BDD2-F230FCF5B699"
+    ]
+  },
+  "multilingual-ru-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "ru",
+    "relevant": {
+      "6D55AD94-85EF-5554-A37C-D70B829B1D65": 1
+    },
+    "evidence": {
+      "6D55AD94-85EF-5554-A37C-D70B829B1D65": "5600 рублей"
+    },
+    "relatedButInsufficient": [
+      "A6DD3801-4E52-50B8-BDD2-F230FCF5B699"
+    ]
+  },
+  "multilingual-ru-absent": {
+    "group": "absent-detail",
+    "language": "ru",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "6D55AD94-85EF-5554-A37C-D70B829B1D65"
+    ]
+  },
+  "multilingual-sv-native": {
+    "group": "multilingual-native",
+    "language": "sv",
+    "relevant": {
+      "454D8DC0-DE73-54C5-87B3-92C982A2F12F": 1
+    },
+    "evidence": {
+      "454D8DC0-DE73-54C5-87B3-92C982A2F12F": "1450 kronor"
+    },
+    "relatedButInsufficient": [
+      "18A0C6A5-15F8-5D0F-A88D-83426B333806"
+    ]
+  },
+  "multilingual-sv-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "sv",
+    "relevant": {
+      "454D8DC0-DE73-54C5-87B3-92C982A2F12F": 1
+    },
+    "evidence": {
+      "454D8DC0-DE73-54C5-87B3-92C982A2F12F": "1450 kronor"
+    },
+    "relatedButInsufficient": [
+      "18A0C6A5-15F8-5D0F-A88D-83426B333806"
+    ]
+  },
+  "multilingual-sv-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "sv",
+    "relevant": {
+      "454D8DC0-DE73-54C5-87B3-92C982A2F12F": 1
+    },
+    "evidence": {
+      "454D8DC0-DE73-54C5-87B3-92C982A2F12F": "1450 kronor"
+    },
+    "relatedButInsufficient": [
+      "18A0C6A5-15F8-5D0F-A88D-83426B333806"
+    ]
+  },
+  "multilingual-sv-absent": {
+    "group": "absent-detail",
+    "language": "sv",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "454D8DC0-DE73-54C5-87B3-92C982A2F12F"
+    ]
+  },
+  "multilingual-tr-native": {
+    "group": "multilingual-native",
+    "language": "tr",
+    "relevant": {
+      "4CC0103D-BF65-590F-B4B7-862D76BCBA7A": 1
+    },
+    "evidence": {
+      "4CC0103D-BF65-590F-B4B7-862D76BCBA7A": "2300 lira"
+    },
+    "relatedButInsufficient": [
+      "51C5DA09-060F-54BD-9118-5B7DFBB2B5D7"
+    ]
+  },
+  "multilingual-tr-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "tr",
+    "relevant": {
+      "4CC0103D-BF65-590F-B4B7-862D76BCBA7A": 1
+    },
+    "evidence": {
+      "4CC0103D-BF65-590F-B4B7-862D76BCBA7A": "2300 lira"
+    },
+    "relatedButInsufficient": [
+      "51C5DA09-060F-54BD-9118-5B7DFBB2B5D7"
+    ]
+  },
+  "multilingual-tr-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "tr",
+    "relevant": {
+      "4CC0103D-BF65-590F-B4B7-862D76BCBA7A": 1
+    },
+    "evidence": {
+      "4CC0103D-BF65-590F-B4B7-862D76BCBA7A": "2300 lira"
+    },
+    "relatedButInsufficient": [
+      "51C5DA09-060F-54BD-9118-5B7DFBB2B5D7"
+    ]
+  },
+  "multilingual-tr-absent": {
+    "group": "absent-detail",
+    "language": "tr",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "4CC0103D-BF65-590F-B4B7-862D76BCBA7A"
+    ]
+  },
+  "multilingual-uk-native": {
+    "group": "multilingual-native",
+    "language": "uk",
+    "relevant": {
+      "F7EC7B5D-872F-5C97-8812-03CA963FA2B1": 1
+    },
+    "evidence": {
+      "F7EC7B5D-872F-5C97-8812-03CA963FA2B1": "1850 гривень"
+    },
+    "relatedButInsufficient": [
+      "CEAE9CB5-9CE1-547B-8812-DE494AB3CCA3"
+    ]
+  },
+  "multilingual-uk-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "uk",
+    "relevant": {
+      "F7EC7B5D-872F-5C97-8812-03CA963FA2B1": 1
+    },
+    "evidence": {
+      "F7EC7B5D-872F-5C97-8812-03CA963FA2B1": "1850 гривень"
+    },
+    "relatedButInsufficient": [
+      "CEAE9CB5-9CE1-547B-8812-DE494AB3CCA3"
+    ]
+  },
+  "multilingual-uk-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "uk",
+    "relevant": {
+      "F7EC7B5D-872F-5C97-8812-03CA963FA2B1": 1
+    },
+    "evidence": {
+      "F7EC7B5D-872F-5C97-8812-03CA963FA2B1": "1850 гривень"
+    },
+    "relatedButInsufficient": [
+      "CEAE9CB5-9CE1-547B-8812-DE494AB3CCA3"
+    ]
+  },
+  "multilingual-uk-absent": {
+    "group": "absent-detail",
+    "language": "uk",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "F7EC7B5D-872F-5C97-8812-03CA963FA2B1"
+    ]
+  },
+  "multilingual-zh-Hans-native": {
+    "group": "multilingual-native",
+    "language": "zh-Hans",
+    "relevant": {
+      "FA1372E0-6C10-59EA-8156-7179BE166B15": 1
+    },
+    "evidence": {
+      "FA1372E0-6C10-59EA-8156-7179BE166B15": "九百元"
+    },
+    "relatedButInsufficient": [
+      "70D13627-EB6E-5861-ABA8-765E8A1EE7D6"
+    ]
+  },
+  "multilingual-zh-Hans-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "zh-Hans",
+    "relevant": {
+      "FA1372E0-6C10-59EA-8156-7179BE166B15": 1
+    },
+    "evidence": {
+      "FA1372E0-6C10-59EA-8156-7179BE166B15": "九百元"
+    },
+    "relatedButInsufficient": [
+      "70D13627-EB6E-5861-ABA8-765E8A1EE7D6"
+    ]
+  },
+  "multilingual-zh-Hans-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "zh-Hans",
+    "relevant": {
+      "FA1372E0-6C10-59EA-8156-7179BE166B15": 1
+    },
+    "evidence": {
+      "FA1372E0-6C10-59EA-8156-7179BE166B15": "九百元"
+    },
+    "relatedButInsufficient": [
+      "70D13627-EB6E-5861-ABA8-765E8A1EE7D6"
+    ]
+  },
+  "multilingual-zh-Hans-absent": {
+    "group": "absent-detail",
+    "language": "zh-Hans",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "FA1372E0-6C10-59EA-8156-7179BE166B15"
+    ]
+  },
+  "multilingual-zh-Hant-native": {
+    "group": "multilingual-native",
+    "language": "zh-Hant",
+    "relevant": {
+      "C761E4A8-FFB0-5D97-A13B-ED5EAAD8D85F": 1
+    },
+    "evidence": {
+      "C761E4A8-FFB0-5D97-A13B-ED5EAAD8D85F": "一千六百元"
+    },
+    "relatedButInsufficient": [
+      "6A4210D0-469C-50A3-8896-BC0B49EE991B"
+    ]
+  },
+  "multilingual-zh-Hant-paraphrase": {
+    "group": "multilingual-paraphrase",
+    "language": "zh-Hant",
+    "relevant": {
+      "C761E4A8-FFB0-5D97-A13B-ED5EAAD8D85F": 1
+    },
+    "evidence": {
+      "C761E4A8-FFB0-5D97-A13B-ED5EAAD8D85F": "一千六百元"
+    },
+    "relatedButInsufficient": [
+      "6A4210D0-469C-50A3-8896-BC0B49EE991B"
+    ]
+  },
+  "multilingual-zh-Hant-cross-language": {
+    "group": "multilingual-cross-language",
+    "language": "zh-Hant",
+    "relevant": {
+      "C761E4A8-FFB0-5D97-A13B-ED5EAAD8D85F": 1
+    },
+    "evidence": {
+      "C761E4A8-FFB0-5D97-A13B-ED5EAAD8D85F": "一千六百元"
+    },
+    "relatedButInsufficient": [
+      "6A4210D0-469C-50A3-8896-BC0B49EE991B"
+    ]
+  },
+  "multilingual-zh-Hant-absent": {
+    "group": "absent-detail",
+    "language": "zh-Hant",
+    "relevant": {},
+    "relatedButInsufficient": [
+      "C761E4A8-FFB0-5D97-A13B-ED5EAAD8D85F"
+    ]
+  },
+  "long-en-native": {
+    "group": "late-evidence",
+    "language": "en",
+    "relevant": {
+      "46F11A0E-B0DB-521A-8A6C-AC0E8D5C5524": 1
+    },
+    "evidence": {
+      "46F11A0E-B0DB-521A-8A6C-AC0E8D5C5524": "The spare projector is in the locked cupboard beside the east staircase."
+    }
+  },
+  "long-en-cross": {
+    "group": "late-evidence",
+    "language": "en",
+    "relevant": {
+      "46F11A0E-B0DB-521A-8A6C-AC0E8D5C5524": 1
+    },
+    "evidence": {
+      "46F11A0E-B0DB-521A-8A6C-AC0E8D5C5524": "The spare projector is in the locked cupboard beside the east staircase."
+    }
+  },
+  "long-ja-native": {
+    "group": "late-evidence",
+    "language": "ja",
+    "relevant": {
+      "709C9EBE-C5E0-5A9E-93B6-0D789DF8A953": 1
+    },
+    "evidence": {
+      "709C9EBE-C5E0-5A9E-93B6-0D789DF8A953": "予備のマイクは西側の階段の隣にある青い戸棚に入っています。"
+    }
+  },
+  "long-ja-cross": {
+    "group": "late-evidence",
+    "language": "ja",
+    "relevant": {
+      "709C9EBE-C5E0-5A9E-93B6-0D789DF8A953": 1
+    },
+    "evidence": {
+      "709C9EBE-C5E0-5A9E-93B6-0D789DF8A953": "予備のマイクは西側の階段の隣にある青い戸棚に入っています。"
+    }
+  },
+  "long-de-native": {
+    "group": "late-evidence",
+    "language": "de",
+    "relevant": {
+      "2EB8E58B-E277-59D3-B337-468652510031": 1
+    },
+    "evidence": {
+      "2EB8E58B-E277-59D3-B337-468652510031": "Das Ersatzstativ liegt in der grünen Truhe neben dem Südeingang."
+    }
+  },
+  "long-de-cross": {
+    "group": "late-evidence",
+    "language": "de",
+    "relevant": {
+      "2EB8E58B-E277-59D3-B337-468652510031": 1
+    },
+    "evidence": {
+      "2EB8E58B-E277-59D3-B337-468652510031": "Das Ersatzstativ liegt in der grünen Truhe neben dem Südeingang."
+    }
+  },
+  "filter-active": {
+    "group": "filtered-evidence",
+    "relevant": {
+      "1B0EBEEC-8B82-5D4D-965E-8AEE62F6F8C7": 1
+    },
+    "evidence": {
+      "1B0EBEEC-8B82-5D4D-965E-8AEE62F6F8C7": "Leila"
+    }
+  },
+  "filter-trash": {
+    "group": "filtered-evidence",
+    "relevant": {
+      "5AEED07E-225A-504F-9E5D-29C35C7ECC6D": 1
+    },
+    "evidence": {
+      "5AEED07E-225A-504F-9E5D-29C35C7ECC6D": "Tomas"
+    }
+  },
+  "filter-wrong-tag": {
+    "group": "filtered-absence",
+    "relevant": {}
+  },
+  "filter-missing-tag": {
+    "group": "filtered-absence",
+    "relevant": {}
+  }
+}

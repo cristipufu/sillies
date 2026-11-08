@@ -23,7 +23,9 @@ import SilliesVault
     let library = VaultLibrary(directory: directory, cacheBytes: 0)
     _ = try await library.snapshot()
     switch arguments[1] {
-    case "seed": try await seed(library, target: count, seconds: seconds)
+    case "seed": try await seed(library, target: count, seconds: seconds, identities: .ordered)
+    case "seed-random":
+      try await seed(library, target: count, seconds: seconds, identities: .random)
     case "seed-meetings":
       try await VaultMeetingFixture.seed(library, target: count, seconds: seconds)
     case "query": try await query(library)
@@ -39,19 +41,25 @@ import SilliesVault
     }
   }
 
-  private static func seed(_ library: VaultLibrary, target: Int, seconds: Double) async throws {
+  private enum FixtureIdentities { case ordered, random }
+
+  private static func seed(
+    _ library: VaultLibrary, target: Int, seconds: Double, identities: FixtureIdentities
+  ) async throws {
     let deadline = ContinuousClock.now.advanced(by: .seconds(seconds))
     var count = try await library.snapshot().page.total
     while count < target, ContinuousClock.now < deadline {
       let end = min(target, count + batchCount)
-      let records = try (count..<end).map(makeRecord)
+      let records = try (count..<end).map { try makeRecord($0, identities: identities) }
       _ = try await library.commit(.init(records: records.map { .insert($0) }))
       count = end
     }
     try emit(SeedResult(records: count, target: target, complete: count == target))
   }
 
-  private static func makeRecord(_ index: Int) throws -> SessionRecord {
+  private static func makeRecord(_ index: Int, identities: FixtureIdentities) throws
+    -> SessionRecord
+  {
     let suffix = String(format: "%012llX", Int64(index + 1))
     guard let id = UUID(uuidString: "00000000-0000-4000-8000-" + suffix) else {
       throw ProbeError.usage
@@ -70,7 +78,8 @@ import SilliesVault
           summary: "Project review with decisions and next steps.",
           actionItems: ["Review the design", "Check offline behavior"])),
       metadata: .init(
-        id: id, createdAt: Date(timeIntervalSince1970: Double(index)), durationSeconds: 900))
+        id: identities == .ordered ? id : UUID(),
+        createdAt: Date(timeIntervalSince1970: Double(index)), durationSeconds: 900))
   }
 
   private static func query(_ library: VaultLibrary) async throws {

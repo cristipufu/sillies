@@ -12,6 +12,13 @@ tag filters, a filter with no documents, and absent information. Trashed documen
 must not leak into active results. This is mostly a scientific-abstract corpus; the small everyday set
 is a regression fixture, not a representative survey of personal libraries.
 
+For the expanded suite, add `--additional Benchmarks/Vault/multilingual.json` to the preparation
+command. This preserves the frozen baseline and adds **49 documents / 98 queries**: native phrasing,
+paraphrases and English cross-language questions across all 22 app languages; nearby distractors;
+missing private details; late evidence in long notes; and active/Trash/tag isolation. The combined
+corpus has **5,247 documents / 433 queries**. These authored cases have not had independent
+native-speaker adjudication and must not be presented as an unbiased language leaderboard.
+
 1. Download the [BEIR SciFact archive](https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/scifact.zip).
 2. Prepare it with `python3 Benchmarks/Vault/prepare_scifact.py /path/to/scifact.zip /new/output/corpus`.
    The preparer verifies the pinned archive checksum and writes separate input, expected-label and manifest files.
@@ -45,6 +52,8 @@ can be cloned to a new run directory to reuse its canonical vectors after a tool
 | `fused` | A diagnostic application of the existing rank-fusion policy to the two top-20 lists; not the workspace's visual list order or a full assistant benchmark |
 | `exactSemantic` | Same provider and persisted vectors, scored without approximate candidates; isolates index misses from model relevance |
 | Availability | Includes unavailable, timeout and failure results; failed queries remain in the denominator |
+| `exactAvailability` | Explicit oracle outcome, including unsupported input; a completed refusal counts as a miss |
+| `relatedButInsufficient` | Annotated nearby documents that lack the requested fact; reported separately from support |
 
 The scorer validates query completeness, duplicate/unknown IDs, filter eligibility, relevance grades,
 rank limits and elapsed times. Hit@5, recall@5, precision@5, MRR@5 and nDCG@5 have independent arithmetic
@@ -55,6 +64,10 @@ remain visible in availability counts.
 If any query requests the exact oracle, every query must have a completed oracle result and valid
 elapsed time. A missing oracle result cannot silently reduce the comparison denominator. An empty
 filtered result remains valid and is counted as a query, with no top-five overlap denominator.
+Authored supporting quotes must exist verbatim in their labeled source. This checks provenance, not
+semantic entailment. Related-but-insufficient labels must be eligible and disjoint from supporting
+IDs. None of these annotations enter worker inputs. Returning a related document on an absent-detail
+query is not an answer hallucination: this benchmark performs retrieval and does not generate answers.
 
 The manifest reports inputs exceeding the production semantic query limit of 200 characters. The
 keyword path keeps its existing query contract. Do not silently alter either input to inflate scores.
@@ -76,6 +89,7 @@ Downloaded documents are not committed here. The preparer and authored cases are
 | Mode | Purpose |
 | --- | --- |
 | `seed` | Short synthetic records, up to one million, through normal commits |
+| `seed-random` | The same content with normal random record IDs; checks that a ranking optimization does not depend on fixture insertion order |
 | `seed-meetings` | Long, 300-turn synthetic transcripts plus a 64 KiB attachment each; storage fixtures, not playable recordings |
 | `query`, `concurrency`, `long-document` | Exact paging/ranking, concurrent reads/edits/cancellation, bounded document editing |
 | `backup`, `restore` | Complete native backup and next-launch restore, record counts, every attachment and sampled full section content |

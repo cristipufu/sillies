@@ -21,6 +21,13 @@ import Testing
     })
   let result = try await library.relatedSearch(.init(query: "bicycle"))
   #expect(result.availability == .timedOut && result.matches.isEmpty)
+  try await library.useSearchEmbeddings(
+    .init(identity: "worker-deadline") { input in
+      if input.purpose == .query { throw SearchEmbeddingError.timedOut }
+      return nil
+    })
+  let workerResult = try await library.relatedSearch(.init(query: "bicycle"))
+  #expect(workerResult.availability == .timedOut && workerResult.matches.isEmpty)
   #expect(try await library.workspacePage(.init(text: "bicycle")).records.map(\.id) == [record.id])
   try await library.useSearchEmbeddings(nil)
 }

@@ -64,9 +64,13 @@ struct SearchModelSettingsView: View {
         Label("Ready", systemImage: "checkmark.circle")
       }
       Text(
-        "Indexed for semantic search: \(progress.searchable). Keyword search stays available while the index is prepared."
+        "Searchable by meaning: \(progress.searchable) of \(progress.processed) prepared passages."
       )
       .font(.caption).foregroundStyle(theme.secondary)
+      if progress.searchable < progress.processed {
+        Text("Some text is searchable by keyword only.")
+          .font(.caption).foregroundStyle(theme.secondary)
+      }
     }
   }
   private func card(_ manifest: SearchModelManifest) -> some View {

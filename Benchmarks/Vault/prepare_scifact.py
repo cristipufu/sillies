@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import uuid
 import zipfile
+from scoring import validate_expectations
 
 ARCHIVE_SHA256 = "536e14446a0ba56ed1398ab1055f39fe852686ecad24a6306c80c490fa8e0165"
 SOURCE = "https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/scifact.zip"
@@ -15,7 +16,18 @@ def identity(key):
     return str(uuid.uuid5(uuid.NAMESPACE_URL, "sillies-vault-qualification/scifact/" + key)).upper()
 
 
-def prepare(archive, output):
+def append_cases(inputs, expected, path):
+    authored = json.loads(path.read_text())
+    inputs["documents"].extend(authored["documents"])
+    annotation_keys = {"group", "relevant", "evidence", "relatedButInsufficient", "language"}
+    for query in authored["queries"]:
+        if query["id"] in expected:
+            raise ValueError("Duplicate authored query")
+        inputs["queries"].append({key: value for key, value in query.items() if key not in annotation_keys})
+        expected[query["id"]] = {key: value for key, value in query.items() if key in annotation_keys}
+
+
+def prepare(archive, output, additional=None):
     raw = archive.read_bytes()
     if hashlib.sha256(raw).hexdigest() != ARCHIVE_SHA256:
         raise ValueError("The source archive differs from the frozen benchmark")
@@ -39,11 +51,10 @@ def prepare(archive, output):
     if len(inputs["documents"]) != 5183 or len(inputs["queries"]) != 300:
         raise ValueError("Unexpected SciFact test split")
     local = Path(__file__).with_name("everyday.json")
-    everyday = json.loads(local.read_text())
-    inputs["documents"].extend(everyday["documents"])
-    for query in everyday["queries"]:
-        inputs["queries"].append({key: value for key, value in query.items() if key not in {"group", "relevant"}})
-        expected[query["id"]] = {"group": query["group"], "relevant": query["relevant"]}
+    append_cases(inputs, expected, local)
+    if additional:
+        append_cases(inputs, expected, additional)
+    validate_expectations(inputs, expected)
     output.mkdir(parents=True, exist_ok=False)
     for name, value in [("inputs.json", inputs), ("expected.json", expected)]:
         (output / name).write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n")
@@ -56,6 +67,9 @@ def prepare(archive, output):
         "documents": len(inputs["documents"]), "queries": len(inputs["queries"]),
         "queriesBeyondSemanticCharacterLimit": sum(len(item["text"]) > 200 for item in inputs["queries"]),
     }
+    if additional:
+        manifest["additionalCasesSHA256"] = hashlib.sha256(additional.read_bytes()).hexdigest()
+        manifest["additionalCases"] = additional.name
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(json.dumps(manifest))
 
@@ -65,5 +79,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("archive", type=Path)
     parser.add_argument("output", type=Path)
+    parser.add_argument("--additional", type=Path)
     args = parser.parse_args()
-    prepare(args.archive, args.output)
+    prepare(args.archive, args.output, args.additional)

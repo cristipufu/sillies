@@ -1,0 +1,1626 @@
+{
+  "description": "Authored multilingual regression cases. Evidence quotes validate provenance, not entailment. No native-speaker adjudication has been performed. Each language has a distinct event and a nearby distractor; missing private details have no supporting source. Gold fields must never enter worker inputs.",
+  "documents": [
+    {
+      "id": "F48B8B29-9F5D-5BE2-BCF3-68B9ABFA6DB4",
+      "title": "Keramický kurz Javor",
+      "text": "Kurz keramiky Javor proběhne v sobotu dopoledne. Rozpočet na hlínu a glazury je 420 eur. Klára přinese nástroje a účastníci si odnesou hotové misky.",
+      "tag": "community"
+    },
+    {
+      "id": "D647D831-E3EB-521E-BDB3-755A66C4499D",
+      "title": "Keramický kurz Javor — related event",
+      "text": "Výstava Javor ukáže keramiku místních umělců. Rozpočet na osvětlení výstavy je 180 eur. Výstava není součástí kurzu.",
+      "tag": "community"
+    },
+    {
+      "id": "726BF53D-F461-5FDA-B56A-288CBD1889E0",
+      "title": "Cykelværksted Havblik",
+      "text": "På cykelværkstedet Havblik skal frivillige reparere skolebørnenes cykler. Reservedele må koste 650 kroner. Mette sørger for lappegrej og nye bremsekabler.",
+      "tag": "community"
+    },
+    {
+      "id": "48E7A3D5-0CDA-5B3D-80C7-8AC9475E8AA8",
+      "title": "Cykelværksted Havblik — related event",
+      "text": "Havblik arrangerer også en cykeltur langs kysten. Deltagelse koster 90 kroner. Turen har sit eget budget og omfatter ingen reparationer.",
+      "tag": "community"
+    },
+    {
+      "id": "A257D2FA-DC6E-58AE-92F7-6EE4759FFEBC",
+      "title": "Dachgarten Lindenhof",
+      "text": "Für den Dachgarten Lindenhof wurden 760 Euro für Erde und Pflanzkästen bewilligt. Die Bewässerung übernimmt Jonas. Vor dem Pflanzen muss die Tragfähigkeit des Dachs geprüft werden.",
+      "tag": "community"
+    },
+    {
+      "id": "58DA9365-5DEB-558E-9F7D-7E9255DBC680",
+      "title": "Dachgarten Lindenhof — related event",
+      "text": "Der Innenhof Lindenhof bekommt neue Sitzbänke für 310 Euro. Dieses Vorhaben ist vom Dachgarten getrennt.",
+      "tag": "community"
+    },
+    {
+      "id": "BA2F8E15-42D4-5E54-A3AE-3613F349431A",
+      "title": "Harbor Lantern rehearsal",
+      "text": "The Harbor Lantern choir reserved 980 dollars for renting a rehearsal room. The singers will bring their own sheet music. Priya will collect the room keys on Friday.",
+      "tag": "community"
+    },
+    {
+      "id": "1BE26FFE-3501-52BB-8D18-EAF3A60B9F1F",
+      "title": "Harbor Lantern rehearsal — related event",
+      "text": "The Harbor Lantern concert has a separate lighting allowance of 240 dollars. It takes place outdoors and does not pay for the rehearsal room.",
+      "tag": "community"
+    },
+    {
+      "id": "E44DE6E1-7FE6-58E0-8DD4-F8C5708C0C3B",
+      "title": "Taller de costura Brisa",
+      "text": "El taller de costura Brisa dispone de 530 euros para comprar tela y cremalleras. Lucía revisará las máquinas antes de la primera clase. Las participantes traerán sus propias tijeras.",
+      "tag": "community"
+    },
+    {
+      "id": "E05FD289-D682-5782-9B6F-71423EC70D02",
+      "title": "Taller de costura Brisa — related event",
+      "text": "La exposición de ropa Brisa destina 210 euros a carteles. No comparte presupuesto con el taller de costura.",
+      "tag": "community"
+    },
+    {
+      "id": "055E41B6-F314-5BDA-A3F6-5A67A7ED6F70",
+      "title": "Sortie ornithologique Aulne",
+      "text": "La sortie ornithologique Aulne prévoit 340 euros pour louer des jumelles. Samira prépare les fiches des oiseaux. Le groupe se retrouve à la réserve avant le lever du soleil.",
+      "tag": "community"
+    },
+    {
+      "id": "A98278B1-E175-51A4-99B1-991DC7CD4749",
+      "title": "Sortie ornithologique Aulne — related event",
+      "text": "La conférence Aulne sur les oiseaux réserve 150 euros à la location d’un projecteur. Son budget est distinct de celui de la sortie.",
+      "tag": "community"
+    },
+    {
+      "id": "F43E1DF8-0C7D-59C6-BA99-FED14FBE5CDF",
+      "title": "Boróka bábszínház",
+      "text": "A Boróka bábszínház 86000 forintot különített el a díszletek elkészítésére. Eszter varrja a figurák ruháit. A próbák a könyvtár különtermében lesznek.",
+      "tag": "community"
+    },
+    {
+      "id": "3AAB7041-A9AA-59D5-A73A-52FC2988F91B",
+      "title": "Boróka bábszínház — related event",
+      "text": "A Boróka mesedélután 12000 forintból vásárol könyveket. Ez külön program, nem a bábszínház költségvetése.",
+      "tag": "community"
+    },
+    {
+      "id": "71C026BE-EA87-589C-9ABB-7EF2CCE3DB9F",
+      "title": "Laboratorio fotografico Riva",
+      "text": "Il laboratorio fotografico Riva ha stanziato 470 euro per carta e prodotti di sviluppo. Marco controllerà la camera oscura. Ogni partecipante porterà un rullino già esposto.",
+      "tag": "community"
+    },
+    {
+      "id": "61D340C4-4F60-5CF8-8EF8-E1F28282E1DC",
+      "title": "Laboratorio fotografico Riva — related event",
+      "text": "La passeggiata fotografica Riva prevede 80 euro per il trasporto. È un’attività distinta dal laboratorio in camera oscura.",
+      "tag": "community"
+    },
+    {
+      "id": "02E7F29C-F945-56E6-A44C-A744D415FB0F",
+      "title": "灯台読書会",
+      "text": "灯台読書会では、翻訳本の購入に三万円を使うことになりました。美咲が本を注文します。参加者は読み終えた本を次の人に渡します。会場では静かに意見を交わします。",
+      "tag": "community"
+    },
+    {
+      "id": "9AB516AE-6E11-515A-B08C-1C9B8A1BF6D8",
+      "title": "灯台読書会 — related event",
+      "text": "灯台朗読会では、マイクのレンタルに八千円を使います。翻訳本を購入する読書会とは別の催しです。",
+      "tag": "community"
+    },
+    {
+      "id": "7D8958D1-21BF-574A-AAFB-D1A241834977",
+      "title": "솔빛 제빵 모임",
+      "text": "솔빛 제빵 모임은 밀가루와 버터 구입에 18만 원을 배정했습니다. 지수가 오븐을 점검합니다. 참가자들은 빵을 구운 뒤 이웃과 나누기로 했습니다.",
+      "tag": "community"
+    },
+    {
+      "id": "C6EF6DFC-9C12-5423-ABB0-4BB2BB9D3095",
+      "title": "솔빛 제빵 모임 — related event",
+      "text": "솔빛 요리 전시회는 안내판 제작에 5만 원을 배정했습니다. 제빵 모임의 재료비와는 별도입니다.",
+      "tag": "community"
+    },
+    {
+      "id": "F1BAD594-974D-5BED-B571-F76001E9B7A0",
+      "title": "Fjellglimt kartkurs",
+      "text": "Kartkurset Fjellglimt setter av 1250 kroner til kompass. Ingrid skriver ut turkartene. Deltakerne skal øve på å finne veien uten mobiltelefon.",
+      "tag": "community"
+    },
+    {
+      "id": "5FC76EBE-6059-5F5F-9DBD-4C447B2A389A",
+      "title": "Fjellglimt kartkurs — related event",
+      "text": "Fjellglimt arrangerer en egen fjelltur med 400 kroner til buss. Turbudsjettet dekker ikke kompass til kurset.",
+      "tag": "community"
+    },
+    {
+      "id": "C666B60E-3513-5742-959B-A3D9412AD0A8",
+      "title": "Molenpad buurtarchief",
+      "text": "Het buurtarchief Molenpad heeft 390 euro gereserveerd voor zuurvrije archiefdozen. Noor sorteert de oude brieven. Vrijwilligers beschrijven elke doos voordat deze wordt opgeborgen.",
+      "tag": "community"
+    },
+    {
+      "id": "BBF7EAB3-0D75-5093-AB65-E6850BC6C4B6",
+      "title": "Molenpad buurtarchief — related event",
+      "text": "De fotoavond Molenpad heeft een eigen budget van 110 euro voor afdrukken. Dit is geen onderdeel van de aanschaf van archiefdozen.",
+      "tag": "community"
+    },
+    {
+      "id": "044CEADB-DA63-5C19-A5A5-32F566E62199",
+      "title": "Warsztat bursztynowy Fala",
+      "text": "Warsztat bursztynowy Fala przeznaczył 920 złotych na narzędzia do szlifowania. Marta przygotuje stanowiska pracy. Uczestnicy będą wykonywać niewielkie zawieszki.",
+      "tag": "community"
+    },
+    {
+      "id": "040EA3E8-D45F-513A-BFD5-D2DE2BA8E6C0",
+      "title": "Warsztat bursztynowy Fala — related event",
+      "text": "Kiermasz Fala przeznacza 260 złotych na dekorację stoisk. Ma osobny budżet i nie finansuje narzędzi warsztatu.",
+      "tag": "community"
+    },
+    {
+      "id": "80FFEE08-150D-530F-8938-90BB905A8564",
+      "title": "Oficina de rádio Vagalume",
+      "text": "A oficina de rádio Vagalume reservou 680 reais para comprar componentes eletrônicos. Camila vai testar os alto-falantes. A turma montará um receptor simples durante as aulas.",
+      "tag": "community"
+    },
+    {
+      "id": "E67053D4-5F31-57A4-87FE-346210141B64",
+      "title": "Oficina de rádio Vagalume — related event",
+      "text": "O programa de rádio Vagalume tem 190 reais para divulgar uma entrevista. Esse valor não faz parte da oficina de montagem de receptores.",
+      "tag": "community"
+    },
+    {
+      "id": "9D25E71C-8BA5-5B00-92A8-9EBCB503F94A",
+      "title": "Encontro de azulejaria Maré",
+      "text": "O encontro de azulejaria Maré reservou 285 euros para vidrados. A Inês prepara o forno. Cada participante pintará dois azulejos e voltará na semana seguinte para os recolher.",
+      "tag": "community"
+    },
+    {
+      "id": "98B27B5A-6550-5643-9251-D1B63A9E141F",
+      "title": "Encontro de azulejaria Maré — related event",
+      "text": "A exposição Maré destinou 95 euros à impressão de convites. É uma iniciativa separada do encontro de azulejaria.",
+      "tag": "community"
+    },
+    {
+      "id": "D8DE66BE-2151-503A-8B25-8F9D4CE4D02B",
+      "title": "Atelierul de zmee Senin",
+      "text": "Atelierul de zmee Senin a rezervat 740 de lei pentru pânză și sfoară. Irina verifică tijele înainte de începerea atelierului. Copiii vor testa zmeele în parc după ce le asamblează.",
+      "tag": "community"
+    },
+    {
+      "id": "05FC283D-4977-5D83-B5CC-CC2E77612074",
+      "title": "Atelierul de zmee Senin — related event",
+      "text": "Festivalul Senin are un buget separat de 230 de lei pentru afișe. Acești bani nu sunt pentru materialele atelierului de zmee.",
+      "tag": "community"
+    },
+    {
+      "id": "6D55AD94-85EF-5554-A37C-D70B829B1D65",
+      "title": "Кружок переплёта Ива",
+      "text": "Кружок переплёта Ива выделил 5600 рублей на картон и клей. Анна проверит прессы до начала занятия. Участники восстановят обложки старых книг.",
+      "tag": "community"
+    },
+    {
+      "id": "A6DD3801-4E52-50B8-BDD2-F230FCF5B699",
+      "title": "Кружок переплёта Ива — related event",
+      "text": "Литературный вечер Ива выделил 1700 рублей на печать программок. Его бюджет не связан с ремонтом книг.",
+      "tag": "community"
+    },
+    {
+      "id": "454D8DC0-DE73-54C5-87B3-92C982A2F12F",
+      "title": "Strandljus vävkurs",
+      "text": "Vävkursen Strandljus avsätter 1450 kronor till garn. Elsa förbereder vävstolarna. Deltagarna ska väva små dukar som de får ta med hem.",
+      "tag": "community"
+    },
+    {
+      "id": "18A0C6A5-15F8-5D0F-A88D-83426B333806",
+      "title": "Strandljus vävkurs — related event",
+      "text": "Utställningen Strandljus avsätter 350 kronor till ramar. Den har en egen budget och köper inget garn till kursen.",
+      "tag": "community"
+    },
+    {
+      "id": "4CC0103D-BF65-590F-B4B7-862D76BCBA7A",
+      "title": "Kıvılcım mozaik atölyesi",
+      "text": "Kıvılcım mozaik atölyesi renkli taşlar için 2300 lira ayırdı. Deniz çalışma masalarını hazırlayacak. Katılımcılar küçük bir pano yapıp evlerine götürecek.",
+      "tag": "community"
+    },
+    {
+      "id": "51C5DA09-060F-54BD-9118-5B7DFBB2B5D7",
+      "title": "Kıvılcım mozaik atölyesi — related event",
+      "text": "Kıvılcım sergisi davetiyeler için 600 lira ayırdı. Serginin bütçesi mozaik atölyesinden ayrıdır.",
+      "tag": "community"
+    },
+    {
+      "id": "F7EC7B5D-872F-5C97-8812-03CA963FA2B1",
+      "title": "Гурток вітражу Обрій",
+      "text": "Гурток вітражу Обрій виділив 1850 гривень на кольорове скло. Олена підготує захисні окуляри. Учасники складатимуть невеликі вітражні прикраси.",
+      "tag": "community"
+    },
+    {
+      "id": "CEAE9CB5-9CE1-547B-8812-DE494AB3CCA3",
+      "title": "Гурток вітражу Обрій — related event",
+      "text": "Виставка Обрій виділила 450 гривень на освітлення стендів. Її кошторис не стосується гуртка вітражу.",
+      "tag": "community"
+    },
+    {
+      "id": "FA1372E0-6C10-59EA-8156-7179BE166B15",
+      "title": "青禾木工小组",
+      "text": "青禾木工小组安排了九百元购买木板和砂纸。小林负责检查工具。大家会制作小书架，完工后带回家。活动期间需要佩戴护目镜。",
+      "tag": "community"
+    },
+    {
+      "id": "70D13627-EB6E-5861-ABA8-765E8A1EE7D6",
+      "title": "青禾木工小组 — related event",
+      "text": "青禾手工展安排了二百元印制海报。展览和木工小组的预算是分开的。",
+      "tag": "community"
+    },
+    {
+      "id": "C761E4A8-FFB0-5D97-A13B-ED5EAAD8D85F",
+      "title": "海星版畫課",
+      "text": "海星版畫課編列了一千六百元購買油墨。雅婷負責整理滾筒。學員會刻製簡單的圖案，再印在自備的紙張上。課後一起清潔工具。",
+      "tag": "community"
+    },
+    {
+      "id": "6A4210D0-469C-50A3-8896-BC0B49EE991B",
+      "title": "海星版畫課 — related event",
+      "text": "海星作品展編列了五百元租借展示架。展覽經費與版畫課的油墨預算分開處理。",
+      "tag": "community"
+    },
+    {
+      "id": "46F11A0E-B0DB-521A-8A6C-AC0E8D5C5524",
+      "title": "Cedar equipment diary",
+      "text": "The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. The Cedar crew discussed packing, labeling and returning equipment. They checked the storage shelves and counted empty boxes. \n\nThe spare projector is in the locked cupboard beside the east staircase.",
+      "tag": "equipment"
+    },
+    {
+      "id": "709C9EBE-C5E0-5A9E-93B6-0D789DF8A953",
+      "title": "白波の備品記録",
+      "text": "白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。白波の係は道具を整理し、箱に名前を書き、使い終わった品物を戻しました。棚を確認して空の箱を数えました。\n\n予備のマイクは西側の階段の隣にある青い戸棚に入っています。",
+      "tag": "equipment"
+    },
+    {
+      "id": "2EB8E58B-E277-59D3-B337-468652510031",
+      "title": "Nordstern Materialprotokoll",
+      "text": "Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. Das Nordstern-Team sortierte die Geräte und beschriftete die Kisten. Nach der Rückgabe wurden die Regale kontrolliert und leere Kartons gezählt. \n\nDas Ersatzstativ liegt in der grünen Truhe neben dem Südeingang.",
+      "tag": "equipment"
+    },
+    {
+      "id": "1B0EBEEC-8B82-5D4D-965E-8AEE62F6F8C7",
+      "title": "Orion cabinet handover",
+      "text": "The Orion cabinet key is with Leila. This is the current handover note.",
+      "tag": "current"
+    },
+    {
+      "id": "5AEED07E-225A-504F-9E5D-29C35C7ECC6D",
+      "title": "Orion cabinet handover",
+      "text": "The Orion cabinet key is with Tomas. This handover note is obsolete.",
+      "tag": "old",
+      "trashed": true
+    }
+  ],
+  "queries": [
+    {
+      "id": "multilingual-cs-native",
+      "text": "Kolik peněz je vyhrazeno na materiál pro kurz Javor?",
+      "group": "multilingual-native",
+      "language": "cs",
+      "relevant": {
+        "F48B8B29-9F5D-5BE2-BCF3-68B9ABFA6DB4": 1
+      },
+      "evidence": {
+        "F48B8B29-9F5D-5BE2-BCF3-68B9ABFA6DB4": "420 eur"
+      },
+      "relatedButInsufficient": [
+        "D647D831-E3EB-521E-BDB3-755A66C4499D"
+      ]
+    },
+    {
+      "id": "multilingual-cs-paraphrase",
+      "text": "Jaká je částka na hlínu a glazury v Javoru?",
+      "group": "multilingual-paraphrase",
+      "language": "cs",
+      "relevant": {
+        "F48B8B29-9F5D-5BE2-BCF3-68B9ABFA6DB4": 1
+      },
+      "evidence": {
+        "F48B8B29-9F5D-5BE2-BCF3-68B9ABFA6DB4": "420 eur"
+      },
+      "relatedButInsufficient": [
+        "D647D831-E3EB-521E-BDB3-755A66C4499D"
+      ]
+    },
+    {
+      "id": "multilingual-cs-cross-language",
+      "text": "What is the materials budget for the Javor pottery class?",
+      "group": "multilingual-cross-language",
+      "language": "cs",
+      "relevant": {
+        "F48B8B29-9F5D-5BE2-BCF3-68B9ABFA6DB4": 1
+      },
+      "evidence": {
+        "F48B8B29-9F5D-5BE2-BCF3-68B9ABFA6DB4": "420 eur"
+      },
+      "relatedButInsufficient": [
+        "D647D831-E3EB-521E-BDB3-755A66C4499D"
+      ]
+    },
+    {
+      "id": "multilingual-cs-absent",
+      "text": "Jaké je telefonní číslo lektorky kurzu Javor?",
+      "group": "absent-detail",
+      "language": "cs",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "F48B8B29-9F5D-5BE2-BCF3-68B9ABFA6DB4"
+      ]
+    },
+    {
+      "id": "multilingual-da-native",
+      "text": "Hvor meget må reservedele koste på Havblik?",
+      "group": "multilingual-native",
+      "language": "da",
+      "relevant": {
+        "726BF53D-F461-5FDA-B56A-288CBD1889E0": 1
+      },
+      "evidence": {
+        "726BF53D-F461-5FDA-B56A-288CBD1889E0": "650 kroner"
+      },
+      "relatedButInsufficient": [
+        "48E7A3D5-0CDA-5B3D-80C7-8AC9475E8AA8"
+      ]
+    },
+    {
+      "id": "multilingual-da-paraphrase",
+      "text": "Hvad er beløbsgrænsen for nye dele til cyklerne i Havblik?",
+      "group": "multilingual-paraphrase",
+      "language": "da",
+      "relevant": {
+        "726BF53D-F461-5FDA-B56A-288CBD1889E0": 1
+      },
+      "evidence": {
+        "726BF53D-F461-5FDA-B56A-288CBD1889E0": "650 kroner"
+      },
+      "relatedButInsufficient": [
+        "48E7A3D5-0CDA-5B3D-80C7-8AC9475E8AA8"
+      ]
+    },
+    {
+      "id": "multilingual-da-cross-language",
+      "text": "How much can the Havblik bicycle workshop spend on spare parts?",
+      "group": "multilingual-cross-language",
+      "language": "da",
+      "relevant": {
+        "726BF53D-F461-5FDA-B56A-288CBD1889E0": 1
+      },
+      "evidence": {
+        "726BF53D-F461-5FDA-B56A-288CBD1889E0": "650 kroner"
+      },
+      "relatedButInsufficient": [
+        "48E7A3D5-0CDA-5B3D-80C7-8AC9475E8AA8"
+      ]
+    },
+    {
+      "id": "multilingual-da-absent",
+      "text": "Hvad er postnummeret for cykelværkstedet Havblik?",
+      "group": "absent-detail",
+      "language": "da",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "726BF53D-F461-5FDA-B56A-288CBD1889E0"
+      ]
+    },
+    {
+      "id": "multilingual-de-native",
+      "text": "Wie viel Geld steht für Erde und Kästen im Lindenhof bereit?",
+      "group": "multilingual-native",
+      "language": "de",
+      "relevant": {
+        "A257D2FA-DC6E-58AE-92F7-6EE4759FFEBC": 1
+      },
+      "evidence": {
+        "A257D2FA-DC6E-58AE-92F7-6EE4759FFEBC": "760 Euro"
+      },
+      "relatedButInsufficient": [
+        "58DA9365-5DEB-558E-9F7D-7E9255DBC680"
+      ]
+    },
+    {
+      "id": "multilingual-de-paraphrase",
+      "text": "Welches Budget wurde für die Bepflanzung des Dachgartens Lindenhof genehmigt?",
+      "group": "multilingual-paraphrase",
+      "language": "de",
+      "relevant": {
+        "A257D2FA-DC6E-58AE-92F7-6EE4759FFEBC": 1
+      },
+      "evidence": {
+        "A257D2FA-DC6E-58AE-92F7-6EE4759FFEBC": "760 Euro"
+      },
+      "relatedButInsufficient": [
+        "58DA9365-5DEB-558E-9F7D-7E9255DBC680"
+      ]
+    },
+    {
+      "id": "multilingual-de-cross-language",
+      "text": "What budget was approved for soil and planters in the Lindenhof roof garden?",
+      "group": "multilingual-cross-language",
+      "language": "de",
+      "relevant": {
+        "A257D2FA-DC6E-58AE-92F7-6EE4759FFEBC": 1
+      },
+      "evidence": {
+        "A257D2FA-DC6E-58AE-92F7-6EE4759FFEBC": "760 Euro"
+      },
+      "relatedButInsufficient": [
+        "58DA9365-5DEB-558E-9F7D-7E9255DBC680"
+      ]
+    },
+    {
+      "id": "multilingual-de-absent",
+      "text": "Wie lautet die Versicherungsnummer des Dachgartens Lindenhof?",
+      "group": "absent-detail",
+      "language": "de",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "A257D2FA-DC6E-58AE-92F7-6EE4759FFEBC"
+      ]
+    },
+    {
+      "id": "multilingual-en-native",
+      "text": "How much is set aside for the Harbor Lantern rehearsal space?",
+      "group": "multilingual-native",
+      "language": "en",
+      "relevant": {
+        "BA2F8E15-42D4-5E54-A3AE-3613F349431A": 1
+      },
+      "evidence": {
+        "BA2F8E15-42D4-5E54-A3AE-3613F349431A": "980 dollars"
+      },
+      "relatedButInsufficient": [
+        "1BE26FFE-3501-52BB-8D18-EAF3A60B9F1F"
+      ]
+    },
+    {
+      "id": "multilingual-en-paraphrase",
+      "text": "What can Harbor Lantern spend on a room for choir practice?",
+      "group": "multilingual-paraphrase",
+      "language": "en",
+      "relevant": {
+        "BA2F8E15-42D4-5E54-A3AE-3613F349431A": 1
+      },
+      "evidence": {
+        "BA2F8E15-42D4-5E54-A3AE-3613F349431A": "980 dollars"
+      },
+      "relatedButInsufficient": [
+        "1BE26FFE-3501-52BB-8D18-EAF3A60B9F1F"
+      ]
+    },
+    {
+      "id": "multilingual-en-cross-language",
+      "text": "What is the room-rental allowance for the Harbor Lantern singers?",
+      "group": "multilingual-cross-language",
+      "language": "en",
+      "relevant": {
+        "BA2F8E15-42D4-5E54-A3AE-3613F349431A": 1
+      },
+      "evidence": {
+        "BA2F8E15-42D4-5E54-A3AE-3613F349431A": "980 dollars"
+      },
+      "relatedButInsufficient": [
+        "1BE26FFE-3501-52BB-8D18-EAF3A60B9F1F"
+      ]
+    },
+    {
+      "id": "multilingual-en-absent",
+      "text": "What is the alarm code for the Harbor Lantern rehearsal room?",
+      "group": "absent-detail",
+      "language": "en",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "BA2F8E15-42D4-5E54-A3AE-3613F349431A"
+      ]
+    },
+    {
+      "id": "multilingual-es-native",
+      "text": "¿Cuánto puede gastar Brisa en tela y cremalleras?",
+      "group": "multilingual-native",
+      "language": "es",
+      "relevant": {
+        "E44DE6E1-7FE6-58E0-8DD4-F8C5708C0C3B": 1
+      },
+      "evidence": {
+        "E44DE6E1-7FE6-58E0-8DD4-F8C5708C0C3B": "530 euros"
+      },
+      "relatedButInsufficient": [
+        "E05FD289-D682-5782-9B6F-71423EC70D02"
+      ]
+    },
+    {
+      "id": "multilingual-es-paraphrase",
+      "text": "¿Qué presupuesto tiene el taller Brisa para los materiales de costura?",
+      "group": "multilingual-paraphrase",
+      "language": "es",
+      "relevant": {
+        "E44DE6E1-7FE6-58E0-8DD4-F8C5708C0C3B": 1
+      },
+      "evidence": {
+        "E44DE6E1-7FE6-58E0-8DD4-F8C5708C0C3B": "530 euros"
+      },
+      "relatedButInsufficient": [
+        "E05FD289-D682-5782-9B6F-71423EC70D02"
+      ]
+    },
+    {
+      "id": "multilingual-es-cross-language",
+      "text": "How much can the Brisa sewing workshop spend on fabric and zippers?",
+      "group": "multilingual-cross-language",
+      "language": "es",
+      "relevant": {
+        "E44DE6E1-7FE6-58E0-8DD4-F8C5708C0C3B": 1
+      },
+      "evidence": {
+        "E44DE6E1-7FE6-58E0-8DD4-F8C5708C0C3B": "530 euros"
+      },
+      "relatedButInsufficient": [
+        "E05FD289-D682-5782-9B6F-71423EC70D02"
+      ]
+    },
+    {
+      "id": "multilingual-es-absent",
+      "text": "¿Cuál es la contraseña del wifi del taller Brisa?",
+      "group": "absent-detail",
+      "language": "es",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "E44DE6E1-7FE6-58E0-8DD4-F8C5708C0C3B"
+      ]
+    },
+    {
+      "id": "multilingual-fr-native",
+      "text": "Quel montant est prévu pour les jumelles de la sortie Aulne ?",
+      "group": "multilingual-native",
+      "language": "fr",
+      "relevant": {
+        "055E41B6-F314-5BDA-A3F6-5A67A7ED6F70": 1
+      },
+      "evidence": {
+        "055E41B6-F314-5BDA-A3F6-5A67A7ED6F70": "340 euros"
+      },
+      "relatedButInsufficient": [
+        "A98278B1-E175-51A4-99B1-991DC7CD4749"
+      ]
+    },
+    {
+      "id": "multilingual-fr-paraphrase",
+      "text": "Combien peut-on dépenser pour louer le matériel d’observation à Aulne ?",
+      "group": "multilingual-paraphrase",
+      "language": "fr",
+      "relevant": {
+        "055E41B6-F314-5BDA-A3F6-5A67A7ED6F70": 1
+      },
+      "evidence": {
+        "055E41B6-F314-5BDA-A3F6-5A67A7ED6F70": "340 euros"
+      },
+      "relatedButInsufficient": [
+        "A98278B1-E175-51A4-99B1-991DC7CD4749"
+      ]
+    },
+    {
+      "id": "multilingual-fr-cross-language",
+      "text": "What is the binocular-rental budget for the Aulne birdwatching outing?",
+      "group": "multilingual-cross-language",
+      "language": "fr",
+      "relevant": {
+        "055E41B6-F314-5BDA-A3F6-5A67A7ED6F70": 1
+      },
+      "evidence": {
+        "055E41B6-F314-5BDA-A3F6-5A67A7ED6F70": "340 euros"
+      },
+      "relatedButInsufficient": [
+        "A98278B1-E175-51A4-99B1-991DC7CD4749"
+      ]
+    },
+    {
+      "id": "multilingual-fr-absent",
+      "text": "Quel est le numéro de permis du guide de la sortie Aulne ?",
+      "group": "absent-detail",
+      "language": "fr",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "055E41B6-F314-5BDA-A3F6-5A67A7ED6F70"
+      ]
+    },
+    {
+      "id": "multilingual-hu-native",
+      "text": "Mennyi pénzt szán a Boróka a díszletekre?",
+      "group": "multilingual-native",
+      "language": "hu",
+      "relevant": {
+        "F43E1DF8-0C7D-59C6-BA99-FED14FBE5CDF": 1
+      },
+      "evidence": {
+        "F43E1DF8-0C7D-59C6-BA99-FED14FBE5CDF": "86000 forintot"
+      },
+      "relatedButInsufficient": [
+        "3AAB7041-A9AA-59D5-A73A-52FC2988F91B"
+      ]
+    },
+    {
+      "id": "multilingual-hu-paraphrase",
+      "text": "Mekkora keretből készülhet a Boróka bábszínház színpadi háttere?",
+      "group": "multilingual-paraphrase",
+      "language": "hu",
+      "relevant": {
+        "F43E1DF8-0C7D-59C6-BA99-FED14FBE5CDF": 1
+      },
+      "evidence": {
+        "F43E1DF8-0C7D-59C6-BA99-FED14FBE5CDF": "86000 forintot"
+      },
+      "relatedButInsufficient": [
+        "3AAB7041-A9AA-59D5-A73A-52FC2988F91B"
+      ]
+    },
+    {
+      "id": "multilingual-hu-cross-language",
+      "text": "How much has the Boróka puppet theatre set aside for scenery?",
+      "group": "multilingual-cross-language",
+      "language": "hu",
+      "relevant": {
+        "F43E1DF8-0C7D-59C6-BA99-FED14FBE5CDF": 1
+      },
+      "evidence": {
+        "F43E1DF8-0C7D-59C6-BA99-FED14FBE5CDF": "86000 forintot"
+      },
+      "relatedButInsufficient": [
+        "3AAB7041-A9AA-59D5-A73A-52FC2988F91B"
+      ]
+    },
+    {
+      "id": "multilingual-hu-absent",
+      "text": "Mi a Boróka bábszínház adószáma?",
+      "group": "absent-detail",
+      "language": "hu",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "F43E1DF8-0C7D-59C6-BA99-FED14FBE5CDF"
+      ]
+    },
+    {
+      "id": "multilingual-it-native",
+      "text": "Quanto può spendere Riva per carta e sviluppo?",
+      "group": "multilingual-native",
+      "language": "it",
+      "relevant": {
+        "71C026BE-EA87-589C-9ABB-7EF2CCE3DB9F": 1
+      },
+      "evidence": {
+        "71C026BE-EA87-589C-9ABB-7EF2CCE3DB9F": "470 euro"
+      },
+      "relatedButInsufficient": [
+        "61D340C4-4F60-5CF8-8EF8-E1F28282E1DC"
+      ]
+    },
+    {
+      "id": "multilingual-it-paraphrase",
+      "text": "Qual è il fondo del laboratorio Riva per i materiali della camera oscura?",
+      "group": "multilingual-paraphrase",
+      "language": "it",
+      "relevant": {
+        "71C026BE-EA87-589C-9ABB-7EF2CCE3DB9F": 1
+      },
+      "evidence": {
+        "71C026BE-EA87-589C-9ABB-7EF2CCE3DB9F": "470 euro"
+      },
+      "relatedButInsufficient": [
+        "61D340C4-4F60-5CF8-8EF8-E1F28282E1DC"
+      ]
+    },
+    {
+      "id": "multilingual-it-cross-language",
+      "text": "What is Riva’s budget for photographic paper and developing supplies?",
+      "group": "multilingual-cross-language",
+      "language": "it",
+      "relevant": {
+        "71C026BE-EA87-589C-9ABB-7EF2CCE3DB9F": 1
+      },
+      "evidence": {
+        "71C026BE-EA87-589C-9ABB-7EF2CCE3DB9F": "470 euro"
+      },
+      "relatedButInsufficient": [
+        "61D340C4-4F60-5CF8-8EF8-E1F28282E1DC"
+      ]
+    },
+    {
+      "id": "multilingual-it-absent",
+      "text": "Qual è il codice della porta del laboratorio fotografico Riva?",
+      "group": "absent-detail",
+      "language": "it",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "71C026BE-EA87-589C-9ABB-7EF2CCE3DB9F"
+      ]
+    },
+    {
+      "id": "multilingual-ja-native",
+      "text": "灯台読書会で本の購入に使える金額はいくらですか？",
+      "group": "multilingual-native",
+      "language": "ja",
+      "relevant": {
+        "02E7F29C-F945-56E6-A44C-A744D415FB0F": 1
+      },
+      "evidence": {
+        "02E7F29C-F945-56E6-A44C-A744D415FB0F": "三万円"
+      },
+      "relatedButInsufficient": [
+        "9AB516AE-6E11-515A-B08C-1C9B8A1BF6D8"
+      ]
+    },
+    {
+      "id": "multilingual-ja-paraphrase",
+      "text": "灯台読書会の翻訳本をそろえるための予算を教えてください。",
+      "group": "multilingual-paraphrase",
+      "language": "ja",
+      "relevant": {
+        "02E7F29C-F945-56E6-A44C-A744D415FB0F": 1
+      },
+      "evidence": {
+        "02E7F29C-F945-56E6-A44C-A744D415FB0F": "三万円"
+      },
+      "relatedButInsufficient": [
+        "9AB516AE-6E11-515A-B08C-1C9B8A1BF6D8"
+      ]
+    },
+    {
+      "id": "multilingual-ja-cross-language",
+      "text": "How much did the Lighthouse reading group allocate to translated books?",
+      "group": "multilingual-cross-language",
+      "language": "ja",
+      "relevant": {
+        "02E7F29C-F945-56E6-A44C-A744D415FB0F": 1
+      },
+      "evidence": {
+        "02E7F29C-F945-56E6-A44C-A744D415FB0F": "三万円"
+      },
+      "relatedButInsufficient": [
+        "9AB516AE-6E11-515A-B08C-1C9B8A1BF6D8"
+      ]
+    },
+    {
+      "id": "multilingual-ja-absent",
+      "text": "灯台読書会の会場の暗証番号は何ですか？",
+      "group": "absent-detail",
+      "language": "ja",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "02E7F29C-F945-56E6-A44C-A744D415FB0F"
+      ]
+    },
+    {
+      "id": "multilingual-ko-native",
+      "text": "솔빛 제빵 모임의 재료비는 얼마인가요?",
+      "group": "multilingual-native",
+      "language": "ko",
+      "relevant": {
+        "7D8958D1-21BF-574A-AAFB-D1A241834977": 1
+      },
+      "evidence": {
+        "7D8958D1-21BF-574A-AAFB-D1A241834977": "18만 원"
+      },
+      "relatedButInsufficient": [
+        "C6EF6DFC-9C12-5423-ABB0-4BB2BB9D3095"
+      ]
+    },
+    {
+      "id": "multilingual-ko-paraphrase",
+      "text": "솔빛 모임은 밀가루와 버터를 사는 데 얼마를 쓸 수 있나요?",
+      "group": "multilingual-paraphrase",
+      "language": "ko",
+      "relevant": {
+        "7D8958D1-21BF-574A-AAFB-D1A241834977": 1
+      },
+      "evidence": {
+        "7D8958D1-21BF-574A-AAFB-D1A241834977": "18만 원"
+      },
+      "relatedButInsufficient": [
+        "C6EF6DFC-9C12-5423-ABB0-4BB2BB9D3095"
+      ]
+    },
+    {
+      "id": "multilingual-ko-cross-language",
+      "text": "How much did the Solbit baking group allocate to flour and butter?",
+      "group": "multilingual-cross-language",
+      "language": "ko",
+      "relevant": {
+        "7D8958D1-21BF-574A-AAFB-D1A241834977": 1
+      },
+      "evidence": {
+        "7D8958D1-21BF-574A-AAFB-D1A241834977": "18만 원"
+      },
+      "relatedButInsufficient": [
+        "C6EF6DFC-9C12-5423-ABB0-4BB2BB9D3095"
+      ]
+    },
+    {
+      "id": "multilingual-ko-absent",
+      "text": "솔빛 제빵 모임 주방의 출입 비밀번호는 무엇인가요?",
+      "group": "absent-detail",
+      "language": "ko",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "7D8958D1-21BF-574A-AAFB-D1A241834977"
+      ]
+    },
+    {
+      "id": "multilingual-nb-native",
+      "text": "Hvor mye kan Fjellglimt bruke på kompass?",
+      "group": "multilingual-native",
+      "language": "nb",
+      "relevant": {
+        "F1BAD594-974D-5BED-B571-F76001E9B7A0": 1
+      },
+      "evidence": {
+        "F1BAD594-974D-5BED-B571-F76001E9B7A0": "1250 kroner"
+      },
+      "relatedButInsufficient": [
+        "5FC76EBE-6059-5F5F-9DBD-4C447B2A389A"
+      ]
+    },
+    {
+      "id": "multilingual-nb-paraphrase",
+      "text": "Hva er rammen for innkjøp av orienteringsutstyr til Fjellglimt?",
+      "group": "multilingual-paraphrase",
+      "language": "nb",
+      "relevant": {
+        "F1BAD594-974D-5BED-B571-F76001E9B7A0": 1
+      },
+      "evidence": {
+        "F1BAD594-974D-5BED-B571-F76001E9B7A0": "1250 kroner"
+      },
+      "relatedButInsufficient": [
+        "5FC76EBE-6059-5F5F-9DBD-4C447B2A389A"
+      ]
+    },
+    {
+      "id": "multilingual-nb-cross-language",
+      "text": "How much is allocated to compasses for the Fjellglimt navigation course?",
+      "group": "multilingual-cross-language",
+      "language": "nb",
+      "relevant": {
+        "F1BAD594-974D-5BED-B571-F76001E9B7A0": 1
+      },
+      "evidence": {
+        "F1BAD594-974D-5BED-B571-F76001E9B7A0": "1250 kroner"
+      },
+      "relatedButInsufficient": [
+        "5FC76EBE-6059-5F5F-9DBD-4C447B2A389A"
+      ]
+    },
+    {
+      "id": "multilingual-nb-absent",
+      "text": "Hva er organisasjonsnummeret til kartkurset Fjellglimt?",
+      "group": "absent-detail",
+      "language": "nb",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "F1BAD594-974D-5BED-B571-F76001E9B7A0"
+      ]
+    },
+    {
+      "id": "multilingual-nl-native",
+      "text": "Hoeveel geld heeft Molenpad voor archiefdozen?",
+      "group": "multilingual-native",
+      "language": "nl",
+      "relevant": {
+        "C666B60E-3513-5742-959B-A3D9412AD0A8": 1
+      },
+      "evidence": {
+        "C666B60E-3513-5742-959B-A3D9412AD0A8": "390 euro"
+      },
+      "relatedButInsufficient": [
+        "BBF7EAB3-0D75-5093-AB65-E6850BC6C4B6"
+      ]
+    },
+    {
+      "id": "multilingual-nl-paraphrase",
+      "text": "Wat mag het buurtarchief Molenpad uitgeven aan veilige dozen voor de brieven?",
+      "group": "multilingual-paraphrase",
+      "language": "nl",
+      "relevant": {
+        "C666B60E-3513-5742-959B-A3D9412AD0A8": 1
+      },
+      "evidence": {
+        "C666B60E-3513-5742-959B-A3D9412AD0A8": "390 euro"
+      },
+      "relatedButInsufficient": [
+        "BBF7EAB3-0D75-5093-AB65-E6850BC6C4B6"
+      ]
+    },
+    {
+      "id": "multilingual-nl-cross-language",
+      "text": "What is the Molenpad neighborhood archive’s allowance for acid-free boxes?",
+      "group": "multilingual-cross-language",
+      "language": "nl",
+      "relevant": {
+        "C666B60E-3513-5742-959B-A3D9412AD0A8": 1
+      },
+      "evidence": {
+        "C666B60E-3513-5742-959B-A3D9412AD0A8": "390 euro"
+      },
+      "relatedButInsufficient": [
+        "BBF7EAB3-0D75-5093-AB65-E6850BC6C4B6"
+      ]
+    },
+    {
+      "id": "multilingual-nl-absent",
+      "text": "Wat is de kluiscode van het buurtarchief Molenpad?",
+      "group": "absent-detail",
+      "language": "nl",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "C666B60E-3513-5742-959B-A3D9412AD0A8"
+      ]
+    },
+    {
+      "id": "multilingual-pl-native",
+      "text": "Ile Fala może wydać na narzędzia do szlifowania?",
+      "group": "multilingual-native",
+      "language": "pl",
+      "relevant": {
+        "044CEADB-DA63-5C19-A5A5-32F566E62199": 1
+      },
+      "evidence": {
+        "044CEADB-DA63-5C19-A5A5-32F566E62199": "920 złotych"
+      },
+      "relatedButInsufficient": [
+        "040EA3E8-D45F-513A-BFD5-D2DE2BA8E6C0"
+      ]
+    },
+    {
+      "id": "multilingual-pl-paraphrase",
+      "text": "Jaki budżet ma warsztat Fala na wyposażenie do obróbki bursztynu?",
+      "group": "multilingual-paraphrase",
+      "language": "pl",
+      "relevant": {
+        "044CEADB-DA63-5C19-A5A5-32F566E62199": 1
+      },
+      "evidence": {
+        "044CEADB-DA63-5C19-A5A5-32F566E62199": "920 złotych"
+      },
+      "relatedButInsufficient": [
+        "040EA3E8-D45F-513A-BFD5-D2DE2BA8E6C0"
+      ]
+    },
+    {
+      "id": "multilingual-pl-cross-language",
+      "text": "What is the Fala amber workshop’s budget for polishing tools?",
+      "group": "multilingual-cross-language",
+      "language": "pl",
+      "relevant": {
+        "044CEADB-DA63-5C19-A5A5-32F566E62199": 1
+      },
+      "evidence": {
+        "044CEADB-DA63-5C19-A5A5-32F566E62199": "920 złotych"
+      },
+      "relatedButInsufficient": [
+        "040EA3E8-D45F-513A-BFD5-D2DE2BA8E6C0"
+      ]
+    },
+    {
+      "id": "multilingual-pl-absent",
+      "text": "Jaki jest numer polisy ubezpieczeniowej warsztatu Fala?",
+      "group": "absent-detail",
+      "language": "pl",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "044CEADB-DA63-5C19-A5A5-32F566E62199"
+      ]
+    },
+    {
+      "id": "multilingual-pt-BR-native",
+      "text": "Quanto a Vagalume pode gastar em componentes?",
+      "group": "multilingual-native",
+      "language": "pt-BR",
+      "relevant": {
+        "80FFEE08-150D-530F-8938-90BB905A8564": 1
+      },
+      "evidence": {
+        "80FFEE08-150D-530F-8938-90BB905A8564": "680 reais"
+      },
+      "relatedButInsufficient": [
+        "E67053D4-5F31-57A4-87FE-346210141B64"
+      ]
+    },
+    {
+      "id": "multilingual-pt-BR-paraphrase",
+      "text": "Qual é a verba para as peças eletrônicas da oficina de rádio Vagalume?",
+      "group": "multilingual-paraphrase",
+      "language": "pt-BR",
+      "relevant": {
+        "80FFEE08-150D-530F-8938-90BB905A8564": 1
+      },
+      "evidence": {
+        "80FFEE08-150D-530F-8938-90BB905A8564": "680 reais"
+      },
+      "relatedButInsufficient": [
+        "E67053D4-5F31-57A4-87FE-346210141B64"
+      ]
+    },
+    {
+      "id": "multilingual-pt-BR-cross-language",
+      "text": "How much can the Vagalume radio workshop spend on electronic components?",
+      "group": "multilingual-cross-language",
+      "language": "pt-BR",
+      "relevant": {
+        "80FFEE08-150D-530F-8938-90BB905A8564": 1
+      },
+      "evidence": {
+        "80FFEE08-150D-530F-8938-90BB905A8564": "680 reais"
+      },
+      "relatedButInsufficient": [
+        "E67053D4-5F31-57A4-87FE-346210141B64"
+      ]
+    },
+    {
+      "id": "multilingual-pt-BR-absent",
+      "text": "Qual é a senha do computador da oficina de rádio Vagalume?",
+      "group": "absent-detail",
+      "language": "pt-BR",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "80FFEE08-150D-530F-8938-90BB905A8564"
+      ]
+    },
+    {
+      "id": "multilingual-pt-PT-native",
+      "text": "Quanto pode o encontro Maré gastar em vidrados?",
+      "group": "multilingual-native",
+      "language": "pt-PT",
+      "relevant": {
+        "9D25E71C-8BA5-5B00-92A8-9EBCB503F94A": 1
+      },
+      "evidence": {
+        "9D25E71C-8BA5-5B00-92A8-9EBCB503F94A": "285 euros"
+      },
+      "relatedButInsufficient": [
+        "98B27B5A-6550-5643-9251-D1B63A9E141F"
+      ]
+    },
+    {
+      "id": "multilingual-pt-PT-paraphrase",
+      "text": "Qual é a verba destinada ao acabamento dos azulejos no encontro Maré?",
+      "group": "multilingual-paraphrase",
+      "language": "pt-PT",
+      "relevant": {
+        "9D25E71C-8BA5-5B00-92A8-9EBCB503F94A": 1
+      },
+      "evidence": {
+        "9D25E71C-8BA5-5B00-92A8-9EBCB503F94A": "285 euros"
+      },
+      "relatedButInsufficient": [
+        "98B27B5A-6550-5643-9251-D1B63A9E141F"
+      ]
+    },
+    {
+      "id": "multilingual-pt-PT-cross-language",
+      "text": "How much did the Maré tile-painting gathering reserve for glazes?",
+      "group": "multilingual-cross-language",
+      "language": "pt-PT",
+      "relevant": {
+        "9D25E71C-8BA5-5B00-92A8-9EBCB503F94A": 1
+      },
+      "evidence": {
+        "9D25E71C-8BA5-5B00-92A8-9EBCB503F94A": "285 euros"
+      },
+      "relatedButInsufficient": [
+        "98B27B5A-6550-5643-9251-D1B63A9E141F"
+      ]
+    },
+    {
+      "id": "multilingual-pt-PT-absent",
+      "text": "Qual é o número de identificação fiscal do encontro Maré?",
+      "group": "absent-detail",
+      "language": "pt-PT",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "9D25E71C-8BA5-5B00-92A8-9EBCB503F94A"
+      ]
+    },
+    {
+      "id": "multilingual-ro-native",
+      "text": "Câți bani poate cheltui Senin pe pânză și sfoară?",
+      "group": "multilingual-native",
+      "language": "ro",
+      "relevant": {
+        "D8DE66BE-2151-503A-8B25-8F9D4CE4D02B": 1
+      },
+      "evidence": {
+        "D8DE66BE-2151-503A-8B25-8F9D4CE4D02B": "740 de lei"
+      },
+      "relatedButInsufficient": [
+        "05FC283D-4977-5D83-B5CC-CC2E77612074"
+      ]
+    },
+    {
+      "id": "multilingual-ro-paraphrase",
+      "text": "Care este bugetul pentru materialele zmeelor de la atelierul Senin?",
+      "group": "multilingual-paraphrase",
+      "language": "ro",
+      "relevant": {
+        "D8DE66BE-2151-503A-8B25-8F9D4CE4D02B": 1
+      },
+      "evidence": {
+        "D8DE66BE-2151-503A-8B25-8F9D4CE4D02B": "740 de lei"
+      },
+      "relatedButInsufficient": [
+        "05FC283D-4977-5D83-B5CC-CC2E77612074"
+      ]
+    },
+    {
+      "id": "multilingual-ro-cross-language",
+      "text": "How much has the Senin kite workshop reserved for fabric and string?",
+      "group": "multilingual-cross-language",
+      "language": "ro",
+      "relevant": {
+        "D8DE66BE-2151-503A-8B25-8F9D4CE4D02B": 1
+      },
+      "evidence": {
+        "D8DE66BE-2151-503A-8B25-8F9D4CE4D02B": "740 de lei"
+      },
+      "relatedButInsufficient": [
+        "05FC283D-4977-5D83-B5CC-CC2E77612074"
+      ]
+    },
+    {
+      "id": "multilingual-ro-absent",
+      "text": "Care este codul de acces al depozitului atelierului Senin?",
+      "group": "absent-detail",
+      "language": "ro",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "D8DE66BE-2151-503A-8B25-8F9D4CE4D02B"
+      ]
+    },
+    {
+      "id": "multilingual-ru-native",
+      "text": "Сколько кружок Ива может потратить на картон и клей?",
+      "group": "multilingual-native",
+      "language": "ru",
+      "relevant": {
+        "6D55AD94-85EF-5554-A37C-D70B829B1D65": 1
+      },
+      "evidence": {
+        "6D55AD94-85EF-5554-A37C-D70B829B1D65": "5600 рублей"
+      },
+      "relatedButInsufficient": [
+        "A6DD3801-4E52-50B8-BDD2-F230FCF5B699"
+      ]
+    },
+    {
+      "id": "multilingual-ru-paraphrase",
+      "text": "Какой бюджет у Ивы на материалы для ремонта книжных обложек?",
+      "group": "multilingual-paraphrase",
+      "language": "ru",
+      "relevant": {
+        "6D55AD94-85EF-5554-A37C-D70B829B1D65": 1
+      },
+      "evidence": {
+        "6D55AD94-85EF-5554-A37C-D70B829B1D65": "5600 рублей"
+      },
+      "relatedButInsufficient": [
+        "A6DD3801-4E52-50B8-BDD2-F230FCF5B699"
+      ]
+    },
+    {
+      "id": "multilingual-ru-cross-language",
+      "text": "What is the Iva bookbinding club’s budget for cardboard and glue?",
+      "group": "multilingual-cross-language",
+      "language": "ru",
+      "relevant": {
+        "6D55AD94-85EF-5554-A37C-D70B829B1D65": 1
+      },
+      "evidence": {
+        "6D55AD94-85EF-5554-A37C-D70B829B1D65": "5600 рублей"
+      },
+      "relatedButInsufficient": [
+        "A6DD3801-4E52-50B8-BDD2-F230FCF5B699"
+      ]
+    },
+    {
+      "id": "multilingual-ru-absent",
+      "text": "Какой код у двери мастерской кружка Ива?",
+      "group": "absent-detail",
+      "language": "ru",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "6D55AD94-85EF-5554-A37C-D70B829B1D65"
+      ]
+    },
+    {
+      "id": "multilingual-sv-native",
+      "text": "Hur mycket får Strandljus lägga på garn?",
+      "group": "multilingual-native",
+      "language": "sv",
+      "relevant": {
+        "454D8DC0-DE73-54C5-87B3-92C982A2F12F": 1
+      },
+      "evidence": {
+        "454D8DC0-DE73-54C5-87B3-92C982A2F12F": "1450 kronor"
+      },
+      "relatedButInsufficient": [
+        "18A0C6A5-15F8-5D0F-A88D-83426B333806"
+      ]
+    },
+    {
+      "id": "multilingual-sv-paraphrase",
+      "text": "Vilken budget har vävkursen Strandljus för trådmaterial?",
+      "group": "multilingual-paraphrase",
+      "language": "sv",
+      "relevant": {
+        "454D8DC0-DE73-54C5-87B3-92C982A2F12F": 1
+      },
+      "evidence": {
+        "454D8DC0-DE73-54C5-87B3-92C982A2F12F": "1450 kronor"
+      },
+      "relatedButInsufficient": [
+        "18A0C6A5-15F8-5D0F-A88D-83426B333806"
+      ]
+    },
+    {
+      "id": "multilingual-sv-cross-language",
+      "text": "How much can the Strandljus weaving course spend on yarn?",
+      "group": "multilingual-cross-language",
+      "language": "sv",
+      "relevant": {
+        "454D8DC0-DE73-54C5-87B3-92C982A2F12F": 1
+      },
+      "evidence": {
+        "454D8DC0-DE73-54C5-87B3-92C982A2F12F": "1450 kronor"
+      },
+      "relatedButInsufficient": [
+        "18A0C6A5-15F8-5D0F-A88D-83426B333806"
+      ]
+    },
+    {
+      "id": "multilingual-sv-absent",
+      "text": "Vilket är portkoden till vävkursen Strandljus?",
+      "group": "absent-detail",
+      "language": "sv",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "454D8DC0-DE73-54C5-87B3-92C982A2F12F"
+      ]
+    },
+    {
+      "id": "multilingual-tr-native",
+      "text": "Kıvılcım renkli taşlar için ne kadar harcayabilir?",
+      "group": "multilingual-native",
+      "language": "tr",
+      "relevant": {
+        "4CC0103D-BF65-590F-B4B7-862D76BCBA7A": 1
+      },
+      "evidence": {
+        "4CC0103D-BF65-590F-B4B7-862D76BCBA7A": "2300 lira"
+      },
+      "relatedButInsufficient": [
+        "51C5DA09-060F-54BD-9118-5B7DFBB2B5D7"
+      ]
+    },
+    {
+      "id": "multilingual-tr-paraphrase",
+      "text": "Kıvılcım atölyesinin mozaik malzemesi bütçesi nedir?",
+      "group": "multilingual-paraphrase",
+      "language": "tr",
+      "relevant": {
+        "4CC0103D-BF65-590F-B4B7-862D76BCBA7A": 1
+      },
+      "evidence": {
+        "4CC0103D-BF65-590F-B4B7-862D76BCBA7A": "2300 lira"
+      },
+      "relatedButInsufficient": [
+        "51C5DA09-060F-54BD-9118-5B7DFBB2B5D7"
+      ]
+    },
+    {
+      "id": "multilingual-tr-cross-language",
+      "text": "How much did the Kıvılcım mosaic workshop allocate to colored stones?",
+      "group": "multilingual-cross-language",
+      "language": "tr",
+      "relevant": {
+        "4CC0103D-BF65-590F-B4B7-862D76BCBA7A": 1
+      },
+      "evidence": {
+        "4CC0103D-BF65-590F-B4B7-862D76BCBA7A": "2300 lira"
+      },
+      "relatedButInsufficient": [
+        "51C5DA09-060F-54BD-9118-5B7DFBB2B5D7"
+      ]
+    },
+    {
+      "id": "multilingual-tr-absent",
+      "text": "Kıvılcım mozaik atölyesinin kapı şifresi nedir?",
+      "group": "absent-detail",
+      "language": "tr",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "4CC0103D-BF65-590F-B4B7-862D76BCBA7A"
+      ]
+    },
+    {
+      "id": "multilingual-uk-native",
+      "text": "Скільки Обрій може витратити на кольорове скло?",
+      "group": "multilingual-native",
+      "language": "uk",
+      "relevant": {
+        "F7EC7B5D-872F-5C97-8812-03CA963FA2B1": 1
+      },
+      "evidence": {
+        "F7EC7B5D-872F-5C97-8812-03CA963FA2B1": "1850 гривень"
+      },
+      "relatedButInsufficient": [
+        "CEAE9CB5-9CE1-547B-8812-DE494AB3CCA3"
+      ]
+    },
+    {
+      "id": "multilingual-uk-paraphrase",
+      "text": "Який бюджет має гурток Обрій на матеріал для вітражів?",
+      "group": "multilingual-paraphrase",
+      "language": "uk",
+      "relevant": {
+        "F7EC7B5D-872F-5C97-8812-03CA963FA2B1": 1
+      },
+      "evidence": {
+        "F7EC7B5D-872F-5C97-8812-03CA963FA2B1": "1850 гривень"
+      },
+      "relatedButInsufficient": [
+        "CEAE9CB5-9CE1-547B-8812-DE494AB3CCA3"
+      ]
+    },
+    {
+      "id": "multilingual-uk-cross-language",
+      "text": "How much has the Obrii stained-glass club allocated to colored glass?",
+      "group": "multilingual-cross-language",
+      "language": "uk",
+      "relevant": {
+        "F7EC7B5D-872F-5C97-8812-03CA963FA2B1": 1
+      },
+      "evidence": {
+        "F7EC7B5D-872F-5C97-8812-03CA963FA2B1": "1850 гривень"
+      },
+      "relatedButInsufficient": [
+        "CEAE9CB5-9CE1-547B-8812-DE494AB3CCA3"
+      ]
+    },
+    {
+      "id": "multilingual-uk-absent",
+      "text": "Який код сигналізації майстерні гуртка Обрій?",
+      "group": "absent-detail",
+      "language": "uk",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "F7EC7B5D-872F-5C97-8812-03CA963FA2B1"
+      ]
+    },
+    {
+      "id": "multilingual-zh-Hans-native",
+      "text": "青禾木工小组买木板和砂纸的预算是多少？",
+      "group": "multilingual-native",
+      "language": "zh-Hans",
+      "relevant": {
+        "FA1372E0-6C10-59EA-8156-7179BE166B15": 1
+      },
+      "evidence": {
+        "FA1372E0-6C10-59EA-8156-7179BE166B15": "九百元"
+      },
+      "relatedButInsufficient": [
+        "70D13627-EB6E-5861-ABA8-765E8A1EE7D6"
+      ]
+    },
+    {
+      "id": "multilingual-zh-Hans-paraphrase",
+      "text": "青禾小组可以花多少钱购买制作书架的材料？",
+      "group": "multilingual-paraphrase",
+      "language": "zh-Hans",
+      "relevant": {
+        "FA1372E0-6C10-59EA-8156-7179BE166B15": 1
+      },
+      "evidence": {
+        "FA1372E0-6C10-59EA-8156-7179BE166B15": "九百元"
+      },
+      "relatedButInsufficient": [
+        "70D13627-EB6E-5861-ABA8-765E8A1EE7D6"
+      ]
+    },
+    {
+      "id": "multilingual-zh-Hans-cross-language",
+      "text": "How much has the Qinghe woodworking group allocated to boards and sandpaper?",
+      "group": "multilingual-cross-language",
+      "language": "zh-Hans",
+      "relevant": {
+        "FA1372E0-6C10-59EA-8156-7179BE166B15": 1
+      },
+      "evidence": {
+        "FA1372E0-6C10-59EA-8156-7179BE166B15": "九百元"
+      },
+      "relatedButInsufficient": [
+        "70D13627-EB6E-5861-ABA8-765E8A1EE7D6"
+      ]
+    },
+    {
+      "id": "multilingual-zh-Hans-absent",
+      "text": "青禾木工小组工具柜的密码是多少？",
+      "group": "absent-detail",
+      "language": "zh-Hans",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "FA1372E0-6C10-59EA-8156-7179BE166B15"
+      ]
+    },
+    {
+      "id": "multilingual-zh-Hant-native",
+      "text": "海星版畫課購買油墨的預算是多少？",
+      "group": "multilingual-native",
+      "language": "zh-Hant",
+      "relevant": {
+        "C761E4A8-FFB0-5D97-A13B-ED5EAAD8D85F": 1
+      },
+      "evidence": {
+        "C761E4A8-FFB0-5D97-A13B-ED5EAAD8D85F": "一千六百元"
+      },
+      "relatedButInsufficient": [
+        "6A4210D0-469C-50A3-8896-BC0B49EE991B"
+      ]
+    },
+    {
+      "id": "multilingual-zh-Hant-paraphrase",
+      "text": "海星課程可以花多少錢添購印刷用的墨料？",
+      "group": "multilingual-paraphrase",
+      "language": "zh-Hant",
+      "relevant": {
+        "C761E4A8-FFB0-5D97-A13B-ED5EAAD8D85F": 1
+      },
+      "evidence": {
+        "C761E4A8-FFB0-5D97-A13B-ED5EAAD8D85F": "一千六百元"
+      },
+      "relatedButInsufficient": [
+        "6A4210D0-469C-50A3-8896-BC0B49EE991B"
+      ]
+    },
+    {
+      "id": "multilingual-zh-Hant-cross-language",
+      "text": "How much did the Haixing printmaking class budget for ink?",
+      "group": "multilingual-cross-language",
+      "language": "zh-Hant",
+      "relevant": {
+        "C761E4A8-FFB0-5D97-A13B-ED5EAAD8D85F": 1
+      },
+      "evidence": {
+        "C761E4A8-FFB0-5D97-A13B-ED5EAAD8D85F": "一千六百元"
+      },
+      "relatedButInsufficient": [
+        "6A4210D0-469C-50A3-8896-BC0B49EE991B"
+      ]
+    },
+    {
+      "id": "multilingual-zh-Hant-absent",
+      "text": "海星版畫課教室的門禁密碼是什麼？",
+      "group": "absent-detail",
+      "language": "zh-Hant",
+      "relevant": {},
+      "relatedButInsufficient": [
+        "C761E4A8-FFB0-5D97-A13B-ED5EAAD8D85F"
+      ]
+    },
+    {
+      "id": "long-en-native",
+      "text": "Where did the Cedar crew put the spare projector?",
+      "group": "late-evidence",
+      "language": "en",
+      "relevant": {
+        "46F11A0E-B0DB-521A-8A6C-AC0E8D5C5524": 1
+      },
+      "evidence": {
+        "46F11A0E-B0DB-521A-8A6C-AC0E8D5C5524": "The spare projector is in the locked cupboard beside the east staircase."
+      }
+    },
+    {
+      "id": "long-en-cross",
+      "text": "Which cupboard holds the spare projector in the Cedar equipment diary?",
+      "group": "late-evidence",
+      "language": "en",
+      "relevant": {
+        "46F11A0E-B0DB-521A-8A6C-AC0E8D5C5524": 1
+      },
+      "evidence": {
+        "46F11A0E-B0DB-521A-8A6C-AC0E8D5C5524": "The spare projector is in the locked cupboard beside the east staircase."
+      }
+    },
+    {
+      "id": "long-ja-native",
+      "text": "白波の予備のマイクはどこにありますか？",
+      "group": "late-evidence",
+      "language": "ja",
+      "relevant": {
+        "709C9EBE-C5E0-5A9E-93B6-0D789DF8A953": 1
+      },
+      "evidence": {
+        "709C9EBE-C5E0-5A9E-93B6-0D789DF8A953": "予備のマイクは西側の階段の隣にある青い戸棚に入っています。"
+      }
+    },
+    {
+      "id": "long-ja-cross",
+      "text": "Where is the spare microphone stored in the Shiranami equipment diary?",
+      "group": "late-evidence",
+      "language": "ja",
+      "relevant": {
+        "709C9EBE-C5E0-5A9E-93B6-0D789DF8A953": 1
+      },
+      "evidence": {
+        "709C9EBE-C5E0-5A9E-93B6-0D789DF8A953": "予備のマイクは西側の階段の隣にある青い戸棚に入っています。"
+      }
+    },
+    {
+      "id": "long-de-native",
+      "text": "Wo liegt das Ersatzstativ im Nordstern Materialprotokoll?",
+      "group": "late-evidence",
+      "language": "de",
+      "relevant": {
+        "2EB8E58B-E277-59D3-B337-468652510031": 1
+      },
+      "evidence": {
+        "2EB8E58B-E277-59D3-B337-468652510031": "Das Ersatzstativ liegt in der grünen Truhe neben dem Südeingang."
+      }
+    },
+    {
+      "id": "long-de-cross",
+      "text": "Where is the spare tripod stored in the Nordstern equipment log?",
+      "group": "late-evidence",
+      "language": "de",
+      "relevant": {
+        "2EB8E58B-E277-59D3-B337-468652510031": 1
+      },
+      "evidence": {
+        "2EB8E58B-E277-59D3-B337-468652510031": "Das Ersatzstativ liegt in der grünen Truhe neben dem Südeingang."
+      }
+    },
+    {
+      "id": "filter-active",
+      "text": "Who has the Orion cabinet key?",
+      "scope": "all",
+      "tag": "current",
+      "group": "filtered-evidence",
+      "relevant": {
+        "1B0EBEEC-8B82-5D4D-965E-8AEE62F6F8C7": 1
+      },
+      "evidence": {
+        "1B0EBEEC-8B82-5D4D-965E-8AEE62F6F8C7": "Leila"
+      }
+    },
+    {
+      "id": "filter-trash",
+      "text": "Who has the Orion cabinet key?",
+      "scope": "trash",
+      "tag": "old",
+      "group": "filtered-evidence",
+      "relevant": {
+        "5AEED07E-225A-504F-9E5D-29C35C7ECC6D": 1
+      },
+      "evidence": {
+        "5AEED07E-225A-504F-9E5D-29C35C7ECC6D": "Tomas"
+      }
+    },
+    {
+      "id": "filter-wrong-tag",
+      "text": "Who has the Orion cabinet key?",
+      "scope": "all",
+      "tag": "old",
+      "group": "filtered-absence",
+      "relevant": {}
+    },
+    {
+      "id": "filter-missing-tag",
+      "text": "Who has the Orion cabinet key?",
+      "scope": "all",
+      "tag": "nonexistent",
+      "group": "filtered-absence",
+      "relevant": {}
+    }
+  ]
+}

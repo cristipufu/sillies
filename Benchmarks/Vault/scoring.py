@@ -53,18 +53,61 @@ def validate_ranking(ranked, eligible):
         raise ValueError("Unknown, duplicated, filtered-out or excess result")
 
 
+def validate_availability(status, ranked):
+    if not isinstance(status, str) or (status not in {"ready", "preparing", "unavailable", "changed", "timedOut"}
+                                        and not status.startswith("failed(")):
+        raise ValueError("Unknown retrieval availability")
+    if status not in {"ready", "preparing"} and ranked:
+        raise ValueError("Unavailable retrieval cannot supply successful matches")
+
+
+def validate_expectations(inputs, expected):
+    documents = unique(inputs["documents"], "id")
+    queries = unique(inputs["queries"], "id")
+    if set(expected) != set(queries):
+        raise ValueError("Missing or unexpected expectation")
+    for key, query in queries.items():
+        gold = expected[key]
+        if not isinstance(gold.get("group"), str) or not gold["group"].strip():
+            raise ValueError("Each expectation needs a named group")
+        eligible = eligible_documents(query, documents)
+        relevant = gold["relevant"]
+        if not set(relevant).issubset(eligible):
+            raise ValueError("Expected document violates the query filter")
+        if any(type(value) is not int or value <= 0 or value > 4 for value in relevant.values()):
+            raise ValueError("Invalid relevance grade")
+        related = gold.get("relatedButInsufficient", [])
+        if (not isinstance(related, list) or any(not isinstance(item, str) for item in related)
+                or len(related) != len(set(related)) or not set(related).issubset(eligible)
+                or set(related) & set(relevant)):
+            raise ValueError("Related-but-insufficient labels must be eligible and disjoint from support")
+        evidence = gold.get("evidence", {})
+        if evidence and set(evidence) != set(relevant):
+            raise ValueError("Evidence must cover exactly the supporting documents")
+        for identifier, quote in evidence.items():
+            source = documents[identifier]
+            if not isinstance(quote, str) or not quote.strip() or quote not in source.get("text", ""):
+                raise ValueError("Supporting evidence is absent from its labeled document")
+
+
 def validate_exact_results(rows):
-    uses_oracle = any("exactSemantic" in row or "exactSemanticSeconds" in row for row in rows)
+    uses_oracle = any(any(key in row for key in ("exactSemantic", "exactSemanticSeconds", "exactAvailability"))
+                      for row in rows)
     if not uses_oracle:
         return False
+    reports_availability = any("exactAvailability" in row for row in rows)
     for row in rows:
         if row.get("exactSemantic") is None or row.get("exactSemanticSeconds") is None:
             raise ValueError("An exact comparison requires a completed oracle result for every query")
+        if reports_availability and "exactAvailability" not in row:
+            raise ValueError("Oracle availability must be reported consistently")
         validate_elapsed(row["exactSemanticSeconds"])
+        validate_availability(row.get("exactAvailability", "ready"), row["exactSemantic"])
     return True
 
 
 def score(inputs, expected, rows):
+    validate_expectations(inputs, expected)
     documents = unique(inputs["documents"], "id")
     queries = unique(inputs["queries"], "id")
     results = unique(rows, "id")
@@ -73,20 +116,17 @@ def score(inputs, expected, rows):
     uses_oracle = validate_exact_results(rows)
     groups = defaultdict(list)
     availability = defaultdict(int)
+    exact_availability = defaultdict(int)
+    insufficient = defaultdict(lambda: {"queries": 0, "relatedAt1": 0, "relatedAt5": 0})
     overlaps = []
     for key, query in queries.items():
         row, gold = results[key], expected[key]
         eligible = eligible_documents(query, documents)
         relevant = gold["relevant"]
-        if not set(relevant).issubset(eligible):
-            raise ValueError("Expected document violates the query filter")
-        if any(type(value) is not int or value <= 0 or value > 4 for value in relevant.values()):
-            raise ValueError("Invalid relevance grade")
         for field in ("keywordSeconds", "semanticSeconds"):
             validate_elapsed(row[field])
         status = row["availability"]
-        if status not in {"ready", "preparing", "unavailable", "changed", "timedOut"} and not status.startswith("failed("):
-            raise ValueError("Unknown retrieval availability")
+        validate_availability(status, row["semantic"])
         availability[status] += 1
         methods = ["keywords", "semantic", "fused"]
         if uses_oracle:
@@ -94,7 +134,14 @@ def score(inputs, expected, rows):
         for method in methods:
             validate_ranking(row[method], eligible)
             groups[(gold["group"], method)].append((row[method], relevant))
+            if gold.get("relatedButInsufficient"):
+                annotation = insufficient[method]
+                annotation["queries"] += 1
+                related = set(gold["relatedButInsufficient"])
+                annotation["relatedAt1"] += bool(set(row[method][:1]) & related)
+                annotation["relatedAt5"] += bool(set(row[method]) & related)
         if uses_oracle:
+            exact_availability[row.get("exactAvailability", "ready")] += 1
             exact = set(row["exactSemantic"])
             if exact:
                 overlaps.append(len(set(row["semantic"]) & exact) / len(exact))
@@ -108,9 +155,14 @@ def score(inputs, expected, rows):
         if negatives:
             summary["absentQueriesReturningSuggestions"] = sum(negatives)
         report[f"{group}/{method}"] = summary
-    return {"queries": len(queries), "documents": len(documents), "availability": dict(availability),
+    result = {"queries": len(queries), "documents": len(documents), "availability": dict(availability),
             "exactComparisonQueries": len(overlaps),
             "meanExactTop5Overlap": sum(overlaps) / len(overlaps) if overlaps else None, "groups": report}
+    if any("exactAvailability" in row for row in rows):
+        result["exactAvailability"] = dict(exact_availability)
+    if insufficient:
+        result["relatedButInsufficient"] = dict(insufficient)
+    return result
 
 
 def main():

@@ -1,5 +1,6 @@
 import importlib.util
 import math
+import json
 from pathlib import Path
 import unittest
 
@@ -37,6 +38,13 @@ class VaultRetrievalScoringTests(unittest.TestCase):
             inputs, expected, rows = self.fixture()
             change(rows)
             with self.assertRaises(ValueError): scoring.score(inputs, expected, rows)
+
+    def test_graded_relevance_uses_the_five_result_cutoff_and_full_positive_denominator(self):
+        result = scoring.metrics(["wrong", "b", "a", "other", "another", "c"], {"a": 3, "b": 1, "c": 2})
+        self.assertAlmostEqual(result["recallAt5"], 2 / 3)
+        self.assertEqual(result["precisionAt5"], 0.4)
+        self.assertEqual(result["mrrAt5"], 0.5)
+        self.assertAlmostEqual(result["ndcgAt5"], (1 / math.log2(3) + 7 / 2) / (7 + 3 / math.log2(3) + 1 / 2))
 
     def test_filters_are_checked_independently_of_expected_answers(self):
         inputs, expected, rows = self.fixture()
@@ -91,6 +99,64 @@ class VaultRetrievalScoringTests(unittest.TestCase):
         self.assertEqual(result["groups"]["example/exactSemantic"]["queries"], 1)
         inputs["queries"][0]["scope"] = "meetings"
         with self.assertRaises(ValueError): scoring.score(inputs, expected, rows)
+
+    def test_explicitly_unavailable_oracle_counts_as_a_miss_not_a_missing_measurement(self):
+        inputs, expected, rows = self.fixture()
+        rows[0].update(semantic=[], availability="unavailable", exactSemantic=[],
+                       exactSemanticSeconds=0.03, exactAvailability="unavailable")
+        report = scoring.score(inputs, expected, rows)
+        self.assertEqual(report["exactAvailability"], {"unavailable": 1})
+        self.assertEqual(report["groups"]["example/exactSemantic"]["positiveQueries"], 1)
+        self.assertEqual(report["groups"]["example/exactSemantic"]["hitAt5"], 0)
+        self.assertEqual(report["exactComparisonQueries"], 0)
+        rows[0]["exactSemantic"] = ["a"]
+        with self.assertRaises(ValueError): scoring.score(inputs, expected, rows)
+
+    def test_related_evidence_is_not_scored_as_support(self):
+        inputs, expected, rows = self.fixture()
+        expected["q"].update(relevant={}, relatedButInsufficient=["a"])
+        report = scoring.score(inputs, expected, rows)
+        self.assertEqual(report["relatedButInsufficient"]["semantic"],
+                         {"queries": 1, "relatedAt1": 0, "relatedAt5": 1})
+        self.assertEqual(report["groups"]["example/semantic"]["positiveQueries"], 0)
+        expected["q"]["relevant"] = {"a": 1}
+        with self.assertRaises(ValueError): scoring.score(inputs, expected, rows)
+
+    def test_evidence_annotations_are_checked_against_the_source_and_filter(self):
+        inputs, expected, rows = self.fixture()
+        inputs["documents"][0]["text"] = "The release budget is 320 euros."
+        expected["q"]["evidence"] = {"a": "320 euros"}
+        scoring.validate_expectations(inputs, expected)
+        expected["q"]["evidence"]["a"] = "400 euros"
+        with self.assertRaises(ValueError): scoring.validate_expectations(inputs, expected)
+        expected["q"]["evidence"] = {"b": "320 euros"}
+        with self.assertRaises(ValueError): scoring.validate_expectations(inputs, expected)
+        expected["q"].update(evidence={}, relatedButInsufficient=["trash"])
+        with self.assertRaises(ValueError): scoring.validate_expectations(inputs, expected)
+
+    def test_authored_multilingual_labels_are_complete_and_do_not_enter_worker_inputs(self):
+        import sys
+        from unittest.mock import patch
+        with patch.dict(sys.modules, {"scoring": scoring}):
+            spec = importlib.util.spec_from_file_location("prepare_vault", MODULE.with_name("prepare_scifact.py"))
+            preparer = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(preparer)
+        inputs, expected = {"documents": [], "queries": []}, {}
+        preparer.append_cases(inputs, expected, MODULE.with_name("multilingual.json"))
+        scoring.validate_expectations(inputs, expected)
+        self.assertEqual(len(inputs["documents"]), 49)
+        self.assertEqual(len(inputs["queries"]), 98)
+        for gold in expected.values():
+            self.assertEqual(set(gold.get("evidence", {})), set(gold["relevant"]))
+        for query in inputs["queries"]:
+            self.assertLessEqual(len(query["text"]), 200)
+            self.assertTrue(set(query).isdisjoint({"relevant", "group", "language", "evidence", "relatedButInsufficient"}))
+        cases = json.loads(MODULE.with_name("multilingual.json").read_text())
+        languages = {query["language"] for query in cases["queries"] if query["group"] == "multilingual-native"}
+        catalogs = {path.stem for path in MODULE.parents[2].joinpath("Localization").glob("*.json")}
+        self.assertEqual(languages, catalogs)
+        with self.assertRaises(ValueError):
+            preparer.append_cases(inputs, expected, MODULE.with_name("multilingual.json"))
 
 
 if __name__ == "__main__":

@@ -69,6 +69,48 @@ import Testing
   #expect(try fixture.database.sql.integer("SELECT COUNT(*) FROM passage_vectors") == 0)
 }
 
+@Test func semanticWorkspaceSearchRespectsExplicitTrashScopeAndRestoration() throws {
+  let fixture = try VaultPassageFixture()
+  defer { fixture.remove() }
+  let active = fixture.record("The cabinet key is with Leila.")
+  let trashed = fixture.record("The cabinet key is with Tomas.")
+  try fixture.database.commit(.init(records: [active, trashed].map(VaultRecordWrite.insert)))
+  try fixture.database.editDocument(id: trashed.id, edit: .tags(["crew"]), at: Date())
+  try fixture.database.editDocument(id: trashed.id, edit: .moveToTrash, at: Date())
+  let vector = try SearchEmbedding(space: "fixture", values: [1, 0])
+  while let passage = try fixture.database.pendingPassage() {
+    try fixture.database.savePassage(passage)
+  }
+  var candidates: [Int64] = []
+  while let item = try fixture.database.pendingVaultEmbedding(provider: "fixture") {
+    candidates.append(try #require(Int64(item.id)))
+    try fixture.database.saveVaultEmbedding(vector, for: item, provider: "fixture")
+  }
+  let reader = try VaultSemanticSearchDatabase(directory: fixture.directory)
+  let assistant = VaultSearchRequest(query: "Who has the key?")
+  #expect(
+    try reader.search(assistant, embedding: vector, provider: "fixture").map(\.header.id)
+      == [active.id])
+  var query = VaultWorkspaceQuery(scope: .trash, text: "Who has the key?")
+  query.tag = "crew"
+  #expect(
+    try reader.search(
+      .init(workspace: query), embedding: vector, provider: "fixture", candidates: candidates
+    ).map(\.header.id) == [trashed.id])
+  query.scope = .all
+  #expect(
+    try reader.search(.init(workspace: query), embedding: vector, provider: "fixture").isEmpty)
+  try fixture.database.editDocument(id: trashed.id, edit: .restore, at: Date())
+  #expect(
+    try reader.search(.init(workspace: query), embedding: vector, provider: "fixture").map(
+      \.header.id)
+      == [trashed.id])
+  query.scope = .trash
+  #expect(
+    try reader.search(.init(workspace: query), embedding: vector, provider: "fixture").isEmpty)
+  #expect(fixture.database.metrics.loadedBodies == 0)
+}
+
 @Test func vaultVersionOneMigrationBackfillsExistingDocuments() throws {
   let fixture = try VaultPassageFixture()
   defer { fixture.remove() }

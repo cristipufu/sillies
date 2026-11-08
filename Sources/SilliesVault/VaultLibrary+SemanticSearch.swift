@@ -75,6 +75,8 @@ extension VaultLibrary {
       return .init(matches: [], availability: .unavailable)
     } catch SemanticSearchDeadline.Failure.exceeded {
       return .init(matches: [], availability: .timedOut)
+    } catch SearchEmbeddingError.timedOut {
+      return .init(matches: [], availability: .timedOut)
     } catch SearchEmbeddingError.unavailable {
       return .init(matches: [], availability: .unavailable)
     } catch {

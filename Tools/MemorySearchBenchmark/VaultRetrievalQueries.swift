@@ -13,6 +13,7 @@ enum VaultRetrievalQueries {
     let semanticSeconds: Double
     let exactSemantic: [UUID]?
     let exactSemanticSeconds: Double?
+    let exactAvailability: String?
   }
 
   static func evaluate(
@@ -72,8 +73,10 @@ enum VaultRetrievalQueries {
       id: query.id, keywords: Array(keywords.prefix(5)), semantic: Array(semantic.prefix(5)),
       fused: fused,
       availability: String(describing: related.availability), keywordSeconds: keywordSeconds,
-      semanticSeconds: semanticSeconds, exactSemantic: exact,
-      exactSemanticSeconds: oracle == nil ? nil : seconds(exactStart.duration(to: .now)))
+      semanticSeconds: semanticSeconds,
+      exactSemantic: exact.map { $0.matches.prefix(5).map(\.header.id) },
+      exactSemanticSeconds: oracle == nil ? nil : seconds(exactStart.duration(to: .now)),
+      exactAvailability: exact.map { String(describing: $0.availability) })
   }
 
   private static func completedResults(_ url: URL) throws -> [Result] {

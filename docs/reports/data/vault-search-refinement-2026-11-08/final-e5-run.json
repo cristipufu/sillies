@@ -1,0 +1,8 @@
+{
+  "binarySHA256": "556d65f097880d506d648de76cc1e71a9aca535a2e0fe6a36c5e15fda037bc1a",
+  "helperSHA256": "fd3d5b4f2737ba686da14e5e2a63802c5b3818cb9009174da556da5ae171d33a",
+  "inputSHA256": "be9d8f3b5f1d70ccfa36573bae9eeb53bb43e9120faf002f42be479f15832a08",
+  "provider": "e5",
+  "identity": "e5-614241f622f53c4eeff9890bdc4f31cfecc418b3",
+  "model": "/private/tmp/sillies-retrieval-models/multilingual-e5-small/614241f622f53c4eeff9890bdc4f31cfecc418b3"
+}

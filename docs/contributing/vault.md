@@ -163,6 +163,9 @@ results indefinitely.
 Approximate search is not a promise of perfect recall. Broad relevance queries still scale with the
 number of matching blocks. The [qualification report](../reports/vault-qualification-2026-11-07.md)
 distinguishes database latency, index fidelity, actual model retrieval and passage coverage.
+The [search follow-up](../reports/vault-search-refinement-2026-11-08.md) adds provider-aware capacity
+handling, expanded multilingual evidence checks, scoped semantic retrieval and rejected exact-ranking
+experiments. Broad Best match remains the slow path at million-record scale.
 
 ## Export and backup
 

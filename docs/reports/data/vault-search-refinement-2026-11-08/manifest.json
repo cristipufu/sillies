@@ -1,0 +1,14 @@
+{
+  "source": "https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/scifact.zip",
+  "archiveSHA256": "536e14446a0ba56ed1398ab1055f39fe852686ecad24a6306c80c490fa8e0165",
+  "corpusLicense": "ODC-By 1.0",
+  "claimsLicense": "CC BY 4.0",
+  "attribution": "Wadden et al., Fact or Fiction: Verifying Scientific Claims, EMNLP 2020; BEIR test-split distribution",
+  "inputsSHA256": "be9d8f3b5f1d70ccfa36573bae9eeb53bb43e9120faf002f42be479f15832a08",
+  "expectedSHA256": "6de64e107349901428d57602a9d709b32b385524e82da371b41ca3a0cb252584",
+  "documents": 5247,
+  "queries": 433,
+  "queriesBeyondSemanticCharacterLimit": 1,
+  "additionalCasesSHA256": "cca770495f6dce5ddbe22cfd124a345b346cebb9916fdb8c6a393e7f3eacdb1c",
+  "additionalCases": "multilingual.json"
+}

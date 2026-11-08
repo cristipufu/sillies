@@ -1,0 +1,14 @@
+{
+  "unchangedResults": [
+    "apple-64-results.jsonl",
+    "apple-before-results.jsonl",
+    "apple-results.jsonl",
+    "e5-64-results.jsonl",
+    "e5-before-results.jsonl",
+    "e5-rebuilt-64-results.jsonl",
+    "e5-rebuilt-before-results.jsonl",
+    "e5-rebuilt-results.jsonl",
+    "e5-results.jsonl"
+  ],
+  "scorerSHA256": "350b60f9336b26b22989641f91001c9e12d600a4d2693a54561779cfa131e2a8"
+}

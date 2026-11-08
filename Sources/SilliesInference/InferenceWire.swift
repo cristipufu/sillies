@@ -18,11 +18,12 @@ package enum InferenceWire {
     var sent = 0
     while sent < message.count {
       let remaining = deadline - ProcessInfo.processInfo.systemUptime
-      guard remaining > 0 else { throw InferenceWorkerError.interrupted }
+      guard remaining > 0 else { throw InferenceWorkerError.timedOut }
       var descriptor = pollfd(fd: handle.fileDescriptor, events: Int16(POLLOUT), revents: 0)
       let ready = poll(
         &descriptor, 1, Int32(min(Double(Int32.max), ceil(remaining * millisecondsPerSecond))))
       if ready < 0, errno == EINTR { continue }
+      if ready == 0 { throw InferenceWorkerError.timedOut }
       guard ready > 0 else { throw InferenceWorkerError.interrupted }
       let amount = message.withUnsafeBytes {
         Darwin.write(
@@ -60,6 +61,7 @@ package enum InferenceWire {
       let milliseconds = Int32(min(Double(Int32.max), ceil(remaining * millisecondsPerSecond)))
       let ready = poll(&descriptor, 1, milliseconds)
       if ready < 0, errno == EINTR { continue }
+      if ready == 0 { throw InferenceWorkerError.timedOut }
       guard ready > 0 else { throw InferenceWorkerError.interrupted }
       let amount = data.withUnsafeMutableBytes {
         Darwin.read(handle.fileDescriptor, $0.baseAddress?.advanced(by: received), count - received)

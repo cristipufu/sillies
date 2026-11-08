@@ -35,9 +35,8 @@ public final class VaultSemanticSearchDatabase {
       } else {
         candidateFilter = ""
       }
-      let workspaceFilter = request.workspaceQuery.map(VaultWorkspaceFilter.init)
-      let workspaceConditions = workspaceFilter.map { " AND " + $0.sql } ?? ""
-      values += workspaceFilter?.values ?? []
+      let workspaceFilter = VaultWorkspaceFilter(request.workspaceQuery ?? .init())
+      values += workspaceFilter.values
       let filter: String
       switch request.category {
       case .all: filter = ""
@@ -51,7 +50,7 @@ public final class VaultSemanticSearchDatabase {
         SELECT CAST(p.id AS TEXT),v.vector,p.record_id FROM passage_vectors v
         JOIN passages p ON p.id=v.passage_id JOIN available_records r ON r.id=p.record_id
         LEFT JOIN workspace w ON w.record_id=r.id
-        WHERE v.provider=? AND v.space=? AND w.trashed IS NULL \(candidateFilter) \(workspaceConditions) \(filter)
+        WHERE v.provider=? AND v.space=? \(candidateFilter) AND \(workspaceFilter.sql) \(filter)
         """, values
       ) { row in
         try Task.checkCancellation()
@@ -69,8 +68,9 @@ public final class VaultSemanticSearchDatabase {
         try sql.rows(
           """
           SELECT r.header,p.text,w.metadata,b.section,b.ordinal FROM passages p JOIN available_records r ON r.id=p.record_id
-          JOIN content_blocks b ON b.id=p.block_id LEFT JOIN workspace w ON w.record_id=r.id WHERE p.id=? AND w.trashed IS NULL
-          """, [.text(id)]
+          JOIN content_blocks b ON b.id=p.block_id LEFT JOIN workspace w ON w.record_id=r.id
+          WHERE p.id=? AND \(workspaceFilter.sql) \(filter)
+          """, [.text(id)] + workspaceFilter.values
         ) { row in
           let header = try decoder.decode(
             SessionRecordHeader.self, from: VaultSQLConnection.data(row))

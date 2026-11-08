@@ -39,6 +39,20 @@ truncate a saved fact. E5 requires `query: ` / `passage: ` prefixes, attention-m
 L2 normalization; it must not apply an additional layer normalization.
 See the [publisher's contract](https://huggingface.co/intfloat/multilingual-e5-small).
 
+Character limits are not tokenizer limits. `EmbeddingPreparation` asks the provider whether each
+window fits, splits oversized input at character-safe boundaries, and combines unnormalized means
+weighted by actual token counts before normalizing once. Every character remains represented;
+unsupported fragments reject the complete embedding rather than returning a successful prefix.
+Cancellation, byte bounds and a finite attempt budget apply to the entire operation. An exhausted
+capacity budget leaves that input available to keyword search instead of stopping index preparation.
+
+Apple checks its native sequence capacity; E5 checks the real tokenized input including the required
+purpose prefix and special tokens. A new adapter implements this capacity decision rather than
+inventing a shared characters-per-token estimate. Keep the preparation revision in both provider and
+vector-space identities so cached vectors rebuild when the embedding algorithm changes. Canonical
+passage IDs and source locations stay stable. Settings distinguish prepared passages from passages
+that actually have searchable vectors; completed indexing does not imply complete language coverage.
+
 Apple's contextual models have distinct spaces for different script groups. Available assets and
 revisions form the index identity; missing assets fall back to keywords. Sillies does not automatically
 download Apple language assets. Apple's [Natural Language documentation](https://developer.apple.com/documentation/naturallanguage/nlcontextualembedding)

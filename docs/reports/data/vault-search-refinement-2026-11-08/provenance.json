@@ -1,0 +1,120 @@
+{
+  "baseCommit": "d5a5dcf5dc0ec33f6de1ba952ea040606cc59749",
+  "recordedAtUTC": "2026-11-08T03:05:30.973691+00:00",
+  "machine": {
+    "chip": "Apple M4 Pro",
+    "memoryBytes": 51539607552,
+    "macOS": "26.7.2",
+    "architecture": "arm64"
+  },
+  "validation": {
+    "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer make check BUILD_DIR=build/vault-search-refinement-2026-11-08/check-app",
+    "exitCode": 0,
+    "selectedSwiftTests": 1052,
+    "swiftRuns": 21,
+    "pythonTests": 125,
+    "presentation": "headless",
+    "logSHA256": "05663d639a2d045eda91e9110ead8b0227543f6e7db306485fb02bca955b308d",
+    "parentExitChecks": 3,
+    "sourceStrings": 1312
+  },
+  "finalRunPolicy": "Frozen release executables; each provider completed all 433 queries serially after make check. Earlier contended results are retained separately. This is a shared working Mac, not an isolated performance lab.",
+  "timingDefinition": {
+    "unit": "seconds",
+    "p95": "sorted samples at ceil(0.95 * count) - 1",
+    "includes": "All completed queries, including unavailable outcomes",
+    "excludes": "Model downloads, initial index preparation and UI presentation"
+  },
+  "latency": {
+    "apple": {
+      "keywordSeconds": {
+        "samples": 433,
+        "median": 0.049732083,
+        "p95": 0.094993166,
+        "maximum": 0.135400458
+      },
+      "semanticSeconds": {
+        "samples": 433,
+        "median": 0.017171042,
+        "p95": 0.045239583,
+        "maximum": 0.225809292
+      },
+      "exactSemanticSeconds": {
+        "samples": 433,
+        "median": 0.059315834,
+        "p95": 0.064318375,
+        "maximum": 0.224059375
+      }
+    },
+    "e5": {
+      "keywordSeconds": {
+        "samples": 433,
+        "median": 0.050183292,
+        "p95": 0.094161083,
+        "maximum": 0.13832275
+      },
+      "semanticSeconds": {
+        "samples": 433,
+        "median": 0.012271875,
+        "p95": 0.02500925,
+        "maximum": 0.081823333
+      },
+      "exactSemanticSeconds": {
+        "samples": 433,
+        "median": 0.042949292,
+        "p95": 0.046491416,
+        "maximum": 0.144045167
+      }
+    }
+  },
+  "e5ModelFileManifest": "docs/reports/data/vault-qualification-2026-11-07/e5-model-files.json",
+  "e5ModelFileManifestSHA256": "2fdcad62e228bf6a11af9accd9f654f97a54f6550bed84745c7a19eaae8db3cc",
+  "e5ModelFilesReverified": true,
+  "sourceFileSHA256": {
+    "Benchmarks/Vault/README.md": "3d6917b34802f0c21a0719c62ad8447cc6bb4b07a363dc332e3a42a2802af936",
+    "Benchmarks/Vault/multilingual.json": "cca770495f6dce5ddbe22cfd124a345b346cebb9916fdb8c6a393e7f3eacdb1c",
+    "Benchmarks/Vault/prepare_scifact.py": "38022baf9db10f17278e2fc97596e3bc5e491b2b7f032c6d1c5a3b5f8725227e",
+    "Benchmarks/Vault/scoring.py": "350b60f9336b26b22989641f91001c9e12d600a4d2693a54561779cfa131e2a8",
+    "Localization/cs.json": "cab6464644f218ecf607820cf171d464c01458d8d920c735c189c1a89cce841f",
+    "Localization/da.json": "459442fe30ae4ddce3c250d64c3b27a11b5311a8c53d78f7c5e7b18df98b6092",
+    "Localization/de.json": "460cd6129141224ad148bef1aa428cbcc70f68526eebf74b17bffc855ac4251f",
+    "Localization/en.json": "72c38e80cc363c2a7ac557dad3583d1fd98943ef8b0a8b46add27ee4c61be051",
+    "Localization/es.json": "cbe38bfc5f6484278934d9c9516330b694e081929776134ac4fab73615c74345",
+    "Localization/fr.json": "e1d49b4b45c4d16bed2ac52318676c81beed85a68556ea785580c4d94e1d5e28",
+    "Localization/hu.json": "2e7037e254dad1da0a4347ebf6d1b4c94e1f5bc921529174be57a8d36e621e7f",
+    "Localization/it.json": "9f233734a3fbbfb2401f3cefe01f4acf3a066161333d59568b39d4f1e7e53cb5",
+    "Localization/ja.json": "c393ebb9fc712e67df616fdf36a356fe3663005e2b15fe031e5ceee4184c7dea",
+    "Localization/ko.json": "2016d857e7f867690809fbc2bef5ff9731eef3d6168ac1c584bbf528f683bfbf",
+    "Localization/nb.json": "fab4ccbe0d9c27e4a9e3a3184d52808b4cdbab98e2f493dba0a72dd5ac9b652c",
+    "Localization/nl.json": "980be0200077e4df57cf249f0141cc8caf7315e71a94ca4e7dcc38a70a732b19",
+    "Localization/pl.json": "ca44643c11e3e1615086f3e3c319cfaecab0202313db7c32181b36e37f0a46be",
+    "Localization/pt-BR.json": "211ec39cafee08d3eaec6d9c43e419117955095a34b0c85880314bdd84d28a5a",
+    "Localization/pt-PT.json": "3e4cbcde71b37f5bb9d2fa2231fc8244f53d5f1a9770d8100f101e0cfdd6a910",
+    "Localization/ro.json": "62b1de56a8e64dae86aaf01916158d7339ade348a943594b0960eba0f5bda02e",
+    "Localization/ru.json": "e2df3163c10c4a2382ddb80a2a5e8eb8ff14b43cba193b11f653416b7ba361ba",
+    "Localization/sv.json": "b5ce550f344600952de12ef0844eadcb3da89f3e6129b113ae33a5475e57a29b",
+    "Localization/tr.json": "b7c25387fbf2cd80e48fcff7a07d0f2caa04f2b7943a2a0d1078d8d459e67955",
+    "Localization/uk.json": "9bfe226c0280d4a0ad47bc868661d035e5ce262f75614b5add414e0bddcfc297",
+    "Localization/zh-Hans.json": "bdc528fbd314e4005c9532f97df4796db60cf5c2e9d4642cf4b3e2f1da0614db",
+    "Localization/zh-Hant.json": "4579643d987b9cf3dce396f2b92352196da6b7222501861f02175fdc6f1ecd80",
+    "Sources/SilliesApp/UI/SearchModelSettingsView.swift": "700ee75b0fdf87354aa888b543262604cecdbdf20530dad5eaf2cf5413476a12",
+    "Sources/SilliesCore/SearchEmbeddingError.swift": "ef2de3b079206650116978b50b0eab4a9155bde95988767680d0fc9e82ead8f7",
+    "Sources/SilliesInference/InferenceWire.swift": "d7148ea8b13e86816e3079fd21ac027fbaf25d91a805761f54b059da452fec8d",
+    "Sources/SilliesPersistence/VaultSemanticSearchDatabase.swift": "739c796651437bf7294bfe197f8a8fd84f2180cbfee7697670f944e9d3d37ca6",
+    "Sources/SilliesSearchInference/AppleSearchEmbedding.swift": "fd4b473d6a8e58f63db9bdace48c1ba482d2189a72ab7bd950d3b007eee36ca2",
+    "Sources/SilliesSearchInference/E5SearchEmbedding.swift": "516d9880b39c663da124ce70b6a2cc86a4ad91af0f533e995e7dc7ec57594160",
+    "Sources/SilliesSearchInference/SearchEmbeddingRuntime.swift": "4cb294267b3ef76d37d02cb223768b00bc6eda01107a5bf85b4a381edf2d1861",
+    "Sources/SilliesSearchModels/EmbeddingChunk.swift": "9380acfb47e7c8482fb2b3d72961c5e03f8baefeb684b758775953565b1705f0",
+    "Sources/SilliesSearchModels/EmbeddingPreparation.swift": "e550ad8cdfb45d64dcdeb8d712dba28bd3d2f7c815d498355bb0316e888554d9",
+    "Sources/SilliesSearchModels/EmbeddingWorkerSession.swift": "60373056b83ee5f1b8f15b3b0640654d116ea0dc5c331796fb191fe6da87e10d",
+    "Sources/SilliesVault/VaultLibrary+SemanticSearch.swift": "2b8c45fda1146ab0470dbdcda4bc39d7455e1db9e4c18ce083c9a2511f674c3f",
+    "Tests/SilliesPersistenceTests/VaultPassagePersistenceTests.swift": "25793346ae2ada4799f60dd7668db52f193d3c27202e84de7f2f07ab047fc70f",
+    "Tests/SilliesSearchModelsTests/EmbeddingPreparationTests.swift": "2680c465c5c0367f522f4eeb6393a98e981e314f20dd3d40dfbc33960e3e4b0a",
+    "Tests/SilliesSearchModelsTests/InferenceWireDeadlineTests.swift": "8490af2aa12ba8b7f72576001fbc43f4a8f3f44c3734defe9fa916cc312526ed",
+    "Tests/SilliesVaultTests/VaultSemanticLifecycleTests.swift": "fc198d9f0841667dbf169d0ae80d1c301b9f1ba82097adf492a0f26b0416edde",
+    "Tests/test_vault_retrieval_scoring.py": "c8192b35a396a1c57f7d1cedb082a765fa27cb378be53425b6d8d475cc3326ab",
+    "Tools/MemorySearchBenchmark/VaultRetrievalOracle.swift": "e2a06820d0ed90c51ca8681d15c501df196c36568629c08431bd33c15e56707e",
+    "Tools/MemorySearchBenchmark/VaultRetrievalQueries.swift": "d05a4f18d36c9a91cc5235d1254877539067ce83b719bfff317810323274386a",
+    "Tools/VaultScaleBenchmark/VaultScaleBenchmark.swift": "e654088d96af15f4111ca3fc8c2fa4638eae993e87257dfdebab1be179a52804"
+  }
+}

@@ -11,6 +11,7 @@ final class SessionSpeechPipeline: Sendable {
     case languageChanged(SpeechLanguage)
     case failed(SessionFailure)
     case speakerNotice(String)
+    case recovery(SpeechRecoveryUpdate)
   }
   struct Configuration: Sendable {
     let sources: [SessionAudioSource]
@@ -318,6 +319,16 @@ final class SessionSpeechPipeline: Sendable {
     storage.withValue { state in
       state.preparation = nil
       state.group = SpeechChannelGroup(id: id, channels: channels, queue: configuration.queue)
+      for channel in channels.values {
+        channel.onRecovery { [weak self, queue = configuration.queue] update in
+          queue.async { [weak self] in
+            self?.storage.withValue { state in
+              guard state.group?.id == id, !state.stopped else { return }
+              self?.onEvent(.recovery(update))
+            }
+          }
+        }
+      }
       state.sourceOffsets.removeAll()
       if state.switching { state.transcript.markLanguage(language.name, elapsed: state.switchTime) }
       state.phase = .running

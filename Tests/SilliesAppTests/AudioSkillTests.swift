@@ -30,6 +30,7 @@ private final class FixtureAudioCapture: SessionAudioCapture, Sendable {
   func pause() {}
   func resume() {}
   func changeLanguage(_ language: SpeechLanguage) { update(.languageChanged(language)) }
+  func recover(_ update: SpeechRecoveryUpdate) { self.update(.transcriptionRecovery(update)) }
   func finish(completion: @escaping @Sendable (AudioCaptureResult) -> Void) {
     finishes.withLock { $0 += 1 }
     queue.asyncAfter(deadline: .now() + 0.02) {
@@ -361,7 +362,9 @@ private enum MeetingCaptureState: CaseIterable { case recording, paused }
   let coordinator = SkillCoordinator(
     vault: vault,
     audioFactory: { _, update in
-      let fixture = FixtureAudioCapture(update: update)
+      let fixture = FixtureAudioCapture(
+        failure: .init(category: .captureInterrupted, message: "Application stream ended"),
+        update: update)
       capture.withLock { $0 = fixture }
       return fixture
     }, audioLanguages: fixtureAudioLanguages(),
@@ -387,9 +390,44 @@ private enum MeetingCaptureState: CaseIterable { case recording, paused }
   #expect(vault.records.count == 1)
   let saved = try #require(vault.records.first)
   #expect(saved.kind == kind && saved.appName == "Meeting" && saved.windowTitle == "Project review")
+  #expect(saved.failure == nil)
   #expect(try await vault.record(id: saved.id)?.transcript == "Please ship the report on Friday.")
   #expect(!coordinator.binding(for: "mochi").isBound)
   await coordinator.shutdown()
+}
+
+@Test @MainActor func audioRecoveryStatusWaitsForBothSourcesAndSurvivesPause() async throws {
+  let capture = Mutex<FixtureAudioCapture?>(nil)
+  let session = AudioSkillSession(
+    request: .init(
+      kind: .listen, target: nil, recordingDirectory: FileManager.default.temporaryDirectory),
+    services: .init(
+      captureFactory: { _, update in
+        let fixture = FixtureAudioCapture(update: update)
+        capture.withLock { $0 = fixture }
+        return fixture
+      }, languages: fixtureAudioLanguages(), reasoning: FixtureReasoning()), onChange: {})
+  defer { session.cancel() }
+  session.start()
+  let model = session.presentation
+  try await waitForAudioCondition { model.phase == .capturing }
+  let fixture = try #require(capture.withLock { $0 })
+  let application = UUID()
+  let microphone = UUID()
+  fixture.recover(.init(channel: application, phase: .catchingUp, queuedSeconds: 30))
+  fixture.recover(.init(channel: microphone, phase: .retrying, queuedSeconds: 2))
+  try await waitForAudioCondition { model.isRecoveringTranscription }
+  fixture.recover(.init(channel: application, phase: .caughtUp, queuedSeconds: 0))
+  model.onPause?()
+  try await waitForAudioCondition { model.phase == .paused }
+  #expect(model.isRecoveringTranscription)
+  #expect(model.status == String(localized: "Paused"))
+  model.onResume?()
+  #expect(model.status == String(localized: "Transcription is catching up. Recording continues."))
+  fixture.recover(.init(channel: microphone, phase: .caughtUp, queuedSeconds: 0))
+  try await waitForAudioCondition { !model.isRecoveringTranscription }
+  #expect(model.status == String(localized: "Transcribing"))
+  #expect(model.transcriptionFailure == nil)
 }
 
 @Test @MainActor func hiddenMeetingWindowKeepsCaptureAndBindingUntilItReturns() async throws {

@@ -1216,6 +1216,7 @@
     "Transcript ready · Preparing notes": "Transcripción lista · Preparando notas",
     "Transcription": "Transcripción",
     "Transcription could not keep up. Your recording continues; choose Finish & Save to preserve it.": "La transcripción no pudo seguir el ritmo. Tu grabación continúa; elija Finalizar y guardar para conservarlo.",
+    "Transcription is catching up. Recording continues.": "La transcripción se está poniendo al día. La grabación continúa.",
     "Transcription model unavailable · Open Settings": "Modelo de transcripción no disponible · Abrir configuración",
     "Transcription uses %@. Summaries and suggestions use a separate text model.": "La transcripción usa %@. Los resúmenes y las sugerencias usan un modelo de texto independiente.",
     "Translate into": "Traducir al",

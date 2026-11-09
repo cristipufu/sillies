@@ -9,9 +9,11 @@ final class MeetingAudioProcessor {
     let microphone: AVAudioPCMBuffer
     let recording: AVAudioPCMBuffer
     let endTime: TimeInterval
+    let acoustics: VoiceAcousticWindow.Frame
   }
   private static let channelCount: AVAudioChannelCount = 1
   private static let mixGain: Float = 0.5
+  private static let fullScaleMagnitude: Float = 1
   private let format: AVAudioFormat
   private let meetingConverter: MeetingAudioResampler
   private let microphoneConverter: MeetingAudioResampler
@@ -48,6 +50,9 @@ final class MeetingAudioProcessor {
   }
 
   var microphoneEndTime: TimeInterval? { microphoneConverter.outputEndTime }
+  var referenceDiscontinuities: Int { meetingConverter.discontinuities }
+  var microphoneDiscontinuities: Int { microphoneConverter.discontinuities }
+  func echoStatistics() -> VoiceAcousticEvidence.Echo { canceller.statistics() }
 
   private static func timingFailure() -> AudioCaptureFailure {
     AudioCaptureFailure.unavailable(
@@ -84,7 +89,17 @@ final class MeetingAudioProcessor {
       meeting: buffer(frame.meeting, count: frame.validSamples),
       microphone: buffer(cleaned, count: frame.validSamples),
       recording: buffer(mixed, count: frame.validSamples),
-      endTime: frame.startTime + Double(frame.validSamples) / format.sampleRate)
+      endTime: frame.startTime + Double(frame.validSamples) / format.sampleRate,
+      acoustics: .init(
+        referenceSamples: frame.meetingSamplesPresent,
+        clippedSamples: frame.microphone.count { abs($0) >= Self.fullScaleMagnitude },
+        power: .init(
+          reference: power(frame.meeting), microphone: power(frame.microphone),
+          cleaned: power(cleaned))))
+  }
+
+  private func power(_ samples: [Float]) -> Double {
+    samples.reduce(0.0) { $0 + Double($1) * Double($1) } / Double(samples.count)
   }
 
   private func buffer(_ samples: [Float], count: Int) throws -> AVAudioPCMBuffer {

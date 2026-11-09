@@ -763,6 +763,8 @@ package final class ChatSession {
       microphonePreparationStatus = status
       onChange?()
     case .capturing: setPhase(.listening)
+    case .speechAssessment(let utterance, let evidence):
+      diagnostics.acoustics(evidence, utterance: utterance, turn: turnID)
     case .speechStarted:
       diagnostics.record(.speechDetected, turn: turnID)
       clearVoiceTiming()

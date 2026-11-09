@@ -12,6 +12,7 @@ import Testing
   #expect(frame.startTime == 100)
   #expect(frame.microphone == Array(microphone.prefix(160)))
   #expect(frame.meeting == Array(reference.prefix(160)))
+  #expect(frame.meetingSamplesPresent == 160)
   let pending = timeline.nextReadyFrame()
   #expect(pending == nil)
 }
@@ -26,6 +27,17 @@ import Testing
   #expect(frames[0].meeting.allSatisfy { $0 == 0 })
   #expect(frames[1].meeting.allSatisfy { $0 == 0.3 })
   #expect(frames[2].microphone[0] == 0.5)
+  #expect(frames.map(\.meetingSamplesPresent) == [0, 160, 0])
+}
+
+@Test func meetingTimelineDistinguishesRenderedSilenceFromMissingReference() throws {
+  var timeline = MeetingAudioTimeline()
+  try timeline.append([Float](repeating: 0, count: 160), source: .microphone, at: 100)
+  try timeline.append([Float](repeating: 0, count: 80), source: .meeting, at: 100)
+  let next = timeline.nextFinalFrame()
+  let frame = try #require(next)
+  #expect(frame.meeting.allSatisfy { $0 == 0 })
+  #expect(frame.meetingSamplesPresent == 80)
 }
 
 @Test func meetingTimelineRejectsUnboundedClockJumps() throws {

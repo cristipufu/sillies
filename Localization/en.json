@@ -1216,6 +1216,7 @@
     "Transcript ready · Preparing notes": "Transcript ready · Preparing notes",
     "Transcription": "Transcription",
     "Transcription could not keep up. Your recording continues; choose Finish & Save to preserve it.": "Transcription could not keep up. Your recording continues; choose Finish & Save to preserve it.",
+    "Transcription is catching up. Recording continues.": "Transcription is catching up. Recording continues.",
     "Transcription model unavailable · Open Settings": "Transcription model unavailable · Open Settings",
     "Transcription uses %@. Summaries and suggestions use a separate text model.": "Transcription uses %@. Summaries and suggestions use a separate text model.",
     "Translate into": "Translate into",

@@ -25,6 +25,7 @@ package final class VoiceConversationCapture: ConversationCapture {
     var preview = ""
     var lastPublication: TimeInterval = 0
     var speechStart: TimeInterval?
+    private(set) var acousticUtterance: UUID?
     var nextSequence = 0
     var turnSequence = 0
     var draining: [Int: ConversationSpeechTurn] = [:]
@@ -38,6 +39,16 @@ package final class VoiceConversationCapture: ConversationCapture {
     var microphoneStopped = false
     var finishWaiters: [@Sendable (AudioCaptureResult) -> Void] = []
     var finalResult: AudioCaptureResult?
+
+    func beginAcousticUtterance() -> UUID {
+      let id = UUID()
+      acousticUtterance = id
+      return id
+    }
+    func endAcousticUtterance() -> UUID? {
+      defer { acousticUtterance = nil }
+      return acousticUtterance
+    }
 
     func endStartup() {
       startupStage = nil
@@ -178,6 +189,10 @@ package final class VoiceConversationCapture: ConversationCapture {
           if state.preRoll.count > Self.preRollFrames { state.preRoll.removeFirst() }
           if event == .began {
             state.speechStart = time
+            update(
+              .speechAssessment(
+                utterance: state.beginAcousticUtterance(),
+                evidence: processor.assessment(at: .onset)))
             update(.speechStarted)
             if state.turn == nil { try beginTurn(state) }
             for preceding in state.preRoll.dropLast() { state.turn?.append(preceding) }
@@ -189,6 +204,11 @@ package final class VoiceConversationCapture: ConversationCapture {
             state.speechStart = nil
             let timing = processor.lastSpeechSample.flatMap {
               VoiceEndpointTiming(lastSpeechSample: $0, detected: AudioCaptureClock.now)
+            }
+            if let utterance = state.endAcousticUtterance() {
+              update(
+                .speechAssessment(
+                  utterance: utterance, evidence: processor.assessment(at: .endpoint)))
             }
             update(.speechEnded(timing))
           }
@@ -288,6 +308,7 @@ package final class VoiceConversationCapture: ConversationCapture {
           return
         }
         state.stopped = true
+        _ = state.endAcousticUtterance()
         state.endStartup()
         reference.stop()
         flushPendingAudio(state)

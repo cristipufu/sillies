@@ -107,6 +107,12 @@ selection and defer font changes during IME composition. New content follows the
 the user is following and has no selection. Empty conversations start at the top. Earlier messages
 and Latest remain conditional on content outside the viewport.
 
+Chat message text uses Foundation Markdown parsing and native attributed text for emphasis, links,
+headings, lists, quotations and code. Keep the saved/source text intact; parsing and styling belong
+to presentation. Cache parsing across appearance changes and update the existing native storage,
+preserving selected words when streamed Markdown delimiters disappear. Reading-size and palette
+changes must retain inline styles, code fonts and selection.
+
 Use headless `ChatPageNavigationTests`, `ConversationUsabilityTests`, `ConversationExportShutdownTests`,
 `ConversationClarificationTests`, `ConversationNavigationExportTests`, the date-migration regression,
 and the existing composer/reading/attachment/Talk checks. Inspect opt-in light/dark snapshots at

@@ -16,6 +16,9 @@ package final class LeasedSpeechChannel: LocalSpeechChannel {
   }
 
   package func append(_ buffer: AVAudioPCMBuffer) { channel.append(buffer) }
+  package func onRecovery(_ receive: @escaping @Sendable (SpeechRecoveryUpdate) -> Void) {
+    channel.onRecovery(receive)
+  }
 
   package func finish(completion: @escaping @Sendable () -> Void) {
     channel.finish { [lease] in

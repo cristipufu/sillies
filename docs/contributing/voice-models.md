@@ -46,6 +46,11 @@ inference SDK. Recognition, reasoning, synthesis, playback, and artwork have sep
 - Keep reference timestamps on the output presentation clock and preserve resampler stream continuity.
   Mixer tap batch sizes are not render quanta; a tap can delay the reference or miss a short utterance.
   Exercise different input/output rates and packet sizes without device-specific fixed offsets.
+- Inspect Talk's onset/endpoint acoustic assessments before attributing an empty recognition result
+  to speaker echo. Use `voiceAcousticReplay` for bounded synthetic phrase, room, timing and double-talk
+  controls. `voiceAcousticPrerecordedInvestigation` accepts explicit generated far/near WAV fixtures
+  through `SILLIES_ACOUSTIC_FAR_FIXTURE` and `SILLIES_ACOUSTIC_NEAR_FIXTURE`; it reports observed
+  detections and technical evidence, not a physical-device or general echo-quality acceptance pass.
 - Update package/import boundaries, their negative fixtures, packaged resources, and notices.
   Do not add a community runtime package as a shortcut: the current dependency policy is to use the
   existing runtimes or maintain a focused native implementation within this repository.

@@ -54,8 +54,11 @@ public struct AudioSessionLifecycle: Sendable {
     return true
   }
 
-  @discardableResult public mutating func beginFinishing(at now: TimeInterval) -> Bool {
+  @discardableResult public mutating func beginFinishing(
+    at now: TimeInterval, reason: SessionEndReason = .userFinished
+  ) -> Bool {
     guard phase != .finishing, phase != .finished else { return false }
+    if failure?.requiresAttention(ending: reason) == false { failure = nil }
     stoppedAt = stoppedAt ?? pausedAt ?? now
     phase = .finishing
     return true

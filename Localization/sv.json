@@ -1216,6 +1216,7 @@
     "Transcript ready · Preparing notes": "Avskrift klar · Förbereder anteckningar",
     "Transcription": "Transkription",
     "Transcription could not keep up. Your recording continues; choose Finish & Save to preserve it.": "Transkriptionen kunde inte hänga med. Din inspelning fortsätter; välj Slutför & Spara för att bevara den.",
+    "Transcription is catching up. Recording continues.": "Transkriberingen tar igen eftersläpningen. Inspelningen fortsätter.",
     "Transcription model unavailable · Open Settings": "Transkriptionsmodell inte tillgänglig · Öppna Inställningar",
     "Transcription uses %@. Summaries and suggestions use a separate text model.": "Transkriberingen använder %@. Sammanfattningar och förslag använder en separat textmodell.",
     "Translate into": "Översätt till",

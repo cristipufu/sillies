@@ -23,10 +23,11 @@ struct ChatMessageText: NSViewRepresentable {
   func updateNSView(_ view: NSTextView, context: Context) {
     context.coordinator.selectionChanged = selectionChanged
     NativeTextVisibility.apply(presentation, to: view)
-    ChatTypography.apply(readingSize, to: view)
-    if view.string != text { context.coordinator.replaceText(in: view, with: text) }
-    context.coordinator.resetSelection(in: view, revision: selectionReset)
     context.coordinator.applyAppearance(theme, color: color, to: view)
+    context.coordinator.updateText(
+      in: view, text: text,
+      style: .init(size: readingSize.points, ink: color, codeBackground: theme.native(.card)))
+    context.coordinator.resetSelection(in: view, revision: selectionReset)
   }
   func sizeThatFits(_ proposal: ProposedViewSize, nsView view: NSTextView, context: Context)
     -> CGSize?
@@ -40,6 +41,9 @@ struct ChatMessageText: NSViewRepresentable {
     private var selectionRevision: UUID?
     private var appliedTheme: SilliesTheme?
     private var appliedColor: NSColor?
+    private var source: String?
+    private var document: ChatMarkdownText?
+    private var style: ChatMarkdownText.Style?
     init(_ selectionChanged: @escaping (Bool) -> Void) { self.selectionChanged = selectionChanged }
     func applyAppearance(_ theme: SilliesTheme, color: NSColor, to view: NSTextView) {
       guard appliedTheme != theme || appliedColor != color else { return }
@@ -47,6 +51,9 @@ struct ChatMessageText: NSViewRepresentable {
       appliedColor = color
       TextEditorAppearance.apply(theme, to: view)
       view.textColor = color
+      view.linkTextAttributes = [
+        .foregroundColor: theme.native(.accent), .underlineStyle: NSUnderlineStyle.single.rawValue,
+      ]
     }
     func resetSelection(in view: NSTextView, revision: UUID?) {
       guard selectionRevision != revision else { return }
@@ -54,33 +61,32 @@ struct ChatMessageText: NSViewRepresentable {
       view.setSelectedRange(NSRange(location: 0, length: 0))
       selectionChanged(false)
     }
-    func replaceText(in view: NSTextView, with text: String) {
-      let previous = view.string as NSString
-      let next = text as NSString
+    func updateText(in view: NSTextView, text: String, style: ChatMarkdownText.Style) {
+      guard !view.hasMarkedText(), source != text || self.style != style else { return }
+      if source != text {
+        source = text
+        document = ChatMarkdownText(text)
+      }
+      self.style = style
+      guard let document else { return }
+      replaceText(in: view, with: document.render(style: style))
+    }
+    func replaceText(in view: NSTextView, with text: NSAttributedString) {
+      guard let storage = view.textStorage else { return }
+      let change = ChatTextReplacement(previous: view.string, next: text.string)
       let selections = view.selectedRanges
-      var prefix = 0
-      while prefix < min(previous.length, next.length),
-        previous.character(at: prefix) == next.character(at: prefix)
-      {
-        prefix += 1
+      storage.beginEditing()
+      if change.previousRange.length > 0 || change.nextRange.length > 0 {
+        storage.replaceCharacters(
+          in: change.previousRange, with: text.attributedSubstring(from: change.nextRange))
       }
-      if prefix < previous.length {
-        prefix = min(prefix, previous.rangeOfComposedCharacterSequence(at: prefix).location)
+      text.enumerateAttributes(in: NSRange(location: 0, length: text.length)) {
+        attributes, range, _ in
+        storage.setAttributes(attributes, range: range)
       }
-      if prefix < next.length {
-        prefix = min(prefix, next.rangeOfComposedCharacterSequence(at: prefix).location)
-      }
-      var attributes = ChatTypography.attributes
-      if let font = view.font { attributes[.font] = font }
-      if let color = view.textColor { attributes[.foregroundColor] = color }
-      view.textStorage?.replaceCharacters(
-        in: NSRange(location: prefix, length: previous.length - prefix),
-        with: NSAttributedString(string: next.substring(from: prefix), attributes: attributes))
+      storage.endEditing()
       view.selectedRanges = selections.map {
-        let range = $0.rangeValue
-        let location = min(range.location, next.length)
-        return NSValue(
-          range: NSRange(location: location, length: min(range.length, next.length - location)))
+        NSValue(range: change.selection($0.rangeValue))
       }
     }
     func textViewDidChangeSelection(_ notification: Notification) {

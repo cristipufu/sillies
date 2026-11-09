@@ -30,6 +30,7 @@ final class AudioSkillSession: ActiveSkillSession {
   private var suggestionGate = MeetingSuggestionGate()
   private var lastSuggestionCheck: TimeInterval = 0
   private var lastSuggestionSource = ""
+  private var recoveringChannels: Set<UUID> = []
 
   init(
     request: AudioSkillRequest,
@@ -140,28 +141,24 @@ final class AudioSkillSession: ActiveSkillSession {
   private func apply(_ update: AudioCaptureUpdate) {
     guard presentation.canFinish else { return }
     switch update {
-    case .speechStarted, .speechEnded: break
+    case .speechStarted, .speechEnded, .speechAssessment: break
     case .preparing(let message): presentation.status = message
     case .capturing(let label):
       presentation.phase = .capturing
       presentation.sourceLabel = label
-      presentation.status =
-        request.kind == .record
-        ? String(localized: "Recording microphone") : String(localized: "Transcribing")
+      updateCaptureStatus()
     case .changingLanguage(let language):
       presentation.pendingLanguageID = language.id
       presentation.status = String(localized: "Switching to \(language.name)…")
     case .languageChanged(let language):
+      recoveringChannels.removeAll()
+      presentation.isRecoveringTranscription = false
       presentation.selectedLanguageID = language.id
       presentation.pendingLanguageID = nil
       languages.preferences.remember(language, for: presentation.model)
       refreshReasoningAvailability(language)
       if presentation.phase != .preparing {
-        presentation.status =
-          presentation.isPaused
-          ? String(localized: "Paused")
-          : (request.kind == .record
-            ? String(localized: "Recording microphone") : String(localized: "Transcribing"))
+        updateCaptureStatus()
       }
     case .transcript(let text, let level, let elapsed):
       presentation.transcript = text
@@ -173,15 +170,38 @@ final class AudioSkillSession: ActiveSkillSession {
       presentation.status = String(localized: "Stopped · Open details")
       presentation.audioLevel = 0
     case .transcriptionStopped(let failure):
+      recoveringChannels.removeAll()
+      presentation.isRecoveringTranscription = false
       presentation.transcriptionFailure = failure
       presentation.pendingLanguageID = nil
       presentation.status = String(localized: "Recording · Transcription stopped")
       suggestionTask?.cancel()
       suggestionTask = nil
+    case .transcriptionRecovery(let recovery):
+      switch recovery.phase {
+      case .retrying, .catchingUp: recoveringChannels.insert(recovery.channel)
+      case .caughtUp, .stopped: recoveringChannels.remove(recovery.channel)
+      }
+      presentation.isRecoveringTranscription = !recoveringChannels.isEmpty
+      if presentation.transcriptionFailure == nil { updateCaptureStatus() }
     case .speakerDetectionNotice(let message):
       presentation.speakerDetectionNotice = message
     }
     onChange()
+  }
+
+  private func updateCaptureStatus() {
+    if presentation.isPaused {
+      presentation.status = String(localized: "Paused")
+    } else if presentation.transcriptionFailure != nil {
+      presentation.status = String(localized: "Recording · Transcription stopped")
+    } else if presentation.isRecoveringTranscription {
+      presentation.status = String(localized: "Transcription is catching up. Recording continues.")
+    } else {
+      presentation.status =
+        request.kind == .record
+        ? String(localized: "Recording microphone") : String(localized: "Transcribing")
+    }
   }
 
   private func pause() {
@@ -199,11 +219,7 @@ final class AudioSkillSession: ActiveSkillSession {
     guard presentation.phase == .paused else { return }
     service?.resume()
     presentation.phase = .capturing
-    presentation.status =
-      presentation.transcriptionFailure == nil
-      ? (request.kind == .record
-        ? String(localized: "Recording microphone") : String(localized: "Transcribing"))
-      : String(localized: "Recording · Transcription stopped")
+    updateCaptureStatus()
     onChange()
   }
 
@@ -276,7 +292,7 @@ final class AudioSkillSession: ActiveSkillSession {
       }
     }
     if let service {
-      service.finish(completion: completed)
+      service.finish(ending: context.endReason, completion: completed)
     } else {
       completed(
         AudioCaptureResult(

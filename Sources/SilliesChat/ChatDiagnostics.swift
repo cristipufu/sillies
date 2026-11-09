@@ -9,6 +9,7 @@ import SilliesDiagnostics
   private var phase: ChatSession.Phase?
   private var measuredTurn: UUID?
   private var reported: Set<DiagnosticEvent.Metric> = []
+  private var acousticTurn: (utterance: UUID, turn: UUID)?
 
   init(sink: DiagnosticSink) { self.sink = sink }
 
@@ -31,6 +32,34 @@ import SilliesDiagnostics
   func speechAttempt(_ attempt: UUID, for turn: UUID) {
     var event = DiagnosticEvent(.synthesis, .started, operation: attempt)
     event.relatedOperation = turn
+    sink.record(event)
+  }
+
+  func acoustics(_ evidence: VoiceAcousticEvidence, utterance: UUID, turn: UUID) {
+    if evidence.boundary == .onset { acousticTurn = (utterance, turn) }
+    let originalTurn = acousticTurn?.utterance == utterance ? acousticTurn?.turn ?? turn : turn
+    if evidence.boundary == .endpoint, acousticTurn?.utterance == utterance { acousticTurn = nil }
+    var values = DiagnosticAcoustics(
+      boundary: evidence.boundary == .onset ? .onset : .endpoint, utterance: utterance)
+    values.samples = evidence.window.samples
+    values.referenceSamples = evidence.window.referenceSamples
+    values.clippedSamples = evidence.window.clippedSamples
+    values.referenceDecibels = evidence.window.referenceDecibels
+    values.microphoneDecibels = evidence.window.microphoneDecibels
+    values.cleanedDecibels = evidence.window.cleanedDecibels
+    values.droppedReferenceFrames = evidence.delivery.droppedReferenceFrames
+    values.rejectedReferenceFrames = evidence.delivery.rejectedReferenceFrames
+    values.staleReferenceFrames = evidence.delivery.staleReferenceFrames
+    values.referenceDiscontinuities = evidence.delivery.referenceDiscontinuities
+    values.microphoneDiscontinuities = evidence.delivery.microphoneDiscontinuities
+    values.referenceAgeMilliseconds = evidence.delivery.referenceAgeMilliseconds
+    values.echoDelayMilliseconds = evidence.echo.delayMilliseconds
+    values.echoReturnLossDecibels = evidence.echo.returnLossDecibels
+    values.echoReductionDecibels = evidence.echo.reductionDecibels
+    var event = DiagnosticEvent(.capture, .acousticAssessment, operation: originalTurn)
+    event.relatedOperation = session
+    event.phase = phase.flatMap { DiagnosticEvent.Phase(rawValue: $0.rawValue) }
+    event.acoustics = values
     sink.record(event)
   }
 

@@ -8,12 +8,13 @@ package struct DiagnosticEvent: Codable, Sendable, Equatable {
   package enum Action: String, Codable, Sendable {
     case started, completed, failed, cancelled, preempted, phaseChanged, speechDetected
     case speechEnded, emptyRecognition, recoveryStarted, playbackInterrupted, modelSelected
-    case milestone, eventsDropped, contextPrepared
+    case milestone, eventsDropped, contextPrepared, acousticAssessment
   }
   package enum Reason: String, Codable, Sendable {
     case userStop, microphoneMuted, voiceEnded, sessionClosed, speechDetected, recognizedWords
     case recognitionPriority, interactivePriority, incompatibleMemory, runtimeCancellation
     case emptyRecognition, explicitContinuation, playbackInterruption
+    case recognitionRecovery
     case captureByteLimit, captureCallbackLimit, captureDurationLimit
   }
   package enum Phase: String, Codable, Sendable {
@@ -42,6 +43,7 @@ package struct DiagnosticEvent: Codable, Sendable, Equatable {
   package var metric: Metric?
   package var milliseconds: Double?
   package var count: Int?
+  package var acoustics: DiagnosticAcoustics?
   package private(set) var model: String?
   package private(set) var provider: String?
 
@@ -76,6 +78,7 @@ package struct DiagnosticEvent: Codable, Sendable, Equatable {
     event.model = model.flatMap(Self.identifier)
     event.provider = provider.flatMap(Self.identifier)
     event.failure = failure?.validated()
+    event.acoustics = acoustics?.validated()
     if let milliseconds, !milliseconds.isFinite || milliseconds < 0 {
       event.milliseconds = nil
     }

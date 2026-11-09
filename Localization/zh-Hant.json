@@ -1208,6 +1208,7 @@
     "Transcript ready · Preparing notes": "成績單準備好·準備筆記",
     "Transcription": "轉錄",
     "Transcription could not keep up. Your recording continues; choose Finish & Save to preserve it.": "轉錄無法跟上。您的錄音仍在繼續；選擇完成並儲存以保存它。",
+    "Transcription is catching up. Recording continues.": "轉寫正在追趕進度。錄音仍在繼續。",
     "Transcription model unavailable · Open Settings": "轉錄模型不可用 · 開啟設置",
     "Transcription uses %@. Summaries and suggestions use a separate text model.": "轉錄使用 %@。摘要和建議使用獨立的文字模型。",
     "Translate into": "翻譯成",

@@ -4,6 +4,15 @@ import XCTest
 @testable import SilliesSpeech
 
 final class SpeechWindowTests: XCTestCase {
+  func testBacklogReadsPreserveShortVoicedFramesInsideSilence() throws {
+    var buffer = SpeechWindowBuffer()
+    let quietFrame = [Float](repeating: 0.003, count: 160)
+    let silence = [Float](repeating: 0, count: 1_440)
+    try buffer.appendAnalysisFrames(quietFrame + silence)
+    let window = try XCTUnwrap(buffer.next(mode: .draining))
+    XCTAssertEqual(Array(window.samples.prefix(160)), quietFrame)
+    XCTAssertEqual(window.start, 0)
+  }
   func testWordAttachmentsPreservePunctuationAndHyphens() {
     var transcript = SpeechWindowTranscript()
     let result = transcript.receive(

@@ -1224,6 +1224,7 @@
     "Transcript ready · Preparing notes": "Transcript gata · Pregătirea notelor",
     "Transcription": "Transcriere",
     "Transcription could not keep up. Your recording continues; choose Finish & Save to preserve it.": "Transcrierea nu a putut ține pasul. Înregistrarea dvs. continuă; alegeți Finish & Save pentru a-l păstra.",
+    "Transcription is catching up. Recording continues.": "Transcrierea recuperează întârzierea. Înregistrarea continuă.",
     "Transcription model unavailable · Open Settings": "Modelul de transcriere indisponibil · Deschide Setări",
     "Transcription uses %@. Summaries and suggestions use a separate text model.": "Transcrierea folosește %@. Rezumatele și sugestiile folosesc un model de text separat.",
     "Translate into": "Traduceți în",

@@ -13,6 +13,29 @@ private enum PreemptionOrder: CaseIterable {
   case beforeSpeech, duringRecognition, afterEmptyResult
 }
 
+@Test @MainActor
+private func chatAcousticEvidenceKeepsTheInterruptedTurnAcrossRecognitionCancellation() {
+  let events = Mutex<[DiagnosticEvent]>([])
+  let diagnostics = ChatDiagnostics(sink: .init { event in events.withLock { $0.append(event) } })
+  let original = UUID()
+  let replacement = UUID()
+  let utterance = UUID()
+  diagnostics.phaseChanged(.speaking, turn: original)
+  diagnostics.acoustics(
+    .init(boundary: .onset, window: .init(), delivery: .init(), echo: .init()),
+    utterance: utterance, turn: original)
+  diagnostics.record(.cancelled, turn: original, reason: .recognizedWords)
+  diagnostics.phaseChanged(.listening, turn: replacement)
+  diagnostics.acoustics(
+    .init(boundary: .endpoint, window: .init(), delivery: .init(), echo: .init()),
+    utterance: utterance, turn: replacement)
+  let evidence = events.withLock { $0.filter { $0.action == .acousticAssessment } }
+  #expect(evidence.map(\.operation) == [original, original])
+  #expect(evidence.map { $0.acoustics?.utterance } == [utterance, utterance])
+  #expect(evidence.map { $0.acoustics?.boundary } == [.onset, .endpoint])
+  #expect(evidence[0].relatedOperation == evidence[1].relatedOperation)
+}
+
 @Test(arguments: PreemptionOrder.allCases) @MainActor
 private func emptyInterruptionRecoversOnlyUnconfirmedPhrasesWithoutRepeatingInference(
   _ order: PreemptionOrder

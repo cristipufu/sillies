@@ -8,6 +8,10 @@ final class ConversationAudioProcessor {
   private let audio: MeetingAudioProcessor
   private let detector: VoiceActivityDetector
   private var microphoneEnd: TimeInterval?
+  private var acousticWindow = VoiceAcousticWindow()
+  private var delivery = VoiceAcousticEvidence.Delivery()
+  private var lastReferenceEnd: TimeInterval?
+  private var processedEnd: TimeInterval?
   var lastSpeechSample: TimeInterval? { detector.lastSpeechSample }
 
   init(reference: VoicePlaybackReference) throws {
@@ -24,11 +28,19 @@ final class ConversationAudioProcessor {
   func appendMicrophone(_ microphone: AVAudioPCMBuffer, at time: TimeInterval) throws {
     dispatchPrecondition(condition: .notOnQueue(.main))
     // Reference callbacks can precede device playback by output latency. The timeline holds both sources.
-    for frame in reference.drain() {
+    let batch = reference.drain()
+    delivery.droppedReferenceFrames = adding(delivery.droppedReferenceFrames, batch.droppedFrames)
+    delivery.rejectedReferenceFrames = adding(
+      delivery.rejectedReferenceFrames, batch.rejectedFrames)
+    for frame in batch.frames {
+      let end = frame.startTime + Double(frame.samples.count) / frame.sampleRate
+      lastReferenceEnd = max(lastReferenceEnd ?? end, end)
       guard
-        frame.startTime + Double(frame.samples.count) / frame.sampleRate
-          >= time - MeetingAudioTimeline.callbackHoldback
-      else { continue }
+        end >= time - MeetingAudioTimeline.callbackHoldback
+      else {
+        delivery.staleReferenceFrames = adding(delivery.staleReferenceFrames, 1)
+        continue
+      }
       try audio.append(Self.buffer(frame), source: .application, at: frame.startTime)
     }
     try audio.append(microphone, source: .microphone, at: time)
@@ -41,6 +53,8 @@ final class ConversationAudioProcessor {
       let output = try audio.nextReadyOutput(
         through: microphoneEnd - MeetingAudioTimeline.callbackHoldback)
     else { return nil }
+    acousticWindow.append(output.acoustics)
+    processedEnd = output.endTime
     return (
       output.microphone, try detector.consume(output.microphone, endingAt: output.endTime),
       output.endTime
@@ -61,6 +75,22 @@ final class ConversationAudioProcessor {
   }
 
   func beginNextTurn() { detector.beginNextTurn() }
+
+  func assessment(at boundary: VoiceAcousticEvidence.Boundary) -> VoiceAcousticEvidence {
+    delivery.referenceDiscontinuities = audio.referenceDiscontinuities
+    delivery.microphoneDiscontinuities = audio.microphoneDiscontinuities
+    if let processedEnd, let lastReferenceEnd {
+      delivery.referenceAgeMilliseconds = (processedEnd - lastReferenceEnd) * 1_000
+    }
+    return .init(
+      boundary: boundary, window: acousticWindow.snapshot, delivery: delivery,
+      echo: audio.echoStatistics())
+  }
+
+  private func adding(_ count: Int, _ increment: Int) -> Int {
+    let sum = count.addingReportingOverflow(increment)
+    return sum.overflow ? Int.max : sum.partialValue
+  }
 
   private static func buffer(_ frame: AudioRenderFrame) throws -> AVAudioPCMBuffer {
     guard let count = AVAudioFrameCount(exactly: frame.samples.count),

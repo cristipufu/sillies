@@ -21,6 +21,19 @@ final class MeetingEchoCanceller {
     try check(sillies_echo_reset(state))
   }
 
+  func statistics() -> VoiceAcousticEvidence.Echo {
+    dispatchPrecondition(condition: .notOnQueue(.main))
+    var statistics = SilliesEchoStatistics()
+    guard sillies_echo_statistics(state, &statistics) == 0 else { return .init() }
+    var result = VoiceAcousticEvidence.Echo()
+    result.delayMilliseconds = finite(statistics.delay_ms)
+    result.returnLossDecibels = finite(statistics.return_loss_db)
+    result.reductionDecibels = finite(statistics.reduction_db)
+    return result
+  }
+
+  private func finite(_ value: Double) -> Double? { value.isFinite ? value : nil }
+
   func process(reference: [Float], microphone: [Float]) throws -> [Float] {
     dispatchPrecondition(condition: .notOnQueue(.main))
     guard reference.count == MeetingAudioTimeline.frameSamples,

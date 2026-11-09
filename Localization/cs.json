@@ -1224,6 +1224,7 @@
     "Transcript ready · Preparing notes": "Přepis připraven · Příprava poznámek",
     "Transcription": "Přepis",
     "Transcription could not keep up. Your recording continues; choose Finish & Save to preserve it.": "Přepis nestíhal. Vaše nahrávání pokračuje; zvolte Dokončit a uložit, chcete-li jej zachovat.",
+    "Transcription is catching up. Recording continues.": "Přepis dohání zpoždění. Nahrávání pokračuje.",
     "Transcription model unavailable · Open Settings": "Model přepisu není k dispozici · Otevřete Nastavení",
     "Transcription uses %@. Summaries and suggestions use a separate text model.": "Přepis používá %@. Souhrny a návrhy používají samostatný textový model.",
     "Translate into": "Přeložit do",

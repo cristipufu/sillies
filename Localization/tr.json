@@ -1216,6 +1216,7 @@
     "Transcript ready · Preparing notes": "Transkript hazır · Notların hazırlanması",
     "Transcription": "Transkripsiyon",
     "Transcription could not keep up. Your recording continues; choose Finish & Save to preserve it.": "Transkripsiyon devam edemedi. Kaydınız devam ediyor; korumak için Sonlandır ve Kaydet'i seçin.",
+    "Transcription is catching up. Recording continues.": "Yazıya dökme işlemi arayı kapatıyor. Kayıt devam ediyor.",
     "Transcription model unavailable · Open Settings": "Transkripsiyon modeli kullanılamıyor · Ayarları Aç",
     "Transcription uses %@. Summaries and suggestions use a separate text model.": "Metne dönüştürmede %@ kullanılır. Özetler ve öneriler ayrı bir metin modeli kullanır.",
     "Translate into": "Çevir",

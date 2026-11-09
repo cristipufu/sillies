@@ -1216,6 +1216,7 @@
     "Transcript ready · Preparing notes": "Afschrift gereed · Aantekeningen voorbereiden",
     "Transcription": "Transcriptie",
     "Transcription could not keep up. Your recording continues; choose Finish & Save to preserve it.": "De transcriptie kon het niet bijhouden. Je opname gaat door; kies Voltooien en opslaan om het te behouden.",
+    "Transcription is catching up. Recording continues.": "De transcriptie haalt de achterstand in. De opname gaat door.",
     "Transcription model unavailable · Open Settings": "Transcriptiemodel niet beschikbaar · Open Instellingen",
     "Transcription uses %@. Summaries and suggestions use a separate text model.": "Transcriptie gebruikt %@. Samenvattingen en suggesties gebruiken een apart tekstmodel.",
     "Translate into": "Vertalen naar",

@@ -1208,6 +1208,7 @@
     "Transcript ready · Preparing notes": "성적 증명서 준비됨 · 메모 준비 중",
     "Transcription": "전사",
     "Transcription could not keep up. Your recording continues; choose Finish & Save to preserve it.": "전사를 따라갈 수 없습니다. 녹음은 계속됩니다. 보존하려면 완료 및 저장을 선택하세요.",
+    "Transcription is catching up. Recording continues.": "받아쓰기 지연을 해소하고 있습니다. 녹음은 계속됩니다.",
     "Transcription model unavailable · Open Settings": "전사 모델을 사용할 수 없음 · 설정 열기",
     "Transcription uses %@. Summaries and suggestions use a separate text model.": "받아쓰기에는 %@을(를) 사용합니다. 요약과 제안에는 별도의 텍스트 모델을 사용합니다.",
     "Translate into": "번역하다",

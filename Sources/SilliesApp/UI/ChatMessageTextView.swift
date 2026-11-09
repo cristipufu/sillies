@@ -12,7 +12,7 @@ import AppKit
     isEditable = false
     isSelectable = true
     drawsBackground = false
-    isRichText = false
+    isRichText = true
     isVerticallyResizable = false
     isHorizontallyResizable = false
     textContainerInset = .zero

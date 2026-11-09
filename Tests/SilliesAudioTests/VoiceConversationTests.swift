@@ -78,23 +78,98 @@ func voicePlaybackReferenceIsBoundedAndIgnoresStoppedAndInvalidInput(sampleCount
   let frame = AudioRenderFrame(
     samples: [Float](repeating: 0.1, count: sampleCount), sampleRate: 48_000, startTime: 100)
   reference.append(frame)
-  #expect(reference.drain().isEmpty)
+  #expect(reference.drain().frames.isEmpty)
   reference.start()
   for _ in 0..<10_000 { reference.append(frame) }
-  let frames = reference.drain()
+  let batch = reference.drain()
+  let frames = batch.frames
   #expect(!frames.isEmpty)
   #expect(frames.count <= 512)
+  #expect(batch.droppedFrames > 0)
   // Small native quanta must retain at least a second of reference when capture is briefly busy.
   let retainedSamples = frames.reduce(0) { $0 + $1.samples.count }
   #expect(retainedSamples >= 48_000)
   #expect(retainedSamples <= 192_000)
   reference.append(.init(samples: [1], sampleRate: .nan, startTime: 1))
   reference.append(.init(samples: [1], sampleRate: 16_000, startTime: .infinity))
-  #expect(reference.drain().isEmpty)
+  let rejected = reference.drain()
+  #expect(rejected.frames.isEmpty && rejected.rejectedFrames == 2)
   reference.append(frame)
   reference.stop()
   reference.append(frame)
-  #expect(reference.drain().isEmpty)
+  #expect(reference.drain().frames.isEmpty)
+}
+
+@Test func voiceConversationEmitsTwoAcousticBoundariesAndStopsTheirDelivery() async throws {
+  let harness = ConversationHarness()
+  let capture = harness.makeCapture()
+  capture.start()
+  try await harness.wait { harness.capturing.withLock { $0 } == 1 }
+  try await harness.beginSpeech()
+  harness.microphone.receive.withLock { $0 }?(try conversationAudio(.silence, at: 101))
+  harness.microphone.receive.withLock { $0 }?(try conversationAudio(.silence, at: 102))
+  try await harness.wait {
+    harness.updates.withLock { updates in
+      updates.contains {
+        if case .speechAssessment(_, let value) = $0 { value.boundary == .endpoint } else { false }
+      }
+    }
+  }
+  let assessments = harness.updates.withLock { updates in
+    updates.compactMap { if case .speechAssessment(_, let value) = $0 { value } else { nil } }
+  }
+  #expect(assessments.map(\.boundary) == [.onset, .endpoint])
+  #expect(assessments.allSatisfy { $0.window.samples > 0 && $0.window.samples <= 16_000 })
+  let results = Mutex(0)
+  capture.finish { _ in results.withLock { $0 += 1 } }
+  harness.speech.complete()
+  try await harness.wait { results.withLock { $0 } == 1 }
+  let count = harness.updates.withLock { $0.count }
+  harness.microphone.receive.withLock { $0 }?(try conversationAudio(.speech, at: 103))
+  await withCheckedContinuation { continuation in harness.queue.async { continuation.resume() } }
+  #expect(harness.updates.withLock { $0.count } == count)
+}
+
+@Test func voicePlaybackReferenceLossCountersRemainAtomicAcrossConcurrentDrainAndRestart() async {
+  let reference = VoicePlaybackReference()
+  let frame = AudioRenderFrame(
+    samples: [Float](repeating: 0.1, count: 128), sampleRate: 48_000, startTime: 100)
+  let invalid = AudioRenderFrame(samples: [1], sampleRate: .nan, startTime: 100)
+  let totals = Mutex((frames: 0, dropped: 0, rejected: 0))
+  reference.start()
+  func drain() {
+    let batch = reference.drain()
+    totals.withLock {
+      $0.frames += batch.frames.count
+      $0.dropped += batch.droppedFrames
+      $0.rejected += batch.rejectedFrames
+    }
+  }
+  await withTaskGroup(of: Void.self) { group in
+    for _ in 0..<4 {
+      group.addTask {
+        for _ in 0..<1_000 {
+          reference.append(frame)
+          reference.append(invalid)
+        }
+      }
+    }
+    group.addTask {
+      for _ in 0..<100 {
+        drain()
+        await Task.yield()
+      }
+    }
+  }
+  drain()
+  let result = totals.withLock { $0 }
+  #expect(result.frames + result.dropped == 4_000)
+  #expect(result.rejected == 4_000)
+  reference.stop()
+  reference.append(invalid)
+  reference.start()
+  let restarted = reference.drain()
+  #expect(restarted.frames.isEmpty && restarted.droppedFrames == 0 && restarted.rejectedFrames == 0)
 }
 
 private final class ConversationHarness: Sendable {

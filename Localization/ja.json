@@ -1208,6 +1208,7 @@
     "Transcript ready · Preparing notes": "成績証明書の準備完了 · メモの準備中",
     "Transcription": "転写",
     "Transcription could not keep up. Your recording continues; choose Finish & Save to preserve it.": "文字起こしが追いつきませんでした。録音は続行されます。 [完了して保存] を選択して保存します。",
+    "Transcription is catching up. Recording continues.": "文字起こしの遅れを取り戻しています。録音は続いています。",
     "Transcription model unavailable · Open Settings": "文字起こしモデルは利用できません · 設定を開きます",
     "Transcription uses %@. Summaries and suggestions use a separate text model.": "文字起こしには%@を使用します。要約と提案には別のテキストモデルを使用します。",
     "Translate into": "に翻訳します",

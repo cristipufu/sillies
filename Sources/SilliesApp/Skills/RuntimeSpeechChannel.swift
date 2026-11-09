@@ -12,6 +12,9 @@ final class RuntimeSpeechChannel: LocalSpeechChannel {
   }
 
   func append(_ buffer: AVAudioPCMBuffer) { channel.append(buffer) }
+  func onRecovery(_ receive: @escaping @Sendable (SpeechRecoveryUpdate) -> Void) {
+    channel.onRecovery(receive)
+  }
   func finish(completion: @escaping @Sendable () -> Void) { channel.finish(completion: completion) }
   func cancel() { channel.cancel() }
 }

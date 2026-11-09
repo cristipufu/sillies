@@ -9,6 +9,7 @@ public struct MeetingAudioTimeline {
     public let meeting: [Float]
     public let microphone: [Float]
     public let validSamples: Int
+    public let meetingSamplesPresent: Int
   }
   public static let sampleRate = 16_000
   public static let frameSamples = 160
@@ -69,7 +70,8 @@ public struct MeetingAudioTimeline {
     let frame = Frame(
       startTime: origin + Double(cursor) / Double(Self.sampleRate),
       meeting: meeting.read(at: cursor, count: Self.frameSamples),
-      microphone: microphone.read(at: cursor, count: Self.frameSamples), validSamples: validSamples)
+      microphone: microphone.read(at: cursor, count: Self.frameSamples), validSamples: validSamples,
+      meetingSamplesPresent: meeting.presentSamples(at: cursor, count: validSamples))
     cursor += validSamples
     hasEmitted = true
     return frame
@@ -95,6 +97,9 @@ public struct MeetingAudioTimeline {
         let index = slot(position)
         return positions[index] == position ? samples[index] : 0
       }
+    }
+    func presentSamples(at start: Int, count: Int) -> Int {
+      (start..<(start + count)).count { positions[slot($0)] == $0 }
     }
     private func slot(_ position: Int) -> Int {
       let remainder = position % samples.count

@@ -65,6 +65,9 @@ struct AudioSessionHeader: View {
     if model.transcriptionFailure != nil, model.phase == .capturing {
       return String(localized: "Recording · Transcription stopped")
     }
+    if model.isRecoveringTranscription, model.phase == .capturing {
+      return String(localized: "Transcription is catching up. Recording continues.")
+    }
     if model.pendingLanguageID != nil { return String(localized: "Changing language…") }
     switch model.phase {
     case .preparing:

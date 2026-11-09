@@ -412,7 +412,10 @@ final class SkillCoordinator {
     finishSession(for: id, completionTarget: binding(for: id).boundTarget)
   }
 
-  private func finishSession(for id: String, completionTarget: WindowTargetCandidate?) {
+  private func finishSession(
+    for id: String, completionTarget: WindowTargetCandidate?,
+    reason: SessionEndReason = .userFinished
+  ) {
     guard let session = sessions.removeValue(forKey: id),
       case .active(let target, let skill, let startedAt, _, _) = binding(for: id)
     else { return }
@@ -427,7 +430,7 @@ final class SkillCoordinator {
     finishingSessions[finishID] = session
     let context = SkillFinalizeContext(
       now: ProcessInfo.processInfo.systemUptime, startedAt: startedAt,
-      companionID: id, companionName: request.companionName, target: target)
+      companionID: id, companionName: request.companionName, target: target, endReason: reason)
     setBinding(
       .active(
         target: completionTarget, skill: skill, startedAt: startedAt,
@@ -552,7 +555,7 @@ final class SkillCoordinator {
         guard let session = sessions[id] else { continue }
         let snapshot = target.flatMap { snapshots[$0.windowID] }
         if let target, snapshot?.hasClosed(target) == true {
-          finishSession(for: id, completionTarget: nil)
+          finishSession(for: id, completionTarget: nil, reason: .sourceClosed)
           continue
         }
         target = updatedTarget(target, snapshots: snapshots)

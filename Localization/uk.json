@@ -1232,6 +1232,7 @@
     "Transcript ready · Preparing notes": "Стенограма готова · Готуємо нотатки",
     "Transcription": "Транскрипція",
     "Transcription could not keep up. Your recording continues; choose Finish & Save to preserve it.": "Транскрипція не встигла. Ваш запис триває; виберіть «Завершити та зберегти», щоб зберегти його.",
+    "Transcription is catching up. Recording continues.": "Транскрибування надолужує відставання. Запис триває.",
     "Transcription model unavailable · Open Settings": "Модель транскрипції недоступна · Відкрийте налаштування",
     "Transcription uses %@. Summaries and suggestions use a separate text model.": "Для транскрипції використовується %@. Для підсумків і пропозицій використовується окрема текстова модель.",
     "Translate into": "Перекласти на",

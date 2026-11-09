@@ -3,7 +3,7 @@ import Foundation
 
 /// Keeps only the current utterance and a short overlap, independent of session length.
 struct SpeechWindowBuffer {
-  enum Mode { case live, draining }
+  enum Mode { case live, catchingUp, draining }
   enum Completion { case draft, boundary, utterance, session }
   struct Window {
     let samples: [Float]
@@ -18,8 +18,10 @@ struct SpeechWindowBuffer {
   private static let silenceDuration: TimeInterval = 0.6
   private static let leadingContext: TimeInterval = 0.2
   private static let speechThreshold: Float = 0.002
+  private static let analysisFrameSamples = 160
   private(set) var samples: [Float] = []
   private var startSample: Int64 = 0
+  var retainedStartSample: Int64 { startSample }
   private var lastDecodedCount = 0
   private var silentSamples = 0
   private var hasSpeech = false
@@ -44,6 +46,16 @@ struct SpeechWindowBuffer {
     }
   }
 
+  /// Disk read sizes must not dilute a short voiced frame into the surrounding silence.
+  mutating func appendAnalysisFrames(_ incoming: [Float]) throws {
+    guard samples.count + incoming.count <= Int(Self.maximumBufferedDuration * Self.sampleRate)
+    else { throw SpeechError.overloaded }
+    for start in stride(from: 0, to: incoming.count, by: Self.analysisFrameSamples) {
+      let end = min(incoming.count, start + Self.analysisFrameSamples)
+      try append(Array(incoming[start..<end]))
+    }
+  }
+
   mutating func next(mode: Mode) -> Window? {
     guard !samples.isEmpty else { return nil }
     if !hasSpeech {
@@ -62,7 +74,9 @@ struct SpeechWindowBuffer {
       completion = .boundary
     } else if mode == .draining {
       completion = .session
-    } else if samples.count - lastDecodedCount >= Int(cadence.interval * Self.sampleRate) {
+    } else if mode == .live,
+      samples.count - lastDecodedCount >= Int(cadence.interval * Self.sampleRate)
+    {
       completion = .draft
     } else {
       return nil

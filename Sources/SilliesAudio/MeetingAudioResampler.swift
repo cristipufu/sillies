@@ -16,6 +16,7 @@ final class MeetingAudioResampler {
   private var expectedInputTime: TimeInterval?
   private var bufferedDuration: TimeInterval = 0
   private(set) var outputEndTime: TimeInterval?
+  private(set) var discontinuities = 0
 
   init(format: AVAudioFormat) {
     converter = SpeechBufferConverter(format: format)
@@ -28,6 +29,7 @@ final class MeetingAudioResampler {
     if inputFormat != input.format
       || expectedInputTime.map({ abs(time - $0) > sampleTolerance }) == true
     {
+      if inputFormat != nil, discontinuities < Int.max { discontinuities += 1 }
       reset()
     }
     let buffer = try converter.convert(input)

@@ -34,6 +34,7 @@ final class AudioSessionPresentation {
   var diarizationModel: SpeechModelDescriptor?
   var speakerDetectionNotice: String?
   var transcriptionFailure: SessionFailure?
+  var isRecoveringTranscription = false
   var phase: Phase = .preparing
   private var completionFailure: SessionFailure?
   var captureFailure: SessionFailure? {
@@ -103,6 +104,7 @@ final class AudioSessionPresentation {
     audioLevel = 0
     isLoadingLanguages = false
     pendingLanguageID = nil
+    isRecoveringTranscription = false
   }
 
   var selectedLanguage: SpeechLanguage? { languages.first { $0.id == selectedLanguageID } }

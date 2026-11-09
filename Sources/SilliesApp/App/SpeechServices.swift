@@ -82,7 +82,8 @@ final class SpeechServices {
       var context = configuration.recognitionContext
       context.vocabulary = dictionary.hints
       let preparation = SpeechCapturePreparation(
-        registry: registry, model: configuration.model, context: context)
+        registry: registry, model: configuration.model, context: context,
+        backlogDirectory: configuration.recordingURL?.deletingLastPathComponent())
       let recognitionContext = context
       let model = configuration.model
       let diarization = Self.diarizationFactory(
@@ -102,7 +103,10 @@ final class SpeechServices {
             language: language, output: output, failure: failure)
         }, diarization: diarization,
         events: .init(
-          update: update,
+          update: { event in
+            CaptureDiagnostics.recordRecognition(event, operation: operation, sink: diagnostics)
+            update(event)
+          },
           reportOverload: { CaptureDiagnostics.record($0, operation: operation, sink: diagnostics) }
         ))
     }

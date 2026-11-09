@@ -1,6 +1,7 @@
 #include "include/EchoCancellation.h"
 #include "api/audio/audio_processing.h"
 #include <array>
+#include <limits>
 #include <new>
 
 namespace {
@@ -54,4 +55,14 @@ int sillies_echo_process(SilliesEchoCanceller *state, const float *reference,
   float *output[] = {cleaned};
   state->processor->set_stream_delay_ms(0);
   return state->processor->ProcessStream(capture, state->format, state->format, output);
+}
+
+int sillies_echo_statistics(SilliesEchoCanceller *state, SilliesEchoStatistics *statistics) {
+  if (!state || !statistics) return -1;
+  const auto metrics = state->processor->GetStatistics();
+  const auto unavailable = std::numeric_limits<double>::quiet_NaN();
+  statistics->delay_ms = metrics.delay_ms ? static_cast<double>(*metrics.delay_ms) : unavailable;
+  statistics->return_loss_db = metrics.echo_return_loss.value_or(unavailable);
+  statistics->reduction_db = metrics.echo_return_loss_enhancement.value_or(unavailable);
+  return 0;
 }

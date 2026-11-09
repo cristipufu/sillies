@@ -30,6 +30,7 @@ struct SkillFinalizeContext: Sendable {
   let companionID: String
   let companionName: String
   let target: WindowTargetCandidate?
+  var endReason: SessionEndReason = .userFinished
 }
 
 @MainActor

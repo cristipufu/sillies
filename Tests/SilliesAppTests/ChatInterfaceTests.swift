@@ -365,7 +365,8 @@ private struct VaultCardReply: ConversationResponding {
     "Read this 👋 carefully. More text", "Read this 👋🏽 carefully. More text",
     "Read this 🙂 carefully.", "Read",
   ] {
-    coordinator.replaceText(in: view, with: text)
+    coordinator.replaceText(
+      in: view, with: NSAttributedString(string: text, attributes: ChatTypography.attributes))
     #expect(view.string == text)
     #expect(view.selectedRange() == NSRange(location: 0, length: min(9, (text as NSString).length)))
   }
@@ -447,7 +448,8 @@ private actor StreamingInterfaceReply: ConversationResponding {
   coordinator.resetSelection(in: view, revision: latestAction)
   #expect(view.selectedRange().length == 0)
   view.setSelectedRange(NSRange(location: 0, length: 7))
-  coordinator.replaceText(in: view, with: "Earlier words and new words. Another batch.")
+  coordinator.replaceText(
+    in: view, with: NSAttributedString(string: "Earlier words and new words. Another batch."))
   coordinator.resetSelection(in: view, revision: latestAction)
   #expect(view.selectedRange().length == 7)
 }
@@ -482,7 +484,8 @@ private actor StreamingInterfaceReply: ConversationResponding {
     "One paragraph.\n\nȘtefan says hello 👋🏽. 日本語 العربية.\nOne more paragraph.",
   ]
   for text in passages {
-    coordinator.replaceText(in: view, with: text)
+    coordinator.replaceText(
+      in: view, with: NSAttributedString(string: text, attributes: ChatTypography.attributes))
     for width in [CGFloat(320), 160, 280] {
       let size = try #require(
         coordinator.measurement.size(of: view.attributedString(), width: width))

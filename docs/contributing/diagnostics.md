@@ -21,6 +21,18 @@ The admission coordinator records **why it preempts** work; Chat records user st
 recognition results, replay, mode/phase changes and timings. Never log per audio packet, token or
 animation frame. Export does not open a microphone, read conversations or collect unrelated logs.
 
+Talk adds one `acousticAssessment` at VAD onset and one at its endpoint. Each carries an utterance
+UUID and remains correlated with the interrupted Chat turn even if recognition cancels that turn.
+The capture worker keeps at most one second of scalar measurements: reference sample coverage,
+reference/microphone/cleaned power, and full-scale samples. Delivery counters cover the capture
+lifetime; reference age is measured against processed sample time (negative means reference leads
+capture). Zero-valued rendered samples count as present; missing reference samples do not.
+AEC3 supplies optional delay, return-loss and linear-filter reduction estimates at these boundaries.
+Those estimates and total microphone power reduction do not by themselves identify the sound source.
+No PCM, words, device names or raw host timestamps enter the archive. Export validates every numeric
+field, and unavailable statistics stay absent without stopping capture. These measurements do not
+alter VAD thresholds, inference priority or echo-cancellation settings.
+
 The recorder has a 256-event inbox and at most one utility drain. Filesystem work stays in the
 journal actor; worker-entry assertions prevent disk work on the main queue. Export/clear suspend
 new inbox admission briefly and drain accepted work before touching files. Overflow and temporarily

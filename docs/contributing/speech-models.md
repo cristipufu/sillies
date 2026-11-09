@@ -95,3 +95,24 @@ unchanged final window. Incremental engines keep the default `.decode` policy so
 never skipped. Preserve this capability through decorators. Partial-transcript cadence is independent
 of this optimization. Whisper's dictionary prompt cache belongs to its loaded tokenizer and is reset
 on a tokenizer change. Honor `SpeechRecognitionContext.priority` in native and consumer tasks.
+
+## Recovering live recognition
+
+Recording and recognition have separate lifetimes. `SpeechCapturePreparation` injects a private
+`SpeechAudioBackingStore` into recording channels. `DiskSpeechAudioStore` owns four-second PCM pages
+on workers, bounds each source to 64 MiB on disk, and deletes committed pages and the remaining
+session backlog on completion or cancellation. The 24-second recognition memory bound is unchanged.
+Neither audio nor recognized text enters diagnostic events.
+
+`WindowSpeechChannel` retries the same window after transient inference failures without committing
+its draft or resetting transcript positions. Busy inference uses capped exponential backoff; other
+errors have three attempts. Catch-up skips intermediate drafts when a complete window is queued,
+retains overlap until words commit, and reports typed recovery transitions per source. Wrappers must
+forward `onRecovery`; UI recovery remains active until both meeting sources catch up. Permanent
+failures and exhausted disk bounds remain explicit failures while the independent AAC recording
+continues. Finalization remains bounded; its timeout must not be presented as successful transcription.
+
+A verified bound-window closure finishes and saves a meeting automatically, including its final
+recognizer drain. Hiding, minimizing, or temporarily failing to read a window does not end capture.
+`SessionEndReason.sourceClosed` explains a capture interruption before finalization begins; permission,
+transcription, timeout, and recording-save failures still retain their recovery information.

@@ -185,6 +185,7 @@ package final class AudioTranscriptionService: SessionAudioCapture {
       case .changingLanguage(let language): onUpdate(.changingLanguage(language))
       case .languageChanged(let language): onUpdate(.languageChanged(language))
       case .speakerNotice(let message): speakerDetectionStopped(message)
+      case .recovery(let update): onUpdate(.transcriptionRecovery(update))
       case .failed(let failure):
         if state.lifecycle.phase == .preparing {
           fail(failure)
@@ -308,14 +309,19 @@ package final class AudioTranscriptionService: SessionAudioCapture {
       inputQueue.stop()
       state.microphone?.stop(completion: {})
       state.application?.stop(completion: {})
-      state.speech?.cancel()
-      state.meetingAudio = nil
+      // Keep staged audio and recognition until the normal finish path drains both in order.
       onUpdate(.failed(failure))
       fputs("Audio session failed: \(failure.message)\n", stderr)
     }
   }
 
   package func finish(completion: @escaping @Sendable (AudioCaptureResult) -> Void) {
+    finish(ending: .userFinished, completion: completion)
+  }
+
+  package func finish(
+    ending reason: SessionEndReason, completion: @escaping @Sendable (AudioCaptureResult) -> Void
+  ) {
     inputQueue.stop()
     preparation.cancel()
     queue.async { [self] in
@@ -325,7 +331,7 @@ package final class AudioTranscriptionService: SessionAudioCapture {
           return
         }
         state.finishCompletions.append(completion)
-        guard state.lifecycle.beginFinishing(at: dependencies.now()) else { return }
+        guard state.lifecycle.beginFinishing(at: dependencies.now(), reason: reason) else { return }
         do { try flushMeetingAudio(state) } catch {
           state.lifecycle.recordFinalizationNotice(SessionFailure(error, category: .finalization))
           fputs("Meeting audio finalization failed: \(error.localizedDescription)\n", stderr)

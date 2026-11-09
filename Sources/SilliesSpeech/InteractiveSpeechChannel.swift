@@ -32,6 +32,9 @@ package final class InteractiveSpeechChannel: LocalSpeechChannel {
     }
   }
   package func append(_ buffer: AVAudioPCMBuffer) { base.append(buffer) }
+  package func onRecovery(_ receive: @escaping @Sendable (SpeechRecoveryUpdate) -> Void) {
+    base.onRecovery(receive)
+  }
   package func finish(completion: @escaping @Sendable () -> Void) {
     base.finish { [reservation] in
       let release = reservation.release()

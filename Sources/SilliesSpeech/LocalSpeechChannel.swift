@@ -38,6 +38,11 @@ package protocol LocalSpeechChannel: AnyObject, Sendable {
   func append(_ buffer: AVAudioPCMBuffer)
   func finish(completion: @escaping @Sendable () -> Void)
   func cancel()
+  func onRecovery(_ receive: @escaping @Sendable (SpeechRecoveryUpdate) -> Void)
+}
+
+extension LocalSpeechChannel {
+  package func onRecovery(_ receive: @escaping @Sendable (SpeechRecoveryUpdate) -> Void) {}
 }
 
 package enum LocalSpeechFactory {

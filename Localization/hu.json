@@ -1216,6 +1216,7 @@
     "Transcript ready · Preparing notes": "Átirat kész · Jegyzetek készítése",
     "Transcription": "Átírás",
     "Transcription could not keep up. Your recording continues; choose Finish & Save to preserve it.": "Az átírás nem tudott lépést tartani. A felvétel folytatódik; a megőrzéshez válassza a Befejezés és mentés lehetőséget.",
+    "Transcription is catching up. Recording continues.": "Az átírás behozza a lemaradást. A felvétel folytatódik.",
     "Transcription model unavailable · Open Settings": "Az átírási modell nem érhető el · Nyissa meg a Beállításokat",
     "Transcription uses %@. Summaries and suggestions use a separate text model.": "Az átírás ezt használja: %@. Az összefoglalók és javaslatok külön szövegmodellt használnak.",
     "Translate into": "Fordítás nyelvre",

@@ -226,6 +226,7 @@ private final class CaptureLifecycleHarness: Sendable {
   let microphone: LifecycleMicrophone
   let speech = CaptureSpeechChannel()
   let events = CaptureEvents()
+  let lifecycle = Mutex<[AudioCaptureLifecycleEvent]>([])
   init(gate: CaptureStartupGate? = nil, startupFailure: SessionFailure? = nil) {
     microphone = LifecycleMicrophone(gate: gate, startupFailure: startupFailure)
   }
@@ -233,7 +234,7 @@ private final class CaptureLifecycleHarness: Sendable {
     finishTimeout: TimeInterval? = nil, diarization: SpeakerDiarizationFactory.Make? = nil
   ) -> AudioTranscriptionService {
     var dependencies = AudioCaptureDependencies(
-      queue: queue,
+      queue: queue, lifecycle: { [self] event in lifecycle.withLock { $0.append(event) } },
       microphone: { [microphone] _, failure in
         microphone.installFailure(failure)
         return microphone
@@ -319,6 +320,11 @@ private final class LifecycleMicrophone: MicrophoneCapture {
 }
 
 private final class CaptureSpeechChannel: LocalSpeechChannel {
+  private struct FinishState {
+    var isHeld = false
+    var completions: [@Sendable () -> Void] = []
+  }
+  private let finishState = Mutex(FinishState())
   let finalWords = Mutex<String?>(nil)
   let appendedBuffers = Mutex(0)
   private let output = Mutex<LocalSpeechFactory.Output?>(nil)
@@ -333,10 +339,93 @@ private final class CaptureSpeechChannel: LocalSpeechChannel {
   func emit(_ text: String) { output.withLock { $0 }?(SpeechPhrase(text: text, isFinal: true)) }
   func append(_ buffer: AVAudioPCMBuffer) { appendedBuffers.withLock { $0 += 1 } }
   func finish(completion: @escaping @Sendable () -> Void) {
+    let held = finishState.withLock { state in
+      guard state.isHeld else { return false }
+      state.completions.append(completion)
+      return true
+    }
+    guard !held else { return }
     if let words = finalWords.withLock({ $0 }) { emit(words) }
     completion()
   }
+  func holdFinish() { finishState.withLock { $0.isHeld = true } }
+  func completeFinish() {
+    let completions = finishState.withLock { state in
+      state.isHeld = false
+      let completions = state.completions
+      state.completions.removeAll()
+      return completions
+    }
+    if let words = finalWords.withLock({ $0 }) { emit(words) }
+    for completion in completions { completion() }
+  }
   func cancel() {}
+}
+
+@Test func audioCaptureSequenceFailureAndFinishShareTheOriginalDeviceStop() async {
+  let harness = CaptureLifecycleHarness()
+  let service = harness.makeService()
+  service.start()
+  await harness.events.waitForCapture()
+  harness.microphone.fail("Application closed")
+  await harness.events.waitForFailure()
+  let results = Mutex<[AudioCaptureResult]>([])
+  service.finish(ending: .sourceClosed) { result in results.withLock { $0.append(result) } }
+  await harness.checkpoint()
+  #expect(harness.microphone.stopCount == 1)
+  #expect(results.withLock { $0.isEmpty })
+  harness.microphone.completeStops()
+  await harness.checkpoint()
+  #expect(results.withLock { $0.count } == 1)
+  #expect(results.withLock { $0.first?.failure } == nil)
+  harness.microphone.completeStops()
+  await harness.checkpoint()
+  #expect(results.withLock { $0.count } == 1)
+}
+
+@Test func audioCaptureSequenceDeviceStopDoesNotDiscardThePendingRecognizerDrain() async {
+  let harness = CaptureLifecycleHarness()
+  harness.speech.holdFinish()
+  harness.speech.finalWords.withLock { $0 = "Final words after capture stopped" }
+  let service = harness.makeService()
+  service.start()
+  await harness.events.waitForCapture()
+  let (results, completed) = AsyncStream<AudioCaptureResult>.makeStream()
+  service.finish(ending: .sourceClosed) { completed.yield($0) }
+  await harness.checkpoint()
+  harness.microphone.completeStops()
+  await harness.checkpoint()
+  let phases = harness.lifecycle.withLock { $0 }
+  #expect(phases.contains { if case .resourceStopped(.microphone) = $0 { true } else { false } })
+  #expect(!phases.contains { if case .finished = $0 { true } else { false } })
+  harness.speech.completeFinish()
+  var iterator = results.makeAsyncIterator()
+  let result = await iterator.next()
+  #expect(result?.failure == nil)
+  #expect(result?.transcript.contains("Final words after capture stopped") == true)
+  completed.finish()
+}
+
+@Test func audioCaptureSequenceDeadlineReportsTheResourcesStillOwnedByTheDrain() async {
+  let harness = CaptureLifecycleHarness()
+  harness.speech.holdFinish()
+  let service = harness.makeService(finishTimeout: 0)
+  service.start()
+  await harness.events.waitForCapture()
+  let (results, completed) = AsyncStream<AudioCaptureResult>.makeStream()
+  service.finish { completed.yield($0) }
+  var iterator = results.makeAsyncIterator()
+  #expect(await iterator.next()?.failure?.category == .finalization)
+  let resources = harness.lifecycle.withLock { events in
+    events.compactMap { event -> AudioCaptureLifecycleEvent.Resource? in
+      if case .resourceTimedOut(let resource) = event { return resource }
+      return nil
+    }
+  }
+  #expect(Set(resources) == [.microphone, .speech])
+  harness.speech.completeFinish()
+  harness.microphone.completeStops()
+  completed.finish()
 }
 
 @Test func audioCaptureClosureDrainsStagedMeetingAudioBeforeFinishingRecognizers() async throws {

@@ -13,8 +13,8 @@ import time
 
 from checked_test_process import TestProcess
 from test_presentation import TestPresentation
-from test_suites import TestSuites, test_batches
-from test_evidence import (IncompleteTestRun, selected_tests, swift_inventory, swift_test_name,
+from test_suites import TestSuites, test_batches, swift_test_batches
+from test_evidence import (IncompleteTestRun, event_records, selected_tests, swift_inventory, swift_test_name,
                            verify_swift_run, verify_xctest_run, xctest_inventory)
 
 
@@ -132,7 +132,6 @@ class NativeTestRunner:
     def run_swift(self, bundle):
         prefix = self.results / (bundle.stem + "-swift")
         inventory = prefix.with_suffix(".inventory.jsonl")
-        events = prefix.with_suffix(".events.jsonl")
         command = [str(self.helpers / "swiftpm-testing-helper"), "--test-bundle-path",
                    str(bundle / "Contents/MacOS" / bundle.stem), "--testing-library", "swift-testing",
                    "--event-stream-version", "0"]
@@ -157,15 +156,25 @@ class NativeTestRunner:
             return
         # Runtime regexes also match source-file paths. Execute the discovered IDs exactly,
         # so e.g. "Playback" cannot accidentally include a timing test in PlaybackTests.swift.
-        selection = ["--filter", "^(?:" + "|".join(re.escape(test) for test in sorted(expected)) + ")$"]
-        log = prefix.with_suffix(".log")
         if bundle.stem == "SilliesAppTests":
             command[0] = str(self.native_host)
-        self.execute(command + ["--no-parallel", "--event-stream-output-path", str(events)] + selection, log)
+        parameterized = {record["payload"]["id"] for record in event_records(inventory)
+                         if record["kind"] == "test" and record["payload"].get("isParameterized")}
+        batches = swift_test_batches(expected, parameterized)
+        for index, tests in enumerate(batches, start=1):
+            batch = prefix if len(batches) == 1 else prefix.with_name(prefix.name + f"-part{index:03}")
+            self.run_swift_batch(command, bundle, batch, tests)
+
+    def run_swift_batch(self, command, bundle, prefix, expected):
+        self.process = self.new_process_batch()
+        events = prefix.with_suffix(".events.jsonl")
+        selection = ["--filter", "^(?:" + "|".join(re.escape(test) for test in sorted(expected)) + ")$"]
+        self.execute(command + ["--no-parallel", "--event-stream-output-path", str(events)] + selection,
+                     prefix.with_suffix(".log"))
         count = verify_swift_run(events, expected)
         self.receipts.append(dict(bundle=bundle.stem, framework="swift-testing", tests=count,
-                                  presentation=self.options.presentation, suite=self.options.suite,
-                                  configuration=self.options.configuration))
+                                 presentation=self.options.presentation, suite=self.options.suite,
+                                 configuration=self.options.configuration))
 
     def run_xctest(self, bundle):
         prefix = self.results / (bundle.stem + "-xctest")

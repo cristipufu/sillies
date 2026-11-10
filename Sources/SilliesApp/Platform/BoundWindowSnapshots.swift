@@ -47,7 +47,9 @@ enum BoundWindowSnapshots {
       result[entry.id] = snapshot(entry, visibility: .hidden, primaryScreenTop: primaryScreenTop)
     }
     for id in missing where result[id] == nil {
-      result[id] = .init(frame: .zero, title: nil, visibility: complete ? .closed : .unavailable)
+      result[id] = .init(
+        frame: .zero, title: nil, visibility: complete ? .closed : .unavailable,
+        closureEvidence: complete ? .windowServer : nil)
     }
     return result
   }
@@ -85,7 +87,7 @@ enum BoundWindowSnapshots {
       frame: ScreenCoordinates.appKitRect(
         fromAccessibility: entry.frame, primaryScreenTop: primaryScreenTop),
       title: entry.windowTitle, visibility: visibility, windowLayer: entry.layer,
-      ownerPID: entry.ownerPID)
+      ownerPID: entry.ownerPID, isOnScreen: entry.isOnScreen)
   }
 
   private static func unavailable(_ windowIDs: Set<CGWindowID>) -> [CGWindowID:

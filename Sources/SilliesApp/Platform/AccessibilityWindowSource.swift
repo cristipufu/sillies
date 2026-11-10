@@ -440,4 +440,23 @@ final class AccessibilityWindowSource: @unchecked Sendable {
     return (elements, true)
   }
 
+  static func boundWindowInventory(for pid: pid_t) -> BoundWindows.Inventory? {
+    dispatchPrecondition(condition: .notOnQueue(.main))
+    guard AXIsProcessTrusted() else { return nil }
+    let app = AXUIElementCreateApplication(pid)
+    AXUIElementSetMessagingTimeout(app, lookupMessagingTimeoutSeconds)
+    let list = copyWindows(from: app)
+    guard list.succeeded else { return nil }
+    var hidden: CFTypeRef?
+    let status = AXUIElementCopyAttributeValue(app, kAXHiddenAttribute as CFString, &hidden)
+    let windows = list.elements.prefix(maxInspectedWindowCount).compactMap { element in
+      inspectWindow(element, timeout: lookupMessagingTimeoutSeconds).map {
+        BoundWindows.Inventory.Window(element: element, frame: $0.frame)
+      }
+    }
+    return .init(
+      windows: windows, isComplete: windows.count == list.elements.count,
+      isApplicationHidden: status == .success ? hidden as? Bool : nil)
+  }
+
 }

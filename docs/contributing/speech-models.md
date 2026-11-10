@@ -110,7 +110,12 @@ errors have three attempts. Catch-up skips intermediate drafts when a complete w
 retains overlap until words commit, and reports typed recovery transitions per source. Wrappers must
 forward `onRecovery`; UI recovery remains active until both meeting sources catch up. Permanent
 failures and exhausted disk bounds remain explicit failures while the independent AAC recording
-continues. Finalization remains bounded; its timeout must not be presented as successful transcription.
+continues. Meeting capture owns one 30-second finalization budget for recognition, speaker labels
+and completion delivery; microphone-only capture retains its eight-second budget. Device stops
+begin immediately. Channel groups retain their bounded language
+switch deadline, but session shutdown supersedes it and has no competing child deadline. A failure
+and a later Finish subscribe to the same device stops. Finalization timeout must not be presented
+as successful transcription, and diagnostics identify the resources that did not finish.
 
 A verified bound-window closure finishes and saves a meeting automatically, including its final
 recognizer drain. Hiding, minimizing, or temporarily failing to read a window does not end capture.

@@ -21,6 +21,13 @@ The admission coordinator records **why it preempts** work; Chat records user st
 recognition results, replay, mode/phase changes and timings. Never log per audio packet, token or
 animation frame. Export does not open a microphone, read conversations or collect unrelated logs.
 
+Window-bound skills record one random operation identity and deduplicated visible, hidden,
+unavailable and closed transitions. Closure reasons distinguish WindowServer retirement,
+accessibility identity retirement and an owner change. Capture records its stop reason, each
+resource's first stop completion, and the resources still pending when finalization expires.
+These events contain no native window/process IDs, application names, titles, paths or audio.
+The capture adapter maps failures to typed faults and sanitized identities before recording them.
+
 Talk adds one `acousticAssessment` at VAD onset and one at its endpoint. Each carries an utterance
 UUID and remains correlated with the interrupted Chat turn even if recognition cancels that turn.
 The capture worker keeps at most one second of scalar measurements: reference sample coverage,

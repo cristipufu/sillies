@@ -1,9 +1,60 @@
 import Foundation
 import SilliesAudio
+import SilliesCore
 import SilliesDiagnostics
 import SilliesSpeech
 
 enum CaptureDiagnostics {
+  static func record(
+    _ update: AudioCaptureLifecycleEvent, operation: UUID, sink: DiagnosticSink
+  ) {
+    var event = DiagnosticEvent(.capture, .phaseChanged, operation: operation)
+    switch update {
+    case .capturing:
+      event.phase = .listening
+    case .finishing(let reason):
+      event.phase = .finalizing
+      event.reason = reason == .sourceClosed ? .sourceClosed : .userStop
+    case .resourceStopped(let resource):
+      event = .init(.capture, .completed, operation: operation)
+      event.resource = diagnosticResource(resource)
+    case .resourceTimedOut(let resource):
+      event = .init(.capture, .failed, operation: operation)
+      event.fault = .finalization
+      event.resource = diagnosticResource(resource)
+    case .failed(let failure):
+      event = .init(.capture, .failed, operation: operation).failing(failure)
+      event.fault = fault(failure)
+    case .finished:
+      event = .init(.capture, .completed, operation: operation)
+      event.phase = .finished
+    }
+    sink.record(event)
+  }
+
+  private static func diagnosticResource(_ resource: AudioCaptureLifecycleEvent.Resource)
+    -> DiagnosticEvent.Resource
+  {
+    switch resource {
+    case .microphone: .microphone
+    case .application: .applicationAudio
+    case .speech: .recognition
+    }
+  }
+
+  private static func fault(_ failure: SessionFailure) -> DiagnosticEvent.Fault {
+    switch failure.category {
+    case .permissionDenied: .permissionDenied
+    case .captureUnavailable: .captureUnavailable
+    case .captureInterrupted: .captureInterrupted
+    case .audioProcessing: .audioProcessing
+    case .transcription: .transcription
+    case .recordingSave: .recordingSave
+    case .finalization: .finalization
+    default: .unknown
+    }
+  }
+
   static func recordRecognition(_ update: AudioCaptureUpdate, operation: UUID, sink: DiagnosticSink)
   {
     switch update {

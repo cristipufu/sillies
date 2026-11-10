@@ -35,11 +35,11 @@ import Testing
   let channel = LifecycleSpeechChannel()
   let group = SpeechChannelGroup(
     id: UUID(), channels: [.microphone: channel], queue: queue,
-    timeouts: .init(languageChange: 0, sessionEnd: 0))
+    timeouts: .init(languageChange: 0))
   let count = Mutex(0)
   let notice: String? = await withCheckedContinuation { continuation in
     queue.async {
-      group.finish(reason: .sessionEnd) { notice in
+      group.finish(reason: .languageChange) { notice in
         let first = count.withLock {
           $0 += 1
           return $0 == 1
@@ -80,6 +80,25 @@ import Testing
   await onSpeechQueue(queue) {}
   #expect(events.withLock { $0 } == 0)
   #expect(startResults.withLock { $0 } == 1)
+}
+
+@Test func sessionDrainTakesOwnershipFromAnEarlierLanguageChangeDeadline() async {
+  let queue = DispatchQueue(label: "sillies.test.session-drain-ownership")
+  let channel = LifecycleSpeechChannel()
+  let group = SpeechChannelGroup(
+    id: UUID(), channels: [.microphone: channel], queue: queue,
+    timeouts: .init(languageChange: 0))
+  let callbacks = Mutex(0)
+  await onSpeechQueue(queue) {
+    group.finish(reason: .languageChange) { _ in callbacks.withLock { $0 += 1 } }
+    group.finish(reason: .sessionEnd) { _ in callbacks.withLock { $0 += 1 } }
+  }
+  await onSpeechQueue(queue) {}
+  #expect(!channel.wasCancelled)
+  #expect(callbacks.withLock { $0 } == 0)
+  channel.complete()
+  await onSpeechQueue(queue) {}
+  #expect(callbacks.withLock { $0 } == 2)
 }
 
 @Test func partialRecognizerPreparationFailureReleasesAlreadyCreatedChannels() async {

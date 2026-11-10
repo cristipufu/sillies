@@ -1,14 +1,18 @@
 import AppKit
 import CoreGraphics
 import SilliesCore
+import Synchronization
 
 struct WindowTargetSnapshot: Sendable {
   enum Visibility: Sendable { case visible, hidden, unavailable, closed }
+  enum ClosureEvidence: Sendable { case windowServer, accessibility }
   let frame: CGRect
   let title: String?
   var visibility: Visibility = .visible
   var windowLayer: Int = 0
   var ownerPID: pid_t?
+  var isOnScreen = true
+  var closureEvidence: ClosureEvidence?
 
   func hasClosed(_ target: WindowTargetCandidate) -> Bool {
     visibility == .closed || ownerPID.map { $0 != target.processID } == true
@@ -150,12 +154,27 @@ private enum WindowTargetResolver {
 
 final class WindowTargetMetadata: Sendable {
   typealias Read = @Sendable (CGWindowID, Double) -> WindowTargetCandidate?
+  struct SnapshotSource: Sendable {
+    let read: @Sendable (Set<CGWindowID>, Double) -> [CGWindowID: WindowTargetSnapshot]
+    let accessibility: AccessibilityWindowSource.BoundWindows.Source
+    static let native = SnapshotSource(
+      read: { BoundWindowSnapshots.read(windowIDs: $0, primaryScreenTop: $1) },
+      accessibility: .native)
+  }
   static let shared = WindowTargetMetadata()
   private let queue = DispatchQueue(label: "app.sillies.drag-target-metadata", qos: .userInitiated)
   private let read: Read
+  private let boundWindows: AccessibilityWindowSource.BoundWindows
+  private let snapshotSource: SnapshotSource
+  private let boundWindowGeneration = Mutex<UInt64>(0)
 
-  init(read: @escaping Read = { WindowTargetResolver.candidate(for: $0, primaryScreenTop: $1) }) {
+  init(
+    read: @escaping Read = { WindowTargetResolver.candidate(for: $0, primaryScreenTop: $1) },
+    snapshots: SnapshotSource = .native
+  ) {
     self.read = read
+    snapshotSource = snapshots
+    boundWindows = AccessibilityWindowSource.BoundWindows(source: snapshots.accessibility)
   }
 
   func seedRoleSnapshot(_ snapshot: AccessibilityWindowRoleSnapshot?, for pid: pid_t) {
@@ -181,14 +200,31 @@ final class WindowTargetMetadata: Sendable {
   func snapshots(
     for windowIDs: Set<CGWindowID>, primaryScreenTop: Double
   ) async -> [CGWindowID: WindowTargetSnapshot] {
+    let generation = boundWindowGeneration.withLock { $0 }
     guard !Task.isCancelled, !windowIDs.isEmpty else { return [:] }
     return await withCheckedContinuation { continuation in
       queue.async {
         dispatchPrecondition(condition: .notOnQueue(.main))
+        guard self.boundWindowGeneration.withLock({ $0 == generation }) else {
+          continuation.resume(returning: [:])
+          return
+        }
+        let snapshots = self.snapshotSource.read(windowIDs, primaryScreenTop)
+        guard self.boundWindowGeneration.withLock({ $0 == generation }) else {
+          continuation.resume(returning: [:])
+          return
+        }
+        let reconciled = self.boundWindows.reconcile(snapshots, primaryScreenTop: primaryScreenTop)
         continuation.resume(
-          returning: BoundWindowSnapshots.read(
-            windowIDs: windowIDs, primaryScreenTop: primaryScreenTop))
+          returning: self.boundWindowGeneration.withLock { $0 == generation } ? reconciled : [:])
       }
+    }
+  }
+
+  func releaseBoundWindows() {
+    boundWindowGeneration.withLock {
+      $0 &+= 1
+      queue.async { self.boundWindows.clear() }
     }
   }
 

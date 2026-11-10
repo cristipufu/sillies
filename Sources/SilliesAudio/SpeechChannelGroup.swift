@@ -9,13 +9,6 @@ final class SpeechChannelGroup: Sendable {
   }
   struct Timeouts: Sendable {
     var languageChange: TimeInterval = 2
-    var sessionEnd: TimeInterval = 8
-    func duration(for reason: FinishReason) -> TimeInterval {
-      switch reason {
-      case .languageChange: languageChange
-      case .sessionEnd: sessionEnd
-      }
-    }
   }
   let id: UUID
   private let channels: [SessionAudioSource: any LocalSpeechChannel]
@@ -55,6 +48,12 @@ final class SpeechChannelGroup: Sendable {
         return
       }
       state.completions.append(completion)
+      // The capture owner bounds session shutdown, including speaker detection. A second
+      // deadline here races its parent and can discard final words before delivery drains.
+      if reason == .sessionEnd {
+        state.deadline?.cancel()
+        state.deadline = nil
+      }
       guard state.unfinishedSources == nil else { return }
       state.unfinishedSources = Set(channels.keys)
       if channels.isEmpty {
@@ -66,9 +65,11 @@ final class SpeechChannelGroup: Sendable {
           queue.async { [weak self] in self?.channelFinished(source) }
         }
       }
-      let work = DispatchWorkItem { [weak self] in self?.timedOut() }
-      state.deadline = work
-      queue.asyncAfter(deadline: .now() + timeouts.duration(for: reason), execute: work)
+      if reason == .languageChange {
+        let work = DispatchWorkItem { [weak self] in self?.timedOut() }
+        state.deadline = work
+        queue.asyncAfter(deadline: .now() + timeouts.languageChange, execute: work)
+      }
     }
   }
 

@@ -1,9 +1,61 @@
 import AppKit
+import ApplicationServices
 import QuartzCore
+import SilliesCore
+import Synchronization
 import Testing
 import WindowMetadataProtocol
 
 @testable import SilliesApp
+
+@Test @MainActor func boundWindowLifetimeRecognizesClosureWhileWindowServerRetainsTheNativeWindow()
+  async throws
+{
+  let window = NSWindow(
+    contentRect: CGRect(x: 100, y: 100, width: 600, height: 400), styleMask: [.titled],
+    backing: .buffered, defer: false)
+  window.isReleasedWhenClosed = false
+  defer { window.close() }
+  let id = try #require(window.windowServerID)
+  let ownerPID = ProcessInfo.processInfo.processIdentifier
+  let top = Double(NSScreen.screens.first?.frame.maxY ?? 0)
+  let client = WindowMetadataClient()
+  let owner = NSObject()
+  client.start(owner: ObjectIdentifier(owner))
+  defer { client.stop(owner: ObjectIdentifier(owner)) }
+  CATransaction.flush()
+  let registered = Mutex(true)
+  let axFrame = CGRect(
+    x: window.frame.minX, y: top - window.frame.maxY,
+    width: window.frame.width, height: window.frame.height)
+  let accessibility = AccessibilityWindowSource.BoundWindows(
+    source: .init(
+      inventory: { _ in
+        .init(
+          windows: registered.withLock { $0 }
+            ? [.init(element: AXUIElementCreateApplication(ownerPID), frame: axFrame)] : [],
+          isComplete: true, isApplicationHidden: false)
+      }))
+  let load: @Sendable () -> [CGWindowID: WindowTargetSnapshot] = {
+    let snapshots = BoundWindowSnapshots.read(
+      windowIDs: [id], primaryScreenTop: top,
+      source: .init(
+        visibleWindows: { [] },
+        targetWindows: { ids in client.read(.windows(ids.sorted()))?.entries }))
+    return accessibility.reconcile(snapshots, primaryScreenTop: top)
+  }
+  let initialVisibility = await Task.detached { load()[id]?.visibility }.value
+  #expect(initialVisibility == .hidden)
+  window.close()
+  CATransaction.flush()
+  registered.withLock { $0 = false }
+  let result = await Task.detached {
+    (client.read(.windows([id]))?.entries.isEmpty, load()[id])
+  }.value
+  #expect(result.0 == false, "The closed but retained NSWindow still has a WindowServer entry.")
+  #expect(result.1?.visibility == .closed)
+  #expect(result.1?.closureEvidence == .accessibility)
+}
 
 @Test(arguments: 1...6) @MainActor
 func metadataExactLookupDistinguishesUnshownWindowsFromDestroyedWindows(_ cycle: Int)

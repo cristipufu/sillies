@@ -12,6 +12,14 @@ A successful AX batch status does not verify its payload. `AccessibilityWindowIn
 
 Use `optionOnScreenOnly` for front-to-back occlusion order. `optionAll` is an unordered inventory and may place background apps ahead of the visible target. Bound-window existence uses one batched exact-ID lookup through the metadata helper; never infer closure from a truncated inventory, an unreadable response or a missing snapshot. A successful exact lookup that omits the target confirms closure. Preserve hidden/minimized windows and reject recycled identifiers owned by another process. System surfaces at Dock level and above can report screen-sized transparent bounds with alpha 1; do not treat those rectangles as opaque application occluders. Keep reads bounded and on the existing metadata worker, with no per-companion queries.
 
+Applications may retain ordered-out backing windows after their document or meeting closes.
+`AccessibilityWindowSource.BoundWindows` anchors an unambiguous AX identity while metadata is
+available, then checks membership only for ordered-out targets on the existing skill clock.
+Only a complete, readable inventory from a verified non-hidden application can retire that
+identity. Hidden/minimized members, unavailable reads, truncated inventories and ambiguous initial
+matches preserve the binding. Clear anchors with skill-clock ownership. Never enumerate this
+hierarchy in response to move, resize, title or selection notifications.
+
 Example: add a minimize rule to `WindowTransitionObservation`/`WindowTransitionEvaluation`, test it with virtual timestamps, then exercise native minimize/restore in the app fixture. Do not add character-dependent branches to tracking or use metadata polling to drive drag frames.
 
 Run Core transition tests, `WindowTrackingScheduleTests`, window-candidate and visibility tests, the four `SmoothnessBudgetTests` paths, and `make check`. Native integration: `build/Sillies.app/Contents/MacOS/Sillies --window-test --without-accessibility`. Do not relax timing budgets to hide a regression.

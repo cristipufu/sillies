@@ -53,6 +53,8 @@ final class SkillCoordinator {
   private var companionNames: [String: String] = [:]
   @ObservationIgnored private let audio: AudioSkillServices
   @ObservationIgnored private let snapshotLoader: SnapshotLoader
+  @ObservationIgnored private let releaseSnapshots: @Sendable () -> Void
+  @ObservationIgnored private let windowDiagnostics: BoundWindowDiagnostics
   private var finishingSessions: [UUID: any ActiveSkillSession] = [:]
   @ObservationIgnored private var finishWaiters: [() -> Void] = []
   @ObservationIgnored private var tickTimer: Timer?
@@ -62,11 +64,16 @@ final class SkillCoordinator {
     vault: SessionVaultStore, audio: AudioSkillServices,
     snapshotLoader: @escaping SnapshotLoader = { ids, top in
       await WindowTargetMetadata.shared.snapshots(for: ids, primaryScreenTop: top)
+    },
+    releaseSnapshots: @escaping @Sendable () -> Void = {
+      WindowTargetMetadata.shared.releaseBoundWindows()
     }
   ) {
     self.audio = audio
     self.vault = vault
     self.snapshotLoader = snapshotLoader
+    self.releaseSnapshots = releaseSnapshots
+    windowDiagnostics = BoundWindowDiagnostics(sink: audio.diagnostics)
     vault.resumePendingSummaries()
   }
 
@@ -160,12 +167,14 @@ final class SkillCoordinator {
       token: advanceBindingToken(for: id))
     guard let session = makeSession(request) else { return nil }
     sessions[id] = session
+    if request.target != nil { windowDiagnostics.start(for: id) }
     setBinding(
       .active(
         target: request.target, skill: skill, startedAt: request.startedAt,
         statusDetail: session.initialStatusDetail), for: id)
     onEmitEvent?(id, WorkspaceEvent(skill.eventKind, at: request.startedAt))
     session.start()
+    tick()
     return session
   }
 
@@ -348,6 +357,7 @@ final class SkillCoordinator {
       ) { [weak self] outcome in
         guard let self, self.bindingTokens[request.companionID] == request.token else { return }
         self.sessions.removeValue(forKey: request.companionID)
+        self.windowDiagnostics.stop(for: request.companionID, reason: .userFinished)
         self.save(outcome, request: request, completionTarget: request.target)
       }
     case .listen, .participate, .record:
@@ -403,6 +413,7 @@ final class SkillCoordinator {
   private func finishOrCancelSession(for id: String) {
     guard case .active(_, let skill, _, _, _) = binding(for: id), skill.savesPartialOnCancel else {
       sessions.removeValue(forKey: id)?.cancel()
+      windowDiagnostics.stop(for: id, reason: .userFinished)
       return
     }
     finishSession(for: id)
@@ -419,6 +430,7 @@ final class SkillCoordinator {
     guard let session = sessions.removeValue(forKey: id),
       case .active(let target, let skill, let startedAt, _, _) = binding(for: id)
     else { return }
+    windowDiagnostics.stop(for: id, reason: reason)
     if let conversation = session as? ConversationActivity {
       onCloseChatSession?(conversation.presentation)
     }
@@ -488,6 +500,7 @@ final class SkillCoordinator {
     tickTask = nil
     tickTimer?.invalidate()
     tickTimer = nil
+    releaseSnapshots()
   }
 
   private func updateClock() {
@@ -554,6 +567,7 @@ final class SkillCoordinator {
       case .active(var target, let skill, let start, let detail, let level):
         guard let session = sessions[id] else { continue }
         let snapshot = target.flatMap { snapshots[$0.windowID] }
+        if let target { windowDiagnostics.observe(snapshot, target: target, for: id) }
         if let target, snapshot?.hasClosed(target) == true {
           finishSession(for: id, completionTarget: nil, reason: .sourceClosed)
           continue

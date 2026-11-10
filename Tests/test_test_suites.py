@@ -12,7 +12,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from test_evidence import IncompleteTestRun
-from test_suites import TestSuites
+from test_suites import TestSuites, swift_test_batches
 
 spec = importlib.util.spec_from_file_location("checked_runner", ROOT / "scripts/run-checked-tests.py")
 runner_module = importlib.util.module_from_spec(spec)
@@ -20,6 +20,20 @@ spec.loader.exec_module(runner_module)
 
 
 class TestSuiteTests(unittest.TestCase):
+    def test_process_batches_preserve_every_selected_test_and_keep_matrices_intact(self):
+        tests = {f"ExampleTests.test{index}" for index in range(130)}
+        matrices = {"ExampleTests.matrix", "ExampleTests.unselectedMatrix"}
+        tests.add("ExampleTests.matrix")
+        batches = swift_test_batches(tests, matrices)
+        self.assertEqual(set().union(*batches), tests)
+        self.assertEqual(sum(map(len, batches)), len(tests))
+        self.assertTrue(all(len(batch) <= 64 for batch in batches))
+        self.assertEqual(batches[-1], {"ExampleTests.matrix"})
+        self.assertEqual(batches, swift_test_batches(reversed(sorted(tests)), matrices))
+        self.assertEqual(swift_test_batches(set(), matrices), [])
+        with self.assertRaises(ValueError):
+            swift_test_batches(tests, matrices, maximum_tests=0)
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)

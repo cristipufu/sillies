@@ -22,7 +22,8 @@ package final class AudioTranscriptionService: SessionAudioCapture {
     self.init(
       configuration: configuration,
       dependencies: .init(
-        reportOverload: events.reportOverload, speech: speech, diarization: diarization),
+        reportOverload: events.reportOverload, lifecycle: events.lifecycle,
+        speech: speech, diarization: diarization),
       onUpdate: events.update)
   }
 
@@ -76,6 +77,7 @@ package final class AudioTranscriptionService: SessionAudioCapture {
   private func captureStarted(_ label: String) {
     queue.async { [self] in
       guard storage.withValue({ $0.lifecycle.beginCapture(at: dependencies.now()) }) else { return }
+      dependencies.lifecycle(.capturing)
       onUpdate(.capturing(label))
     }
   }
@@ -307,10 +309,10 @@ package final class AudioTranscriptionService: SessionAudioCapture {
       guard state.lifecycle.fail(failure, at: dependencies.now()) else { return }
       preparation.cancel()
       inputQueue.stop()
-      state.microphone?.stop(completion: {})
-      state.application?.stop(completion: {})
+      stopCaptureDevices(state)
       // Keep staged audio and recognition until the normal finish path drains both in order.
       onUpdate(.failed(failure))
+      dependencies.lifecycle(.failed(failure))
       fputs("Audio session failed: \(failure.message)\n", stderr)
     }
   }
@@ -332,8 +334,12 @@ package final class AudioTranscriptionService: SessionAudioCapture {
         }
         state.finishCompletions.append(completion)
         guard state.lifecycle.beginFinishing(at: dependencies.now(), reason: reason) else { return }
+        dependencies.lifecycle(.finishing(reason))
+        stopCaptureDevices(state)
         do { try flushMeetingAudio(state) } catch {
-          state.lifecycle.recordFinalizationNotice(SessionFailure(error, category: .finalization))
+          let failure = SessionFailure(error, category: .finalization)
+          state.lifecycle.recordFinalizationNotice(failure)
+          dependencies.lifecycle(.failed(failure))
           fputs("Meeting audio finalization failed: \(error.localizedDescription)\n", stderr)
         }
         state.meetingAudio = nil
@@ -344,30 +350,41 @@ package final class AudioTranscriptionService: SessionAudioCapture {
   }
 
   private func beginResourceDrain(_ state: AudioCaptureState) {
-    if state.microphone != nil { state.pendingStops.insert(.microphone) }
-    if state.application != nil { state.pendingStops.insert(.application) }
+    stopCaptureDevices(state)
     if state.speech != nil { state.pendingStops.insert(.speech) }
     guard !state.pendingStops.isEmpty else {
       deliverFinish()
       return
     }
-    state.microphone?.stop { [weak self] in self?.resourceStopped(.microphone) }
-    state.application?.stop { [weak self] in self?.resourceStopped(.application) }
     state.speech?.finish { [weak self] notice in self?.resourceStopped(.speech, notice: notice) }
     let deadline = DispatchWorkItem { [weak self] in self?.finishTimedOut() }
     state.deadline = deadline
-    queue.asyncAfter(deadline: .now() + dependencies.finishTimeout, execute: deadline)
+    queue.asyncAfter(
+      deadline: .now() + dependencies.finalizationTimeout(for: configuration.kind),
+      execute: deadline)
+  }
+
+  private func stopCaptureDevices(_ state: AudioCaptureState) {
+    if let microphone = state.microphone, state.requestedStops.insert(.microphone).inserted {
+      state.pendingStops.insert(.microphone)
+      microphone.stop { [weak self] in self?.resourceStopped(.microphone) }
+    }
+    if let application = state.application, state.requestedStops.insert(.application).inserted {
+      state.pendingStops.insert(.application)
+      application.stop { [weak self] in self?.resourceStopped(.application) }
+    }
   }
 
   private func resourceStopped(_ source: AudioCaptureState.StopSource, notice: String? = nil) {
     queue.async { [self] in
       storage.withValue { state in
-        guard state.lifecycle.phase == .finishing, state.pendingStops.remove(source) != nil else {
+        guard state.lifecycle.phase != .finished, state.pendingStops.remove(source) != nil else {
           return
         }
+        dependencies.lifecycle(.resourceStopped(source))
         state.lifecycle.recordFinalizationNotice(
           notice.map { SessionFailure(category: .finalization, message: $0) })
-        if state.pendingStops.isEmpty { deliverFinish() }
+        if state.lifecycle.phase == .finishing, state.pendingStops.isEmpty { deliverFinish() }
       }
     }
   }
@@ -375,6 +392,10 @@ package final class AudioTranscriptionService: SessionAudioCapture {
   private func finishTimedOut() {
     storage.withValue { state in
       guard state.lifecycle.phase == .finishing else { return }
+      for resource in AudioCaptureLifecycleEvent.Resource.allCases
+      where state.pendingStops.contains(resource) {
+        dependencies.lifecycle(.resourceTimedOut(resource))
+      }
       state.speech?.cancel()
       state.lifecycle.recordFinalizationNotice(
         SessionFailure(
@@ -391,8 +412,9 @@ package final class AudioTranscriptionService: SessionAudioCapture {
       var audioURL: URL?
       do { audioURL = try state.writer?.finish() } catch {
         let message = String(localized: "Audio could not be saved: \(error.localizedDescription)")
-        state.lifecycle.recordRecordingFailure(
-          SessionFailure(category: .recordingSave, message: message))
+        let failure = SessionFailure(category: .recordingSave, message: message)
+        state.lifecycle.recordRecordingFailure(failure)
+        dependencies.lifecycle(.failed(failure))
         fputs("\(message)\n", stderr)
       }
       var result = AudioCaptureResult(
@@ -403,6 +425,7 @@ package final class AudioTranscriptionService: SessionAudioCapture {
       result.segments = state.speech?.segments ?? []
       state.lifecycle.completeFinishing()
       state.result = result
+      dependencies.lifecycle(.finished)
       state.deadline?.cancel()
       state.deadline = nil
       state.writer = nil

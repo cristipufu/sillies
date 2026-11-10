@@ -56,6 +56,12 @@
       "boundCompanionAndHUDHideTogetherWithoutEndingTheirSkill()": "gui"
     }
   },
+  "BoundWindowLifetimeTests.swift": {
+    "default": "headless"
+  },
+  "MeetingLifecycleDiagnosticsTests.swift": {
+    "default": "headless"
+  },
   "CharacterRosterTests.swift": {
     "default": "headless",
     "tests": {

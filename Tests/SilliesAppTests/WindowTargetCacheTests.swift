@@ -1,8 +1,40 @@
 import Foundation
 import SilliesCore
+import Synchronization
 import Testing
 
 @testable import SilliesApp
+
+@Test func boundWindowLifetimeRejectsAnInFlightSnapshotAfterItsOwnerStops() async {
+  let entered = AsyncStream<Void>.makeStream()
+  let gate = DispatchSemaphore(value: 0)
+  let reads = Mutex(0)
+  let metadata = WindowTargetMetadata(
+    snapshots: .init(
+      read: { _, _ in
+        let first = reads.withLock {
+          $0 += 1
+          return $0 == 1
+        }
+        if first {
+          entered.continuation.yield(())
+          gate.wait()
+        }
+        return [42: .init(frame: .zero, title: nil)]
+      }, accessibility: .init(inventory: { _ in nil })))
+  let previous = Task { await metadata.snapshots(for: [42], primaryScreenTop: 600) }
+  var starts = entered.stream.makeAsyncIterator()
+  _ = await starts.next()
+  previous.cancel()
+  metadata.releaseBoundWindows()
+  gate.signal()
+  let stale = await previous.value
+  #expect(stale.isEmpty)
+  let current = await metadata.snapshots(for: [42], primaryScreenTop: 600)
+  #expect(current[42]?.visibility == .visible)
+  metadata.releaseBoundWindows()
+  entered.continuation.finish()
+}
 
 @Test func roleCacheRejectsLateRefreshAndPreservesVerifiedSnapshotOnTimeout() throws {
   let cache = WindowTargetCache()

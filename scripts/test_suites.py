@@ -4,6 +4,20 @@ from pathlib import Path
 
 from test_evidence import IncompleteTestRun, swift_test_name
 
+MAXIMUM_TESTS_PER_PROCESS = 64
+
+
+def swift_test_batches(tests, parameterized, maximum_tests=MAXIMUM_TESTS_PER_PROCESS):
+    """Keep matrices intact, and bound ordinary groups without extending any watchdog."""
+    if maximum_tests <= 0:
+        raise ValueError("A test batch must have positive capacity")
+    tests = set(tests)
+    matrices = tests & set(parameterized)
+    ordinary = sorted(tests - matrices)
+    batches = [set(ordinary[start:start + maximum_tests])
+               for start in range(0, len(ordinary), maximum_tests)]
+    return batches + [{test} for test in sorted(matrices)]
+
 
 def unique_fields(pairs):
     result = {}

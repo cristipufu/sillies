@@ -390,7 +390,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         vault: reasoningServices.makeVault(),
         audio: .init(
           captureFactory: speech.captureFactory, languages: speech.languages,
-          reasoning: reasoningServices.reasoning))
+          reasoning: reasoningServices.reasoning, diagnostics: diagnostics?.sink ?? .disabled))
     }
     let tempVault = FileManager.default.temporaryDirectory
       .appendingPathComponent("sillies-vault-\(UUID().uuidString)", isDirectory: true)

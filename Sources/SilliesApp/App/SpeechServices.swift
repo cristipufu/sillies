@@ -107,7 +107,10 @@ final class SpeechServices {
             CaptureDiagnostics.recordRecognition(event, operation: operation, sink: diagnostics)
             update(event)
           },
-          reportOverload: { CaptureDiagnostics.record($0, operation: operation, sink: diagnostics) }
+          reportOverload: {
+            CaptureDiagnostics.record($0, operation: operation, sink: diagnostics)
+          },
+          lifecycle: { CaptureDiagnostics.record($0, operation: operation, sink: diagnostics) }
         ))
     }
   }

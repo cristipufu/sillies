@@ -3,7 +3,7 @@ import SilliesCore
 
 /// Confined by SerialQueueStorage. SDK/DSP objects never leave the capture worker.
 final class AudioCaptureState {
-  enum StopSource: Hashable { case microphone, application, speech }
+  typealias StopSource = AudioCaptureLifecycleEvent.Resource
   var lifecycle = AudioSessionLifecycle()
   var speech: SessionSpeechPipeline?
   var transcriptionFailure: SessionFailure?
@@ -14,6 +14,7 @@ final class AudioCaptureState {
   var meetingAudio: MeetingAudioProcessor?
   var lastPublishedAt: TimeInterval = 0
   var pendingStops: Set<StopSource> = []
+  var requestedStops: Set<StopSource> = []
   var finishCompletions: [@Sendable (AudioCaptureResult) -> Void] = []
   var result: AudioCaptureResult?
   var finalizationOwner: AudioTranscriptionService?

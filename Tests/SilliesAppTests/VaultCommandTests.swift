@@ -19,11 +19,12 @@ import Testing
     presentation: .init(initialRecordID: original.id))
   await model.loadSelection()
   let displayed = try #require(model.visibleDetail)
+  let notesInput = try #require(try await vault.library.notesInput(id: original.id))
   try await vault.edit(
     id: original.id,
     .completeNotes(
       .init(summary: "New notes", actions: ["A commitment"]),
-      revision: original.processingRevision.notes))
+      revision: notesInput.revision))
   await vault.flush()
   model.toggleProtection(displayed)
   await vault.flush()
@@ -45,6 +46,7 @@ import Testing
   let original = commandRecord()
   vault.add(original)
   await vault.flush()
+  let notesInput = try #require(try await vault.library.notesInput(id: original.id))
   var renamed = original
   renamed.transcript = "Alex: The updated transcript."
   renamed.speakerNames = ["meeting:1": "Alex"]
@@ -56,7 +58,7 @@ import Testing
     try await vault.edit(
       id: original.id,
       .completeNotes(
-        .init(summary: "Stale notes", actions: []), revision: original.processingRevision.notes))
+        .init(summary: "Stale notes", actions: []), revision: notesInput.revision))
       == false)
   let saved = try #require(try await vault.record(id: original.id))
   #expect(saved.transcript == renamed.transcript)

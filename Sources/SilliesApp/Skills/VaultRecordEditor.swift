@@ -1,5 +1,6 @@
 import Foundation
 import SilliesCore
+import SilliesReasoning
 import SilliesVault
 
 /// Serial field edits. Worker reads return through modal-safe delivery before a synchronous mutation.
@@ -10,6 +11,7 @@ import SilliesVault
     let isRemoved: (UUID) -> Bool
     let save: (SessionRecord) -> Void
     var applyProtection: ((UUID, VaultRecordProtection, @escaping Completion) -> Void)? = nil
+    let completeNotes: (UUID, LocalNotes, VaultNotesInput.Revision, @escaping Completion) -> Void
   }
   typealias Completion = @MainActor (Result<Bool, Error>) -> Void
   private struct Request {
@@ -48,6 +50,10 @@ import SilliesVault
     guard let request = active else { return }
     if context.isRemoved(request.id) {
       finish(.success(false))
+      return
+    }
+    if case .completeNotes(let notes, let revision) = request.edit {
+      context.completeNotes(request.id, notes, revision) { [weak self] in self?.finish($0) }
       return
     }
     if let record = context.pending(request.id) {

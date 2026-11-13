@@ -53,15 +53,17 @@ import SilliesTextModels
   func makeVault(directory: URL? = nil) -> SessionVaultStore {
     SessionVaultStore(
       directory: directory,
-      notesGenerator: { [reasoning] record in
+      notesGenerator: { [reasoning] input in
+        let record = input.record
         if record.kind == .stash {
           let (summary, actions) = await SessionSummaryWorker.summarize(
             text: record.primaryText, fallbackContext: record.summary)
           return LocalNotes(summary: summary, actions: actions)
         }
         return await reasoning.notes(
-          for: record.primaryText, kind: record.kind, fallback: record.summary,
-          localeIdentifier: record.languageIdentifier)
+          for: .init(
+            source: record.primaryText, kind: record.kind, fallback: record.summary,
+            personalNotes: input.personalNotes, localeIdentifier: record.languageIdentifier))
       })
   }
 }

@@ -13,10 +13,9 @@ struct FixtureReasoning: LocalReasoning {
   func availabilityNotice(localeIdentifier: String?) async -> String? {
     await availability(localeIdentifier)
   }
-  func notes(
-    for text: String, kind: CompanionSkillKind, fallback: String, localeIdentifier: String?
-  ) async -> LocalNotes {
-    let result = await SessionSummaryWorker.summarize(text: text, fallbackContext: fallback)
+  func notes(for request: LocalNotesRequest) async -> LocalNotes {
+    let result = await SessionSummaryWorker.summarize(
+      text: request.source, fallbackContext: request.fallback)
     return LocalNotes(
       summary: result.summary, actions: result.actionItems, provenance: .init(source: .extracted))
   }
@@ -34,10 +33,12 @@ extension SessionVaultStore {
       directory: directory
         ?? FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString),
       pasteboard: pasteboard, defaults: defaults,
-      notesGenerator: { record in
+      notesGenerator: { input in
         await FixtureReasoning().notes(
-          for: record.primaryText, kind: record.kind, fallback: record.summary,
-          localeIdentifier: record.languageIdentifier)
+          for: .init(
+            source: input.record.primaryText, kind: input.record.kind,
+            fallback: input.record.summary,
+            personalNotes: input.personalNotes, localeIdentifier: input.record.languageIdentifier))
       })
   }
 }

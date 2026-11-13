@@ -20,7 +20,7 @@ package enum VaultRecordEdit: Sendable {
   case protection(Protection)
   case requestNotes
   case renameSpeaker(SpeakerEdit)
-  case completeNotes(LocalNotes, revision: UUID)
+  case completeNotes(LocalNotes, revision: VaultNotesInput.Revision)
   case retryScreenshot
   case completeScreenshot(text: String, revision: UUID)
   case failScreenshot(message: String, revision: UUID)
@@ -47,7 +47,9 @@ package enum VaultRecordEdit: Sendable {
       record.originalSpeakerTranscript = edit.originalTranscript
       requestNotes(in: &record)
     case .completeNotes(let notes, let revision):
-      guard record.summaryPending, record.processingRevision.notes == revision else { return false }
+      guard record.summaryPending, record.processingRevision.notes == revision.generation else {
+        return false
+      }
       record.summary = notes.summary
       record.notesSource = notes.source
       record.actionItems = notes.actions

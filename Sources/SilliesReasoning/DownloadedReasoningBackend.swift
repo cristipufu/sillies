@@ -3,6 +3,7 @@ import SilliesModelStore
 import SilliesTextModels
 
 package struct DownloadedReasoningBackend: ReasoningBackend {
+  package var meetingNotesStyle: MeetingNotesStyle { .synthesized }
   let manifest: TextModelManifest
   let store: ModelStore
   let registry: TextModelRegistry

@@ -128,6 +128,55 @@ headers and batched excerpts share one read snapshot. Cursor positions retain SQ
 double value rather than a rounded text conversion. Revision checks prevent stale results from
 publishing after edits or deletion.
 
+## Generated meeting notes
+
+Finishing a recording saves its transcript before background notes run. Notes group recurring subjects
+in the existing reading pane. My notes stays authored text; it can guide emphasis but never establish
+an outcome. Regenerate notes uses the latest saved transcript and annotations. Completed older records
+are not regenerated on launch, and this change requires no database migration.
+
+`ReasoningBackend.meetingNotesStyle` selects the content workflow. Apple uses `MeetingExcerptDraft`:
+headings must occur in the source, and every displayed passage is copied from the transcript. Keep
+source wording and language, including proposals, negations and later corrections. Each topic retains
+at most six complete source passages: the first two and the latest four, in source order. My notes
+can move matching subjects earlier; they never enter excerpt inference or become quoted evidence.
+The existing Extracted Highlights label and notice explain the provenance.
+
+Downloaded models opt into `MeetingSynthesisDraft`, which owns generated paragraphs and display
+translation. `MeetingTopicWriter` updates each subject from relevant later passages. Numeric claims
+must occur in its evidence or earlier notes; personal notes cannot introduce numbers. This mode has
+injected backend coverage; real downloaded-model output must also be reviewed when qualifying a model.
+
+`MeetingNotesGenerator` owns the common source loop, action extraction and cancellation. The drafts
+own their catalogs, with stable job-local identities. `MeetingTopicResolver` compares only two labels
+per request, behind a shared content-term check. Surface forms and lemmas both participate because
+native tagging can assign different lemmas to an isolated heading and the same word in a sentence.
+`MeetingTopicEvidence` retains original ranges and selects matching sentences plus following context.
+Context cannot cross a paragraph boundary or introduce another known subject into an excerpt group.
+
+`MeetingTranscriptSlicer` and `NotesInference` measure provider-shaped requests against the selected
+model profile, reserving output, reasoning and structured-response headroom. Evidence splits at sentence
+or word boundaries rather than dropping a source tail. Each generation releases background admission
+before the next request. Actions are exact source quotations, separately reviewed for a concrete future
+task and actor; agreeing on a date alone is not a task. Apple keeps the original wording and language.
+The synthesis workflow translates validated passages with protected-content checks. Provider refusal
+or invalid output falls back to labeled extracted highlights, with no inferred actions.
+
+`VaultNotesInput` reads one record and its authored context in one snapshot. Completion applies a
+`VaultRecordEdit` in a transaction that checks the generation and transcript, OCR and personal-notes
+revisions. Completion flushes dirty workspace drafts before checking those revisions. Background notes
+failures do not block source-write barriers or prevent later jobs from entering the queue. Unrelated
+edits survive. Changed input queues fresh work; deleted or trashed sources cannot
+receive a completion. The scheduler retains failed reads or completed writes for explicit Retry.
+Delivery retries reuse the result. Pause, including pause during a retry, retains that payload;
+deletion or superseding work retires it. Queued jobs wait until the failure is resolved.
+
+Run `MeetingNotesTests`, `MeetingExcerptTests`, `VaultNotesRevisionTests`, `VaultSummarySchedulerTests`
+and `VaultTopicNotesTests` for source boundaries, budgets, cancellation, stale writes, rollback and retry.
+The opt-in `SILLIES_TOPIC_NOTES_QUALITY_CHECK=1` native check prints only synthetic sources and outputs.
+Review grouping, chronology, original wording and task classification against the source; successful
+decoding alone does not establish factual accuracy. No visible application workflow is required.
+
 ## Search and its limits
 
 FTS5 indexes editable content blocks, including authored notes, tags and saved-link descriptions. The

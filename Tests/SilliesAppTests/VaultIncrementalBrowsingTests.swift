@@ -78,10 +78,11 @@ import Testing
   await model.refreshSearch()
   #expect(model.filteredRecords.isEmpty)
   let previousIdentity = model.detailIdentity
+  let firstInput = try #require(try await vault.library.notesInput(id: first.id))
   try await vault.edit(
     id: first.id,
     .completeNotes(
-      .init(summary: "A decision", actions: []), revision: first.processingRevision.notes))
+      .init(summary: "A decision", actions: []), revision: firstInput.revision))
   await vault.flush()
   let beforeFirstRefresh = try await vault.library.metrics()
   await model.refreshSearch()
@@ -91,11 +92,12 @@ import Testing
   await model.loadSelection()
   #expect(model.visibleDetail?.summary == "A decision")
   try await vault.edit(id: first.id, .requestNotes)
-  let revised = try #require(try await vault.record(id: first.id))
+  await vault.flush()
+  let revised = try #require(try await vault.library.notesInput(id: first.id))
   try await vault.edit(
     id: first.id,
     .completeNotes(
-      .init(summary: "No matching word", actions: []), revision: revised.processingRevision.notes))
+      .init(summary: "No matching word", actions: []), revision: revised.revision))
   await vault.flush()
   let before = try await vault.library.metrics()
   await model.refreshSearch()

@@ -4,11 +4,11 @@ The wheel and the mascot's context menu expose the same six actions. Hover over 
 
 | Skill | Input | Result |
 | --- | --- | --- |
-| Listen | Selected application’s output and microphone | Playable recording, local transcript, summary and explicit action items |
+| Listen | Selected application’s output and microphone | Playable recording, local transcript, topic notes and explicit action items |
 | Participate | The same audio as Listen | The same recording and notes, plus one live suggestion in a mascot speech bubble |
 | Snap | One selected window image | PNG on clipboard and in the Vault immediately; background OCR adds searchable text |
 | Explain | One selected window image | PNG, Vision OCR, summary and plain-language explanation of the recognized text |
-| Record | Built-in microphone where available; otherwise default microphone | Playable `.m4a` AAC file, local transcript, summary and action items |
+| Record | Built-in microphone where available; otherwise default microphone | Playable `.m4a` AAC file, local transcript, topic notes and action items |
 | Chat | Typed messages or an explicit voice conversation | A conversation with the companion, optional spoken replies, and a saved transcript |
 
 Chat uses a compact messenger window with selectable message bubbles, a Latest control, and shared
@@ -20,6 +20,8 @@ microphone audio, read screen contents, or perform actions in other apps. Person
 voices belong to character JSON. See [local voices and Chat](local-voice-models.md).
 
 ScreenCaptureKit's audio filter is application-wide. Selecting a Google Meet browser window includes audio playing in other tabs of that browser. Sillies does not claim per-tab isolation. Microphone speech is labeled separately from app speech. Optional downloaded speaker detection adds source-scoped speaker numbers. Users can name speakers per saved recording; names update transcript headers and regenerated notes without changing spoken words. Source labels alone do not identify individual people. Both meeting skills apply local acoustic echo cancellation to support laptop speakers. Explain reasons over OCR text, not invisible content or the visual meaning of images alone.
+
+Recording notes group recurring subjects. With Apple’s built-in AI, Extracted Highlights contains exact transcript excerpts in their original language, including earlier proposals and later corrections. Each subject keeps bounded opening and recent context. Downloaded text models can synthesize summaries in the selected language. My notes remains authored text; it guides emphasis without becoming evidence. Action items retain source-backed tasks. Existing completed records change only when you choose Regenerate notes.
 
 ## Capture and meeting apps
 
@@ -41,7 +43,7 @@ Bound mascots order immediately above the target window. Their bars and suggesti
 
 Sillies requires macOS 26 or later. SpeechAnalyzer/SpeechTranscriber handles long-running speech, using two independent channels for both meeting skills. The Spoken language menu lists system-supported locales and distinguishes models already installed on this Mac from unavailable ones. Sillies never requests a model download. Recognition requires an explicit locale; it does not infer the spoken language from audio. No remote recognition fallback is enabled. SpeechAnalyzer does not require the older Speech Recognition authorization; microphone and system-audio permissions still apply.
 
-The remembered installed language is used at startup; otherwise Sillies chooses an installed match for the device language. If neither is available, the mascot bar asks the user to open the transcript and choose a ready language. Changes affect new speech, preserve earlier text, and switch both meeting channels together. Audio capture and the recording file remain open while recognizers change; bounded buffering bridges the switch. A paused session remains paused. The final selection is saved with the record and controls generated notes and suggestions; existing transcript text is never retroactively translated.
+The remembered installed language is used at startup; otherwise Sillies chooses an installed match for the device language. If neither is available, the mascot bar asks the user to open the transcript and choose a ready language. Changes affect new speech, preserve earlier text, and switch both meeting channels together. Audio capture and the recording file remain open while recognizers change; bounded buffering bridges the switch. A paused session remains paused. The final selection is saved with the record and controls synthesized notes and suggestions. Transcript text and copied excerpts retain their original language.
 
 Transcript passages are ordered by their audio timestamps, independently of result arrival order. Revisions replace the matching unfinished range within the same source; disjoint drafts survive until finalized. A sub-sample timestamp tolerance prevents floating-point rounding from treating adjacent sentences as overlapping. Application and microphone streams share a session clock. Echo cancellation runs before speech recognition; chronological ordering remains a separate responsibility.
 

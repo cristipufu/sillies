@@ -3,6 +3,7 @@ import FoundationModels
 import SilliesTextModels
 
 package struct AppleReasoningBackend: ReasoningBackend {
+  package var meetingNotesStyle: MeetingNotesStyle { .sourceExcerpts }
   let conversations: AppleConversationSessions
   package init() { conversations = AppleConversationSessions() }
   init(conversations: AppleConversationSessions) { self.conversations = conversations }
@@ -54,26 +55,40 @@ package struct AppleReasoningBackend: ReasoningBackend {
     let session = LanguageModelSession(model: .default, instructions: request.instructions)
     let options = AppleGenerationOptions.make(request)
     switch format {
-    case .text: return try await session.respond(to: request.prompt, options: options).content
+    case .text:
+      return try await session.respond(to: request.prompt, options: options).content
+    case .meetingTopicMatch, .actionReview:
+      let text = try await session.respond(
+        to: request.prompt + "\nAnswer YES or NO only.", options: options
+      ).content
+      return try encode(
+        AppleNotesText.decision(text))
     case .notes:
       return try encode(
         await session.respond(to: request.prompt, generating: GeneratedNotes.self, options: options)
           .content)
-    case .actions:
+    case .meetingTopics:
+      let text = try await session.respond(
+        to: request.prompt + AppleNotesText.listInstruction, options: options
+      ).content
       return try encode(
-        await session.respond(
-          to: request.prompt, generating: GeneratedActionEvidence.self, options: options
-        ).content)
+        GeneratedMeetingTopics(topics: AppleNotesText.items(text)))
+    case .meetingTopicBody:
+      throw TextModelError.invalidResponse
+    case .actions:
+      let text = try await session.respond(
+        to: request.prompt + AppleNotesText.listInstruction, options: options
+      ).content
+      return try encode(
+        GeneratedActionEvidence(passages: AppleNotesText.items(text)))
     case .suggestion:
       return try encode(
         await session.respond(
           to: request.prompt, generating: GeneratedSuggestion.self, options: options
         ).content)
     case .translations:
-      return try encode(
-        await session.respond(
-          to: request.prompt, generating: TranslatedCommitments.self, options: options
-        ).content)
+      let text = try await session.respond(to: request.prompt, options: options).content
+      return try encode(GeneratedTranslations(translations: [text]))
     }
   }
   private func encode(_ value: some Encodable) throws -> String {

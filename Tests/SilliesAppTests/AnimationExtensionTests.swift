@@ -597,7 +597,8 @@ private func spinModalPanelRunLoopUntil(_ condition: () -> Bool) {
 
   let recoveredVault = SessionVaultStore(
     directory: pendingDirectory,
-    notesGenerator: { record in
+    notesGenerator: { input in
+      let record = input.record
       let (summary, actions) = await SessionSummaryWorker.summarize(
         text: record.primaryText, fallbackContext: record.summary)
       return LocalNotes(summary: summary, actions: actions)

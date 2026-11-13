@@ -11,6 +11,12 @@ import SilliesVault
   nonisolated static let maxCacheBytes = VaultImageCache.maximumBytes
   nonisolated static let maxPreviewPixelDimension = VaultImageCodec.maxPreviewPixelDimension
   private enum LoadState { case loading, ready, failed }
+  private struct NotesCompletion: Sendable {
+    let id: UUID
+    let notes: LocalNotes
+    let revision: VaultNotesInput.Revision
+    let respond: VaultRecordEditor.Completion
+  }
   private(set) var records: [SessionRecordHeader] = []
   private(set) var recordCount = 0
   private(set) var eligibleRetentionCount = 0
@@ -19,9 +25,11 @@ import SilliesVault
   private(set) var retentionPolicy: VaultRetentionPolicy
   private(set) var pinnedRecordID: UUID?
   private var writeError: String?
+  private var notesWriteError: String?
   private(set) var restoredPreviousDirectory: URL?
   private var draftErrors: [UUID: String] = [:]
-  var persistenceError: String? { writeError ?? draftErrors.values.first }
+  private var sourceWriteError: String? { writeError ?? draftErrors.values.first }
+  var persistenceError: String? { sourceWriteError ?? notesWriteError }
   private(set) var isLoading = true
   @ObservationIgnored private var loadState = LoadState.loading
   @ObservationIgnored private var loadCompletions: [@MainActor () -> Void] = []
@@ -65,8 +73,9 @@ import SilliesVault
     media = VaultMediaStore(
       directory: storageDirectory, pasteboard: pasteboard, queue: Self.imageQueue)
     summaries = VaultSummaryScheduler(
-      load: { try await library.record(id: $0) }, generate: notesGenerator)
+      load: { try await library.notesInput(id: $0) }, generate: notesGenerator)
     writer.report = { [weak self] in self?.writeError = $0 }
+    summaries.reportFailure = { [weak self] in self?.notesWriteError = $0 }
     writer.committed = { [weak self] in self?.receive($0) }
     linkPreviews.changed = { [weak self] in self?.changes.record([$0]) }
     screenshotText.next = { [weak self, library] in
@@ -99,7 +108,60 @@ import SilliesVault
             return
           }
           self.applyProtection(protection, for: id, completion: completion)
+        },
+        completeNotes: { [weak self] id, notes, revision, completion in
+          guard let self else {
+            completion(.success(false))
+            return
+          }
+          self.completeNotes(id: id, notes: notes, revision: revision, completion: completion)
         }))
+  }
+
+  private func completeNotes(
+    id: UUID, notes: LocalNotes, revision: VaultNotesInput.Revision,
+    completion: @escaping VaultRecordEditor.Completion
+  ) {
+    let request = NotesCompletion(id: id, notes: notes, revision: revision, respond: completion)
+    flushDrafts { [weak self] in
+      guard let self else {
+        request.respond(.success(false))
+        return
+      }
+      self.writer.flush { [weak self] in
+        guard let self, !self.writer.isRemoved(request.id) else {
+          request.respond(.success(false))
+          return
+        }
+        if let error = self.sourceWriteError {
+          request.respond(.failure(VaultStorageError(message: error)))
+          return
+        }
+        self.persistNotes(request)
+      }
+    }
+  }
+
+  private func persistNotes(_ request: NotesCompletion) {
+    Task.detached { [weak self, library] in
+      let result: Result<VaultSnapshot?, Error>
+      do {
+        result = .success(
+          try await library.completeNotes(
+            id: request.id, notes: request.notes, revision: request.revision))
+      } catch { result = .failure(error) }
+      MainRunLoopDelivery.perform {
+        do {
+          guard let self, let snapshot = try result.get(), !self.writer.isRemoved(request.id) else {
+            request.respond(.success(false))
+            return
+          }
+          self.receive(snapshot)
+          self.changes.record([request.id])
+          request.respond(.success(true))
+        } catch { request.respond(.failure(error)) }
+      }
+    }
   }
 
   private func applyProtection(
@@ -217,6 +279,7 @@ import SilliesVault
       load()
     } else {
       writer.retry()
+      summaries.retry()
     }
   }
 
@@ -331,7 +394,7 @@ import SilliesVault
     }
   }
   func whenPersisted(_ completion: @escaping @MainActor (String?) -> Void) {
-    flushOnIOQueue { [weak self] in MainActor.assumeIsolated { completion(self?.persistenceError) }
+    flushOnIOQueue { [weak self] in MainActor.assumeIsolated { completion(self?.sourceWriteError) }
     }
   }
   func drainStagedPreviewsForTermination() { media.drain() }
@@ -345,10 +408,10 @@ import SilliesVault
   }
   private func scheduleSummary(_ id: UUID) {
     summaries.schedule(id) { [weak self] notes, revision in
-      do {
-        try await self?.edit(id: id, .completeNotes(notes, revision: revision))
-        await self?.flush()
-      } catch { fputs("Could not update Vault notes: \(error)\n", stderr) }
+      guard let self else { return false }
+      let accepted = try await edit(id: id, .completeNotes(notes, revision: revision))
+      await flush()
+      return accepted
     }
   }
   func resumePendingSummaries() {

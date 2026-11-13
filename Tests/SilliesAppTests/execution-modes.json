@@ -386,5 +386,8 @@
   },
   "VaultEvidenceNavigationTests.swift": {
     "default": "headless"
+  },
+  "VaultTopicNotesTests.swift": {
+    "default": "headless"
   }
 }

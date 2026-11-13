@@ -26,7 +26,11 @@ private actor DelayedVaultRead {
     load: { _ in await worker.load() },
     context: .init(
       revision: { _ in revision }, pending: { _ in pending }, isRemoved: { _ in false },
-      save: { saved = $0 }))
+      save: { saved = $0 },
+      completeNotes: { _, _, _, complete in
+        Issue.record("This fixture only accepts field edits")
+        complete(.success(false))
+      }))
   var completed = false
   editor.submit(id: original.id, edit: .protection(.protected)) { result in
     if case .success(true) = result {

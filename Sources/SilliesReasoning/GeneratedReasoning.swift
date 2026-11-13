@@ -1,5 +1,9 @@
 import FoundationModels
 
+struct GeneratedReasoningDecision: Codable, Sendable {
+  var answer: Bool
+}
+
 @Generable
 struct GeneratedNotes: Codable, Sendable {
   @Guide(description: "A concise factual summary of the supplied source only.")
@@ -9,15 +13,6 @@ struct GeneratedNotes: Codable, Sendable {
       "For Explain: a plain-language explanation of the visible text, with uncertainty stated. Otherwise empty."
   )
   var explanation: String
-}
-
-@Generable
-struct GeneratedActionEvidence: Codable, Sendable {
-  @Guide(
-    description:
-      "Every source sentence that explicitly commits to a task, copied verbatim. Include all separate assignments and promises. Preserve names and dates. Empty if no commitments."
-  )
-  var passages: [String]
 }
 
 @Generable

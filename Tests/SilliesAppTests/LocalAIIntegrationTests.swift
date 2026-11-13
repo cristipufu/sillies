@@ -1,6 +1,5 @@
 import AVFoundation
 import Foundation
-import NaturalLanguage
 import SilliesAudioTestSupport
 import SilliesCore
 import SilliesDiarizationNemotron
@@ -31,19 +30,21 @@ private final class SpeechFixtureOutput: @unchecked Sendable {
 }
 
 @Test(.enabled(if: ProcessInfo.processInfo.environment["SILLIES_LOCAL_AI_CHECK"] == "1"))
-func localNotesHonorTheSelectedLanguage() async {
+func localMeetingExcerptsPreserveSourceLanguageAndTasks() async {
   let notice = await LocalReasoningService(backend: AppleReasoningBackend()).availabilityNotice(
-    localeIdentifier: "fr-FR")
+    localeIdentifier: "en")
   guard notice == nil else { return }
+  let source = "We agreed to ship the report on Friday. Alex will review the draft tomorrow."
   let result = await LocalReasoningService(backend: AppleReasoningBackend()).notes(
-    for: "We agreed to ship the report on Friday. Alex will review the draft tomorrow.",
-    kind: .record, fallback: "Fixture", localeIdentifier: "fr-FR")
-  print("FRENCH NOTES: \(result.summary) | \(result.actions)")
-  #expect(NLLanguageRecognizer.dominantLanguage(for: result.summary) == .french)
-  #expect(result.actions.contains { $0.localizedCaseInsensitiveContains("vendredi") })
-  #expect(
-    result.actions.contains { $0.contains("Alex") && $0.localizedCaseInsensitiveContains("demain") }
-  )
+    for: .init(source: source, kind: .record, fallback: "Fixture", localeIdentifier: "fr-FR"))
+  print("SOURCE EXCERPTS: \(result.summary) | \(result.actions)")
+  #expect(result.source == .extracted && result.notice.isEmpty)
+  #expect(result.summary.contains("We agreed to ship the report on Friday."))
+  for line in result.summary.split(separator: "\n") where line.hasPrefix("• ") {
+    #expect(source.contains(line.dropFirst("• ".count)))
+  }
+  #expect(result.actions.allSatisfy { source.contains($0) })
+  #expect(result.actions.contains { $0.contains("Alex") && $0.contains("tomorrow") })
 }
 
 /// Opt-in: feeds a generated speech file, never records the room or an application.
@@ -137,7 +138,7 @@ func prepareDownloadedSpeechModelForIntegration() async throws {
     "We agreed to ship the report on Friday. Alex will review the draft tomorrow. The owner of the customer follow-up is still undecided."
   let notes = Task.detached {
     await LocalReasoningService(backend: AppleReasoningBackend()).notes(
-      for: source, kind: .participate, fallback: "Fixture")
+      for: .init(source: source, kind: .participate, fallback: "Fixture"))
   }
   let notice = await LocalReasoningService(backend: AppleReasoningBackend()).availabilityNotice()
   print("LOCAL AI AVAILABILITY: \(notice ?? "available")")
@@ -174,7 +175,7 @@ func prepareDownloadedSpeechModelForIntegration() async throws {
   print("LOCAL NOTES: \(result.summary) | \(result.actions) | \(result.notice)")
   #expect(!result.summary.isEmpty)
   if notice == nil {
-    #expect(result.actions.contains { $0.localizedCaseInsensitiveContains("report") })
+    #expect(result.summary.localizedCaseInsensitiveContains("report"))
     #expect(
       result.actions.contains {
         $0.localizedCaseInsensitiveContains("Alex")

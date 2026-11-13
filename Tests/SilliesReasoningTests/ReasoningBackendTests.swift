@@ -8,10 +8,11 @@ import Testing
   let backend = NotesBackend()
   let service = LocalReasoningService(backend: backend)
   let notes = await service.notes(
-    for: "Ștefan trimite raportul mâine la 14:30.", kind: .listen, fallback: "Recording",
-    localeIdentifier: "ro")
+    for: .init(
+      source: "Ștefan trimite raportul mâine la 14:30.", kind: .listen, fallback: "Recording",
+      localeIdentifier: "ro"))
   #expect(notes.source == .generated)
-  #expect(notes.summary == "Raportul va fi trimis mâine.")
+  #expect(notes.summary.contains("Raportul va fi trimis mâine."))
   #expect(notes.actions == ["Ștefan trimite raportul mâine la 14:30."])
   #expect(await backend.instructions.contains { $0.contains("Romanian") })
 }
@@ -19,8 +20,9 @@ import Testing
 @Test func invalidDownloadedOutputFallsBackWithoutReplacingTheSourceWithInventedNotes() async {
   let service = LocalReasoningService(backend: InvalidBackend())
   let notes = await service.notes(
-    for: "Ștefan trimite raportul mâine.", kind: .listen, fallback: "Recording",
-    localeIdentifier: "ro")
+    for: .init(
+      source: "Ștefan trimite raportul mâine.", kind: .listen, fallback: "Recording",
+      localeIdentifier: "ro"))
   #expect(notes.source == .extracted)
   #expect(notes.actions.isEmpty)
   #expect(!notes.notice.isEmpty)
@@ -47,20 +49,22 @@ import Testing
   await gate.release()
 }
 
-private actor NotesBackend: ReasoningBackend {
+private actor NotesBackend: NotesTestBackend {
   private(set) var instructions: [String] = []
   func availabilityNotice(localeIdentifier: String?) -> String? { nil }
   func generate(_ request: TextGenerationRequest, format: ReasoningFormat) throws -> String {
     instructions.append(request.instructions)
     switch format {
-    case .notes: return #"{"summary":"Raportul va fi trimis mâine.","explanation":""}"#
+    case .meetingTopics: return #"{"topics":["raportul"]}"#
+    case .meetingTopicBody: return #"{"body":"Raportul va fi trimis mâine."}"#
     case .actions:
       return #"{"passages":["Ștefan trimite raportul mâine la 14:30.","Alex va plăti 100 lei."]}"#
+    case .actionReview: return #"{"answer":true}"#
     default: throw TextModelError.invalidResponse
     }
   }
 }
-private struct InvalidBackend: ReasoningBackend {
+private struct InvalidBackend: NotesTestBackend {
   func availabilityNotice(localeIdentifier: String?) async -> String? { nil }
   func generate(_ request: TextGenerationRequest, format: ReasoningFormat) async throws -> String {
     "incomplete JSON"

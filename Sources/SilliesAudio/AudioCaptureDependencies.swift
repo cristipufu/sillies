@@ -8,10 +8,16 @@ protocol MicrophoneCapture: AnyObject, Sendable {
 }
 protocol ApplicationCapture: AnyObject, Sendable {
   func start() async throws
-  func stop(completion: @escaping @Sendable () -> Void)
+  func pause()
+  func resume()
+  func stop(completion: @escaping @Sendable (SessionFailure?) -> Void)
+}
+extension ApplicationCapture {
+  func pause() {}
+  func resume() {}
 }
 extension MicrophoneAudioSource: MicrophoneCapture {}
-extension ApplicationAudioSource: ApplicationCapture {}
+extension ScreenCaptureKitApplicationCapture: ApplicationCapture {}
 
 /// Device factories and a clock let lifecycle tests reorder callbacks without hardware or sleeps.
 struct AudioCaptureDependencies: Sendable {
@@ -28,7 +34,7 @@ struct AudioCaptureDependencies: Sendable {
   var application:
     @Sendable (WindowTargetCandidate, @escaping AudioCaptureInputQueue.Receiver, @escaping Failure)
       -> any ApplicationCapture = {
-        ApplicationAudioSource(target: $0, receive: $1, failure: $2)
+        ScreenCaptureKitApplicationCapture(target: $0, receive: $1, failure: $2)
       }
   var speech: LocalSpeechFactory.Make
   var diarization: SpeakerDiarizationFactory.Make?

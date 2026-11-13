@@ -75,3 +75,17 @@ import Testing
     #expect(lifecycle.elapsed(at: 400) == 0)
   }
 }
+
+@Test func audioLifecycleRetainsCleanupFailureDeliveredBeforeSourceClosureFinalization() {
+  var lifecycle = AudioSessionLifecycle()
+  lifecycle.beginPreparation()
+  lifecycle.beginCapture(at: 1)
+  lifecycle.fail(.init(category: .captureInterrupted, message: "Source closed"), at: 3)
+  let cleanup = SessionFailure(category: .finalization, message: "Capture cleanup failed")
+  lifecycle.recordFinalizationNotice(cleanup)
+  lifecycle.beginFinishing(at: 4, reason: .sourceClosed)
+  #expect(lifecycle.failure == cleanup)
+  lifecycle.completeFinishing()
+  lifecycle.recordFinalizationNotice(.init(category: .finalization, message: "Late callback"))
+  #expect(lifecycle.failure == cleanup)
+}

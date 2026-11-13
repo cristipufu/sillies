@@ -120,6 +120,8 @@
     "Apple’s on-device AI couldn’t generate a response. Try again, or choose a downloaded text model in Settings → Local AI.": "Az Apple eszközön futó MI-je nem tudott választ létrehozni. Próbáld újra, vagy válassz egy letöltött szövegmodellt a Beállítások → Helyi MI menüben.",
     "Apple’s on-device AI does not support %@. Choose a downloaded text model in Settings → Local AI.": "Az Apple eszközön található mesterséges intelligenciája nem támogatja a %@-t. Válasszon ki egy letöltött szövegmodellt a Beállítások → Helyi AI menüpontban.",
     "Apple’s on-device AI is unavailable on this Mac. Choose a downloaded text model in Settings → Local AI.": "Az Apple eszközön lévő mesterséges intelligencia nem érhető el ezen a Mac-en. Válasszon ki egy letöltött szövegmodellt a Beállítások → Helyi AI menüpontban.",
+    "Application audio capture failed (Core Audio error %lld).": "Az alkalmazás hangjának rögzítése sikertelen (Core Audio-hiba: %lld).",
+    "Application audio is unavailable. Finish and start a new session.": "Az alkalmazás hangja nem érhető el. Fejezze be a munkamenetet, majd indítson újat.",
     "Application audio stopped: %@": "Az alkalmazás hangja leállt: %@",
     "Apply and delete %lld captures": {
       "one": "Alkalmazás és %lld felvétel törlése",
@@ -513,6 +515,7 @@
     "In use by your current session.": "Jelenlegi munkamenetében használatban van.",
     "Include Command, Option, or Control.": "Tartalmazza a Command, Option vagy Control parancsot.",
     "Includes your microphone and saves both sides of the conversation. Speaker echo is reduced locally. Muting Meet or Zoom does not mute Sillies.": "Tartalmazza a mikrofonját, és elmenti a beszélgetés mindkét oldalát. A hangszóró visszhangja helyileg csökken. A Meet vagy a Zoom elnémítása nem némítja el a Sillies-t.",
+    "infoplist.NSAudioCaptureUsageDescription": "A Sillies a Hallgatás és Részvétel művelethez kiválasztott alkalmazás hangját rögzíti. A felvétel csak akkor indul, amikor kiválasztja az egyik műveletet.",
     "infoplist.NSMicrophoneUsageDescription": "A diktálás hangmentés nélkül változtatja a beszédet szöveggé ezen a Mac-en. Hallgassa meg, vegyen részt és rögzítse a lejátszható hangokat és átiratokat. A mikrofonrögzítés csak akkor indul el, ha kiválaszt egyet ezen műveletek közül.",
     "infoplist.NSScreenCaptureUsageDescription": "A Sillies rögzíti a célablak képét vagy az alkalmazás hangját, amikor egy társát az ablakra ejti pillanatfelvétel készítéséhez vagy hang átírásához.",
     "Inserted into %@": "%1$@-be helyezve",
@@ -699,6 +702,7 @@
     "Open session and transcript": "Nyitott munkamenet és átirat",
     "Open Session Vault": "Archívum megnyitása",
     "Open Sillies normally to set up your companions.": "Nyisd meg a Sillies-t a szokásos módon a társak beállításához.",
+    "Open system audio recording settings": "Rendszerhang-rögzítési beállítások megnyitása",
     "Open text": "Nyissa meg a szöveget",
     "Open transcript in separate window": "Átirat megnyitása külön ablakban",
     "Open Vault": "Nyissa meg a Vaultot",
@@ -1082,6 +1086,7 @@
     "Supports the selected conversation language.": "Támogatja a kiválasztott beszélgetési nyelvet.",
     "Switching to %@…": "Váltás a %@-re…",
     "System": "Rendszer",
+    "System audio access is required. Enable Sillies in recording settings, then start a new session.": "A rendszerhanghoz való hozzáférés szükséges. Engedélyezze a Sillies alkalmazást a felvételi beállításokban, majd indítson új munkamenetet.",
     "System language": "Rendszer nyelve",
     "Tag": "Címke",
     "Tags": "Címkék",
@@ -1157,6 +1162,7 @@
     "There is not enough memory headroom for this text model.": "Nincs elegendő memória ehhez a szöveges modellhez.",
     "These companion preferences could not be saved.": "Nem sikerült menteni a társ beállításait.",
     "These files stay in their original locations. Removing a Vault item never deletes them.": "Ezek a fájlok az eredeti helyükön maradnak. Egy archívumelem eltávolítása soha nem törli őket.",
+    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Ezek a beszélőcímkék nem egyértelműek. Javítsd őket közvetlenül az átirat szerkesztésével.",
     "Thinking…": "Gondolkodni…",
     "This Apple speech model is not installed. Choose a language marked Ready on this Mac.": "Ez az Apple beszédmodell nincs telepítve. Válassza ki a Ready jelzésű nyelvet ezen a Macen.",
     "This change will delete %lld existing capture(s).": {
@@ -1343,7 +1349,6 @@
     "Your words won’t get lost": "A szavaid nem vesznek el",
     "Your words, your way": "A szavaid, a te utad",
     "· %@": "· %@",
-    "⌘F": "⌘F",
-    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Ezek a beszélőcímkék nem egyértelműek. Javítsd őket közvetlenül az átirat szerkesztésével."
+    "⌘F": "⌘F"
   }
 }

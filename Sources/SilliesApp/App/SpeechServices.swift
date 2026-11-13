@@ -101,7 +101,7 @@ final class SpeechServices {
           }
           return try await preparation.makeChannel(
             language: language, output: output, failure: failure)
-        }, diarization: diarization,
+        }, diarization: diarization, applicationIdentity: NativeApplicationAudioIdentity.verify,
         events: .init(
           update: { event in
             CaptureDiagnostics.recordRecognition(event, operation: operation, sink: diagnostics)

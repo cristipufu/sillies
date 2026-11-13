@@ -48,7 +48,8 @@ extension SkillCoordinator {
     vault: SessionVaultStore,
     audioFactory: @escaping SessionAudioCaptureFactory = {
       AudioTranscriptionService(
-        configuration: $0, speech: AppleSpeechProvider.makeChannel, events: .init(update: $1))
+        configuration: $0, speech: AppleSpeechProvider.makeChannel,
+        applicationIdentity: { _ in .unavailable }, events: .init(update: $1))
     }, audioLanguages: AudioLanguageEnvironment = .live,
     snapshotLoader: @escaping SnapshotLoader = { ids, top in
       await WindowTargetMetadata.shared.snapshots(for: ids, primaryScreenTop: top)

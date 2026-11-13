@@ -83,6 +83,7 @@ import Testing
   #expect(model.canContinue)
   #expect(model.requirements.first { $0.id == .replyModel }?.isOptional == true)
   #expect(!model.requirements.contains { $0.id == .voice })
+  #expect(!model.requirements.contains { $0.id == .screenRecording })
 }
 
 @Test @MainActor func stoppedSetupCannotLaunchFromLateReadiness() async throws {

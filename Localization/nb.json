@@ -120,6 +120,8 @@
     "Apple’s on-device AI couldn’t generate a response. Try again, or choose a downloaded text model in Settings → Local AI.": "Apples KI på enheten kunne ikke generere et svar. Prøv igjen, eller velg en nedlastet tekstmodell i Innstillinger → Lokal KI.",
     "Apple’s on-device AI does not support %@. Choose a downloaded text model in Settings → Local AI.": "Apples AI på enheten støtter ikke %@. Velg en nedlastet tekstmodell i Innstillinger → Lokal AI.",
     "Apple’s on-device AI is unavailable on this Mac. Choose a downloaded text model in Settings → Local AI.": "Apples AI på enheten er ikke tilgjengelig på denne Mac-en. Velg en nedlastet tekstmodell i Innstillinger → Lokal AI.",
+    "Application audio capture failed (Core Audio error %lld).": "Opptak av programmets lyd mislyktes (Core Audio-feil %lld).",
+    "Application audio is unavailable. Finish and start a new session.": "Programmets lyd er ikke tilgjengelig. Avslutt og start en ny økt.",
     "Application audio stopped: %@": "Programlyd stoppet: %@",
     "Apply and delete %lld captures": {
       "one": "Bruk og slett %lld opptak",
@@ -513,6 +515,7 @@
     "In use by your current session.": "I bruk av din nåværende økt.",
     "Include Command, Option, or Control.": "Inkluder kommando, alternativ eller kontroll.",
     "Includes your microphone and saves both sides of the conversation. Speaker echo is reduced locally. Muting Meet or Zoom does not mute Sillies.": "Inkluderer mikrofonen din og lagrer begge sider av samtalen. Høyttalerekko reduseres lokalt. Demping av Meet eller Zoom demper ikke Sillies.",
+    "infoplist.NSAudioCaptureUsageDescription": "Sillies tar opp lyd fra programmet du velger for Lytt og Delta. Opptaket starter bare når du velger en av disse handlingene.",
     "infoplist.NSMicrophoneUsageDescription": "Diktering gjør talen din til tekst på denne Mac-en uten å lagre lyd. Lytt, delta og ta opp lagre spillbar lyd og transkripsjoner. Mikrofonopptak starter bare når du velger en av disse handlingene.",
     "infoplist.NSScreenCaptureUsageDescription": "Sillies fanger målvindubildet eller applyden når du slipper en ledsager inn i et vindu for å ta et øyeblikksbilde eller transkribere lyd.",
     "Inserted into %@": "Sett inn i %1$@",
@@ -699,6 +702,7 @@
     "Open session and transcript": "Åpen økt og transkripsjon",
     "Open Session Vault": "Åpne arkivet",
     "Open Sillies normally to set up your companions.": "Åpne Sillies på vanlig måte for å sette opp ledsagerne dine.",
+    "Open system audio recording settings": "Åpne innstillinger for opptak av systemlyd",
     "Open text": "Åpne tekst",
     "Open transcript in separate window": "Åpne transkripsjonen i eget vindu",
     "Open Vault": "Åpne Vault",
@@ -1082,6 +1086,7 @@
     "Supports the selected conversation language.": "Støtter det valgte samtalespråket.",
     "Switching to %@…": "Bytter til %@...",
     "System": "System",
+    "System audio access is required. Enable Sillies in recording settings, then start a new session.": "Tilgang til systemlyd kreves. Aktiver Sillies i opptaksinnstillingene, og start deretter en ny økt.",
     "System language": "Systemspråk",
     "Tag": "Etikett",
     "Tags": "Merker",
@@ -1157,6 +1162,7 @@
     "There is not enough memory headroom for this text model.": "Det er ikke nok minne for denne tekstmodellen.",
     "These companion preferences could not be saved.": "Kunne ikke lagre disse innstillingene for ledsageren.",
     "These files stay in their original locations. Removing a Vault item never deletes them.": "Disse filene blir værende på sine opprinnelige plasseringer. Fjerning av et arkivelement sletter dem aldri.",
+    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Disse taleretikettene er tvetydige. Rett dem ved å redigere transkripsjonen direkte.",
     "Thinking…": "Tenker...",
     "This Apple speech model is not installed. Choose a language marked Ready on this Mac.": "Denne Apple-talemodellen er ikke installert. Velg et språk merket Klar på denne Mac-en.",
     "This change will delete %lld existing capture(s).": {
@@ -1343,7 +1349,6 @@
     "Your words won’t get lost": "Ordene dine vil ikke gå tapt",
     "Your words, your way": "Dine ord, din måte",
     "· %@": "· %@",
-    "⌘F": "⌘F",
-    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Disse taleretikettene er tvetydige. Rett dem ved å redigere transkripsjonen direkte."
+    "⌘F": "⌘F"
   }
 }

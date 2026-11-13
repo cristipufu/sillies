@@ -121,6 +121,8 @@
     "Apple’s on-device AI couldn’t generate a response. Try again, or choose a downloaded text model in Settings → Local AI.": "AI-ul Apple de pe dispozitiv nu a putut genera un răspuns. Încearcă din nou sau alege un model de text descărcat în Configurări → AI local.",
     "Apple’s on-device AI does not support %@. Choose a downloaded text model in Settings → Local AI.": "AI-ul Apple pe dispozitiv nu acceptă %1$@. Alegeți un model de text descărcat în Setări → AI local.",
     "Apple’s on-device AI is unavailable on this Mac. Choose a downloaded text model in Settings → Local AI.": "Inteligența artificială a dispozitivului Apple nu este disponibilă pe acest Mac. Alegeți un model de text descărcat în Setări → AI local.",
+    "Application audio capture failed (Core Audio error %lld).": "Capturarea sunetului aplicației a eșuat (eroare Core Audio %lld).",
+    "Application audio is unavailable. Finish and start a new session.": "Sunetul aplicației nu este disponibil. Încheie sesiunea și începe una nouă.",
     "Application audio stopped: %@": "Audio aplicație oprit: %1$@",
     "Apply and delete %lld captures": {
       "one": "Aplică și șterge %lld captură",
@@ -517,6 +519,7 @@
     "In use by your current session.": "În uz de sesiunea curentă.",
     "Include Command, Option, or Control.": "Includeți comanda, opțiunea sau controlul.",
     "Includes your microphone and saves both sides of the conversation. Speaker echo is reduced locally. Muting Meet or Zoom does not mute Sillies.": "Include microfonul și salvează ambele părți ale conversației. Ecoul difuzorului este redus local. Dezactivarea sunetului Meet sau Zoom nu dezactivează Sillies.",
+    "infoplist.NSAudioCaptureUsageDescription": "Sillies înregistrează sunetul aplicației pe care o alegi pentru Ascultă și Participă. Înregistrarea începe doar când alegi una dintre aceste acțiuni.",
     "infoplist.NSMicrophoneUsageDescription": "Dictarea vă transformă vorbirea în text pe acest Mac fără a salva audio. Ascultați, participați și înregistrați, salvați fișierele audio și transcrierile care pot fi redate. Captarea microfonului începe numai când alegeți una dintre aceste acțiuni.",
     "infoplist.NSScreenCaptureUsageDescription": "Sillies captează imaginea ferestrei țintă sau sunetul aplicației atunci când plasați un însoțitor pe o fereastră pentru a face un instantaneu sau a transcrie sunetul.",
     "Inserted into %@": "Inserat în %1$@",
@@ -704,6 +707,7 @@
     "Open session and transcript": "Sesiune deschisă și transcriere",
     "Open Session Vault": "Deschide seiful",
     "Open Sillies normally to set up your companions.": "Deschide Sillies în mod normal pentru a configura însoțitorii.",
+    "Open system audio recording settings": "Deschide configurările de înregistrare a sunetului sistemului",
     "Open text": "Deschideți textul",
     "Open transcript in separate window": "Deschide transcrierea într-o fereastră separată",
     "Open Vault": "Deschide seif",
@@ -1089,6 +1093,7 @@
     "Supports the selected conversation language.": "Acceptă limba selectată pentru conversație.",
     "Switching to %@…": "Se comută la %1$@...",
     "System": "Sistem",
+    "System audio access is required. Enable Sillies in recording settings, then start a new session.": "Este necesar accesul la sunetul sistemului. Permite accesul pentru Sillies în configurările de înregistrare, apoi începe o sesiune nouă.",
     "System language": "Limba sistemului",
     "Tag": "Etichetă",
     "Tags": "Etichete",
@@ -1164,6 +1169,7 @@
     "There is not enough memory headroom for this text model.": "Nu există suficient spațiu de memorie pentru acest model de text.",
     "These companion preferences could not be saved.": "Aceste preferințe ale însoțitorului nu au putut fi salvate.",
     "These files stay in their original locations. Removing a Vault item never deletes them.": "Aceste fișiere rămân în locațiile originale. Eliminarea unui element din Seif nu le șterge niciodată.",
+    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Aceste etichete ale vorbitorilor sunt ambigue. Editează direct transcrierea pentru a le corecta.",
     "Thinking…": "Gândind…",
     "This Apple speech model is not installed. Choose a language marked Ready on this Mac.": "Acest model de vorbire Apple nu este instalat. Alegeți o limbă marcată Gata pe acest Mac.",
     "This change will delete %lld existing capture(s).": {
@@ -1351,7 +1357,6 @@
     "Your words won’t get lost": "Cuvintele tale nu se vor pierde",
     "Your words, your way": "Cuvintele tale, felul tău",
     "· %@": "· %1$@",
-    "⌘F": "⌘F",
-    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Aceste etichete ale vorbitorilor sunt ambigue. Editează direct transcrierea pentru a le corecta."
+    "⌘F": "⌘F"
   }
 }

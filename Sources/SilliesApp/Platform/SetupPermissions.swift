@@ -9,7 +9,7 @@ enum SetupPermissions {
     case .openMicrophoneSettings: AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
     case .openScreenRecordingSettings:
       await Task.detached { CGPreflightScreenCaptureAccess() }.value
-    case .openAccessibilitySettings: false
+    case .openAccessibilitySettings, .openSystemAudioRecordingSettings: false
     }
   }
 
@@ -24,7 +24,7 @@ enum SetupPermissions {
     case .openScreenRecordingSettings:
       let granted = await Task.detached { CGRequestScreenCaptureAccess() }.value
       if !granted { SessionRecovery.open(permission) }
-    case .openAccessibilitySettings:
+    case .openAccessibilitySettings, .openSystemAudioRecordingSettings:
       SessionRecovery.open(permission)
     }
   }

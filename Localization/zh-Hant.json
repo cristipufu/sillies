@@ -119,6 +119,8 @@
     "Apple’s on-device AI couldn’t generate a response. Try again, or choose a downloaded text model in Settings → Local AI.": "Apple 裝置端 AI 無法產生回覆。請重試，或在「設定」→「本機 AI」中選擇已下載的文字模型。",
     "Apple’s on-device AI does not support %@. Choose a downloaded text model in Settings → Local AI.": "Apple 的裝置端 AI 不支援 %1$@。在「設定」→「本機 AI」中選擇下載的文字模型。",
     "Apple’s on-device AI is unavailable on this Mac. Choose a downloaded text model in Settings → Local AI.": "Apple 的裝置端 AI 在這台 Mac 上不可用。在「設定」→「本機 AI」中選擇下載的文字模型。",
+    "Application audio capture failed (Core Audio error %lld).": "無法擷取 App 音訊（Core Audio 錯誤 %lld）。",
+    "Application audio is unavailable. Finish and start a new session.": "App 音訊無法使用。請結束階段並開始新階段。",
     "Application audio stopped: %@": "應用程式音訊停止：%1$@",
     "Apply and delete %lld captures": {
       "other": "套用並刪除 %lld 項內容"
@@ -509,6 +511,7 @@
     "In use by your current session.": "您目前的會話正在使用。",
     "Include Command, Option, or Control.": "包括命令、選項或控制。",
     "Includes your microphone and saves both sides of the conversation. Speaker echo is reduced locally. Muting Meet or Zoom does not mute Sillies.": "包括您的麥克風並保存對話雙方。揚聲器迴聲局部減少。將 Meet 或 Zoom 靜音不會將 Sillies 靜音。",
+    "infoplist.NSAudioCaptureUsageDescription": "Sillies 會錄製你為「聆聽」和「參與」選擇的 App 的音訊。只有在你選擇這些操作之一時才會開始錄製。",
     "infoplist.NSMicrophoneUsageDescription": "聽寫功能可在這台 Mac 上將您的語音轉換為文本，而無需保存音訊。聆聽、參與和錄製可保存可播放的音訊和文字記錄。只有當您選擇其中一項操作時，麥克風捕獲才會開始。",
     "infoplist.NSScreenCaptureUsageDescription": "當您將同伴拖曳到視窗上以拍攝快照或轉錄音訊時，Sillies 會擷取目標視窗影像或應用程式音訊。",
     "Inserted into %@": "插入%1$@",
@@ -694,6 +697,7 @@
     "Open session and transcript": "公開會議和記錄",
     "Open Session Vault": "開啟資料庫",
     "Open Sillies normally to set up your companions.": "請正常開啟 Sillies，以設定你的同伴。",
+    "Open system audio recording settings": "打開系統音訊錄製設定",
     "Open text": "開啟文字",
     "Open transcript in separate window": "在獨立視窗中打開逐字稿",
     "Open Vault": "打開金庫",
@@ -1075,6 +1079,7 @@
     "Supports the selected conversation language.": "支援所選的對話語言。",
     "Switching to %@…": "切換到 %1$@...",
     "System": "系統",
+    "System audio access is required. Enable Sillies in recording settings, then start a new session.": "需要系統音訊存取權限。請在錄製設定中允許 Sillies，然後開始新階段。",
     "System language": "系統語言",
     "Tag": "標籤",
     "Tags": "標籤",
@@ -1150,6 +1155,7 @@
     "There is not enough memory headroom for this text model.": "此文字模型沒有足夠的記憶體空間。",
     "These companion preferences could not be saved.": "無法儲存這些同伴偏好設定。",
     "These files stay in their original locations. Removing a Vault item never deletes them.": "這些檔案保留在原始位置。移除資料庫項目不會刪除它們。",
+    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "這些發言人標籤存在歧義。請直接編輯逐字稿以更正。",
     "Thinking…": "思考…",
     "This Apple speech model is not installed. Choose a language marked Ready on this Mac.": "未安裝此 Apple 語音模型。選擇在此 Mac 上標記為「就緒」的語言。",
     "This change will delete %lld existing capture(s).": {
@@ -1335,7 +1341,6 @@
     "Your words won’t get lost": "你的話不會失去",
     "Your words, your way": "你的話語，你的方式",
     "· %@": "·%1$@",
-    "⌘F": "⌘F",
-    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "這些發言人標籤存在歧義。請直接編輯逐字稿以更正。"
+    "⌘F": "⌘F"
   }
 }

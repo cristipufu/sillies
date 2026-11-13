@@ -120,6 +120,8 @@
     "Apple’s on-device AI couldn’t generate a response. Try again, or choose a downloaded text model in Settings → Local AI.": "A IA da Apple no dispositivo não conseguiu gerar uma resposta. Tente novamente ou escolha um modelo de texto descarregado em Definições → IA local.",
     "Apple’s on-device AI does not support %@. Choose a downloaded text model in Settings → Local AI.": "A IA no dispositivo da Apple não suporta %1$@. Escolha um modelo de texto descarregado em Definições → IA local.",
     "Apple’s on-device AI is unavailable on this Mac. Choose a downloaded text model in Settings → Local AI.": "A IA no dispositivo da Apple não está disponível neste Mac. Escolha um modelo de texto descarregado em Definições → IA local.",
+    "Application audio capture failed (Core Audio error %lld).": "Não foi possível captar o áudio da aplicação (erro do Core Audio %lld).",
+    "Application audio is unavailable. Finish and start a new session.": "O áudio da aplicação está indisponível. Termine e inicie uma nova sessão.",
     "Application audio stopped: %@": "Áudio do aplicativo interrompido: %1$@",
     "Apply and delete %lld captures": {
       "one": "Aplicar e eliminar %lld captura",
@@ -513,6 +515,7 @@
     "In use by your current session.": "Em utilização pela sua sessão atual.",
     "Include Command, Option, or Control.": "Inclui comando, opção ou controlo.",
     "Includes your microphone and saves both sides of the conversation. Speaker echo is reduced locally. Muting Meet or Zoom does not mute Sillies.": "Inclui o seu microfone e guarda ambos os lados da conversa. O eco do altifalante é reduzido localmente. Desativar o Meet ou o Zoom não silencia o Sillies.",
+    "infoplist.NSAudioCaptureUsageDescription": "O Sillies grava o áudio da aplicação que escolhe para Ouvir e Participar. A gravação só começa quando escolhe uma destas ações.",
     "infoplist.NSMicrophoneUsageDescription": "O ditado transforma o seu discurso em texto neste Mac sem guardar áudio. Ouça, participe e grave, guarde áudio e transcrições reproduzíveis. A captura do microfone só começa quando escolhe uma destas ações.",
     "infoplist.NSScreenCaptureUsageDescription": "Sillies captura a imagem da janela de destino ou o áudio da aplicação quando liberta um add-on numa janela para tirar um instantâneo ou transcrever o áudio.",
     "Inserted into %@": "Inserido em %1$@",
@@ -699,6 +702,7 @@
     "Open session and transcript": "Sessão aberta e transcrição",
     "Open Session Vault": "Abrir arquivo",
     "Open Sillies normally to set up your companions.": "Abre o Sillies normalmente para configurar os teus companheiros.",
+    "Open system audio recording settings": "Abrir definições de gravação de áudio do sistema",
     "Open text": "Texto aberto",
     "Open transcript in separate window": "Abrir transcrição noutra janela",
     "Open Vault": "Abrir cofre",
@@ -1082,6 +1086,7 @@
     "Supports the selected conversation language.": "Suporta o idioma de conversa selecionado.",
     "Switching to %@…": "Mudando para %1$@…",
     "System": "Sistema",
+    "System audio access is required. Enable Sillies in recording settings, then start a new session.": "É necessário aceder ao áudio do sistema. Ative o Sillies nas definições de gravação e inicie uma nova sessão.",
     "System language": "Idioma do sistema",
     "Tag": "Etiqueta",
     "Tags": "Etiquetas",
@@ -1157,6 +1162,7 @@
     "There is not enough memory headroom for this text model.": "Não existe espaço de memória suficiente para este modelo de texto.",
     "These companion preferences could not be saved.": "Não foi possível guardar estas preferências do companheiro.",
     "These files stay in their original locations. Removing a Vault item never deletes them.": "Estes ficheiros permanecem nas localizações originais. Remover um item do Arquivo nunca os elimina.",
+    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Estas identificações de falantes são ambíguas. Edite a transcrição diretamente para as corrigir.",
     "Thinking…": "Pensando…",
     "This Apple speech model is not installed. Choose a language marked Ready on this Mac.": "Este modelo de voz da Apple não está instalado. Escolha um idioma marcado como Pronto neste Mac.",
     "This change will delete %lld existing capture(s).": {
@@ -1343,7 +1349,6 @@
     "Your words won’t get lost": "As suas palavras não se perderão",
     "Your words, your way": "As suas palavras, o seu jeito",
     "· %@": "· %1$@",
-    "⌘F": "⌘F",
-    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Estas identificações de falantes são ambíguas. Edite a transcrição diretamente para as corrigir."
+    "⌘F": "⌘F"
   }
 }

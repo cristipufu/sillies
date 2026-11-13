@@ -120,6 +120,8 @@
     "Apple’s on-device AI couldn’t generate a response. Try again, or choose a downloaded text model in Settings → Local AI.": "De AI van Apple op dit apparaat kon geen antwoord genereren. Probeer het opnieuw of kies een gedownload tekstmodel in Instellingen → Lokale AI.",
     "Apple’s on-device AI does not support %@. Choose a downloaded text model in Settings → Local AI.": "De AI op het apparaat van Apple ondersteunt %@ niet. Kies een gedownload tekstmodel in Instellingen → Lokale AI.",
     "Apple’s on-device AI is unavailable on this Mac. Choose a downloaded text model in Settings → Local AI.": "De AI op het apparaat van Apple is niet beschikbaar op deze Mac. Kies een gedownload tekstmodel in Instellingen → Lokale AI.",
+    "Application audio capture failed (Core Audio error %lld).": "Het vastleggen van app-audio is mislukt (Core Audio-fout %lld).",
+    "Application audio is unavailable. Finish and start a new session.": "De app-audio is niet beschikbaar. Beëindig de sessie en start een nieuwe.",
     "Application audio stopped: %@": "Applicatie-audio gestopt: %@",
     "Apply and delete %lld captures": {
       "one": "Toepassen en %lld opname verwijderen",
@@ -513,6 +515,7 @@
     "In use by your current session.": "In gebruik tijdens uw huidige sessie.",
     "Include Command, Option, or Control.": "Voeg Command, Option of Control toe.",
     "Includes your microphone and saves both sides of the conversation. Speaker echo is reduced locally. Muting Meet or Zoom does not mute Sillies.": "Inclusief uw microfoon en bewaart beide kanten van het gesprek. De echo van de luidspreker wordt lokaal verminderd. Als u Meet of Zoom dempt, wordt Sillies niet gedempt.",
+    "infoplist.NSAudioCaptureUsageDescription": "Sillies neemt audio op uit de app die je kiest voor Luisteren en Deelnemen. De opname begint alleen wanneer je een van deze acties kiest.",
     "infoplist.NSMicrophoneUsageDescription": "Door te dicteren wordt uw spraak op deze Mac omgezet in tekst zonder audio op te slaan. Luister, neem deel en neem op, sla afspeelbare audio en transcripties op. Microfoonopname start alleen wanneer u een van deze acties kiest.",
     "infoplist.NSScreenCaptureUsageDescription": "Sillies legt de doelvensterafbeelding of app-audio vast wanneer u een begeleider op een venster laat vallen om een momentopname te maken of audio te transcriberen.",
     "Inserted into %@": "Ingevoegd in %1$@",
@@ -699,6 +702,7 @@
     "Open session and transcript": "Open sessie en transcriptie",
     "Open Session Vault": "Archief openen",
     "Open Sillies normally to set up your companions.": "Open Sillies normaal om je metgezellen in te stellen.",
+    "Open system audio recording settings": "Instellingen voor systeemaudio-opname openen",
     "Open text": "Tekst openen",
     "Open transcript in separate window": "Transcript in apart venster openen",
     "Open Vault": "Open kluis",
@@ -1082,6 +1086,7 @@
     "Supports the selected conversation language.": "Ondersteunt de gekozen gesprekstaal.",
     "Switching to %@…": "Overstappen naar %@…",
     "System": "Systeem",
+    "System audio access is required. Enable Sillies in recording settings, then start a new session.": "Toegang tot systeemaudio is vereist. Sta Sillies toe in de opname-instellingen en start daarna een nieuwe sessie.",
     "System language": "Systeem taal",
     "Tag": "Tag",
     "Tags": "Tags",
@@ -1157,6 +1162,7 @@
     "There is not enough memory headroom for this text model.": "Er is niet genoeg geheugenruimte voor dit tekstmodel.",
     "These companion preferences could not be saved.": "Deze voorkeuren van de metgezel konden niet worden opgeslagen.",
     "These files stay in their original locations. Removing a Vault item never deletes them.": "Deze bestanden blijven op hun oorspronkelijke locaties. Een archiefitem verwijderen wist deze bestanden nooit.",
+    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Deze sprekerlabels zijn dubbelzinnig. Corrigeer ze rechtstreeks in het transcript.",
     "Thinking…": "Denken…",
     "This Apple speech model is not installed. Choose a language marked Ready on this Mac.": "Dit Apple spraakmodel is niet geïnstalleerd. Kies een taal die is gemarkeerd als Klaar op deze Mac.",
     "This change will delete %lld existing capture(s).": {
@@ -1343,7 +1349,6 @@
     "Your words won’t get lost": "Je woorden zullen niet verloren gaan",
     "Your words, your way": "Jouw woorden, jouw manier",
     "· %@": "· %@",
-    "⌘F": "⌘F",
-    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Deze sprekerlabels zijn dubbelzinnig. Corrigeer ze rechtstreeks in het transcript."
+    "⌘F": "⌘F"
   }
 }

@@ -45,12 +45,6 @@ import SilliesCore
     requirements.removeAll { $0.id == .microphone }
     requirements.append(
       .init(permission: .openMicrophoneSettings, granted: await isGranted(.openMicrophoneSettings)))
-    if activity == .meetings {
-      requirements.append(
-        .init(
-          permission: .openScreenRecordingSettings,
-          granted: await isGranted(.openScreenRecordingSettings)))
-    }
     return .init(requirements: requirements, microphoneLanguage: microphoneLanguage)
   }
 }

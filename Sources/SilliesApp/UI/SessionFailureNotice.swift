@@ -26,6 +26,8 @@ struct SessionFailureNotice: View {
     switch action {
     case .openMicrophoneSettings: String(localized: "Open microphone settings")
     case .openScreenRecordingSettings: String(localized: "Open screen recording settings")
+    case .openSystemAudioRecordingSettings:
+      String(localized: "Open system audio recording settings")
     case .openAccessibilitySettings: String(localized: "Enable text insertion…")
     }
   }

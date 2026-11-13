@@ -120,6 +120,8 @@
     "Apple’s on-device AI couldn’t generate a response. Try again, or choose a downloaded text model in Settings → Local AI.": "Apple’ın aygıtta çalışan yapay zekâsı yanıt oluşturamadı. Yeniden deneyin veya Ayarlar → Yerel Yapay Zekâ bölümünden indirilmiş bir metin modeli seçin.",
     "Apple’s on-device AI does not support %@. Choose a downloaded text model in Settings → Local AI.": "Apple'ın cihazdaki yapay zekası %1$@'yi desteklemiyor. Ayarlar → Yerel AI bölümünde indirilen bir metin modelini seçin.",
     "Apple’s on-device AI is unavailable on this Mac. Choose a downloaded text model in Settings → Local AI.": "Apple'ın cihaz içi yapay zekası bu Mac'te kullanılamıyor. Ayarlar → Yerel AI bölümünde indirilen bir metin modelini seçin.",
+    "Application audio capture failed (Core Audio error %lld).": "Uygulama sesi yakalanamadı (Core Audio hatası %lld).",
+    "Application audio is unavailable. Finish and start a new session.": "Uygulama sesi kullanılamıyor. Oturumu bitirip yeni bir oturum başlatın.",
     "Application audio stopped: %@": "Uygulama sesi durduruldu: %1$@",
     "Apply and delete %lld captures": {
       "one": "Uygula ve %lld kaydı sil",
@@ -513,6 +515,7 @@
     "In use by your current session.": "Mevcut oturumunuz tarafından kullanılıyor.",
     "Include Command, Option, or Control.": "Komut, Seçenek veya Denetimi ekleyin.",
     "Includes your microphone and saves both sides of the conversation. Speaker echo is reduced locally. Muting Meet or Zoom does not mute Sillies.": "Mikrofonunuzu içerir ve konuşmanın her iki tarafını da kaydeder. Hoparlör yankısı yerel olarak azaltıldı. Meet veya Zoom'un sesini kapatmak Sillies'nin sesini kapatmaz.",
+    "infoplist.NSAudioCaptureUsageDescription": "Sillies, Dinle ve Katıl için seçtiğiniz uygulamanın sesini kaydeder. Kayıt yalnızca bu eylemlerden birini seçtiğinizde başlar.",
     "infoplist.NSMicrophoneUsageDescription": "Dikte, bu Mac'te sesinizi kaydetmeden konuşmanızı metne dönüştürür. Dinle, Katıl ve Kaydet, çalınabilir ses ve transkriptleri kaydedin. Mikrofon yakalama yalnızca bu işlemlerden birini seçtiğinizde başlar.",
     "infoplist.NSScreenCaptureUsageDescription": "Sillies, anlık görüntü almak veya sesi metne dönüştürmek için bir arkadaşınızı pencereye bıraktığınızda hedef pencere görüntüsünü veya uygulama sesini yakalar.",
     "Inserted into %@": "%1$@'ye eklendi",
@@ -699,6 +702,7 @@
     "Open session and transcript": "Açık oturum ve transkript",
     "Open Session Vault": "Arşivi aç",
     "Open Sillies normally to set up your companions.": "Arkadaşlarını ayarlamak için Sillies’i normal şekilde aç.",
+    "Open system audio recording settings": "Sistem sesi kayıt ayarlarını aç",
     "Open text": "Metni aç",
     "Open transcript in separate window": "Dökümü ayrı pencerede aç",
     "Open Vault": "Apps Kasası'nı aç",
@@ -1082,6 +1086,7 @@
     "Supports the selected conversation language.": "Seçilen sohbet dilini destekler.",
     "Switching to %@…": "%1$@'ye geçiliyor…",
     "System": "Sistem",
+    "System audio access is required. Enable Sillies in recording settings, then start a new session.": "Sistem sesine erişim gerekiyor. Kayıt ayarlarında Sillies uygulamasına izin verin ve yeni bir oturum başlatın.",
     "System language": "Sistem dili",
     "Tag": "Etiket",
     "Tags": "Etiketler",
@@ -1157,6 +1162,7 @@
     "There is not enough memory headroom for this text model.": "Bu metin modeli için yeterli bellek alanı yok.",
     "These companion preferences could not be saved.": "Bu arkadaş tercihleri kaydedilemedi.",
     "These files stay in their original locations. Removing a Vault item never deletes them.": "Bu dosyalar özgün konumlarında kalır. Bir Arşiv öğesini kaldırmak bu dosyaları asla silmez.",
+    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Bu konuşmacı etiketleri belirsiz. Düzeltmek için doğrudan dökümü düzenleyin.",
     "Thinking…": "Düşünüyorum…",
     "This Apple speech model is not installed. Choose a language marked Ready on this Mac.": "Bu Apple konuşma modeli yüklü değil. Bu Mac'te Hazır olarak işaretlenmiş bir dil seçin.",
     "This change will delete %lld existing capture(s).": {
@@ -1343,7 +1349,6 @@
     "Your words won’t get lost": "Sözlerin kaybolmayacak",
     "Your words, your way": "Senin sözlerin, senin yolun",
     "· %@": "· %1$@",
-    "⌘F": "⌘F",
-    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Bu konuşmacı etiketleri belirsiz. Düzeltmek için doğrudan dökümü düzenleyin."
+    "⌘F": "⌘F"
   }
 }

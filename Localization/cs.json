@@ -121,6 +121,8 @@
     "Apple’s on-device AI couldn’t generate a response. Try again, or choose a downloaded text model in Settings → Local AI.": "AI společnosti Apple v zařízení nedokázala vygenerovat odpověď. Zkuste to znovu nebo vyberte stažený textový model v Nastavení → Místní AI.",
     "Apple’s on-device AI does not support %@. Choose a downloaded text model in Settings → Local AI.": "Umělá inteligence Apple na zařízení nepodporuje %@. Vyberte stažený textový model v Nastavení → Místní AI.",
     "Apple’s on-device AI is unavailable on this Mac. Choose a downloaded text model in Settings → Local AI.": "Umělá inteligence Apple na zařízení není na tomto Macu k dispozici. Vyberte stažený textový model v Nastavení → Místní AI.",
+    "Application audio capture failed (Core Audio error %lld).": "Záznam zvuku aplikace selhal (chyba Core Audio %lld).",
+    "Application audio is unavailable. Finish and start a new session.": "Zvuk aplikace není k dispozici. Dokončete relaci a spusťte novou.",
     "Application audio stopped: %@": "Zvuk aplikace zastaven: %@",
     "Apply and delete %lld captures": {
       "one": "Použít a smazat %lld záznam",
@@ -517,6 +519,7 @@
     "In use by your current session.": "Používá se vaší aktuální relací.",
     "Include Command, Option, or Control.": "Zahrnout příkaz, možnost nebo ovládání.",
     "Includes your microphone and saves both sides of the conversation. Speaker echo is reduced locally. Muting Meet or Zoom does not mute Sillies.": "Obsahuje váš mikrofon a ukládá obě strany konverzace. Ozvěna reproduktoru je lokálně snížena. Ztlumení funkce Meet nebo Zoom neztlumí Sillies.",
+    "infoplist.NSAudioCaptureUsageDescription": "Sillies zaznamenává zvuk z aplikace, kterou vyberete pro poslech a účast. Záznam začne pouze tehdy, když zvolíte jednu z těchto akcí.",
     "infoplist.NSMicrophoneUsageDescription": "Diktování promění vaši řeč na text na tomto Macu bez ukládání zvuku. Poslouchejte, zúčastněte se a nahrávejte a ukládejte přehrávatelný zvuk a přepisy. Záznam mikrofonem se spustí pouze tehdy, když vyberete jednu z těchto akcí.",
     "infoplist.NSScreenCaptureUsageDescription": "Sillies zachytí obraz cílového okna nebo zvuk aplikace, když pustíte doprovod do okna za účelem pořízení snímku nebo přepisu zvuku.",
     "Inserted into %@": "Vloženo do %1$@",
@@ -704,6 +707,7 @@
     "Open session and transcript": "Otevřené sezení a přepis",
     "Open Session Vault": "Otevřít archiv",
     "Open Sillies normally to set up your companions.": "Pro nastavení společníků spusťte Sillies běžným způsobem.",
+    "Open system audio recording settings": "Otevřít nastavení záznamu systémového zvuku",
     "Open text": "Otevřít text",
     "Open transcript in separate window": "Otevřít přepis v samostatném okně",
     "Open Vault": "Otevřete Vault",
@@ -1089,6 +1093,7 @@
     "Supports the selected conversation language.": "Podporuje vybraný jazyk rozhovoru.",
     "Switching to %@…": "Přepínání na %@…",
     "System": "Systém",
+    "System audio access is required. Enable Sillies in recording settings, then start a new session.": "Je vyžadován přístup k systémovému zvuku. Povolte Sillies v nastavení záznamu a poté spusťte novou relaci.",
     "System language": "Jazyk systému",
     "Tag": "Štítek",
     "Tags": "Značky",
@@ -1164,6 +1169,7 @@
     "There is not enough memory headroom for this text model.": "Pro tento textový model není dostatek místa v paměti.",
     "These companion preferences could not be saved.": "Toto nastavení společníka se nepodařilo uložit.",
     "These files stay in their original locations. Removing a Vault item never deletes them.": "Tyto soubory zůstanou na původním místě. Odstraněním položky Archivu se nikdy nesmažou.",
+    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Tato označení mluvčích jsou nejednoznačná. Opravte je přímo v přepisu.",
     "Thinking…": "Přemýšlím…",
     "This Apple speech model is not installed. Choose a language marked Ready on this Mac.": "Tento model řeči Apple není nainstalován. Vyberte jazyk označený na tomto Macu jako Připraveno.",
     "This change will delete %lld existing capture(s).": {
@@ -1351,7 +1357,6 @@
     "Your words won’t get lost": "Vaše slova se neztratí",
     "Your words, your way": "Vaše slova, vaše cesta",
     "· %@": "· %@",
-    "⌘F": "⌘F",
-    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Tato označení mluvčích jsou nejednoznačná. Opravte je přímo v přepisu."
+    "⌘F": "⌘F"
   }
 }

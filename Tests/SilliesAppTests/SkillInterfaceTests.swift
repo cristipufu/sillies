@@ -65,6 +65,7 @@ import Testing
     sessionView, size: CGSize(width: 560, height: 640), name: "sillies-session-minimum-preview")
   for recovery in [
     SessionFailure.RecoveryAction.openMicrophoneSettings, .openScreenRecordingSettings,
+    .openSystemAudioRecordingSettings,
   ] {
     model.phase = .failed(.permissionDenied(recovery))
     try renderSkillInterface(

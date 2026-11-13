@@ -7,6 +7,7 @@ public struct AudioSessionLifecycle: Sendable {
   }
   public private(set) var phase: Phase = .idle
   public private(set) var failure: SessionFailure?
+  private var finalizationNotice: SessionFailure?
   private var startedAt: TimeInterval?
   private var pausedAt: TimeInterval?
   private var stoppedAt: TimeInterval?
@@ -59,6 +60,7 @@ public struct AudioSessionLifecycle: Sendable {
   ) -> Bool {
     guard phase != .finishing, phase != .finished else { return false }
     if failure?.requiresAttention(ending: reason) == false { failure = nil }
+    failure = failure ?? finalizationNotice
     stoppedAt = stoppedAt ?? pausedAt ?? now
     phase = .finishing
     return true
@@ -71,8 +73,9 @@ public struct AudioSessionLifecycle: Sendable {
   }
 
   public mutating func recordFinalizationNotice(_ notice: SessionFailure?) {
-    guard phase == .finishing else { return }
-    failure = failure ?? notice
+    guard phase != .finished else { return }
+    finalizationNotice = finalizationNotice ?? notice
+    if phase == .finishing { failure = failure ?? finalizationNotice }
   }
 
   public mutating func recordRecordingFailure(_ failure: SessionFailure) {

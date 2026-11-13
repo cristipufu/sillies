@@ -33,6 +33,10 @@ Recording starts only when you choose a capture action. Listen and Participate c
 audio, which can include other audio-playing tabs in a browser. They also use Sillies' independent
 microphone capture: muting your microphone inside a meeting app does not mute Sillies. Paused audio is
 discarded. Closing the transcript window keeps the session running; **Finish & Save** stops and saves it.
+Listen and Participate prefer a native Core Audio tap scoped to the selected application's verified
+processes. Unsupported startup configurations can use ScreenCaptureKit instead. macOS may request
+system-audio or screen-recording access for the selected provider. Silence and permission errors do not
+cause a provider switch. The audio tap is stopped while paused and recreated when recording resumes.
 Use recordings only when you have the appropriate permission from the people involved.
 
 Speaker detection distinguishes voices within a session and audio source. Sillies does not create a

@@ -1,123 +1,156 @@
-import CoreMedia
 import Foundation
-import ScreenCaptureKit
 import SilliesCore
 import Synchronization
 
-/// ScreenCaptureKit taps the selected application's audio; it never redirects or plays it.
-final class ApplicationAudioSource: NSObject, SCStreamOutput, SCStreamDelegate, Sendable {
-  private static let sampleRate = 48_000
-  private static let channelCount = 1
-  private static let unusedVideoDimension = 2
-  private let target: WindowTargetCandidate
-  private let receive: AudioCaptureInputQueue.Receiver
-  private let failure: @Sendable (SessionFailure) -> Void
-  private let queue = DispatchQueue(label: "app.sillies.application-audio", qos: .userInitiated)
-  // SCStream has no Sendable conformance. This slot is accessed only under the state Mutex;
-  // start publishes it once, and stop removes it before awaiting SDK shutdown.
-  private struct State: @unchecked Sendable {
-    var stream: SCStream?
-    var stopped = false
+/// Selects once at startup. Only unsupported tap configurations permit ScreenCaptureKit fallback.
+actor ApplicationAudioSource: ApplicationCapture {
+  struct Providers: Sendable {
+    typealias Make =
+      @Sendable (
+        @escaping AudioCaptureInputQueue.Receiver, @escaping ApplicationAudioRequest.Failure
+      ) ->
+      any ApplicationCapture
+    let preferred: Make
+    let fallback: Make
   }
-  private let state = Mutex(State())
+  private enum Phase { case idle, starting, active, stopping, stopped }
+  private let providers: Providers
+  private let failure: ApplicationAudioRequest.Failure
+  private let delivery: ApplicationAudioDelivery
+  nonisolated private let commands = Mutex<Task<Void, Never>?>(nil)
+  private enum Command: Sendable {
+    case pause, resume
+    case stop(@Sendable (SessionFailure?) -> Void)
+  }
+  private var phase = Phase.idle
+  private var stopOutcome: SessionFailure?
+  private var current: (any ApplicationCapture)?
+  private var generation = UUID()
+  private var completions: [@Sendable (SessionFailure?) -> Void] = []
 
   init(
-    target: WindowTargetCandidate, receive: @escaping AudioCaptureInputQueue.Receiver,
-    failure: @escaping @Sendable (SessionFailure) -> Void
+    providers: Providers, receive: @escaping AudioCaptureInputQueue.Receiver,
+    failure: @escaping ApplicationAudioRequest.Failure
   ) {
-    self.target = target
-    self.receive = receive
+    self.providers = providers
     self.failure = failure
+    delivery = ApplicationAudioDelivery(receive: receive)
+  }
+  init(request: ApplicationAudioRequest, identity: @escaping ApplicationAudioIdentityCheck) {
+    self.init(
+      providers: .init(
+        preferred: { receive, failure in
+          CoreAudioApplicationCapture(
+            request: .init(target: request.target, receive: receive, failure: failure),
+            identity: identity)
+        },
+        fallback: { receive, failure in
+          ScreenCaptureKitApplicationCapture(
+            target: request.target, receive: receive, failure: failure)
+        }), receive: request.receive, failure: request.failure)
   }
 
   func start() async throws {
-    do { try await startCapture() } catch {
-      if error is CancellationError { throw error }
-      throw Self.captureFailure(error)
+    guard phase == .idle else { throw CancellationError() }
+    phase = .starting
+    do {
+      try await withTaskCancellationHandler {
+        try await selectAndStartProvider()
+        try ensureStarting()
+        phase = .active
+      } onCancel: {
+        self.stop { _ in }
+      }
+    } catch {
+      await stopOwnedProvider { _ in }
+      throw error
     }
   }
-
-  static func captureFailure(_ error: Error) -> SessionFailure {
-    let native = error as NSError
-    if native.domain == SCStreamErrorDomain,
-      native.code == SCStreamError.Code.userDeclined.rawValue
-    {
-      return .permissionDenied(.openScreenRecordingSettings)
-    }
-    return SessionFailure(error, category: .captureUnavailable)
-  }
-
-  private func startCapture() async throws {
-    let content = try await SCShareableContent.excludingDesktopWindows(
-      false, onScreenWindowsOnly: false)
-    guard let display = content.displays.first,
-      let application = content.applications.first(where: { $0.processID == target.processID })
-    else {
-      throw AudioCaptureFailure.unavailable(
-        String(localized: "The selected application is no longer available."))
-    }
-    guard !state.withLock({ $0.stopped }) else { throw CancellationError() }
-    let filter = SCContentFilter(display: display, including: [application], exceptingWindows: [])
-    let configuration = SCStreamConfiguration()
-    configuration.capturesAudio = true
-    configuration.excludesCurrentProcessAudio = true
-    configuration.sampleRate = Self.sampleRate
-    configuration.channelCount = Self.channelCount
-    configuration.width = Self.unusedVideoDimension
-    configuration.height = Self.unusedVideoDimension
-    configuration.minimumFrameInterval = CMTime(value: 1, timescale: 1)
-    let stream = SCStream(filter: filter, configuration: configuration, delegate: self)
-    try stream.addStreamOutput(self, type: .audio, sampleHandlerQueue: queue)
-    try await stream.startCapture()
-    let cancelled = state.withLock { state in
-      guard !state.stopped else { return true }
-      state.stream = stream
-      return false
-    }
-    if cancelled {
-      try await stream.stopCapture()
-      throw CancellationError()
+  private func selectAndStartProvider() async throws {
+    do {
+      try await startProvider(providers.preferred)
+    } catch CoreAudioCaptureError.unsupported {
+      delivery.stop()
+      generation = UUID()
+      let cleanup = await stopCurrent()
+      if let cleanup { throw cleanup }
+      try ensureStarting()
+      try await startProvider(providers.fallback)
     }
   }
-
-  func stop(completion: @escaping @Sendable () -> Void = {}) {
-    let active = state.withLock { state in
-      state.stopped = true
-      let active = state.stream
-      state.stream = nil
-      return active
+  private func startProvider(_ make: Providers.Make) async throws {
+    try ensureStarting()
+    let token = UUID()
+    generation = token
+    delivery.select(token)
+    let provider = make(
+      { [delivery] in delivery.receive($0, from: token) },
+      { [weak self] failure in
+        Task { await self?.receiveFailure(failure, from: token) }
+      })
+    current = provider
+    try await provider.start()
+    try ensureStarting()
+  }
+  private func ensureStarting() throws {
+    guard phase == .starting, !Task.isCancelled else { throw CancellationError() }
+  }
+  private func receiveFailure(_ event: SessionFailure, from token: UUID) {
+    guard token == generation, phase == .starting || phase == .active else { return }
+    failure(event)
+  }
+  nonisolated func pause() { enqueue(.pause) }
+  nonisolated func resume() { enqueue(.resume) }
+  nonisolated func stop(completion: @escaping @Sendable (SessionFailure?) -> Void) {
+    enqueue(.stop(completion))
+  }
+  nonisolated private func enqueue(_ command: Command) {
+    commands.withLock { tail in
+      let preceding = tail
+      tail = Task { [self] in
+        await preceding?.value
+        await apply(command)
+      }
     }
-    guard let active else {
-      completion()
+  }
+  private func apply(_ command: Command) async {
+    switch command {
+    case .pause: if phase == .active { current?.pause() }
+    case .resume: if phase == .active { current?.resume() }
+    case .stop(let completion): await stopOwnedProvider(completion)
+    }
+  }
+  private func stopOwnedProvider(_ completion: @escaping @Sendable (SessionFailure?) -> Void) async
+  {
+    if phase == .stopped {
+      completion(stopOutcome)
       return
     }
-    Task.detached {
-      do { try await active.stopCapture() } catch {
-        fputs("Application audio stop failed: \(error.localizedDescription)\n", stderr)
+    completions.append(completion)
+    guard phase != .stopping else { return }
+    phase = .stopping
+    generation = UUID()
+    delivery.stop()
+    let outcome = await stopCurrent()
+    current = nil
+    stopOutcome = outcome
+    phase = .stopped
+    let pending = completions
+    completions.removeAll()
+    for completion in pending { completion(outcome) }
+  }
+  private func stopCurrent() async -> SessionFailure? {
+    guard let current else { return nil }
+    return await withCheckedContinuation { continuation in
+      let completed = Mutex(false)
+      current.stop { result in
+        let first = completed.withLock { flag in
+          if flag { return false }
+          flag = true
+          return true
+        }
+        if first { continuation.resume(returning: result) }
       }
-      completion()
     }
-  }
-
-  func stream(
-    _ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer,
-    of outputType: SCStreamOutputType
-  ) {
-    if outputType == .audio, sampleBuffer.isValid,
-      let packet = AudioCaptureInputQueue.Packet(sample: sampleBuffer, source: .application)
-    {
-      receive(packet)
-    }
-  }
-
-  func stream(_ stream: SCStream, didStopWithError error: Error) {
-    guard !state.withLock({ $0.stopped }) else { return }
-    let mapped = Self.captureFailure(error)
-    failure(
-      mapped.recovery != nil
-        ? mapped
-        : SessionFailure(
-          category: .captureInterrupted,
-          message: String(localized: "Application audio stopped: \(error.localizedDescription)")))
   }
 }

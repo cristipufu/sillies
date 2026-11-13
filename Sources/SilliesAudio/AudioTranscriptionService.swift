@@ -17,12 +17,18 @@ package final class AudioTranscriptionService: SessionAudioCapture {
   package convenience init(
     configuration: AudioCaptureConfiguration, speech: @escaping LocalSpeechFactory.Make,
     diarization: SpeakerDiarizationFactory.Make? = nil,
+    applicationIdentity: @escaping ApplicationAudioIdentityCheck,
     events: AudioCaptureEvents
   ) {
     self.init(
       configuration: configuration,
       dependencies: .init(
         reportOverload: events.reportOverload, lifecycle: events.lifecycle,
+        application: { target, receive, failure in
+          ApplicationAudioSource(
+            request: .init(target: target, receive: receive, failure: failure),
+            identity: applicationIdentity)
+        },
         speech: speech, diarization: diarization),
       onUpdate: events.update)
   }
@@ -250,6 +256,7 @@ package final class AudioTranscriptionService: SessionAudioCapture {
           try flushMeetingAudio(state)
           try state.meetingAudio?.reset()
           let now = dependencies.now()
+          state.application?.pause()
           state.lifecycle.pause(at: now)
           state.speakerObservationBoundary = now
           invalidateCallSpeakers(state, at: now)
@@ -262,7 +269,10 @@ package final class AudioTranscriptionService: SessionAudioCapture {
     queue.async { [self] in
       storage.withValue { state in
         let now = dependencies.now()
-        if state.lifecycle.resume(at: now) { state.speakerObservationBoundary = now }
+        if state.lifecycle.resume(at: now) {
+          state.speakerObservationBoundary = now
+          state.application?.resume()
+        }
       }
     }
   }
@@ -397,7 +407,10 @@ package final class AudioTranscriptionService: SessionAudioCapture {
       deliverFinish()
       return
     }
-    state.speech?.finish { [weak self] notice in self?.resourceStopped(.speech, notice: notice) }
+    state.speech?.finish { [weak self] notice in
+      self?.resourceStopped(
+        .speech, failure: notice.map { .init(category: .finalization, message: $0) })
+    }
     let deadline = DispatchWorkItem { [weak self] in self?.finishTimedOut() }
     state.deadline = deadline
     queue.asyncAfter(
@@ -412,19 +425,22 @@ package final class AudioTranscriptionService: SessionAudioCapture {
     }
     if let application = state.application, state.requestedStops.insert(.application).inserted {
       state.pendingStops.insert(.application)
-      application.stop { [weak self] in self?.resourceStopped(.application) }
+      application.stop { [weak self] failure in
+        self?.resourceStopped(.application, failure: failure)
+      }
     }
   }
 
-  private func resourceStopped(_ source: AudioCaptureState.StopSource, notice: String? = nil) {
+  private func resourceStopped(
+    _ source: AudioCaptureState.StopSource, failure: SessionFailure? = nil
+  ) {
     queue.async { [self] in
       storage.withValue { state in
         guard state.lifecycle.phase != .finished, state.pendingStops.remove(source) != nil else {
           return
         }
         dependencies.lifecycle(.resourceStopped(source))
-        state.lifecycle.recordFinalizationNotice(
-          notice.map { SessionFailure(category: .finalization, message: $0) })
+        state.lifecycle.recordFinalizationNotice(failure)
         if state.lifecycle.phase == .finishing, state.pendingStops.isEmpty { deliverFinish() }
       }
     }

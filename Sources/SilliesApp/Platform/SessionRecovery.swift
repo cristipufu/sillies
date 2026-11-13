@@ -6,7 +6,8 @@ enum SessionRecovery {
     let pane: String
     switch action {
     case .openMicrophoneSettings: pane = "Privacy_Microphone"
-    case .openScreenRecordingSettings: pane = "Privacy_ScreenCapture"
+    case .openScreenRecordingSettings, .openSystemAudioRecordingSettings:
+      pane = "Privacy_ScreenCapture"
     case .openAccessibilitySettings: pane = "Privacy_Accessibility"
     }
     return URL(string: "x-apple.systempreferences:com.apple.preference.security?\(pane)")

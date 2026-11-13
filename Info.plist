@@ -27,6 +27,7 @@
         </dict>
     </array>
     <key>NSMicrophoneUsageDescription</key><string>Dictation turns your speech into text on this Mac without saving audio. Listen, Participate, and Record save playable audio and transcripts. Microphone capture starts only when you choose one of these actions.</string>
+    <key>NSAudioCaptureUsageDescription</key><string>Sillies records audio from the application you choose for Listen and Participate. Recording starts only when you choose one of these actions.</string>
     <key>NSScreenCaptureUsageDescription</key><string>Sillies captures the target window image or app audio when you drop a companion onto a window to take a snapshot or transcribe audio.</string>
     <key>SUFeedURL</key><string>https://github.com/cristipufu/sillies/releases/latest/download/appcast.xml</string>
     <key>SUPublicEDKey</key><string>vFHZvPv37uOxCFjKgYKFskqqJEAeKj5Gk7RiSMP5EPY=</string>

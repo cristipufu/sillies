@@ -86,7 +86,7 @@ private final class CallMicrophone: MicrophoneCapture {
 }
 private final class CallApplicationAudio: ApplicationCapture {
   func start() async throws {}
-  func stop(completion: @escaping @Sendable () -> Void) { completion() }
+  func stop(completion: @escaping @Sendable (SessionFailure?) -> Void) { completion(nil) }
 }
 private final class CallSpeechChannel: LocalSpeechChannel {
   private let output: LocalSpeechFactory.Output

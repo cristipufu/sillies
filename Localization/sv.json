@@ -120,6 +120,8 @@
     "Apple’s on-device AI couldn’t generate a response. Try again, or choose a downloaded text model in Settings → Local AI.": "Apples AI på enheten kunde inte generera ett svar. Försök igen eller välj en nedladdad textmodell i Inställningar → Lokal AI.",
     "Apple’s on-device AI does not support %@. Choose a downloaded text model in Settings → Local AI.": "Apples AI på enheten stöder inte %1$@. Välj en nedladdad textmodell i Inställningar → Lokal AI.",
     "Apple’s on-device AI is unavailable on this Mac. Choose a downloaded text model in Settings → Local AI.": "Apples on-device AI är inte tillgänglig på denna Mac. Välj en nedladdad textmodell i Inställningar → Lokal AI.",
+    "Application audio capture failed (Core Audio error %lld).": "Det gick inte att spela in appens ljud (Core Audio-fel %lld).",
+    "Application audio is unavailable. Finish and start a new session.": "Appens ljud är inte tillgängligt. Avsluta och starta en ny session.",
     "Application audio stopped: %@": "Applikationsljudet stoppat: %1$@",
     "Apply and delete %lld captures": {
       "one": "Tillämpa och radera %lld inspelning",
@@ -513,6 +515,7 @@
     "In use by your current session.": "Används av din nuvarande session.",
     "Include Command, Option, or Control.": "Inkludera kommando, alternativ eller kontroll.",
     "Includes your microphone and saves both sides of the conversation. Speaker echo is reduced locally. Muting Meet or Zoom does not mute Sillies.": "Inkluderar din mikrofon och sparar båda sidor av konversationen. Högtalareko reduceras lokalt. Att stänga av Meet eller Zoom dämpar inte Sillies.",
+    "infoplist.NSAudioCaptureUsageDescription": "Sillies spelar in ljud från appen du väljer för Lyssna och Delta. Inspelningen börjar bara när du väljer någon av dessa åtgärder.",
     "infoplist.NSMicrophoneUsageDescription": "Diktering förvandlar ditt tal till text på denna Mac utan att spara ljud. Lyssna, delta och spela in spara spelbart ljud och transkriptioner. Mikrofoninspelning startar först när du väljer en av dessa åtgärder.",
     "infoplist.NSScreenCaptureUsageDescription": "Sillies fångar målfönstrets bild eller appljud när du släpper en följeslagare i ett fönster för att ta en ögonblicksbild eller transkribera ljud.",
     "Inserted into %@": "Insatt i %1$@",
@@ -699,6 +702,7 @@
     "Open session and transcript": "Öppen session och utskrift",
     "Open Session Vault": "Öppna arkivet",
     "Open Sillies normally to set up your companions.": "Öppna Sillies normalt för att ställa in dina följeslagare.",
+    "Open system audio recording settings": "Öppna inställningar för inspelning av systemljud",
     "Open text": "Öppna text",
     "Open transcript in separate window": "Öppna transkription i separat fönster",
     "Open Vault": "Öppna Vault",
@@ -1082,6 +1086,7 @@
     "Supports the selected conversation language.": "Stöder det valda samtalsspråket.",
     "Switching to %@…": "Byter till %1$@...",
     "System": "System",
+    "System audio access is required. Enable Sillies in recording settings, then start a new session.": "Åtkomst till systemljud krävs. Tillåt Sillies i inspelningsinställningarna och starta sedan en ny session.",
     "System language": "Systemspråk",
     "Tag": "Tagg",
     "Tags": "Taggar",
@@ -1157,6 +1162,7 @@
     "There is not enough memory headroom for this text model.": "Det finns inte tillräckligt med minnesutrymme för denna textmodell.",
     "These companion preferences could not be saved.": "Det gick inte att spara följeslagarens inställningar.",
     "These files stay in their original locations. Removing a Vault item never deletes them.": "Dessa filer stannar på sina ursprungliga platser. Att ta bort ett arkivobjekt raderar dem aldrig.",
+    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Dessa talaretiketter är tvetydiga. Rätta dem genom att redigera transkriptionen direkt.",
     "Thinking…": "Funderar...",
     "This Apple speech model is not installed. Choose a language marked Ready on this Mac.": "Denna Apple-talmodell är inte installerad. Välj ett språk som är markerat Ready på denna Mac.",
     "This change will delete %lld existing capture(s).": {
@@ -1343,7 +1349,6 @@
     "Your words won’t get lost": "Dina ord försvinner inte",
     "Your words, your way": "Dina ord, ditt sätt",
     "· %@": "· %1$@",
-    "⌘F": "⌘F",
-    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Dessa talaretiketter är tvetydiga. Rätta dem genom att redigera transkriptionen direkt."
+    "⌘F": "⌘F"
   }
 }

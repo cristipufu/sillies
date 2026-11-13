@@ -428,9 +428,12 @@ private final class CaptureSpeechChannel: LocalSpeechChannel {
   completed.finish()
 }
 
-@Test func audioCaptureClosureDrainsStagedMeetingAudioBeforeFinishingRecognizers() async throws {
+@Test(arguments: [false, true])
+func audioCaptureClosureDrainsStagedMeetingAudioBeforeFinishingRecognizers(
+  cleanupFails: Bool
+) async throws {
   let queue = DispatchQueue(label: "sillies.test.closed-meeting")
-  let application = EndingApplicationCapture()
+  let application = EndingApplicationCapture(cleanupFails: cleanupFails)
   let microphone = LifecycleMicrophone(gate: nil, startupFailure: nil)
   let applicationSpeech = CaptureSpeechChannel()
   let microphoneSpeech = CaptureSpeechChannel()
@@ -466,13 +469,15 @@ private final class CaptureSpeechChannel: LocalSpeechChannel {
   microphone.completeStops()
   var iterator = results.makeAsyncIterator()
   let result = await iterator.next()
-  #expect(result?.failure == nil)
+  #expect(result?.failure?.category == (cleanupFails ? .finalization : nil))
   #expect(applicationSpeech.appendedBuffers.withLock { $0 } > 0)
   #expect(microphoneSpeech.appendedBuffers.withLock { $0 } > 0)
   completed.finish()
 }
 
 private final class EndingApplicationCapture: ApplicationCapture {
+  private let cleanupFails: Bool
+  init(cleanupFails: Bool) { self.cleanupFails = cleanupFails }
   private struct State {
     var receive: AudioCaptureInputQueue.Receiver?
     var failure: AudioCaptureDependencies.Failure?
@@ -488,7 +493,10 @@ private final class EndingApplicationCapture: ApplicationCapture {
     }
   }
   func start() async throws {}
-  func stop(completion: @escaping @Sendable () -> Void) { completion() }
+  func stop(completion: @escaping @Sendable (SessionFailure?) -> Void) {
+    completion(
+      cleanupFails ? .init(category: .finalization, message: "Fixture cleanup failure") : nil)
+  }
   func send(_ packet: AudioCaptureInputQueue.Packet) { state.withLock { $0.receive }?(packet) }
   func end() {
     state.withLock { $0.failure }?(.init(category: .captureInterrupted, message: "Source closed"))

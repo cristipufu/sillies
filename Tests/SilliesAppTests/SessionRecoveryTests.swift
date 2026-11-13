@@ -15,10 +15,14 @@ import Testing
   #expect(
     SessionRecovery.settingsURL(for: .openScreenRecordingSettings)?.absoluteString
       == "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")
+  #expect(
+    SessionRecovery.settingsURL(for: .openSystemAudioRecordingSettings)?.absoluteString
+      == "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")
 }
 
 @Test(arguments: [
   SessionFailure.RecoveryAction.openMicrophoneSettings, .openScreenRecordingSettings,
+  .openSystemAudioRecordingSettings,
 ])
 @MainActor func permissionFailureSurvivesLivePresentationAndVaultSave(
   _ recovery: SessionFailure.RecoveryAction

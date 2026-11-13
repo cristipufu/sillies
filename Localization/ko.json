@@ -119,6 +119,8 @@
     "Apple’s on-device AI couldn’t generate a response. Try again, or choose a downloaded text model in Settings → Local AI.": "Apple의 온디바이스 AI가 응답을 생성하지 못했습니다. 다시 시도하거나 설정 → 로컬 AI에서 다운로드한 텍스트 모델을 선택하세요.",
     "Apple’s on-device AI does not support %@. Choose a downloaded text model in Settings → Local AI.": "Apple의 온디바이스 AI는 %1$@를 지원하지 않습니다. 설정 → 로컬 AI에서 다운로드한 텍스트 모델을 선택하세요.",
     "Apple’s on-device AI is unavailable on this Mac. Choose a downloaded text model in Settings → Local AI.": "이 Mac에서는 Apple의 온디바이스 AI를 사용할 수 없습니다. 설정 → 로컬 AI에서 다운로드한 텍스트 모델을 선택하세요.",
+    "Application audio capture failed (Core Audio error %lld).": "앱 오디오 캡처에 실패했습니다(Core Audio 오류 %lld).",
+    "Application audio is unavailable. Finish and start a new session.": "앱 오디오를 사용할 수 없습니다. 세션을 종료하고 새 세션을 시작하세요.",
     "Application audio stopped: %@": "애플리케이션 오디오 중지됨: %1$@",
     "Apply and delete %lld captures": {
       "other": "적용하고 캡처 %lld개 삭제"
@@ -509,6 +511,7 @@
     "In use by your current session.": "현재 세션에서 사용 중입니다.",
     "Include Command, Option, or Control.": "명령, 옵션 또는 제어를 포함합니다.",
     "Includes your microphone and saves both sides of the conversation. Speaker echo is reduced locally. Muting Meet or Zoom does not mute Sillies.": "마이크를 포함하고 대화의 양쪽을 모두 저장합니다. 스피커 반향이 국지적으로 감소됩니다. Meet 또는 Zoom을 음소거해도 Sillies는 음소거되지 않습니다.",
+    "infoplist.NSAudioCaptureUsageDescription": "Sillies는 듣기 및 참여에서 선택한 앱의 오디오를 녹음합니다. 이 작업 중 하나를 선택할 때만 녹음이 시작됩니다.",
     "infoplist.NSMicrophoneUsageDescription": "받아쓰기는 오디오를 저장하지 않고도 이 Mac에서 음성을 텍스트로 변환합니다. 듣고, 참여하고, 녹음하면 재생 가능한 오디오와 스크립트가 저장됩니다. 마이크 캡처는 다음 작업 중 하나를 선택한 경우에만 시작됩니다.",
     "infoplist.NSScreenCaptureUsageDescription": "Sillies는 스냅샷을 찍거나 오디오를 녹음하기 위해 컴패니언을 창에 놓을 때 대상 창 이미지 또는 앱 오디오를 캡처합니다.",
     "Inserted into %@": "%1$@에 삽입됨",
@@ -694,6 +697,7 @@
     "Open session and transcript": "세션 및 스크립트 열기",
     "Open Session Vault": "보관함 열기",
     "Open Sillies normally to set up your companions.": "동반자를 설정하려면 Sillies를 일반 모드로 실행하세요.",
+    "Open system audio recording settings": "시스템 오디오 녹음 설정 열기",
     "Open text": "텍스트 열기",
     "Open transcript in separate window": "별도 윈도우에서 전사 열기",
     "Open Vault": "금고 열기",
@@ -1075,6 +1079,7 @@
     "Supports the selected conversation language.": "선택한 대화 언어를 지원해요.",
     "Switching to %@…": "%1$@로 전환 중…",
     "System": "시스템",
+    "System audio access is required. Enable Sillies in recording settings, then start a new session.": "시스템 오디오 접근 권한이 필요합니다. 녹음 설정에서 Sillies를 허용한 다음 새 세션을 시작하세요.",
     "System language": "시스템 언어",
     "Tag": "태그",
     "Tags": "태그",
@@ -1150,6 +1155,7 @@
     "There is not enough memory headroom for this text model.": "이 텍스트 모델에는 메모리 여유 공간이 충분하지 않습니다.",
     "These companion preferences could not be saved.": "동반자 환경설정을 저장하지 못했습니다.",
     "These files stay in their original locations. Removing a Vault item never deletes them.": "이 파일들은 원래 위치에 유지됩니다. 보관함 항목을 제거해도 파일은 삭제되지 않습니다.",
+    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "이 화자 표시는 모호합니다. 대화 기록을 직접 편집하여 수정하세요.",
     "Thinking…": "생각하다…",
     "This Apple speech model is not installed. Choose a language marked Ready on this Mac.": "이 Apple 음성 모델이 설치되지 않았습니다. 이 Mac에서 Ready로 표시된 언어를 선택하세요.",
     "This change will delete %lld existing capture(s).": {
@@ -1335,7 +1341,6 @@
     "Your words won’t get lost": "당신의 말은 사라지지 않을 것입니다",
     "Your words, your way": "당신의 말, 당신의 방식",
     "· %@": "· %1$@",
-    "⌘F": "⌘F",
-    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "이 화자 표시는 모호합니다. 대화 기록을 직접 편집하여 수정하세요."
+    "⌘F": "⌘F"
   }
 }

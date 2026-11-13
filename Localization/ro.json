@@ -1351,6 +1351,7 @@
     "Your words won’t get lost": "Cuvintele tale nu se vor pierde",
     "Your words, your way": "Cuvintele tale, felul tău",
     "· %@": "· %1$@",
-    "⌘F": "⌘F"
+    "⌘F": "⌘F",
+    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Aceste etichete ale vorbitorilor sunt ambigue. Editează direct transcrierea pentru a le corecta."
   }
 }

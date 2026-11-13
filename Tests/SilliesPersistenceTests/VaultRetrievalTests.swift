@@ -57,7 +57,7 @@ private func cleanRetrievalFixture(_ directory: URL) {
   var record = retrievalRecord(text: "[00:00] Meeting · Speaker 1: Ștefan ships API_v2.")
   record.imageFilename = "capture.png"
   let speaker = try #require(SessionSpeakerNaming.speakers(in: record).first)
-  record = SessionSpeakerNaming.rename(speaker, to: "Alex", in: record)
+  record = try SessionSpeakerNaming.rename(speaker, to: "Alex", in: record)
   let exporter = VaultMarkdownExporter(sourceDirectory: source.directory)
   let note = try exporter.export(record, to: directory.appendingPathComponent("export"))
   let markdown = try String(contentsOf: note, encoding: .utf8)

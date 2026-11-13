@@ -388,11 +388,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     guard launch.isAutomatedRun else {
       let speech = try SpeechServices(diagnostics: diagnostics?.sink ?? .disabled)
       speechServices = speech
+      let callAccessibility = CallAccessibilityRegistry(
+        prepare: AccessibilityWindowSource.CallMetadata.manualAccessibilityLease)
       return SkillCoordinator(
         vault: reasoningServices.makeVault(),
         audio: .init(
           captureFactory: speech.captureFactory, languages: speech.languages,
-          reasoning: reasoningServices.reasoning, diagnostics: diagnostics?.sink ?? .disabled))
+          reasoning: reasoningServices.reasoning,
+          makeCallSpeakerReader: {
+            CallWindowSpeakerReader(
+              makeProvider: CallSpeakerProviders.make,
+              accessibility: callAccessibility)
+          },
+          diagnostics: diagnostics?.sink ?? .disabled))
     }
     let tempVault = FileManager.default.temporaryDirectory
       .appendingPathComponent("sillies-vault-\(UUID().uuidString)", isDirectory: true)
@@ -401,7 +409,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
       vault: reasoningServices.makeVault(directory: tempVault),
       audio: .init(
         captureFactory: speech.captureFactory, languages: speech.languages,
-        reasoning: reasoningServices.reasoning))
+        reasoning: reasoningServices.reasoning,
+        makeCallSpeakerReader: { UnavailableCallSpeakerReader() }))
   }
 
   func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {

@@ -1335,6 +1335,7 @@
     "Your words won’t get lost": "你的话不会丢失",
     "Your words, your way": "你的话语，你的方式",
     "· %@": "·%1$@",
-    "⌘F": "⌘F"
+    "⌘F": "⌘F",
+    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "这些发言人标签存在歧义。请直接编辑转录文本以更正。"
   }
 }

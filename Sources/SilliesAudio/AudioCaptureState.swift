@@ -12,6 +12,7 @@ final class AudioCaptureState {
   var application: (any ApplicationCapture)?
   var writer: AudioRecordingWriter?
   var meetingAudio: MeetingAudioProcessor?
+  var speakerObservationBoundary: TimeInterval = 0
   var lastPublishedAt: TimeInterval = 0
   var pendingStops: Set<StopSource> = []
   var requestedStops: Set<StopSource> = []

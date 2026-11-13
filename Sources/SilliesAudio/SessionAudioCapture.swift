@@ -7,6 +7,7 @@ package protocol SessionAudioCapture: AnyObject, Sendable {
   func pause()
   func resume()
   func changeLanguage(_ language: SpeechLanguage)
+  func observeCallSpeakers(_ observation: CallSpeakerObservation)
   func refreshProgress()
   func finish(completion: @escaping @Sendable (AudioCaptureResult) -> Void)
   func finish(
@@ -28,4 +29,5 @@ package typealias SessionAudioCaptureFactory =
 
 extension SessionAudioCapture {
   package func refreshProgress() {}
+  package func observeCallSpeakers(_ observation: CallSpeakerObservation) {}
 }

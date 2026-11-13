@@ -57,7 +57,8 @@ extension SkillCoordinator {
     self.init(
       vault: vault,
       audio: .init(
-        captureFactory: audioFactory, languages: audioLanguages, reasoning: FixtureReasoning()),
+        captureFactory: audioFactory, languages: audioLanguages, reasoning: FixtureReasoning(),
+        makeCallSpeakerReader: { UnavailableCallSpeakerReader() }),
       snapshotLoader: snapshotLoader)
   }
 }

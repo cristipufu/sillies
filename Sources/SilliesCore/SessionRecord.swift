@@ -33,6 +33,7 @@ public struct SessionRecord: Codable, Identifiable, Equatable, Sendable {
   public var screenshotTextState = ScreenshotTextState.none
   public var transcriptSegments: [TranscriptSegment] = []
   public var speakerNames: [String: String] = [:]
+  public var speakerNameSuppressions: Set<String> = []
   public var originalSpeakerTranscript: String?
   public var processingRevision: SessionProcessingRevision
 

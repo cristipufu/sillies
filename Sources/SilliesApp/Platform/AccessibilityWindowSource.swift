@@ -460,3 +460,57 @@ final class AccessibilityWindowSource: @unchecked Sendable {
   }
 
 }
+
+extension AccessibilityWindowSource {
+  /// Native gateway for recording-owned call workers. AX handles stay inside their actor.
+  /// This gateway has no tracking state, observers or hierarchy-discovery scheduling.
+  enum CallMetadata {
+    static func values(_ attributes: [String], of element: AXUIElement) -> [AnyObject]? {
+      dispatchPrecondition(condition: .notOnQueue(.main))
+      var result: CFArray?
+      guard
+        AXUIElementCopyMultipleAttributeValues(element, attributes as CFArray, [], &result)
+          == .success,
+        let values = result as? [AnyObject], values.count == attributes.count
+      else { return nil }
+      return values
+    }
+    static func elements(_ attribute: String, of element: AXUIElement, limit: Int) -> [AXUIElement]?
+    {
+      dispatchPrecondition(condition: .notOnQueue(.main))
+      var count: CFIndex = 0
+      let status = AXUIElementGetAttributeValueCount(element, attribute as CFString, &count)
+      // Leaf controls need not expose AXChildren. Failed IPC and required inventories stay unavailable.
+      if attribute == kAXChildrenAttribute, status == .attributeUnsupported { return [] }
+      guard status == .success, count >= 0, count <= limit else { return nil }
+      if count == 0 { return [] }
+      var result: CFArray?
+      guard
+        AXUIElementCopyAttributeValues(element, attribute as CFString, 0, count, &result)
+          == .success,
+        let values = result as? [AnyObject], values.count == count,
+        values.allSatisfy({ CFGetTypeID($0) == AXUIElementGetTypeID() })
+      else { return nil }
+      return values.map { unsafeDowncast($0, to: AXUIElement.self) }
+    }
+    static func manualAccessibilityLease(processID: Int32) -> CallAccessibilityRegistry.Restoration
+    {
+      dispatchPrecondition(condition: .notOnQueue(.main))
+      let application = AXUIElementCreateApplication(processID)
+      AXUIElementSetMessagingTimeout(application, CallSpeakerAX.timeout)
+      var previous: CFTypeRef?
+      guard
+        AXUIElementCopyAttributeValue(application, "AXManualAccessibility" as CFString, &previous)
+          == .success,
+        previous as? Bool == false,
+        AXUIElementSetAttributeValue(
+          application, "AXManualAccessibility" as CFString, kCFBooleanTrue) == .success
+      else { return .init(restore: { true }) }
+      return .init(restore: {
+        dispatchPrecondition(condition: .notOnQueue(.main))
+        return AXUIElementSetAttributeValue(
+          application, "AXManualAccessibility" as CFString, kCFBooleanFalse) == .success
+      })
+    }
+  }
+}

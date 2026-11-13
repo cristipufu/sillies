@@ -1351,6 +1351,7 @@
     "Your words won’t get lost": "Vaše slova se neztratí",
     "Your words, your way": "Vaše slova, vaše cesta",
     "· %@": "· %@",
-    "⌘F": "⌘F"
+    "⌘F": "⌘F",
+    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Tato označení mluvčích jsou nejednoznačná. Opravte je přímo v přepisu."
   }
 }

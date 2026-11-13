@@ -7,5 +7,6 @@ struct AudioSkillServices {
   let captureFactory: SessionAudioCaptureFactory
   let languages: AudioLanguageEnvironment
   let reasoning: any LocalReasoning
+  let makeCallSpeakerReader: @Sendable () -> any CallSpeakerReading
   var diagnostics: DiagnosticSink = .disabled
 }

@@ -1,6 +1,6 @@
 # Privacy policy
 
-**Sillies for macOS · Last updated November 7, 2026**
+**Sillies for macOS · Last updated November 13, 2026**
 
 Sillies processes your conversations, screenshots, and writing on your Mac. There is no Sillies account,
 advertising, in-app analytics, telemetry, or cloud inference fallback. The developer does not receive
@@ -38,6 +38,13 @@ Use recordings only when you have the appropriate permission from the people inv
 Speaker detection distinguishes voices within a session and audio source. Sillies does not create a
 cross-recording voice identity or enrollment profile. Saved speaker labels and names you enter remain
 part of the recording's local record.
+
+While Listen or Participate is recording, Sillies can read participant names and speaking indicators
+from the selected call window through macOS Accessibility. Separate adapters recognize Zoom, Teams,
+and Google Meet metadata. Names are attached only when the available evidence meets the attribution
+rules; missing or ambiguous evidence leaves anonymous labels. These reads stop when capture pauses
+or ends. Names and corrections are saved with the recording; call-window trees and participant names
+are never written to the diagnostics archive.
 
 ## Local AI
 

@@ -1343,6 +1343,7 @@
     "Your words won’t get lost": "A szavaid nem vesznek el",
     "Your words, your way": "A szavaid, a te utad",
     "· %@": "· %@",
-    "⌘F": "⌘F"
+    "⌘F": "⌘F",
+    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Ezek a beszélőcímkék nem egyértelműek. Javítsd őket közvetlenül az átirat szerkesztésével."
   }
 }

@@ -8,6 +8,7 @@ package struct AudioCaptureResult: Sendable {
   package let duration: TimeInterval
   package let failure: SessionFailure?
   package var speakerDetectionNotice: String? = nil
+  package var originalTranscript: String?
   package var segments: [TranscriptSegment] = []
   package var plainText: String { segments.map(\.text).joined(separator: " ") }
   package func ending(_ reason: SessionEndReason) -> Self {
@@ -15,6 +16,7 @@ package struct AudioCaptureResult: Sendable {
       transcript: transcript, recordingURL: recordingURL, duration: duration,
       failure: failure.flatMap { $0.requiresAttention(ending: reason) ? $0 : nil })
     result.segments = segments
+    result.originalTranscript = originalTranscript
     result.speakerDetectionNotice = speakerDetectionNotice
     return result
   }

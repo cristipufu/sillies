@@ -42,6 +42,7 @@ final class SessionSpeechPipeline: Sendable {
     var sourceTimes: [SessionAudioSource: TimeInterval] = [:]
     var sourceOffsets: [SessionAudioSource: TimeInterval] = [:]
     var transcript = SpeechTranscript()
+    var callSpeakers = CallSpeakerTimeline()
     var speakers: SessionDiarization?
     var finalizationNotice: String?
     var switchTime: TimeInterval = 0
@@ -73,6 +74,7 @@ final class SessionSpeechPipeline: Sendable {
     }
   }
 
+  var originalText: String { storage.withValue { $0.transcript.originalText } }
   var segments: [TranscriptSegment] { storage.withValue { $0.transcript.segments } }
   var preview: String {
     return storage.withValue { state in
@@ -177,6 +179,7 @@ final class SessionSpeechPipeline: Sendable {
       state.group?.cancel()
       state.speakers?.cancel()
       state.transcript.preserveDrafts()
+      state.transcript.attributeCallSpeakers(using: state.callSpeakers)
       state.group = nil
       state.phase = .finished
     }
@@ -208,6 +211,7 @@ final class SessionSpeechPipeline: Sendable {
       state.finalizationNotice = notice ?? state.finalizationNotice
       state.speakers?.flushPending()
       state.transcript.preserveDrafts()
+      state.transcript.attributeCallSpeakers(using: state.callSpeakers)
       state.group = nil
       prepare(language)
     }
@@ -229,6 +233,7 @@ final class SessionSpeechPipeline: Sendable {
   ) {
     storage.withValue { state in
       state.transcript.preserveDrafts()
+      state.transcript.attributeCallSpeakers(using: state.callSpeakers)
       state.group = nil
       state.phase = .finished
       completion(notice ?? state.finalizationNotice)
@@ -363,6 +368,15 @@ final class SessionSpeechPipeline: Sendable {
       phrase.text = configuration.dictionary.replacing(in: phrase.text)
       state.transcript.receive(
         phrase, source: source, elapsed: state.sourceTimes[source, default: 0])
+      state.transcript.attributeCallSpeakers(using: state.callSpeakers)
+      onEvent(.textChanged)
+    }
+  }
+
+  func observeCallSpeakers(_ observation: CallSpeakerObservation, at elapsed: TimeInterval) {
+    storage.withValue { state in
+      guard !state.stopped, state.callSpeakers.append(observation, at: elapsed) else { return }
+      state.transcript.attributeCallSpeakers(using: state.callSpeakers)
       onEvent(.textChanged)
     }
   }

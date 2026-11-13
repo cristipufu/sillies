@@ -1,5 +1,7 @@
 # Sillies development
 
+- Treat reviews of other products as inspiration for an independently designed implementation. Do not copy their source or vocabulary tables. Keep the names of products used as inspiration out of feature code, comments, documentation, and commit messages.
+
 - Retain local diagnostics only through an injected `DiagnosticSink` and typed, content-free events. Events in that archive must never include messages, prompts, audio, clipboard/Vault content, window titles, paths, raw error descriptions or arbitrary dictionaries. Record transitions and first-delivery milestones, never audio packets, tokens or animation frames. The app owns the bounded recorder; journal I/O stays off the main queue, shutdown flushes through the modal-safe delivery path, and exports preserve size/privacy bounds. Keep rotation, retention, failure/retry, concurrency and export regressions in `SilliesDiagnosticsTests`; see `docs/contributing/diagnostics.md`.
 
 - Keep behavior and geometry in `SilliesCore`, free of AppKit and timers.

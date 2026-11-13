@@ -23,6 +23,7 @@ final class AudioSkillSession: ActiveSkillSession {
   private let onChange: () -> Void
   private let recordID = UUID()
   private var service: (any SessionAudioCapture)?
+  private let callSpeakers: CallSpeakerMonitor?
   private var updateDelivery: AudioSessionUpdateDelivery?
   private var suggestionTask: Task<Void, Never>?
   private var availabilityTask: Task<Void, Never>?
@@ -39,6 +40,8 @@ final class AudioSkillSession: ActiveSkillSession {
     self.captureFactory = services.captureFactory
     self.languages = services.languages
     self.reasoning = services.reasoning
+    callSpeakers =
+      request.kind == .record ? nil : CallSpeakerMonitor(reader: services.makeCallSpeakerReader())
     self.request = request
     self.onChange = onChange
     let source =
@@ -165,11 +168,13 @@ final class AudioSkillSession: ActiveSkillSession {
       presentation.elapsed = elapsed
       presentation.audioLevel = presentation.isPaused ? 0 : level
     case .failed(let failure):
+      callSpeakers?.stop()
       presentation.pendingLanguageID = nil
       presentation.phase = .failed(failure)
       presentation.status = String(localized: "Stopped · Open details")
       presentation.audioLevel = 0
     case .transcriptionStopped(let failure):
+      callSpeakers?.stop()
       recoveringChannels.removeAll()
       presentation.isRecoveringTranscription = false
       presentation.transcriptionFailure = failure
@@ -206,6 +211,7 @@ final class AudioSkillSession: ActiveSkillSession {
 
   private func pause() {
     guard presentation.phase == .capturing else { return }
+    callSpeakers?.suspend()
     service?.pause()
     presentation.phase = .paused
     presentation.status = String(localized: "Paused")
@@ -225,6 +231,9 @@ final class AudioSkillSession: ActiveSkillSession {
 
   func tick(_ context: SkillTickContext) -> SkillTickDisposition {
     service?.refreshProgress()
+    if presentation.phase == .capturing, let service {
+      callSpeakers?.tick(context, capture: service)
+    }
     considerSuggestion()
     return .keepRunning(statusDetail: presentation.statusLine, audioLevel: presentation.audioLevel)
   }
@@ -314,7 +323,7 @@ final class AudioSkillSession: ActiveSkillSession {
     let hasText = !result.transcript.isEmpty
     var sourceText = SessionContent.Text(transcript: result.transcript)
     sourceText.segments = result.segments
-    let record = SessionRecord(
+    var record = SessionRecord(
       kind: context.kind,
       origin: .init(
         characterID: context.finalize.companionID, characterName: context.finalize.companionName,
@@ -336,6 +345,7 @@ final class AudioSkillSession: ActiveSkillSession {
       metadata: .init(
         id: context.id, durationSeconds: result.duration,
         transcription: context.transcription))
+    record.originalSpeakerTranscript = result.originalTranscript
     let banner =
       result.failure != nil
       ? String(localized: "Session needs attention · View details")
@@ -358,6 +368,7 @@ final class AudioSkillSession: ActiveSkillSession {
   }
 
   private func stopReceivingUpdates() {
+    callSpeakers?.stop()
     updateDelivery?.stop()
     updateDelivery = nil
   }

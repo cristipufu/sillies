@@ -35,7 +35,15 @@ public struct TranscriptTimeline: Sendable {
   }
 
   public var text: String {
-    render(sources.values.flatMap(\.entries) + markers.entries)
+    render(sources.values.flatMap(\.entries) + markers.entries, line: \.renderedText)
+  }
+
+  public var originalText: String {
+    render(sources.values.flatMap(\.entries) + markers.entries, line: \.originalRenderedText)
+  }
+
+  public mutating func attributeCallSpeakers(using timeline: CallSpeakerTimeline, source: String) {
+    if sources[source]?.attributeCallSpeakers(using: timeline) == true { revision &+= 1 }
   }
 
   /// Reads only each source's recent tail, regardless of how long the session has run.
@@ -67,9 +75,12 @@ public struct TranscriptTimeline: Sendable {
     return fragments.reversed().joined(separator: "\n")
   }
 
-  private func render(_ entries: [TranscriptSourceTimeline.Entry]) -> String {
+  private func render(
+    _ entries: [TranscriptSourceTimeline.Entry],
+    line: KeyPath<TranscriptSourceTimeline.Entry, String>
+  ) -> String {
     entries.sorted(by: TranscriptSourceTimeline.Entry.chronologicalOrder)
-      .map(\.renderedText).joined(separator: "\n")
+      .map { $0[keyPath: line] }.joined(separator: "\n")
   }
 
   public mutating func receive(_ passage: Passage) {

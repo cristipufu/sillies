@@ -50,6 +50,7 @@ import Testing
   var renamed = original
   renamed.transcript = "Alex: The updated transcript."
   renamed.speakerNames = ["meeting:1": "Alex"]
+  renamed.speakerNameSuppressions = ["meeting:2"]
   try await vault.edit(id: original.id, .renameSpeaker(.init(original: original, renamed: renamed)))
   let model = SessionVaultModel(vault: vault, presentation: .init())
   model.regenerateNotes(original)
@@ -63,6 +64,7 @@ import Testing
   let saved = try #require(try await vault.record(id: original.id))
   #expect(saved.transcript == renamed.transcript)
   #expect(saved.speakerNames == renamed.speakerNames)
+  #expect(saved.speakerNameSuppressions == renamed.speakerNameSuppressions)
   #expect(saved.summary == original.summary)
   #expect(saved.summaryPending)
   #expect(saved.processingRevision.notes != original.processingRevision.notes)

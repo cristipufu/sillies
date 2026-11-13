@@ -11,6 +11,10 @@ struct SpeechTranscript {
   private var cachedPreview = ""
 
   var text: String { timeline.text }
+  var originalText: String { timeline.originalText }
+  mutating func attributeCallSpeakers(using names: CallSpeakerTimeline) {
+    timeline.attributeCallSpeakers(using: names, source: SessionAudioSource.application.rawValue)
+  }
   var segments: [TranscriptSegment] { timeline.segments }
 
   var preview: String {

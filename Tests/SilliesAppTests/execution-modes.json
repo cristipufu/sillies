@@ -1,4 +1,5 @@
 {
+  "CallSpeakerTests.swift": { "default": "headless" },
   "VaultNativeInteractionTests.swift": {
     "default": "gui"
   },

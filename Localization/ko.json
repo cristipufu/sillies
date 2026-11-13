@@ -1335,6 +1335,7 @@
     "Your words won’t get lost": "당신의 말은 사라지지 않을 것입니다",
     "Your words, your way": "당신의 말, 당신의 방식",
     "· %@": "· %1$@",
-    "⌘F": "⌘F"
+    "⌘F": "⌘F",
+    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "이 화자 표시는 모호합니다. 대화 기록을 직접 편집하여 수정하세요."
   }
 }

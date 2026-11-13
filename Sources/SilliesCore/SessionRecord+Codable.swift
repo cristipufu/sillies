@@ -24,7 +24,7 @@ extension SessionRecord {
     case speechProvenance
     case diarizationProvenance
     case isProtected, screenshotTextState
-    case transcriptSegments, speakerNames, originalSpeakerTranscript
+    case transcriptSegments, speakerNames, speakerNameSuppressions, originalSpeakerTranscript
     case audioFilename, explanation, processingNote, suggestions, failureMessage, languageIdentifier
   }
 
@@ -73,6 +73,8 @@ extension SessionRecord {
       try container.decodeIfPresent([TranscriptSegment].self, forKey: .transcriptSegments) ?? []
     speakerNames =
       try container.decodeIfPresent([String: String].self, forKey: .speakerNames) ?? [:]
+    speakerNameSuppressions =
+      try container.decodeIfPresent(Set<String>.self, forKey: .speakerNameSuppressions) ?? []
     originalSpeakerTranscript = try container.decodeIfPresent(
       String.self, forKey: .originalSpeakerTranscript)
   }
@@ -111,6 +113,7 @@ extension SessionRecord {
     try container.encode(screenshotTextState, forKey: .screenshotTextState)
     try container.encode(transcriptSegments, forKey: .transcriptSegments)
     try container.encode(speakerNames, forKey: .speakerNames)
+    try container.encode(speakerNameSuppressions, forKey: .speakerNameSuppressions)
     try container.encodeIfPresent(originalSpeakerTranscript, forKey: .originalSpeakerTranscript)
   }
 

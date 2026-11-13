@@ -5,9 +5,12 @@ struct TranscriptSourceTimeline: Sendable {
   struct Entry: Sendable {
     let sequence: Int
     let range: Range<TimeInterval>
-    let renderedText: String
-    let segment: TranscriptSegment?
-    let characterCount: Int
+    private(set) var renderedText: String
+    private(set) var segment: TranscriptSegment?
+    private(set) var characterCount: Int
+    private enum CallNameState { case pending, resolved }
+    private var callNameState = CallNameState.pending
+    var originalRenderedText: String { segment?.originalTranscriptLine ?? renderedText }
     var isFinal: Bool
 
     init(passage: TranscriptTimeline.Passage, sequence: Int) {
@@ -17,9 +20,7 @@ struct TranscriptSourceTimeline: Sendable {
         start: passage.range.lowerBound, end: passage.range.upperBound,
         text: passage.text, speaker: passage.speaker)
       range = passage.range
-      let time = SessionRecord.formatDuration(range.lowerBound)
-      let label = passage.speaker.map { passage.source + " · " + $0.label } ?? passage.source
-      renderedText = "[\(time)] \(label): \(passage.text)"
+      renderedText = segment?.transcriptLine ?? ""
       characterCount = renderedText.count
       isFinal = passage.isFinal
     }
@@ -31,6 +32,22 @@ struct TranscriptSourceTimeline: Sendable {
       renderedText = "[\(SessionRecord.formatDuration(time))] Language: \(language)"
       characterCount = renderedText.count
       isFinal = true
+    }
+
+    mutating func attributeCallSpeaker(using timeline: CallSpeakerTimeline) -> Bool {
+      guard isFinal, callNameState == .pending, let segment else { return false }
+      guard case .resolved(let name) = timeline.decision(for: range) else { return false }
+      callNameState = .resolved
+      guard name != nil else { return false }
+      if case .overlapping = segment.speaker { return false }
+      let named = TranscriptSegment(
+        sequence: segment.sequence, source: segment.source,
+        start: segment.start, end: segment.end, text: segment.text, speaker: segment.speaker,
+        automaticSpeakerName: name)
+      self.segment = named
+      renderedText = named.transcriptLine
+      characterCount = renderedText.count
+      return true
     }
 
     static func chronologicalOrder(_ lhs: Self, _ rhs: Self) -> Bool {
@@ -90,6 +107,16 @@ struct TranscriptSourceTimeline: Sendable {
     entries.replaceSubrange(affected, with: entry.map { [$0] } ?? [])
     finalizedPrefixCount = min(finalizedPrefixCount, affected.lowerBound)
     return true
+  }
+
+  mutating func attributeCallSpeakers(using timeline: CallSpeakerTimeline) -> Bool {
+    guard let earliest = timeline.earliestTime else { return false }
+    let first = max(0, insertionIndex(at: earliest) - 1)
+    var changed = false
+    for index in first..<entries.count {
+      if entries[index].attributeCallSpeaker(using: timeline) { changed = true }
+    }
+    return changed
   }
 
   mutating func insertMarker(_ entry: Entry) {

@@ -1343,6 +1343,7 @@
     "Your words won’t get lost": "Deine Worte gehen nicht verloren",
     "Your words, your way": "Deine Worte, dein Weg",
     "· %@": "· %@",
-    "⌘F": "⌘F"
+    "⌘F": "⌘F",
+    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Diese Sprecherbezeichnungen sind mehrdeutig. Korrigiere sie direkt im Transkript."
   }
 }

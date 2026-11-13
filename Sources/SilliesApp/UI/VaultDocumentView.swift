@@ -37,7 +37,7 @@ struct VaultDocumentView: View {
             Button("Back to document", systemImage: "chevron.left") { model.hideSpeakers() }
             SpeakerNamingView(record: record) { speaker, name in
               actions.rename(speaker, to: name, in: record)
-            }
+            }.id(record.id)
             Spacer()
           }.padding(24).frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if model.pane == .screenshot {

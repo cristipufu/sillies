@@ -9,11 +9,13 @@ package enum VaultRecordEdit: Sendable {
     package let expectedRevision: UUID
     package let transcript: String
     package let names: [String: String]
+    package let suppressions: Set<String>
     package let originalTranscript: String?
     package init(original: SessionRecord, renamed: SessionRecord) {
       expectedRevision = original.processingRevision.notes
       transcript = renamed.transcript
       names = renamed.speakerNames
+      suppressions = renamed.speakerNameSuppressions
       originalTranscript = renamed.originalSpeakerTranscript
     }
   }
@@ -44,6 +46,7 @@ package enum VaultRecordEdit: Sendable {
       guard record.processingRevision.notes == edit.expectedRevision else { return false }
       record.transcript = edit.transcript
       record.speakerNames = edit.names
+      record.speakerNameSuppressions = edit.suppressions
       record.originalSpeakerTranscript = edit.originalTranscript
       requestNotes(in: &record)
     case .completeNotes(let notes, let revision):

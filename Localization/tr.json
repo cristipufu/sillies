@@ -1343,6 +1343,7 @@
     "Your words won’t get lost": "Sözlerin kaybolmayacak",
     "Your words, your way": "Senin sözlerin, senin yolun",
     "· %@": "· %1$@",
-    "⌘F": "⌘F"
+    "⌘F": "⌘F",
+    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Bu konuşmacı etiketleri belirsiz. Düzeltmek için doğrudan dökümü düzenleyin."
   }
 }

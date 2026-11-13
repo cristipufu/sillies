@@ -1359,6 +1359,7 @@
     "Your words won’t get lost": "Ваши слова не потеряются",
     "Your words, your way": "Твои слова, твой путь",
     "· %@": "· %1$@",
-    "⌘F": "⌘F"
+    "⌘F": "⌘F",
+    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Эти метки говорящих неоднозначны. Исправьте их непосредственно в расшифровке."
   }
 }

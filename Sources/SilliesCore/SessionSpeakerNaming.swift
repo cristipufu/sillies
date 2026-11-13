@@ -1,80 +1,115 @@
 import Foundation
 
-public struct SessionSpeakerIdentity: Identifiable, Equatable, Sendable {
-  public let source: String
-  public let number: Int
-  public var id: String { "\(source):\(number)" }
-  public var label: String { String(localized: "\(source) · Speaker \(number)") }
-}
-
-/// Changes only speaker headers. Names never rewrite words spoken by the participants.
+/// Corrections are recording-scoped metadata and exact header edits. Spoken words stay untouched.
 public enum SessionSpeakerNaming {
-  private static let maximumNameLength = 80
-  private struct Header {
-    let prefix: Substring
-    let source: String
-    let numbers: [Int]
-    let text: Substring
+  public enum Failure: Error, Equatable { case ambiguousHeaders }
+  public static func speakers(in record: SessionRecord) -> [SessionSpeakerIdentity] {
+    let headers = descriptors(in: record)
+    var suggestions: [String: Set<CallSpeakerName>] = [:]
+    for header in headers {
+      guard let name = header.automaticName else { continue }
+      for identity in header.identities { suggestions[identity.id, default: []].insert(name) }
+    }
+    var seen: Set<String> = []
+    return headers.flatMap(\.identities).filter { seen.insert($0.id).inserted }.map { identity in
+      guard case .voice(let number) = identity.kind, let names = suggestions[identity.id],
+        names.count == 1
+      else { return identity }
+      return .init(source: identity.source, number: number, suggestedName: names.first)
+    }
   }
 
-  public static func speakers(in record: SessionRecord) -> [SessionSpeakerIdentity] {
-    var seen: Set<String> = []
-    return (record.originalSpeakerTranscript ?? record.transcript).split(separator: "\n")
-      .compactMap(parse).flatMap { header in
-        header.numbers.map { SessionSpeakerIdentity(source: header.source, number: $0) }
-      }.filter { seen.insert($0.id).inserted }
+  public static func name(for identity: SessionSpeakerIdentity, in record: SessionRecord) -> String
+  {
+    if let manual = record.speakerNames[identity.id] { return manual }
+    if record.speakerNameSuppressions.contains(identity.id) { return "" }
+    return identity.suggestedName?.rawValue ?? ""
   }
 
   public static func rename(
     _ identity: SessionSpeakerIdentity, to name: String, in record: SessionRecord
-  ) -> SessionRecord {
-    var record = record
-    let name = String(
-      name.trimmingCharacters(in: .whitespacesAndNewlines).filter { !$0.isNewline }.prefix(
-        maximumNameLength))
-    record.speakerNames[identity.id] = name.isEmpty ? nil : name
-    let original = record.originalSpeakerTranscript ?? record.transcript
-    record.originalSpeakerTranscript = original
-    record.transcript = original.split(separator: "\n", omittingEmptySubsequences: false).map {
-      line in
-      guard let header = parse(line) else { return String(line) }
-      guard
-        header.numbers.contains(where: {
-          record.speakerNames[SessionSpeakerIdentity(source: header.source, number: $0).id] != nil
-        })
-      else { return String(line) }
-      let names = header.numbers.map { number in
-        record.speakerNames[SessionSpeakerIdentity(source: header.source, number: number).id]
-          ?? "Speaker \(number)"
-      }
-      let label =
-        names.joined(separator: " + ") + (names.count > 1 ? " · overlap" : "")
-      return "\(header.prefix)\(header.source) · \(label): \(header.text)"
-    }.joined(separator: "\n")
-    return record
+  ) throws -> SessionRecord {
+    var updated = record
+    let value = cleanName(name)
+    updated.speakerNames[identity.id] = value.isEmpty ? nil : value
+    if value.isEmpty {
+      updated.speakerNameSuppressions.insert(identity.id)
+    } else {
+      updated.speakerNameSuppressions.remove(identity.id)
+    }
+    updated.originalSpeakerTranscript = record.originalSpeakerTranscript ?? record.transcript
+    updated.transcript = replacingHeaders(
+      in: record, using: try headerReplacements(in: record, renamed: updated))
+    return updated
   }
 
-  private static func parse(_ line: Substring) -> Header? {
-    guard line.first == "[", let stamp = line.range(of: "] "),
-      let separator = line.range(of: ": ", range: stamp.upperBound..<line.endIndex)
-    else { return nil }
-    let heading = line[stamp.upperBound..<separator.lowerBound]
-    guard let marker = heading.range(of: " · Speaker") else { return nil }
-    let source = String(heading[..<marker.lowerBound])
-    var suffix = heading[marker.upperBound...]
-    if suffix.hasPrefix("s ") {
-      suffix = suffix.dropFirst(2)
-    } else if suffix.hasPrefix(" ") {
-      suffix = suffix.dropFirst()
-    } else {
-      return nil
+  private struct HeaderReplacement {
+    let original: String
+    let updated: String
+  }
+
+  private static func cleanName(_ name: String) -> String {
+    let normalized = boundedNamePrefix(name).precomposedStringWithCanonicalMapping
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+    return String(boundedNamePrefix(normalized).prefix(CallSpeakerName.maximumCharacters))
+  }
+
+  private static func boundedNamePrefix(_ name: String) -> String {
+    var scalars = String.UnicodeScalarView()
+    var inspectedBytes = 0
+    for scalar in name.unicodeScalars {
+      inspectedBytes += scalar.utf8.count
+      guard inspectedBytes <= CallSpeakerName.maximumUTF8Bytes else { break }
+      if !CharacterSet.controlCharacters.contains(scalar), !CharacterSet.newlines.contains(scalar) {
+        scalars.append(scalar)
+      }
     }
-    if let overlap = suffix.range(of: " · overlap") { suffix = suffix[..<overlap.lowerBound] }
-    let components = suffix.components(separatedBy: " + ")
-    let numbers = components.compactMap(Int.init)
-    guard !numbers.isEmpty, numbers.count == components.count else { return nil }
-    return Header(
-      prefix: line[..<stamp.upperBound], source: source, numbers: numbers,
-      text: line[separator.upperBound...])
+    return String(scalars)
+  }
+
+  private static func headerReplacements(in record: SessionRecord, renamed updated: SessionRecord)
+    throws -> [HeaderReplacement]
+  {
+    var replacements: [String: Set<String>] = [:]
+    for header in descriptors(in: record) {
+      replacements[
+        header.renderedPrefix(
+          names: record.speakerNames, suppressions: record.speakerNameSuppressions), default: []
+      ]
+      .insert(
+        header.renderedPrefix(
+          names: updated.speakerNames, suppressions: updated.speakerNameSuppressions))
+    }
+    guard
+      !replacements.contains(where: { old, choices in
+        choices.count > 1 && choices.contains(where: { $0 != old })
+      })
+    else {
+      throw Failure.ambiguousHeaders
+    }
+    return replacements.compactMap { old, choices -> HeaderReplacement? in
+      guard choices.count == 1, let new = choices.first, old != new else { return nil }
+      return HeaderReplacement(original: old, updated: new)
+    }.sorted { $0.original.count > $1.original.count }
+  }
+
+  private static func replacingHeaders(
+    in record: SessionRecord, using replacements: [HeaderReplacement]
+  ) -> String {
+    record.transcript.split(separator: "\n", omittingEmptySubsequences: false)
+      .map { line in
+        guard let replacement = replacements.first(where: { line.hasPrefix($0.original) }) else {
+          return String(line)
+        }
+        return replacement.updated + line.dropFirst(replacement.original.count)
+      }.joined(separator: "\n")
+  }
+
+  private static func descriptors(in record: SessionRecord) -> [SessionSpeakerHeader] {
+    if !record.transcriptSegments.isEmpty {
+      return record.transcriptSegments.map(SessionSpeakerHeader.init(segment:))
+    }
+    return (record.originalSpeakerTranscript ?? record.transcript).split(separator: "\n")
+      .compactMap(SessionSpeakerHeader.init(legacyLine:))
   }
 }

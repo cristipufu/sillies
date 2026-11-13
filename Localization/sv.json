@@ -1343,6 +1343,7 @@
     "Your words won’t get lost": "Dina ord försvinner inte",
     "Your words, your way": "Dina ord, ditt sätt",
     "· %@": "· %1$@",
-    "⌘F": "⌘F"
+    "⌘F": "⌘F",
+    "These speaker labels are ambiguous. Edit the transcript directly to correct them.": "Dessa talaretiketter är tvetydiga. Rätta dem genom att redigera transkriptionen direkt."
   }
 }

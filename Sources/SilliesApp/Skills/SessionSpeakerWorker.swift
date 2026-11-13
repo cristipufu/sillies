@@ -5,8 +5,8 @@ actor SessionSpeakerWorker {
     SessionSpeakerNaming.speakers(in: record)
   }
   func rename(_ speaker: SessionSpeakerIdentity, to name: String, in record: SessionRecord)
-    -> SessionRecord
+    throws -> SessionRecord
   {
-    SessionSpeakerNaming.rename(speaker, to: name, in: record)
+    try SessionSpeakerNaming.rename(speaker, to: name, in: record)
   }
 }

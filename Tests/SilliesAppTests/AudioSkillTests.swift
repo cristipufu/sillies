@@ -65,7 +65,8 @@ private final class FixtureAudioCapture: SessionAudioCapture, Sendable {
       captureFactory: { configuration, update in
         captures.withLock { $0.append(configuration) }
         return FixtureAudioCapture(update: update)
-      }, languages: languages, reasoning: reasoning), onChange: {})
+      }, languages: languages, reasoning: reasoning,
+      makeCallSpeakerReader: { UnavailableCallSpeakerReader() }), onChange: {})
   defer { session.cancel() }
   let model = session.presentation
   session.start()
@@ -406,7 +407,8 @@ private enum MeetingCaptureState: CaseIterable { case recording, paused }
         let fixture = FixtureAudioCapture(update: update)
         capture.withLock { $0 = fixture }
         return fixture
-      }, languages: fixtureAudioLanguages(), reasoning: FixtureReasoning()), onChange: {})
+      }, languages: fixtureAudioLanguages(), reasoning: FixtureReasoning(),
+      makeCallSpeakerReader: { UnavailableCallSpeakerReader() }), onChange: {})
   defer { session.cancel() }
   session.start()
   let model = session.presentation

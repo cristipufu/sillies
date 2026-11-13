@@ -24,7 +24,9 @@ struct SpeakerNamingView: View {
               )
               .onSubmit { rename(speaker, names[speaker.id] ?? "") }
               Button("Save") { rename(speaker, names[speaker.id] ?? "") }
-                .disabled((names[speaker.id] ?? "") == (record.speakerNames[speaker.id] ?? ""))
+                .disabled(
+                  (names[speaker.id] ?? "")
+                    == (SessionSpeakerNaming.name(for: speaker, in: record)))
             }
           }
         }.padding(.top, 10)
@@ -33,7 +35,10 @@ struct SpeakerNamingView: View {
       Color.clear.frame(height: 0)
         .task(id: record.id) {
           speakers = await SessionSpeakerWorker().speakers(in: record)
-          names = record.speakerNames
+          names = Dictionary(
+            speakers.map {
+              ($0.id, SessionSpeakerNaming.name(for: $0, in: record))
+            }, uniquingKeysWith: { _, latest in latest })
         }
     }
   }

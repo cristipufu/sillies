@@ -462,7 +462,7 @@ final class SessionVaultModel {
         guard let self, let latest = try await self.vault.record(id: id) else {
           return
         }
-        let updated = await speakerWorker.rename(speaker, to: name, in: latest)
+        let updated = try await speakerWorker.rename(speaker, to: name, in: latest)
         guard
           try await self.vault.edit(
             id: id, .renameSpeaker(.init(original: latest, renamed: updated)))
@@ -472,6 +472,11 @@ final class SessionVaultModel {
           return
         }
         self.showFeedback(String(localized: "Speaker updated · Refreshing notes"))
+      } catch is SessionSpeakerNaming.Failure {
+        self?.showPersistentFeedback(
+          String(
+            localized:
+              "These speaker labels are ambiguous. Edit the transcript directly to correct them."))
       } catch {
         fputs("Could not rename the speaker: \(error)\n", stderr)
         self?.showPersistentFeedback(

@@ -76,7 +76,14 @@ package final class AudioTranscriptionService: SessionAudioCapture {
 
   private func captureStarted(_ label: String) {
     queue.async { [self] in
-      guard storage.withValue({ $0.lifecycle.beginCapture(at: dependencies.now()) }) else { return }
+      let now = dependencies.now()
+      guard
+        storage.withValue({ state in
+          guard state.lifecycle.beginCapture(at: now) else { return false }
+          state.speakerObservationBoundary = now
+          return true
+        })
+      else { return }
       dependencies.lifecycle(.capturing)
       onUpdate(.capturing(label))
     }
@@ -217,6 +224,24 @@ package final class AudioTranscriptionService: SessionAudioCapture {
     }
   }
 
+  package func observeCallSpeakers(_ observation: CallSpeakerObservation) {
+    queue.async { [self] in
+      storage.withValue { state in
+        let now = dependencies.now()
+        guard state.lifecycle.acceptsAudio, configuration.kind.isMeetingSession,
+          let target = configuration.target,
+          observation.source == .init(processID: target.processID, windowID: target.windowID),
+          observation.capturedAt.isFinite,
+          observation.capturedAt >= state.speakerObservationBoundary,
+          observation.capturedAt <= now,
+          now - observation.capturedAt <= CallSpeakerTimeline.maximumHold
+        else { return }
+        state.speech?.observeCallSpeakers(
+          observation, at: state.lifecycle.sampleElapsed(at: observation.capturedAt))
+      }
+    }
+  }
+
   package func pause() {
     queue.async { [self] in
       storage.withValue { state in
@@ -224,14 +249,30 @@ package final class AudioTranscriptionService: SessionAudioCapture {
         do {
           try flushMeetingAudio(state)
           try state.meetingAudio?.reset()
-          state.lifecycle.pause(at: dependencies.now())
+          let now = dependencies.now()
+          state.lifecycle.pause(at: now)
+          state.speakerObservationBoundary = now
+          invalidateCallSpeakers(state, at: now)
         } catch { fail(SessionFailure(error, category: .audioProcessing)) }
       }
     }
   }
 
   package func resume() {
-    queue.async { [self] in _ = storage.withValue { $0.lifecycle.resume(at: dependencies.now()) } }
+    queue.async { [self] in
+      storage.withValue { state in
+        let now = dependencies.now()
+        if state.lifecycle.resume(at: now) { state.speakerObservationBoundary = now }
+      }
+    }
+  }
+
+  private func invalidateCallSpeakers(_ state: AudioCaptureState, at now: TimeInterval) {
+    guard let target = configuration.target else { return }
+    let reading = CallSpeakerObservation(
+      source: .init(processID: target.processID, windowID: target.windowID),
+      capturedAt: now, availability: .unavailable)
+    state.speech?.observeCallSpeakers(reading, at: state.lifecycle.elapsed(at: now))
   }
 
   package func refreshProgress() {
@@ -423,6 +464,9 @@ package final class AudioTranscriptionService: SessionAudioCapture {
         failure: state.lifecycle.failure ?? state.transcriptionFailure)
       result.speakerDetectionNotice = state.speakerDetectionNotice
       result.segments = state.speech?.segments ?? []
+      if result.segments.contains(where: { $0.automaticSpeakerName != nil }) {
+        result.originalTranscript = state.speech?.originalText
+      }
       state.lifecycle.completeFinishing()
       state.result = result
       dependencies.lifecycle(.finished)

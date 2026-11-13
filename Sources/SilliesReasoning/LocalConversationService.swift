@@ -102,6 +102,7 @@ package actor LocalConversationService: ConversationResponding {
       case .repeatGeneration:
         try await toolbox.beginReplay()
       }
+      await toolbox.includeSelectedSources(working.background.records.compactMap(\.source))
       text = try await ChatReplyGenerator.reply(
         to: working, backend: selected, tools: toolbox, receive: delivery.append)
     }

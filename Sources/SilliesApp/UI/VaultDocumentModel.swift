@@ -247,6 +247,19 @@ import SilliesCore
     await editor.flush()
     await metadata.flush()
   }
+  func clearEvidence() { editor.clearEvidence() }
+  func revealEvidence(_ passage: VaultEvidencePassage, action: VaultEvidenceAction) -> Bool {
+    guard header?.id == passage.reference.location.recordID, editor.revealEvidence(passage) else {
+      return false
+    }
+    if let seconds = passage.startSeconds {
+      switch action {
+      case .read: playback.seek(to: seconds)
+      case .play: playback.play(from: seconds)
+      }
+    }
+    return true
+  }
   func stop() {
     generation = UUID()
     isLoading = false

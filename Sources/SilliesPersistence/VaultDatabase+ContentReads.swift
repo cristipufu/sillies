@@ -80,7 +80,7 @@ extension VaultDatabase {
   }
 
   /// Full materialization is reserved for explicit exports and existing bounded reasoning callers.
-  func sectionText(_ location: VaultBlockLocation) throws -> String {
+  public func sectionText(_ location: VaultBlockLocation) throws -> String {
     guard try isRecordAvailable(location.recordID) else { return "" }
     var text = ""
     try sql.rows(

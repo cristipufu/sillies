@@ -8,6 +8,7 @@ import SwiftUI
     case resume
     case record(UUID)
     case source(VaultSourceReference)
+    case evidence(VaultEvidencePassage, VaultEvidenceAction)
     case stash, retention
   }
   struct Services {
@@ -103,6 +104,15 @@ import SwiftUI
     model.resume()
     switch destination {
     case .resume: break
+    case .evidence(let passage, let action):
+      model.workspace.selectScope(.all)
+      conversations?.reader.clear()
+      sourceTask = Task { [weak self] in
+        guard let self else { return }
+        await vault.waitUntilLoaded()
+        guard !Task.isCancelled else { return }
+        await model.workspace.openEvidence(passage, action: action)
+      }
     case .source(let reference):
       model.workspace.selectScope(.all)
       conversations?.reader.clear()

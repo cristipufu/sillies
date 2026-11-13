@@ -12,6 +12,25 @@ struct VaultRecordPassage {
   struct Source {
     let text: String
     let title: String
+    struct Section {
+      let kind: VaultDocumentSection
+      let text: String
+      let characters: Range<Int>
+    }
+    let sections: [Section]
+    init(sections: [(VaultDocumentSection, String)], title: String) {
+      var text = ""
+      var locations: [Section] = []
+      for (kind, value) in sections where !value.isEmpty {
+        if !text.isEmpty { text += "\n\n" }
+        let start = text.count
+        text += value
+        locations.append(.init(kind: kind, text: value, characters: start..<text.count))
+      }
+      self.text = text
+      self.title = title
+      self.sections = locations
+    }
     init(record: SessionRecord, notes: String = "", title: String? = nil) {
       let captured =
         ([record.transcript, record.extractedText] + record.stashedItems + [record.explanation])
@@ -19,6 +38,7 @@ struct VaultRecordPassage {
       let sourceText = captured.isEmpty ? record.summary : captured.joined(separator: "\n\n")
       text = [sourceText, notes].filter { !$0.isEmpty }.joined(separator: "\n\n")
       self.title = title ?? record.windowTitle ?? record.appName
+      sections = []
     }
   }
 
@@ -44,6 +64,25 @@ struct VaultRecordPassage {
 
   let text: String
   let coverage: Coverage
+
+  func evidence(
+    in source: Source,
+    read: (VaultDocumentSection, Range<Int>, String) throws -> [VaultEvidencePassage]
+  )
+    rethrows -> [VaultEvidencePassage]
+  {
+    let selected = coverage.startOffset..<coverage.endOffset
+    return try source.sections.flatMap { section -> [VaultEvidencePassage] in
+      let overlap = selected.clamped(to: section.characters)
+      guard !overlap.isEmpty else { return [] }
+      let start = section.text.index(
+        section.text.startIndex, offsetBy: overlap.lowerBound - section.characters.lowerBound)
+      let end = section.text.index(start, offsetBy: overlap.count)
+      let offset = section.text.utf8.distance(from: section.text.startIndex, to: start)
+      let text = String(section.text[start..<end])
+      return try read(section.kind, offset..<(offset + text.utf8.count), text)
+    }
+  }
 
   static func selectRelated(in record: SessionRecord, query: String, offset: Int? = nil) throws
     -> [Self]

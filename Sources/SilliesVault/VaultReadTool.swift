@@ -39,11 +39,15 @@ package struct VaultReadTool: ConversationTool {
     do {
       let passages = try VaultRecordPassage.selectRelated(
         in: document.content, query: args.query, offset: args.offset)
-      guard let passage = passages.first else {
+      guard !passages.isEmpty else {
         throw VaultRecordPassage.SelectionError.invalidOffset
       }
-      let source = document.source(excerpt: passage.text)
-      return try VaultToolContent.readOutput(source, passages: passages)
+      var sources: [ChatSource] = []
+      for part in passages {
+        let evidence = try await library.evidence(for: [part], in: document)
+        sources.append(document.source(excerpt: part.text).withPassages(evidence))
+      }
+      return try VaultToolContent.readOutput(sources, passages: passages)
     } catch VaultRecordPassage.SelectionError.invalidOffset {
       return .init(
         text:
@@ -51,4 +55,5 @@ package struct VaultReadTool: ConversationTool {
       )
     }
   }
+
 }

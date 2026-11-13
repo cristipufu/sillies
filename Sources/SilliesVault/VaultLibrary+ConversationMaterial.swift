@@ -15,7 +15,8 @@ extension VaultLibrary: ConversationMaterialProviding {
       let passage = try VaultRecordPassage.select(
         in: document.content, query: query,
         maximumCharacters: ConversationRecordContext.maximumExcerptCharacters)
-      let source = document.source(excerpt: passage.text)
+      let source = document.source(excerpt: passage.text).withPassages(
+        try evidence(for: [passage], in: document))
       return .init(
         id: id, title: source.title, source: source,
         isComplete: passage.coverage.isComplete)

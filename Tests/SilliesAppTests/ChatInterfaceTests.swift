@@ -317,7 +317,8 @@ private struct VaultCardReply: ConversationResponding {
     try await Task.sleep(for: .milliseconds(5))
   }
   #expect(session.messages.last?.sources == sources)
-  let presentation = ChatVaultPresentation(store: store, openRecord: { _ in })
+  let presentation = ChatVaultPresentation(
+    store: store, openRecord: { _ in }, openPassage: { _, _ in })
   for scheme in [ColorScheme.light, .dark] {
     try renderSkillInterface(
       ChatSessionView(

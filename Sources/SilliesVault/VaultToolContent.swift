@@ -84,7 +84,12 @@ enum VaultToolContent {
     let brief = SearchPage(
       sources.map { RecordPassage($0, excerptLimit: briefExcerptCharacters) },
       request: request)
-    return try .init(text: encoded(full), sources: sources, briefText: encoded(brief))
+    let briefText = try encoded(brief)
+    return try .init(text: encoded(full), sources: sources, briefText: briefText).withEvidence([
+      .init(
+        text: briefText,
+        sources: sources.map { $0.withExcerpt(String($0.excerpt.prefix(briefExcerptCharacters))) })
+    ])
   }
 
   private static func encoded(_ value: some Encodable) throws -> String {
@@ -92,19 +97,25 @@ enum VaultToolContent {
     encoder.outputFormatting = .sortedKeys
     return String(decoding: try encoder.encode(value), as: UTF8.self)
   }
-  static func readOutput(_ source: ChatSource, passages: [VaultRecordPassage]) throws
+  static func readOutput(_ sources: [ChatSource], passages: [VaultRecordPassage]) throws
     -> ConversationToolOutput
   {
-    guard let passage = passages.first else {
+    guard let passage = passages.first, let source = sources.first, sources.count == passages.count
+    else {
       throw VaultRecordPassage.SelectionError.invalidOffset
     }
+    let briefSource = source.withExcerpt(String(source.excerpt.prefix(briefExcerptCharacters)))
+    let brief = try encoded(
+      RecordRead(source: briefSource, passage: passage.prefix(briefExcerptCharacters)))
+    let single = try encoded(RecordRead(source: source, passage: passage))
+    let combined = sources.dropFirst().reduce(source) { $0.mergingEvidence(from: $1) }
     return try .init(
       text: encoded(
         RecordRead(source: source, passage: passage, additional: Array(passages.dropFirst()))),
-      sources: [source],
-      briefText: encoded(
-        RecordRead(source: source, passage: passage.prefix(briefExcerptCharacters))),
-      alternatives: [encoded(RecordRead(source: source, passage: passage))])
+      sources: [combined], briefText: brief, alternatives: [single]
+    ).withEvidence([
+      .init(text: brief, sources: [briefSource]), .init(text: single, sources: [source]),
+    ])
   }
   static func links(in record: SessionRecord) throws -> [URL] {
     let text = String(

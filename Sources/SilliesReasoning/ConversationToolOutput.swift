@@ -6,6 +6,24 @@ package struct ConversationToolOutput: Sendable {
   package let text: String
   package let sources: [ChatSource]
   package let alternatives: [String]
+  package struct Evidence: Sendable {
+    package let text: String
+    package let sources: [ChatSource]
+    package init(text: String, sources: [ChatSource]) {
+      self.text = text
+      self.sources = sources
+    }
+  }
+  private var evidence: [Evidence] = []
+  package func withEvidence(_ evidence: [Evidence]) -> Self {
+    var copy = self
+    copy.evidence = evidence
+    return copy
+  }
+  func sources(for representation: String) -> [ChatSource] {
+    guard representations.contains(representation) else { return [] }
+    return evidence.first { $0.text == representation }?.sources ?? sources
+  }
   var representations: [String] {
     var seen: Set<String> = []
     return ([text] + alternatives + [briefText]).filter { seen.insert($0).inserted }

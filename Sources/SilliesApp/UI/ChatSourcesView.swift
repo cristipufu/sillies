@@ -12,7 +12,11 @@ struct ChatSourcesView: View {
       ForEach(sources) { source in
         VStack(alignment: .leading, spacing: 8) {
           Button {
-            vault.openRecord(source.id)
+            if let passage = source.passages.first {
+              vault.openPassage(passage, .read)
+            } else {
+              vault.openRecord(source.id)
+            }
           } label: {
             VStack(alignment: .leading, spacing: 8) {
               if let image = vault.store.cachedImage(for: source) {
@@ -36,7 +40,11 @@ struct ChatSourcesView: View {
               }
             }.contentShape(Rectangle())
           }.buttonStyle(.plain).help("Open in Vault")
-          if !source.excerpt.isEmpty {
+          if let passage = source.passages.first {
+            ChatSourcePassageView(
+              passage: passage, source: source, vault: vault, presentation: .card)
+          }
+          if source.passages.isEmpty, !source.excerpt.isEmpty {
             Text(source.excerpt).font(.caption).foregroundStyle(theme.secondary)
               .lineLimit(3).textSelection(.enabled)
           }

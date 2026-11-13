@@ -29,8 +29,30 @@ import SilliesVault
   private(set) var recoverySaved = false
   private(set) var selection = NSRange(location: 0, length: 0)
   struct RevealRequest {
+    enum Presentation { case position, passage }
     let id = UUID()
     let range: NSRange
+    var presentation = Presentation.position
+  }
+  func revealEvidence(_ passage: VaultEvidencePassage) -> Bool {
+    guard !isDirty else { return false }
+    var offset = 0
+    for block in blocks {
+      if let range = passage.range(in: block) {
+        let local = NSRange(range, in: block.text)
+        let target = NSRange(location: offset + local.location, length: local.length)
+        guard VaultTextRange.contains(target, inLength: (text as NSString).length),
+          (text as NSString).substring(with: target) == passage.text
+        else { return false }
+        revealRequest = .init(range: target, presentation: .passage)
+        return true
+      }
+      offset += (block.text as NSString).length
+    }
+    return false
+  }
+  func clearEvidence() {
+    if revealRequest?.presentation == .passage { revealRequest = nil }
   }
   private(set) var revealRequest: RevealRequest?
   func reveal(_ location: VaultBlockLocation) {
@@ -136,6 +158,7 @@ import SilliesVault
   func replaceText(_ value: String) {
     guard canAcceptEdits, value != text else { return }
     text = value
+    revealRequest = nil
     onInteraction?()
     change = UUID()
     isDirty = true

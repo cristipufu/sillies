@@ -9,6 +9,7 @@ struct ChatMessageBubble: View {
   let model: ChatSession
   let original: ChatMessage
   let vault: ChatVaultPresentation?
+  let showSources: ([ChatSource]) -> Void
   let selectionChanged: (Bool) -> Void
   @State private var showsReplyDetails = false
   private static let outgoingIndent: CGFloat = 36
@@ -53,6 +54,10 @@ struct ChatMessageBubble: View {
         }
         if let vault, !sources.isEmpty {
           ChatSourcesView(sources: sources, vault: vault).padding(.top, 6)
+        }
+        if vault != nil, !fromUser, !message.sources.isEmpty {
+          Button("Sources", systemImage: "text.quote") { showSources(message.sources) }
+            .buttonStyle(.plain).font(.caption).foregroundStyle(theme.accent)
         }
         if !fromUser, message.contextInspection != nil || !message.exchanges.isEmpty {
           Button {

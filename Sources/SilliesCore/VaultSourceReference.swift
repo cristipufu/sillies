@@ -1,7 +1,7 @@
 import Foundation
 
 /// A portable note keeps its quotation even when the source is edited, trashed or removed.
-public struct VaultSourceReference: Equatable, Sendable {
+public struct VaultSourceReference: Codable, Hashable, Sendable {
   public let location: VaultBlockLocation
   public let blockID: Int64
   public let revision: UUID

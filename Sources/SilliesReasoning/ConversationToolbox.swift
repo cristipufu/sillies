@@ -33,7 +33,9 @@ package actor ConversationToolbox {
     callLimit = maximumCalls
   }
 
-  func includeSelectedSources(_ sources: [ChatSource]) { publish(sources) }
+  func includeSelectedSources(_ sources: [ChatSource]) {
+    publish(sources.filter { !$0.excerpt.isEmpty })
+  }
 
   package init(tools: [any ConversationTool], progress: @escaping @Sendable (ChatProgress) -> Void)
     throws
@@ -59,6 +61,8 @@ package actor ConversationToolbox {
     declinedCalls = 0
     resultBytes = 0
     resultTokens = 0
+    sources.removeAll(keepingCapacity: true)
+    progress(.sources(sources))
   }
 
   package func invoke(_ call: ConversationToolCall) async throws -> String {
@@ -98,7 +102,6 @@ package actor ConversationToolbox {
       }
       clarification = question
     }
-    publish(result.sources)
     do { return try await recordOutput(result, for: call) } catch {
       if let question = result.clarification, clarification?.id == question.id {
         clarification = nil
@@ -119,7 +122,9 @@ package actor ConversationToolbox {
     } else {
       text = recovery == .reducedContext ? output.briefText : output.text
     }
-    return try recordExchange(text, for: call)
+    let recorded = try recordExchange(text, for: call)
+    publish(output.sources(for: text))
+    return recorded
   }
 
   private func decline(
@@ -168,7 +173,7 @@ package actor ConversationToolbox {
   private func publish(_ discovered: [ChatSource]) {
     for source in discovered {
       if let index = sources.firstIndex(where: { $0.id == source.id }) {
-        sources[index] = source
+        sources[index] = sources[index].mergingEvidence(from: source)
       } else if sources.count < Self.maximumSources {
         sources.append(source)
       }

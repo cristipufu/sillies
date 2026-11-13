@@ -254,6 +254,46 @@ import SilliesVault
     } catch { report(error, during: token) }
   }
 
+  func openEvidence(_ passage: VaultEvidencePassage, action: VaultEvidenceAction) async {
+    guard isPresented else { return }
+    let token = lifetime
+    let request = UUID()
+    suspendDocument()
+    openingRequest = request
+    document.clearEvidence()
+    isOpening = true
+    defer { if openingRequest == request { isOpening = false } }
+    do {
+      await document.flush()
+      guard ownsEvidenceRequest(request, lifetime: token), document.canNavigate else { return }
+      guard let location = try await vault.library.evidenceLocation(passage) else {
+        guard ownsEvidenceRequest(request, lifetime: token) else { return }
+        reportUnavailableEvidence()
+        return
+      }
+      guard ownsEvidenceRequest(request, lifetime: token) else { return }
+      navigation.visit(.library, leaving: currentCheckpoint)
+      selectedID = location.recordID
+      selectedIDs = [location.recordID]
+      await document.open(location.recordID, match: location)
+      guard ownsEvidenceRequest(request, lifetime: token) else { return }
+      guard document.revealEvidence(passage, action: action) else {
+        reportUnavailableEvidence()
+        return
+      }
+      actionError = nil
+    } catch { if ownsEvidenceRequest(request, lifetime: token) { report(error, during: token) } }
+  }
+
+  private func ownsEvidenceRequest(_ request: UUID, lifetime token: UUID) -> Bool {
+    isPresented && lifetime == token && openingRequest == request && !Task.isCancelled
+  }
+  private func reportUnavailableEvidence() {
+    actionError = String(
+      localized:
+        "This passage changed or is no longer available. The saved excerpt is still in Chat.")
+  }
+
   func quoteSelection() async {
     let token = lifetime
     let source = document.editor.location
@@ -285,11 +325,11 @@ import SilliesVault
     _ id: UUID, at destination: VaultBlockLocation? = nil, restoring pane: VaultDocumentPane? = nil
   ) {
     let request = UUID()
+    suspendDocument()
     openingRequest = request
     isOpening = true
     selectedID = id
     selectedIDs = [id]
-    selectionTask?.cancel()
     let match =
       destination ?? (records + related).first { $0.id == id }?.match
       ?? (document.header?.id == id ? document.visibleTextLocation : nil)

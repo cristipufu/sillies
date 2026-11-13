@@ -59,6 +59,34 @@ actor VaultWorkspaceReader {
     try Task.checkCancellation()
     return try storage().sourceLocation(reference)
   }
+  func evidenceLocation(_ passage: VaultEvidencePassage) throws -> VaultBlockLocation? {
+    try Task.checkCancellation()
+    return try storage().evidenceLocation(passage)
+  }
+  func searchEvidence(_ match: VaultSearchMatch, query: String, maximumCharacters: Int) throws
+    -> VaultEvidencePassage?
+  {
+    try Task.checkCancellation()
+    guard let location = match.location,
+      ![.title, .labels, .files].contains(location.section),
+      let block = try storage().sectionPage(location).blocks.first
+    else { return nil }
+    let text: String
+    let offset: Int
+    if let range = block.text.range(of: match.excerpt), !match.excerpt.isEmpty {
+      text = String(match.excerpt.prefix(maximumCharacters))
+      offset = block.text.unicodeScalars.distance(from: block.text.startIndex, to: range.lowerBound)
+    } else {
+      let source = VaultRecordPassage.Source(
+        sections: [(location.section, block.text)], title: match.documentTitle ?? "")
+      let passage = try VaultRecordPassage.select(
+        in: source, query: query, maximumCharacters: maximumCharacters)
+      text = passage.text
+      let start = block.text.index(block.text.startIndex, offsetBy: passage.coverage.startOffset)
+      offset = block.text.unicodeScalars.distance(from: block.text.startIndex, to: start)
+    }
+    return .init(block: block, scalarOffset: offset, text: text)
+  }
   func matchingPassages(recordID: UUID, query: VaultWorkspaceQuery) throws -> [VaultPassageMatch] {
     try storage().matchingPassages(recordID: recordID, query: query)
   }

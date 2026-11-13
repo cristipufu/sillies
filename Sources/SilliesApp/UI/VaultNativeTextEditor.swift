@@ -112,6 +112,7 @@ struct VaultNativeTextEditor: NSViewRepresentable {
       guard VaultTextRange.contains(request.range, inLength: (text.string as NSString).length)
       else { return }
       text.scrollRangeToVisible(request.range)
+      if request.presentation == .passage { text.showFindIndicator(for: request.range) }
     }
     init(model: VaultTextEditorModel) {
       self.model = model

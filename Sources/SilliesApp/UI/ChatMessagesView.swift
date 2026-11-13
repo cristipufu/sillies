@@ -9,6 +9,7 @@ struct ChatMessagesView: View {
   let motion: ChatPresentationMotion
   var vault: ChatVaultPresentation? = nil
   var focusComposer: () -> Void = {}
+  var showSources: ([ChatSource]) -> Void = { _ in }
   @Environment(\.chatReadingSize) private var readingSize
   @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
   private var reduceMotion: Bool { systemReduceMotion || motion == .reduced }
@@ -180,7 +181,8 @@ struct ChatMessagesView: View {
   }
 
   private func bubble(_ message: ChatMessage) -> some View {
-    ChatMessageBubble(model: model, original: message, vault: vault) { selected in
+    ChatMessageBubble(model: model, original: message, vault: vault, showSources: showSources) {
+      selected in
       if selected {
         selectedMessages.insert(message.id)
       } else {

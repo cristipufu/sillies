@@ -71,6 +71,8 @@ struct ChatSessionView: View {
     } else {
       switch navigation.page {
       case .conversation: EmptyView()
+      case .sources(let sources):
+        if let vault { ChatSourcesPage(sources: sources, vault: vault, back: returnToConversation) }
       case .memories:
         ConversationMemoriesView(
           model: model, back: returnToConversation,
@@ -95,7 +97,8 @@ struct ChatSessionView: View {
       header.padding(12)
       Divider().overlay(theme.border)
       ChatMessagesView(
-        model: model, motion: motion, vault: vault, focusComposer: { composerFocus = UUID() })
+        model: model, motion: motion, vault: vault, focusComposer: { composerFocus = UUID() },
+        showSources: { navigation.show(.sources($0)) })
       if model.failure != nil || model.notice != nil || model.history.failure != nil
         || model.draft.count > ChatContext.maximumMessageCharacters
         || model.export.notice != nil || model.export.isExporting

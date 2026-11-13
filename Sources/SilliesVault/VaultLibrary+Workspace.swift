@@ -3,6 +3,17 @@ import SilliesCore
 import SilliesPersistence
 
 extension VaultLibrary {
+  package nonisolated func evidenceLocation(_ passage: VaultEvidencePassage) async throws
+    -> VaultBlockLocation?
+  {
+    try await documentReader.evidenceLocation(passage)
+  }
+  func searchEvidence(_ match: VaultSearchMatch, query: String, maximumCharacters: Int) async throws
+    -> VaultEvidencePassage?
+  {
+    try await assistantReader.searchEvidence(
+      match, query: query, maximumCharacters: maximumCharacters)
+  }
   package nonisolated func exportText(_ text: String, to destination: URL) async throws -> URL {
     try await workspaceExporter.exportText(text, to: destination)
   }

@@ -383,5 +383,8 @@
   },
   "AccessibilityWindowInspectionTests.swift": {
     "default": "headless"
+  },
+  "VaultEvidenceNavigationTests.swift": {
+    "default": "headless"
   }
 }

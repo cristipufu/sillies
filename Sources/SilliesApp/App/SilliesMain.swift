@@ -309,7 +309,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         openSettings: { [weak skills] in skills?.onOpenChatSettings?($0) },
         renderer: characters.first(where: { $0.id == session.companionID })?.renderer,
         vault: .init(
-          store: skills.vault, openRecord: { [weak self] in self?.showVault(recordID: $0) }),
+          store: skills.vault, openRecord: { [weak self] in self?.showVault(recordID: $0) },
+          openPassage: { [weak self] passage, action in self?.showVault(.evidence(passage, action))
+          }),
         anchor: self.controller?.conversationAnchor(for: session.companionID))
     }
   }

@@ -96,7 +96,7 @@ import UniformTypeIdentifiers
         presentation: ConversationBubblePresentation(),
         content: ChatSessionView(
           model: session, openSettings: { _ in }, close: {}, renderer: "frog", motion: .reduced,
-          vault: .init(store: vault, openRecord: { _ in }))
+          vault: .init(store: vault, openRecord: { _ in }, openPassage: { _, _ in }))
       ).environment(\.colorScheme, scheme),
       size: ChatWindowLayout.minimumSize, name: "sillies-context-chat-\(scheme)")
     try renderSkillInterface(

@@ -72,6 +72,26 @@ not create live repositories or perform inference.
 
 ## Navigation and export
 
+Each reply retains its own admitted Vault evidence. **Sources** opens that saved snapshot inside
+the Chat bubble; it does not start inference or replace the mounted conversation. Full record cards
+still belong to the first reply that introduced the record. A later reply can retain different
+passages from the same record without duplicating its card.
+
+`VaultEvidencePassage` carries an exact quotation, block identity, section revision and scalar offset,
+with available speaker/audio timing. Search, selected records and explicit reads attach references
+before inference. Tool-owned full, single-passage and brief representations retain their corresponding
+evidence; omitted output publishes no source. Recovery clears the earlier attempt's evidence and
+replays cached operations without another write allowance.
+
+Passage actions route through the existing Vault window. Navigation resolves the current block by
+identity, checks its revision and text, loads one bounded section page, then highlights the quotation
+without replacing the user's selection. Opening a passage positions available audio without playing;
+**Play from here** is explicit. Changed, trashed or deleted sources leave the saved quotation intact
+and report an unavailable passage. Record-level sources without passage metadata still open the item.
+
+Run the evidence Core, persistence, tool-budget and native navigation regressions, including
+`ChatPageNavigationTests`. Visible activation/stacking checks remain explicitly opt-in.
+
 Memories, conversation search, the Vault picker and the memory editor occupy the existing anchored
 Chat bubble. Do not present these routine pages as native sheets over its transparent, shaped window:
 macOS sheet dimming applies to the parent window, not just the drawn bubble. Use the shared Back

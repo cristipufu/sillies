@@ -41,10 +41,14 @@ package struct VaultSearchTool: ConversationTool {
       } else {
         links = []
       }
+      let limit =
+        match.retrieval == .semantic ? VaultRecordPassage.maximumCharacters : Self.excerptCharacters
+      let passage = try await library.searchEvidence(
+        match, query: args.query, maximumCharacters: limit)
       sources.append(
         ChatSource(match, links: links).withExcerpt(
-          match.retrieval == .semantic
-            ? match.excerpt : String(match.excerpt.prefix(Self.excerptCharacters))))
+          passage?.text ?? String(match.excerpt.prefix(limit))
+        ).withPassages(passage.map { [$0] } ?? []))
     }
     return try VaultToolContent.searchOutput(sources, request: request)
   }

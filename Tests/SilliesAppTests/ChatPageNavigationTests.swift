@@ -32,7 +32,7 @@ import Testing
     appearance: ThemeEnvironment(), reading: ChatReadingPreferences(defaults: fixture.defaults))
   controller.prepare(
     fixture.session, openSettings: { _ in },
-    vault: .init(store: fixture.vault, openRecord: { _ in }))
+    vault: .init(store: fixture.vault, openRecord: { _ in }, openPassage: { _, _ in }))
   defer { controller.close() }
   let window = try #require(controller.window)
   let content = try #require(window.contentView)
@@ -43,7 +43,7 @@ import Testing
   editor.setSelectedRange(selection)
   message.setSelectedRange(selection)
   #expect(window.makeFirstResponder(editor))
-  for page in [ChatWindowNavigation.Page.memories, .search, .vault] {
+  for page in [ChatWindowNavigation.Page.memories, .search, .vault, .sources([])] {
     controller.navigation.show(page)
     try await waitForNavigation(content) { editor.isHidden }
     #expect(window.attachedSheet == nil)
@@ -79,6 +79,7 @@ import Testing
   for scheme in [ColorScheme.light, .dark] {
     for (page, name) in [
       (ChatWindowNavigation.Page.memories, "memories"), (.search, "search"), (.vault, "vault"),
+      (.sources([]), "sources"),
     ] {
       navigation.show(page)
       try renderSkillInterface(
@@ -86,7 +87,8 @@ import Testing
           presentation: ConversationBubblePresentation(),
           content: ChatSessionView(
             model: fixture.session, openSettings: { _ in }, close: {}, motion: .reduced,
-            vault: .init(store: fixture.vault, openRecord: { _ in }), navigation: navigation)
+            vault: .init(store: fixture.vault, openRecord: { _ in }, openPassage: { _, _ in }),
+            navigation: navigation)
         ).environment(\.colorScheme, scheme),
         size: ChatWindowLayout.minimumSize, name: "sillies-inline-\(name)-\(scheme)")
     }

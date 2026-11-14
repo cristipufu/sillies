@@ -1,4 +1,5 @@
 import Foundation
+import SilliesAudio
 import SilliesCore
 import SilliesModelStore
 import SilliesSpeech
@@ -13,7 +14,10 @@ import Testing
 @Test func downloadedSpeechProvidersHonorLanguageAvailabilityAndCancellation() async throws {
   let catalog = try SpeechModelCatalog.bundled()
   for (provider, identifier): (any SpeechProvider, String) in [
-    (WhisperSpeechProvider(), "whisper-turbo"), (ParakeetSpeechProvider(), "parakeet-ultra"),
+    (
+      WhisperSpeechProvider(makeShortInputValidator: WebRTCSpeechWindowValidator.init),
+      "whisper-turbo"
+    ), (ParakeetSpeechProvider(), "parakeet-ultra"),
     (NemotronSpeechProvider(), "nemotron-unified"),
   ] {
     try await verifySpeechProviderContract(

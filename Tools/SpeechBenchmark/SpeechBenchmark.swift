@@ -81,7 +81,8 @@ private actor BenchmarkRunner {
       return
     }
     let providers: [any SpeechProvider] = [
-      WhisperSpeechProvider(), ParakeetSpeechProvider(), NemotronSpeechProvider(),
+      WhisperSpeechProvider(makeShortInputValidator: WebRTCSpeechWindowValidator.init),
+      ParakeetSpeechProvider(), NemotronSpeechProvider(),
     ]
     guard let provider = providers.first(where: { $0.id == manifest.model.providerID }) else {
       throw SpeechError.unavailable("No provider registered.")

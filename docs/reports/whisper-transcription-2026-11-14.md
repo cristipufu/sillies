@@ -1,9 +1,12 @@
 # Whisper transcription investigation — 14 November 2026
 
-**No Whisper behavior change is enabled.** Acoustic confirmation and decoder-recovery candidates
+**This investigation enabled no Whisper behavior change.** Acoustic confirmation and decoder-recovery candidates
 reduced aggregate recognition errors but failed the raw subgroup or critical-value checks. Their
 production changes were removed. Parakeet and the separately qualified Nemotron implementation keep
 their existing adaptive defaults; Whisper keeps baseline boundaries. Talk/dictation are unchanged.
+
+A subsequent [short-input fix](whisper-short-inputs-2026-11-14.md) was qualified and enabled separately;
+it preserves these baseline boundaries and addresses the runtime's minimum-length guard.
 
 This change retains qualification safeguards: bounded live-draft capture, noise-draft regressions,
 explicit end-to-end comparison metadata, and a file-only native Whisper replay adapter. It introduces
@@ -120,9 +123,12 @@ errors overall. These failures were retained without attributing them away as st
 
 The 22 consulted retention/noise/short-reply controls had no critical or subgroup regressions
 (54.22% → 22.67% WER), but their bootstrap interval included zero; they did not pass the full statistical
-gate. All six short replies reached native decoding. **Four returned empty text in both modes**, even
-with candidate recovery; the remaining two had the same text. This is not a claim that short-reply
-recognition was fixed.
+gate. All six short replies reached the native API. **Four returned empty text in both modes**, even
+with candidate recovery; the remaining two had the same text. A subsequent source-level investigation
+found that these four inputs were no longer than the SDK's one-second trailing seek guard and never
+entered its decoding loop. Engine-call counts alone did not establish actual decoding. The separate
+[short-input investigation](whisper-short-inputs-2026-11-14.md) addresses that root cause; the raw
+outcomes and rejection of these broader candidates remain unchanged.
 
 The earlier complete-pass candidate also passed 48 separately seeded noise-only controls: baseline
 produced nonempty final text in 15 cases and live drafts in 11; candidate produced neither in any case.

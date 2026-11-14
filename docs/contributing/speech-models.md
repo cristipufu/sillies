@@ -43,6 +43,12 @@ adapter even when the files install correctly.
 4. Implement drain and cancellation, incremental timestamps, language controls, and supported vocabulary
    hints honestly. If the runtime requires a minimum audio duration, handle short final windows without
    inventing transcript time. Do not retain the full recording or use an SDK helper that owns capture.
+   Reuse `SpeechInputPadding` for decoder-only minimum lengths. If newly admitted windows need acoustic
+   confirmation, inject a `SpeechWindowValidatorFactory` through the provider's
+   `SpeechWindowConfiguration.inputValidation`; keep native audio classification in `SilliesAudio` and
+   confidence interpretation inside the provider. Do not apply a new rejection policy to already
+   supported windows without qualifying that broader change. Whisper composition supplies
+   `WebRTCSpeechWindowValidator.init` explicitly.
 5. Load only verified local artifacts. Disable every automatic network fallback, including tokenizer
    downloads. Reuse installation leases, progress, errors, and teardown from the shared infrastructure.
 

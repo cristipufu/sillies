@@ -2,11 +2,21 @@ import CoreML
 import Foundation
 @preconcurrency import WhisperKit
 
-/// WhisperKit 1.1.1 writes attention rows including the prompt, then reads them without it.
-/// Keep this compatibility adapter until upstream issue #542 is fixed in our pinned release.
+/// Adapts prompted alignment and keeps newly padded windows progressing.
+/// WhisperKit 1.1.1 reads attention rows without the prompt offset; recheck after issue #542 is fixed.
 /// https://github.com/argmaxinc/argmax-oss-swift/issues/542
-final class PromptAlignedSegmentSeeker: SegmentSeeking {
+final class WhisperSegmentSeeker: SegmentSeeking {
   private let base = SegmentSeeker()
+  private let context: WhisperTranscriptionInput.Context
+
+  init(context: WhisperTranscriptionInput.Context) {
+    self.context = context
+  }
+
+  func nextSeek(from current: Int, proposed: Int, sampleCount: Int) -> Int {
+    guard context == .extended else { return proposed }
+    return WhisperSeekProgress.advance(from: current, proposed: proposed, sampleCount: sampleCount)
+  }
 
   // These signatures are imposed by WhisperKit's adapter protocol.
   func findSeekPointAndSegments(
@@ -14,10 +24,14 @@ final class PromptAlignedSegmentSeeker: SegmentSeeking {
     currentSeek: Int, segmentSize: Int, sampleRate: Int, timeToken: Int, specialToken: Int,
     tokenizer: WhisperTokenizer
   ) -> (Int, [TranscriptionSegment]?) {
-    base.findSeekPointAndSegments(
+    let (proposed, segments) = base.findSeekPointAndSegments(
       decodingResult: decodingResult, options: options, allSegmentsCount: allSegmentsCount,
       currentSeek: currentSeek, segmentSize: segmentSize, sampleRate: sampleRate,
       timeToken: timeToken, specialToken: specialToken, tokenizer: tokenizer)
+    return (
+      nextSeek(from: currentSeek, proposed: proposed, sampleCount: segmentSize),
+      segments
+    )
   }
 
   func addWordTimestamps(

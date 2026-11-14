@@ -29,6 +29,7 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
   private let state: StateOwner
   private let signal: AsyncStream<Void>.Continuation
   private let request: SpeechChannelRequest
+  private let inputValidation: SpeechInputValidation
 
   deinit {
     signal.finish()
@@ -42,6 +43,7 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
     guard
       configuration.boundaryReplayDuration.isFinite, configuration.boundaryReplayDuration >= 0,
       configuration.boundaryReplayDuration <= SpeechWindowBuffer.maximumReplayDuration,
+      configuration.inputValidation.isValid,
       let format = AVAudioFormat(
         standardFormatWithSampleRate: SpeechWindowBuffer.sampleRate, channels: 1)
     else {
@@ -54,6 +56,7 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
       mode: request.context.windowBoundaryMode(for: configuration))
     state = StateOwner(initial)
     self.request = request
+    inputValidation = configuration.inputValidation
     let (events, signal) = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingNewest(1))
     self.signal = signal
     let priority = request.context.priority.taskPriority
@@ -83,7 +86,7 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
             if let cached = results.result(for: window) {
               result = cached
             } else {
-              result = try await self.transcribeRecovering(input, engine: engine)
+              result = try await self.transcribeValidated(input, engine: engine)
               results.remember(result, for: window)
             }
             try Task.checkCancellation()
@@ -205,6 +208,13 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
     guard notify else { return }
     request.failure(error.localizedDescription)
     cancel()
+  }
+
+  private func transcribeValidated(_ input: SpeechWindowRequest, engine: any SpeechWindowEngine)
+    async throws -> SpeechWindowResult
+  {
+    guard try inputValidation.accepts(input.samples) else { return .init(words: []) }
+    return try await transcribeRecovering(input, engine: engine)
   }
 
   private func transcribeRecovering(_ input: SpeechWindowRequest, engine: any SpeechWindowEngine)

@@ -7,6 +7,49 @@ import XCTest
 @testable import SilliesSpeech
 
 final class WindowSpeechChannelTests: XCTestCase, @unchecked Sendable {
+  func testShortInputConfirmationPreservesClockDrainFailureAndCancellationAcrossCapturePurposes()
+    async throws
+  {
+    for purpose in [SpeechRecognitionContext.Purpose.shortUtterance, .continuousTranscription] {
+      for evidence in [ShortInputEvidence.speech, .noise, .failed, .cancelled] {
+        let engine = CountingWindowEngine(policy: .decode)
+        let failures = Mutex(0)
+        let phrases = Mutex<[SpeechPhrase]>([])
+        let inferences = Mutex(0)
+        var request = SpeechChannelRequest(
+          language: .automatic, output: { phrase in phrases.withLock { $0.append(phrase) } },
+          failure: { _ in failures.withLock { $0 += 1 } })
+        request.context.purpose = purpose
+        request.measureInference = { _ in inferences.withLock { $0 += 1 } }
+        let channel = try WindowSpeechChannel(
+          engine: engine, request: request,
+          configuration: .init(
+            inputValidation: .shortWindows(maximumSamples: 1_600, factory: { evidence })))
+        channel.append(try audioFrame(energy: 0.01))
+        await withCheckedContinuation { continuation in channel.finish { continuation.resume() } }
+        let count = await engine.count
+        XCTAssertEqual(count, evidence == .speech ? 1 : 0)
+        XCTAssertEqual(inferences.withLock { $0 }, count)
+        XCTAssertEqual(failures.withLock { $0 }, evidence == .failed ? 1 : 0)
+        let delivered = phrases.withLock { $0.filter { !$0.text.isEmpty } }
+        XCTAssertEqual(delivered.map(\.text), evidence == .speech ? ["hello"] : [])
+        if evidence == .speech { XCTAssertEqual(delivered.last?.duration, 0.1) }
+        channel.cancel()
+      }
+    }
+  }
+
+  func testInvalidShortInputBoundsFailBeforeWorkerCreation() throws {
+    for maximum in [-1, Int.max] {
+      let request = SpeechChannelRequest(language: .automatic, output: { _ in }, failure: { _ in })
+      XCTAssertThrowsError(
+        try WindowSpeechChannel(
+          engine: CountingWindowEngine(policy: .decode), request: request,
+          configuration: .init(
+            inputValidation: .shortWindows(
+              maximumSamples: maximum, factory: { ShortInputEvidence.speech }))))
+    }
+  }
   func testInvalidReplayDurationsFailBeforeStartingAWorker() {
     for duration in [-1, Double.nan, .infinity, SpeechWindowBuffer.maximumReplayDuration + 1] {
       XCTAssertThrowsError(
@@ -50,6 +93,18 @@ final class WindowSpeechChannelTests: XCTestCase, @unchecked Sendable {
     XCTAssertEqual(
       events.withLock { $0 }, ["failed", "failure reported", "finished", "reentrant finish"])
     channel.cancel()
+  }
+}
+
+private enum ShortInputEvidence: SpeechWindowValidating {
+  case speech, noise, failed, cancelled
+  func containsSpeech(_: [Float]) throws -> Bool {
+    switch self {
+    case .speech: return true
+    case .noise: return false
+    case .failed: throw SpeechError.invalidAudioFormat
+    case .cancelled: throw CancellationError()
+    }
   }
 }
 

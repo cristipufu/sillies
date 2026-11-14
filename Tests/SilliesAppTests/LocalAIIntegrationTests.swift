@@ -90,7 +90,10 @@ private func downloadedRuntime(id: String?) async throws -> SpeechRuntimeRegistr
   {
     let registry = try SpeechRuntimeRegistry(
       store: ModelStore(root: URL(fileURLWithPath: root)),
-      providers: [WhisperSpeechProvider(), ParakeetSpeechProvider(), NemotronSpeechProvider()],
+      providers: [
+        WhisperSpeechProvider(makeShortInputValidator: WebRTCSpeechWindowValidator.init),
+        ParakeetSpeechProvider(), NemotronSpeechProvider(),
+      ],
       diarizationProviders: [NemotronDiarizationProvider()])
     runtime = try await registry.prepare(id)
   } else {

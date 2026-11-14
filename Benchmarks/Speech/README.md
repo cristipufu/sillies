@@ -73,8 +73,10 @@ check; formatting differences remain word errors. The intentionally conservative
 missing multipliers or equate homophones. It does not prove semantic correctness.
 
 Work accounting is explicitly injected and content-free: actual inference requests and decoded input
-samples, including retries, excluding cache reuse. These count engine calls; native token-level
-temperature fallback stays inside a call. Processing time includes feeding and backlog I/O;
+samples, including retries, excluding cache reuse and decoder-internal minimum-length padding. These
+count engine calls, not proof that the SDK entered its decoding loop; native token-level temperature
+fallback stays inside a call. The file-only native replay additionally records Whisper's actual
+`nativeDecodingWindows` counter and bounded native segment confidence. Processing time includes feeding and backlog I/O;
 real-time runs also include the intended wait. Finalization time starts at the last packet's release.
 These are local qualification measurements, not routine test timing budgets or device-presentation
 latency. More retained speech can require more decoding work.
@@ -102,7 +104,9 @@ of hallucinations. Current native runs declare `comparison.kind = end-to-end` an
 gate. Equal window traces cannot establish equal decoding policy or preprocessing. The scorer rejects
 `boundary-effect` for these runs even when window traces match. Retain failed raw outcomes. The
 [Whisper investigation](../../docs/reports/whisper-transcription-2026-11-14.md) records candidates that
-reduced aggregate errors but failed subgroup or critical-value checks; production retains its baseline.
+reduced aggregate errors but failed subgroup or critical-value checks; production retains baseline
+boundaries. The [short-input follow-up](../../docs/reports/whisper-short-inputs-2026-11-14.md) qualifies
+minimum-length handling separately from boundary selection and broader decoder changes.
 
 ## Compare complete application versions
 

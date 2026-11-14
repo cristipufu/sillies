@@ -8,17 +8,17 @@
 namespace {
 constexpr int kSampleRate = 16000;
 constexpr size_t kFrameSamples = 160;
-constexpr int kAggressiveness = 2;
 constexpr float kPCMScale = 32767.0f;
 }
 struct SilliesVoiceActivity { VadInst *vad; };
 
-SilliesVoiceActivity *sillies_vad_create(void) {
+SilliesVoiceActivity *sillies_vad_create(SilliesVoiceActivityMode mode) {
+  if (mode != SilliesVoiceActivityConversation && mode != SilliesVoiceActivityTranscription) return nullptr;
   auto *state = new (std::nothrow) SilliesVoiceActivity{nullptr};
   if (!state) return nullptr;
   state->vad = WebRtcVad_Create();
   if (!state->vad || WebRtcVad_Init(state->vad) != 0 ||
-      WebRtcVad_set_mode(state->vad, kAggressiveness) != 0) {
+      WebRtcVad_set_mode(state->vad, static_cast<int>(mode)) != 0) {
     sillies_vad_destroy(state);
     return nullptr;
   }

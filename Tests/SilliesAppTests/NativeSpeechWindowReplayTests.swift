@@ -3,6 +3,7 @@ import CryptoKit
 import Foundation
 import SilliesSpeech
 import Testing
+import WhisperKit
 
 @testable import SilliesSpeechNemotron
 @testable import SilliesSpeechWhisper
@@ -17,7 +18,7 @@ func nativeSpeechWindowReplayPreservesDecoderResults() async throws {
 private enum NativeSpeechWindowReplay {
   private enum Provider: String, Decodable { case nemotron, whisper }
   private struct PreparedEngine {
-    let engine: any SpeechWindowEngine
+    let transcribe: @Sendable (SpeechWindowRequest) async throws -> WindowResult
     let reset: @Sendable () async throws -> Void
   }
   private static let sampleRate = 16_000.0
@@ -46,10 +47,27 @@ private enum NativeSpeechWindowReplay {
     let text: String
     let start: Double
     let end: Double
+    var probability: Float?
+  }
+  private struct Segment: Encodable {
+    let text: String
+    let start: Float
+    let end: Float
+    let averageLogProbability: Float
+    let compressionRatio: Float
+    let noSpeechProbability: Float
+    let temperature: Float
+  }
+  private struct WindowResult: Sendable {
+    let words: [Word]
+    var segments: [Segment] = []
+    var nativeDecodingWindows: Double?
   }
   private struct Result: Encodable {
     let window: Request.Window
     let words: [Word]
+    let segments: [Segment]
+    let nativeDecodingWindows: Double?
   }
 
   static func run(_ url: URL) async throws {
@@ -82,12 +100,13 @@ private enum NativeSpeechWindowReplay {
       var input = SpeechWindowRequest(
         samples: Array(samples[start..<(start + window.sampleCount)]), language: language)
       input.window = .init(start: window.start, phase: window.phase)
-      let result = try await prepared.engine.transcribe(input)
+      let result = try await prepared.transcribe(input)
       try #require(result.words.count <= maximumWordsPerWindow)
+      try #require(result.segments.count <= maximumWordsPerWindow)
       results.append(
         .init(
-          window: window,
-          words: result.words.map { .init(text: $0.text, start: $0.start, end: $0.end) }))
+          window: window, words: result.words, segments: result.segments,
+          nativeDecodingWindows: result.nativeDecodingWindows))
     }
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -103,11 +122,35 @@ private enum NativeSpeechWindowReplay {
       let decoder = try await NemotronNativeDecoder.load(request.modelDirectory, language: language)
       let engine = NemotronStreamingEngine(
         decoder: decoder, normalization: .init(mode: request.signalMode ?? .preserve))
-      return .init(engine: engine, reset: { try await engine.resetForReuse() })
+      return .init(
+        transcribe: { input in
+          let result = try await engine.transcribe(input)
+          return .init(
+            words: result.words.map { .init(text: $0.text, start: $0.start, end: $0.end) })
+        }, reset: { try await engine.resetForReuse() })
     case .whisper:
       let engine = WhisperWindowEngine()
       try await engine.load(request.modelDirectory)
-      return .init(engine: engine, reset: {})
+      return .init(
+        transcribe: { input in
+          let outcome = try await engine.decodeWindow(input)
+          let segments = outcome.nativeResults.flatMap(\.segments)
+          return .init(
+            words: outcome.acceptedSegments.flatMap { $0.words ?? [] }.map {
+              .init(
+                text: $0.word.trimmingCharacters(in: .whitespaces), start: Double($0.start),
+                end: Double($0.end), probability: $0.probability)
+            },
+            segments: segments.map {
+              .init(
+                text: $0.text, start: $0.start, end: $0.end,
+                averageLogProbability: $0.avgLogprob, compressionRatio: $0.compressionRatio,
+                noSpeechProbability: $0.noSpeechProb, temperature: $0.temperature)
+            },
+            nativeDecodingWindows: outcome.nativeResults.reduce(0) {
+              $0 + $1.timings.totalDecodingWindows
+            })
+        }, reset: {})
     }
   }
 

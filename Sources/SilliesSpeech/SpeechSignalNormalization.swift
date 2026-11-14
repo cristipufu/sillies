@@ -10,17 +10,26 @@ package struct SpeechSignalNormalization: Sendable {
       gain == 1 ? samples : samples.map { $0 * gain }
     }
   }
-  private var level = SpeechSignalGain()
+  private var level: SpeechSignalGain
   private let mode: Mode
-  package init(mode: Mode = .bounded) { self.mode = mode }
+  package init(mode: Mode = .bounded, gain: SpeechSignalGain = .init()) {
+    self.mode = mode
+    self.level = gain
+  }
 
   package mutating func prepare(_ samples: [Float]) throws -> Adjustment {
     var peak: Float = 0
+    var sumSquares = 0.0
     for sample in samples {
       guard sample.isFinite else { throw SpeechError.invalidAudioFormat }
       peak = max(peak, abs(sample))
+      let value = Double(sample)
+      sumSquares += value * value
     }
-    guard let gain = mode == .preserve ? 1 : level.observe(peak: peak) else {
+    let rootMeanSquare = Float((sumSquares / Double(max(1, samples.count))).squareRoot())
+    guard
+      let gain = mode == .preserve ? 1 : level.observe(peak: peak, rootMeanSquare: rootMeanSquare)
+    else {
       throw SpeechError.invalidAudioFormat
     }
     return Adjustment(gain: gain)

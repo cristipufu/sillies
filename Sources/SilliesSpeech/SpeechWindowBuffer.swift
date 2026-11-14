@@ -12,8 +12,8 @@ struct SpeechWindowBuffer {
     let completion: Completion
     var end: TimeInterval { start + Double(samples.count) / sampleRate }
   }
-  static let sampleRate: Double = 16_000
-  static let maximumWindowDuration: TimeInterval = 12
+  static let sampleRate = SpeechWindowConfiguration.sampleRate
+  static let maximumWindowDuration = SpeechWindowConfiguration.maximumWindowDuration
   static let maximumBufferedDuration: TimeInterval = 24
   static let maximumReplayDuration = maximumWindowDuration / 2
   var cadence: SpeechDecodeCadence = .windowed

@@ -29,6 +29,13 @@ Speech recognition and text summarization have separate language coverage. Apple
 
 The Whisper adapter overrides tokenizer loading because the SDK's `download: false` does not disable its tokenizer fallback. It constructs the tokenizer from local files and fails if they are incomplete. `OfflineWhisperKit` only changes loading; the SDK still owns decoding and alignment. The SDK's private model-variant diagnostic remains its default when supplying a tokenizer this way; multilingual decoding is set from the loaded vocabulary dimension. Recheck this contract when updating the pinned SDK.
 
+Whisper's pinned runtime skips inputs of one second or less. The provider now confirms speech in
+those windows, pads decoder input just past the native minimum and checks native confidence, while
+preserving the captured duration. This applies automatically to short final windows in meetings,
+Talk and dictation; it does not change their endpointing. Longer decoder windows keep their existing
+path and Whisper keeps baseline boundaries. The [short-input qualification](reports/whisper-short-inputs-2026-11-14.md)
+records the English short-speech improvement, fresh noise checks and remaining accuracy limits.
+
 ## Installation and lifecycle
 
 Models live under `~/Library/Application Support/Sillies/SpeechModels/<model-id>/<revision>`. Partial downloads are separate and are never selectable. Verified completed artifacts are reused on retry; URLSession resume data is retained when available. SHA-256 verification occurs before atomic installation and again when acquiring a runtime. Symlink/path traversal checks inspect every existing path component. A lease prevents removal/replacement while a runtime is preparing or in use.
@@ -106,7 +113,7 @@ The standalone `SpeechBenchmark check MODEL_ID STORE_DIRECTORY` command queries 
 
 `SpeechInferenceScheduler` prioritizes queued interactive work and raises its task priority. `SpeechWorkerExecutor` preserves that priority on its isolated queue; ordinary background work stays at utility priority. Neither priority nor cancellation guarantees preemption of a native prediction already in progress. Dictation has its own lifecycle, microphone-only channels, warm-runtime lease, cleanup deadline, and recovery history.
 
-The pinned WhisperKit 1.1.1 runtime misaligns word timestamps when prompt tokens are present ([upstream issue 542](https://github.com/argmaxinc/argmax-oss-swift/issues/542)). `PromptAlignedSegmentSeeker` adapts the alignment matrix inside this provider, respecting Core ML row padding. Remove the adapter only after updating the pinned runtime and rerunning prompted English/Romanian/mixed-language fixtures. Zero-duration opening words remain valid and are covered independently by the rolling-transcript tests.
+The pinned WhisperKit 1.1.1 runtime misaligns word timestamps when prompt tokens are present ([upstream issue 542](https://github.com/argmaxinc/argmax-oss-swift/issues/542)). `WhisperSegmentSeeker` adapts the alignment matrix inside this provider, respecting Core ML row padding. Remove the adapter only after updating the pinned runtime and rerunning prompted English/Romanian/mixed-language fixtures. Zero-duration opening words remain valid and are covered independently by the rolling-transcript tests.
 
 Use the runner's `dictate` command instead of `run` for one interactive channel with vocabulary hints. It reports **release-to-final-text**, separately from total duration. This excludes cleanup/insertion; the live dictation coordinator records release-to-insertion. First Core ML specialization can take about a minute on the development machine, and remains off the UI thread. Subsequent captures retain a recently used runtime for 120 seconds; idle expiry, pause, exclusions, and termination release it.
 

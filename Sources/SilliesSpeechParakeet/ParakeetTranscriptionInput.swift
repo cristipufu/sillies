@@ -22,7 +22,7 @@ struct ParakeetTranscriptionInput {
     }
     // Keep every captured sample. Padding is decoder context only: the channel still retires
     // the original window, so silence never extends session time or shifts subsequent speech.
-    let missing = max(0, Self.minimumSampleCount - request.samples.count)
-    samples = missing == 0 ? request.samples : request.samples + Array(repeating: 0, count: missing)
+    samples = try SpeechInputPadding.extending(
+      request.samples, toMinimumSampleCount: Self.minimumSampleCount)
   }
 }

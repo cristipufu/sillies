@@ -18,7 +18,7 @@ actor WhisperWindowEngine: SpeechWindowEngine {
     let config = WhisperKitConfig(
       modelFolder: directory.path, tokenizerFolder: directory,
       computeOptions: ModelComputeOptions(melCompute: .cpuOnly),
-      segmentSeeker: PromptAlignedSegmentSeeker(),
+      segmentSeeker: WhisperSegmentSeeker(context: .captured),
       verbose: false, logLevel: .error, prewarm: true, load: true, download: false)
     pipeline = try await OfflineWhisperKit(config)
     vocabulary = WhisperVocabularyPrompt()
@@ -27,9 +27,27 @@ actor WhisperWindowEngine: SpeechWindowEngine {
 
   func transcribe(_ request: SpeechWindowRequest) async throws -> SpeechWindowResult {
     dispatchPrecondition(condition: .notOnQueue(.main))
+    return try await decodeWindow(request).result
+  }
+
+  func decodeWindow(_ request: SpeechWindowRequest) async throws -> WhisperDecodingOutcome {
+    dispatchPrecondition(condition: .notOnQueue(.main))
     guard let pipeline else {
       throw SpeechError.unavailable(String(localized: "Whisper is not ready."))
     }
+    let options = decodingOptions(for: request, tokenizer: pipeline.tokenizer)
+    let input = try WhisperTranscriptionInput(request.samples, options: options)
+    pipeline.segmentSeeker = WhisperSegmentSeeker(context: input.context)
+    let results =
+      input.samples.isEmpty
+      ? [] : try await pipeline.transcribe(audioArray: input.samples, decodeOptions: options)
+    return .init(
+      nativeResults: results, context: input.context, options: options)
+  }
+
+  private func decodingOptions(for request: SpeechWindowRequest, tokenizer: WhisperTokenizer?)
+    -> DecodingOptions
+  {
     var options = DecodingOptions()
     options.task = .transcribe
     options.language =
@@ -39,20 +57,11 @@ actor WhisperWindowEngine: SpeechWindowEngine {
     options.skipSpecialTokens = true
     options.temperatureFallbackCount = 1
     options.concurrentWorkerCount = 1
-    if let tokenizer = pipeline.tokenizer {
+    if let tokenizer {
       options.promptTokens = vocabulary.tokens(for: request.context.vocabulary) {
         tokenizer.encode(text: $0)
       }
     }
-    let results = try await pipeline.transcribe(audioArray: request.samples, decodeOptions: options)
-    return SpeechWindowResult(
-      words: results.flatMap(\.segments).flatMap { segment in
-        (segment.words ?? []).map {
-          SpeechWord(
-            text: $0.word.trimmingCharacters(in: .whitespaces), start: Double($0.start),
-            end: Double($0.end),
-            boundary: $0.word.first?.isWhitespace == true ? .separated : .attached)
-        }
-      }, detectedLanguage: results.first?.language)
+    return options
   }
 }

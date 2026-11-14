@@ -37,7 +37,9 @@ final class SpeechServices {
     let registry = try SpeechRuntimeRegistry(
       store: store,
       providers: [
-        AppleSpeechProvider(), WhisperSpeechProvider(), ParakeetSpeechProvider(),
+        AppleSpeechProvider(),
+        WhisperSpeechProvider(makeShortInputValidator: WebRTCSpeechWindowValidator.init),
+        ParakeetSpeechProvider(),
         NemotronSpeechProvider(),
       ],
       diarizationProviders: [NemotronDiarizationProvider()])

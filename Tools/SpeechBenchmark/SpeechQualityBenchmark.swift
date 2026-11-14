@@ -163,7 +163,8 @@ enum SpeechQualityBenchmark {
     let store = ModelStore(root: options.store)
     let lease = try await store.acquire(specification)
     let providers: [any SpeechProvider] = [
-      WhisperSpeechProvider(), ParakeetSpeechProvider(), NemotronSpeechProvider(),
+      WhisperSpeechProvider(makeShortInputValidator: WebRTCSpeechWindowValidator.init),
+      ParakeetSpeechProvider(), NemotronSpeechProvider(),
     ]
     guard let provider = providers.first(where: { $0.id == specification.model.providerID }) else {
       throw SpeechError.unavailable("No quality provider registered.")

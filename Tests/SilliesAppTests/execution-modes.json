@@ -307,6 +307,7 @@
   "WhisperPromptAlignmentTests.swift": {
     "default": "headless"
   },
+  "WhisperTranscriptionInputTests.swift": { "default": "headless" },
   "WhisperVocabularyTests.swift": {
     "default": "headless"
   },

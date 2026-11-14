@@ -1,0 +1,741 @@
+{
+  "schema": 1,
+  "scope": "Public research qualification only. Failures retained; no audio, model weights or executable binaries.",
+  "artifacts": [
+    {
+      "file": "acoustic-acceptance-contract.json.gz",
+      "bytes": 411,
+      "sha256": "bcd554f5cc56d09b60c4f094c8b4cb2a4688d75190dd231f1d704adfbe2dafc7",
+      "uncompressedBytes": 647,
+      "uncompressedSHA256": "ccb3db9fb2df555bc8a44d16544c8267b1052864f84231cbc59c2b280f2c9d13"
+    },
+    {
+      "file": "acoustic-analysis-normalized-probe-results.json.gz",
+      "bytes": 219,
+      "sha256": "903d9fe765b8ac48e90c60ce9c7104beac5e9e5b63420715bdc5648300c2aaaf",
+      "uncompressedBytes": 2294,
+      "uncompressedSHA256": "a1c26f875f4f8fd62760cd2488835e46619553d2c888f87ffbdc1917a5f7305c"
+    },
+    {
+      "file": "acoustic-analysis-normalized-probe.json.gz",
+      "bytes": 1736,
+      "sha256": "680453847f11f0a221078451048bb1113a01c7b5699da8912a5149a22c63349c",
+      "uncompressedBytes": 8970,
+      "uncompressedSHA256": "22548eeb3dd8de6b351f840cbecc505d21d0cf7e79baaa615545e235899d969d"
+    },
+    {
+      "file": "acoustic-candidate-development.json.gz",
+      "bytes": 9744,
+      "sha256": "e2abe84524a8a9368f79f10e9e9ff3041ddd7e4575c595e7c0d80489dc1cf444",
+      "uncompressedBytes": 183103,
+      "uncompressedSHA256": "c466636e3de0b126ff32b81bbb0598573d4d62bc9dddef5b49ee6a3086adc19e"
+    },
+    {
+      "file": "acoustic-development-score.json.gz",
+      "bytes": 2786,
+      "sha256": "315399692e947446c38a5ca7ec777d0a79c5041b471a3344ddda16484065a6a5",
+      "uncompressedBytes": 31629,
+      "uncompressedSHA256": "df553151cc173092c3e6694bbd5031598c525fc8580e5bbac24d1afd7992fdf3"
+    },
+    {
+      "file": "acoustic-freeze.json.gz",
+      "bytes": 15174,
+      "sha256": "9a576b35ac994d26e21297d218910ad334c76e3cfa4ecccf4cebc6d1d292bca3",
+      "uncompressedBytes": 66266,
+      "uncompressedSHA256": "6707341344e2de04abdf731537ee0d091c6172927369bee7d07d562353c08bdb"
+    },
+    {
+      "file": "acoustic-real-noise-probe-v2-results.json.gz",
+      "bytes": 219,
+      "sha256": "7322e341608a1cd938dd482b3476ad53a3f82b3e09c120450e64c973c46375ef",
+      "uncompressedBytes": 2291,
+      "uncompressedSHA256": "4ab6c055b56599db2fdb7974d45fbb3509f632637e562c2b3bc700ccc3386af7"
+    },
+    {
+      "file": "acoustic-real-noise-probe-v2.json.gz",
+      "bytes": 1716,
+      "sha256": "ed07d1acd40e75488d3c8ce3d1c39b19180080031e964f8026afda1773865d2f",
+      "uncompressedBytes": 8748,
+      "uncompressedSHA256": "b2903ffc416eff9cbd67d9846f8940536c4bd8202b343909922fbca841d479af"
+    },
+    {
+      "file": "acoustic-real-noise-probe.json.gz",
+      "bytes": 1725,
+      "sha256": "a3186802841c5dd38538bb786c73fad4117114ef601228f79210d7ac6d6ef552",
+      "uncompressedBytes": 8745,
+      "uncompressedSHA256": "cfdc781b670c4bf01c77eb23803711e14c9255fabb287e9ceef199c48a8ad44b"
+    },
+    {
+      "file": "acoustic-shipped-development.json.gz",
+      "bytes": 9921,
+      "sha256": "675168451996e309638550a23f62c3d74f9c6c38ee523cf10a4c0f3521fd6776",
+      "uncompressedBytes": 185402,
+      "uncompressedSHA256": "07d6da4440b5631a7236da04a647bee7c64fb2e8a4c3226a6056eb1916df613e"
+    },
+    {
+      "file": "archive-long-evidence.py.gz",
+      "bytes": 974,
+      "sha256": "4e0d99f71cbcef9a846578cee31ac4b4b515a61fbfba02b6b6d269a443042388",
+      "uncompressedBytes": 2043,
+      "uncompressedSHA256": "4a8af9503cad9348ba4a7ec801ea0b6490e5e4adcc8c9ae146c9686b7e2d9a1a"
+    },
+    {
+      "file": "confidence-acceptance-contract.json.gz",
+      "bytes": 230,
+      "sha256": "91903cc192c679dda77263d13418fc9998cb1d0f7bb403fb08f7a01d9274b9c0",
+      "uncompressedBytes": 324,
+      "uncompressedSHA256": "0944f84dc9d8e03158650bdcb590bdbdd46b7469301bf42c5e514567091f93fa"
+    },
+    {
+      "file": "confidence-development-score.json.gz",
+      "bytes": 2801,
+      "sha256": "75d3e6a1b88d40fcb1a6480717e3e01949b80a04eeb2f855f09d01e650de16a5",
+      "uncompressedBytes": 31789,
+      "uncompressedSHA256": "b468eb5be912d39232d053cd4405c67ff75ed64b55d642020d55a843ff0ccfef"
+    },
+    {
+      "file": "confidence-development.json.gz",
+      "bytes": 9135,
+      "sha256": "a4f2f1a0012277d52faa220eaae7e20ef00cec6e54464c73e98d3d21157b2203",
+      "uncompressedBytes": 182449,
+      "uncompressedSHA256": "c8c2c953df391d1d12060d32aa5670cf879ff0bbd7e84fecf6ffc1b51cec55b3"
+    },
+    {
+      "file": "confidence-freeze.json.gz",
+      "bytes": 2801,
+      "sha256": "b03b24db82420f2358a8fce0c1a85fdf5f888f419bd4fc96fa8982d3077225b9",
+      "uncompressedBytes": 8367,
+      "uncompressedSHA256": "9e7fa133b5a26052b395811a34c31d492465fa3705d713e8459c5015c5cc7666"
+    },
+    {
+      "file": "final-helper-source.json.gz",
+      "bytes": 2033,
+      "sha256": "dfaefe71096e6ccdeabdb3615429deb2af6ff2c76378d0d70f9868dae7db590d",
+      "uncompressedBytes": 5611,
+      "uncompressedSHA256": "b5ab0a4ebc42e2ab492b4909bc65ac7a64d8763dcc8b177d810d574662d98b18"
+    },
+    {
+      "file": "final-test-receipts.json.gz",
+      "bytes": 1087,
+      "sha256": "f00f8a54ac01f4a02dad09aeb529c1faf7a761fcc0c9e21ebbe4cee9159fcc7b",
+      "uncompressedBytes": 32992,
+      "uncompressedSHA256": "e08dff28968e1503dbd9b9391f04897d599275dc3b1bae609a1d1da6f7994c04"
+    },
+    {
+      "file": "fresh-input-audit.json.gz",
+      "bytes": 5247,
+      "sha256": "2649903c748646a7e8983637c0abfce508946f498f8800082b4fbe36536626db",
+      "uncompressedBytes": 20747,
+      "uncompressedSHA256": "b9387453d07f30ee755412f996df88dd6ae160f399f8a830e2fbf759851babae"
+    },
+    {
+      "file": "long-development-conditions--manifest.json.gz",
+      "bytes": 7379,
+      "sha256": "a25790b72f02efee6991f72c4a2c97877bfcf21ad24747f1055bb94c093580c8",
+      "uncompressedBytes": 63243,
+      "uncompressedSHA256": "9ec895cd8fb036415a23af0db38e05b053aabd7881b10ff9608403d6c8402525"
+    },
+    {
+      "file": "long-development-source--manifest.json.gz",
+      "bytes": 4641,
+      "sha256": "4732e8884f3f0c56f121ac1b0f9bb4ba56cdd559ea55205b94f7880ffed6302e",
+      "uncompressedBytes": 20090,
+      "uncompressedSHA256": "3c34830936d3d56eb4f32a37dfaacef6ac04ab488f001fcb085f81c5c1a025a2"
+    },
+    {
+      "file": "long-development-source-manifest.json.gz",
+      "bytes": 4641,
+      "sha256": "4732e8884f3f0c56f121ac1b0f9bb4ba56cdd559ea55205b94f7880ffed6302e",
+      "uncompressedBytes": 20090,
+      "uncompressedSHA256": "3c34830936d3d56eb4f32a37dfaacef6ac04ab488f001fcb085f81c5c1a025a2"
+    },
+    {
+      "file": "long-fresh-conditions--manifest.json.gz",
+      "bytes": 15075,
+      "sha256": "222ba3d583722672c99b3ef873ff9103914b22fbd674972d131055642ed288ee",
+      "uncompressedBytes": 135618,
+      "uncompressedSHA256": "f74f4978ceb272f88a1ab63c2a815dad86094a24577d6fd9e3d079a2589f3938"
+    },
+    {
+      "file": "long-fresh-source--manifest.json.gz",
+      "bytes": 12660,
+      "sha256": "e4f6dd5e138daba4ed618156cb314998503c291b2edcc66f4377e08e4fbeeebb",
+      "uncompressedBytes": 57427,
+      "uncompressedSHA256": "efaa9065b1d2f6cd71b830dc935119dcc3d9958ce8abba8383ec62c4b74cbed4"
+    },
+    {
+      "file": "long-fresh-source-manifest.json.gz",
+      "bytes": 12660,
+      "sha256": "e4f6dd5e138daba4ed618156cb314998503c291b2edcc66f4377e08e4fbeeebb",
+      "uncompressedBytes": 57427,
+      "uncompressedSHA256": "efaa9065b1d2f6cd71b830dc935119dcc3d9958ce8abba8383ec62c4b74cbed4"
+    },
+    {
+      "file": "musan-README.txt.gz",
+      "bytes": 358,
+      "sha256": "d5f6d6f9f30a9a1ab6445bb61215bc3e0869f8be7c356bd95d9f24b95eb602c1",
+      "uncompressedBytes": 599,
+      "uncompressedSHA256": "6de1fff54c7462b2e6d6f933812ca7949d7d5fdaa494b65b36ab7921e3805338"
+    },
+    {
+      "file": "musan-repository.json.gz",
+      "bytes": 108,
+      "sha256": "1ab68a018b93a46f9ad088a9ac7c1899b1607d92ee7bbbe0788ea46ccaa46b30",
+      "uncompressedBytes": 95,
+      "uncompressedSHA256": "095273c8f070617f4d8b10c818aa7ccff9da4fd97cb1e29993e755973e3e9f21"
+    },
+    {
+      "file": "musan-sound-bible-license.txt.gz",
+      "bytes": 2729,
+      "sha256": "f2bf2c84aadd81260333310f99c66d53011db3ce244cdd1a3308a9bc274e3b8d",
+      "uncompressedBytes": 18849,
+      "uncompressedSHA256": "2df0991bf3b3866bef669f49adab165c23769d60d432cedb4195851c7c1214ec"
+    },
+    {
+      "file": "musan-tree-noise-sound-bible.json.gz",
+      "bytes": 5765,
+      "sha256": "22baaa01ee3c3c49b3b4e6fabf60296f0d9282ce894b523aa4fffa84eb5a52f9",
+      "uncompressedBytes": 18258,
+      "uncompressedSHA256": "b238ce9b60405fadeea5fb8a14fc432f76d89183e5af253f36edd8b5b298c613"
+    },
+    {
+      "file": "musan-tree-noise.json.gz",
+      "bytes": 266,
+      "sha256": "c0b2bc58c140de3e2530e3ab613a81dd599492294f84fe89a4c626e88bd0b4e5",
+      "uncompressedBytes": 534,
+      "uncompressedSHA256": "33d009117b30089e41c0ba5036e609d9c8bb808b2bffbd189b60801283f3146d"
+    },
+    {
+      "file": "native-quality-completions.json.gz",
+      "bytes": 569,
+      "sha256": "78de178d44a509e0863945d4aeb8ed1a10d9aa6f689554710b63145cb97935cf",
+      "uncompressedBytes": 2136,
+      "uncompressedSHA256": "fb9e83cbff4b62f38799801deeda1afd2da1429b27d4c801a572b7e3fae8f99a"
+    },
+    {
+      "file": "neural-vad-challenging-probe-contract.json.gz",
+      "bytes": 260,
+      "sha256": "68efbca3d91a3376d9c08474a69c079aea52a47ad19449d3d41718887c768990",
+      "uncompressedBytes": 345,
+      "uncompressedSHA256": "7aff4fef21957939c35e40cc4dbf53597c8a4fc4543f8478d5593189ebbafd1f"
+    },
+    {
+      "file": "neural-vad-challenging-probe-results.json.gz",
+      "bytes": 990,
+      "sha256": "da9eaa924e5f09286064987dcf18519b30756460e168bae16191b81626ac3d84",
+      "uncompressedBytes": 24582,
+      "uncompressedSHA256": "3f0487af293a1302bd03454744854b36be1d787ec0871f5e7dd96d1643e66d90"
+    },
+    {
+      "file": "neural-vad-challenging-probe.json.gz",
+      "bytes": 3560,
+      "sha256": "13843d5970eda5b1014dc0b75b3df2a1845033d1efd8897e74ff334188487370",
+      "uncompressedBytes": 18818,
+      "uncompressedSHA256": "ca5ce45896c0102dfe2e8b41d22bce9a7fe7d1c27f56e685634c6793b077ec4f"
+    },
+    {
+      "file": "neural-vad-challenging-reviewed-results.json.gz",
+      "bytes": 990,
+      "sha256": "da9eaa924e5f09286064987dcf18519b30756460e168bae16191b81626ac3d84",
+      "uncompressedBytes": 24582,
+      "uncompressedSHA256": "3f0487af293a1302bd03454744854b36be1d787ec0871f5e7dd96d1643e66d90"
+    },
+    {
+      "file": "neural-vad-challenging-reviewed.json.gz",
+      "bytes": 3561,
+      "sha256": "e68fe5b7f63a8e9edc9224bb67536652bbaa8716edebf4263cb0e84c4af5c326",
+      "uncompressedBytes": 18821,
+      "uncompressedSHA256": "9f4b5859b994ab1e487320a24b7e71c7232f97a529115a12d1cf4b888affc10f"
+    },
+    {
+      "file": "neural-vad-model-manifest.json.gz",
+      "bytes": 434,
+      "sha256": "b865c047305b7e93511dfff0ace239c1b7cbf692bb80948760e9c7b53a78c6e4",
+      "uncompressedBytes": 1038,
+      "uncompressedSHA256": "d6484d722abee25514d397547014a7d38b0587dda6d769f698792b6d3659cc15"
+    },
+    {
+      "file": "neural-vad-probe-contract.json.gz",
+      "bytes": 347,
+      "sha256": "272e9651de4dc9c537f87354af108b88dfbec4b43d66a1bc014b5cd1597dcbc0",
+      "uncompressedBytes": 496,
+      "uncompressedSHA256": "87432debee1e1dc0d3375eec5173825465023cad4fc9c8812e26e8b3711a5633"
+    },
+    {
+      "file": "neural-vad-probe-results.json.gz",
+      "bytes": 1227,
+      "sha256": "99dce53d90735df6d6b6cc5a6b6fd07f756505e4e599d323c901c3814df60e0d",
+      "uncompressedBytes": 29092,
+      "uncompressedSHA256": "e970e217ab7eea67c23bb68cd6e08728d0cb28376a1355ea69123b7bc1ef5c34"
+    },
+    {
+      "file": "neural-vad-probe.json.gz",
+      "bytes": 4106,
+      "sha256": "abe6badc05aad2e9ebed950f15ea4b8c7cb73ca8e7a34c59fbbe08a784de74c7",
+      "uncompressedBytes": 21656,
+      "uncompressedSHA256": "80612fb59cc5cb27788ef1aab0ff22a936b631504c0f2e2c3af25dd6872ac70c"
+    },
+    {
+      "file": "neural-vad-repository.json.gz",
+      "bytes": 119,
+      "sha256": "4bbc3918164f859906abfb6c30cd2f7fbc24346b16553e7f1071dc5f2ec9412b",
+      "uncompressedBytes": 107,
+      "uncompressedSHA256": "697e3c9cbad6c1ae3b0d11cd68177057dd38734529d5e4517b081cc4f9999e42"
+    },
+    {
+      "file": "neural-vad-reviewed-results.json.gz",
+      "bytes": 1227,
+      "sha256": "99dce53d90735df6d6b6cc5a6b6fd07f756505e4e599d323c901c3814df60e0d",
+      "uncompressedBytes": 29092,
+      "uncompressedSHA256": "e970e217ab7eea67c23bb68cd6e08728d0cb28376a1355ea69123b7bc1ef5c34"
+    },
+    {
+      "file": "neural-vad-reviewed.json.gz",
+      "bytes": 4107,
+      "sha256": "2b50ae8a3ec41d63fddc2fa4b850517e6058383dc78b2feda6b614d82855090f",
+      "uncompressedBytes": 21659,
+      "uncompressedSHA256": "6c26cf2d4c642bb4457666aa2e8da6f0c58f8387a5eb502318b840513e51e275"
+    },
+    {
+      "file": "neural-vad-tree.json.gz",
+      "bytes": 701,
+      "sha256": "1de4a6c73a80237783f4912f3fa9670372c152f13f854a0aca107459893fd810",
+      "uncompressedBytes": 1896,
+      "uncompressedSHA256": "0d7531dedf99a0cf3b260c37a8cb24a3496ac7746aed082385163c862fac09c3"
+    },
+    {
+      "file": "prepare-analysis-probe.py.gz",
+      "bytes": 678,
+      "sha256": "3afb2d713fcdafb86eda7d620077bd501e3495c07da386adb9dee45fd289106a",
+      "uncompressedBytes": 1204,
+      "uncompressedSHA256": "c33b5514d74ef51a0c20f47dfbe58d5a966f983e1c897e356781818e9ae31141"
+    },
+    {
+      "file": "prepare-real-noise-v1.py.gz",
+      "bytes": 1361,
+      "sha256": "6ecaed4ca59a229413a444d2d81cf7fa8041de6c36fd97bbeba4f32ada837bed",
+      "uncompressedBytes": 2741,
+      "uncompressedSHA256": "2d5b73ab562558efae6bfb7be29edbac7ed9196c643f4f43ac7b36903c934c9f"
+    },
+    {
+      "file": "prepare-real-noise.py.gz",
+      "bytes": 1362,
+      "sha256": "afc0b6c51800d4bc200c77871c8c407b3640630fe239c9e8e0f2023f65c5ceaa",
+      "uncompressedBytes": 2740,
+      "uncompressedSHA256": "fa30e21c5025491a536113b6b80ca181382a62109c8e489c371e45f641a946ee"
+    },
+    {
+      "file": "production-review.json.gz",
+      "bytes": 286,
+      "sha256": "f181c3caadc8ea6b5d38d7d327e4c4d2bf7148817985b69e4cb3e7a75ec3024a",
+      "uncompressedBytes": 385,
+      "uncompressedSHA256": "b07f68598c7a07c2f5863533957a502a6ea199da8e2555dc49aa9ca49de80ceb"
+    },
+    {
+      "file": "qualification-environment.json.gz",
+      "bytes": 281,
+      "sha256": "86c4566b152f85df0336cec1f6c042b6b62673a87083272ca931014f19c19795",
+      "uncompressedBytes": 366,
+      "uncompressedSHA256": "97a877575fd21fab15b02c97d7cf5fa87e480c7047678ad5984041651d202975"
+    },
+    {
+      "file": "real-noise--manifest.json.gz",
+      "bytes": 5290,
+      "sha256": "dbeeff9820fd47bbe926a11847417f5de73175c807abe0a2bb00a410833e93d4",
+      "uncompressedBytes": 73187,
+      "uncompressedSHA256": "0874bdefc9c7f11a617918f7d931c98aec81c0aa91977d931ae68d4dfe73b4d2"
+    },
+    {
+      "file": "real-noise-acoustic-pilot.json.gz",
+      "bytes": 2830,
+      "sha256": "f9b3303b2bee658a62494ba3e9dd785454fa469fdd7bd7bbc941eeebcd6846e6",
+      "uncompressedBytes": 60020,
+      "uncompressedSHA256": "7195181390e5667bf81032cad691882ebd103c201fb3ff42f479cce865f99920"
+    },
+    {
+      "file": "real-noise-acoustic-score.json.gz",
+      "bytes": 1327,
+      "sha256": "88eb1aba863c7c12666bee9a89a02b103b93a7f80941d6d7d879226b1ca76a31",
+      "uncompressedBytes": 15083,
+      "uncompressedSHA256": "312a4d5c27e61f82b2345e83d6ec30874058164ec8d08cf52a3c99fa32be59b3"
+    },
+    {
+      "file": "real-noise-confidence-pilot.json.gz",
+      "bytes": 2321,
+      "sha256": "85e630bbe4a4e10997493c7b2e8f99d3092d56ae8ab34917b88fd9ab83904ab8",
+      "uncompressedBytes": 61907,
+      "uncompressedSHA256": "2cc6e617f1807082a1c4fa59bc1b48bf2bd5774c9a0d5d84ca77ccf8fa666f7e"
+    },
+    {
+      "file": "real-noise-confidence-score.json.gz",
+      "bytes": 1252,
+      "sha256": "e00f5694940bdc9790cfb8e4c5d2b58bb62e11c8a64807085cf140da7b37088c",
+      "uncompressedBytes": 14922,
+      "uncompressedSHA256": "a6abd1eac9f3f683b91c646707cc48b2f450a162e31f7397eeb07e8f5752ee20"
+    },
+    {
+      "file": "real-noise-pilot-manifest.json.gz",
+      "bytes": 2285,
+      "sha256": "9f0ac4f9fed491382df9cfb8cc897f02ff1dd4bba76d9690d490f3df3c176939",
+      "uncompressedBytes": 18954,
+      "uncompressedSHA256": "ed29a0f60b2be6a9ff9e80e57192dce9def255ccb3aa23f6e056ba5161a23ce8"
+    },
+    {
+      "file": "real-noise-selection-plan-v1.json.gz",
+      "bytes": 375,
+      "sha256": "95a071186977ca368c7f199286edd4e96bdd73023e75ee276cf1084b076433f4",
+      "uncompressedBytes": 601,
+      "uncompressedSHA256": "3dd1434a599bc8119159fb6e0c259cb9591b5cfe735e27c5c8214717fa183ee6"
+    },
+    {
+      "file": "real-noise-selection-plan.json.gz",
+      "bytes": 373,
+      "sha256": "128dde1e231f51ece53ffca30fb21f07a28c393cbb868fc1d7711a7ab2315558",
+      "uncompressedBytes": 601,
+      "uncompressedSHA256": "b12f29109fa8dd20d903d3bf92b9120d8496eb10baefc3b15fa08ad0e6cfafc9"
+    },
+    {
+      "file": "real-noise-shipped-pilot.json.gz",
+      "bytes": 2782,
+      "sha256": "ced7fa19fb2c221bfb9d170129be0bfef564a40bf1825bd3d0fdd8bcc6148cce",
+      "uncompressedBytes": 62709,
+      "uncompressedSHA256": "e29f04278ef5d7b531cbd4b6c95f2c9faf7cae7d9789cd4c3bc5fd21491b3983"
+    },
+    {
+      "file": "shipped-freeze.json.gz",
+      "bytes": 14520,
+      "sha256": "9c2e4cfbb688e06a5eb6e18039792ade850d4032a0470b0aa00415725ea41047",
+      "uncompressedBytes": 35189,
+      "uncompressedSHA256": "a6862dc1820ea3fcaa38352334f6bf2d1720f6130e9dc7a6909c4ef98650410e"
+    },
+    {
+      "file": "sillies-whisper-followup-acoustic-analysis-normalized-probe.log.gz",
+      "bytes": 963,
+      "sha256": "502c59cbc5789db99c0fe6d997c3111791eaad5f6b4bc03e2019eba48db75c4e",
+      "uncompressedBytes": 8115,
+      "uncompressedSHA256": "e3abedb9b14e392eca1c0b585e76afd287a36e6c5f9d565b09e2be85f7a944b8"
+    },
+    {
+      "file": "sillies-whisper-followup-acoustic-build.log.gz",
+      "bytes": 298,
+      "sha256": "e04fb6d6c75e22e91426e4d24741e8358f5d7c452111efa03920fb7315b18033",
+      "uncompressedBytes": 699,
+      "uncompressedSHA256": "4384f3d8f4178d08e68162a3fe19196daf822d748c4258f25bb92fd38e27bcf9"
+    },
+    {
+      "file": "sillies-whisper-followup-acoustic-candidate-development.log.gz",
+      "bytes": 2466,
+      "sha256": "b7609c7ef844425d29b0a04b9495ae470895f54abf7f093729b7725c595a9b54",
+      "uncompressedBytes": 14405,
+      "uncompressedSHA256": "7f69a3d75a119aeb70c14c9564cff2a3a2fbe926b9f1e7da3e077a9eb6fdb200"
+    },
+    {
+      "file": "sillies-whisper-followup-acoustic-development-score.log.gz",
+      "bytes": 510,
+      "sha256": "f26be4d757c3e9eabf41e171625195765c4c36f3ec15947787de811eb0049fe1",
+      "uncompressedBytes": 1013,
+      "uncompressedSHA256": "ecdfe4ba501961d5329de332a563006809f05876ed6c9ed7f862d883fcfb8076"
+    },
+    {
+      "file": "sillies-whisper-followup-acoustic-focused.log.gz",
+      "bytes": 1269,
+      "sha256": "5cbe07dfceab4b9daddeee9516ae72ce4f404acdf0fb9cc42582485b4f167e58",
+      "uncompressedBytes": 5460,
+      "uncompressedSHA256": "54b6c76fba9c2f1400df68b162b3ccb0afbdb2f2074c7b7cf2c56cf72fdaef10"
+    },
+    {
+      "file": "sillies-whisper-followup-acoustic-real-noise-probe-v2.log.gz",
+      "bytes": 965,
+      "sha256": "6beea8ad3436415a7b4319148e5dd9916baf0eb836fdb07d07f1e01c1ad1362f",
+      "uncompressedBytes": 9169,
+      "uncompressedSHA256": "a580397274b3acde05aa1df622d7cfbca5638d9ef392374ef4a1db9a1c45de04"
+    },
+    {
+      "file": "sillies-whisper-followup-acoustic-real-noise-probe.log.gz",
+      "bytes": 1262,
+      "sha256": "7702ba8ed3c6431a30cd8ac773e163dd63823f1595452763005bb0059622a2f5",
+      "uncompressedBytes": 10487,
+      "uncompressedSHA256": "7606456e6c092990d5b7bacf10a4b67ec525277a8c4c1cfee2981f62facb644b"
+    },
+    {
+      "file": "sillies-whisper-followup-acoustic-shipped-development.log.gz",
+      "bytes": 2496,
+      "sha256": "5239fb662751e3833bebb5f12e2247c6d87aa58ba61059807793c0cfc9588522",
+      "uncompressedBytes": 14471,
+      "uncompressedSHA256": "d11c20e067963c2b39fa8f179aea468d01cada1d56daa4adc312807f055d5326"
+    },
+    {
+      "file": "sillies-whisper-followup-baseline-build.log.gz",
+      "bytes": 8847,
+      "sha256": "8509e76e42250f2bf908ca79b19028233eb8403a708c58ed3765f16459179762",
+      "uncompressedBytes": 89953,
+      "uncompressedSHA256": "d19247e0a19dcf60d1a9660b6bbcdd98e2625ac2966c686fbbd9fea2711776c1"
+    },
+    {
+      "file": "sillies-whisper-followup-build.log.gz",
+      "bytes": 362,
+      "sha256": "f542b498150d04707bb1f0c7f61df6e8f63960d2178cd068ab676676b1d0bf21",
+      "uncompressedBytes": 793,
+      "uncompressedSHA256": "bd59c7c4006bf206e743974aa771aaf8cbca05c037b0955eefe9967ed5a97dd1"
+    },
+    {
+      "file": "sillies-whisper-followup-confidence-build.log.gz",
+      "bytes": 383,
+      "sha256": "fdae44268b4c494dbfbec3a042c78260a1b0e8939e87a7e5a3beff7a497ea54f",
+      "uncompressedBytes": 866,
+      "uncompressedSHA256": "76f6b5ec78b2d43b01dae406b4327b5d83909f71d7c0bb209b36dfaaec883a5f"
+    },
+    {
+      "file": "sillies-whisper-followup-confidence-development-score.log.gz",
+      "bytes": 504,
+      "sha256": "2a8a777b1e8bb7914c410db618a66911475d77635ae2c934f0e1cdd66600a788",
+      "uncompressedBytes": 1025,
+      "uncompressedSHA256": "515c1915a455a1e68838e4b52106cac238e2f9591225ad6da1dba64508ed232f"
+    },
+    {
+      "file": "sillies-whisper-followup-confidence-development.log.gz",
+      "bytes": 2296,
+      "sha256": "1aec46216e557883cf067ec3532c7a58d994a723edfab7d0e3b4b4938df43618",
+      "uncompressedBytes": 14035,
+      "uncompressedSHA256": "fb9fed84900c7e691e66ab9112ecbfcc177a1ad4496897256ca1c77782b5883a"
+    },
+    {
+      "file": "sillies-whisper-followup-confidence-focused.log.gz",
+      "bytes": 917,
+      "sha256": "c4dd1f33ea6bcc5e404e5c801bbe3a75c722d696f3f472f261739ca87b2a0f2b",
+      "uncompressedBytes": 2351,
+      "uncompressedSHA256": "8cfc59ee597b280c426ea3f5ded632ddc7597053f03e919f5648e025ba2164d2"
+    },
+    {
+      "file": "sillies-whisper-followup-final-check.log.gz",
+      "bytes": 51845,
+      "sha256": "b9c263ca5c83b4f147688bdb47b16e5fcf2a82b51fe82a8963f9e58dd4a0cb4a",
+      "uncompressedBytes": 319487,
+      "uncompressedSHA256": "b0a478100bada8e0cb3966c396dbbcf861caac937aeec99662dea1d849333e65"
+    },
+    {
+      "file": "sillies-whisper-followup-final-commit-check.log.gz",
+      "bytes": 50981,
+      "sha256": "57e912893ff8fe3c2e72bedfb3067abeae7a9bd0ff16a5b18b5e69cc18a394d0",
+      "uncompressedBytes": 318021,
+      "uncompressedSHA256": "b7419a4bb88f741cb24e38a37bb20170c55eddaae77f9b27219828804885571a"
+    },
+    {
+      "file": "sillies-whisper-followup-final-probe-headless.log.gz",
+      "bytes": 538,
+      "sha256": "ce9f3b2b02d08cb3fdf727afd4b1170c8ca18c2314f0961e069aba5248b2ea05",
+      "uncompressedBytes": 944,
+      "uncompressedSHA256": "6907ab9c1e30c9ed4785e4fdf618a1fc57b00216e6485efa25198a9814d9d02a"
+    },
+    {
+      "file": "sillies-whisper-followup-final-release-build.log.gz",
+      "bytes": 400,
+      "sha256": "4f1063eb5269dc9bed360753b5d3bad9b58f51f8266f7c0f31bc96a7978a42f6",
+      "uncompressedBytes": 889,
+      "uncompressedSHA256": "37f208c5e9d738898ebf43dabb13aa519fb9ea31597d6226b90f495687c5ee83"
+    },
+    {
+      "file": "sillies-whisper-followup-final-reviewed-check.log.gz",
+      "bytes": 50682,
+      "sha256": "3217c19533fb2c3ac9eadea47a7c325c4b3f46e084c00057197593286f69dbaa",
+      "uncompressedBytes": 317353,
+      "uncompressedSHA256": "d1053ce936b8af65a98faad0a1edb29fc4eddf5f169c474f90de5af64a89117e"
+    },
+    {
+      "file": "sillies-whisper-followup-neural-challenging-probe.log.gz",
+      "bytes": 648,
+      "sha256": "f6d7930f4f4a5c3e5f35072944c659bd3c31c578bcff27bb4c58418fffc8582a",
+      "uncompressedBytes": 1160,
+      "uncompressedSHA256": "cab1a7776dc7c009d8880c3c15dd39e1b808883177c5a7f03c45b2e49ce391e9"
+    },
+    {
+      "file": "sillies-whisper-followup-neural-challenging-reviewed.log.gz",
+      "bytes": 564,
+      "sha256": "980649089ec6c00c45f00dc87909e18cc1087501e9362376489eba82d98bd9d3",
+      "uncompressedBytes": 963,
+      "uncompressedSHA256": "2527dfdfd5433c68aabf6a69af50f95df53677b7e6bb6e5be6aa4400b25ba11d"
+    },
+    {
+      "file": "sillies-whisper-followup-neural-probe-build.log.gz",
+      "bytes": 3473,
+      "sha256": "38bfd105ea59d35665c96bb3f8cb6d179510bf844f47609d478a5e2096572f91",
+      "uncompressedBytes": 24200,
+      "uncompressedSHA256": "fa02e9515e5ddb4428e084d4e011cfe143c173b97dc346349f766795f5a30202"
+    },
+    {
+      "file": "sillies-whisper-followup-neural-probe-fixed.log.gz",
+      "bytes": 1061,
+      "sha256": "bf407f7a07bac35650781de8c2c512c98f48847b019cca1079ccb4db68fa10c4",
+      "uncompressedBytes": 3613,
+      "uncompressedSHA256": "9643d8c270eed1c34a13c96bd91635d866cc72cd3cf0eec3d9a881197481555d"
+    },
+    {
+      "file": "sillies-whisper-followup-neural-probe.log.gz",
+      "bytes": 3301,
+      "sha256": "c0ec862dcb21b45c876f985c2237f5e3388dd134387d44e2121844706a669c78",
+      "uncompressedBytes": 23645,
+      "uncompressedSHA256": "83f85962d82a43a2c43fd6bff9d19aade9d946246ed35342f2401df7c4f73fae"
+    },
+    {
+      "file": "sillies-whisper-followup-neural-reviewed.log.gz",
+      "bytes": 1238,
+      "sha256": "01c18e26bb8dfd28d17bcf22881953940374041b46d051ca20ddd291520352a8",
+      "uncompressedBytes": 3989,
+      "uncompressedSHA256": "b973ecc6f9d4a31bd3d97e240db159f0b3164a6b6607688c3f9c17493494cc62"
+    },
+    {
+      "file": "sillies-whisper-followup-real-noise-acoustic-score.log.gz",
+      "bytes": 440,
+      "sha256": "3b3fde92fa7536ec29d9a4d5a7fc2bbb38e8573d705a58a3e1da8af6c8960a02",
+      "uncompressedBytes": 914,
+      "uncompressedSHA256": "1c343bb4145735030a602822b0250919cb91389f6f4ec91957a8ddc365b44cce"
+    },
+    {
+      "file": "sillies-whisper-followup-real-noise-acoustic.log.gz",
+      "bytes": 499,
+      "sha256": "408622e22345810039dd016baa34e01b2dd4da2c45358671f3886598a348a8f1",
+      "uncompressedBytes": 3010,
+      "uncompressedSHA256": "6aadd1ed9e25741e9ba7d4da54fcf00458ac11d402b47678de671d3a6027482b"
+    },
+    {
+      "file": "sillies-whisper-followup-real-noise-confidence-score.log.gz",
+      "bytes": 445,
+      "sha256": "939628089f5b2e5cb5ecb89eb492f6e4eedf9c45992a211d404382a592c90a1a",
+      "uncompressedBytes": 913,
+      "uncompressedSHA256": "1e11bb63618f3ec9d724791c8b8d9681c275f7cd27ecb960a1169592b6b5f166"
+    },
+    {
+      "file": "sillies-whisper-followup-real-noise-confidence.log.gz",
+      "bytes": 355,
+      "sha256": "19171b1d5e245f401f5b997f2c4681b7b2c041d84e69981add67e71789e1972e",
+      "uncompressedBytes": 2692,
+      "uncompressedSHA256": "8f76b2b1636e0f88b78061dc008a77af09b6fab114e3934202a35247fa5033ce"
+    },
+    {
+      "file": "sillies-whisper-followup-real-noise-prepare-v2.log.gz",
+      "bytes": 50,
+      "sha256": "28fca4f09682f9c698c8472b8a67160778cca78a8879f332958a8ef6f02e65d1",
+      "uncompressedBytes": 30,
+      "uncompressedSHA256": "be7b89690fd855d4dd1e068e18451367760073e0b3ceb0c741a864b7cc37f234"
+    },
+    {
+      "file": "sillies-whisper-followup-real-noise-prepare.log.gz",
+      "bytes": 254,
+      "sha256": "1d3703053f728208abb973ca32f225855dceeb6bd6fdc7315d85d29826ae149d",
+      "uncompressedBytes": 420,
+      "uncompressedSHA256": "dfb4286fa13b205aa3ae3dee086df6d9a78adf423db6ccc2aeec9fbf82bde979"
+    },
+    {
+      "file": "sillies-whisper-followup-real-noise-shipped.log.gz",
+      "bytes": 529,
+      "sha256": "1e99c687dc09e92172cd6c36804d9a86a8fa38bf939000a1539648fdd2f4cc9b",
+      "uncompressedBytes": 3072,
+      "uncompressedSHA256": "e0ab512a008d871bafaa153cfe7e936b1d9e953448db1706fd3d67e2bc031184"
+    },
+    {
+      "file": "sillies-whisper-followup-restore-fresh-v2.log.gz",
+      "bytes": 95,
+      "sha256": "0326756e764b0dd3a5339996ede76d89ff17a9468a38bc494fb3d7ab39f1df4a",
+      "uncompressedBytes": 84,
+      "uncompressedSHA256": "886a08d1f24d7924b5a79907900f8c2d601af947d2963e7f748cb09961e1ed80"
+    },
+    {
+      "file": "sillies-whisper-followup-restore-fresh.log.gz",
+      "bytes": 582,
+      "sha256": "de6a3973f6ee69bd566dca1249d5cebbd2caefe9ee8a5dbc8fb483a7a59ad6c9",
+      "uncompressedBytes": 2078,
+      "uncompressedSHA256": "ef74bf7c6564140f653e86f7c8c06313d6691d31ee47cfb1ff97e07b8343874c"
+    },
+    {
+      "file": "sillies-whisper-followup-restore-long.log.gz",
+      "bytes": 95,
+      "sha256": "87fb03f8a7b5b510a37240acdd772172f9dac26782e980a714692752657de403",
+      "uncompressedBytes": 83,
+      "uncompressedSHA256": "182a0bfac84c7de0c5d4fef433914987f2907fb12afb3706e8aa59f838001603"
+    },
+    {
+      "file": "sillies-whisper-followup-romanian-baseline.log.gz",
+      "bytes": 1379,
+      "sha256": "a9abb1c81605e64a8770b15f9583d7d3eafd3a473a560428dee0fc871a34be6d",
+      "uncompressedBytes": 16032,
+      "uncompressedSHA256": "cffb4eed05ce61817fd319deff9bda75640c6c3a34d78960c32cb4af965bbcee"
+    },
+    {
+      "file": "sillies-whisper-followup-romanian-commit.log.gz",
+      "bytes": 591,
+      "sha256": "9aa4e8a584a51c0cda6943a233dc599d7466e8d764b158c6cc9a067e7efc6fe9",
+      "uncompressedBytes": 7812,
+      "uncompressedSHA256": "c20b571ea1545f17d7c9068570618ce6794d60bb146b9647dd182bf40192ff28"
+    },
+    {
+      "file": "sillies-whisper-followup-romanian-score.log.gz",
+      "bytes": 477,
+      "sha256": "b073d2acaf278b18615d8337bb247d568a3427307e6c23d06af94e3fb420447b",
+      "uncompressedBytes": 969,
+      "uncompressedSHA256": "d8f408bed78630797e8dcdab02fde8e679e5f9ba98b00014d9cc0ebc0f656f78"
+    },
+    {
+      "file": "sillies-whisper-followup-romanian-shipped.log.gz",
+      "bytes": 1883,
+      "sha256": "98861e59f2c0078ef8c1867f4f0e03fbb4a95497d0d2719ff783c3ba507fa84a",
+      "uncompressedBytes": 17165,
+      "uncompressedSHA256": "41f20c308c1500ef7ba9e948e1232350c6951b31ce2de7f2be37112c322dc1bb"
+    },
+    {
+      "file": "sillies-whisper-followup-selection-resumed.log.gz",
+      "bytes": 369,
+      "sha256": "97f4fe77248f6b871197b9cfdf516f576775f60d7a42d8224b9f06670dce442d",
+      "uncompressedBytes": 1112,
+      "uncompressedSHA256": "032e4b2b83ca9e3d5367b48ccd945b1e5563037465661ce4c694ff1b41817567"
+    },
+    {
+      "file": "sillies-whisper-followup-selection-v1-final.log.gz",
+      "bytes": 382,
+      "sha256": "725b55594066c673e480913c37503ebad4f96305a4cbb9a68296505115ed7f56",
+      "uncompressedBytes": 1165,
+      "uncompressedSHA256": "dc29679d69f5c61e84d0c29f53143483c704f9a9c27eecedf9077ee9d126dd19"
+    },
+    {
+      "file": "sillies-whisper-followup-selection-v2-resumed.log.gz",
+      "bytes": 434,
+      "sha256": "5b55221eb8e29db5ff30daced7038dbfe2f883a2e29ee87658155a90524c80f5",
+      "uncompressedBytes": 1630,
+      "uncompressedSHA256": "26fecf2c7d8ca191071e88bff0e91603f885f553e69f76ffeea7a9c5813feccc"
+    },
+    {
+      "file": "sillies-whisper-followup-selection-v2.log.gz",
+      "bytes": 411,
+      "sha256": "4c65380271762715d91e97c731e56a9ce0e4aef855e878149ffc3d7a4d824856",
+      "uncompressedBytes": 1548,
+      "uncompressedSHA256": "a7447a98467f154414eeef9282d3a89769a496622bfed47125effc3a42739530"
+    },
+    {
+      "file": "sillies-whisper-followup-selection-v3.log.gz",
+      "bytes": 281,
+      "sha256": "e01710515e204a439023607612db2add524532eea50370c92e17af2288b6c707",
+      "uncompressedBytes": 1323,
+      "uncompressedSHA256": "7d7df905d2638926da85edb645ab26d8ce31aaa52b74a2c7c4ae7c48ed28862c"
+    },
+    {
+      "file": "sillies-whisper-followup-selection.log.gz",
+      "bytes": 687,
+      "sha256": "5acdd59d359c1a1501439bdf7ea6c33d6f317f899272582e60603907e22b42bf",
+      "uncompressedBytes": 2366,
+      "uncompressedSHA256": "7a7fd7877bde74ab072524b9023d162019455800820f9a67055253a022614272"
+    },
+    {
+      "file": "cleanup-planned.json.gz",
+      "bytes": 602,
+      "sha256": "32fa063f2bd1c04cf3c449e9f69643a27723b7ca048c55524c4ec6ade08b7027",
+      "uncompressedBytes": 4134,
+      "uncompressedSHA256": "d91b6e1d2f4f3c3d14b63928ffe7f567f4f65decb55db5175b07bd2d0a6f3f4f"
+    },
+    {
+      "file": "cleanup.json.gz",
+      "bytes": 809,
+      "sha256": "b990e878fd194ade188ff1e0b1a98c1fd2f3a89e23cb08ba57bf7598c5bdc60a",
+      "uncompressedBytes": 4523,
+      "uncompressedSHA256": "ca97df1c60d0ebc3a33304fe3d7a28b927958401d8b1b6ff0f4f11a1c28b7919"
+    }
+  ]
+}

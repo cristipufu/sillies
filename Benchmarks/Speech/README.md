@@ -124,3 +124,24 @@ This validates matching inputs and compares the selected arms with the raw gate.
 comparisons reject `boundary-effect`: identical start/count traces cannot establish equal normalized
 PCM or decoder state. Compound English cardinal values are normalized only in the separate retention
 guard; original-token WER and unknown/malformed numeric expressions remain conservative.
+
+## Probe an acoustic model without capture
+
+`NativeAcousticModelReplayTests` loads an explicitly supplied, checksum-verified local Core ML VAD
+through the existing native SDK. It never downloads a model. The request contains `modelDirectory`,
+`output` and `fixtures` with `id`, `audio`, `sha256` and `expectedSpeech`. Supply file URLs, mono PCM16
+16 kHz audio, at most 128 fixtures and twelve seconds per fixture; the output path must be new.
+
+```sh
+SILLIES_NEURAL_ACOUSTIC_REPLAY=/path/to/request.json \
+  bash scripts/test.sh --bundle SilliesAppTests --filter nativeAcousticModelReplayMatchesPublicFixtures
+```
+
+This headless, opt-in functional probe uses CPU-only inference, fresh recurrent state for every
+file and the SDK's default probability threshold. It records bounded probabilities/chunk counts for
+captured audio and existing detector-only gain. Supplied gold labels remain assertions: false
+classifications fail the run while preserving the complete numeric output. It does not measure
+transcription quality or native performance. Default checks do not load the model or read these files.
+The [long-window investigation](../../docs/reports/whisper-long-window-noise-2026-11-14.md) retains
+both passing speech challenges and failed noise probes; detector results do not justify changing
+production admission without end-to-end qualification.

@@ -15,8 +15,10 @@ struct SpeechWindowBuffer {
   static let sampleRate: Double = 16_000
   static let maximumWindowDuration: TimeInterval = 12
   static let maximumBufferedDuration: TimeInterval = 24
+  static let maximumReplayDuration = maximumWindowDuration / 2
   var cadence: SpeechDecodeCadence = .windowed
-  private static let leadingContext: TimeInterval = 0.2
+  private static let leadingContext = SpeechWindowConfiguration.leadingContext
+  var boundaryReplayDuration = leadingContext
   private static let analysisFrameSamples = 160
   var boundaries = SpeechBoundaryPolicy(mode: .baseline)
   private(set) var samples: [Float] = []
@@ -35,8 +37,7 @@ struct SpeechWindowBuffer {
     let activity = boundaries.observe(
       energy: vDSP.rootMeanSquare(incoming), sampleCount: incoming.count)
     guard activity != .invalid else {
-      throw SpeechError.unavailable(
-        String(localized: "Speech audio changed to an unexpected format."))
+      throw SpeechError.invalidAudioFormat
     }
     samples.append(contentsOf: incoming)
     if activity == .voice {
@@ -100,7 +101,8 @@ struct SpeechWindowBuffer {
     guard window.completion != .draft else { return }
     let retireTime =
       window.completion == .boundary
-      ? max(window.start, boundary - Self.leadingContext) : window.end
+      ? max(min(window.end, window.start + Self.leadingContext), boundary - boundaryReplayDuration)
+      : window.end
     let count = max(
       0, min(samples.count, Int((retireTime * Self.sampleRate).rounded()) - Int(startSample)))
     discard(count)

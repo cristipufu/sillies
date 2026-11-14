@@ -7,6 +7,18 @@ import XCTest
 @testable import SilliesSpeech
 
 final class WindowSpeechChannelTests: XCTestCase, @unchecked Sendable {
+  func testInvalidReplayDurationsFailBeforeStartingAWorker() {
+    for duration in [-1, Double.nan, .infinity, SpeechWindowBuffer.maximumReplayDuration + 1] {
+      XCTAssertThrowsError(
+        try WindowSpeechChannel(
+          engine: FailingWindowEngine(),
+          request: .init(
+            language: .automatic, output: { _ in XCTFail("Invalid channel produced text") },
+            failure: { XCTFail($0) }),
+          configuration: .init(boundaryReplayDuration: duration)))
+    }
+  }
+
   func testFailureDuringFinalDrainIsReportedBeforeCompletion() async throws {
     let events = Mutex<[String]>([])
     let owner = Mutex<WindowSpeechChannel?>(nil)

@@ -390,5 +390,7 @@
   },
   "VaultTopicNotesTests.swift": {
     "default": "headless"
-  }
+  },
+  "NativeSpeechWindowReplayTests.swift": { "default": "headless" },
+  "NemotronStreamingEngineTests.swift": { "default": "headless" }
 }

@@ -152,6 +152,48 @@ final class SpeechWindowTests: XCTestCase {
     XCTAssertTrue(buffer.samples.isEmpty)
   }
 
+  func testBoundaryReplayRetainsConfiguredDecoderHistoryWithoutGrowingTheWindow() throws {
+    var buffer = SpeechWindowBuffer()
+    buffer.boundaryReplayDuration = 5.6
+    let count = Int(SpeechWindowBuffer.maximumWindowDuration * SpeechWindowBuffer.sampleRate)
+    try buffer.append([Float](repeating: 0.1, count: count))
+    let first = try XCTUnwrap(buffer.next(mode: .catchingUp))
+    buffer.retire(first, through: 10)
+    let tail = try XCTUnwrap(buffer.next(mode: .draining))
+    XCTAssertEqual(tail.start, 4.4, accuracy: 0.0001)
+    XCTAssertLessThanOrEqual(tail.samples.count, count)
+    XCTAssertEqual(tail.end, first.end, accuracy: 0.0001)
+  }
+
+  func testBoundaryAlwaysRetiresAudioWhenRecognizedWordsPrecedeReplayContext() throws {
+    for replay in [SpeechWindowConfiguration.leadingContext, 5.6] {
+      var buffer = SpeechWindowBuffer()
+      buffer.boundaryReplayDuration = replay
+      let count = Int(SpeechWindowBuffer.maximumWindowDuration * SpeechWindowBuffer.sampleRate)
+      try buffer.append([Float](repeating: 0.1, count: count))
+      let first = try XCTUnwrap(buffer.next(mode: .catchingUp))
+      buffer.retire(first, through: first.start)
+      XCTAssertGreaterThan(buffer.retainedStartSample, 0)
+      XCTAssertLessThan(buffer.samples.count, count)
+    }
+  }
+
+  func testContinuousWordClockPreservesShortWordsAndRepeatedWordsAcrossARollover() {
+    var transcript = SpeechWindowTranscript()
+    _ = transcript.receive(
+      .init(words: [.init(text: "yes", start: 10.7, end: 10.76)], timing: .continuous),
+      window: window(start: 0, duration: 12, completion: .boundary))
+    let result = transcript.receive(
+      .init(
+        words: [
+          .init(text: "yes", start: 0.14, end: 0.20),
+          .init(text: "yes", start: 0.19, end: 0.27),
+          .init(text: "no", start: 0.28, end: 0.35),
+        ], timing: .continuous),
+      window: window(start: 10.56, duration: 3, completion: .utterance))
+    XCTAssertEqual(result.phrases.first?.text, "yes no")
+  }
+
   private func window(start: Double, duration: Double, completion: SpeechWindowBuffer.Completion)
     -> SpeechWindowBuffer.Window
   {

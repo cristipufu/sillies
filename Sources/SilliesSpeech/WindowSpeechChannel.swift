@@ -40,6 +40,8 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
     configuration: SpeechWindowConfiguration = .init()
   ) throws {
     guard
+      configuration.boundaryReplayDuration.isFinite, configuration.boundaryReplayDuration >= 0,
+      configuration.boundaryReplayDuration <= SpeechWindowBuffer.maximumReplayDuration,
       let format = AVAudioFormat(
         standardFormatWithSampleRate: SpeechWindowBuffer.sampleRate, channels: 1)
     else {
@@ -47,6 +49,7 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
     }
     var initial = State(converter: SpeechBufferConverter(format: format))
     initial.buffer.cadence = configuration.cadence
+    initial.buffer.boundaryReplayDuration = configuration.boundaryReplayDuration
     initial.buffer.boundaries = .init(
       mode: request.context.windowBoundaryMode(for: configuration))
     state = StateOwner(initial)
@@ -75,7 +78,7 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
             var input = SpeechWindowRequest(
               samples: window.samples, language: request.language, context: request.context)
             input.window = .init(
-              start: window.start, phase: window.completion == .draft ? .partial : .complete)
+              start: window.start, phase: window.completion.inferencePhase)
             let result: SpeechWindowResult
             if let cached = results.result(for: window) {
               result = cached

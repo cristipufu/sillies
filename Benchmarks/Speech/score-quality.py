@@ -4,6 +4,7 @@ import argparse
 from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass
 import copy
+import hashlib
 import math
 import json
 from pathlib import Path
@@ -66,20 +67,90 @@ def alignment(reference, hypothesis):
 
 
 # Numeric word forms are equivalent for value retention; WER still scores the original tokens.
-# Deliberately do not equate homophones ("to", "for") or infer missing number multipliers.
-CARDINAL_FORMS = {
+# Explicit multipliers are parsed; missing multipliers and homophones are never inferred.
+ENGLISH_CARDINAL_FORMS = {
     **{word: str(value) for value, word in enumerate(
         'zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen'.split())},
     **dict(zip('twenty thirty forty fifty sixty seventy eighty ninety'.split(), map(str, range(20, 100, 10)))),
+}
+CARDINAL_FORMS = {
+    **ENGLISH_CARDINAL_FORMS,
     **{word: str(value) for value, word in enumerate('zero unu doi trei patru cinci șase șapte opt nouă zece'.split())},
     'una': '1', 'două': '2',
 }
+NUMBER_SCALES = [('trillion', 10**12), ('billion', 10**9), ('million', 10**6), ('thousand', 1000)]
+NUMBER_WORDS = set(ENGLISH_CARDINAL_FORMS) | {name for name, _ in NUMBER_SCALES} | {'hundred', 'and'}
+MAX_NUMERAL_WORDS = 32
+
+
+def number_below_hundred(words):
+    if not words or any(word not in ENGLISH_CARDINAL_FORMS for word in words):
+        return None
+    values = [int(ENGLISH_CARDINAL_FORMS[word]) for word in words]
+    if len(values) == 1:
+        return values[0]
+    if len(values) == 2 and values[0] >= 20 and values[0] % 10 == 0 and 1 <= values[1] <= 9:
+        return sum(values)
+    return None
+
+
+def number_below_thousand(words):
+    if len(words) >= 2 and words[1] == 'hundred':
+        first = number_below_hundred(words[:1])
+        remainder = words[2:]
+        if remainder[:1] == ['and']:
+            remainder = remainder[1:]
+            if not remainder:
+                return None
+        last = number_below_hundred(remainder) if remainder else 0
+        if first is not None and 1 <= first <= 9 and last is not None:
+            return first * 100 + last
+        return None
+    return number_below_hundred(words)
+
+
+def number_expression(words):
+    for name, scale in NUMBER_SCALES:
+        if name not in words:
+            continue
+        if words.count(name) != 1:
+            return None
+        split = words.index(name)
+        first = number_below_thousand(words[:split])
+        remainder = words[split + 1:]
+        if remainder[:1] == ['and']:
+            remainder = remainder[1:]
+            if not remainder:
+                return None
+        last = number_expression(remainder) if remainder else 0
+        if first is not None and first > 0 and last is not None and last < scale:
+            return first * scale + last
+        return None
+    return number_below_thousand(words)
+
+
+def canonical_values(words):
+    result, index = [], 0
+    while index < len(words):
+        end = index
+        if words[index] in ENGLISH_CARDINAL_FORMS:
+            while end < len(words) and end - index < MAX_NUMERAL_WORDS and words[end] in NUMBER_WORDS:
+                end += 1
+        while end > index:
+            value = number_expression(words[index:end])
+            if value is not None:
+                result.append(str(value))
+                break
+            end -= 1
+        if end == index:
+            result.append(CARDINAL_FORMS.get(words[index], words[index]))
+            end += 1
+        index = end
+    return result
 
 
 def critical_losses(reference, baseline, adaptive):
-    def canonical(words):
-        return [CARDINAL_FORMS.get(word, word) for word in words]
-    truth_words, old_words, new_words = map(canonical, [reference, baseline, adaptive])
+    truth_words, old_words, new_words = map(canonical_values, [reference, baseline, adaptive])
     watched = {word for word in truth_words if word in {'no', 'not', 'never', 'nu', 'niciodată'} or any(c.isdigit() for c in word)}
     old, new, truth = Counter(old_words), Counter(new_words), Counter(truth_words)
     return sorted(word for word in watched if min(new[word], truth[word]) < min(old[word], truth[word]))
@@ -188,16 +259,18 @@ def validate_window_trace(row):
                 or not 0 < window['sampleCount'] <= MAX_WINDOW_SECONDS * WINDOW_SAMPLE_RATE
                 or window['start'] + window['sampleCount'] / WINDOW_SAMPLE_RATE > row['audioSeconds'] + AUDIO_TIME_TOLERANCE):
             raise ValueError('Window trace exceeds its audio bounds')
-    phases = {'draft': 'partial', 'boundary': 'complete', 'utterance': 'complete', 'session': 'complete'}
+    phases = {'draft': {'partial'}, 'boundary': {'boundary', 'complete'}, 'utterance': {'complete'}, 'session': {'complete'}}
     if any(w['completion'] not in phases for w in windows):
         raise ValueError('Unknown window completion')
     for inference in inferences:
-        if not any((w['start'], w['sampleCount'], phases[w['completion']]) ==
-                   (inference['start'], inference['sampleCount'], inference['phase']) for w in windows):
+        if not any(w['start'] == inference['start'] and w['sampleCount'] == inference['sampleCount']
+                   and inference['phase'] in phases[w['completion']] for w in windows):
             raise ValueError('Inference has no matching window decision')
 
 
 def score_boundary_effect(document):
+    if document.get('comparison', {}).get('kind') == 'end-to-end':
+        raise ValueError('Cross-version comparisons must retain actual outcomes; equal window traces do not establish equal preprocessing')
     pairs = validated_pairs(document)
     controlled = copy.deepcopy(document)
     equivalent, variations = [], []
@@ -220,14 +293,45 @@ def score_boundary_effect(document):
             'input_equivalent_pairs': equivalent, 'same_input_output_variations': variations}
 
 
+def compare_versions(baseline, candidate, baseline_mode='baseline', candidate_mode='adaptive'):
+    """Compare shipped and candidate behavior while preserving their complete source reports."""
+    before, after = validated_pairs(baseline), validated_pairs(candidate)
+    if baseline_mode not in {'baseline', 'adaptive'} or candidate_mode not in {'baseline', 'adaptive'}:
+        raise ValueError('Unknown comparison policy')
+    for key in ['model', 'revision', 'manifestSHA256', 'split', 'feed']:
+        if key not in baseline or baseline[key] != candidate.get(key):
+            raise ValueError('Cross-version models, inputs or delivery differ: ' + key)
+    if before.keys() != after.keys():
+        raise ValueError('Cross-version fixture sets differ')
+    rows = []
+    for identifier, pair in before.items():
+        old, new = pair[baseline_mode], after[identifier][candidate_mode]
+        if any(old[key] != new[key] for key in ['reference', 'language', 'condition', 'audioSeconds']):
+            raise ValueError('Cross-version paired fixture differs: ' + identifier)
+        rows += [{**old, 'mode': 'baseline'}, {**new, 'mode': 'adaptive'}]
+    return {**baseline, 'results': rows, 'expectedResults': len(rows),
+            'comparison': {'kind': 'end-to-end', 'baselineMode': baseline_mode, 'candidateMode': candidate_mode}}
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('results', type=Path)
     parser.add_argument('output', type=Path)
     parser.add_argument('--comparison', choices=['raw', 'boundary-effect'], default='raw')
+    parser.add_argument('--baseline', type=Path, help='Complete native report from the shipped executable')
+    parser.add_argument('--baseline-mode', choices=['baseline', 'adaptive'], default='baseline')
+    parser.add_argument('--candidate-mode', choices=['baseline', 'adaptive'], default='adaptive')
     arguments = parser.parse_args()
-    document = json.loads(arguments.results.read_text())
+    candidate_bytes = arguments.results.read_bytes()
+    document = json.loads(candidate_bytes)
+    if arguments.baseline:
+        baseline_bytes = arguments.baseline.read_bytes()
+        document = compare_versions(json.loads(baseline_bytes), document, arguments.baseline_mode, arguments.candidate_mode)
+        document['comparison'].update(baselineReportSHA256=hashlib.sha256(baseline_bytes).hexdigest(),
+                                      candidateReportSHA256=hashlib.sha256(candidate_bytes).hexdigest())
     result = score(document) if arguments.comparison == 'raw' else score_boundary_effect(document)
+    if arguments.baseline:
+        result['comparison'] = document['comparison']
     arguments.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
     decision = result if arguments.comparison == 'raw' else result['boundary_effect']
     print(json.dumps({key: value for key,value in decision.items() if key not in {'groups','cases','critical_regressions'}}, indent=2))

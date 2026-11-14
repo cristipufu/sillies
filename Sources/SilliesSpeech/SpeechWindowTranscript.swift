@@ -4,23 +4,26 @@ import Foundation
 struct SpeechWindowTranscript {
   private static let overlapDuration: TimeInterval = 1
   private static let timestampTolerance: TimeInterval = 0.08
+  private static let continuousTimestampTolerance = 1 / SpeechWindowBuffer.sampleRate
   private var committedThrough: TimeInterval = 0
   private var lastCommittedWord: SpeechWord?
 
   mutating func receive(_ result: SpeechWindowResult, window: SpeechWindowBuffer.Window) -> (
     phrases: [SpeechPhrase], retiredThrough: TimeInterval
   ) {
+    let tolerance =
+      result.timing == .continuous ? Self.continuousTimestampTolerance : Self.timestampTolerance
     var words = result.words.compactMap { word -> SpeechWord? in
       let start = window.start + word.start
       let end = min(window.end, window.start + word.end)
       guard start.isFinite, end.isFinite, end >= start,
         lastCommittedWord == nil
-          ? end >= committedThrough : end > committedThrough + Self.timestampTolerance
+          ? end >= committedThrough : end > committedThrough + tolerance
       else { return nil }
       return SpeechWord(
         text: word.text, start: max(window.start, start), end: end, boundary: word.boundary)
     }
-    if let previous = lastCommittedWord, let first = words.first,
+    if result.timing == .reestimated, let previous = lastCommittedWord, let first = words.first,
       first.start < committedThrough, first.end < committedThrough + Self.overlapDuration,
       first.text.trimmingCharacters(in: .punctuationCharacters).lowercased()
         == previous.text.trimmingCharacters(in: .punctuationCharacters).lowercased()

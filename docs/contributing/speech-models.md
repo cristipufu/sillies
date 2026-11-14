@@ -129,13 +129,22 @@ owns audio and utterance retirement. `SpeechRecognitionContext.windowBoundaryMod
 immutable `SpeechWindowConfiguration` at channel creation. Both `WindowSpeechModel` and the direct
 streaming adapter use that path. Providers supply qualified policy values and own native decoding;
 they never implement thresholding, calibration, buffering or utterance retirement. The default
-configuration retains baseline boundaries. Parakeet explicitly opts into its qualified adaptive
-policy. Whisper and Nemotron retain baseline boundaries because native qualification found
-noise, subgroup or critical-word regressions. Apple already forwards all audio to its analyzer
+configuration retains baseline boundaries. Parakeet and Nemotron opt into qualified adaptive policies.
+Whisper retains baseline boundaries pending noise-regression qualification. Apple already forwards all audio to its analyzer
 and has no local energy gate.
 `SpeechRecognitionContext.purpose` distinguishes continuous transcription from short utterances
 independently of inference priority. Short Talk/dictation channels keep their established policy.
 A request override exists for paired qualification; no user setting or persisted preference is added.
+
+A logical `SpeechWindowPosition.Phase.boundary` continues a streaming decoder; only `.complete`
+flushes an utterance. The shared incremental cursor appends unseen samples across overlapping
+windows, includes input gain in identity and bounds native history to 60 seconds. Providers map
+native times into the current window and declare continuous versus reestimated timing explicitly.
+Continuous clocks retain short and repeated words without applying independent-window deduplication.
+`SpeechSignalGain` owns bounded level policy in Core; recording and speaker-analysis audio stay raw.
+Nemotron derives replay context from its encoder configuration. Retrying a failed/cancelled native
+request must restart uncommitted progress, never skip already-accounted samples.
+See the [recovery qualification](../reports/nemotron-transcription-2026-11-14.md).
 
 Use the [file-only native quality runner](../../Benchmarks/Speech/README.md) before changing the shared
 policy. Compare the same weights, language and decoder on development speech, freeze the

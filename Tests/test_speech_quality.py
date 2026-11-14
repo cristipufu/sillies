@@ -68,6 +68,17 @@ class SpeechQualityTests(SpeechQualityFixtures, unittest.TestCase):
         self.assertFalse(report['gate_passed'])
         self.assertEqual(report['subgroup_regressions'], ['en/clean'])
 
+    def test_explicit_compound_numbers_retain_values_but_missing_multipliers_do_not(self):
+        for digits, spoken in [('23', 'twenty three'), ('100', 'one hundred'),
+                               ('2005', 'two thousand five'), ('102', 'one hundred and two'),
+                               ('1005007', 'one million five thousand seven')]:
+            self.assertEqual(quality.critical_losses(quality.tokens(digits), quality.tokens(digits), quality.tokens(spoken)), [])
+        for reference, changed in [('2005', 'two hundred five'), ('1000', 'one'),
+                                   ('23', 'twenty four'), ('1000000', 'one thousand')]:
+            self.assertTrue(quality.critical_losses(quality.tokens(reference), quality.tokens(reference), quality.tokens(changed)))
+        self.assertEqual(quality.canonical_values('one two three'.split()), ['1', '2', '3'])
+        self.assertNotEqual(quality.canonical_values('ten three'.split()), ['13'])
+
     def test_identical_policies_are_not_claimed_as_an_improvement(self):
         rows = [self.row('one', mode, 'yes', 'yes') for mode in ['baseline', 'adaptive']]
         report = quality.score(self.document(rows))
@@ -113,6 +124,24 @@ class WindowEffectTests(SpeechQualityFixtures, unittest.TestCase):
         rows[0]['decodedInputSamples'] = 16000
         del rows[1]['windows']
         with self.assertRaises(ValueError): quality.score_boundary_effect(self.document(rows))
+
+
+class VersionComparisonTests(SpeechQualityFixtures, unittest.TestCase):
+    def native(self, text):
+        rows = [self.row('one', mode, 'not', text) for mode in ['baseline', 'adaptive']]
+        for row in rows: row['audioSeconds'] = 1
+        return {**self.document(rows), 'manifestSHA256': 'same-input', 'feed': 'replay'}
+
+    def test_changed_preprocessing_keeps_real_critical_losses_even_when_windows_match(self):
+        combined = quality.compare_versions(self.native('not'), self.native('other'))
+        self.assertFalse(quality.score(combined)['regression_checks_passed'])
+        with self.assertRaises(ValueError): quality.score_boundary_effect(combined)
+
+    def test_mismatched_models_or_inputs_cannot_be_compared(self):
+        before = self.native('not')
+        for key in ['revision', 'model', 'manifestSHA256', 'feed', 'split']:
+            after = {**before, key: 'different'}
+            with self.assertRaises(ValueError): quality.compare_versions(before, after)
 
 
 if __name__ == '__main__':

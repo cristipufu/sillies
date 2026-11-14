@@ -95,3 +95,20 @@ traces fail closed. The default `raw` comparison keeps the original strict gate 
 Publish both views and the actual repeat controls. A controlled effect score does not establish that
 the underlying recognizer is deterministic or free of hallucinations. The production decoder and its
 fallback configuration are unchanged by this comparison.
+
+## Compare complete application versions
+
+Input normalization and streaming-state changes require actual cross-version outcomes. Retain a
+shipped executable and its SwiftPM resource bundles, pin the candidate executable separately, and run
+both against the identical manifest, model revision, language hints and feed mode. Never rebuild an
+executable path while it is being qualified. Keep every original report.
+
+```sh
+python3 -B Benchmarks/Speech/score-quality.py candidate.json comparison.json \
+  --baseline shipped.json --baseline-mode baseline --candidate-mode adaptive
+```
+
+This validates matching inputs and compares the selected arms with the raw gate. Cross-version
+comparisons reject `boundary-effect`: identical start/count traces cannot establish equal normalized
+PCM or decoder state. Compound English cardinal values are normalized only in the separate retention
+guard; original-token WER and unknown/malformed numeric expressions remain conservative.

@@ -1,6 +1,3 @@
-import AVFoundation
-@preconcurrency import CoreML
-import FluidAudio
 import Foundation
 import SilliesSpeech
 
@@ -8,83 +5,59 @@ import SilliesSpeech
 actor NemotronStreamingEngine: ReusableSpeechEngine {
   nonisolated private let executor = SpeechWorkerExecutor()
   nonisolated var unownedExecutor: UnownedSerialExecutor { executor.asUnownedSerialExecutor() }
-  private static let sampleRate = 16_000.0
-  private static let leftFrames = 70
-  private static let chunkFrames = 7
-  private static let rightFrames = 7
-  private var manager: StreamingUnifiedAsrManager?
+  private var decoder: (any NemotronDecoding)?
   private var progress = SpeechIncrementalWindow()
-  private var timings: [TokenTiming] = []
+  private var normalization = SpeechSignalNormalization()
+
+  init() {}
+  init(decoder: any NemotronDecoding, normalization: SpeechSignalNormalization = .init()) {
+    self.decoder = decoder
+    self.normalization = normalization
+  }
 
   isolated deinit { dispatchPrecondition(condition: .notOnQueue(.main)) }
 
   func load(_ directory: URL, language: SpeechLanguage) async throws {
     dispatchPrecondition(condition: .notOnQueue(.main))
-    try Task.checkCancellation()
-    let code =
-      language.isAutomatic
-      ? "auto" : language.locale.language.languageCode?.identifier ?? language.id
-    guard let prompt = NemotronUnifiedLanguage(rawValue: code) else {
-      throw SpeechError.unavailable(
-        String(localized: "Nemotron Unified ASR does not support this language."))
-    }
-    let configuration = MLModelConfiguration()
-    configuration.computeUnits = .cpuAndNeuralEngine
-    let manager = StreamingUnifiedAsrManager(
-      configuration: configuration,
-      config: UnifiedConfig(
-        leftFrames: Self.leftFrames, chunkFrames: Self.chunkFrames, rightFrames: Self.rightFrames,
-        family: .nemotronMultilingual(prompt)), encoderPrecision: .fp16)
-    try await manager.loadModels(from: directory)
-    try Task.checkCancellation()
-    self.manager = manager
+    decoder = try await NemotronNativeDecoder.load(directory, language: language)
   }
 
   func transcribe(_ request: SpeechWindowRequest) async throws -> SpeechWindowResult {
     dispatchPrecondition(condition: .notOnQueue(.main))
     try Task.checkCancellation()
-    guard let manager else {
+    guard let decoder else {
       throw SpeechError.unavailable(String(localized: "The speech model is not ready."))
     }
-    let update = progress.advance(request)
-    if update.action == .restart {
-      try await manager.reset()
-      timings.removeAll(keepingCapacity: true)
+    do {
+      let adjustment = try normalization.prepare(request.samples)
+      let update = try progress.advance(request, inputGain: adjustment.gain)
+      if update.action == .restart {
+        try await decoder.reset()
+      }
+      let result = try await decoder.decode(
+        adjustment.apply(to: update.samples), phase: update.phase)
+      try Task.checkCancellation()
+      return SpeechWindowResult(
+        words: result.words.map {
+          SpeechWord(
+            text: $0.text, start: $0.start - update.windowOffset,
+            end: $0.end - update.windowOffset, boundary: $0.boundary)
+        }, detectedLanguage: result.detectedLanguage,
+        timing: update.action == .append ? .continuous : .reestimated)
+    } catch {
+      resetProgress()
+      throw error
     }
-    if !update.samples.isEmpty {
-      try await manager.appendAudio(Self.audioBuffer(update.samples))
-    }
-    switch update.phase {
-    case .partial: try await manager.processBufferedAudio()
-    case .complete: _ = try await manager.finish()
-    }
-    try Task.checkCancellation()
-    timings.append(contentsOf: await manager.consumeTokenTimings())
-    return SpeechWindowResult(
-      words: buildWordTimings(from: timings).map {
-        SpeechWord(text: $0.word, start: $0.startTime, end: $0.endTime)
-      })
   }
 
   func resetForReuse() async throws {
     dispatchPrecondition(condition: .notOnQueue(.main))
-    try await manager?.reset()
-    progress = SpeechIncrementalWindow()
-    timings.removeAll(keepingCapacity: true)
+    defer { resetProgress() }
+    try await decoder?.reset()
   }
 
-  private static func audioBuffer(_ samples: [Float]) throws -> AVAudioPCMBuffer {
-    guard let count = AVAudioFrameCount(exactly: samples.count),
-      let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1),
-      let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: count),
-      let destination = buffer.floatChannelData?[0]
-    else {
-      throw SpeechError.unavailable(String(localized: "Could not prepare streaming speech audio."))
-    }
-    buffer.frameLength = count
-    samples.withUnsafeBufferPointer { source in
-      if let base = source.baseAddress { destination.update(from: base, count: samples.count) }
-    }
-    return buffer
+  private func resetProgress() {
+    progress.reset()
+    normalization.reset()
   }
 }

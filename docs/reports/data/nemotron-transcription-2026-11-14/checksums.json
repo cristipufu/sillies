@@ -1,0 +1,386 @@
+{
+  "baseline-executable.json.gz": {
+    "bytes": 141,
+    "sha256": "bca7839b90970ce42b3845758f714d71d0af1beb0c2e48c47d5d10a03d2b2c37"
+  },
+  "conditions-development-automatic-manifest.json.gz": {
+    "bytes": 1188,
+    "sha256": "0ea912f1c75e25b07384d2b7bfdfd35fe7a853ae0a66810cd5c480a018ca9e15"
+  },
+  "conditions-development-manifest.json.gz": {
+    "bytes": 20270,
+    "sha256": "99a3a68147dfe53d0af5c2ff8755f955c3973ce4b5d677b73e45d40e2a9a0d8f"
+  },
+  "conditions-development-paced-manifest.json.gz": {
+    "bytes": 1183,
+    "sha256": "011b143a6ade7f74ae737414c7a52a7cecaf3c0b8bd3537e61abca9544a9c6b8"
+  },
+  "conditions-final-holdout-manifest.json.gz": {
+    "bytes": 20263,
+    "sha256": "fc3d47262d5ea7a8228845a034257626aaee12907f441412a12bb6a7564e2172"
+  },
+  "conditions-holdout-manifest.json.gz": {
+    "bytes": 20063,
+    "sha256": "d20970d73bb0ee0746ccbf28feec6a627290d82cf77087dea81cbad22b43d54c"
+  },
+  "continuous-manifest.json.gz": {
+    "bytes": 981,
+    "sha256": "b6a6541311a22b41ac4d93dbd2273c4777984ec472c724bcd63ab3e27f630227"
+  },
+  "continuous-source-manifest.json.gz": {
+    "bytes": 981,
+    "sha256": "b6a6541311a22b41ac4d93dbd2273c4777984ec472c724bcd63ab3e27f630227"
+  },
+  "final-test-receipts.json.gz": {
+    "bytes": 68667,
+    "sha256": "869157aebbd3c5b18007ee132b55b256fef60c0de91cd71177c2a06ea619397c"
+  },
+  "frozen-nemotron-conservative.json.gz": {
+    "bytes": 11403,
+    "sha256": "9967225a098076b82b5b6b408239821aa74cce4ca2b4a824f0b2cc43cabea1ba"
+  },
+  "frozen-nemotron-continuity.json.gz": {
+    "bytes": 11396,
+    "sha256": "882bb645f73ea1cc522c33fad114d967dc4a3ed26b126c1a8291771d33f3f4ad"
+  },
+  "frozen-nemotron-pinned.json.gz": {
+    "bytes": 11401,
+    "sha256": "e0198cd80ba23c5dba900813ac00ed47eac231fae34a1226d68537999f7c38c0"
+  },
+  "gain-control-negation-1-output.json.gz": {
+    "bytes": 660,
+    "sha256": "4cd9d7e72720a243e8486e5599a51d876d62172afe091fb80eb4fd599f27790a"
+  },
+  "gain-control-negation-1.json.gz": {
+    "bytes": 482,
+    "sha256": "79518db4fd5ae75ff6274bfb5600b889d84c45780f5c6cd2cb2ae349b5858f52"
+  },
+  "gain-control-negation-2-output.json.gz": {
+    "bytes": 665,
+    "sha256": "a6a05b69be6a0bfd8d959115b880d541c3e979b13378f25c58e969fab07c0440"
+  },
+  "gain-control-negation-2.json.gz": {
+    "bytes": 482,
+    "sha256": "b4a9cb37746aa350b0851eeb757fb708606cdffb87d34a7166c50cee2c44e32c"
+  },
+  "gain-control-negation-4-output.json.gz": {
+    "bytes": 664,
+    "sha256": "dbc1cd39a85ff90e508913d02fc9e29c7d2839d672907d107ef29243889df4c8"
+  },
+  "gain-control-negation-4.json.gz": {
+    "bytes": 482,
+    "sha256": "ae8821eaeb67f95223c5ced25ed792f3544b2760eb15a11b068adf386f3adb06"
+  },
+  "gain-control-negation-8-output.json.gz": {
+    "bytes": 669,
+    "sha256": "eb91859e92b918476a1cea04499650d20520f2c9c0a84411c999b267d7982fc9"
+  },
+  "gain-control-negation-8.json.gz": {
+    "bytes": 482,
+    "sha256": "95de8dae4753ff18d9de4189e0510d9488cb757394f0476a9b08349361f3037c"
+  },
+  "gain-control-numbers-1-output.json.gz": {
+    "bytes": 477,
+    "sha256": "0b3de3393b9415e3f92e1eb45a4d808678744daf583a092c5b5c178152554061"
+  },
+  "gain-control-numbers-1.json.gz": {
+    "bytes": 484,
+    "sha256": "a259ccc33269d5d312477c67d9965cc0eeb0d8e480acaf79138e361f43d4deb1"
+  },
+  "gain-control-numbers-2-output.json.gz": {
+    "bytes": 444,
+    "sha256": "4c6ef3184afaf3ebb704d6fc046e3e3303f5ece708d1b27aee49e509945b1fa8"
+  },
+  "gain-control-numbers-2.json.gz": {
+    "bytes": 484,
+    "sha256": "fd4ae85fd3c3382ca276afa8afc841e6ee8521eec3f4c7ee5cbdd82a5d0db822"
+  },
+  "gain-control-numbers-4-output.json.gz": {
+    "bytes": 404,
+    "sha256": "1c03502b1af46d77aabed9bf2200f93365739238a96ebaec7c7f2062991f27fb"
+  },
+  "gain-control-numbers-4.json.gz": {
+    "bytes": 484,
+    "sha256": "5960d42381a6beb2fd8018223be51e6ae41ac9ccb05e89fd9343fdc5c1fb98ba"
+  },
+  "gain-control-numbers-8-output.json.gz": {
+    "bytes": 402,
+    "sha256": "ffec887f02d93822dd3edea7c6a435ef2fd2c251ca85d13dae45db27099895fc"
+  },
+  "gain-control-numbers-8.json.gz": {
+    "bytes": 484,
+    "sha256": "8136da13bd23cf2f10fcb0d0c8e023afce5c17dfa4e96b28834ba98f9c39648e"
+  },
+  "meeting-manifest.json.gz": {
+    "bytes": 1745,
+    "sha256": "1ad85a45e1bcd8bc7082c3907f2b3b5be45a1eaf91ccf7ab4f809956963c0cef"
+  },
+  "meeting-rendering-review.json.gz": {
+    "bytes": 385,
+    "sha256": "39eee9187c44662de4831fd961c3db04410a3b4d35116b9e437f7417fa1a9e89"
+  },
+  "meeting-source-manifest.json.gz": {
+    "bytes": 1745,
+    "sha256": "1ad85a45e1bcd8bc7082c3907f2b3b5be45a1eaf91ccf7ab4f809956963c0cef"
+  },
+  "native-default-smoke.log.gz": {
+    "bytes": 384,
+    "sha256": "be4a2fdc8e3be63d705aafbb27714c9eaec4fd8cbaa5193bb65141ef223a25fe"
+  },
+  "nemotron-automatic-score.json.gz": {
+    "bytes": 729,
+    "sha256": "909b6fd9d7ab604baf65f7a2db5a23ababe0f97c63a0f0e62d7e26989cd5239a"
+  },
+  "nemotron-candidate-automatic.json.gz": {
+    "bytes": 1702,
+    "sha256": "acedc025c9f2eecaba6c410327b71ea017b48707ea6b1e8335afe4d5c43bd719"
+  },
+  "nemotron-candidate-continuous.json.gz": {
+    "bytes": 2396,
+    "sha256": "7311194c03e6991fd0d999912bb0c19bf93afbf97c3f3f747f939b63c07599d5"
+  },
+  "nemotron-candidate-meeting.json.gz": {
+    "bytes": 2944,
+    "sha256": "307af0e2861b174a1717150cd2f2d09f16930edfa7c2f2269f5afecc2c9d7d89"
+  },
+  "nemotron-candidate-paced.json.gz": {
+    "bytes": 1683,
+    "sha256": "de0ffd9092f4c06dcf81103ae2f6460d2b7c3d80f97c03a49be0e8884fa93183"
+  },
+  "nemotron-conservative-calibration-score.json.gz": {
+    "bytes": 2234,
+    "sha256": "26de4ea64208899362a8702263de416726100890d568e571a4ba17397b90df2b"
+  },
+  "nemotron-conservative-calibration.json.gz": {
+    "bytes": 11306,
+    "sha256": "ca1cd01b0c0bd7bebe6cbd760f2ba7ac2ac7eddcebebd939587320e1545e07a2"
+  },
+  "nemotron-conservative-final-holdout-score.json.gz": {
+    "bytes": 4591,
+    "sha256": "0b8363f8c6f525732bcf59cbf2f5dac3568cf45676674490129a2b8ef52563e8"
+  },
+  "nemotron-conservative-final-holdout.json.gz": {
+    "bytes": 29420,
+    "sha256": "816d15f32291ef46b9dfa05ff9f3b523f427b242d6e091c7b2e5bdd748e24135"
+  },
+  "nemotron-conservative-known-retention-score.json.gz": {
+    "bytes": 4615,
+    "sha256": "afdaf42645a69192b9a56db593940e4a1fd59bfe63c58470b3b6bd8b8f338206"
+  },
+  "nemotron-conservative-known-retention.json.gz": {
+    "bytes": 29793,
+    "sha256": "a962be54f41b834eda6686521e24b67a086e38382256be0a50002c4481834b67"
+  },
+  "nemotron-conservative-known-second-cohort-score.json.gz": {
+    "bytes": 4600,
+    "sha256": "66f27465833e07ce501a9ab65f5e6fdc0f3f495983b8aea38b06982a47105adb"
+  },
+  "nemotron-conservative-known-second-cohort.json.gz": {
+    "bytes": 28940,
+    "sha256": "265e2e49fd668834a1456ce8406145e128178ad0c7d77116a33299badbde4e17"
+  },
+  "nemotron-continuity-development-dev-score.json.gz": {
+    "bytes": 2203,
+    "sha256": "06ad5fe813d2e6e99b6fe2338710b2ae820e0544e446cc7b94b58af8d018daa1"
+  },
+  "nemotron-continuity-development-dev.json.gz": {
+    "bytes": 11278,
+    "sha256": "d41f5d87916d3735cd8f19509c7ccca6a3549fca9084eab470e262b6db5cecb9"
+  },
+  "nemotron-continuity-development-test-score.json.gz": {
+    "bytes": 4592,
+    "sha256": "04e9a88a72ebd28c9e60293303b42bc1e13aef7659d04fe40041f7cfb6e346a4"
+  },
+  "nemotron-continuity-development-test.json.gz": {
+    "bytes": 29922,
+    "sha256": "eb219d64423aa293e1efbda5af78e7fa40e174960ebbe807226d0875c005fe4e"
+  },
+  "nemotron-continuity-fresh-holdout-score.json.gz": {
+    "bytes": 4790,
+    "sha256": "80b05a6b1008e6fc7fd4b4b08f434ab63076c602284cea0dfb82d396328a29bc"
+  },
+  "nemotron-continuity-fresh-holdout.json.gz": {
+    "bytes": 28716,
+    "sha256": "d97d7d7393da77c93b478d06f16199f95eb3eda039d4b658885e6cb4da1845c1"
+  },
+  "nemotron-continuous-score.json.gz": {
+    "bytes": 429,
+    "sha256": "6a83530d15673c9e66a3646457ac0098c4af17d5d3fea836508f2c332731e19f"
+  },
+  "nemotron-meeting-score.json.gz": {
+    "bytes": 836,
+    "sha256": "c401f2bcb0816cd5416f93a2e5de7e9b35bc0196251693d4b76ef98c8b4841c5"
+  },
+  "nemotron-normalized-adaptive-development-dev-score.json.gz": {
+    "bytes": 2154,
+    "sha256": "d6a81b613bfd74f43fe5410fa268b7b747070838745a43b46316352eaed85e24"
+  },
+  "nemotron-normalized-adaptive-development-test-score.json.gz": {
+    "bytes": 4876,
+    "sha256": "aeb9300fc5111d6d1b1377a0f22147ede649cafc403fcd08baa4955e044b48b4"
+  },
+  "nemotron-normalized-baseline-development-dev-score.json.gz": {
+    "bytes": 2222,
+    "sha256": "51e1adff2ae74eb0f4e0f5c1ee0302e99ca03d40399a4e4253ea43e299e7ba0f"
+  },
+  "nemotron-normalized-baseline-development-test-score.json.gz": {
+    "bytes": 4849,
+    "sha256": "9fac7756e0c716c798f13cb627be67946e1db55b2e7f2eefdf56fddcbdd28555"
+  },
+  "nemotron-normalized-development-dev.json.gz": {
+    "bytes": 11455,
+    "sha256": "2ed297d98c971fde0cbc6936d2425ed6c6b68f9afd5d38770b00aed87254cf0a"
+  },
+  "nemotron-normalized-development-test.json.gz": {
+    "bytes": 29955,
+    "sha256": "3b35f86a82c967fa6945d7bcb3d2817bd7050adaec2a392e077e08f3ea6a82d6"
+  },
+  "nemotron-normalized-replay.json.gz": {
+    "bytes": 684,
+    "sha256": "20e2373435a672380742ea2e64dd0412b7d9307e216c3843e9dccedf5c31db59"
+  },
+  "nemotron-paced-score.json.gz": {
+    "bytes": 729,
+    "sha256": "0547cd6b43b38d1de8a69a21c62fc22509e15a816a3471bc8b67d53c9e3f614d"
+  },
+  "nemotron-pinned-calibration-score.json.gz": {
+    "bytes": 2237,
+    "sha256": "60484c8442ae6a9b7fa052bb6d5b3f097c725359d521372d0947c3d4948d8dcd"
+  },
+  "nemotron-pinned-calibration.json.gz": {
+    "bytes": 11323,
+    "sha256": "6803d8928f87506dbf9d704706bd0ef6109accd5fb628a6fee663f1ba075c635"
+  },
+  "nemotron-pinned-final-holdout-score.json.gz": {
+    "bytes": 4596,
+    "sha256": "b6d844b546572f1c53ec181c296e75bd36e5e22f510519e96db8e997c60a1df8"
+  },
+  "nemotron-pinned-final-holdout.json.gz": {
+    "bytes": 29436,
+    "sha256": "07e2ab207393cb9b697a548cbcc064b472908203113ee20e748a67d30f09594b"
+  },
+  "nemotron-pinned-known-retention-score.json.gz": {
+    "bytes": 4645,
+    "sha256": "6439b989904b2ceaced6116def82695017d63cc9285a0a62552471690c6d26fa"
+  },
+  "nemotron-pinned-known-retention.json.gz": {
+    "bytes": 29850,
+    "sha256": "e810c09e3e31fe1d52eea21669a860f7b2e8a4d353c97b4e427ef681c1c510a5"
+  },
+  "nemotron-pinned-known-second-cohort-score.json.gz": {
+    "bytes": 4565,
+    "sha256": "522c08a029f0203216c8b8b5269488a39a193045167d2a0bfdfe1461ebc53265"
+  },
+  "nemotron-pinned-known-second-cohort.json.gz": {
+    "bytes": 28720,
+    "sha256": "0fdf05f29a6170b26f62c21600f136696b1d841e1f467129ed377b4ba6eca392"
+  },
+  "nemotron-raw-gain16.json.gz": {
+    "bytes": 684,
+    "sha256": "20e2373435a672380742ea2e64dd0412b7d9307e216c3843e9dccedf5c31db59"
+  },
+  "nemotron-retention-development-dev-score.json.gz": {
+    "bytes": 2412,
+    "sha256": "7a5ae34eae73b0a2c1e305de548af9aa2c74747e6f36ab504d7350ac043e9c31"
+  },
+  "nemotron-retention-development-dev.json.gz": {
+    "bytes": 11305,
+    "sha256": "71bfafc78593399450af30eb61c33adc13ba2a31c74a2fd48e33bf2078894aa1"
+  },
+  "nemotron-shipped-automatic.json.gz": {
+    "bytes": 1684,
+    "sha256": "f47513611716f7f1dbcab34795142f1e1aefc7b6ccaf9ddea489dc74b6a1a6cd"
+  },
+  "nemotron-shipped-continuous.json.gz": {
+    "bytes": 2390,
+    "sha256": "0468421d8bb01d905d79191c684dc782deabe1250d29cbcb13f040c9b09ab953"
+  },
+  "nemotron-shipped-development-dev.json.gz": {
+    "bytes": 11524,
+    "sha256": "5209fe0c5f8fd49e7465ff9e809eb9bd727875681e46e144bc680c052ac45097"
+  },
+  "nemotron-shipped-development-test.json.gz": {
+    "bytes": 29937,
+    "sha256": "e0cc892a48459326d96eb4b05013d98068b85535aa6824bebeef2b65ad5e93e0"
+  },
+  "nemotron-shipped-final-holdout.json.gz": {
+    "bytes": 29942,
+    "sha256": "7f418764dc5a4e46bc533e4548fc5584f2683ed7fa5181b203bb913d14c58e86"
+  },
+  "nemotron-shipped-fresh-holdout.json.gz": {
+    "bytes": 28891,
+    "sha256": "087eb2ecee2740f716985c1422ce9ae275ca7f0a3cbe3cf2cf929eb05603c33e"
+  },
+  "nemotron-shipped-meeting.json.gz": {
+    "bytes": 2931,
+    "sha256": "eaa09c3052ecbf2c42c93a4fa4d1bc88f1965008f1bc2703f0ed0f9148e59b70"
+  },
+  "nemotron-shipped-paced.json.gz": {
+    "bytes": 1681,
+    "sha256": "9db1cb37aa7120a657f50a17ca785ab041fa1502184c4e4f1a3f4b6429349e4f"
+  },
+  "nemotron-tail-context.json.gz": {
+    "bytes": 793,
+    "sha256": "30fc3e1ac698e8e1a3ecdf8da361da80ff3fb5c99a2bb41b78bd2a196ad8fc07"
+  },
+  "nemotron-tail-native.json.gz": {
+    "bytes": 600,
+    "sha256": "edbd0b6ae091879ee778ca803ab031d57dfa72a23883f39e623f267ce671c66b"
+  },
+  "qualified-source-files.json": {
+    "bytes": 2995,
+    "sha256": "da35403a38cbf5f80ea331592b8ab162607684b03e216d01f8b9f8158e1c7857"
+  },
+  "replay-adaptive.json.gz": {
+    "bytes": 455,
+    "sha256": "4cb76f896a95cbd6e704ed34a928d6d20e3a79e27e66ecd16188c97f5ba0d93f"
+  },
+  "replay-baseline.json.gz": {
+    "bytes": 467,
+    "sha256": "49600b2a48883efdacd2f8afc0db99b707f5b3ac284d819e13e6c32ae5f0922f"
+  },
+  "replay-gain16.json.gz": {
+    "bytes": 458,
+    "sha256": "198329734e91a9671737c689252fb19b565823e6df86f4e56b68330c82547236"
+  },
+  "replay-tail-context.json.gz": {
+    "bytes": 422,
+    "sha256": "e1ef18bbacded3fe58747dc1fea38b39be6983557c0aeb6fb43f152a3416a893"
+  },
+  "replay-tail.json.gz": {
+    "bytes": 421,
+    "sha256": "a0c788aa6d9676a0cc023986e732411b6f03191cfbcee6ef9c3e0d35c37552bd"
+  },
+  "reproduction-manifest.json.gz": {
+    "bytes": 1114,
+    "sha256": "e623408df7fb514fc958c85befaed1bd04ac79ae1d0c4efb6012b47f73b84773"
+  },
+  "reproduction-tail-manifest.json.gz": {
+    "bytes": 1143,
+    "sha256": "a0812ab541972bcfe6ba51f0c7cfcaafc9c9291f6e5220c9b1eea40c09aa19af"
+  },
+  "source-manifest-nemotron-final.json.gz": {
+    "bytes": 12677,
+    "sha256": "296fe71ab48ffd71534baa25403a22d1fbcc24e12a5a444953fd62796ddbc987"
+  },
+  "source-manifest-normalization-holdout.json.gz": {
+    "bytes": 12473,
+    "sha256": "a1d494be1c70b0ffa7113d499714e81b0b987e5d04c3dee6a9cc5f0805286ef2"
+  },
+  "source-manifest-shared-vad.json.gz": {
+    "bytes": 12688,
+    "sha256": "c25890fb0d4cc1e0555d07fafcfe64ff4886de7d2e6f289db4a0ff198d06f739"
+  },
+  "source-reproduction.json.gz": {
+    "bytes": 772,
+    "sha256": "cf496d03a6fb88000420e5b95b154cc42f72777c8a983861c974192bc49a1949"
+  },
+  "source-tail.json.gz": {
+    "bytes": 790,
+    "sha256": "5f6edd0719dc23e3356d5f102c56c7b48d96141b135628c0a44f2b0f972ec540"
+  },
+  "verified-model-artifacts.json": {
+    "bytes": 7784,
+    "sha256": "edc326b2b3007a01df48d8e0cc0d74dda20da3465afeb3886b8bae0412554779"
+  }
+}

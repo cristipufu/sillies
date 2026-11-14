@@ -182,6 +182,9 @@ private final class ConversationHarness: Sendable {
   let updates = Mutex<[AudioCaptureUpdate]>([])
   func makeCapture(
     finishTimeout: TimeInterval = 1, startupTimeout: TimeInterval = 45,
+    scheduleDeadline: @escaping VoiceConversationCapture.Resources.ScheduleDeadline =
+      VoiceConversationCapture
+      .Resources.queuedDeadline,
     warm: @escaping @Sendable () async throws -> Void = {}
   ) -> VoiceConversationCapture {
     VoiceConversationCapture(
@@ -203,7 +206,7 @@ private final class ConversationHarness: Sendable {
         warmSpeech: { [self] in
           warmed.withLock { $0 += 1 }
           try await warm()
-        }, startupTimeout: startupTimeout),
+        }, startupTimeout: startupTimeout, scheduleStartupDeadline: scheduleDeadline),
       update: { [self] event in
         updates.withLock { $0.append(event) }
         if case .capturing = event { capturing.withLock { $0 += 1 } }
@@ -354,8 +357,13 @@ private actor SuspendedConversationWarmup {
 {
   let harness = ConversationHarness()
   let warmup = SuspendedConversationWarmup()
-  let capture = harness.makeCapture(startupTimeout: 0.05, warm: { await warmup.wait() })
+  let deadline = ManualConversationStartupDeadline()
+  let capture = harness.makeCapture(
+    startupTimeout: 0.05, scheduleDeadline: deadline.schedule, warm: { await warmup.wait() })
   capture.start()
+  try await harness.wait { harness.warmed.withLock { $0 } == 1 }
+  #expect(deadline.delay == 0.05)
+  await deadline.fire(on: harness.queue)
   try await harness.wait { harness.microphone.stops.withLock { $0 } == 1 }
   let result = Mutex<AudioCaptureResult?>(nil)
   capture.finish { value in result.withLock { $0 = value } }
@@ -380,8 +388,12 @@ private actor SuspendedConversationWarmup {
   let harness = ConversationHarness()
   let startup = SuspendedConversationWarmup()
   harness.microphone.startup.withLock { $0 = { await startup.wait() } }
-  let capture = harness.makeCapture(startupTimeout: 0.05)
+  let deadline = ManualConversationStartupDeadline()
+  let capture = harness.makeCapture(startupTimeout: 0.05, scheduleDeadline: deadline.schedule)
   capture.start()
+  try await harness.wait { harness.microphone.starts.withLock { $0 } == 1 }
+  #expect(deadline.delay == 0.05)
+  await deadline.fire(on: harness.queue)
   try await harness.wait { harness.microphone.stops.withLock { $0 } == 1 }
   let result = Mutex<AudioCaptureResult?>(nil)
   capture.finish { value in result.withLock { $0 = value } }
@@ -404,13 +416,42 @@ private actor SuspendedConversationWarmup {
 
 @Test func voiceConversationSuccessfulStartupCancelsItsDeadline() async throws {
   let harness = ConversationHarness()
-  let capture = harness.makeCapture(startupTimeout: 0.05)
+  let deadline = ManualConversationStartupDeadline()
+  let capture = harness.makeCapture(startupTimeout: 0.05, scheduleDeadline: deadline.schedule)
   capture.start()
   try await harness.wait { harness.capturing.withLock { $0 } == 1 }
-  try await Task.sleep(for: .milliseconds(100))
+  #expect(deadline.isCancelled)
+  await deadline.fire(on: harness.queue)
   #expect(harness.microphone.stops.withLock { $0 } == 0)
   let result = Mutex<AudioCaptureResult?>(nil)
   capture.finish { value in result.withLock { $0 = value } }
   try await harness.wait { result.withLock { $0 != nil } }
   #expect(result.withLock { $0?.failure } == nil)
+}
+
+private final class ManualConversationStartupDeadline: Sendable {
+  private struct Scheduled {
+    let delay: TimeInterval
+    let action: @Sendable () -> Void
+    var isCancelled = false
+  }
+  private let scheduled = Mutex<Scheduled?>(nil)
+  var delay: TimeInterval? { scheduled.withLock { $0?.delay } }
+  var isCancelled: Bool { scheduled.withLock { $0?.isCancelled == true } }
+  func schedule(
+    _ queue: DispatchQueue, _ delay: TimeInterval, _ action: @escaping @Sendable () -> Void
+  ) -> CaptureDeadline {
+    dispatchPrecondition(condition: .onQueue(queue))
+    scheduled.withLock { $0 = Scheduled(delay: delay, action: action) }
+    return CaptureDeadline { [self] in scheduled.withLock { $0?.isCancelled = true } }
+  }
+  func fire(on queue: DispatchQueue) async {
+    await withCheckedContinuation { continuation in
+      queue.async { [self] in
+        let action = scheduled.withLock { $0?.action }
+        if let action { action() } else { Issue.record("No startup deadline was scheduled") }
+        continuation.resume()
+      }
+    }
+  }
 }

@@ -1,0 +1,35 @@
+{
+  "removed_generated_inputs": [
+    {
+      "directory": "conditions",
+      "bytes_removed": 63126295,
+      "no_open_files_verified": true
+    },
+    {
+      "directory": "conditions-v3",
+      "bytes_removed": 62928533,
+      "no_open_files_verified": true
+    },
+    {
+      "directory": "conditions-v4",
+      "bytes_removed": 61732374,
+      "no_open_files_verified": true
+    },
+    {
+      "directory": "conditions-v5",
+      "bytes_removed": 63679728,
+      "no_open_files_verified": true
+    },
+    {
+      "directory": "ami-restored",
+      "bytes_removed": 2217879,
+      "no_open_files_verified": true
+    },
+    {
+      "directory": "fleurs-restored-probe",
+      "bytes_removed": 411294,
+      "no_open_files_verified": true
+    }
+  ],
+  "kept": "Canonical public source audio, input manifests, raw results and logs; installed models and personal data are outside cleanup scope."
+}

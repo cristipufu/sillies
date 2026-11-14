@@ -1,0 +1,7 @@
+{
+  "machine": "Apple M4 Pro",
+  "memory_bytes": 51539607552,
+  "macos": "26.7.2",
+  "swift": "Apple Swift version 6.4.2 (swiftlang-6.4.2.1.9 clang-2100.4.1.1)\nTarget: arm64-apple-macosx26.0",
+  "python": "3.13.9"
+}

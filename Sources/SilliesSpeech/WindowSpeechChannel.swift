@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import SilliesCore
 import Synchronization
 
 /// One consumer task per source. Audio callbacks never create tasks or invoke inference.
@@ -37,7 +38,8 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
 
   package init(
     engine: any SpeechWindowEngine, request: SpeechChannelRequest,
-    cadence: SpeechDecodeCadence = .windowed
+    cadence: SpeechDecodeCadence = .windowed,
+    boundaryMode: SpeechBoundaryPolicy.Mode = .baseline
   ) throws {
     guard
       let format = AVAudioFormat(
@@ -47,6 +49,7 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
     }
     var initial = State(converter: SpeechBufferConverter(format: format))
     initial.buffer.cadence = cadence
+    initial.buffer.boundaries = .init(mode: request.context.boundaryMode ?? boundaryMode)
     state = StateOwner(initial)
     self.request = request
     let (events, signal) = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingNewest(1))
@@ -201,6 +204,8 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
     while true {
       do {
         try Task.checkCancellation()
+        request.measureInference?(
+          .init(sampleCount: input.samples.count, phase: input.window?.phase ?? .complete))
         return try await engine.transcribe(input)
       } catch is CancellationError { throw CancellationError() } catch {
         attempts = min(attempts + 1, Self.maximumRetryExponent + 1)

@@ -100,6 +100,7 @@ final class AudioSkillSession: ActiveSkillSession {
     let url = request.recordingDirectory.appendingPathComponent("\(recordID.uuidString).m4a")
     var configuration = AudioCaptureConfiguration(
       kind: request.kind, target: request.target, recordingURL: url, language: language)
+    configuration.recognitionContext.purpose = .continuousTranscription
     configuration.model = presentation.model
     configuration.diarizationModel = presentation.diarizationModel
     let delivery = AudioSessionUpdateDelivery { [weak self] in self?.apply($0) }

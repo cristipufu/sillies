@@ -168,7 +168,7 @@ let package = Package(
       dependencies: [
         "SilliesCore", "SilliesModelStore", "SilliesSpeech", "SilliesSpeechWhisper",
         "SilliesSpeechParakeet", "SilliesSpeechNemotron", "SilliesDiarizationNemotron",
-        "SilliesSpeechApple",
+        "SilliesSpeechApple", "SilliesAudio",
       ], path: "Tools/SpeechBenchmark"),
     .executableTarget(
       name: "TextModelBenchmark",

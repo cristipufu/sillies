@@ -16,6 +16,7 @@ package struct SpeechChannelRequest: Sendable {
   package let failure: LocalSpeechFactory.Failure
   package var context = SpeechRecognitionContext()
   package var audioBackingStore: (any SpeechAudioBackingStore)?
+  package var measureInference: (@Sendable (SpeechInferenceMeasurement) -> Void)?
   package init(
     language: SpeechLanguage, output: @escaping LocalSpeechFactory.Output,
     failure: @escaping LocalSpeechFactory.Failure

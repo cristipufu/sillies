@@ -370,11 +370,18 @@ private final class CaptureSpeechChannel: LocalSpeechChannel {
   harness.microphone.fail("Application closed")
   await harness.events.waitForFailure()
   let results = Mutex<[AudioCaptureResult]>([])
-  service.finish(ending: .sourceClosed) { result in results.withLock { $0.append(result) } }
+  let (deliveries, delivered) = AsyncStream<AudioCaptureResult>.makeStream()
+  defer { delivered.finish() }
+  service.finish(ending: .sourceClosed) { result in
+    results.withLock { $0.append(result) }
+    delivered.yield(result)
+  }
   await harness.checkpoint()
   #expect(harness.microphone.stopCount == 1)
   #expect(results.withLock { $0.isEmpty })
   harness.microphone.completeStops()
+  var delivery = deliveries.makeAsyncIterator()
+  _ = await delivery.next()
   await harness.checkpoint()
   #expect(results.withLock { $0.count } == 1)
   #expect(results.withLock { $0.first?.failure } == nil)

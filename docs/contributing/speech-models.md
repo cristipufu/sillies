@@ -121,3 +121,18 @@ A verified bound-window closure finishes and saves a meeting automatically, incl
 recognizer drain. Hiding, minimizing, or temporarily failing to read a window does not end capture.
 `SessionEndReason.sourceClosed` explains a capture interruption before finalization begins; permission,
 transcription, timeout, and recording-save failures still retain their recovery information.
+
+## Qualify boundary policy changes
+
+`SpeechBoundaryPolicy` in Core owns bounded, per-source acoustic classification. The window buffer
+owns audio and utterance retirement; providers recommend a policy through `WindowSpeechModel`.
+`SpeechRecognitionContext.purpose` distinguishes continuous transcription from short utterances
+independently of inference priority. Short Talk/dictation channels keep their established policy.
+A request override exists for paired qualification; no user setting or persisted preference is added.
+
+Use the [file-only native quality runner](../../Benchmarks/Speech/README.md) before changing a provider's
+recommendation. Compare the same weights, language and decoder on development speech, freeze the
+candidate, then evaluate unseen human recordings, paced delivery, short replies, silence and long
+speech. Keep failed results. Do not generalize a provider's result to other runtimes or every language.
+Inference observers must remain optional, typed and content-free, outside audio locks and diagnostics
+archives; they must never record audio, words or tokens.

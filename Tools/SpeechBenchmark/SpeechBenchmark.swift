@@ -13,7 +13,14 @@ import Synchronization
 @main
 struct SpeechBenchmark {
   static func main() async {
-    do { try await BenchmarkRunner().run(Array(CommandLine.arguments.dropFirst())) } catch {
+    do {
+      let arguments = Array(CommandLine.arguments.dropFirst())
+      if arguments.first == "quality" {
+        try await SpeechQualityBenchmark.run(Array(arguments.dropFirst()))
+      } else {
+        try await BenchmarkRunner().run(arguments)
+      }
+    } catch {
       fputs("Speech benchmark: \(error.localizedDescription)\n", stderr)
       exit(1)
     }

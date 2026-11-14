@@ -1,9 +1,15 @@
 import Foundation
+import SilliesCore
 
 package struct WindowSpeechModel: PreparedSpeechModel {
   private static let validationSamples = 16_000
   private let engine: any SpeechWindowEngine
-  package init(engine: any SpeechWindowEngine) { self.engine = engine }
+  private let boundaryMode: SpeechBoundaryPolicy.Mode
+  package init(engine: any SpeechWindowEngine, boundaryMode: SpeechBoundaryPolicy.Mode = .baseline)
+  {
+    self.engine = engine
+    self.boundaryMode = boundaryMode
+  }
   package func validate() async throws {
     // Bypass voice activity detection so the decoder actually runs on the candidate weights.
     let result = try await engine.transcribe(
@@ -16,6 +22,7 @@ package struct WindowSpeechModel: PreparedSpeechModel {
   }
   package func makeChannel(_ request: SpeechChannelRequest) async throws -> any LocalSpeechChannel {
     try Task.checkCancellation()
-    return try WindowSpeechChannel(engine: engine, request: request)
+    let recommended = request.context.purpose == .continuousTranscription ? boundaryMode : .baseline
+    return try WindowSpeechChannel(engine: engine, request: request, boundaryMode: recommended)
   }
 }

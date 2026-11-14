@@ -1,6 +1,9 @@
 import Foundation
+import SilliesCore
 
 package struct SpeechRecognitionContext: Sendable {
+  package enum Purpose: Sendable { case shortUtterance, continuousTranscription }
+  package var purpose: Purpose = .shortUtterance
   package enum Priority: Int, Sendable {
     case live, interactive
     package var taskPriority: TaskPriority {
@@ -12,8 +15,13 @@ package struct SpeechRecognitionContext: Sendable {
   }
   package var vocabulary: [String]
   package var priority: Priority
-  package init(vocabulary: [String] = [], priority: Priority = .live) {
+  package var boundaryMode: SpeechBoundaryPolicy.Mode?
+  package init(
+    vocabulary: [String] = [], priority: Priority = .live,
+    boundaryMode: SpeechBoundaryPolicy.Mode? = nil
+  ) {
     self.vocabulary = vocabulary
     self.priority = priority
+    self.boundaryMode = boundaryMode
   }
 }

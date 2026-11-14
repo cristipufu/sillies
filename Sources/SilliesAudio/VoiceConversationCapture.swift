@@ -6,9 +6,13 @@ import SilliesSpeech
 /// Continuous microphone/AEC/VAD, with short-lived recognizer turns. All device/DSP state is queue-confined.
 package final class VoiceConversationCapture: ConversationCapture {
   struct Resources: Sendable {
+    typealias ScheduleDeadline =
+      @Sendable (DispatchQueue, TimeInterval, @escaping @Sendable () -> Void) -> CaptureDeadline
+    static let queuedDeadline: ScheduleDeadline = CaptureDeadline.queued
     let audio: AudioCaptureDependencies
     let warmSpeech: @Sendable () async throws -> Void
     var startupTimeout: TimeInterval = 45
+    var scheduleStartupDeadline: ScheduleDeadline = Self.queuedDeadline
   }
   private static let preRollFrames = 40
   private static let publicationInterval: TimeInterval = 0.1
@@ -34,7 +38,7 @@ package final class VoiceConversationCapture: ConversationCapture {
     var failure: SessionFailure?
     var startTime: TimeInterval?
     var startupStage: VoiceCaptureStartupStage?
-    var startupDeadline: DispatchWorkItem?
+    var startupDeadline: CaptureDeadline?
     var stopDeadline: DispatchWorkItem?
     var microphoneStopped = false
     var finishWaiters: [@Sendable (AudioCaptureResult) -> Void] = []
@@ -60,6 +64,7 @@ package final class VoiceConversationCapture: ConversationCapture {
   private let reference: VoicePlaybackReference
   private let dependencies: AudioCaptureDependencies
   private let warmSpeech: @Sendable () async throws -> Void
+  private let scheduleStartupDeadline: Resources.ScheduleDeadline
   private let startupTimeout: TimeInterval
   private let update: @Sendable (AudioCaptureUpdate) -> Void
   private let input: AudioCaptureInputQueue
@@ -86,6 +91,7 @@ package final class VoiceConversationCapture: ConversationCapture {
     self.dependencies = dependencies
     warmSpeech = resources.warmSpeech
     startupTimeout = resources.startupTimeout
+    scheduleStartupDeadline = resources.scheduleStartupDeadline
     self.update = update
     input = AudioCaptureInputQueue(queue: dependencies.queue)
     storage = SerialQueueStorage(queue: dependencies.queue, makeValue: State.init)
@@ -152,15 +158,15 @@ package final class VoiceConversationCapture: ConversationCapture {
   private func beginStartup(_ state: State) {
     state.startupStage = .speech
     update(.preparing(VoiceCaptureStartupStage.speech.status))
-    let deadline = DispatchWorkItem { [weak self] in
+    state.startupDeadline = scheduleStartupDeadline(dependencies.queue, startupTimeout) {
+      [weak self] in
       self?.storage.withValue { state in
         guard !state.stopped, let stage = state.startupStage else { return }
         state.endStartup()
         self?.report(stage.timeoutFailure)
       }
     }
-    state.startupDeadline = deadline
-    dependencies.queue.asyncAfter(deadline: .now() + startupTimeout, execute: deadline)
+
   }
 
   private func enqueue(_ packet: AudioCaptureInputQueue.Packet) {

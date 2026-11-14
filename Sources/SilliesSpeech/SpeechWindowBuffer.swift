@@ -1,5 +1,6 @@
 import Accelerate
 import Foundation
+import SilliesCore
 
 /// Keeps only the current utterance and a short overlap, independent of session length.
 struct SpeechWindowBuffer {
@@ -15,10 +16,9 @@ struct SpeechWindowBuffer {
   static let maximumWindowDuration: TimeInterval = 12
   static let maximumBufferedDuration: TimeInterval = 24
   var cadence: SpeechDecodeCadence = .windowed
-  private static let silenceDuration: TimeInterval = 0.6
   private static let leadingContext: TimeInterval = 0.2
-  private static let speechThreshold: Float = 0.002
   private static let analysisFrameSamples = 160
+  var boundaries = SpeechBoundaryPolicy(mode: .baseline)
   private(set) var samples: [Float] = []
   private var startSample: Int64 = 0
   var retainedStartSample: Int64 { startSample }
@@ -30,17 +30,25 @@ struct SpeechWindowBuffer {
 
   mutating func append(_ incoming: [Float]) throws {
     guard !incoming.isEmpty else { return }
-    guard samples.count + incoming.count <= Int(Self.maximumBufferedDuration * Self.sampleRate)
+    guard incoming.count <= Int(Self.maximumBufferedDuration * Self.sampleRate) - samples.count
     else { throw SpeechError.overloaded }
+    let activity = boundaries.observe(
+      energy: vDSP.rootMeanSquare(incoming), sampleCount: incoming.count)
+    guard activity != .invalid else {
+      throw SpeechError.unavailable(
+        String(localized: "Speech audio changed to an unexpected format."))
+    }
     samples.append(contentsOf: incoming)
-    if vDSP.rootMeanSquare(incoming) > Self.speechThreshold {
+    if activity == .voice {
       hasSpeech = true
       silentSamples = 0
       lastSpeechEndSample = startSample + Int64(samples.count)
     } else {
-      let wasSilent = silentSamples >= Int(Self.silenceDuration * Self.sampleRate)
+      let wasSilent = silentSamples >= Int(SpeechBoundaryPolicy.baselineSilence * Self.sampleRate)
       silentSamples += incoming.count
-      if hasSpeech, !wasSilent, silentSamples >= Int(Self.silenceDuration * Self.sampleRate) {
+      if hasSpeech, !wasSilent,
+        silentSamples >= Int(SpeechBoundaryPolicy.baselineSilence * Self.sampleRate)
+      {
         utteranceEnds.append(startSample + Int64(samples.count))
       }
     }
@@ -48,7 +56,7 @@ struct SpeechWindowBuffer {
 
   /// Disk read sizes must not dilute a short voiced frame into the surrounding silence.
   mutating func appendAnalysisFrames(_ incoming: [Float]) throws {
-    guard samples.count + incoming.count <= Int(Self.maximumBufferedDuration * Self.sampleRate)
+    guard incoming.count <= Int(Self.maximumBufferedDuration * Self.sampleRate) - samples.count
     else { throw SpeechError.overloaded }
     for start in stride(from: 0, to: incoming.count, by: Self.analysisFrameSamples) {
       let end = min(incoming.count, start + Self.analysisFrameSamples)
@@ -103,6 +111,7 @@ struct SpeechWindowBuffer {
     samples.removeAll()
     hasSpeech = false
     utteranceEnds.removeAll()
+    boundaries.reset()
   }
 
   private mutating func discard(_ count: Int) {

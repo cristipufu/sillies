@@ -81,6 +81,7 @@ private final class FixtureAudioCapture: SessionAudioCapture, Sendable {
   #expect(model.canPause && model.canSelectLanguage)
   #expect(model.transcript.contains("report"))
   #expect(model.model.id == speechModel.id)
+  #expect(captures.withLock { $0.first?.recognitionContext.purpose == .continuousTranscription })
 
   var openedSettings = false
   let controller = AudioSessionWindowController(appearance: ThemeEnvironment()) {

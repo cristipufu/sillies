@@ -1,4 +1,5 @@
 import Foundation
+import SilliesCore
 import XCTest
 
 @testable import SilliesSpeech
@@ -114,6 +115,41 @@ final class SpeechWindowTests: XCTestCase {
       .init(words: words),
       window: window(start: 0, duration: 1, completion: .session))
     XCTAssertEqual(overlap.phrases.first?.text, "")
+  }
+
+  func testAdaptiveBoundaryKeepsShortAnswersAndTheFinalPartialFrame() throws {
+    for mode in SpeechBoundaryPolicy.Mode.allCases {
+      var buffer = SpeechWindowBuffer()
+      buffer.boundaries = .init(mode: mode)
+      try buffer.appendAnalysisFrames([Float](repeating: 0, count: 4_800))
+      let answer = [Float](repeating: 0.03, count: 3_200 + 17)
+      try buffer.appendAnalysisFrames(answer)
+      let result = try XCTUnwrap(buffer.next(mode: .draining))
+      XCTAssertEqual(Array(result.samples.suffix(answer.count)), answer)
+      XCTAssertEqual(result.end, Double(4_800 + answer.count) / 16_000, accuracy: 0.000001)
+    }
+  }
+
+  func testAdaptiveBoundaryPreservesTheMaximumWindowAndItsTail() throws {
+    var buffer = SpeechWindowBuffer()
+    buffer.boundaries = .init(mode: .adaptive)
+    var audio = [Float](repeating: 0.1, count: 12 * 16_000)
+    let dip = 11 * 16_000
+    audio.replaceSubrange(dip..<dip + 1_600, with: repeatElement(0, count: 1_600))
+    audio.replaceSubrange(dip + 640..<dip + 800, with: repeatElement(0.003, count: 160))
+    try buffer.appendAnalysisFrames(audio)
+    let window = try XCTUnwrap(buffer.next(mode: .live))
+    XCTAssertEqual(window.end, SpeechWindowBuffer.maximumWindowDuration)
+    buffer.retire(window, through: window.end)
+    let tail = try XCTUnwrap(buffer.next(mode: .draining))
+    XCTAssertLessThan(tail.start, window.end)
+    XCTAssertEqual(tail.samples.last, audio.last)
+  }
+
+  func testNonFiniteSpeechSamplesFailWithoutRetainingInvalidAudio() {
+    var buffer = SpeechWindowBuffer()
+    XCTAssertThrowsError(try buffer.append([.nan]))
+    XCTAssertTrue(buffer.samples.isEmpty)
   }
 
   private func window(start: Double, duration: Double, completion: SpeechWindowBuffer.Completion)

@@ -5,6 +5,7 @@ import SilliesSpeech
 import Testing
 
 @testable import SilliesSpeechNemotron
+@testable import SilliesSpeechWhisper
 
 /// Explicit file-only native replay. The caller supplies public research inputs, never live audio.
 @Test(.enabled(if: ProcessInfo.processInfo.environment["SILLIES_SPEECH_WINDOW_REPLAY"] != nil))
@@ -14,6 +15,11 @@ func nativeSpeechWindowReplayPreservesDecoderResults() async throws {
 }
 
 private enum NativeSpeechWindowReplay {
+  private enum Provider: String, Decodable { case nemotron, whisper }
+  private struct PreparedEngine {
+    let engine: any SpeechWindowEngine
+    let reset: @Sendable () async throws -> Void
+  }
   private static let sampleRate = 16_000.0
   private static let maximumAudioSamples = 384_000
   private static let maximumWindows = 128
@@ -32,6 +38,7 @@ private enum NativeSpeechWindowReplay {
     let language: String
     let gain: Float?
     let signalMode: SpeechSignalNormalization.Mode?
+    let provider: Provider?
     let windows: [Window]
     let output: URL
   }
@@ -63,9 +70,7 @@ private enum NativeSpeechWindowReplay {
     try #require(samples.allSatisfy { $0.isFinite && abs($0) <= 1 })
     try #require((1...maximumWindows).contains(request.windows.count))
     let language = SpeechLanguage(id: request.language, name: request.language, isInstalled: true)
-    let decoder = try await NemotronNativeDecoder.load(request.modelDirectory, language: language)
-    let engine = NemotronStreamingEngine(
-      decoder: decoder, normalization: .init(mode: request.signalMode ?? .preserve))
+    let prepared = try await prepare(request, language: language)
     var results: [Result] = []
     for window in request.windows {
       try #require(
@@ -77,7 +82,7 @@ private enum NativeSpeechWindowReplay {
       var input = SpeechWindowRequest(
         samples: Array(samples[start..<(start + window.sampleCount)]), language: language)
       input.window = .init(start: window.start, phase: window.phase)
-      let result = try await engine.transcribe(input)
+      let result = try await prepared.engine.transcribe(input)
       try #require(result.words.count <= maximumWordsPerWindow)
       results.append(
         .init(
@@ -87,7 +92,23 @@ private enum NativeSpeechWindowReplay {
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
     try encoder.encode(results).write(to: request.output, options: .atomic)
-    try await engine.resetForReuse()
+    try await prepared.reset()
+  }
+
+  private static func prepare(_ request: Request, language: SpeechLanguage) async throws
+    -> PreparedEngine
+  {
+    switch request.provider ?? .nemotron {
+    case .nemotron:
+      let decoder = try await NemotronNativeDecoder.load(request.modelDirectory, language: language)
+      let engine = NemotronStreamingEngine(
+        decoder: decoder, normalization: .init(mode: request.signalMode ?? .preserve))
+      return .init(engine: engine, reset: { try await engine.resetForReuse() })
+    case .whisper:
+      let engine = WhisperWindowEngine()
+      try await engine.load(request.modelDirectory)
+      return .init(engine: engine, reset: {})
+    }
   }
 
   private static func readAudio(_ url: URL) throws -> [Float] {

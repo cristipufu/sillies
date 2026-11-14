@@ -61,7 +61,10 @@ and alternates their order for each pair. Every result is saved atomically. The 
 expected paired results, a final completion marker, and no native recognition failures. It exits
 nonzero if the main acceptance gate fails: fewer total errors, a negative upper 95% paired clustered
 bootstrap bound, no language/condition group increase, no newly lost utterance, no newly generated
-noise-only words, and no newly lost negation/number value. Condition variants of the same recording
+noise-only words or longer noise-only live drafts, and no newly lost negation/number value. Draft
+capture is bounded to 64 KiB per fixture; overflow fails qualification. Historical reports without
+draft fields retain their original final-only coverage, which the scorer reports explicitly.
+Condition variants of the same recording
 are resampled together. Small supplementary sets may be inconclusive despite no subgroup increase.
 
 WER uses Unicode-normalized, case-folded word tokens, preserves diacritics and counts substitutions,
@@ -70,7 +73,8 @@ check; formatting differences remain word errors. The intentionally conservative
 missing multipliers or equate homophones. It does not prove semantic correctness.
 
 Work accounting is explicitly injected and content-free: actual inference requests and decoded input
-samples, including retries, excluding cache reuse. Processing time includes feeding and backlog I/O;
+samples, including retries, excluding cache reuse. These count engine calls; native token-level
+temperature fallback stays inside a call. Processing time includes feeding and backlog I/O;
 real-time runs also include the intended wait. Finalization time starts at the last packet's release.
 These are local qualification measurements, not routine test timing budgets or device-presentation
 latency. More retained speech can require more decoding work.
@@ -92,9 +96,13 @@ shared outcome for pairs whose full window and inference traces match exactly. C
 boundaries always retain their actual outputs and critical-loss checks. Missing, incomplete or invalid
 traces fail closed. The default `raw` comparison keeps the original strict gate unchanged.
 
-Publish both views and the actual repeat controls. A controlled effect score does not establish that
-the underlying recognizer is deterministic or free of hallucinations. The production decoder and its
-fallback configuration are unchanged by this comparison.
+Publish both views and the actual repeat controls for historical comparisons that kept decoding
+fixed. A controlled effect score does not establish that the recognizer is deterministic or free
+of hallucinations. Current native runs declare `comparison.kind = end-to-end` and require the raw
+gate. Equal window traces cannot establish equal decoding policy or preprocessing. The scorer rejects
+`boundary-effect` for these runs even when window traces match. Retain failed raw outcomes. The
+[Whisper investigation](../../docs/reports/whisper-transcription-2026-11-14.md) records candidates that
+reduced aggregate errors but failed subgroup or critical-value checks; production retains its baseline.
 
 ## Compare complete application versions
 

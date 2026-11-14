@@ -20,6 +20,7 @@ enum SpeechQualityBenchmark {
     static let realtimeSeconds = 90.0
     static let packetSeconds = 0.1
     static let inferenceWindows = 1_024
+    static let draftBytes = 64 * 1_024
   }
   private struct Options {
     enum Feed: String, Codable { case replay, realtime }
@@ -63,6 +64,7 @@ enum SpeechQualityBenchmark {
     let mode: SpeechBoundaryPolicy.Mode
     let reference: String
     let hypothesis: String
+    let draftHypotheses: [String]
     let audioSeconds: Double
     let processingSeconds: Double
     let finalizationSeconds: Double
@@ -73,6 +75,8 @@ enum SpeechQualityBenchmark {
     let errors: [String]
   }
   private struct Report: Encodable {
+    private struct Comparison: Encodable { let kind = "end-to-end" }
+    private let comparison = Comparison()
     let schema = 1
     let pipeline = "meeting-disk-backed"
     let model: String
@@ -92,6 +96,8 @@ enum SpeechQualityBenchmark {
   private final class Output: Sendable {
     struct Snapshot {
       var finals: [String] = []
+      var drafts: [String] = []
+      var draftBytes = 0
       var errors: [String] = []
       var windows: [SpeechWindowMeasurement] = []
       var inferenceWindows: [SpeechInferenceMeasurement] = []
@@ -101,7 +107,19 @@ enum SpeechQualityBenchmark {
     private let state = Mutex(Snapshot())
     var snapshot: Snapshot { state.withLock { $0 } }
     func receive(_ phrase: SpeechPhrase) {
-      if phrase.isFinal, !phrase.text.isEmpty { state.withLock { $0.finals.append(phrase.text) } }
+      guard !phrase.text.isEmpty else { return }
+      state.withLock {
+        if phrase.isFinal {
+          $0.finals.append(phrase.text)
+        } else if $0.drafts.count < Limits.inferenceWindows,
+          phrase.text.utf8.count <= Limits.draftBytes - $0.draftBytes
+        {
+          $0.drafts.append(phrase.text)
+          $0.draftBytes += phrase.text.utf8.count
+        } else if $0.errors.isEmpty {
+          $0.errors.append("Quality draft trace exceeded its bound.")
+        }
+      }
     }
     func fail(_ message: String) { state.withLock { $0.errors.append(message) } }
     func measure(_ event: SpeechWindowMeasurement) {
@@ -264,7 +282,8 @@ enum SpeechQualityBenchmark {
       id: request.fixture.id, language: request.fixture.language,
       condition: request.fixture.condition ?? "original", mode: request.mode,
       reference: request.fixture.reference,
-      hypothesis: snapshot.finals.joined(separator: " "), audioSeconds: duration,
+      hypothesis: snapshot.finals.joined(separator: " "), draftHypotheses: snapshot.drafts,
+      audioSeconds: duration,
       processingSeconds: seconds(started.duration(to: completed)),
       finalizationSeconds: seconds(released.duration(to: completed)),
       windows: snapshot.windows, inferenceWindows: snapshot.inferenceWindows,

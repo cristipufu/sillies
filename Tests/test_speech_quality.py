@@ -92,6 +92,24 @@ class SpeechQualityTests(SpeechQualityFixtures, unittest.TestCase):
         self.assertFalse(report['gate_passed'])
         self.assertEqual(len(report['critical_regressions']), 1)
 
+    def test_empty_finals_cannot_hide_new_noise_captions_in_live_drafts(self):
+        rows = [self.row('noise', mode, '', '', 'no-speech') for mode in ['baseline', 'adaptive']]
+        rows[0]['draftHypotheses'] = []
+        rows[1]['draftHypotheses'] = ['a noise caption']
+        report = quality.score(self.document(rows))
+        self.assertFalse(report['regression_checks_passed'])
+        self.assertTrue(report['critical_regressions'][0]['draft_noise_increase'])
+        self.assertEqual(report['draft_noise_pairs_checked'], 1)
+        rows[0]['draftHypotheses'] = ['an older noise caption']
+        rows[1]['hypothesis'] = 'a new final caption'
+        self.assertFalse(quality.score(self.document(rows))['regression_checks_passed'])
+
+    def test_native_draft_traces_reject_unbounded_or_untyped_content(self):
+        rows = [self.row('one', mode, 'yes', 'yes') for mode in ['baseline', 'adaptive']]
+        for invalid in [[1], ['x' * (quality.MAX_DRAFT_BYTES + 1)], [''] * (quality.MAX_WINDOW_MEASUREMENTS + 1)]:
+            rows[0]['draftHypotheses'] = invalid
+            with self.assertRaises(ValueError): quality.score(self.document(rows))
+
 
 class WindowEffectTests(SpeechQualityFixtures, unittest.TestCase):
     def traced(self, row, completion='session'):
@@ -124,6 +142,13 @@ class WindowEffectTests(SpeechQualityFixtures, unittest.TestCase):
         rows[0]['decodedInputSamples'] = 16000
         del rows[1]['windows']
         with self.assertRaises(ValueError): quality.score_boundary_effect(self.document(rows))
+
+    def test_end_to_end_decoder_changes_cannot_hide_losses_behind_equal_windows(self):
+        rows = [self.traced(self.row('one', 'baseline', 'not', 'not')),
+                self.traced(self.row('one', 'adaptive', 'not', ''))]
+        document = {**self.document(rows), 'comparison': {'kind': 'end-to-end'}}
+        self.assertFalse(quality.score(document)['regression_checks_passed'])
+        with self.assertRaises(ValueError): quality.score_boundary_effect(document)
 
 
 class VersionComparisonTests(SpeechQualityFixtures, unittest.TestCase):

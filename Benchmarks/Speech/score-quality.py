@@ -16,6 +16,7 @@ BOOTSTRAP_REPETITIONS = 2000
 BOOTSTRAP_SEED = 473
 CONFIDENCE_TAIL = 0.025
 MAX_WINDOW_MEASUREMENTS = 1024
+MAX_DRAFT_BYTES = 64 * 1024
 WINDOW_SAMPLE_RATE = 16000
 MAX_WINDOW_SECONDS = 12
 MAX_FIXTURE_SECONDS = 90
@@ -165,6 +166,12 @@ def validated_pairs(document):
     for result in document['results']:
         if result['mode'] in pairs[result['id']] or result['errors']:
             raise ValueError('Duplicate policy row or native recognition failure')
+        if 'draftHypotheses' in result:
+            drafts = result['draftHypotheses']
+            if (not isinstance(drafts, list) or len(drafts) > MAX_WINDOW_MEASUREMENTS
+                    or not all(isinstance(text, str) for text in drafts)
+                    or sum(len(text.encode('utf-8')) for text in drafts) > MAX_DRAFT_BYTES):
+                raise ValueError('Draft trace exceeds its content bound')
         pairs[result['id']][result['mode']] = result
     for pair in pairs.values():
         if set(pair) != {'baseline', 'adaptive'}:
@@ -189,11 +196,17 @@ def compare_pairs(pairs):
         lost = critical_losses(reference, old_words, new_words)
         lost_utterance = reference and old_words and not new_words
         new_noise_words = not reference and len(new_words) > len(old_words)
-        if lost or lost_utterance or new_noise_words:
-            regressions.append({'id': identifier, 'critical_losses': lost, 'hypothesis': new['hypothesis']})
+        draft_words = {mode: max((len(tokens(text)) for text in row['draftHypotheses']), default=0)
+                       if 'draftHypotheses' in row else None for mode, row in pair.items()}
+        new_noise_draft = (not reference and None not in draft_words.values()
+                           and draft_words['adaptive'] > draft_words['baseline'])
+        if lost or lost_utterance or new_noise_words or new_noise_draft:
+            regressions.append({'id': identifier, 'critical_losses': lost, 'hypothesis': new['hypothesis'],
+                                'draft_noise_increase': bool(new_noise_draft)})
         cases.append({'id': identifier, 'baseline': asdict(before), 'adaptive': asdict(after),
                       'baseline_wer': before.wer, 'adaptive_wer': after.wer,
-                      'baseline_seconds': old['processingSeconds'], 'adaptive_seconds': new['processingSeconds']})
+                      'baseline_seconds': old['processingSeconds'], 'adaptive_seconds': new['processingSeconds'],
+                      'maximum_draft_words': draft_words})
     return groups, regressions, cases
 
 
@@ -240,6 +253,8 @@ def score(document):
             'paired_fixtures': len(pairs), 'totals': {m: {**asdict(v), 'wer': v.wer} for m, v in totals.items()},
             'groups': summary, 'paired_wer_delta_95ci': interval, 'critical_regressions': critical_regressions,
             'subgroup_regressions': subgroup_regressions,
+            'draft_noise_pairs_checked': sum(not pair['baseline']['reference'].strip()
+                and all('draftHypotheses' in row for row in pair.values()) for pair in pairs.values()),
             'regression_checks_passed': not critical_regressions and not subgroup_regressions,
             'gate_passed': passed, 'cases': cases}
 
@@ -270,7 +285,7 @@ def validate_window_trace(row):
 
 def score_boundary_effect(document):
     if document.get('comparison', {}).get('kind') == 'end-to-end':
-        raise ValueError('Cross-version comparisons must retain actual outcomes; equal window traces do not establish equal preprocessing')
+        raise ValueError('End-to-end comparisons must retain actual outcomes; equal window traces do not establish equal decoding policy or preprocessing')
     pairs = validated_pairs(document)
     controlled = copy.deepcopy(document)
     equivalent, variations = [], []

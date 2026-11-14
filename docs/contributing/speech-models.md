@@ -152,3 +152,8 @@ candidate, then evaluate unseen human recordings, paced delivery, short replies,
 speech. Keep failed results. Do not generalize a provider's result to other runtimes or every language.
 Window and inference observers must remain optional, typed and content-free, outside audio locks and diagnostics
 archives; they must never record audio, words or tokens.
+
+The opt-in public-corpus runner separately retains bounded live drafts, so empty final text cannot
+hide transient noise captions. End-to-end comparisons must keep actual outcomes even when window
+traces match. See the [Whisper investigation](../reports/whisper-transcription-2026-11-14.md) for rejected
+acoustic and decoding candidates; their production changes were removed after the raw gates failed.

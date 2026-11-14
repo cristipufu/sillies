@@ -56,3 +56,18 @@ Synthetic provider, window-binding, lifecycle, audio-bridge, correction and pers
 run headlessly in `make check`, with producer/bridge tests also selected by stress and race runs.
 They establish the handling of supplied metadata, not live compatibility or accuracy in real calls.
 Live Zoom/Teams/Meet recordings and visible native workflows need separately authorized validation.
+
+An offline bundle audit on 14 November 2026 examined Zoom 7.2.5 (90525) and Teams
+26304.1203.5314.5342 without launching either app. Zoom's 17 native language resources contain the
+participant-list, computer-audio and active-speaker resource keys corresponding to the existing
+English parser. Teams has 52 native language resources; those resources alone did not establish an
+additional speaking-label schema. Resource presence does not establish how a live AX node combines
+labels, identifies the local person or proves roster completeness. No translated parser rules or
+Teams/Meet roster fallback were enabled from this evidence.
+
+The [bounded audit metadata](../reports/data/call-resource-audit-2026-11-14.json) retains versions,
+resource hashes and key counts, with no vocabulary tables or user content. The next compatibility
+check still needs actual authorized call metadata: each provider's speaking indicator, local-role
+annotation, roster completeness and unavailable/stop paths. Meet additionally needs its live browser
+scope/indicator contract checked. Until then, the existing anonymous-label and manual-correction
+paths remain the supported fallback.

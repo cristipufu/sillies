@@ -1,0 +1,435 @@
+{
+  "scope": "Read-only native application bundles. No accessibility trees, call windows, account data or user content. Presence of resource keys is not live accessibility compatibility evidence.",
+  "applications": [
+    {
+      "bundleIdentifier": "us.zoom.xos",
+      "version": "7.2.5 (90525)",
+      "build": "7.2.5.90525",
+      "resources": [
+        {
+          "locale": "de",
+          "sha256": "71e60a309995e66253bdc81f7b640adddcfbcb5355a2773e7dab36236eeb1194",
+          "bytes": 1920718,
+          "recognizedFunctionalKeyCount": 4
+        },
+        {
+          "locale": "en",
+          "sha256": "90fec453ac3a653a45d7304f13b39891629bdc992c851f0e0e1931b346b4ca3a",
+          "bytes": 1423146,
+          "recognizedFunctionalKeyCount": 4
+        },
+        {
+          "locale": "es",
+          "sha256": "2732c939bdc388f7921dcd07787d48cb92d0a7516f0a1907f71eead0bc3312bc",
+          "bytes": 1898182,
+          "recognizedFunctionalKeyCount": 4
+        },
+        {
+          "locale": "fr",
+          "sha256": "280d3fe7860ee8e4dedf1c1b561f76e4fff2b3043de2b6ed36618a342c0c3b18",
+          "bytes": 1947428,
+          "recognizedFunctionalKeyCount": 4
+        },
+        {
+          "locale": "id",
+          "sha256": "abb152aed840e75606c1e35188c57025a7afd6ea47e1c20f7fcbce9b6185e465",
+          "bytes": 1795204,
+          "recognizedFunctionalKeyCount": 4
+        },
+        {
+          "locale": "it",
+          "sha256": "cad5c8e85004045e9e699f0e9978bbd490da3c79f000fb281a193c2e60647548",
+          "bytes": 1881556,
+          "recognizedFunctionalKeyCount": 4
+        },
+        {
+          "locale": "ja",
+          "sha256": "b10b31126e92d332ddddbcfb5840fa87f018c21a197ce0c139a6b92d546db47a",
+          "bytes": 1353232,
+          "recognizedFunctionalKeyCount": 4
+        },
+        {
+          "locale": "ko-KR",
+          "sha256": "31f71cb1233c62657499227cd1435860699e36f5fa23de1fa409a444f64b49f2",
+          "bytes": 1323056,
+          "recognizedFunctionalKeyCount": 4
+        },
+        {
+          "locale": "nl",
+          "sha256": "2022ef02ed8de1c3baf0cf8e6c97fa72ec85d37b956af2aa4c68f4a669fe2929",
+          "bytes": 1828242,
+          "recognizedFunctionalKeyCount": 4
+        },
+        {
+          "locale": "pl",
+          "sha256": "28b7c5652a843cd047f51403d21c0493330103e940503b1ab7781a0d4afd0c57",
+          "bytes": 1858844,
+          "recognizedFunctionalKeyCount": 4
+        },
+        {
+          "locale": "pt-PT",
+          "sha256": "8721fba210c91c4e590f1d413364784c51dff1617e638cd9d0b34a921f49837c",
+          "bytes": 1860744,
+          "recognizedFunctionalKeyCount": 4
+        },
+        {
+          "locale": "ru",
+          "sha256": "3063c898495731cdd1845f1aef17816d1304622476c79afca3ea2fb9e5b36da5",
+          "bytes": 1895776,
+          "recognizedFunctionalKeyCount": 4
+        },
+        {
+          "locale": "sv",
+          "sha256": "4ea68e91a03188f62ff9c34b1673573abeb6d41a4ace7cfc9b105bed1d59bab6",
+          "bytes": 1682882,
+          "recognizedFunctionalKeyCount": 4
+        },
+        {
+          "locale": "tr",
+          "sha256": "c082de904aae367645784c399094949eca3e21352c344d1bc4d75716018d91f7",
+          "bytes": 1814526,
+          "recognizedFunctionalKeyCount": 4
+        },
+        {
+          "locale": "vi",
+          "sha256": "319c4a63b09eb0760e19032987277c6bd52d540f794075ef1b3df0d6a3e870af",
+          "bytes": 1812426,
+          "recognizedFunctionalKeyCount": 4
+        },
+        {
+          "locale": "zh-Hans",
+          "sha256": "a20b95adf4ee9a3b43b4b060d4e0733d77891aa392295b55bc00dc970c7d4116",
+          "bytes": 1140552,
+          "recognizedFunctionalKeyCount": 4
+        },
+        {
+          "locale": "zh-Hant",
+          "sha256": "ea4cb17fc55762a3c8622a28eb2c338a9005d2d7827285c202b9982ee44b30c3",
+          "bytes": 1156438,
+          "recognizedFunctionalKeyCount": 4
+        }
+      ]
+    },
+    {
+      "bundleIdentifier": "com.microsoft.teams2",
+      "version": "26304.1203.5314.5342",
+      "build": "26304.1203.5314.5342",
+      "resources": [
+        {
+          "locale": "af",
+          "sha256": "5274ac1080822f1a92a619b91762b635101da6b2a055fccdd630938c4a478642",
+          "bytes": 8751,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "ar",
+          "sha256": "1111bc9c040759232f90706753b3a781287d438eb61eb59088da30b5b246d869",
+          "bytes": 10018,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "az",
+          "sha256": "4e8730aafb1d1562c4a93c4cc072d2823ba50d80802cee62dd75189e3f315706",
+          "bytes": 9570,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "bg",
+          "sha256": "2c54eb0616ddc67c237d1c6ac667ca4abdd737437a53de4858b97a4c3b86bf1a",
+          "bytes": 12313,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "bs",
+          "sha256": "ddae7e2ccd71a325b93f6d3ff7a7d760efc374e393f039949bd9b1cea471150d",
+          "bytes": 9458,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "ca",
+          "sha256": "bb108d204394d15a9f65f6602e0782eb77c5aa3038b158adf227baa99d6667f6",
+          "bytes": 9350,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "cs",
+          "sha256": "c464155887a0e677ffa2b3405f8c6c15eed67d228dbd93684e96b2c45921720c",
+          "bytes": 9202,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "cy",
+          "sha256": "1875ba2130feeeefa5e04eb24eb05fefc81540a1eb1f58eb7587590594a01ec7",
+          "bytes": 9010,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "da",
+          "sha256": "7f36721fb66eec8a5052b48e7295126cf89c5742713d675f70c96d22ca6503e0",
+          "bytes": 8926,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "de",
+          "sha256": "6746b7417dc8531b0c9af8d02323333586323b254dbc383db264dc46c8a43b68",
+          "bytes": 9321,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "el",
+          "sha256": "44367f1949ef9456e7378f8700772ce82aa2e2b24973d91bf27d9a8eb650f863",
+          "bytes": 12294,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "en",
+          "sha256": "befb95c1d70ed14826b2818e11fcebe1adc4ca8a5443d1ed90509a621c89b1c6",
+          "bytes": 8962,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "es",
+          "sha256": "9aaa6036d49469e19c5edd44f0f1b58fb0c0fcaabc7ae18d31c8bde0d2c10f9c",
+          "bytes": 9269,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "et",
+          "sha256": "aa62fdb01927cca566342a77e89a9d4eed7377da577a2b02e2333ca7bba89932",
+          "bytes": 9165,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "eu",
+          "sha256": "2f7cf92a4c8f55693c12204d3acb37448edb37ef8e64c0be2070fbdb3a5d7f22",
+          "bytes": 8897,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "fa",
+          "sha256": "238c5b11b9752f18b1259f3a2bf72a503d56ef49c91abfae969e9d51c1fc110f",
+          "bytes": 11663,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "fi",
+          "sha256": "d324461e21bbd922decbf8d0ea24c96203e4cbf422aaa813a429b12267219de9",
+          "bytes": 9235,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "fil",
+          "sha256": "4de64c896d6f56b8623807efdbf06ad8da8ac11990fe6001238c5c4b7196c39a",
+          "bytes": 9221,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "fr",
+          "sha256": "b539ef25132e02516ce2323af5240110c3fe57133222459c93a0ddc99dda9678",
+          "bytes": 9459,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "gl",
+          "sha256": "aeefb139da55d5a84ebc29d07e0d1e399d7c914508e27758b7a4e550080fe186",
+          "bytes": 9079,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "he",
+          "sha256": "2b6c22cb6d66d8ec73d21ded0a608a8d1728b01d88d50e82c64a4099d86f998a",
+          "bytes": 10226,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "hi",
+          "sha256": "8c43c246ed1966164bca2b3eb9737fc9f1c891a8dbfc00deb23ae2c08b9f47b3",
+          "bytes": 13918,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "hr",
+          "sha256": "13bac24feecf78113cd7064e2d278680ec79f8beda207785b86902220945c3be",
+          "bytes": 9203,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "hu",
+          "sha256": "f46bd3b160502d351502dfdb540cf44f1c6acc325f63cb73c4610659ed965bde",
+          "bytes": 9446,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "id",
+          "sha256": "4c1d78accd215d7afbc5c43ddb9a4958f341c08d1595ec229e04407067eb24c6",
+          "bytes": 8836,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "is",
+          "sha256": "2dfd10ece00a5f4e4f22ac8b99b54a4864fcf11a86998154e22d0ca49d41de1e",
+          "bytes": 9086,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "it",
+          "sha256": "850eac5e1dbd756b7fc54dda46481ebf39cca863dfa5b7140b0da082f282ca1a",
+          "bytes": 9245,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "ja",
+          "sha256": "0ae3963df5cf97e479fdb2160e267a10a270575121d79dc7fc70f8e8d4d9526d",
+          "bytes": 10475,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "ka",
+          "sha256": "5ab2a1989cb9803918a9c0d073e8c7ce2fe8751ba6080ec71ee333dc39f3e65f",
+          "bytes": 14561,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "kk",
+          "sha256": "03987f735a2b0e283c9d1cec3f6b75693d31245f29fd877fbf84796726462ada",
+          "bytes": 11592,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "ko",
+          "sha256": "b74516119162c64bc2c494f7d9380187146958ffcb3c03fe22b8078fdc168cfb",
+          "bytes": 9751,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "lt",
+          "sha256": "500aeb8eeb43e9f264da0f239d41b9ca71d3fa2dd80c8b79a9b21e4ef5772487",
+          "bytes": 9591,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "lv",
+          "sha256": "a8c900c6dd39815fcaa485a5c4c348a83b23ba8a23b2b1439d668245c69f7ecb",
+          "bytes": 9299,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "mk",
+          "sha256": "1855dc454a51a4de2e041f75b87477a474d67bb732b3989569d0c8d968f4bbc2",
+          "bytes": 12151,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "ms",
+          "sha256": "99dc4ab0bbf4c79ec12843024634ba30b1abb345563db4988d878f11ac3823fc",
+          "bytes": 9141,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "mt",
+          "sha256": "907d53196c948a8bddc23a21049e428af291144d2903fa579e21eb9461ef4b3d",
+          "bytes": 9067,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "nb",
+          "sha256": "6d32c6d01052949db4b16afb4435cd2dc13109515625d538f1b2fe1c3ea05bde",
+          "bytes": 1082,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "nl",
+          "sha256": "d4b1259db2420fae926f1aff6da7ef54653374900c88f821d6003582b3030e99",
+          "bytes": 8968,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "pl",
+          "sha256": "c79cabe368f593ba3b432791a1b775956b0a7be4ac0753ee5503af55621f42dc",
+          "bytes": 9809,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "pt",
+          "sha256": "fbb6da8c2f4d315128c97ee01986010d99b8b8cadf69a863f973a645fb579218",
+          "bytes": 9098,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "ro",
+          "sha256": "7b9b05fdbad05cbe623bfe78fd82caf0453a5636411bd1e08162275a66f6332f",
+          "bytes": 9358,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "ru",
+          "sha256": "8808fffcdca1af28286d829629fba3dd05875804d5e9ea3f35bfb0433d219d3b",
+          "bytes": 11608,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "sk",
+          "sha256": "b371a553cffadbc1f20b09c652dcab36b910eefcc15d91486ecd9bc582e4d3af",
+          "bytes": 9797,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "sl",
+          "sha256": "e26ed249f946dd28be270b1b8f9593c0d67a6e9e66b889eb0a7c4ba2a59d6307",
+          "bytes": 9501,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "sq",
+          "sha256": "9ecd0c34aa9b1aceac1dbfba601da22638eea954007f57d776475256b18597a6",
+          "bytes": 9209,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "sr",
+          "sha256": "0666060069dcabb66adea9fad881e1fc1c3c26ed0a7606dcd7942a76291fcabd",
+          "bytes": 12129,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "sv",
+          "sha256": "9ec334e9037ada26f53189c2c3dbc04ae12139e022acfb705ac3ebb88b206816",
+          "bytes": 9010,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "th",
+          "sha256": "cf20558463fe9510c51f7d288dd9c6ef9624a822d7708c9b5572b6d5dcbcbbe6",
+          "bytes": 13753,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "tr",
+          "sha256": "55e48b8a2ec3116e7bcc509c35837bd0f3bbc4a40e0a2b09a1e7bd6c03d64745",
+          "bytes": 9328,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "uk",
+          "sha256": "58da8e006407ccf3e5a1e909a9a089fca37ff0b3b39598a86ca57f28f1fe53b4",
+          "bytes": 11709,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "vi",
+          "sha256": "2a9919b1b0962e19d7417d471473d9afcdea6246f27ffe5aae1cc1d721c8194d",
+          "bytes": 9937,
+          "recognizedFunctionalKeyCount": 0
+        },
+        {
+          "locale": "zh",
+          "sha256": "3bffb85542d36fbc2a40215d8fe11081eb69496ccd0dde1bac127b568572ddb7",
+          "bytes": 8218,
+          "recognizedFunctionalKeyCount": 0
+        }
+      ]
+    }
+  ],
+  "functionalKeysAreZoomSpecific": true,
+  "conclusion": "Installed resource presence alone does not verify an accessibility label grammar or complete roster. Keep existing provider schemas until live metadata can be observed with explicit recording authorization."
+}

@@ -91,8 +91,10 @@ There were 183 reference-word occurrences across the three conditions: baseline 
 candidate had 29 substitutions, 86 deletions and three insertions. The paired WER-delta interval was
 **−48.77 to −23.87 percentage points**, with no critical or subgroup regression. The bootstrap clusters
 conditions by utterance; these are only three English meetings, not independent evidence across
-languages, speakers, devices or arbitrary environments. Short Romanian speech still needs dedicated
-qualification; the English result is not a multilingual accuracy claim.
+languages, speakers, devices or arbitrary environments. A subsequent
+[Romanian lexical qualification](romanian-short-inputs-2026-11-14.md) passed on complete short words,
+including automatic language controls. Romanian conversational coverage remains unverified;
+these limited results are not a general multilingual accuracy claim.
 
 Fresh noise controls fixed four signal types (Gaussian noise, line hum, a pure tone and clicks),
 three durations (0.2, 0.5, 0.95 seconds) and three levels before transcription. Both builds produced

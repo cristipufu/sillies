@@ -35,6 +35,9 @@ preserving the captured duration. This applies automatically to short final wind
 Talk and dictation; it does not change their endpointing. Longer decoder windows keep their existing
 path and Whisper keeps baseline boundaries. The [short-input qualification](reports/whisper-short-inputs-2026-11-14.md)
 records the English short-speech improvement, fresh noise checks and remaining accuracy limits.
+The [Romanian lexical follow-up](reports/romanian-short-inputs-2026-11-14.md) additionally checks
+complete short words with Romanian and automatic language selection; automatic detection remains
+weak on isolated quiet/noisy words. Neither corpus establishes live conversational accuracy.
 
 ## Installation and lifecycle
 

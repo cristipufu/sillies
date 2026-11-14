@@ -16,6 +16,12 @@ package struct SpeechRecognitionContext: Sendable {
   package var vocabulary: [String]
   package var priority: Priority
   package var boundaryMode: SpeechBoundaryPolicy.Mode?
+  package func windowBoundaryMode(for configuration: SpeechWindowConfiguration)
+    -> SpeechBoundaryPolicy.Mode
+  {
+    boundaryMode
+      ?? (purpose == .continuousTranscription ? configuration.continuousBoundaryMode : .baseline)
+  }
   package init(
     vocabulary: [String] = [], priority: Priority = .live,
     boundaryMode: SpeechBoundaryPolicy.Mode? = nil

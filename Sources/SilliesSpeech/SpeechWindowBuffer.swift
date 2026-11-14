@@ -5,7 +5,7 @@ import SilliesCore
 /// Keeps only the current utterance and a short overlap, independent of session length.
 struct SpeechWindowBuffer {
   enum Mode { case live, catchingUp, draining }
-  enum Completion { case draft, boundary, utterance, session }
+  typealias Completion = SpeechWindowCompletion
   struct Window {
     let samples: [Float]
     let start: TimeInterval

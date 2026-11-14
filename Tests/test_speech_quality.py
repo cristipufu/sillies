@@ -11,7 +11,7 @@ sys.modules[SPEC.name] = quality
 SPEC.loader.exec_module(quality)
 
 
-class SpeechQualityTests(unittest.TestCase):
+class SpeechQualityFixtures:
     def row(self, identifier, mode, reference, hypothesis, condition='clean'):
         return {'id': identifier, 'mode': mode, 'reference': reference, 'hypothesis': hypothesis,
                 'language': 'en', 'condition': condition, 'errors': [], 'processingSeconds': 1}
@@ -20,6 +20,8 @@ class SpeechQualityTests(unittest.TestCase):
         return {'model': 'fixture', 'revision': 'fixed', 'split': 'test', 'complete': True, 'pipeline': 'meeting-disk-backed',
                 'expectedResults': len(rows), 'results': rows}
 
+
+class SpeechQualityTests(SpeechQualityFixtures, unittest.TestCase):
     def test_edit_counts_are_substitutions_deletions_and_insertions(self):
         result = quality.alignment('we will not ship five'.split(), 'we might ship five today'.split())
         self.assertEqual(result.total, 3)
@@ -78,6 +80,39 @@ class SpeechQualityTests(unittest.TestCase):
         report = quality.score(self.document(rows))
         self.assertFalse(report['gate_passed'])
         self.assertEqual(len(report['critical_regressions']), 1)
+
+
+class WindowEffectTests(SpeechQualityFixtures, unittest.TestCase):
+    def traced(self, row, completion='session'):
+        row.update(audioSeconds=1, inferenceRequests=1, decodedInputSamples=16000,
+                   windows=[{'start': 0, 'sampleCount': 16000, 'completion': completion}],
+                   inferenceWindows=[{'start': 0, 'sampleCount': 16000, 'phase': 'complete'}])
+        return row
+
+    def test_equal_input_variation_is_visible_in_raw_score_and_has_no_boundary_effect(self):
+        rows = [self.traced(self.row('one', 'baseline', 'yes', 'yes')),
+                self.traced(self.row('one', 'adaptive', 'yes', 'other'))]
+        document = self.document(rows)
+        report = quality.score_boundary_effect(document)
+        self.assertFalse(report['raw']['regression_checks_passed'])
+        self.assertTrue(report['boundary_effect']['regression_checks_passed'])
+        self.assertEqual(report['same_input_output_variations'][0]['adaptive'], 'other')
+        self.assertEqual(document['results'][1]['hypothesis'], 'other')
+
+    def test_changed_commit_boundaries_cannot_hide_critical_losses(self):
+        rows = [self.traced(self.row('one', 'baseline', 'not', 'not')),
+                self.traced(self.row('one', 'adaptive', 'not', ''), completion='utterance')]
+        report = quality.score_boundary_effect(self.document(rows))
+        self.assertFalse(report['boundary_effect']['regression_checks_passed'])
+        self.assertEqual(report['input_equivalent_pairs'], [])
+
+    def test_missing_or_inconsistent_traces_fail_closed(self):
+        rows = [self.traced(self.row('one', mode, 'yes', 'yes')) for mode in ['baseline', 'adaptive']]
+        rows[0]['decodedInputSamples'] = 0
+        with self.assertRaises(ValueError): quality.score_boundary_effect(self.document(rows))
+        rows[0]['decodedInputSamples'] = 16000
+        del rows[1]['windows']
+        with self.assertRaises(ValueError): quality.score_boundary_effect(self.document(rows))
 
 
 if __name__ == '__main__':

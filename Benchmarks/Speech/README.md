@@ -7,7 +7,8 @@ Python prepares and scores public fixtures; all recognition runs in the Swift ex
 The reviewed input manifests and raw results live in
 [`docs/reports/data/transcription-boundaries-2026-11-14`](../../docs/reports/data/transcription-boundaries-2026-11-14).
 The [report](../../docs/reports/transcription-boundaries-2026-11-14.md) records rejected candidates,
-selection, scoring, work accounting and the limits of the evidence. Audio stays outside Git.
+selection, scoring, work accounting and the limits of the evidence. Audio stays outside Git. The [provider follow-up](../../docs/reports/shared-stt-boundaries-2026-11-14.md)
+records shared configuration, other-provider failures, native defaults and the fresh control cohort.
 
 ## Restore inputs
 
@@ -77,3 +78,20 @@ latency. More retained speech can require more decoding work.
 Keep manifests, source/model checksums, raw results, completion receipts and reports. Remove disposable
 restoration copies and generated conditions after verifying their exact paths and that no process uses
 them. Installed models and personal recordings are outside cleanup scope.
+
+## Providers with stochastic decoding
+
+Whisper can sample random fallback tokens. Run repeat controls before attributing small output changes
+to the gate. The native runner records bounded, content-free traces of every window decision (including
+cache reuse) and every actual inference request. For canonical mono 16 kHz fixtures, equal ordered
+start/count/completion traces and equal decode calls establish equivalent audio inputs and retirement.
+
+`score-quality.py RESULTS OUTPUT --comparison boundary-effect` retains the complete raw score and
+lists every same-input output variation. It additionally estimates the boundary effect using one
+shared outcome for pairs whose full window and inference traces match exactly. Changed input or commit
+boundaries always retain their actual outputs and critical-loss checks. Missing, incomplete or invalid
+traces fail closed. The default `raw` comparison keeps the original strict gate unchanged.
+
+Publish both views and the actual repeat controls. A controlled effect score does not establish that
+the underlying recognizer is deterministic or free of hallucinations. The production decoder and its
+fallback configuration are unchanged by this comparison.

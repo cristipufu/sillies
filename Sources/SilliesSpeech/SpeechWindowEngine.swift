@@ -39,7 +39,7 @@ package struct SpeechWindowRequest: Sendable {
 
 /// Identifies a bounded utterance so streaming engines can decode only newly appended audio.
 package struct SpeechWindowPosition: Sendable {
-  package enum Phase: Sendable { case partial, complete }
+  package enum Phase: String, Codable, Sendable { case partial, complete }
   package let start: TimeInterval
   package let phase: Phase
   package init(start: TimeInterval, phase: Phase) {

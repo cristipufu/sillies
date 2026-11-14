@@ -18,7 +18,8 @@ struct NemotronSpeechModel: PreparedSpeechModel {
     do {
       try Task.checkCancellation()
       let channel = try WindowSpeechChannel(
-        engine: SpeechInferenceScheduler(engine: lease), request: request, cadence: .streaming)
+        engine: SpeechInferenceScheduler(engine: lease), request: request,
+        configuration: .init(cadence: .streaming))
       return LeasedSpeechChannel(channel: channel, lease: lease)
     } catch {
       await lease.release()

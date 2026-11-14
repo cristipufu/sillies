@@ -1,0 +1,19 @@
+{
+  "Benchmarks/Speech/score-quality.py": "8ec122f6677ef376d0c1718ae897601d1ee6d764b7e426095109e0b55d9ca45e",
+  "Sources/SilliesSpeech/SpeechInferenceMeasurement.swift": "530a238c0d767ae973c27ecd6a00192156b810dce51e3077a0b2823469aa835b",
+  "Sources/SilliesSpeech/SpeechProvider.swift": "161bf48eeb1182bd599f425c01b8b66e64067312f0821a9f4ce2e4bdcee396d9",
+  "Sources/SilliesSpeech/SpeechRecognitionContext.swift": "394a18a5c39397c5b15d6a448b8c2c1d448f8b4a4fcafc27acc56dc2ecea2c89",
+  "Sources/SilliesSpeech/SpeechWindowBuffer.swift": "2df7d13f04b4c38a679edff280399404cde6bc73a0d6293db988709f04bfecf0",
+  "Sources/SilliesSpeech/SpeechWindowEngine.swift": "a547f08603615c8cbc2cb00a3f7c8e450b394d5a74a6e9ff7cb9550d3cae8c6d",
+  "Sources/SilliesSpeech/WindowSpeechChannel.swift": "8509b54c533367c9cef85f0101bb719cad4a057bd7f27826cc7c6e90ec1ad33f",
+  "Sources/SilliesSpeech/WindowSpeechModel.swift": "1158941d7be56acd384d009c4931bb63d8da3ca41650e39611e0b1dcc57af30c",
+  "Sources/SilliesSpeechNemotron/NemotronSpeechModel.swift": "838f6405e1e19ec1d57580bc912931bc9af711a6fc368ad420f0164f50784f0d",
+  "Sources/SilliesSpeechParakeet/ParakeetSpeechProvider.swift": "fadc11fab7063d76f4e9ec7dd359c823f56e6a5922da7f09bcc17ad10589333b",
+  "Tests/SilliesSpeechTests/WindowSpeechChannelTests.swift": "61930fe73d2c82497058aa6690a84a7c5e569614175ca5930c8b11514154145d",
+  "Tests/test_speech_quality.py": "96c1dbe87f05e01378aa938160d2ea2ede635af1f3f1f1b7954663a3b14438b5",
+  "Tools/SpeechBenchmark/SpeechBenchmark.swift": "c485669a484ee11d461775a626b9ffac42d82e16226b6a9af4523aced7957333",
+  "Tools/SpeechBenchmark/SpeechQualityBenchmark.swift": "30838dc5e5af566297f4f78f946b838ddb9ca8c153f3bcd86f7c06c5b7bcfacc",
+  "Sources/SilliesSpeech/SpeechWindowCompletion.swift": "4982d9faaa5dc64cfa7e407e5c70829ac0d9575ed0ab5563cada2b3cd08b08bc",
+  "Sources/SilliesSpeech/SpeechWindowConfiguration.swift": "677fb43d8ecf769b1c60baf8426514a1cde75eb6b34a2fbba305bf1245e0087e",
+  "Sources/SilliesSpeech/SpeechWindowMeasurement.swift": "48608646497c63693397979e29623024fa9ccd3d67998a90250f5e17b9522e2c"
+}

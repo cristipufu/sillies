@@ -1,0 +1,234 @@
+{
+  "apple-native-smoke.json.gz": {
+    "bytes": 232,
+    "sha256": "3a23275c4d8ab2bd6591fa2dae477b939090bd7e10628da3f66d2e579f896fba"
+  },
+  "cleanup-verification.json.gz": {
+    "bytes": 266,
+    "sha256": "fa33928a0f7b431111331bcb18615945728e2aabe1531ce7969c0791c34eed32"
+  },
+  "frozen-final-shared-policy.json.gz": {
+    "bytes": 1979,
+    "sha256": "755562a7d251a69becd3aed415a24cccd3dc436c9c4b0b2248f699d43d43528b"
+  },
+  "frozen-shared-policy.json.gz": {
+    "bytes": 1879,
+    "sha256": "0991522b9a2122aa1c63d79cb4abb8beeebb35c1c8953cbcf097ff7871a28913"
+  },
+  "frozen-shared-profiles.json.gz": {
+    "bytes": 1978,
+    "sha256": "37b6c435983c2a2d0dea38d8775c3792e78457f05a94738e7b9e3636cc7c234f"
+  },
+  "input-auto-manifest.json.gz": {
+    "bytes": 1187,
+    "sha256": "9678e51fd629e2ab03c38f0b6bb39c9fe9fd3ea28a34fda3f1320338dbf142d2"
+  },
+  "input-continuous-manifest.json.gz": {
+    "bytes": 981,
+    "sha256": "b6a6541311a22b41ac4d93dbd2273c4777984ec472c724bcd63ab3e27f630227"
+  },
+  "input-fresh-manifest.json.gz": {
+    "bytes": 20270,
+    "sha256": "99a3a68147dfe53d0af5c2ff8755f955c3973ce4b5d677b73e45d40e2a9a0d8f"
+  },
+  "input-manifest.json.gz": {
+    "bytes": 20201,
+    "sha256": "6ad56e5bb930b34e3fcb4056768cd4141eec5caa1db7785a02eea8a661e430c2"
+  },
+  "input-meeting-manifest.json.gz": {
+    "bytes": 1745,
+    "sha256": "1ad85a45e1bcd8bc7082c3907f2b3b5be45a1eaf91ccf7ab4f809956963c0cef"
+  },
+  "input-realtime-manifest.json.gz": {
+    "bytes": 1183,
+    "sha256": "8c5a00d246228afb3ffa38561f23cddeef8d2df0664e53e1a41d2be325bf0b02"
+  },
+  "input-whisper-controls.json.gz": {
+    "bytes": 896,
+    "sha256": "9526f451a4267f5bb879e32cb8776208b01b14e8ed989d5b71c34a4d734c17c5"
+  },
+  "native-provider-defaults.json.gz": {
+    "bytes": 2528,
+    "sha256": "97135c89d07a9f67459e73f1670ecc72aa3215c7f715f3b4c8272c0ed326e21c"
+  },
+  "nemotron-calibration-score.json.gz": {
+    "bytes": 2749,
+    "sha256": "77343ea8edae6da5f962d7a9548c740dd274cfce78d8826e417f2428d8163d02"
+  },
+  "nemotron-calibration.json.gz": {
+    "bytes": 11689,
+    "sha256": "6cf334a970bea83cbcb91717bcaa456c99992beb3dd3e52cf2e8002e0c64daed"
+  },
+  "nemotron-energy-calibration-score.json.gz": {
+    "bytes": 2688,
+    "sha256": "f24ea2ada527f640bb5f5c047add7fe018fb7a235f034abfdf642f04b3dacd2c"
+  },
+  "nemotron-energy-calibration.json.gz": {
+    "bytes": 11553,
+    "sha256": "f09fcfea7de9ccba3171a0f7c83473f1c1239910eadf68400c8fe259be8c8a81"
+  },
+  "nemotron-energy-holdout-score.json.gz": {
+    "bytes": 9757,
+    "sha256": "029384d482a096adbf97ec9de84124f08f8f12d42b5aa9cc8a970d2f7443b5a9"
+  },
+  "nemotron-energy-holdout.json.gz": {
+    "bytes": 29940,
+    "sha256": "b4e9c7b06079109a6740ba3980c5f782c1ca7d72780a197511d537da1a8896f3"
+  },
+  "nemotron-unified-default-smoke.log.gz": {
+    "bytes": 277,
+    "sha256": "64c8a029dbc8a80cbb3bf0a4ee1d65eb3a1d4d6e6581e365720883efdc15c463"
+  },
+  "parakeet-energy-auto-score.json.gz": {
+    "bytes": 849,
+    "sha256": "5e216bd9d842e3a7e9c58ccf191f6b5fdff18b8e34077580051f5464a7929bd2"
+  },
+  "parakeet-energy-auto.json.gz": {
+    "bytes": 1432,
+    "sha256": "4bfd3104f9e5303682534c1b9a1d2d9e61b0a8c0f14ecbd730819b73f8fea21b"
+  },
+  "parakeet-energy-continuous-score.json.gz": {
+    "bytes": 507,
+    "sha256": "cd862b27f262d3179b4b04f4cd50e5c42602cedf9155c0b0496d6a8b84b51aa3"
+  },
+  "parakeet-energy-continuous.json.gz": {
+    "bytes": 1578,
+    "sha256": "1282df8423a0e40bdfb63f5f3a9ec4638087ac6f84fb09c2d04e510a39b04cf6"
+  },
+  "parakeet-energy-holdout-score.json.gz": {
+    "bytes": 9283,
+    "sha256": "cdfd5676e1783301f4cacb79a47900c23ea92762e38c6b9412076fd414c6032c"
+  },
+  "parakeet-energy-holdout.json.gz": {
+    "bytes": 21297,
+    "sha256": "bbbd1c0d75a16790d65b61dec3fc53f93e512e65c8fd6424a2aec72e752016fe"
+  },
+  "parakeet-energy-meeting-score.json.gz": {
+    "bytes": 960,
+    "sha256": "0731a277afc68d6c70639865bf9337a5dbdf593348f4f868c713d8893366b32e"
+  },
+  "parakeet-energy-meeting.json.gz": {
+    "bytes": 2308,
+    "sha256": "c9ddf9b2ed8d3db240a9cc83a614c5f99f83cc39665ee16045eab6b9998e7c80"
+  },
+  "parakeet-energy-realtime-score.json.gz": {
+    "bytes": 848,
+    "sha256": "b43dbb35dca43ee27b4b78082c0eb46f3be945c3c5c0ee5a180730be7ea1431b"
+  },
+  "parakeet-energy-realtime.json.gz": {
+    "bytes": 1418,
+    "sha256": "054ea4e3c1147d7accaa55dda3d0e4ca640005db82c904b7105c32ada880d739"
+  },
+  "parakeet-ultra-default-smoke.log.gz": {
+    "bytes": 392,
+    "sha256": "08c8b6c9e41dfe9248afe42042165cd818a76649326f115b2e444509d7b5f207"
+  },
+  "parakeet-vad-calibration-score.json.gz": {
+    "bytes": 2877,
+    "sha256": "1b3e04e726ea8aa8f63c0830e5d6f66e8f82f0d73aa3d637025cf9845fd78597"
+  },
+  "parakeet-vad-calibration.json.gz": {
+    "bytes": 7928,
+    "sha256": "dbb0725fe13749ff3b9599886444ae88d113826c33fbbb56adf79c4f5c208704"
+  },
+  "qualified-source-files.json": {
+    "bytes": 2070,
+    "sha256": "15cd2257815d68398188e0c2e007cbfb27530dca7a64a1a13b7a5d535ee0e6d3"
+  },
+  "source-fresh-manifest.json.gz": {
+    "bytes": 12688,
+    "sha256": "c25890fb0d4cc1e0555d07fafcfe64ff4886de7d2e6f289db4a0ff198d06f739"
+  },
+  "source-prior-manifest.json.gz": {
+    "bytes": 12615,
+    "sha256": "a8d0f2ad764e8b689bc2bf4b9d2aaa22ace3d6569ea74d328f8a841b6ed5d55d"
+  },
+  "test-receipts.json.gz": {
+    "bytes": 67317,
+    "sha256": "3b2489170bd9c22badd2f96a9f8bbe1b22b2c48b1f2ad836ccbe05bf8e541ec7"
+  },
+  "verified-model-artifacts.json": {
+    "bytes": 26205,
+    "sha256": "6c6486b50a151f16a34f69c1871454c802158c48378228f1a9d8b113b4555c48"
+  },
+  "voice-evidence-candidate-sources.json.gz": {
+    "bytes": 1612,
+    "sha256": "452a4452efda76671b5e586376d629f11d72d91ef060cbbe9f25de22a3358889"
+  },
+  "voice-evidence-candidate.patch.gz": {
+    "bytes": 13054,
+    "sha256": "6742d6313eee2afa6ac6b6e2edd5a034e7a62aadaed33973c2281694a34f0c7b"
+  },
+  "whisper-calibration-score.json.gz": {
+    "bytes": 2348,
+    "sha256": "747c22e08a0c08b19e17ca1b491f35e76f8b0e0df18bd7d384893cabb38fef3c"
+  },
+  "whisper-calibration-traced-score.json.gz": {
+    "bytes": 3224,
+    "sha256": "3d2585ee3c3d430932785150468f53fa1a15eb26f57a9450c752a82375927ac9"
+  },
+  "whisper-calibration-traced.json.gz": {
+    "bytes": 8470,
+    "sha256": "05598dc2caae0b2a01e6cd6614d2ae8737cee96d2b1db2bb7b67f254c9616acd"
+  },
+  "whisper-calibration.json.gz": {
+    "bytes": 5491,
+    "sha256": "22f6651c76710352406a57aa1394cef3056055e301fc4a08ddce9d9e1321185a"
+  },
+  "whisper-controls-a-score.json.gz": {
+    "bytes": 876,
+    "sha256": "dfa5ec2a09e7c8b495970681d7444b222500cccc73f9069dd921b928b064b97a"
+  },
+  "whisper-controls-a.json.gz": {
+    "bytes": 1082,
+    "sha256": "abeebed97ff1535d8bbc04268ae63b841a8c861f56b19e518bcb5acb32c8c250"
+  },
+  "whisper-controls-b-score.json.gz": {
+    "bytes": 902,
+    "sha256": "ea45e5fc1df4453951531fc3f5a52b4517e692523808db4acffc3a43746ac2e9"
+  },
+  "whisper-controls-b.json.gz": {
+    "bytes": 1156,
+    "sha256": "e6246a03d6c3a653959deb5fec752a100a0f3f96153b583268f1a9dce0f00e54"
+  },
+  "whisper-holdout-score.json.gz": {
+    "bytes": 10863,
+    "sha256": "b65c390d4c785f6bcd5c7dea741750ba17d5728068bd45ba3247562fb9928aff"
+  },
+  "whisper-holdout.json.gz": {
+    "bytes": 21135,
+    "sha256": "2eeda9335b62e6ed5eda6cc9c3f9bb801f13dc07e6d0c6c1e1173445a9252d38"
+  },
+  "whisper-native-confidence-controls.json.gz": {
+    "bytes": 1113,
+    "sha256": "1626dde462cb400c79cc1ddb2110c092d3db40955ec4e8dfd84d69e1dec6639e"
+  },
+  "whisper-onset-controls.json.gz": {
+    "bytes": 1111,
+    "sha256": "110dcbeddbb05f7eaf8e75a48b3f8b99b3be64e23557407d463d9a488fdf6698"
+  },
+  "whisper-turbo-default-smoke.log.gz": {
+    "bytes": 276,
+    "sha256": "de8a3e22cb7f1b339d9a24f332aa481fc8514f41c2a1ff0e0e227af466b04d27"
+  },
+  "whisper-turn-calibration-score.json.gz": {
+    "bytes": 3543,
+    "sha256": "a7dd566519e98df02b2c65141b6c4b23d991d91fcac8e94b4dde56ce995bc575"
+  },
+  "whisper-turn-calibration.json.gz": {
+    "bytes": 8055,
+    "sha256": "bac730c1bdcaa709d2ed423b4421e55e46f29dc3e589417461891a148f6beb11"
+  },
+  "whisper-vad-calibration-score.json.gz": {
+    "bytes": 3706,
+    "sha256": "92eaeedefb2f8b814ad221389fc75c45a728d0d60f67d15e773939d19b5163a4"
+  },
+  "whisper-vad-calibration.json.gz": {
+    "bytes": 8226,
+    "sha256": "f81386bf5856f288cea8109236e3f527f0b11afba36afa592a0bad0f4e2b9c55"
+  },
+  "whisper-vad-controls.json.gz": {
+    "bytes": 1165,
+    "sha256": "7d969d82c5cf45da0a749234aed9c0928da5a5ee8df168af345cf66c20d4ae71"
+  }
+}

@@ -1,6 +1,5 @@
 import AVFoundation
 import Foundation
-import SilliesCore
 import Synchronization
 
 /// One consumer task per source. Audio callbacks never create tasks or invoke inference.
@@ -38,8 +37,7 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
 
   package init(
     engine: any SpeechWindowEngine, request: SpeechChannelRequest,
-    cadence: SpeechDecodeCadence = .windowed,
-    boundaryMode: SpeechBoundaryPolicy.Mode = .baseline
+    configuration: SpeechWindowConfiguration = .init()
   ) throws {
     guard
       let format = AVAudioFormat(
@@ -48,8 +46,9 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
       throw SpeechError.unavailable(String(localized: "Could not prepare transcription audio."))
     }
     var initial = State(converter: SpeechBufferConverter(format: format))
-    initial.buffer.cadence = cadence
-    initial.buffer.boundaries = .init(mode: request.context.boundaryMode ?? boundaryMode)
+    initial.buffer.cadence = configuration.cadence
+    initial.buffer.boundaries = .init(
+      mode: request.context.windowBoundaryMode(for: configuration))
     state = StateOwner(initial)
     self.request = request
     let (events, signal) = AsyncStream<Void>.makeStream(bufferingPolicy: .bufferingNewest(1))
@@ -69,6 +68,10 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
         do {
           while let window = try self.nextWindow() {
             try Task.checkCancellation()
+            request.measureWindow?(
+              .init(
+                start: window.start, sampleCount: window.samples.count,
+                completion: window.completion))
             var input = SpeechWindowRequest(
               samples: window.samples, language: request.language, context: request.context)
             input.window = .init(
@@ -114,7 +117,11 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
         if let backingStore = request.audioBackingStore {
           try backingStore.append(incoming)
         } else {
-          try state.buffer.append(incoming)
+          if state.buffer.boundaries.mode == .adaptive {
+            try state.buffer.appendAnalysisFrames(incoming)
+          } else {
+            try state.buffer.append(incoming)
+          }
         }
       }
       reportBacklog()
@@ -205,7 +212,9 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
       do {
         try Task.checkCancellation()
         request.measureInference?(
-          .init(sampleCount: input.samples.count, phase: input.window?.phase ?? .complete))
+          .init(
+            start: input.window?.start ?? 0, sampleCount: input.samples.count,
+            phase: input.window?.phase ?? .complete))
         return try await engine.transcribe(input)
       } catch is CancellationError { throw CancellationError() } catch {
         attempts = min(attempts + 1, Self.maximumRetryExponent + 1)

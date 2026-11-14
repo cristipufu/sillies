@@ -1,0 +1,566 @@
+[
+  {
+    "model": {
+      "id": "whisper-turbo",
+      "providerID": "whisperkit",
+      "name": "Whisper Turbo",
+      "detail": "Broad multilingual recognition. Choose a language or detect it automatically.",
+      "revision": "0f63a7800b00dd0226abd051b906c246e1907482",
+      "capabilities": {
+        "languageControl": "selectable",
+        "languages": [
+          "en",
+          "zh",
+          "de",
+          "es",
+          "ru",
+          "ko",
+          "fr",
+          "ja",
+          "pt",
+          "tr",
+          "pl",
+          "ca",
+          "nl",
+          "ar",
+          "sv",
+          "it",
+          "id",
+          "hi",
+          "fi",
+          "vi",
+          "he",
+          "uk",
+          "el",
+          "ms",
+          "cs",
+          "ro",
+          "da",
+          "hu",
+          "ta",
+          "no",
+          "th",
+          "ur",
+          "hr",
+          "bg",
+          "lt",
+          "la",
+          "mi",
+          "ml",
+          "cy",
+          "sk",
+          "te",
+          "fa",
+          "lv",
+          "bn",
+          "sr",
+          "az",
+          "sl",
+          "kn",
+          "et",
+          "mk",
+          "br",
+          "eu",
+          "is",
+          "hy",
+          "ne",
+          "mn",
+          "bs",
+          "kk",
+          "sq",
+          "sw",
+          "gl",
+          "mr",
+          "pa",
+          "si",
+          "km",
+          "sn",
+          "yo",
+          "so",
+          "af",
+          "oc",
+          "ka",
+          "be",
+          "tg",
+          "sd",
+          "gu",
+          "am",
+          "yi",
+          "lo",
+          "uz",
+          "fo",
+          "ht",
+          "ps",
+          "tk",
+          "nn",
+          "mt",
+          "sa",
+          "lb",
+          "my",
+          "bo",
+          "tl",
+          "mg",
+          "as",
+          "tt",
+          "haw",
+          "ln",
+          "ha",
+          "ba",
+          "jw",
+          "su",
+          "yue"
+        ],
+        "supportsAutomaticDetection": true,
+        "requiresAppleSilicon": true
+      },
+      "license": "MIT \u00b7 OpenAI / Argmax",
+      "sourceURL": "https://huggingface.co/argmaxinc/whisperkit-coreml"
+    },
+    "artifacts": [
+      {
+        "path": "AudioEncoder.mlmodelc/analytics/coremldata.bin",
+        "url": "https://huggingface.co/argmaxinc/whisperkit-coreml/resolve/0f63a7800b00dd0226abd051b906c246e1907482/openai_whisper-large-v3-v20240930_626MB/AudioEncoder.mlmodelc/analytics/coremldata.bin",
+        "byteCount": 243,
+        "sha256": "56793886ab1adb9ca8a4e335efbe8af6640f40d958ab2d29c3ad2d7d6f712e95"
+      },
+      {
+        "path": "AudioEncoder.mlmodelc/coremldata.bin",
+        "url": "https://huggingface.co/argmaxinc/whisperkit-coreml/resolve/0f63a7800b00dd0226abd051b906c246e1907482/openai_whisper-large-v3-v20240930_626MB/AudioEncoder.mlmodelc/coremldata.bin",
+        "byteCount": 348,
+        "sha256": "ffa9eb76e8e9d9be75a4d527e5249e61d67fd43081c5aa110fd24efa6c8c5ea3"
+      },
+      {
+        "path": "AudioEncoder.mlmodelc/metadata.json",
+        "url": "https://huggingface.co/argmaxinc/whisperkit-coreml/resolve/0f63a7800b00dd0226abd051b906c246e1907482/openai_whisper-large-v3-v20240930_626MB/AudioEncoder.mlmodelc/metadata.json",
+        "byteCount": 1922,
+        "sha256": "a87a3375afe79e88e27af30247e234e706b98679dedfd1b021a74f7ee108c669"
+      },
+      {
+        "path": "AudioEncoder.mlmodelc/model.mil",
+        "url": "https://huggingface.co/argmaxinc/whisperkit-coreml/resolve/0f63a7800b00dd0226abd051b906c246e1907482/openai_whisper-large-v3-v20240930_626MB/AudioEncoder.mlmodelc/model.mil",
+        "byteCount": 934263,
+        "sha256": "3cec2580fb07b12a88087f0e1586c6ba2982980eb36499561e1ffca2b0950442"
+      },
+      {
+        "path": "AudioEncoder.mlmodelc/weights/weight.bin",
+        "url": "https://huggingface.co/argmaxinc/whisperkit-coreml/resolve/0f63a7800b00dd0226abd051b906c246e1907482/openai_whisper-large-v3-v20240930_626MB/AudioEncoder.mlmodelc/weights/weight.bin",
+        "byteCount": 421968768,
+        "sha256": "e4740fa28ed65907af754af893dfce98473fafb84dd8d718ad346985fe7678c1"
+      },
+      {
+        "path": "MelSpectrogram.mlmodelc/analytics/coremldata.bin",
+        "url": "https://huggingface.co/argmaxinc/whisperkit-coreml/resolve/0f63a7800b00dd0226abd051b906c246e1907482/openai_whisper-large-v3-v20240930_626MB/MelSpectrogram.mlmodelc/analytics/coremldata.bin",
+        "byteCount": 243,
+        "sha256": "c5be419f8622083ac7046306400643539f0e7577c843448c36defc090d41e7ce"
+      },
+      {
+        "path": "MelSpectrogram.mlmodelc/coremldata.bin",
+        "url": "https://huggingface.co/argmaxinc/whisperkit-coreml/resolve/0f63a7800b00dd0226abd051b906c246e1907482/openai_whisper-large-v3-v20240930_626MB/MelSpectrogram.mlmodelc/coremldata.bin",
+        "byteCount": 329,
+        "sha256": "2bfc12cffc2e45e039c7a18f384f09adffb72c182fcd93f9413d405d1a6c1130"
+      },
+      {
+        "path": "MelSpectrogram.mlmodelc/metadata.json",
+        "url": "https://huggingface.co/argmaxinc/whisperkit-coreml/resolve/0f63a7800b00dd0226abd051b906c246e1907482/openai_whisper-large-v3-v20240930_626MB/MelSpectrogram.mlmodelc/metadata.json",
+        "byteCount": 1850,
+        "sha256": "2bc552e09a6f124d9e6c178dd1a6979e010206acb26308b2224887c9dcbeb35f"
+      },
+      {
+        "path": "MelSpectrogram.mlmodelc/model.mil",
+        "url": "https://huggingface.co/argmaxinc/whisperkit-coreml/resolve/0f63a7800b00dd0226abd051b906c246e1907482/openai_whisper-large-v3-v20240930_626MB/MelSpectrogram.mlmodelc/model.mil",
+        "byteCount": 10143,
+        "sha256": "c270b95b5f81d7f7d0b8a3e8f991d4e5812a37cad29349868a35b91f3a6a4463"
+      },
+      {
+        "path": "MelSpectrogram.mlmodelc/weights/weight.bin",
+        "url": "https://huggingface.co/argmaxinc/whisperkit-coreml/resolve/0f63a7800b00dd0226abd051b906c246e1907482/openai_whisper-large-v3-v20240930_626MB/MelSpectrogram.mlmodelc/weights/weight.bin",
+        "byteCount": 373376,
+        "sha256": "009d9fb8f6b589accfa08cebf1c712ef07c3405229ce3cfb3a57ee033c9d8a49"
+      },
+      {
+        "path": "TextDecoder.mlmodelc/analytics/coremldata.bin",
+        "url": "https://huggingface.co/argmaxinc/whisperkit-coreml/resolve/0f63a7800b00dd0226abd051b906c246e1907482/openai_whisper-large-v3-v20240930_626MB/TextDecoder.mlmodelc/analytics/coremldata.bin",
+        "byteCount": 243,
+        "sha256": "3913b8c9716b284a917cf3744f4d415f2a05e2b910594a14c6cc10092284d3f8"
+      },
+      {
+        "path": "TextDecoder.mlmodelc/coremldata.bin",
+        "url": "https://huggingface.co/argmaxinc/whisperkit-coreml/resolve/0f63a7800b00dd0226abd051b906c246e1907482/openai_whisper-large-v3-v20240930_626MB/TextDecoder.mlmodelc/coremldata.bin",
+        "byteCount": 633,
+        "sha256": "3faabaf66930e66956d8291d0ff485fb382496e30a91a7185548b9b898ce90a9"
+      },
+      {
+        "path": "TextDecoder.mlmodelc/metadata.json",
+        "url": "https://huggingface.co/argmaxinc/whisperkit-coreml/resolve/0f63a7800b00dd0226abd051b906c246e1907482/openai_whisper-large-v3-v20240930_626MB/TextDecoder.mlmodelc/metadata.json",
+        "byteCount": 4924,
+        "sha256": "994f6030d7b1a8be999940444c3cf5d6a57d40ddd4423cf1d1fc93520aa1b052"
+      },
+      {
+        "path": "TextDecoder.mlmodelc/model.mil",
+        "url": "https://huggingface.co/argmaxinc/whisperkit-coreml/resolve/0f63a7800b00dd0226abd051b906c246e1907482/openai_whisper-large-v3-v20240930_626MB/TextDecoder.mlmodelc/model.mil",
+        "byteCount": 217177,
+        "sha256": "dbe833be9e64348c95b7fa598d0ae4309a91aedce4e82fa500a714b0e4b5d754"
+      },
+      {
+        "path": "TextDecoder.mlmodelc/weights/weight.bin",
+        "url": "https://huggingface.co/argmaxinc/whisperkit-coreml/resolve/0f63a7800b00dd0226abd051b906c246e1907482/openai_whisper-large-v3-v20240930_626MB/TextDecoder.mlmodelc/weights/weight.bin",
+        "byteCount": 203199860,
+        "sha256": "d69700903d518ada33170ab77faaaf464496fb9ff65752c6d5a6109aa2fb02db"
+      },
+      {
+        "path": "config.json",
+        "url": "https://huggingface.co/argmaxinc/whisperkit-coreml/resolve/0f63a7800b00dd0226abd051b906c246e1907482/openai_whisper-large-v3-v20240930_626MB/config.json",
+        "byteCount": 1149,
+        "sha256": "f01d83dd891791d6f12421c05d3ed8ebbe70866f10d6c9a7a7e80b558ce5a0f1"
+      },
+      {
+        "path": "generation_config.json",
+        "url": "https://huggingface.co/argmaxinc/whisperkit-coreml/resolve/0f63a7800b00dd0226abd051b906c246e1907482/openai_whisper-large-v3-v20240930_626MB/generation_config.json",
+        "byteCount": 2767,
+        "sha256": "7fbb053a023be11fbeccd8421811610308143daa93d9617c52aab4a0fa1491c6"
+      },
+      {
+        "path": "added_tokens.json",
+        "url": "https://huggingface.co/openai/whisper-large-v3/resolve/06f233fe06e710322aca913c1bc4249a0d71fce1/added_tokens.json",
+        "byteCount": 34648,
+        "sha256": "3c51f66c4c21f9e126970078f11ae77a78c74aee8df606ee9daba86e467108e0"
+      },
+      {
+        "path": "special_tokens_map.json",
+        "url": "https://huggingface.co/openai/whisper-large-v3/resolve/06f233fe06e710322aca913c1bc4249a0d71fce1/special_tokens_map.json",
+        "byteCount": 2072,
+        "sha256": "1c70773c078cb2ca96e0fcff113102f1d3e2b1504272c3bb63b035d4a6700d87"
+      },
+      {
+        "path": "tokenizer.json",
+        "url": "https://huggingface.co/openai/whisper-large-v3/resolve/06f233fe06e710322aca913c1bc4249a0d71fce1/tokenizer.json",
+        "byteCount": 2480617,
+        "sha256": "6d8cbd7cd0d8d5815e478dac67b85a26bbe77c1f5e0c6d76d1ce2abc0e5f21ca"
+      },
+      {
+        "path": "tokenizer_config.json",
+        "url": "https://huggingface.co/openai/whisper-large-v3/resolve/06f233fe06e710322aca913c1bc4249a0d71fce1/tokenizer_config.json",
+        "byteCount": 282843,
+        "sha256": "844b642c73a91359722f47b35705f7174686df33d252695d8572cf9ac03a6389"
+      }
+    ]
+  },
+  {
+    "model": {
+      "id": "parakeet-ultra",
+      "providerID": "fluidaudio",
+      "name": "Parakeet Ultra",
+      "detail": "Recognition in 25 European languages. An optional language hint guides the writing script.",
+      "revision": "95eaa59a39d4394f047a4dc5cce480388a60d1b6",
+      "capabilities": {
+        "languageControl": "hinted",
+        "languages": [
+          "bg",
+          "hr",
+          "cs",
+          "da",
+          "nl",
+          "en",
+          "et",
+          "fi",
+          "fr",
+          "de",
+          "el",
+          "hu",
+          "it",
+          "lv",
+          "lt",
+          "mt",
+          "pl",
+          "pt",
+          "ro",
+          "sk",
+          "sl",
+          "es",
+          "sv",
+          "ru",
+          "uk"
+        ],
+        "supportsAutomaticDetection": true,
+        "requiresAppleSilicon": true
+      },
+      "license": "CC BY 4.0 \u00b7 NVIDIA / Moondream / Fluid Inference",
+      "sourceURL": "https://huggingface.co/moondream/parakeet-ultra"
+    },
+    "artifacts": [
+      {
+        "path": "Decoder.mlmodelc/analytics/coremldata.bin",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/Decoder.mlmodelc/analytics/coremldata.bin",
+        "byteCount": 243,
+        "sha256": "fe92b6cfaa012abd5248c0bc877832f19807015abffc60d87b8ccc8ccb48b3b5"
+      },
+      {
+        "path": "Decoder.mlmodelc/coremldata.bin",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/Decoder.mlmodelc/coremldata.bin",
+        "byteCount": 560,
+        "sha256": "3b06e66768f0df7e21795f50e2b29300e33eeb1a2579dc42c695279c2d308497"
+      },
+      {
+        "path": "Decoder.mlmodelc/model.mil",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/Decoder.mlmodelc/model.mil",
+        "byteCount": 13110,
+        "sha256": "956f600207f88396017ca5c96cfa3acd5bfee60835a5b44b762e033a8fb28955"
+      },
+      {
+        "path": "Decoder.mlmodelc/weights/weight.bin",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/Decoder.mlmodelc/weights/weight.bin",
+        "byteCount": 23604992,
+        "sha256": "02a0d219f281b9665bc10c8768649403b2eebbbf4b44c627041d948e0de11bb4"
+      },
+      {
+        "path": "Encoder.mlmodelc/analytics/coremldata.bin",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/Encoder.mlmodelc/analytics/coremldata.bin",
+        "byteCount": 243,
+        "sha256": "d87101d824d6723cf95304da33755c3c60e762663b9ef2b0c4bd0aa166a09a0d"
+      },
+      {
+        "path": "Encoder.mlmodelc/coremldata.bin",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/Encoder.mlmodelc/coremldata.bin",
+        "byteCount": 514,
+        "sha256": "397a84a4062f563cbc5f56077c674f09a61d85be5090f61d2f1932afb92ac0fe"
+      },
+      {
+        "path": "Encoder.mlmodelc/model.mil",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/Encoder.mlmodelc/model.mil",
+        "byteCount": 1002653,
+        "sha256": "f5d601568a4171d99a314c0fe3f6bc67715da2623732a3fb566e050ea83e5848"
+      },
+      {
+        "path": "Encoder.mlmodelc/weights/weight.bin",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/Encoder.mlmodelc/weights/weight.bin",
+        "byteCount": 594211328,
+        "sha256": "315ba01f33cadbf601d43ac7f5c86208b7aa75fdaa34705c9869d5abe3521c9b"
+      },
+      {
+        "path": "JointDecisionv3.mlmodelc/analytics/coremldata.bin",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/JointDecisionv3.mlmodelc/analytics/coremldata.bin",
+        "byteCount": 243,
+        "sha256": "68d38ca646aebafa7a9329e2efda50f5767c49e89fdb5f77f212072bb66f97c4"
+      },
+      {
+        "path": "JointDecisionv3.mlmodelc/coremldata.bin",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/JointDecisionv3.mlmodelc/coremldata.bin",
+        "byteCount": 592,
+        "sha256": "5e3af5a4ce686f6c237cadbd9284e10d333bc0e1546633cd0e430e6194044bc4"
+      },
+      {
+        "path": "JointDecisionv3.mlmodelc/model.mil",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/JointDecisionv3.mlmodelc/model.mil",
+        "byteCount": 11777,
+        "sha256": "791b3c3cf3eb2079c84623fc880f6bba008d1366e5f8b03e9a8ed8bd4d7194a0"
+      },
+      {
+        "path": "JointDecisionv3.mlmodelc/weights/weight.bin",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/JointDecisionv3.mlmodelc/weights/weight.bin",
+        "byteCount": 12642764,
+        "sha256": "3f310b85b82341c53ec383025ab094a4e462ee1c592e1ad7c6bfe39cff66ca25"
+      },
+      {
+        "path": "Preprocessor.mlmodelc/analytics/coremldata.bin",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/Preprocessor.mlmodelc/analytics/coremldata.bin",
+        "byteCount": 243,
+        "sha256": "c9beeb989c8d66f8be11df59bc6df277ec76cee404f6865b46243835ef562f6d"
+      },
+      {
+        "path": "Preprocessor.mlmodelc/coremldata.bin",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/Preprocessor.mlmodelc/coremldata.bin",
+        "byteCount": 486,
+        "sha256": "dbde3f2300842c1fd51ef3ff948a0bcffe65ffd2dca10707f2509f32c1d65b1d"
+      },
+      {
+        "path": "Preprocessor.mlmodelc/metadata.json",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/Preprocessor.mlmodelc/metadata.json",
+        "byteCount": 2841,
+        "sha256": "2a98699e22d279dd37fa1d238aeb1c6db1df0d6fad687775324157689d8f3acf"
+      },
+      {
+        "path": "Preprocessor.mlmodelc/model.mil",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/Preprocessor.mlmodelc/model.mil",
+        "byteCount": 28181,
+        "sha256": "4b8518a956450fec57f06c2a21bdffc26973f7f1fa6842fb38fe917f896b6b93"
+      },
+      {
+        "path": "Preprocessor.mlmodelc/weights/weight.bin",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/Preprocessor.mlmodelc/weights/weight.bin",
+        "byteCount": 491072,
+        "sha256": "129b76e3aeafa8afa3ea76d995b964b145fe83700d579f6ff42c4c38fa0968ea"
+      },
+      {
+        "path": "README.md",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/README.md",
+        "byteCount": 2235,
+        "sha256": "9e9e26b6da628a0dc34b9c55f2029e486fc02304ccd7f83825333572ae11c158"
+      },
+      {
+        "path": "config.json",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/config.json",
+        "byteCount": 414,
+        "sha256": "965c69bf500c7be18958df6438dc1ba897721690ae412937ca7c91e28cec1870"
+      },
+      {
+        "path": "parakeet_v3_vocab.json",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/parakeet_v3_vocab.json",
+        "byteCount": 151122,
+        "sha256": "7ec60e05f1b24480736ec0eed40900f4626bce1fa9a60fd700ec7e2a59198735"
+      },
+      {
+        "path": "parakeet_vocab.json",
+        "url": "https://huggingface.co/FluidInference/parakeet-ultra-coreml/resolve/95eaa59a39d4394f047a4dc5cce480388a60d1b6/parakeet_vocab.json",
+        "byteCount": 151122,
+        "sha256": "7ec60e05f1b24480736ec0eed40900f4626bce1fa9a60fd700ec7e2a59198735"
+      }
+    ]
+  },
+  {
+    "model": {
+      "id": "nemotron-unified",
+      "providerID": "nemotron-unified",
+      "name": "Nemotron Unified ASR",
+      "detail": "Streaming recognition in 25 European languages. Choose the spoken language for best accuracy.",
+      "revision": "bd13ddde81d3134719c520845346b3252daf3175",
+      "capabilities": {
+        "languageControl": "selectable",
+        "languages": [
+          "bg",
+          "cs",
+          "da",
+          "de",
+          "el",
+          "en",
+          "es",
+          "et",
+          "fi",
+          "fr",
+          "hr",
+          "hu",
+          "it",
+          "lt",
+          "lv",
+          "mt",
+          "nl",
+          "pl",
+          "pt",
+          "ro",
+          "ru",
+          "sk",
+          "sl",
+          "sv",
+          "uk"
+        ],
+        "supportsAutomaticDetection": true,
+        "requiresAppleSilicon": true
+      },
+      "license": "OpenMDW 1.1 \u00b7 NVIDIA / Fluid Inference",
+      "sourceURL": "https://huggingface.co/nvidia/nemotron-labs-unified-asr-0.6b"
+    },
+    "artifacts": [
+      {
+        "path": "metadata.json",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/metadata.json",
+        "byteCount": 4139,
+        "sha256": "e9cf68aa3283f3f5e9a94d4e587ee85eef1c921d8fba5d0587fbdf5e2f5ea08e"
+      },
+      {
+        "path": "nemotron_unified_decoder.mlmodelc/analytics/coremldata.bin",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_decoder.mlmodelc/analytics/coremldata.bin",
+        "byteCount": 243,
+        "sha256": "93b62b4a28bf99a52f496dff2b25022d907ded1918936490ed83f0493edbd01b"
+      },
+      {
+        "path": "nemotron_unified_decoder.mlmodelc/coremldata.bin",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_decoder.mlmodelc/coremldata.bin",
+        "byteCount": 564,
+        "sha256": "9f5ae02afe1022a82c0cddbf3a48ceca947e9e34c33b28b3ce216dbe0b8297ad"
+      },
+      {
+        "path": "nemotron_unified_decoder.mlmodelc/metadata.json",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_decoder.mlmodelc/metadata.json",
+        "byteCount": 3445,
+        "sha256": "70664a31626b36eda11becaa4b3b378efb7d368405b3eedb075cc4b5fa46f11e"
+      },
+      {
+        "path": "nemotron_unified_decoder.mlmodelc/model.mil",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_decoder.mlmodelc/model.mil",
+        "byteCount": 13106,
+        "sha256": "9c89bbd4cc33f55e3a04526e8f17e1dd6952fe2720c65bd61692dd4dec8a0349"
+      },
+      {
+        "path": "nemotron_unified_decoder.mlmodelc/weights/weight.bin",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_decoder.mlmodelc/weights/weight.bin",
+        "byteCount": 18360832,
+        "sha256": "ba1e400896aa4ba2e6fa989322401c38948a0c82cbc94d54bc7d2324d4a1acab"
+      },
+      {
+        "path": "nemotron_unified_encoder_streaming_70_7_7.mlmodelc/analytics/coremldata.bin",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_encoder_streaming_70_7_7.mlmodelc/analytics/coremldata.bin",
+        "byteCount": 243,
+        "sha256": "06985efdd2acec668cd0feb4fec027dda34e4cb8f7ed226c125a2b74ff35d103"
+      },
+      {
+        "path": "nemotron_unified_encoder_streaming_70_7_7.mlmodelc/coremldata.bin",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_encoder_streaming_70_7_7.mlmodelc/coremldata.bin",
+        "byteCount": 559,
+        "sha256": "2c357cd2bed9820d51f078b134e9187c9ccadda57a2774fbca458bdc275718df"
+      },
+      {
+        "path": "nemotron_unified_encoder_streaming_70_7_7.mlmodelc/metadata.json",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_encoder_streaming_70_7_7.mlmodelc/metadata.json",
+        "byteCount": 3328,
+        "sha256": "7e10476ab62a8547e991a0c548f5bead524606b39fd7b8998fff52479d90cc19"
+      },
+      {
+        "path": "nemotron_unified_encoder_streaming_70_7_7.mlmodelc/model.mil",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_encoder_streaming_70_7_7.mlmodelc/model.mil",
+        "byteCount": 801144,
+        "sha256": "4ee40edc31023ee7421ef7b9695622a7150a47f7ff9d9e2b8f27d4df149dd34e"
+      },
+      {
+        "path": "nemotron_unified_encoder_streaming_70_7_7.mlmodelc/weights/weight.bin",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_encoder_streaming_70_7_7.mlmodelc/weights/weight.bin",
+        "byteCount": 1185527424,
+        "sha256": "ad298b392cbef7e2a386699f516012e96c606ca940ef9074447f14fd633443d2"
+      },
+      {
+        "path": "nemotron_unified_joint_decision_single_step.mlmodelc/analytics/coremldata.bin",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_joint_decision_single_step.mlmodelc/analytics/coremldata.bin",
+        "byteCount": 243,
+        "sha256": "07dc3bb72c56aa7aa0e43173a4f89bf8474f28b110395a4123b266ace6526794"
+      },
+      {
+        "path": "nemotron_unified_joint_decision_single_step.mlmodelc/coremldata.bin",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_joint_decision_single_step.mlmodelc/coremldata.bin",
+        "byteCount": 560,
+        "sha256": "8148c3f4980957565f5bbe05cff27f20c38f9e79b23c3bac19c0c218901c92ec"
+      },
+      {
+        "path": "nemotron_unified_joint_decision_single_step.mlmodelc/metadata.json",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_joint_decision_single_step.mlmodelc/metadata.json",
+        "byteCount": 3262,
+        "sha256": "7cfe900ed38b8e564809b0972801741af1e93a267d491cf8a6b0e246b28c38c2"
+      },
+      {
+        "path": "nemotron_unified_joint_decision_single_step.mlmodelc/model.mil",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_joint_decision_single_step.mlmodelc/model.mil",
+        "byteCount": 9613,
+        "sha256": "6885efe2bffe960ac1220d89d6dca61e4eb5c09e454fcc8250d8cace3ab13fa5"
+      },
+      {
+        "path": "nemotron_unified_joint_decision_single_step.mlmodelc/weights/weight.bin",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/nemotron_unified_joint_decision_single_step.mlmodelc/weights/weight.bin",
+        "byteCount": 7384000,
+        "sha256": "2b69d8d77dbd0b57f949a2ca705ff49c179a65c241241a98bb16fa5a4e6e6acc"
+      },
+      {
+        "path": "vocab.json",
+        "url": "https://huggingface.co/FluidInference/nemotron-labs-unified-asr-0.6b-coreml/resolve/bd13ddde81d3134719c520845346b3252daf3175/coreml/vocab.json",
+        "byteCount": 67489,
+        "sha256": "09ae4e49089dd601216ec052dd8bbd474a3709db6e332478ce6a54e47da2ad22"
+      }
+    ]
+  }
+]

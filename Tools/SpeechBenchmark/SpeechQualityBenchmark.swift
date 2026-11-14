@@ -19,6 +19,7 @@ enum SpeechQualityBenchmark {
     static let replaySeconds = 23.5
     static let realtimeSeconds = 90.0
     static let packetSeconds = 0.1
+    static let inferenceWindows = 1_024
   }
   private struct Options {
     enum Feed: String, Codable { case replay, realtime }
@@ -65,6 +66,8 @@ enum SpeechQualityBenchmark {
     let audioSeconds: Double
     let processingSeconds: Double
     let finalizationSeconds: Double
+    let windows: [SpeechWindowMeasurement]
+    let inferenceWindows: [SpeechInferenceMeasurement]
     let inferenceRequests: Int
     let decodedInputSamples: Int
     let errors: [String]
@@ -90,6 +93,8 @@ enum SpeechQualityBenchmark {
     struct Snapshot {
       var finals: [String] = []
       var errors: [String] = []
+      var windows: [SpeechWindowMeasurement] = []
+      var inferenceWindows: [SpeechInferenceMeasurement] = []
       var inferenceRequests = 0
       var decodedInputSamples = 0
     }
@@ -99,8 +104,22 @@ enum SpeechQualityBenchmark {
       if phrase.isFinal, !phrase.text.isEmpty { state.withLock { $0.finals.append(phrase.text) } }
     }
     func fail(_ message: String) { state.withLock { $0.errors.append(message) } }
+    func measure(_ event: SpeechWindowMeasurement) {
+      state.withLock {
+        if $0.windows.count < Limits.inferenceWindows {
+          $0.windows.append(event)
+        } else if $0.errors.isEmpty {
+          $0.errors.append("Quality window trace exceeded its bound.")
+        }
+      }
+    }
     func measure(_ event: SpeechInferenceMeasurement) {
       state.withLock {
+        if $0.inferenceWindows.count < Limits.inferenceWindows {
+          $0.inferenceWindows.append(event)
+        } else if $0.errors.isEmpty {
+          $0.errors.append("Quality inference trace exceeded its bound.")
+        }
         $0.inferenceRequests += 1
         $0.decodedInputSamples += event.sampleCount
       }
@@ -212,6 +231,7 @@ enum SpeechQualityBenchmark {
     channelRequest.context.purpose = .continuousTranscription
     channelRequest.context.boundaryMode = request.mode
     channelRequest.audioBackingStore = DiskSpeechAudioStore(directory: request.backlogDirectory)
+    channelRequest.measureWindow = output.measure
     channelRequest.measureInference = output.measure
     let channel = try await request.model.makeChannel(channelRequest)
     defer { channel.cancel() }
@@ -247,6 +267,7 @@ enum SpeechQualityBenchmark {
       hypothesis: snapshot.finals.joined(separator: " "), audioSeconds: duration,
       processingSeconds: seconds(started.duration(to: completed)),
       finalizationSeconds: seconds(released.duration(to: completed)),
+      windows: snapshot.windows, inferenceWindows: snapshot.inferenceWindows,
       inferenceRequests: snapshot.inferenceRequests,
       decodedInputSamples: snapshot.decodedInputSamples,
       errors: snapshot.errors)

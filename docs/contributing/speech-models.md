@@ -125,14 +125,21 @@ transcription, timeout, and recording-save failures still retain their recovery 
 ## Qualify boundary policy changes
 
 `SpeechBoundaryPolicy` in Core owns bounded, per-source acoustic classification. The window buffer
-owns audio and utterance retirement; providers recommend a policy through `WindowSpeechModel`.
+owns audio and utterance retirement. `SpeechRecognitionContext.windowBoundaryMode(for:)` selects the policy from capture purpose and an
+immutable `SpeechWindowConfiguration` at channel creation. Both `WindowSpeechModel` and the direct
+streaming adapter use that path. Providers supply qualified policy values and own native decoding;
+they never implement thresholding, calibration, buffering or utterance retirement. The default
+configuration retains baseline boundaries. Parakeet explicitly opts into its qualified adaptive
+policy. Whisper and Nemotron retain baseline boundaries because native qualification found
+noise, subgroup or critical-word regressions. Apple already forwards all audio to its analyzer
+and has no local energy gate.
 `SpeechRecognitionContext.purpose` distinguishes continuous transcription from short utterances
 independently of inference priority. Short Talk/dictation channels keep their established policy.
 A request override exists for paired qualification; no user setting or persisted preference is added.
 
-Use the [file-only native quality runner](../../Benchmarks/Speech/README.md) before changing a provider's
-recommendation. Compare the same weights, language and decoder on development speech, freeze the
+Use the [file-only native quality runner](../../Benchmarks/Speech/README.md) before changing the shared
+policy. Compare the same weights, language and decoder on development speech, freeze the
 candidate, then evaluate unseen human recordings, paced delivery, short replies, silence and long
 speech. Keep failed results. Do not generalize a provider's result to other runtimes or every language.
-Inference observers must remain optional, typed and content-free, outside audio locks and diagnostics
+Window and inference observers must remain optional, typed and content-free, outside audio locks and diagnostics
 archives; they must never record audio, words or tokens.

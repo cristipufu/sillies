@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import SilliesAudio
 import SilliesCore
 import SilliesModelStore
 import SilliesSpeech
@@ -118,6 +119,10 @@ private actor BenchmarkRunner {
         language: language, output: output.receive, failure: output.fail)
       if mode == .dictation {
         request.context = .init(vocabulary: ["Alex", "Ștefan", "API_v2"], priority: .interactive)
+      } else {
+        request.context.purpose = .continuousTranscription
+        request.audioBackingStore = DiskSpeechAudioStore(
+          directory: FileManager.default.temporaryDirectory)
       }
       let channelStarted = ContinuousClock.now
       channels.append(try await model.makeChannel(request))

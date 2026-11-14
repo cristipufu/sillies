@@ -3,6 +3,8 @@
 import argparse
 from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass
+import copy
+import math
 import json
 from pathlib import Path
 import random
@@ -12,6 +14,11 @@ import unicodedata
 BOOTSTRAP_REPETITIONS = 2000
 BOOTSTRAP_SEED = 473
 CONFIDENCE_TAIL = 0.025
+MAX_WINDOW_MEASUREMENTS = 1024
+WINDOW_SAMPLE_RATE = 16000
+MAX_WINDOW_SECONDS = 12
+MAX_FIXTURE_SECONDS = 90
+AUDIO_TIME_TOLERANCE = 1e-6
 
 
 def tokens(text):
@@ -166,13 +173,63 @@ def score(document):
             'gate_passed': passed, 'cases': cases}
 
 
+def validate_window_trace(row):
+    windows, inferences = row.get('windows'), row.get('inferenceWindows')
+    if windows is None or inferences is None or max(len(windows), len(inferences)) > MAX_WINDOW_MEASUREMENTS:
+        raise ValueError('Boundary attribution requires bounded native window traces')
+    if not math.isfinite(row['audioSeconds']) or not 0 < row['audioSeconds'] <= MAX_FIXTURE_SECONDS:
+        raise ValueError('Audio duration exceeds its trace bound')
+    if not windows and row['hypothesis'].strip():
+        raise ValueError('Transcript has no processing window')
+    if len(inferences) != row['inferenceRequests'] or sum(w['sampleCount'] for w in inferences) != row['decodedInputSamples']:
+        raise ValueError('Inference trace does not match work accounting')
+    for window in windows + inferences:
+        if (not math.isfinite(window['start']) or window['start'] < 0
+                or not 0 < window['sampleCount'] <= MAX_WINDOW_SECONDS * WINDOW_SAMPLE_RATE
+                or window['start'] + window['sampleCount'] / WINDOW_SAMPLE_RATE > row['audioSeconds'] + AUDIO_TIME_TOLERANCE):
+            raise ValueError('Window trace exceeds its audio bounds')
+    phases = {'draft': 'partial', 'boundary': 'complete', 'utterance': 'complete', 'session': 'complete'}
+    if any(w['completion'] not in phases for w in windows):
+        raise ValueError('Unknown window completion')
+    for inference in inferences:
+        if not any((w['start'], w['sampleCount'], phases[w['completion']]) ==
+                   (inference['start'], inference['sampleCount'], inference['phase']) for w in windows):
+            raise ValueError('Inference has no matching window decision')
+
+
+def score_boundary_effect(document):
+    pairs = validated_pairs(document)
+    controlled = copy.deepcopy(document)
+    equivalent, variations = [], []
+    for identifier, pair in pairs.items():
+        old, new = pair['baseline'], pair['adaptive']
+        for row in pair.values():
+            validate_window_trace(row)
+        if old['audioSeconds'] != new['audioSeconds']:
+            raise ValueError('Paired audio durations differ')
+        if old['windows'] == new['windows'] and old['inferenceWindows'] == new['inferenceWindows']:
+            equivalent.append(identifier)
+            if old['hypothesis'] != new['hypothesis']:
+                variations.append({'id': identifier, 'baseline': old['hypothesis'], 'adaptive': new['hypothesis']})
+    # Equal audio windows and decode calls cannot attribute decoder randomness to the boundary policy.
+    # Keep every raw outcome separately; use one shared output only for this controlled effect estimate.
+    for row in controlled['results']:
+        if row['mode'] == 'adaptive' and row['id'] in equivalent:
+            row['hypothesis'] = pairs[row['id']]['baseline']['hypothesis']
+    return {'raw': score(document), 'boundary_effect': score(controlled),
+            'input_equivalent_pairs': equivalent, 'same_input_output_variations': variations}
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('results', type=Path)
     parser.add_argument('output', type=Path)
+    parser.add_argument('--comparison', choices=['raw', 'boundary-effect'], default='raw')
     arguments = parser.parse_args()
-    result = score(json.loads(arguments.results.read_text()))
+    document = json.loads(arguments.results.read_text())
+    result = score(document) if arguments.comparison == 'raw' else score_boundary_effect(document)
     arguments.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
-    print(json.dumps({key: value for key,value in result.items() if key not in {'groups','cases','critical_regressions'}}, indent=2))
+    decision = result if arguments.comparison == 'raw' else result['boundary_effect']
+    print(json.dumps({key: value for key,value in decision.items() if key not in {'groups','cases','critical_regressions'}}, indent=2))
 
-    raise SystemExit(0 if result['gate_passed'] else 1)
+    raise SystemExit(0 if decision['gate_passed'] else 1)

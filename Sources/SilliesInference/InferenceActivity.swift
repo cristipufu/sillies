@@ -122,11 +122,19 @@ package actor InferenceActivity {
   package func forgetVoiceModel(_ id: UUID) async { await residency.forget(.voice, id: id) }
 
   package func prepareSpeechRuntime(_ prepare: @Sendable () async throws -> Void) async throws {
+    try await performSpeech(prepare)
+  }
+
+  package func performSpeech<Value: Sendable>(
+    _ operation: @Sendable () async throws -> Value
+  ) async throws -> Value {
     try Task.checkCancellation()
     await beginSpeech()
     defer { endSpeech() }
     try Task.checkCancellation()
-    try await prepare()
+    let result = try await operation()
+    try Task.checkCancellation()
+    return result
   }
 
   package func beginSpeech() async {

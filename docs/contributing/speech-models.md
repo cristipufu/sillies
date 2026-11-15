@@ -45,8 +45,8 @@ adapter even when the files install correctly.
    inventing transcript time. Do not retain the full recording or use an SDK helper that owns capture.
    Reuse `SpeechInputPadding` for decoder-only minimum lengths. If newly admitted windows need acoustic
    confirmation, inject a `SpeechWindowValidatorFactory` through the provider's
-   `SpeechWindowConfiguration.inputValidation`; keep native audio classification in `SilliesAudio` and
-   confidence interpretation inside the provider. Do not apply a new rejection policy to already
+   `SpeechWindowConfiguration.inputValidation`; keep WebRTC classification in `SilliesAudio`, learned
+   model inference in its isolated adapter, and confidence interpretation inside the provider. Do not apply a new rejection policy to already
    supported windows without qualifying that broader change. Whisper composition supplies
    `WebRTCSpeechWindowValidator.init` explicitly.
 5. Load only verified local artifacts. Disable every automatic network fallback, including tokenizer
@@ -69,6 +69,29 @@ That check exercises the actual Parakeet warmup chain with a fake microphone and
 
 Speaker detection is a separate capability with `DiarizationProvider` and `PreparedDiarizationModel`.
 Do not imply an STT engine identifies speakers just because its transcript has source labels.
+
+## Acoustic validation and model ownership
+
+`SpeechWindowValidating` accepts asynchronous, throwing analysis. `WindowSpeechChannel` owns the await,
+cancellation checks and transcript retirement. A rejected window returns no words without changing
+its captured duration. A validator failure follows the channel's explicit failure path; cancellation
+does not publish a late result. Synchronous validators can still implement the contract directly.
+
+Use `SpeechInputValidation.partitioned` when qualifying a new validator for longer windows while
+preserving an established short-input policy. The Whisper provider derives that split from its native
+minimum input size. Classification does not change decoder samples, options or confidence policy.
+
+`SilliesSpeechActivity` owns the optional learned backend. Its native actor co-retains the verified
+`InstalledModelLease` and weights, loads and destroys them on a speech worker, validates fixed tensor
+interfaces before SDK access, and creates fresh recurrent state for every window. Never share mutable
+recurrent state across sources. Preparation and inference use injected `InferenceActivity` admission;
+`SpeechOperationQueue` serializes async native operations with a bounded priority queue and explicit
+queued/active cancellation. Recognition scheduling uses the same queue and admission abstraction.
+
+This backend is currently reachable only through the explicit file-only qualification runner. It is
+not registered in app composition or the downloadable catalog. The
+[end-to-end evaluation](../reports/learned-speech-validation-2026-11-15.md) failed the speech gate;
+detector recall and fewer noise insertions do not qualify an application rollout.
 
 ## Check it
 

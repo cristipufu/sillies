@@ -4,26 +4,26 @@ import Testing
 @testable import SilliesSpeech
 
 @Test func acousticConfirmationIsScopedToNewShortInputsAndDoesNotConstructValidatorsForLongAudio()
-  throws
+  async throws
 {
   let creations = Mutex(0)
   let policy = SpeechInputValidation.shortWindows(maximumSamples: 4) {
     creations.withLock { $0 += 1 }
     return InputValidationFixture.noise
   }
-  #expect(try !policy.accepts([Float](repeating: 0.1, count: 4)))
-  #expect(try policy.accepts([Float](repeating: 0.1, count: 5)))
+  #expect(try await !policy.accepts([Float](repeating: 0.1, count: 4)))
+  #expect(try await policy.accepts([Float](repeating: 0.1, count: 5)))
   #expect(creations.withLock { $0 } == 1)
-  #expect(try SpeechInputValidation.unchecked.accepts([0.1]))
+  #expect(try await SpeechInputValidation.unchecked.accepts([0.1]))
 }
 
 @Test func acousticConfirmationPreservesFailuresAndCancellationAndRejectsInvalidPolicyBounds()
-  throws
+  async throws
 {
   for fixture in [InputValidationFixture.failed, .cancelled] {
     let policy = SpeechInputValidation.shortWindows(maximumSamples: 4, factory: { fixture })
-    #expect(throws: (any Error).self) { try policy.accepts([0.1]) }
-    #expect(try policy.accepts([Float](repeating: 0.1, count: 5)))
+    await #expect(throws: (any Error).self) { try await policy.accepts([0.1]) }
+    #expect(try await policy.accepts([Float](repeating: 0.1, count: 5)))
   }
   for limit in [-1, Int.max] {
     let policy = SpeechInputValidation.shortWindows(
@@ -41,4 +41,26 @@ private enum InputValidationFixture: SpeechWindowValidating {
     case .cancelled: throw CancellationError()
     }
   }
+}
+
+@Test func partitionedAcousticValidationPreservesQualifiedShortInputs() async throws {
+  let shortCreations = Mutex(0)
+  let longCreations = Mutex(0)
+  let policy = SpeechInputValidation.partitioned(
+    maximumShortSamples: 16_000,
+    short: {
+      shortCreations.withLock { $0 += 1 }
+      return InputValidationFixture.failed
+    },
+    remaining: {
+      longCreations.withLock { $0 += 1 }
+      return InputValidationFixture.noise
+    })
+  await #expect(throws: SpeechError.self) { try await policy.accepts([0.1]) }
+  await #expect(throws: SpeechError.self) {
+    try await policy.accepts([Float](repeating: 0.1, count: 16_000))
+  }
+  #expect(try await !policy.accepts([Float](repeating: 0.1, count: 16_001)))
+  #expect(shortCreations.withLock { $0 } == 2)
+  #expect(longCreations.withLock { $0 } == 1)
 }

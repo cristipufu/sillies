@@ -213,7 +213,7 @@ package final class WindowSpeechChannel: LocalSpeechChannel {
   private func transcribeValidated(_ input: SpeechWindowRequest, engine: any SpeechWindowEngine)
     async throws -> SpeechWindowResult
   {
-    guard try inputValidation.accepts(input.samples) else { return .init(words: []) }
+    guard try await inputValidation.accepts(input.samples) else { return .init(words: []) }
     return try await transcribeRecovering(input, engine: engine)
   }
 

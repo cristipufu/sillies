@@ -7,7 +7,6 @@ import SilliesModelStore
 import SilliesSpeech
 import SilliesSpeechNemotron
 import SilliesSpeechParakeet
-import SilliesSpeechWhisper
 import Synchronization
 
 /// Paired file-only recognition using the same prepared native model and decoder configuration.
@@ -30,13 +29,16 @@ enum SpeechQualityBenchmark {
     let output: URL
     let split: String
     let feed: Feed
+    let activitySpecification: URL?
     init(_ arguments: [String]) throws {
-      guard arguments.count == 6, let feed = Feed(rawValue: arguments[5]),
+      guard (6...7).contains(arguments.count), let feed = Feed(rawValue: arguments[5]),
         ["dev", "test"].contains(arguments[4])
       else {
         throw SpeechError.unavailable(
-          "Usage: SpeechBenchmark quality MODEL STORE MANIFEST OUTPUT dev|test replay|realtime")
+          "Usage: SpeechBenchmark quality MODEL STORE MANIFEST OUTPUT dev|test replay|realtime [ACTIVITY_SPEC]"
+        )
       }
+      activitySpecification = arguments.count == 7 ? URL(fileURLWithPath: arguments[6]) : nil
       model = arguments[0]
       store = URL(fileURLWithPath: arguments[1], isDirectory: true)
       manifest = URL(fileURLWithPath: arguments[2])
@@ -77,6 +79,7 @@ enum SpeechQualityBenchmark {
   private struct Report: Encodable {
     private struct Comparison: Encodable { let kind = "end-to-end" }
     private let comparison = Comparison()
+    let activityModel: SpeechActivityQualification.Identity?
     let schema = 1
     let pipeline = "meeting-disk-backed"
     let model: String
@@ -160,10 +163,14 @@ enum SpeechQualityBenchmark {
         "Quality input must contain unique fixtures and a new output path.")
     }
     let specification = try SpeechModelCatalog.bundled().manifest(for: options.model)
+    guard options.activitySpecification == nil || specification.model.providerID == "whisperkit"
+    else { throw SpeechError.invalidAudioFormat }
     let store = ModelStore(root: options.store)
     let lease = try await store.acquire(specification)
+    let whisper = try await SpeechActivityQualification.configuration(
+      specification: options.activitySpecification)
     let providers: [any SpeechProvider] = [
-      WhisperSpeechProvider(makeShortInputValidator: WebRTCSpeechWindowValidator.init),
+      whisper.provider,
       ParakeetSpeechProvider(), NemotronSpeechProvider(),
     ]
     guard let provider = providers.first(where: { $0.id == specification.model.providerID }) else {
@@ -184,7 +191,7 @@ enum SpeechQualityBenchmark {
       print("Both recognition policies warmed on calibration audio.")
     }
     var report = Report(
-      model: options.model, revision: specification.model.revision,
+      activityModel: whisper.identity, model: options.model, revision: specification.model.revision,
       manifestSHA256: SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined(),
       split: options.split, feed: options.feed, expectedResults: fixtures.count * 2)
     try report.save(to: options.output)

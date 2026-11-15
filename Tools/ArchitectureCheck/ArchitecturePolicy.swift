@@ -40,6 +40,10 @@ struct ArchitecturePolicy {
     "SilliesSpeechApple": [
       "Foundation", "AVFoundation", "Speech", "Synchronization", "SilliesSpeech",
     ],
+    "SilliesSpeechActivity": [
+      "Foundation", "CoreML", "FluidAudio", "SilliesSpeech", "SilliesInference",
+      "SilliesModelStore",
+    ],
     "SilliesSpeechWhisper": [
       "Foundation", "NaturalLanguage", "CoreML", "WhisperKit", "SilliesSpeech",
     ],
@@ -100,6 +104,7 @@ struct ArchitecturePolicy {
   static let workerEntries: [String: Set<String>] = [
     "DiagnosticJournal.swift": ["prepare", "append", "clear", "readRecords"],
     "DiagnosticJournal+Export.swift": ["export"],
+    "NativeSpeechActivityEngine.swift": ["load", "containsSpeech"],
     "WhisperWindowEngine.swift": ["load", "transcribe"],
     "ParakeetWindowEngine.swift": ["load", "transcribe"],
     "NemotronStreamingEngine.swift": ["load", "transcribe"],

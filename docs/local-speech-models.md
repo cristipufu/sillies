@@ -39,6 +39,11 @@ The [Romanian lexical follow-up](reports/romanian-short-inputs-2026-11-14.md) ad
 complete short words with Romanian and automatic language selection; automatic detection remains
 weak on isolated quiet/noisy words. Neither corpus establishes live conversational accuracy.
 
+The [learned acoustic-validation evaluation](reports/learned-speech-validation-2026-11-15.md) reduced
+inserted words in a small independent-noise control, but failed the English/Romanian speech gate.
+That backend remains an explicit qualification tool. It is not enabled in the app, installed into the
+personal model store, or applied to other STT providers.
+
 ## Installation and lifecycle
 
 Models live under `~/Library/Application Support/Sillies/SpeechModels/<model-id>/<revision>`. Partial downloads are separate and are never selectable. Verified completed artifacts are reused on retry; URLSession resume data is retained when available. SHA-256 verification occurs before atomic installation and again when acquiring a runtime. Symlink/path traversal checks inspect every existing path component. A lease prevents removal/replacement while a runtime is preparing or in use.

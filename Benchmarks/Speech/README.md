@@ -145,3 +145,31 @@ transcription quality or native performance. Default checks do not load the mode
 The [long-window investigation](../../docs/reports/whisper-long-window-noise-2026-11-14.md) retains
 both passing speech challenges and failed noise probes; detector results do not justify changing
 production admission without end-to-end qualification.
+
+## Qualify a learned validator with actual transcripts
+
+The `quality` command accepts an optional seventh argument for a separate, verified activity model:
+
+```sh
+"$SILLIES_SPEECH_BENCHMARK" quality whisper-turbo /installed/speech-models \
+  /new/conditions/manifest.json /new/candidate.json dev replay /research/activity.json
+```
+
+The specification is a bounded JSON file with `store` and `manifest`. The manifest has `modelID`,
+`revision`, and `artifacts`; every artifact supplies `path`, an immutable HTTPS `url`, `byteCount`, and
+`sha256`, using the normal `ModelArtifactManifest` contract. The temporary store must already contain
+a valid installation receipt and all files. `ModelStore.acquire` verifies the installation before a
+lease reaches the backend. This command never installs or downloads a missing activity model.
+The pinned interface expects `silero-vad-unified-256ms-v6.2.1.mlmodelc` inside the revision directory.
+
+This option supports Whisper qualification only. It preserves the existing short-input validator
+and applies learned validation to longer windows, with fresh recurrent state per window and the
+unchanged SDK threshold. Six-argument invocations retain normal provider composition. Reports include
+the auxiliary model identity; retain the full artifact manifest and executable/source hashes alongside
+them. Inference counters still count ASR engine calls, not the activity detector's Core ML predictions.
+These counters do not establish net CPU savings or latency improvements.
+
+Use the same selected arms and raw end-to-end scorer for shipped and candidate executables. A failed
+development gate blocks reserved speech decoding and default enablement. The
+[integration report](../../docs/reports/learned-speech-validation-2026-11-15.md) retains both failed
+speech candidates, independent-noise results and native ownership/cancellation checks.

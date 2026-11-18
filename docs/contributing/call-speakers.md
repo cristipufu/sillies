@@ -2,8 +2,9 @@
 
 `CallSpeakerProviding` isolates app-specific metadata recognition. `ZoomCallSpeakerProvider`,
 `TeamsCallSpeakerProvider`, and `MeetCallSpeakerProvider` own their vocabulary, accepted roles and
-content scopes. App composition injects their factory into `CallWindowSpeakerReader`; neither
-capture nor the native tree walker switches on call-app types. Providers receive typed metadata
+content scopes and optional `CallSpeakerVisualInterpreting` strategy. App composition injects their
+factory into `CallWindowSpeakerReader`; neither capture nor the native tree walker switches on
+call-app types. Providers receive typed metadata
 and lazy, bounded roster/tile readers. They cannot retain native AX handles.
 
 `CallWindowSpeakerReader` is a recording-owned actor. The native gateway stays in
@@ -14,6 +15,29 @@ before text values are requested. Identified chat, caption and transcript contai
 Only recognized rosters or speaking tiles permit static-text value reads. Nothing from the tree
 enters diagnostics. An app-owned `CallAccessibilityRegistry` shares manual-accessibility leases across recordings;
 only the last lease restores a setting that Sillies enabled. Reader cleanup never waits on the main queue.
+
+When a provider supplies verified tile identities and a visual interpreter but no explicit speaker,
+`CallSpeakerHighlightReader` requests one transient image through its injected
+`CallSpeakerImageCapturing` dependency. The native `CallSpeakerWindowCapture` filters the exact
+process/window and crops to the participant tiles. `CallSpeakerVisualLayout` bounds capture to
+64 tiles, 4,096 points per dimension and 4,194,304 pixels; tiles must cover at least 75% of the crop,
+so widely separated thumbnails cannot pull shared documents into a large capture region. There
+is no OCR, image encoding, saved video, network request or Zoom control interaction. Missing screen
+capture permission returns unavailable evidence without opening a permission prompt.
+
+`ZoomSpeakerHighlight` owns Zoom's observed outline color. The reusable bitmap adapter samples
+border and interior points; pure `CallSpeakerBorder` policy requires a thin highlight on every edge
+and rejects solid-colored video. Only one unmuted highlighted tile is accepted. The native reader
+rechecks tile names, audio state, window and tile geometry after capture; a changed layout discards
+the observation. Teams and Meet do not opt into this strategy. A different adapter can supply a
+different interpreter without changing capture, tracking or transcript code.
+
+This bounded visual fallback is the explicitly authorized exception to the repository's prohibition
+on pixel/screenshot polling for meeting-speaker identification. It reuses the recording's skill clock;
+there is no additional timer, screen-wide capture or per-frame producer. One native capture remains
+admitted even if its awaiting task is cancelled. Pause invalidates delivery; stop clears native caches,
+rejects late images and never waits for a pending screenshot to finish. Neither images nor names enter
+the diagnostic archive.
 
 `CallSpeakerMonitor` uses the existing one-second skill clock, with one outstanding read. It
 suspends during pointer manipulation, observed frame movement, pause and unavailable snapshots.
@@ -26,7 +50,10 @@ monotonic observation times onto recording time. `CallSpeakerTimeline` is pure C
 90% coverage by one consistent remote name. Conflicting remote indicators and acoustic overlap
 remain anonymous. Microphone passages are never assigned remote names. The two-person fallback
 requires an explicitly complete roster, exactly two unique participants and verified local identity.
-Zoom roster completeness additionally requires readable, unchanged AXRowCount and all AXRows.
+Zoom roster completeness requires every AXRows entry to be readable and the ordered row identities
+to remain unchanged across the read. The bounded native collection gateway checks the AXRows count
+and returned payload together; a separate AXRowCount attribute is not required. Zoom 7.2.5 exposes
+AXRows but does not expose AXRowCount on its participant outline.
 Visible tiles alone never establish completeness.
 
 Participant names are capped at 80 characters and 1,024 UTF-8 bytes both before and after
@@ -71,3 +98,21 @@ check still needs actual authorized call metadata: each provider's speaking indi
 annotation, roster completeness and unavailable/stop paths. Meet additionally needs its live browser
 scope/indicator contract checked. Until then, the existing anonymous-label and manual-correction
 paths remain the supported fallback.
+
+A read-only check against an ongoing Zoom 7.2.5 group call on 18 November 2026 reproduced the
+roster failure: AXRowCount was unsupported while AXRows returned 13 entries. Reading and
+revalidating the row collection recovered all 13 names and the explicit local `(me)` identity.
+The accessibility-only scans still returned no active-speaker evidence: the visible video tiles exposed
+computer-audio and video state without the required active-speaker field. Roster recovery alone
+does not establish speaker identity in a group call.
+
+After explicit authorization, transient participant-strip samples exposed a three-point outline
+with sRGB color `(72, 221, 92)`. A passive sample followed the highlighted identity through two
+speaker changes. The subsequent production-reader/timeline probe recognized three distinct names
+and resolved 14 stable transcript intervals over 24 observations; transition intervals remained
+anonymous. No meeting audio or words were read by that probe, and no images or names were saved.
+This establishes the name-evidence path against the active meeting, not an end-to-end check of
+the already-running app's transcript: that instance was not replaced or restarted during the call.
+Headless fixtures cover border ambiguity, muted/stale highlights, geometry bounds, cancellation,
+late native completion and the resulting named transcript text. Teams and Meet still need their own
+live qualification. Hidden tiles, unavailable captures and unrecognized visual styles remain anonymous.

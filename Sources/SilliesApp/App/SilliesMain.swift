@@ -398,7 +398,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
           makeCallSpeakerReader: {
             CallWindowSpeakerReader(
               makeProvider: CallSpeakerProviders.make,
-              accessibility: callAccessibility)
+              accessibility: callAccessibility,
+              visual: CallSpeakerHighlightReader(capture: CallSpeakerWindowCapture()))
           },
           diagnostics: diagnostics?.sink ?? .disabled))
     }

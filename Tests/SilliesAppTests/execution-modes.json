@@ -1,6 +1,7 @@
 {
   "NativeAcousticModelReplayTests.swift": { "default": "headless" },
   "CallSpeakerTests.swift": { "default": "headless" },
+  "CallSpeakerVisualTests.swift": { "default": "headless" },
   "VaultNativeInteractionTests.swift": {
     "default": "gui"
   },

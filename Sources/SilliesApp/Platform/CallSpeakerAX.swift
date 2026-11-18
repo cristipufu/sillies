@@ -20,7 +20,6 @@ enum CallSpeakerAX {
     case classes = "AXDOMClassList"
     case url = "AXURL"
     case value = "AXValue"
-    case rowCount = "AXRowCount"
   }
   static func values(_ attributes: [Attribute], of element: AXUIElement) -> [Attribute: AnyObject] {
     guard

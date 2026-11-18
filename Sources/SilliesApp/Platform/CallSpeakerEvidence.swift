@@ -7,6 +7,14 @@ struct CallSpeakerEvidence: Sendable {
   private(set) var localParticipant: CallSpeakerName?
   private(set) var isAmbiguous = false
   private(set) var roster = CallSpeakerObservation.Roster.partial
+  private(set) var visualTiles: [CallSpeakerTile] = []
+  mutating func addVisualTile(_ tile: CallSpeakerTile) {
+    guard visualTiles.count < CallSpeakerVisualLayout.maximumTiles else {
+      invalidate()
+      return
+    }
+    visualTiles.append(tile)
+  }
   mutating func invalidate() { isAmbiguous = true }
   mutating func declareCompleteRoster() { roster = .complete }
   mutating func setLocal(_ name: CallSpeakerName) {

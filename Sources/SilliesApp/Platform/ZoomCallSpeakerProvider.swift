@@ -3,6 +3,7 @@ import SilliesCore
 
 struct ZoomCallSpeakerProvider: CallSpeakerProviding {
   private(set) var evidence = CallSpeakerEvidence()
+  var visualInterpreter: (any CallSpeakerVisualInterpreting)? { ZoomSpeakerHighlight() }
 
   mutating func inspect(_ node: CallSpeakerNode) -> CallSpeakerTraversal {
     let label = node.description ?? node.title ?? ""
@@ -13,11 +14,24 @@ struct ZoomCallSpeakerProvider: CallSpeakerProviding {
       return .skip
     }
     guard node.role == "AXTabGroup" else { return .children }
-    return zoomTile(label) ? .skip : .children
+    guard let tile = ZoomParticipantMetadata(label) else { return .children }
+    observe(tile)
+    if let frame = node.readFrame() {
+      evidence.addVisualTile(
+        .init(
+          name: tile.participant.name, frame: frame,
+          audio: tile.audio == .muted ? .muted : .unmuted))
+    }
+    return .skip
   }
 
   @discardableResult mutating func zoomTile(_ description: String) -> Bool {
     guard let tile = ZoomParticipantMetadata(description) else { return false }
+    observe(tile)
+    return true
+  }
+
+  private mutating func observe(_ tile: ZoomParticipantMetadata) {
     observe(tile.participant)
     switch tile.activity {
     case .silent: break
@@ -25,7 +39,6 @@ struct ZoomCallSpeakerProvider: CallSpeakerProviding {
       if tile.participant.identity == .remote { evidence.addSpeaker(tile.participant.name) }
     case .conflicting: evidence.invalidate()
     }
-    return true
   }
 
   mutating func zoomRoster(rows: [String], declaredCount: Int) {

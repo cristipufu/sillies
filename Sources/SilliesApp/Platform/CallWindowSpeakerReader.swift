@@ -8,15 +8,18 @@ actor CallWindowSpeakerReader: CallSpeakerReading {
   private let makeProvider: CallSpeakerProviderFactory
   private var window: AXUIElement?
   private let accessibility: CallAccessibilityRegistry
+  private let visual: any CallSpeakerVisualReading
   private var accessibilityLease: Task<CallAccessibilityRegistry.Lease, Never>?
   private var source: CallSpeakerObservation.Source?
   private var isStopped = false
   init(
     makeProvider: @escaping CallSpeakerProviderFactory,
-    accessibility: CallAccessibilityRegistry
+    accessibility: CallAccessibilityRegistry,
+    visual: any CallSpeakerVisualReading
   ) {
     self.accessibility = accessibility
     self.makeProvider = makeProvider
+    self.visual = visual
   }
 
   func read(_ request: CallSpeakerReadRequest) async -> CallSpeakerObservation {
@@ -49,10 +52,56 @@ actor CallWindowSpeakerReader: CallSpeakerReading {
     guard let result = scan.read(window: window), !result.isAmbiguous else {
       return unavailable(.unavailable)
     }
+    let sample = await supplement(
+      Sample(evidence: result, capturedAt: start), window: window, request: request,
+      interpreter: provider.visualInterpreter)
+    guard !isStopped, !Task.isCancelled, let sample else { return unavailable(.unavailable) }
     return .init(
-      source: source, capturedAt: start, availability: .available,
-      speaking: result.speaking, participants: result.participants,
-      localParticipant: result.localParticipant, roster: result.roster)
+      source: source, capturedAt: sample.capturedAt, availability: .available,
+      speaking: sample.evidence.speaking, participants: sample.evidence.participants,
+      localParticipant: sample.evidence.localParticipant, roster: sample.evidence.roster)
+  }
+
+  private struct Sample {
+    let evidence: CallSpeakerEvidence
+    let capturedAt: TimeInterval
+  }
+
+  private func supplement(
+    _ original: Sample, window: AXUIElement, request: CallSpeakerReadRequest,
+    interpreter: (any CallSpeakerVisualInterpreting)?
+  ) async -> Sample? {
+    guard let interpreter, original.evidence.speaking.isEmpty,
+      let layout = visualLayout(original.evidence, window: window),
+      let observation = await visual.read(
+        .init(
+          source: .init(processID: request.target.processID, windowID: request.target.windowID),
+          layout: layout, interpreter: interpreter))
+    else { return original }
+    guard !isStopped, !Task.isCancelled, CallSpeakerAX.matches(window, request: request),
+      let bundle = request.target.bundleIdentifier,
+      let provider = makeProvider(bundle)
+    else { return nil }
+    let scan = CallSpeakerTreeRead(
+      provider: provider, startedAt: ProcessInfo.processInfo.systemUptime)
+    guard var current = scan.read(window: window), !current.isAmbiguous,
+      visualLayout(current, window: window) == layout,
+      current.speaking.isEmpty
+    else { return nil }
+    for name in observation.speaking
+    where name.comparisonKey != current.localParticipant?.comparisonKey {
+      current.addSpeaker(name)
+    }
+    return .init(evidence: current, capturedAt: observation.capturedAt)
+  }
+
+  private func visualLayout(_ evidence: CallSpeakerEvidence, window: AXUIElement)
+    -> CallSpeakerVisualLayout?
+  {
+    guard !evidence.visualTiles.isEmpty,
+      let frame = CallSpeakerAX.frame(CallSpeakerAX.values([.position, .size], of: window))
+    else { return nil }
+    return .init(windowFrame: frame, tiles: evidence.visualTiles)
   }
 
   private func boundWindow(_ request: CallSpeakerReadRequest, deadline: TimeInterval)
@@ -88,6 +137,7 @@ actor CallWindowSpeakerReader: CallSpeakerReading {
     guard !isStopped else { return }
     isStopped = true
     window = nil
+    await visual.stop()
     if let lease = await accessibilityLease?.value { await accessibility.release(lease) }
     accessibilityLease = nil
   }

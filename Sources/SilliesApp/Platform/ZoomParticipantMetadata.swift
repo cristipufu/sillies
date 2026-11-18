@@ -3,9 +3,10 @@ import Foundation
 /// A tile has one audio-control boundary; name punctuation belongs to everything before it.
 struct ZoomParticipantMetadata {
   enum Activity { case silent, speaking, conflicting }
-  private enum AudioState { case muted, unmuted }
+  enum AudioState { case muted, unmuted }
   let participant: CallParticipantLabel
   let activity: Activity
+  let audio: AudioState
 
   init?(_ description: String) {
     guard let fields = CallMetadataFields(description)?.values else { return nil }
@@ -19,6 +20,7 @@ struct ZoomParticipantMetadata {
       CallMetadataFields.words($0) == ["active", "speaker"]
     }
     self.participant = participant
+    self.audio = audioState
     if isSpeaking {
       activity = audioState == .unmuted ? .speaking : .conflicting
     } else {

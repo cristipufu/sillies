@@ -37,7 +37,11 @@ final class CallSpeakerTreeRead {
         role: role, description: metadata[.description] as? String,
         title: metadata[.title] as? String, classes: metadata[.classes] as? [String] ?? [],
         url: (metadata[.url] as? URL) ?? (metadata[.url] as? String).flatMap(URL.init(string:)),
-        scope: node.scope, readRoster: { self.readRoster(node.element) },
+        scope: node.scope,
+        readFrame: {
+          CallSpeakerAX.frame(CallSpeakerAX.values([.position, .size], of: node.element))
+        },
+        readRoster: { self.readRoster(node.element) },
         readSpeakingTile: { self.markedTileTexts(node, maximumAncestorDistance: $0) })
       let traversal = provider.inspect(candidate)
       if traversal == .skip { continue }
@@ -63,24 +67,19 @@ final class CallSpeakerTreeRead {
   }
 
   private func readRoster(_ outline: AXUIElement) -> CallSpeakerRoster? {
-    guard let number = CallSpeakerAX.values([.rowCount], of: outline)[.rowCount] as? NSNumber,
-      number.doubleValue.isFinite, let count = Int(exactly: number), count > 0,
-      count <= CallSpeakerAX.maximumChildren,
-      let rows = CallSpeakerAX.elements(
-        kAXRowsAttribute, of: outline, limit: CallSpeakerAX.maximumChildren),
-      rows.count == count
-    else { return nil }
-    var names: [String] = []
-    for row in rows {
-      guard canRead, CallSpeakerAX.string(.role, of: row) == kAXRowRole,
-        let text = firstRosterText(row)
-      else { return nil }
-      names.append(text)
-    }
-    guard let final = CallSpeakerAX.values([.rowCount], of: outline)[.rowCount] as? NSNumber,
-      final.doubleValue.isFinite, Int(exactly: final) == count
-    else { return nil }
-    return .init(rows: names, declaredCount: count)
+    CallSpeakerRosterRead<AXUIElement>(
+      readRows: {
+        guard self.canRead else { return nil }
+        return CallSpeakerAX.elements(
+          kAXRowsAttribute, of: outline, limit: CallSpeakerAX.maximumChildren)
+      },
+      readName: { row in
+        guard self.canRead, CallSpeakerAX.string(.role, of: row) == kAXRowRole else {
+          return nil
+        }
+        return self.firstRosterText(row)
+      }
+    ).read()
   }
 
   private func firstRosterText(_ row: AXUIElement) -> String? {

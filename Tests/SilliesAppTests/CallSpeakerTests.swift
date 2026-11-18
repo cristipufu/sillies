@@ -8,6 +8,49 @@ import Testing
 
 @testable import SilliesApp
 
+@Test func callSpeakerRosterUsesStableNativeRowsWithoutASeparateRowCount() throws {
+  let roster = try #require(
+    CallSpeakerRosterRead(
+      readRows: { [1, 2, 3] },
+      readName: { [1: "Me (me)", 2: "Alice", 3: "Bob"][$0] }
+    ).read())
+  var provider = ZoomCallSpeakerProvider()
+  provider.zoomRoster(rows: roster.rows, declaredCount: roster.declaredCount)
+  #expect(provider.evidence.roster == .complete)
+  #expect(provider.evidence.participants.map(\.rawValue) == ["Me", "Alice", "Bob"])
+  #expect(provider.evidence.localParticipant?.rawValue == "Me")
+  #expect(provider.evidence.speaking.isEmpty)
+}
+
+@Test func callSpeakerRosterRejectsReplacementReorderingAndUnavailableRows() {
+  for finalRows: [Int]? in [[1, 3], [2, 1], [1], nil] {
+    var reads = 0
+    let roster = CallSpeakerRosterRead<Int>(
+      readRows: {
+        reads += 1
+        return reads == 1 ? [1, 2] : finalRows
+      },
+      readName: { "Participant \($0)" }
+    ).read()
+    #expect(roster == nil)
+  }
+  let unreadable = CallSpeakerRosterRead<Int>(
+    readRows: { [1, 2] }, readName: { $0 == 1 ? "Alice" : nil }
+  ).read()
+  #expect(unreadable == nil)
+  for rows: [Int]? in [nil, [], Array(0...CallSpeakerAX.maximumChildren)] {
+    var nameReads = 0
+    let rejected = CallSpeakerRosterRead<Int>(
+      readRows: { rows },
+      readName: { _ in
+        nameReads += 1
+        return "Alice"
+      }
+    ).read()
+    #expect(rejected == nil && nameReads == 0)
+  }
+}
+
 @Test func callSpeakerParsersRequireKnownSignalsAndRejectAmbiguity() async throws {
   var zoom = ZoomCallSpeakerProvider()
   let unrelated = zoom.zoomTile("Alice, video off")
@@ -140,7 +183,8 @@ import Testing
 @Test func callSpeakerNativeReaderRejectsUnrelatedApplicationsAndReadsAfterStop() async {
   let reader = CallWindowSpeakerReader(
     makeProvider: CallSpeakerProviders.make,
-    accessibility: CallAccessibilityRegistry(prepare: { _ in .init(restore: { true }) }))
+    accessibility: CallAccessibilityRegistry(prepare: { _ in .init(restore: { true }) }),
+    visual: UnavailableTestCallSpeakerVisualReader())
   let request = CallSpeakerReadRequest(
     target: .init(
       windowID: 1, processID: 1,
@@ -149,6 +193,11 @@ import Testing
   #expect(await reader.read(request).availability == .unsupported)
   await reader.stop()
   #expect(await reader.read(request).availability == .unsupported)
+}
+
+private struct UnavailableTestCallSpeakerVisualReader: CallSpeakerVisualReading {
+  func read(_ request: CallSpeakerVisualRequest) async -> CallSpeakerVisualObservation? { nil }
+  func stop() async {}
 }
 
 @Test func callSpeakerAccessibilityLeasesRestoreOnlyAfterTheFinalRecording() async {

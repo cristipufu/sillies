@@ -7,9 +7,11 @@ public struct CallSpeakerTimeline: Sendable {
   public static let maximumHold: TimeInterval = 1.5
   public static let transitionMargin: TimeInterval = 0.75
   private static let minimumCoverage = 0.9
+  public enum Participant: Sendable { case remote, local }
   private struct Sample: Sendable {
     let time: TimeInterval
     let name: CallSpeakerName?
+    let localName: CallSpeakerName?
     let isOverlapping: Bool
   }
   public enum Decision: Equatable, Sendable {
@@ -39,7 +41,9 @@ public struct CallSpeakerTimeline: Sendable {
     return true
   }
 
-  public func decision(for range: Range<TimeInterval>) -> Decision {
+  public func decision(
+    for range: Range<TimeInterval>, participant: Participant = .remote
+  ) -> Decision {
     guard range.lowerBound.isFinite, range.upperBound.isFinite, range.lowerBound >= 0,
       range.upperBound > range.lowerBound
     else { return .resolved(nil) }
@@ -53,8 +57,8 @@ public struct CallSpeakerTimeline: Sendable {
       let next = index + 1 < samples.count ? samples[index + 1].time : latestTime
       let overlap = min(end, min(next, sample.time + Self.maximumHold)) - max(start, sample.time)
       guard overlap > 0 else { continue }
-      if sample.isOverlapping { return .resolved(nil) }
-      if let name = sample.name {
+      if participant == .remote, sample.isOverlapping { return .resolved(nil) }
+      if let name = participant == .local ? sample.localName : sample.name {
         names[name.comparisonKey] = name
         covered += overlap
       }
@@ -70,23 +74,25 @@ public struct CallSpeakerTimeline: Sendable {
       observation.participants.count <= CallSpeakerObservation.maximumParticipants,
       observation.speaking.count <= CallSpeakerObservation.maximumParticipants
     else {
-      return .init(time: time, name: nil, isOverlapping: false)
+      return .init(time: time, name: nil, localName: nil, isOverlapping: false)
     }
     let local = observation.localParticipant?.comparisonKey
     let people = Dictionary(
       observation.participants.map { ($0.comparisonKey, $0) },
       uniquingKeysWith: { first, _ in first })
+    let localName = local.flatMap { people[$0] }
     if observation.roster == .complete, people.count == 2, observation.participants.count == 2,
       let local, people[local] != nil
     {
       return .init(
-        time: time, name: people.first(where: { $0.key != local })?.value, isOverlapping: false)
+        time: time, name: people.first(where: { $0.key != local })?.value,
+        localName: localName, isOverlapping: false)
     }
     let others = Dictionary(
       observation.speaking.filter { $0.comparisonKey != local }.map { ($0.comparisonKey, $0) },
       uniquingKeysWith: { first, _ in first })
     return .init(
-      time: time, name: others.count == 1 ? others.values.first : nil,
+      time: time, name: others.count == 1 ? others.values.first : nil, localName: localName,
       isOverlapping: others.count > 1)
   }
 }

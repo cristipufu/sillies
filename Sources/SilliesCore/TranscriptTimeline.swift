@@ -9,10 +9,12 @@ public struct TranscriptTimeline: Sendable {
     public let isFinal: Bool
     public let finalizedThrough: TimeInterval?
     public var speaker: TranscriptSpeaker?
+    public var words: [TranscriptWord]
 
     public init(
       source: String, range: Range<TimeInterval>, text: String, isFinal: Bool,
-      finalizedThrough: TimeInterval? = nil, speaker: TranscriptSpeaker? = nil
+      finalizedThrough: TimeInterval? = nil, speaker: TranscriptSpeaker? = nil,
+      words: [TranscriptWord] = []
     ) {
       self.source = source
       self.range = range
@@ -20,6 +22,7 @@ public struct TranscriptTimeline: Sendable {
       self.isFinal = isFinal
       self.finalizedThrough = finalizedThrough
       self.speaker = speaker
+      self.words = words
     }
   }
   private var sources: [String: TranscriptSourceTimeline] = [:]
@@ -30,20 +33,31 @@ public struct TranscriptTimeline: Sendable {
   public init() {}
 
   public var segments: [TranscriptSegment] {
-    sources.values.flatMap(\.entries).sorted(by: TranscriptSourceTimeline.Entry.chronologicalOrder)
-      .compactMap(\.segment)
+    sources.values.flatMap(\.entries).flatMap(\.segments).sorted {
+      if $0.start != $1.start { return $0.start < $1.start }
+      return $0.sequence < $1.sequence
+    }
   }
 
   public var text: String {
-    render(sources.values.flatMap(\.entries) + markers.entries, line: \.renderedText)
+    (sources.values.flatMap(\.entries) + markers.entries).flatMap(\.renderedLines)
+      .sorted(by: TranscriptRenderLine.chronologicalOrder).map(\.text).joined(separator: "\n")
   }
 
   public var originalText: String {
     render(sources.values.flatMap(\.entries) + markers.entries, line: \.originalRenderedText)
   }
 
-  public mutating func attributeCallSpeakers(using timeline: CallSpeakerTimeline, source: String) {
-    if sources[source]?.attributeCallSpeakers(using: timeline) == true { revision &+= 1 }
+  public mutating func attributeCallSpeakers(
+    using timeline: CallSpeakerTimeline, source: String,
+    participant: CallSpeakerTimeline.Participant = .remote
+  ) {
+    if sources[source]?.attributeCallSpeakers(
+      using: .init(timeline: timeline, participant: participant), nextSequence: &nextSequence)
+      == true
+    {
+      revision &+= 1
+    }
   }
 
   /// Reads only each source's recent tail, regardless of how long the session has run.
@@ -60,13 +74,14 @@ public struct TranscriptTimeline: Sendable {
   {
     var remaining = characterLimit
     var fragments: [Substring] = []
-    let ordered = entries.sorted(by: TranscriptSourceTimeline.Entry.chronologicalOrder)
+    let ordered = entries.flatMap(\.renderedLines).sorted(
+      by: TranscriptRenderLine.chronologicalOrder)
     for entry in ordered.reversed() {
       let count = min(remaining, entry.characterCount)
       // Whole passages already have a cached character count; only the boundary needs truncation.
       let visibleText =
         count == entry.characterCount
-        ? entry.renderedText[...] : entry.renderedText.suffix(count)
+        ? entry.text[...] : entry.text.suffix(count)
       fragments.append(visibleText)
       remaining -= count
       if remaining <= 0 { break }

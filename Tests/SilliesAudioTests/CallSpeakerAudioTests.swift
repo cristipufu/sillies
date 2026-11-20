@@ -45,6 +45,7 @@ private func callSpeakerAudioBridgeValidatesSourceClockAndPauseBoundary(
     await bridgeCheckpoint(queue)
   }
   let name = try #require(CallSpeakerName(rawValue: "Alice"))
+  let local = try #require(CallSpeakerName(rawValue: "Pat"))
   for step in 0...20 {
     let wallTime = 100 + Double(step) / 2
     clock.withLock { $0 = delivery == .stale ? 200 : max(105, wallTime) }
@@ -54,7 +55,8 @@ private func callSpeakerAudioBridgeValidatesSourceClockAndPauseBoundary(
     service.observeCallSpeakers(
       .init(
         source: .init(processID: 42, windowID: delivery == .wrongWindow ? 8 : 7),
-        capturedAt: capturedAt, availability: .available, speaking: [name]))
+        capturedAt: capturedAt, availability: .available, speaking: [name],
+        participants: [name, local], localParticipant: local))
     await bridgeCheckpoint(queue)
   }
   let speech = channels.withLock { $0 }
@@ -68,7 +70,9 @@ private func callSpeakerAudioBridgeValidatesSourceClockAndPauseBoundary(
   let remote = try #require(result.segments.first(where: { $0.source == "Meeting" }))
   #expect(remote.automaticSpeakerName == (delivery == .current ? name : nil))
   #expect(remote.text == "Their original words")
-  #expect(result.segments.first(where: { $0.source == "Microphone" })?.automaticSpeakerName == nil)
+  #expect(
+    result.segments.first(where: { $0.source == "Microphone" })?.automaticSpeakerName
+      == (delivery == .current ? local : nil))
   if delivery == .current {
     #expect(result.transcript.contains("Meeting · Alice: Their original words"))
     #expect(result.originalTranscript?.contains("Meeting: Their original words") == true)

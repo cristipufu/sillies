@@ -7,6 +7,9 @@ struct TranscriptSourceTimeline: Sendable {
     let range: Range<TimeInterval>
     private(set) var renderedText: String
     private(set) var segment: TranscriptSegment?
+    private(set) var segments: [TranscriptSegment] = []
+    private(set) var renderedLines: [TranscriptRenderLine] = []
+    private var words: [TranscriptWord] = []
     private(set) var characterCount: Int
     private enum CallNameState { case pending, resolved }
     private var callNameState = CallNameState.pending
@@ -23,6 +26,9 @@ struct TranscriptSourceTimeline: Sendable {
       renderedText = segment?.transcriptLine ?? ""
       characterCount = renderedText.count
       isFinal = passage.isFinal
+      words = passage.words
+      segments = segment.map { [$0] } ?? []
+      renderedLines = [.init(time: range.lowerBound, sequence: sequence, text: renderedText)]
     }
 
     init(language: String, time: TimeInterval, sequence: Int) {
@@ -32,22 +38,36 @@ struct TranscriptSourceTimeline: Sendable {
       renderedText = "[\(SessionRecord.formatDuration(time))] Language: \(language)"
       characterCount = renderedText.count
       isFinal = true
+      renderedLines = [.init(time: time, sequence: sequence, text: renderedText)]
     }
 
-    mutating func attributeCallSpeaker(using timeline: CallSpeakerTimeline) -> Bool {
-      guard isFinal, callNameState == .pending, let segment else { return false }
-      guard case .resolved(let name) = timeline.decision(for: range) else { return false }
-      callNameState = .resolved
-      guard name != nil else { return false }
-      if case .overlapping = segment.speaker { return false }
-      let named = TranscriptSegment(
-        sequence: segment.sequence, source: segment.source,
-        start: segment.start, end: segment.end, text: segment.text, speaker: segment.speaker,
-        automaticSpeakerName: name)
-      self.segment = named
-      renderedText = named.transcriptLine
+    mutating func attributeCallSpeaker(
+      using attribution: TranscriptCallAttribution, nextSequence: inout Int
+    ) -> Bool {
+      guard isFinal, callNameState == .pending, let segment,
+        let spans = attribution.spans(for: segment, words: words)
+      else { return false }
+      retireWordTimings()
+      guard spans.contains(where: { $0.name != nil }) else { return false }
+      segments = spans.enumerated().map { index, span in
+        let identifier = index == 0 ? sequence : nextSequence
+        if index > 0 { nextSequence += 1 }
+        return TranscriptSegment(
+          sequence: identifier, source: segment.source,
+          start: span.range.lowerBound, end: span.range.upperBound, text: span.text,
+          speaker: segment.speaker, automaticSpeakerName: span.name)
+      }
+      renderedLines = segments.map {
+        .init(time: $0.start, sequence: $0.sequence, text: $0.transcriptLine)
+      }
+      renderedText = renderedLines.map(\.text).joined(separator: "\n")
       characterCount = renderedText.count
       return true
+    }
+
+    mutating func retireWordTimings() {
+      words.removeAll()
+      callNameState = .resolved
     }
 
     static func chronologicalOrder(_ lhs: Self, _ rhs: Self) -> Bool {
@@ -70,6 +90,7 @@ struct TranscriptSourceTimeline: Sendable {
   private static let timeBoundaryTolerance: TimeInterval = 0.000_001
   private(set) var entries: [Entry] = []
   private var finalizedPrefixCount = 0
+  private var timingRetirementIndex = 0
 
   private struct Replacement {
     let range: Range<Int>
@@ -77,7 +98,12 @@ struct TranscriptSourceTimeline: Sendable {
   }
 
   mutating func receive(_ passage: TranscriptTimeline.Passage, sequence: Int) -> Bool {
-    defer { finalize(through: passage.finalizedThrough) }
+    defer {
+      finalize(through: passage.finalizedThrough)
+      if let latest = entries.last?.range.upperBound {
+        retireWordTimings(before: latest - CallSpeakerTimeline.retainedDuration)
+      }
+    }
     guard let replacement = replacement(for: passage, sequence: sequence) else { return false }
     return apply(replacement)
   }
@@ -88,7 +114,7 @@ struct TranscriptSourceTimeline: Sendable {
     let text = passage.text.trimmingCharacters(in: .whitespacesAndNewlines)
     let normalized = TranscriptTimeline.Passage(
       source: passage.source, range: passage.range, text: text, isFinal: passage.isFinal,
-      speaker: passage.speaker)
+      speaker: passage.speaker, words: passage.words)
     let entry = Entry(passage: normalized, sequence: entries[affected].first?.sequence ?? sequence)
     return Replacement(range: affected, entry: text.isEmpty ? nil : entry)
   }
@@ -99,8 +125,9 @@ struct TranscriptSourceTimeline: Sendable {
     let unchanged =
       affected.count == 1 && entries[affected.lowerBound].range == entry?.range
       && entries[affected.lowerBound].renderedText == entry?.renderedText
+    timingRetirementIndex = min(timingRetirementIndex, affected.lowerBound)
     if unchanged, let entry {
-      entries[affected.lowerBound].isFinal = entry.isFinal
+      entries[affected.lowerBound] = entry
       return false
     }
     guard !affected.isEmpty || entry != nil else { return false }
@@ -109,14 +136,28 @@ struct TranscriptSourceTimeline: Sendable {
     return true
   }
 
-  mutating func attributeCallSpeakers(using timeline: CallSpeakerTimeline) -> Bool {
-    guard let earliest = timeline.earliestTime else { return false }
+  mutating func attributeCallSpeakers(
+    using attribution: TranscriptCallAttribution, nextSequence: inout Int
+  ) -> Bool {
+    guard let earliest = attribution.timeline.earliestTime else { return false }
+    retireWordTimings(before: earliest)
     let first = max(0, insertionIndex(at: earliest) - 1)
     var changed = false
     for index in first..<entries.count {
-      if entries[index].attributeCallSpeaker(using: timeline) { changed = true }
+      if entries[index].attributeCallSpeaker(using: attribution, nextSequence: &nextSequence) {
+        changed = true
+      }
     }
     return changed
+  }
+
+  private mutating func retireWordTimings(before time: TimeInterval) {
+    while timingRetirementIndex < entries.count,
+      entries[timingRetirementIndex].range.upperBound < time
+    {
+      entries[timingRetirementIndex].retireWordTimings()
+      timingRetirementIndex += 1
+    }
   }
 
   mutating func insertMarker(_ entry: Entry) {

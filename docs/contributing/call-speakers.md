@@ -47,8 +47,17 @@ main actor, including while AppKit is running a modal termination loop.
 Capture validates process/window identity, freshness and the capture/resume epoch before mapping
 monotonic observation times onto recording time. `CallSpeakerTimeline` is pure Core policy:
 120 seconds / 512 observations maximum, 1.5-second evidence hold, 750 ms transition margins and
-90% coverage by one consistent remote name. Conflicting remote indicators and acoustic overlap
-remain anonymous. Microphone passages are never assigned remote names. The two-person fallback
+90% coverage by one consistent name. Final passages with complete, validated word timings are
+attributed by word and adjacent equal identities are grouped into spans. Attached subwords stay
+together; uncertain transition words remain anonymous without erasing names on the surrounding
+speech. Original passage text and acoustic labels remain intact, and split spans retain chronological
+ordering across meeting and microphone audio. Missing, invalid or text-mismatched timings fall back
+to whole-passage attribution without reconstructing words. Timing metadata is retired after attribution
+or the bounded evidence horizon.
+
+Conflicting remote indicators and acoustic overlap remain anonymous. Microphone passages use
+only the explicitly verified local participant, with the same freshness and coverage requirements;
+they are never assigned remote names. Local identity must occur in the observed participant set. The two-person fallback
 requires an explicitly complete roster, exactly two unique participants and verified local identity.
 Zoom roster completeness requires every AXRows entry to be readable and the ordered row identities
 to remain unchanged across the read. The bounded native collection gateway checks the AXRows count

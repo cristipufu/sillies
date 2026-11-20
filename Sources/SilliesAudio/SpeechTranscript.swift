@@ -14,6 +14,8 @@ struct SpeechTranscript {
   var originalText: String { timeline.originalText }
   mutating func attributeCallSpeakers(using names: CallSpeakerTimeline) {
     timeline.attributeCallSpeakers(using: names, source: SessionAudioSource.application.rawValue)
+    timeline.attributeCallSpeakers(
+      using: names, source: SessionAudioSource.microphone.rawValue, participant: .local)
   }
   var segments: [TranscriptSegment] { timeline.segments }
 
@@ -39,7 +41,7 @@ struct SpeechTranscript {
       .init(
         source: source.rawValue, range: start..<(start + duration),
         text: phrase.text, isFinal: phrase.isFinal, finalizedThrough: phrase.finalizedThrough,
-        speaker: phrase.speaker))
+        speaker: phrase.speaker, words: phrase.words))
     pendingStarts[source] = phrase.isFinal ? nil : start
   }
 
